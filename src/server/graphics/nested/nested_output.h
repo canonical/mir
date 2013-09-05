@@ -60,6 +60,8 @@ public:
     void release_current() override;
     void post_update() override;
     virtual bool can_bypass() const override;
+    
+    void set_power_mode(MirDPMSMode mode) override;
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;

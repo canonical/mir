@@ -110,6 +110,12 @@ public:
     {
         return false;
     }
+    
+    void set_power_mode(MirDPMSMode mode) override
+    {
+        // TODO: We should support this.
+        (void) mode;
+    }
 
 protected:
     std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
@@ -140,6 +146,12 @@ public:
     void post_update() override
     {
         hwc_device->commit_frame(egl_display, egl_surface);
+    }
+
+    void set_power_mode(MirDPMSMode mode) override
+    {
+        // TODO: We should support this.
+        (void) mode;
     }
 
 private:

@@ -79,13 +79,13 @@ public:
         f(configuration);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirDPMSMode /* dpms_mode */)
+    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirDPMSMode dpms_mode)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot configure output\n"));
+        configuration.dpms_mode = dpms_mode;
     }
 
 private:
-    mg::DisplayConfigurationOutput const configuration;
+    mg::DisplayConfigurationOutput configuration;
     mg::DisplayConfigurationCard const card;
 };
 
@@ -189,8 +189,12 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
     return std::make_shared<AndroidDisplayConfiguration>(display_buffer->view_area().size);
 }
 
-void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
+void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        display_buffer->set_power_mode(output.dpms_mode);
+    });
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(
