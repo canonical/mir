@@ -151,10 +151,8 @@ public:
     {
         std::unique_lock<std::mutex> lg(mutex);
 
-        while (blanked == true)
-            cond.wait(lg);
-
-        hwc_device->commit_frame(egl_display, egl_surface);
+        if (!blanked)
+            hwc_device->commit_frame(egl_display, egl_surface);
     }
 
     void set_power_mode(MirDPMSMode mode) override
