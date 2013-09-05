@@ -95,3 +95,15 @@ void mga::HWCCommonDevice::notify_vsync()
 {
     coordinator->notify_vsync();
 }
+
+void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
+{
+    int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank);
+    if (err)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Could not blank/unblank display")) <<
+            boost::errinfo_errno(-err));
+    }    
+}
