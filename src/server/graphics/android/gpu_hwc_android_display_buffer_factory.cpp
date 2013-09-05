@@ -163,11 +163,13 @@ public:
 
         if (mode == mir_dpms_mode_on)
         {
+            printf("Attempting to unblank screen \n");
             hwc_device->blank_or_unblank_screen(false);
             blanked = false;
         }
         else
         {
+            printf("Attempting to blank screen \n");
             hwc_device->blank_or_unblank_screen(true); // TODO: Be more granular with the standby and suspend settings.
             blanked = true;
         }
