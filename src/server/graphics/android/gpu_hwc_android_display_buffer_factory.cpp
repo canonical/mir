@@ -25,6 +25,9 @@
 #include "mir/graphics/egl_resources.h"
 
 #include <boost/throw_exception.hpp>
+
+#include <mutex>
+#include <condition_variable>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
@@ -132,7 +135,8 @@ public:
                      EGLContext egl_context_shared,
                      std::shared_ptr<mga::HWCDevice> const& hwc_device)
         : GPUDisplayBuffer{native_win, egl_display, egl_context_shared},
-          hwc_device{hwc_device}
+          hwc_device{hwc_device},
+          blanked(false)
     {
     }
 
@@ -145,19 +149,37 @@ public:
 
     void post_update() override
     {
+        std::unique_lock<std::mutex> lg(mutex);
+
+        while (blanked == true)
+            cond.wait(lg);
+
         hwc_device->commit_frame(egl_display, egl_surface);
     }
 
     void set_power_mode(MirDPMSMode mode) override
     {
+        std::unique_lock<std::mutex> lg(mutex);
+
         if (mode == mir_dpms_mode_on)
+        {
             hwc_device->blank_or_unblank_screen(false);
+            blanked = false;
+        }
         else
+        {
             hwc_device->blank_or_unblank_screen(true); // TODO: Be more granular with the standby and suspend settings.
+            blanked = true;
+        }
+        cond.notify_all();
     }
 
 private:
     std::shared_ptr<mga::HWCDevice> const hwc_device;
+    
+    std::mutex mutex;
+    std::condition_variable cond;
+    bool blanked;
 };
 
 }
