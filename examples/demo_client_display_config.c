@@ -153,6 +153,7 @@ static void toggle_dpms_between_on_and_off(struct ClientContext *context)
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
+        printf("Output->dpms : %d \n", output->dpms_mode);
         if (output->dpms_mode == mir_dpms_mode_on)
             output->dpms_mode = mir_dpms_mode_off;
         else
@@ -210,10 +211,6 @@ static void event_callback(
         else if (event->key.key_code == XKB_KEY_v)
         {
             configure_display(ctx, configuration_mode_vertical);
-        }
-        else if (event->key.key_code == 25)
-        {
-            toggle_dpms_between_on_and_off(ctx);
         }
         toggle_dpms_between_on_and_off(ctx);
     }
