@@ -29,9 +29,9 @@
 namespace mcl = mir::client;
 namespace mtf=mir_test_framework;
 namespace geom = mir::geometry;
+
 namespace
 {
-
 class StubClientBuffer : public mcl::ClientBuffer
 {
     std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()
@@ -66,7 +66,6 @@ class StubClientBuffer : public mcl::ClientBuffer
     }
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
     {
-printf("ZUB.\n");
         return nullptr;
     }
 };
@@ -99,7 +98,8 @@ struct StubClientPlatform : public mcl::ClientPlatform
 
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
-        return std::make_shared<EGLNativeDisplayType>();
+        auto fake_window = reinterpret_cast<EGLNativeDisplayType>(0x12345678);
+        return std::make_shared<EGLNativeDisplayType>(fake_window);
     }
 };
 
@@ -136,17 +136,12 @@ public:
 
 }
 
-
 void mtf::TestingClientConfiguration::set_client_configuration(std::shared_ptr<mir::options::Option> const& options)
 {
     if (!options->get("tests-use-real-graphics", false))
     {
         connection_factory = std::make_shared<StubConnectionFactory>();
         mir_global_connection_factory = connection_factory.get();
-        printf("FAKE\n");
-    }
-    else{
-        printf("TRUE\n");
     }
 }
 
