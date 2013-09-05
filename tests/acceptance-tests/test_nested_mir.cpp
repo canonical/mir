@@ -175,7 +175,14 @@ struct ClientConfig : mtf::TestingClientConfiguration
 
 using TestNestedMir = mtf::BespokeDisplayServerTestFixture;
 
-TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
+// TODO resolve problems running "nested" tests on android
+#ifdef ANDROID
+#define DISABLED_ON_ANDROID(name) DISABLED_##name
+#else
+#define DISABLED_ON_ANDROID(name) name
+#endif
+
+TEST_F(TestNestedMir, DISABLED_ON_ANDROID(nested_platform_connects_and_disconnects))
 {
     struct MyHostServerConfiguration : HostServerConfiguration
     {
@@ -220,7 +227,7 @@ TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
     EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
 }
 
-TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
+TEST_F(TestNestedMir, DISABLED_ON_ANDROID(on_exit_display_objects_should_be_destroyed))
 {
     struct MyNestedServerConfiguration : NestedServerConfiguration
     {
