@@ -150,8 +150,10 @@ public:
 
     void set_power_mode(MirDPMSMode mode) override
     {
-        // TODO: We should support this.
-        (void) mode;
+        if (mode == mir_dpms_mode_on)
+            hwc_device->blank_or_unblank_screen(false);
+        else
+            hwc_device->blank_or_unblank_screen(true); // TODO: Be more granular with the standby and suspend settings.
     }
 
 private:
