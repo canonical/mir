@@ -24,6 +24,7 @@
 #include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
+#include "mir_test_framework/testing_client_configuration.h"
 
 #include <memory>
 #include <list>
@@ -37,13 +38,6 @@ class DisplayServer;
 namespace mir_test_framework
 {
 using namespace mir;
-
-struct TestingClientConfiguration
-{
-    virtual ~TestingClientConfiguration() = default;
-    // Code to run in client process
-    virtual void exec() = 0;
-};
 
 
 class TestingProcessManager

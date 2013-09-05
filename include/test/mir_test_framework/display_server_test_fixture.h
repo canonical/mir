@@ -22,6 +22,7 @@
 #include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_process_manager.h"
+#include "mir_test_framework/testing_client_configuration.h"
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -76,6 +77,7 @@ protected:
     virtual void TearDown();
 
 private:
+    std::shared_ptr<mir::options::Option> server_options;
     TestingProcessManager process_manager;
 };
 

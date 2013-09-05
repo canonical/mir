@@ -27,7 +27,7 @@ mtf::TestingServerConfiguration mir_test_framework::DefaultDisplayServerTestFixt
 
 void DefaultDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
-    mtf::setup_client_configuration(default_parameters.the_options());
+    config.set_client_configuration(default_parameters.the_options());
     process_manager.launch_client_process(config);
 }
 
@@ -56,11 +56,13 @@ DefaultDisplayServerTestFixture::~DefaultDisplayServerTestFixture() {}
 
 void BespokeDisplayServerTestFixture::launch_server_process(TestingServerConfiguration& functor)
 {
+    server_options = functor.the_options();
     process_manager.launch_server_process(functor);
 }
 
 void BespokeDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
+    config.set_client_configuration(server_options);
     process_manager.launch_client_process(config);
 }
 

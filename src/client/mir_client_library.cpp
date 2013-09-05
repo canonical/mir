@@ -22,6 +22,7 @@
 #include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_connection.h"
+#include "mir_connection_factory.h"
 #include "display_configuration.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
@@ -37,6 +38,8 @@ namespace mcl = mir::client;
 
 std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
+
+MirConnectionFactory* mir_global_connection_factory = NULL;
 
 namespace
 {
@@ -81,6 +84,21 @@ namespace mir
 {
 namespace client
 {
+
+class DefaultConnectionFactory : public MirConnectionFactory
+{
+public:
+    MirConnection* create_mir_connection(std::string const& socket_file)
+    {
+        mcl::DefaultConnectionConfiguration conf{socket_file};
+        return new MirConnection(conf);
+    }
+
+};
+
+}
+}
+
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
     try
@@ -96,10 +114,18 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
             else
                 sock = mir::default_server_socket;
         }
- 
-        mcl::DefaultConnectionConfiguration conf{sock};
 
-        MirConnection* connection = new MirConnection(conf);
+        MirConnection* connection;
+        if(!mir_global_connection_factory)
+        {
+            mcl::DefaultConnectionFactory connection_factory;
+            connection = connection_factory.create_mir_connection(sock);
+        }
+        else
+        {
+            //debug/test client code is overriding default configuration
+            connection = mir_global_connection_factory->create_mir_connection(sock);
+        }
 
         return connection->connect(name, callback, context);
     }
@@ -127,19 +153,6 @@ void mir_connection_release(MirConnection * connection)
 
     delete connection;
 }
-}
-}
-
-MirClientApiImpl mir_global_api_functions {
-    &mcl::mir_connect,
-    &mcl::mir_connection_release
-};
-MirClientApiImpl* mir_global_api_function_impl = &mir_global_api_functions;
-
-MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
-{
-    return mir_global_api_function_impl->mir_connect(socket_file, name, callback, context);
-}
 
 MirConnection *mir_connect_sync(char const *server, char const *app_name)
 {
@@ -147,11 +160,6 @@ MirConnection *mir_connect_sync(char const *server, char const *app_name)
     mir_wait_for(::mir_connect(server, app_name,
                                reinterpret_cast<mir_connected_callback> (assign_result), &conn));
     return conn;
-}
-
-void mir_connection_release(MirConnection * connection)
-{
-    mir_global_api_function_impl->mir_connection_release(connection);
 }
 
 int mir_connection_is_valid(MirConnection * connection)
