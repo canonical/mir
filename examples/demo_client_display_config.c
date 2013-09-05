@@ -211,7 +211,7 @@ static void event_callback(
         {
             configure_display(ctx, configuration_mode_vertical);
         }
-        else if (event->key.key_code == XKB_KEY_p)
+        else if (event->key.key_code == 25)
         {
             toggle_dpms_between_on_and_off(ctx);
         }
