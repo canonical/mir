@@ -114,28 +114,31 @@ namespace
 // It may well turn out that NativePlatform == Platform - but this keeps them separate for now
 struct NativeAndroidPlatform : mg::NativePlatform
 {
+    void initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* /*fd*/) override
+    {
+    }
+
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::create_buffer_allocator is not implemented yet!"));
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::get_ipc_package is not implemented yet!"));
     }
 
-    std::shared_ptr<mg::InternalClient> create_internal_client()
+    std::shared_ptr<mg::InternalClient> create_internal_client() override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::create_internal_client is not implemented yet!"));
     }
 
     void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& /*packer*/,
-            std::shared_ptr<mg::Buffer> const& /*buffer*/) const
+            std::shared_ptr<mg::Buffer> const& /*buffer*/) const override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::fill_ipc_package is not implemented yet!"));
     }
-
 };
 }
 
