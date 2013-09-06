@@ -40,6 +40,9 @@ mia::InputTargeter::InputTargeter(droidinput::sp<droidinput::InputDispatcherInte
 {
 }
 
+mia::InputTargeter::~InputTargeter() noexcept(true) {}
+
+
 void mia::InputTargeter::focus_cleared()
 {
     droidinput::sp<droidinput::InputWindowHandle> null_window = nullptr;
