@@ -24,7 +24,7 @@ namespace geom = mir::geometry;
 
 void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 {
-    static MirDPMSMode const default_dpms_state = mir_dpms_mode_on;
+    static MirPowerMode const default_power_state = mir_power_mode_on;
 
     conf.for_each_output(
         [&conf](DisplayConfigurationOutput const& conf_output)
@@ -36,12 +36,12 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
                     preferred_mode_index = 0;
 
                 conf.configure_output(conf_output.id, true, geom::Point(),
-                                      preferred_mode_index, default_dpms_state);
+                                      preferred_mode_index, default_power_state);
             }
             else
             {
                 conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                      conf_output.current_mode_index, default_dpms_state);
+                                      conf_output.current_mode_index, default_power_state);
             }
         });
 }

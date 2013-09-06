@@ -257,7 +257,7 @@ typedef struct MirDisplayOutput
     uint32_t physical_width_mm;
     uint32_t physical_height_mm;
     
-    MirDPMSMode dpms_mode;
+    MirPowerMode power_mode;
 } MirDisplayOutput;
 
 typedef struct MirDisplayConfiguration
