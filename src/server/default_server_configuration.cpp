@@ -597,7 +597,6 @@ mir::DefaultServerConfiguration::the_input_configuration()
         else if (options->is_set(nested_mode_opt))
         {
             return std::make_shared<mi::NestedInputConfiguration>(
-                the_host_connection(),
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
