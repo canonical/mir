@@ -19,18 +19,13 @@
 #ifndef MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_
 #define MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_
 
-#include "mir/input/input_configuration.h"
+#include "mir/input/android/dispatcher_input_configuration.h"
 
 namespace mir
 {
 namespace input
 {
-class EventFilter;
-class CursorListener;
-class InputReport;
-class InputRegion;
-
-class NestedInputConfiguration : public InputConfiguration
+class NestedInputConfiguration : public android::DispatcherInputConfiguration
 {
 public:
     NestedInputConfiguration(
@@ -40,16 +35,7 @@ public:
         std::shared_ptr<InputReport> const& input_report);
     virtual ~NestedInputConfiguration();
 
-    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
-    std::shared_ptr<shell::InputTargeter> the_input_targeter();
-    std::shared_ptr<InputManager> the_input_manager();
-    void set_input_targets(std::shared_ptr<InputTargets> const& targets);
-
 private:
-    std::shared_ptr<EventFilter> const event_filter;
-    std::shared_ptr<InputRegion> const input_region;
-    std::shared_ptr<CursorListener> const cursor_listener;
-    std::shared_ptr<InputReport> const input_report;
 };
 }
 }
