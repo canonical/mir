@@ -16,25 +16,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/input/nested_input_configuration.h"
 #include "mir/input/nested_input_relay.h"
 
-#include <boost/exception/all.hpp>
-#include <stdexcept>
+#include <InputDispatcher.h>
 
 namespace mi = mir::input;
 
-mi::NestedInputConfiguration::NestedInputConfiguration(
-    std::shared_ptr<NestedInputRelay> const& input_relay,
-    std::shared_ptr<EventFilter> const& event_filter,
-    std::shared_ptr<InputRegion> const& input_region,
-    std::shared_ptr<CursorListener> const& cursor_listener,
-    std::shared_ptr<InputReport> const& input_report) :
-    android::DispatcherInputConfiguration(event_filter, input_region, cursor_listener, input_report),
-    input_relay(input_relay)
+mi::NestedInputRelay::NestedInputRelay()
 {
 }
 
-mi::NestedInputConfiguration::~NestedInputConfiguration()
+mi::NestedInputRelay::~NestedInputRelay() noexcept
 {
 }
+
+void mi::NestedInputRelay::set_dispatcher(::android::sp<::android::InputDispatcher> const& dispatcher)
+{
+    this->dispatcher = dispatcher;
+}
+
+bool mi::NestedInputRelay::handle(MirEvent const& /*event*/)
+{
+    // TODO
+    return true;
+}
+
+
