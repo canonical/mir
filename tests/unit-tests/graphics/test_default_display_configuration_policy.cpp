@@ -55,7 +55,7 @@ public:
                 geom::Point{geom::X{123}, geom::Y{343}},
                 1,
                 0,
-                mir_dpms_mode_on
+                mir_power_mode_on
             });
         /* Connected without modes */
         outputs.push_back(
@@ -72,7 +72,7 @@ public:
                 geom::Point(),
                 std::numeric_limits<size_t>::max(),
                 std::numeric_limits<size_t>::max(),
-                mir_dpms_mode_on
+                mir_power_mode_on
             });
         /* Connected with a single mode */
         outputs.push_back(
@@ -93,7 +93,7 @@ public:
                 geom::Point(),
                 0,
                 0,
-                mir_dpms_mode_on
+                mir_power_mode_on
             });
         /* Not connected */
         outputs.push_back(
@@ -112,7 +112,7 @@ public:
                 geom::Point(),
                 1,
                 0,
-                mir_dpms_mode_on
+                mir_power_mode_on
             });
     }
 
@@ -128,7 +128,7 @@ public:
     }
 
     MOCK_METHOD5(configure_output, void(mg::DisplayConfigurationOutputId, bool,
-                                        geom::Point, size_t, MirDPMSMode));
+                                        geom::Point, size_t, MirPowerMode));
 
 private:
     mg::DisplayConfigurationCardId const card_id;
@@ -161,7 +161,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
     policy.apply_to(conf);
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_dpms_mode_on)
+TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
 {
     using namespace ::testing;
 
@@ -170,7 +170,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_dpms_mode_on)
 
     conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
     {
-        EXPECT_CALL(conf, configure_output(output.id, _, _, _, mir_dpms_mode_on));
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _, mir_power_mode_on));
     });
 
     policy.apply_to(conf);

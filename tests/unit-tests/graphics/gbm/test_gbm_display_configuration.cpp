@@ -198,7 +198,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             geom::Point(),
             1,
             0,
-            mir_dpms_mode_on
+            mir_power_mode_on
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -213,7 +213,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             geom::Point(),
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
-            mir_dpms_mode_on
+            mir_power_mode_on
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -228,7 +228,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             geom::Point(),
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
-            mir_dpms_mode_on
+            mir_power_mode_on
         }
     };
 
@@ -382,7 +382,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             geom::Point(),
             1,
             0,
-            mir_dpms_mode_on
+            mir_power_mode_on
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -397,7 +397,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             geom::Point(),
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
-            mir_dpms_mode_on
+            mir_power_mode_on
         },
     };
 
@@ -416,7 +416,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             geom::Point(),
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
-            mir_dpms_mode_on
+            mir_power_mode_on
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -431,7 +431,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             geom::Point(),
             1,
             0,
-            mir_dpms_mode_on
+            mir_power_mode_on
         },
     };
 

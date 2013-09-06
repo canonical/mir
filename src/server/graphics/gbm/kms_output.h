@@ -39,7 +39,7 @@ public:
     virtual ~KMSOutput() = default;
 
     virtual void reset() = 0;
-    virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index, MirDPMSMode dpms_mode) = 0;
+    virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index, MirPowerMode power_mode) = 0;
     virtual geometry::Size size() const = 0;
 
     virtual bool set_crtc(uint32_t fb_id) = 0;
