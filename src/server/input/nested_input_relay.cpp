@@ -37,7 +37,19 @@ void mi::NestedInputRelay::set_dispatcher(::android::sp<::android::InputDispatch
 
 bool mi::NestedInputRelay::handle(MirEvent const& /*event*/)
 {
-    // TODO
+    if (dispatcher == nullptr)
+    {
+        return false;
+    }
+
+    // TODO convert event to an InputEvent
+//    dispatcher->injectInputEvent(
+//        const InputEvent* event,
+//        int32_t injectorPid,
+//        int32_t injectorUid,
+//        int32_t syncMode,
+//        int32_t timeoutMillis,
+//        uint32_t policyFlags);
     return true;
 }
 
