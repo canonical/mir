@@ -52,6 +52,9 @@ target_link_libraries(mir_demo_client_progressbar mirclient)
 add_executable(mir_demo_client_display_config demo_client_display_config.c)
 target_link_libraries(mir_demo_client_display_config eglapp)
 
+add_executable(mir_demo_client_egl_image demo_client_egl_image.c)
+target_link_libraries(mir_demo_client_egl_image eglapp ${GBM_LIBRARIES})
+
 add_executable(mir_demo_client_flicker
   flicker.c
 )

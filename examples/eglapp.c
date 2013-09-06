@@ -164,6 +164,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
+    char *mir_socket = NULL;
 
     if (argc > 1)
     {
@@ -225,6 +226,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                         }
                     }
                     break;
+                case 'm':
+                    mir_socket = argv[++i];
+                    break;
                 case 'h':
                 default:
                     help = 1;
@@ -250,7 +254,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         }
     }
 
-    connection = mir_connect_sync(NULL, appname);
+    connection = mir_connect_sync(mir_socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
     /* eglapps are interested in the screen size, so

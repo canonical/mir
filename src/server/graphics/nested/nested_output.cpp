@@ -70,7 +70,8 @@ struct Logger
     char const* const scope;
 };
 
-#define DEBUG_TRACE     Logger log_scope(this, __PRETTY_FUNCTION__)
+//#define DEBUG_TRACE     Logger log_scope(this, __PRETTY_FUNCTION__)
+#define DEBUG_TRACE
 }
 
 mgn::detail::NestedOutput::NestedOutput(
@@ -81,7 +82,7 @@ mgn::detail::NestedOutput::NestedOutput(
     egl_display(egl_display),
     mir_surface{mir_surface},
     egl_config{egl_display.choose_config(egl_attribs)},
-    egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
+    egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), egl_context_attribs)},
     area{area.top_left, area.size},
     event_handler{event_handler},
     egl_surface{EGL_NO_SURFACE}
@@ -100,7 +101,8 @@ geom::Rectangle mgn::detail::NestedOutput::view_area() const
 void mgn::detail::NestedOutput::make_current()
 {
     DEBUG_TRACE;
-    egl_surface = egl_display.egl_surface(egl_config, mir_surface);
+    if (egl_surface == EGL_NO_SURFACE)
+        egl_surface = egl_display.egl_surface(egl_config, mir_surface);
 
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
@@ -118,7 +120,7 @@ void mgn::detail::NestedOutput::post_update()
 {
     DEBUG_TRACE;
     eglSwapBuffers(egl_display, egl_surface);
-    mir_surface_swap_buffers_sync(mir_surface);
+    //mir_surface_swap_buffers_sync(mir_surface);
 }
 
 bool mgn::detail::NestedOutput::can_bypass() const

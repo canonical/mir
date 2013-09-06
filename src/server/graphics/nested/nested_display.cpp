@@ -44,7 +44,7 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
 }
 
-void mgn::detail::EGLDisplayHandle::initialize() const
+void mgn::detail::EGLDisplayHandle::initialize()
 {
     int major;
     int minor;
@@ -53,6 +53,25 @@ void mgn::detail::EGLDisplayHandle::initialize() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
+
+    static const EGLint context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    static const EGLint config_attr[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 0,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    egl_context_ = eglCreateContext(egl_display, choose_config(config_attr), EGL_NO_CONTEXT, context_attr);
+    if (egl_context_ == EGL_NO_CONTEXT)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
 }
 
 EGLConfig mgn::detail::EGLDisplayHandle::choose_config(const EGLint attrib_list[]) const
@@ -80,6 +99,11 @@ EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirS
     return egl_surface;
 }
 
+EGLContext mgn::detail::EGLDisplayHandle::egl_context() const
+{
+    return egl_context_;
+}
+
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 {
     eglTerminate(egl_display);
@@ -96,6 +120,7 @@ mgn::NestedDisplay::NestedDisplay(
     outputs{}
 {
     egl_display.initialize();
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
     configure(*configuration());
 }
 
