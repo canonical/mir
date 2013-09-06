@@ -85,6 +85,9 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
+    if (!mir_eglapp_make_current())
+        return 1;
+
     vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
     fshader = load_shader(fshadersrc, GL_FRAGMENT_SHADER);

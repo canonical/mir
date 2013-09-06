@@ -31,6 +31,9 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
+    if (!mir_eglapp_make_current())
+        return 1;
+
     struct timespec ts =
     {
         0,

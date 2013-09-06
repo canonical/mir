@@ -32,6 +32,8 @@ static MirConnection *connection;
 static MirSurface *surface;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
+static EGLContext eglcontext;
+static EGLConfig eglconfig;
 static volatile sig_atomic_t running = 0;
 
 #define CHECK(_cond, _err) \
@@ -159,11 +161,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         mir_eglapp_handle_input,
         NULL
     };
-    EGLConfig eglconfig;
     EGLint neglconfigs;
-    EGLContext eglctx;
     EGLBoolean ok;
-    EGLint swapinterval = 1;
     char *mir_socket = NULL;
 
     if (argc > 1)
@@ -179,7 +178,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 switch (arg[1])
                 {
                 case 'n':
-                    swapinterval = 0;
+                    //swapinterval = 0;
                     break;
                 case 'o':
                     {
@@ -319,18 +318,37 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             NULL);
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
-    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
+    eglcontext = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
                               ctxattribs);
-    CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
+    CHECK(eglcontext != EGL_NO_CONTEXT, "eglCreateContext shared failed");
 
-    ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
-    CHECK(ok, "Can't eglMakeCurrent");
+    ok = eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, eglcontext);
+    CHECK(ok, "Can't eglMakeCurrent shared");
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
     *width = surfaceparm.width;
     *height = surfaceparm.height;
+    return 1;
+}
+
+mir_eglapp_bool mir_eglapp_make_current()
+{
+    EGLint swapinterval = 1;
+    EGLint ctxattribs[] =
+    {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+    EGLBoolean ok;
+
+    EGLContext eglctx = eglCreateContext(egldisplay, eglconfig, eglcontext,
+                                  ctxattribs);
+    CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
+
+    ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
+    CHECK(ok, "Can't eglMakeCurrent");
 
     eglSwapInterval(egldisplay, swapinterval);
 
