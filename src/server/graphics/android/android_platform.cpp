@@ -30,7 +30,6 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 
-
 #include "mir/graphics/native_platform.h"
 #include "mir/graphics/null_display_report.h"
 #include <boost/throw_exception.hpp>
@@ -117,13 +116,11 @@ namespace
 // It may well turn out that NativePlatform == Platform - but this keeps them separate for now
 struct NativeAndroidPlatform : mg::NativePlatform
 {
-
     NativeAndroidPlatform()
-        : underlying(std::make_shared<mga::AndroidPlatform>(std::make_shared<mg::NullDisplayReport>()))
+        : underlying_android_platform(std::make_shared<mga::AndroidPlatform>(std::make_shared<mg::NullDisplayReport>()))
     {
 
     }
-    std::shared_ptr<mg::Platform> underlying;
 
     void initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* /*fd*/) override
     {
@@ -132,24 +129,27 @@ struct NativeAndroidPlatform : mg::NativePlatform
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& init) override
     {
-        return underlying->create_buffer_allocator(init);
+        return underlying_android_platform->create_buffer_allocator(init);
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
     {
-        return underlying->get_ipc_package();
+        return underlying_android_platform->get_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override
     {
-        return underlying->create_internal_client();
+        return underlying_android_platform->create_internal_client();
     }
 
     void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& packer,
             std::shared_ptr<mg::Buffer> const& buf) const override
     {
-       underlying->fill_ipc_package(packer, buf);
+       underlying_android_platform->fill_ipc_package(packer, buf);
     }
+
+private:
+    std::shared_ptr<mg::Platform> underlying_android_platform;
 };
 }
 
