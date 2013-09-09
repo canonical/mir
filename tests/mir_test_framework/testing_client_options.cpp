@@ -24,7 +24,6 @@
 #include "src/client/client_buffer.h"
 #include "src/client/client_platform.h"
 #include "src/client/mir_connection.h"
-#include "src/client/mir_connection_factory.h"
 
 namespace mcl = mir::client;
 namespace mtf=mir_test_framework;
@@ -124,28 +123,48 @@ struct StubConnectionConfiguration : public mcl::DefaultConnectionConfiguration
     }
 };
 
-class StubConnectionFactory : public MirConnectionFactory
+MirWaitHandle* mir_connect_test_override(
+    char const *socket_file,
+    char const *app_name,
+    mir_connected_callback callback,
+    void *context)
 {
-public:
-    MirConnection* create_mir_connection(std::string const& socket_file)
-    {
-        StubConnectionConfiguration conf(socket_file);
-        return new MirConnection(conf);
-    }
-};
+    StubConnectionConfiguration conf(socket_file);
+    auto connection = new MirConnection(conf);
+    return connection->connect(app_name, callback, context);
+}
 
+void mir_connection_release_override(MirConnection *connection)
+{
+    auto wait_handle = connection->disconnect();
+    wait_handle->wait_for_all();
+    delete connection;
+}
+
+}
+
+mtf::TestingClientConfiguration::TestingClientConfiguration()
+    : default_mir_connect_impl(mir_connect_impl),
+      default_mir_connection_release_impl(mir_connection_release_impl)
+{
+}
+
+void mtf::TestingClientConfiguration::use_default_connect_functions()
+{
+    mir_connect_impl = default_mir_connect_impl;
+    mir_connection_release_impl = default_mir_connection_release_impl;
 }
 
 void mtf::TestingClientConfiguration::set_client_configuration(std::shared_ptr<mir::options::Option> const& options)
 {
     if (!options->get("tests-use-real-graphics", false))
     {
-        connection_factory = std::make_shared<StubConnectionFactory>();
-        mir_global_connection_factory = connection_factory.get();
+        mir_connect_impl = mir_connect_test_override;
+        mir_connection_release_impl = mir_connection_release_override;
     }
 }
 
 mtf::TestingClientConfiguration::~TestingClientConfiguration()
 {
-    mir_global_connection_factory = NULL;
+    use_default_connect_functions();
 }

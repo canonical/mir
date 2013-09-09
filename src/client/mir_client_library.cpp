@@ -22,7 +22,6 @@
 #include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_connection.h"
-#include "mir_connection_factory.h"
 #include "display_configuration.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
@@ -38,8 +37,6 @@ namespace mcl = mir::client;
 
 std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
-
-MirConnectionFactory* mir_global_connection_factory = NULL;
 
 namespace
 {
@@ -78,19 +75,10 @@ void assign_result(void *result, void **context)
         *context = result;
 }
 
-class DefaultConnectionFactory : public MirConnectionFactory
-{
-public:
-    MirConnection* create_mir_connection(std::string const& socket_file)
-    {
-        mcl::DefaultConnectionConfiguration conf{socket_file};
-        return new MirConnection(conf);
-    }
-
-};
 }
 
-MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+MirWaitHandle* mir_default_connect(
+    char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
@@ -107,18 +95,8 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
                 sock = mir::default_server_socket;
         }
 
-        MirConnection* connection;
-        if(!mir_global_connection_factory)
-        {
-            DefaultConnectionFactory connection_factory;
-            connection = connection_factory.create_mir_connection(sock);
-        }
-        else
-        {
-            //debug/test client code is overriding default configuration
-            connection = mir_global_connection_factory->create_mir_connection(sock);
-        }
-
+        mcl::DefaultConnectionConfiguration conf{socket_file};
+        auto connection = new MirConnection(conf);
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
@@ -129,6 +107,39 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         callback(error_connection, context);
         return 0;
     }
+}
+
+
+void mir_default_connection_release(MirConnection * connection)
+{
+    if (!error_connections.contains(connection))
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_all();
+    }
+    else
+    {
+        error_connections.remove(connection);
+    }
+
+    delete connection;
+}
+
+//mir_connect and mir_connection_release can be overridden by test code that sets these function
+//pointers to do things like stub out the graphics drivers or change the connection configuration;
+MirWaitHandle* (*mir_connect_impl)(
+    char const *server, char const *app_name,
+    mir_connected_callback callback, void *context) = mir_default_connect;
+void (*mir_connection_release_impl) (MirConnection *connection) = mir_default_connection_release;
+
+MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+{
+    return mir_connect_impl(socket_file, name, callback, context);
+}
+
+void mir_connection_release(MirConnection *connection)
+{
+    return mir_connection_release_impl(connection);
 }
 
 MirConnection *mir_connect_sync(char const *server,
@@ -150,21 +161,6 @@ int mir_connection_is_valid(MirConnection * connection)
 char const * mir_connection_get_error_message(MirConnection * connection)
 {
     return connection->get_error_message();
-}
-
-void mir_connection_release(MirConnection * connection)
-{
-    if (!error_connections.contains(connection))
-    {
-        auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
-    }
-    else
-    {
-        error_connections.remove(connection);
-    }
-
-    delete connection;
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
