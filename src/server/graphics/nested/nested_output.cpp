@@ -60,7 +60,7 @@ mgn::detail::NestedOutput::NestedOutput(
     egl_config{egl_display.choose_config(egl_attribs)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
     area{area.top_left, area.size},
-    display_egl_surface{egl_display.egl_surface(egl_config, mir_surface)}
+    display_egl_surface{egl_display.create_egl_surface(egl_config, mir_surface)}
 {
 }
 

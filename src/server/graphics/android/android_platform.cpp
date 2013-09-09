@@ -113,6 +113,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 namespace
 {
+// TODO: mg::NativePlatform is not needed. Remove interface and just use mga::AndroidPlatform
 // It may well turn out that NativePlatform == Platform - but this keeps them separate for now
 struct NativeAndroidPlatform : mg::NativePlatform
 {
