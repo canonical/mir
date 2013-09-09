@@ -60,7 +60,7 @@ mgn::detail::NestedOutput::NestedOutput(
     egl_config{egl_display.choose_config(egl_attribs)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
     area{area.top_left, area.size},
-    egl_surface{EGL_NO_SURFACE}
+    display_egl_surface{egl_display.egl_surface(egl_config, mir_surface)}
 {
 }
 
@@ -71,22 +71,18 @@ geom::Rectangle mgn::detail::NestedOutput::view_area() const
 
 void mgn::detail::NestedOutput::make_current()
 {
-    egl_surface = egl_display.egl_surface(egl_config, mir_surface);
-
-    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
+    if (eglMakeCurrent(egl_display, *display_egl_surface, *display_egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
 }
 
 void mgn::detail::NestedOutput::release_current()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface(egl_display, egl_surface);
-    egl_surface = EGL_NO_SURFACE;
 }
 
 void mgn::detail::NestedOutput::post_update()
 {
-    mir_surface_swap_buffers_sync(mir_surface);
+    eglSwapBuffers(egl_display, *display_egl_surface);
 }
 
 bool mgn::detail::NestedOutput::can_bypass() const
@@ -94,12 +90,3 @@ bool mgn::detail::NestedOutput::can_bypass() const
     // TODO we really should return "true" - but we need to support bypass properly then
     return false;
 }
-
-
-mgn::detail::NestedOutput::~NestedOutput() noexcept
-{
-    if (egl_surface != EGL_NO_SURFACE)
-        eglDestroySurface(egl_display, egl_surface);
-}
-
-

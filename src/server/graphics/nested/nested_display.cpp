@@ -36,9 +36,6 @@ namespace geom = mir::geometry;
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
     auto const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
-    if (!native_display)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native display."));
-
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
@@ -67,17 +64,14 @@ EGLConfig mgn::detail::EGLDisplayHandle::choose_config(const EGLint attrib_list[
     return result;
 }
 
-EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const
+std::shared_ptr<mgn::detail::EGLSurfaceHandle> mgn::detail::EGLDisplayHandle::egl_surface(
+    EGLConfig egl_config, MirSurface* mir_surface) const
 {
     auto const native_window = static_cast<EGLNativeWindowType>(mir_surface_get_egl_native_window(mir_surface));
     if (!native_window)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
 
-    EGLSurface egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
-    if (egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
-
-    return egl_surface;
+    return std::make_shared<EGLSurfaceHandle>(egl_display, native_window, egl_config);
 }
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept

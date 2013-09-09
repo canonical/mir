@@ -30,6 +30,11 @@
 
 #include <unordered_map>
 
+
+//TODO:remove
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mir
 {
 namespace geometry
@@ -45,6 +50,32 @@ namespace nested
 {
 namespace detail
 {
+
+class EGLSurfaceHandle
+{
+public:
+    explicit EGLSurfaceHandle(EGLDisplay display, EGLNativeWindowType native_window, EGLConfig cfg)
+        : egl_display(display),
+          egl_surface(eglCreateWindowSurface(egl_display, cfg, native_window, NULL))
+    {
+        if (egl_surface == EGL_NO_SURFACE)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
+        }
+    }
+
+    ~EGLSurfaceHandle() noexcept
+    {
+        eglDestroySurface(egl_display, egl_surface);
+    }
+
+    operator EGLSurface() const { return egl_surface; }
+
+private:
+    EGLDisplay const egl_display;
+    EGLSurface const egl_surface;
+};
+
 class EGLDisplayHandle
 {
 public:
@@ -53,7 +84,7 @@ public:
 
     void initialize() const;
     EGLConfig choose_config(const EGLint attrib_list[]) const;
-    EGLSurface egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const;
+    std::shared_ptr<EGLSurfaceHandle> egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const;
 
     operator EGLDisplay() const { return egl_display; }
 
