@@ -640,6 +640,6 @@ TYPED_TEST(AndroidTestFramebufferInit, android_display_configure_output)
 
     mg::DisplayConfigurationOutputId id{0};
     EXPECT_THROW({
-        config->configure_output(id, true, geom::Point{0,0}, 0);
+        config->configure_output(id, true, geom::Point{0,0}, 0, mir_power_mode_on);
     }, std::runtime_error);
 }
