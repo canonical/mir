@@ -61,7 +61,7 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-struct StubConfig : public mtd::NullDisplayConfig
+struct StubConfig : public mtd::NullDisplayConfiguration
 {
     StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
        : outputs{conf, conf}
