@@ -78,7 +78,7 @@ void assign_result(void *result, void **context)
 }
 
 MirWaitHandle* mir_default_connect(
-    char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+    char const* sock, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
@@ -95,8 +95,10 @@ MirWaitHandle* mir_default_connect(
                 sock = mir::default_server_socket;
         }
 
-        mcl::DefaultConnectionConfiguration conf{socket_file};
-        auto connection = new MirConnection(conf);
+        mcl::DefaultConnectionConfiguration conf{sock};
+
+        MirConnection* connection = new MirConnection(conf);
+
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
@@ -126,7 +128,7 @@ void mir_default_connection_release(MirConnection * connection)
 }
 
 //mir_connect and mir_connection_release can be overridden by test code that sets these function
-//pointers to do things like stub out the graphics drivers or change the connection configuration;
+//pointers to do things like stub out the graphics drivers or change the connection configuration
 MirWaitHandle* (*mir_connect_impl)(
     char const *server, char const *app_name,
     mir_connected_callback callback, void *context) = mir_default_connect;
