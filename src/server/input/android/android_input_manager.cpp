@@ -21,13 +21,8 @@
 #include "android_input_constants.h"
 #include "android_input_thread.h"
 #include "android_input_channel.h"
-#include "mir/input/android/default_android_input_configuration.h"
 
 #include <EventHub.h>
-#include <InputDispatcher.h>
-
-#include <memory>
-#include <vector>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -36,10 +31,9 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> co
     droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
     std::shared_ptr<InputThread> const& reader_thread,
     std::shared_ptr<InputThread> const& dispatcher_thread)
-  : event_hub(event_hub),
-    dispatcher(dispatcher),
-    reader_thread(reader_thread),
-    dispatcher_thread(dispatcher_thread)
+  : InputDispatcherManager(dispatcher, dispatcher_thread),
+    event_hub(event_hub),
+    reader_thread(reader_thread)
 {
 }
 
@@ -49,9 +43,7 @@ mia::InputManager::~InputManager()
 
 void mia::InputManager::stop()
 {
-    dispatcher_thread->request_stop();
-    dispatcher->setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen);
-    dispatcher_thread->join();
+    InputDispatcherManager::stop();
 
     reader_thread->request_stop();
     event_hub->wake();
@@ -60,15 +52,8 @@ void mia::InputManager::stop()
 
 void mia::InputManager::start()
 {
-    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
-    dispatcher->setInputFilterEnabled(true);
     event_hub->flush();
-
     reader_thread->start();
-    dispatcher_thread->start();
-}
 
-std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel()
-{
-    return std::make_shared<mia::AndroidInputChannel>();
+    InputDispatcherManager::start();
 }
