@@ -29,6 +29,8 @@ namespace nested
 {
 namespace detail
 {
+
+class EGLSurfaceHandle;
 class MirSurfaceHandle
 {
 public:
@@ -53,7 +55,7 @@ public:
         MirSurface* mir_surface,
         geometry::Rectangle const& area);
 
-    ~NestedOutput() noexcept;
+    ~NestedOutput() = default;
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -70,7 +72,7 @@ private:
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
 
-    EGLSurface egl_surface;
+    std::shared_ptr<EGLSurfaceHandle> const display_egl_surface;
 };
 
 extern EGLint const egl_attribs[];

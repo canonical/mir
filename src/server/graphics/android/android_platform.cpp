@@ -31,6 +31,7 @@
 #include "mir/options/option.h"
 
 #include "mir/graphics/native_platform.h"
+#include "mir/graphics/null_display_report.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -111,34 +112,44 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 namespace
 {
+// TODO: mg::NativePlatform is not needed. Remove interface and just use mga::AndroidPlatform
 // It may well turn out that NativePlatform == Platform - but this keeps them separate for now
 struct NativeAndroidPlatform : mg::NativePlatform
 {
+    NativeAndroidPlatform()
+        : underlying_android_platform(std::make_shared<mga::AndroidPlatform>(std::make_shared<mg::NullDisplayReport>()))
+    {
+
+    }
+
     void initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* /*fd*/) override
     {
     }
 
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+        std::shared_ptr<mg::BufferInitializer> const& init) override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::create_buffer_allocator is not implemented yet!"));
+        return underlying_android_platform->create_buffer_allocator(init);
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::get_ipc_package is not implemented yet!"));
+        return underlying_android_platform->get_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::create_internal_client is not implemented yet!"));
+        return underlying_android_platform->create_internal_client();
     }
 
-    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& /*packer*/,
-            std::shared_ptr<mg::Buffer> const& /*buffer*/) const override
+    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& packer,
+            std::shared_ptr<mg::Buffer> const& buf) const override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::fill_ipc_package is not implemented yet!"));
+       underlying_android_platform->fill_ipc_package(packer, buf);
     }
+
+private:
+    std::shared_ptr<mg::Platform> underlying_android_platform;
 };
 }
 
