@@ -51,7 +51,7 @@ bool mi::NestedInputRelay::handle(MirEvent const& event)
     static auto const injector_uid = 0;
     static auto const sync_mode = ::android::INPUT_EVENT_INJECTION_SYNC_NONE;
     static auto const timeout_millis = 0;
-    static auto const policy_flags = ::android::POLICY_FLAG_INJECTED || ::android::POLICY_FLAG_TRUSTED;
+    static auto const policy_flags = ::android::POLICY_FLAG_INJECTED | ::android::POLICY_FLAG_TRUSTED;
 
     switch (event.type)
     {
