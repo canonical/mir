@@ -74,24 +74,26 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
     }
 }
 
-mga::HWCFBLayer::HWCFBLayer()
-    : HWCFBLayer(nullptr, HWCRect{})
-{
-}
 
 mga::HWCFBLayer::HWCFBLayer(
         buffer_handle_t native_handle,
-        HWCRect& display_frame_rect)
+        HWCRect display_frame_rect)
     : HWCDefaultLayer{display_frame_rect}
 {
-    self.compositionType = HWC_FRAMEBUFFER_TARGET;
-    self.handle = native_handle;
+    self.compositionType = HWC_FRAMEBUFFER;
 
+    self.handle = native_handle;
     self.sourceCrop = display_frame_rect;
     self.displayFrame = display_frame_rect;
 }
 
+mga::HWCFBLayer::HWCFBLayer()
+    : HWCFBLayer{nullptr, mga::HWCRect{}}
+{
+}
+
 mga::HWCLayerList::HWCLayerList()
+    : layer_list{std::make_shared<HWCFBLayer>()}
 {
 }
 
@@ -108,13 +110,6 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
     geom::Rectangle rect{pt, buffer->size()};
     HWCRect display_rect(rect);
 
-    auto fb_layer = std::make_shared<HWCFBLayer>(handle, display_rect);
-    if (layer_list.empty())
-    {
-        layer_list.push_back(fb_layer);
-    }
-    else
-    {
-        layer_list[0] = fb_layer;
-    }
+    auto fb_layer = std::make_shared<HWCFBLayer>(handle->handle, display_rect);
+    layer_list[fb_position] = fb_layer;
 } 

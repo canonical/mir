@@ -80,16 +80,6 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
 }
 
-TEST_F(HWCLayerListTest, default_list)
-{
-    using namespace testing;
-
-    mga::HWCLayerList layerlist;
-
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(0u, list.size());
-}
-
 TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
 {
     using namespace testing;

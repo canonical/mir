@@ -64,8 +64,8 @@ protected:
 struct HWCFBLayer : public HWCDefaultLayer
 {
     HWCFBLayer();
-    HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
-               HWCRect& display_frame_rect);
+    HWCFBLayer(buffer_handle_t native_buf,
+               HWCRect display_frame_rect);
 };
 
 class HWCLayerOrganizer
@@ -92,6 +92,8 @@ public:
 
 private:
     LayerList layer_list;
+
+    static size_t const fb_position = 0u;
 };
 
 }
