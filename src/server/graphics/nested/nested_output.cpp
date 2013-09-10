@@ -115,21 +115,15 @@ catch (std::exception const&)
 
 void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
 {
-    switch (event.type)
-    {
-    case mir_event_type_key:
-        event_handler->handle(event);
-        break;
-    case mir_event_type_motion:
+    if (event.type == mir_event_type_motion)
     {
         auto my_event = event;
         my_event.motion.x_offset += area.top_left.x.as_float();
         my_event.motion.y_offset += area.top_left.y.as_float();
         event_handler->handle(my_event);
-        break;
     }
-    case mir_event_type_surface:
-        // TODO Surface attributes shouldn't be changing. So what do we do if they do?
-        break;
+    else
+    {
+        event_handler->handle(event);
     }
 }
