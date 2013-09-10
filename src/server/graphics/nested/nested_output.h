@@ -29,6 +29,8 @@ namespace nested
 {
 namespace detail
 {
+
+class EGLSurfaceHandle;
 class MirSurfaceHandle
 {
 public:
@@ -71,8 +73,7 @@ private:
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
     std::shared_ptr<input::EventFilter> const event_handler;
-
-    EGLSurface egl_surface;
+    std::shared_ptr<EGLSurfaceHandle> const display_egl_surface;
 
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);

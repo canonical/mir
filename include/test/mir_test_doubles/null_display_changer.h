@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
 #include "mir/frontend/display_changer.h"
-#include "null_display_config.h"
+#include "null_display_configuration.h"
 
 namespace mir
 {
@@ -34,7 +34,7 @@ class NullDisplayChanger : public frontend::DisplayChanger
 public:
     virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
     {
-        return std::make_shared<NullDisplayConfig>();
+        return std::make_shared<NullDisplayConfiguration>();
     }
     virtual void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
     {
