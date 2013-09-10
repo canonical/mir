@@ -87,17 +87,10 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& b
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
-    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
-    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
-    }
-
     auto& list = layer_organizer->native_list();
-
     auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size());
     auto hwc_display_raw = static_cast<hwc_display_contents_1_t*>( ::operator new( struct_size));
-    auto hwc_display = std::unique_ptr<hwc_display_contents_1_t>(hwc_display_raw); 
+    auto hwc_display = std::unique_ptr<hwc_display_contents_1_t>(hwc_display_raw);
 
     auto i = 0u;
     for( auto& layer : list)
@@ -107,7 +100,28 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     hwc_display->numHwLayers = list.size();
     hwc_display->retireFenceFd = -1;
 
-    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display_raw);
+    auto rc = hwc_device->prepare(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display_raw);
+    if (rc != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+    }
+
+    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
+    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
+    }
+
+    auto& l = layer_organizer->native_list();
+    i = 0u;
+    for( auto& layer : l)
+    {
+        hwc_display->hwLayers[i++] = *layer;
+    }
+    hwc_display->numHwLayers = list.size();
+    hwc_display->retireFenceFd = -1;
+
+    rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display_raw);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
