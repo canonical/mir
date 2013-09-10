@@ -78,7 +78,7 @@ void assign_result(void *result, void **context)
 }
 
 MirWaitHandle* mir_default_connect(
-    char const* sock, char const* name, mir_connected_callback callback, void * context)
+    char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
