@@ -149,6 +149,11 @@ TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set_vsync)
     //the order here is very important. eglSwapBuffers will alter the layerlist,
     //so it must come before assembling the data for set
     InSequence seq;
+    EXPECT_CALL(*mock_organizer, native_list())
+        .Times(1)
+        .WillOnce(ReturnRef(fb_list));
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
+        .Times(1);
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(1);
     EXPECT_CALL(*mock_organizer, native_list())
@@ -161,6 +166,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set_vsync)
 
     device.commit_frame(dpy, surf);
 
+    EXPECT_EQ(fb_list.size(), mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(fb_list.size(), mock_device->display0_set_content.numHwLayers);
 }
 
