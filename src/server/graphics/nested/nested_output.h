@@ -53,9 +53,10 @@ public:
     NestedOutput(
         EGLDisplayHandle const& egl_display,
         MirSurface* mir_surface,
-        geometry::Rectangle const& area);
+        geometry::Rectangle const& area,
+        std::shared_ptr<input::EventFilter> const& event_handler);
 
-    ~NestedOutput() = default;
+    ~NestedOutput() noexcept;
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -71,8 +72,11 @@ private:
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
-
+    std::shared_ptr<input::EventFilter> const event_handler;
     std::shared_ptr<EGLSurfaceHandle> const display_egl_surface;
+
+    static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
+    void mir_event(MirEvent const& event);
 };
 
 extern EGLint const egl_attribs[];

@@ -25,6 +25,7 @@
 
 namespace mir
 {
+namespace input { class EventFilter; }
 namespace graphics
 {
 namespace nested
@@ -33,9 +34,11 @@ namespace nested
 class NestedPlatform : public Platform
 {
 public:
-    NestedPlatform(std::shared_ptr<HostConnection> const& connection,
-                   std::shared_ptr<DisplayReport> const& display_report,
-                   std::shared_ptr<NativePlatform> const& native_platform);
+    NestedPlatform(
+        std::shared_ptr<HostConnection> const& connection,
+        std::shared_ptr<input::EventFilter> const& event_handler,
+        std::shared_ptr<DisplayReport> const& display_report,
+        std::shared_ptr<NativePlatform> const& native_platform);
 
     ~NestedPlatform() noexcept;
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
@@ -49,6 +52,7 @@ public:
 
 private:
     std::shared_ptr<NativePlatform> const native_platform;
+    std::shared_ptr<input::EventFilter> const event_handler;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<HostConnection> const connection;
 };

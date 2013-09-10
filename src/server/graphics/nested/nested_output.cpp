@@ -17,6 +17,7 @@
  */
 
 #include "nested_output.h"
+#include "mir/input/event_filter.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -54,14 +55,18 @@ EGLint const mgn::detail::egl_context_attribs[] = {
 mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
-    geometry::Rectangle const& area) :
+    geometry::Rectangle const& area,
+    std::shared_ptr<input::EventFilter> const& event_handler) :
     egl_display(egl_display),
     mir_surface{mir_surface},
     egl_config{egl_display.choose_config(egl_attribs)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
     area{area.top_left, area.size},
+    event_handler{event_handler},
     display_egl_surface{egl_display.create_egl_surface(egl_config, mir_surface)}
 {
+    MirEventDelegate ed = {event_thunk, this};
+    mir_surface_set_event_handler(mir_surface, &ed);
 }
 
 geom::Rectangle mgn::detail::NestedOutput::view_area() const
@@ -89,4 +94,36 @@ bool mgn::detail::NestedOutput::can_bypass() const
 {
     // TODO we really should return "true" - but we need to support bypass properly then
     return false;
+}
+
+mgn::detail::NestedOutput::~NestedOutput() noexcept
+{
+}
+
+void mgn::detail::NestedOutput::event_thunk(
+    MirSurface* /*surface*/,
+    MirEvent const* event,
+    void* context)
+try
+{
+    static_cast<mgn::detail::NestedOutput*>(context)->mir_event(*event);
+}
+catch (std::exception const&)
+{
+    // Just in case: do not allow exceptions to propagate.
+}
+
+void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
+{
+    if (event.type == mir_event_type_motion)
+    {
+        auto my_event = event;
+        my_event.motion.x_offset += area.top_left.x.as_float();
+        my_event.motion.y_offset += area.top_left.y.as_float();
+        event_handler->handle(my_event);
+    }
+    else
+    {
+        event_handler->handle(event);
+    }
 }

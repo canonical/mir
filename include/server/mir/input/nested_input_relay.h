@@ -16,32 +16,34 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_
+#ifndef MIR_INPUT_NESTED_INPUT_RELAY_H_
+#define MIR_INPUT_NESTED_INPUT_RELAY_H_
 
-#include "mir/input/android/dispatcher_input_configuration.h"
+#include "mir/input/event_filter.h"
+
+#include <utils/StrongPointer.h>
+
+namespace android { class InputDispatcher; }
 
 namespace mir
 {
 namespace input
 {
-class NestedInputRelay;
-
-class NestedInputConfiguration : public android::DispatcherInputConfiguration
+class NestedInputRelay : public EventFilter
 {
 public:
-    NestedInputConfiguration(
-        std::shared_ptr<NestedInputRelay> const& input_relay,
-        std::shared_ptr<EventFilter> const& event_filter,
-        std::shared_ptr<InputRegion> const& input_region,
-        std::shared_ptr<CursorListener> const& cursor_listener,
-        std::shared_ptr<InputReport> const& input_report);
-    virtual ~NestedInputConfiguration();
+    NestedInputRelay();
+    ~NestedInputRelay() noexcept;
+
+    void set_dispatcher(::android::sp<::android::InputDispatcher> const& dispatcher);
 
 private:
-    std::shared_ptr<NestedInputRelay> const input_relay;
+    bool handle(MirEvent const& event);
+
+    ::android::sp<::android::InputDispatcher> dispatcher;
 };
 }
 }
 
-#endif /* MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_ */
+
+#endif /* MIR_INPUT_NESTED_INPUT_RELAY_H_ */
