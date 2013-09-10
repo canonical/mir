@@ -74,6 +74,12 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
     }
 }
 
+mga::HWCFBLayer::HWCFBLayer()
+    : HWCFBLayer()
+{
+
+}
+
 mga::HWCFBLayer::HWCFBLayer(
         std::shared_ptr<ANativeWindowBuffer> const& native_buf,
         HWCRect& display_frame_rect)

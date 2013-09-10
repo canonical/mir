@@ -115,6 +115,18 @@ TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
     EXPECT_THAT(target_layer.visibleRegionScreen.rects[0], MatchesRect( expected_visible, "visible"));
 }
 
+TEST_F(HWCLayerListTest, fb_target)
+{
+    using namespace testing;
+
+    mga::HWCLayerList layerlist;
+
+    auto list = layerlist.native_list(); 
+    ASSERT_EQ(1u, list.size());
+    hwc_layer_1 target_layer = *list[0];
+    EXPECT_EQ(nullptr, target_layer.handle); 
+}
+
 TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
 {
     using namespace testing;

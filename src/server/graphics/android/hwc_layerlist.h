@@ -63,6 +63,7 @@ protected:
 
 struct HWCFBLayer : public HWCDefaultLayer
 {
+    HWCFBLayer();
     HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
                HWCRect& display_frame_rect);
 };
