@@ -180,7 +180,7 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
     hwc_region_t region {1, nullptr};
 
     hwc_layer_1 expected_layer;
-    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.hints = 0;
     expected_layer.flags = 0;
     expected_layer.handle = stub_handle_1->handle;

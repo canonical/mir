@@ -75,18 +75,17 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
 }
 
 mga::HWCFBLayer::HWCFBLayer()
-    : HWCFBLayer()
+    : HWCFBLayer(nullptr, HWCRect{})
 {
-
 }
 
 mga::HWCFBLayer::HWCFBLayer(
-        std::shared_ptr<ANativeWindowBuffer> const& native_buf,
+        buffer_handle_t native_handle,
         HWCRect& display_frame_rect)
     : HWCDefaultLayer{display_frame_rect}
 {
     self.compositionType = HWC_FRAMEBUFFER_TARGET;
-    self.handle = native_buf->handle;
+    self.handle = native_handle;
 
     self.sourceCrop = display_frame_rect;
     self.displayFrame = display_frame_rect;
