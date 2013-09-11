@@ -43,6 +43,7 @@ public:
     void pack_fd(int);
     void pack_data(int);
     void pack_stride(geometry::Stride);
+    void pack_flags(unsigned int);
 private:
     protobuf::Buffer* buffer_response;
 };

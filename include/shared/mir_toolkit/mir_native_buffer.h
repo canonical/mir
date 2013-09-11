@@ -21,6 +21,12 @@
 #define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
 enum { mir_buffer_package_max = 32 };
+
+typedef enum
+{
+    mir_buffer_flag_canscanout = 1
+} MirBufferFlag;
+
 typedef struct MirBufferPackage
 {
     int data_items;
@@ -33,6 +39,8 @@ typedef struct MirBufferPackage
     int age; /**< Number of frames submitted by the client since the client has rendered to this buffer. */
              /**< This has the same semantics as the EGL_EXT_buffer_age extension */
              /**< \see http://www.khronos.org/registry/egl/extensions/EXT/EGL_EXT_buffer_age.txt */
+
+    unsigned int flags;  /* MirBufferFlag's */
 } MirBufferPackage;
 
 #ifdef ANDROID
