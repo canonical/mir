@@ -213,6 +213,15 @@ TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
+    auto min_buffers = interpreter.driver_requests_info(NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS);
+    EXPECT_EQ(min_buffers, 1);
+}
+
+TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
+{
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
+
     auto width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
 
     EXPECT_EQ(surf_params.width, width);

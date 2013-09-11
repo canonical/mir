@@ -66,6 +66,7 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0;
         default:
+            printf("BAD %i\n", key);
             throw std::runtime_error("driver requested unsupported query");
     }
 }
