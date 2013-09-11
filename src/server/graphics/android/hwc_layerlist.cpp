@@ -97,6 +97,7 @@ mga::LayerList::LayerList()
       hwc_representation{std::make_shared<hwc_display_contents_1_t>()}
 {
     memset(hwc_representation.get(), 0, sizeof(hwc_display_contents_1_t));
+    update_list();
 }
 
 void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
@@ -109,6 +110,8 @@ void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
 
     auto fb_layer = std::make_shared<HWCFBLayer>(handle->handle, display_rect);
     layer_list[fb_position] = fb_layer;
+
+    update_list();
 } 
 
 void mga::LayerList::update_list()
@@ -116,7 +119,7 @@ void mga::LayerList::update_list()
     if (layer_list.size() != hwc_representation->numHwLayers)
     {
         auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
-        auto hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+        hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
             static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
 
         hwc_representation->numHwLayers = layer_list.size();
