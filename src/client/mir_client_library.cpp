@@ -128,7 +128,10 @@ void mir_default_connection_release(MirConnection * connection)
 }
 
 //mir_connect and mir_connection_release can be overridden by test code that sets these function
-//pointers to do things like stub out the graphics drivers or change the connection configuration
+//pointers to do things like stub out the graphics drivers or change the connection configuration.
+
+//TODO: we could have a more comprehensive solution that allows us to substitute any of the functions
+//for test purposes, not just the connect functions
 MirWaitHandle* (*mir_connect_impl)(
     char const *server, char const *app_name,
     mir_connected_callback callback, void *context) = mir_default_connect;

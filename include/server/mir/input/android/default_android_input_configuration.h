@@ -47,12 +47,14 @@ protected:
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
 
 private:
+    droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() override;
 
     CachedPtr<InputThread> reader_thread;
 
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;
     CachedAndroidPtr<droidinput::InputReaderInterface> reader;
+    CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
 };
 }
 }

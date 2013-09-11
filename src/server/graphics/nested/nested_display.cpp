@@ -33,12 +33,24 @@ namespace mgn = mir::graphics::nested;
 namespace mgnw = mir::graphics::nested::mir_api_wrappers;
 namespace geom = mir::geometry;
 
+mgn::detail::EGLSurfaceHandle::EGLSurfaceHandle(EGLDisplay display, EGLNativeWindowType native_window, EGLConfig cfg)
+    : egl_display(display),
+      egl_surface(eglCreateWindowSurface(egl_display, cfg, native_window, NULL))
+{
+    if (egl_surface == EGL_NO_SURFACE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
+    }
+}
+
+mgn::detail::EGLSurfaceHandle::~EGLSurfaceHandle() noexcept
+{
+    eglDestroySurface(egl_display, egl_surface);
+}
+
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
     auto const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
-    if (!native_display)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native display."));
-
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
@@ -67,17 +79,14 @@ EGLConfig mgn::detail::EGLDisplayHandle::choose_config(const EGLint attrib_list[
     return result;
 }
 
-EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const
+std::shared_ptr<mgn::detail::EGLSurfaceHandle> mgn::detail::EGLDisplayHandle::create_egl_surface(
+    EGLConfig egl_config, MirSurface* mir_surface) const
 {
     auto const native_window = static_cast<EGLNativeWindowType>(mir_surface_get_egl_native_window(mir_surface));
     if (!native_window)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
 
-    EGLSurface egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
-    if (egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
-
-    return egl_surface;
+    return std::make_shared<EGLSurfaceHandle>(egl_display, native_window, egl_config);
 }
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
@@ -85,8 +94,12 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
     eglTerminate(egl_display);
 }
 
-mgn::NestedDisplay::NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
+mgn::NestedDisplay::NestedDisplay(
+    std::shared_ptr<HostConnection> const& connection,
+    std::shared_ptr<input::EventFilter> const& event_handler,
+    std::shared_ptr<mg::DisplayReport> const& display_report) :
     connection{connection},
+    event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
     outputs{}
@@ -142,7 +155,11 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                 if (!mir_surface_is_valid(mir_surface))
                     BOOST_THROW_EXCEPTION(std::runtime_error(mir_surface_get_error_message(mir_surface)));
 
-                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(egl_display, mir_surface, area);
+                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(
+                    egl_display,
+                    mir_surface,
+                    area,
+                    event_handler);
             }
         });
 

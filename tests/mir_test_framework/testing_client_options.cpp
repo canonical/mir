@@ -39,7 +39,6 @@ extern MirWaitHandle* (*mir_connect_impl)(
     void *context);
 extern void (*mir_connection_release_impl) (MirConnection *connection);
 
-
 namespace
 {
 class StubClientBuffer : public mcl::ClientBuffer
@@ -103,13 +102,14 @@ struct StubClientPlatform : public mcl::ClientPlatform
 
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface*)
     {
-        return std::make_shared<EGLNativeWindowType>();
+        auto fake_window = reinterpret_cast<EGLNativeWindowType>(0x12345678);
+        return std::make_shared<EGLNativeWindowType>(fake_window);
     }
 
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
-        auto fake_window = reinterpret_cast<EGLNativeDisplayType>(0x12345678);
-        return std::make_shared<EGLNativeDisplayType>(fake_window);
+        auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678);
+        return std::make_shared<EGLNativeDisplayType>(fake_display);
     }
 };
 

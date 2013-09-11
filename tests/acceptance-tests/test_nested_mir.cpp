@@ -196,7 +196,7 @@ TEST_F(TestNestedMir, DISABLED_ON_ANDROID(nested_platform_connects_and_disconnec
 
     MyHostServerConfiguration host_config;
     ClientConfig<NestedServerConfiguration> client_config(host_config.the_socket_file());
-
+    client_config.use_default_connect_functions();
 
     launch_server_process(host_config);
     launch_client_process(client_config);
