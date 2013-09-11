@@ -150,9 +150,11 @@ public:
     void post_update() override
     {
         std::unique_lock<std::mutex> lg(mutex);
+        
+        while (!blanked)
+            cond.wait(lg);
 
-        if (!blanked)
-            hwc_device->commit_frame(egl_display, egl_surface);
+        hwc_device->commit_frame(egl_display, egl_surface);
     }
 
     void set_power_mode(MirPowerMode mode) override
