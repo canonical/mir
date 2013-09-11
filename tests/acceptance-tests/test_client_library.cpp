@@ -456,6 +456,77 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
     launch_client_process(client_config);
 }
 
+#ifndef ANDROID
+TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters parm =
+            {
+                __PRETTY_FUNCTION__,
+                1280, 1024,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            surface = mir_connection_create_surface_sync(connection, &parm);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+            MirNativeBuffer *native;
+            mir_surface_get_current_buffer(surface, &native);
+            EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_swap_buffers_sync(surface);
+            EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_release_sync(surface);
+
+            parm.width = 100;
+            parm.height = 100;
+
+            surface = mir_connection_create_surface_sync(connection, &parm);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+            mir_surface_get_current_buffer(surface, &native);
+            EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_swap_buffers_sync(surface);
+            EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_release_sync(surface);
+
+            parm.width = 800;
+            parm.height = 600;
+            parm.buffer_usage = mir_buffer_usage_software;
+
+            surface = mir_connection_create_surface_sync(connection, &parm);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+            mir_surface_get_current_buffer(surface, &native);
+            EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_swap_buffers_sync(surface);
+            EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_release_sync(surface);
+
+            parm.buffer_usage = mir_buffer_usage_hardware;
+
+            surface = mir_connection_create_surface_sync(connection, &parm);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+            mir_surface_get_current_buffer(surface, &native);
+            EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_swap_buffers_sync(surface);
+            EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
+            mir_surface_release_sync(surface);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+#endif
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
