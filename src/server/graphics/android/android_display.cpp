@@ -64,7 +64,7 @@ public:
                         true,
                         true,
                         geom::Point{0,0},
-                        0, 0, mir_dpms_mode_on},
+                        0, 0, mir_power_mode_on},
           card{mg::DisplayConfigurationCardId{0}, 1}
     {
     }
@@ -79,9 +79,9 @@ public:
         f(configuration);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirDPMSMode dpms_mode)
+    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode power_mode)
     {
-        configuration.dpms_mode = dpms_mode;
+        configuration.power_mode = power_mode;
     }
 
 private:
@@ -193,7 +193,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
 {
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
-        display_buffer->set_power_mode(output.dpms_mode);
+        display_buffer->set_power_mode(output.power_mode);
     });
 }
 

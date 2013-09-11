@@ -51,7 +51,7 @@ public:
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
     
-    virtual void set_power_mode(MirDPMSMode mode) = 0;
+    virtual void set_power_mode(MirPowerMode mode) = 0;
 
 protected:
     DisplayBuffer() = default;

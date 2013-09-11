@@ -63,6 +63,7 @@
 #include "mir/input/null_input_report.h"
 #include "mir/input/display_input_region.h"
 #include "mir/input/event_filter_chain.h"
+#include "mir/input/nested_input_relay.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/input_manager.h"
@@ -345,7 +346,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
 
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(the_host_connection(), the_display_report(), create_native_platform());
+            return std::make_shared<mir::graphics::nested::NestedPlatform>(
+                the_host_connection(),
+                the_nested_input_relay(),
+                the_display_report(),
+                create_native_platform(the_display_report()));
         });
 }
 
@@ -593,7 +598,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         else if (options->is_set(nested_mode_opt))
         {
             return std::make_shared<mi::NestedInputConfiguration>(
-                the_host_connection(),
+                the_nested_input_relay(),
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -957,6 +962,12 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                 BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
             }
         });
+}
+
+auto mir::DefaultServerConfiguration::the_nested_input_relay()
+-> std::shared_ptr<mi::NestedInputRelay>
+{
+    return nested_input_relay([]{ return std::make_shared<mi::NestedInputRelay>(); });
 }
 
 

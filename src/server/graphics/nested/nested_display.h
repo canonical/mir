@@ -32,6 +32,7 @@
 
 namespace mir
 {
+namespace input { class EventFilter; }
 namespace geometry
 {
 struct Rectangle;
@@ -45,6 +46,20 @@ namespace nested
 {
 namespace detail
 {
+
+class EGLSurfaceHandle
+{
+public:
+    explicit EGLSurfaceHandle(EGLDisplay display, EGLNativeWindowType native_window, EGLConfig cfg);
+    ~EGLSurfaceHandle() noexcept;
+
+    operator EGLSurface() const { return egl_surface; }
+
+private:
+    EGLDisplay const egl_display;
+    EGLSurface const egl_surface;
+};
+
 class EGLDisplayHandle
 {
 public:
@@ -53,7 +68,7 @@ public:
 
     void initialize() const;
     EGLConfig choose_config(const EGLint attrib_list[]) const;
-    EGLSurface egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const;
+    std::shared_ptr<EGLSurfaceHandle> create_egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const;
 
     operator EGLDisplay() const { return egl_display; }
 
@@ -74,6 +89,7 @@ class NestedDisplay : public Display
 public:
     NestedDisplay(
         std::shared_ptr<HostConnection> const& connection,
+        std::shared_ptr<input::EventFilter> const& event_handler,
         std::shared_ptr<DisplayReport> const& display_report);
 
     ~NestedDisplay() noexcept;
@@ -100,6 +116,7 @@ public:
 
 private:
     std::shared_ptr<HostConnection> const connection;
+    std::shared_ptr<input::EventFilter> const event_handler;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle const egl_display;
 

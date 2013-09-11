@@ -125,7 +125,7 @@ public:
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
-            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_dpms_mode_on};
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
 
         f(dummy_output_config);
     }

@@ -29,6 +29,8 @@ namespace nested
 {
 namespace detail
 {
+
+class EGLSurfaceHandle;
 class MirSurfaceHandle
 {
 public:
@@ -51,7 +53,8 @@ public:
     NestedOutput(
         EGLDisplayHandle const& egl_display,
         MirSurface* mir_surface,
-        geometry::Rectangle const& area);
+        geometry::Rectangle const& area,
+        std::shared_ptr<input::EventFilter> const& event_handler);
 
     ~NestedOutput() noexcept;
 
@@ -61,7 +64,7 @@ public:
     void post_update() override;
     virtual bool can_bypass() const override;
     
-    void set_power_mode(MirDPMSMode mode) override;
+    void set_power_mode(MirPowerMode mode) override;
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;
@@ -71,8 +74,11 @@ private:
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
+    std::shared_ptr<input::EventFilter> const event_handler;
+    std::shared_ptr<EGLSurfaceHandle> const display_egl_surface;
 
-    EGLSurface egl_surface;
+    static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
+    void mir_event(MirEvent const& event);
 };
 
 extern EGLint const egl_attribs[];

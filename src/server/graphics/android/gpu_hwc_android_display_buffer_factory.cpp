@@ -114,7 +114,7 @@ public:
         return false;
     }
     
-    void set_power_mode(MirDPMSMode mode) override
+    void set_power_mode(MirPowerMode mode) override
     {
         // TODO: We should support this.
         (void) mode;
@@ -155,19 +155,17 @@ public:
             hwc_device->commit_frame(egl_display, egl_surface);
     }
 
-    void set_power_mode(MirDPMSMode mode) override
+    void set_power_mode(MirPowerMode mode) override
     {
         std::unique_lock<std::mutex> lg(mutex);
 
-        if (mode == mir_dpms_mode_on)
+        if (mode == mir_power_mode_on)
         {
-            printf("Attempting to unblank screen \n");
             hwc_device->blank_or_unblank_screen(false);
             blanked = false;
         }
         else
         {
-            printf("Attempting to blank screen \n");
             hwc_device->blank_or_unblank_screen(true); // TODO: Be more granular with the standby and suspend settings.
             blanked = true;
         }

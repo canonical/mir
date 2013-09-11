@@ -146,25 +146,17 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
     mir_display_config_destroy(conf);
 }
 
-static void toggle_dpms_between_on_and_off(struct ClientContext *context)
+static void toggle_power_between_on_and_off(struct ClientContext *context)
 {
     MirDisplayConfiguration *conf = 
         mir_connection_create_display_config(context->connection);
-    static bool blanked = false;
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-
-        if (blanked == false)
-            {
-                output->dpms_mode = mir_dpms_mode_off;
-                blanked = true;
-            }
+        if (output->power_mode == mir_power_mode_on)
+            output->power_mode = mir_power_mode_off;
         else
-            {
-                blanked = false;
-                output->dpms_mode = mir_dpms_mode_on;
-            }
+            output->power_mode = mir_power_mode_on;
     }
 
     apply_configuration(context->connection, conf);
@@ -182,10 +174,10 @@ static void display_change_callback(MirConnection *connection, void *context)
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d dpms_mode: %d\n",
+        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d power_mode: %d\n",
                output->output_id, output->connected,
                output->used, output->position_x, output->position_y,
-               output->dpms_mode);
+               output->power_mode);
     }
 
     mir_display_config_destroy(conf);
@@ -219,7 +211,10 @@ static void event_callback(
         {
             configure_display(ctx, configuration_mode_vertical);
         }
-        toggle_dpms_between_on_and_off(ctx);
+        else if (event->key.key_code == XKB_KEY_p)
+        {
+            toggle_power_between_on_and_off(ctx);
+        }
     }
 }
 
@@ -234,7 +229,7 @@ int main(int argc, char *argv[])
                " c: clone outputs\n"
                " h: arrange outputs horizontally in the virtual space\n"
                " v: arrange outputs vertically in the virtual space\n"
-               " p: Toggle DPMS on/off\n");
+               " p: Toggle display power on/off\n");
 
         return 1;
     }

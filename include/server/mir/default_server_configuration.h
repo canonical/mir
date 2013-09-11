@@ -102,6 +102,7 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
+class NestedInputRelay;
 }
 
 namespace logging
@@ -134,6 +135,7 @@ public:
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
+    virtual std::shared_ptr<input::NestedInputRelay> the_nested_input_relay();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -285,6 +287,7 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
+    CachedPtr<input::NestedInputRelay> nested_input_relay;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 

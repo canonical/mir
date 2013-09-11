@@ -6,6 +6,7 @@ set(
   null_input_configuration.cpp
   null_input_report.cpp
   nested_input_configuration.cpp
+  nested_input_relay.cpp
   display_input_region.cpp
   vt_filter.cpp
 )
