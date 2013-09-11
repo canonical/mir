@@ -41,7 +41,7 @@ public:
     ~RealKMSOutput();
 
     void reset();
-    void configure(geometry::Displacement fb_offset, size_t kms_mode_index, MirPowerMode power_mode);
+    void configure(geometry::Displacement fb_offset, size_t kms_mode_index);
     geometry::Size size() const;
 
     bool set_crtc(uint32_t fb_id);
@@ -68,8 +68,6 @@ private:
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
     bool has_cursor_;
-
-    MirPowerMode power_mode;
 };
 
 }

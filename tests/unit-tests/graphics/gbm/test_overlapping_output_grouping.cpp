@@ -79,8 +79,7 @@ public:
                 used,
                 rect.top_left,
                 i - 1,
-                0,
-                mir_power_mode_on
+                0
             };
 
             f(output);
@@ -89,7 +88,7 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode)
+                          geom::Point, size_t)
     {
     }
 

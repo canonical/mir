@@ -146,23 +146,6 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
     mir_display_config_destroy(conf);
 }
 
-static void toggle_power_between_on_and_off(struct ClientContext *context)
-{
-    MirDisplayConfiguration *conf = 
-        mir_connection_create_display_config(context->connection);
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
-    {
-        MirDisplayOutput *output = &conf->outputs[i];
-        if (output->power_mode == mir_power_mode_on)
-            output->power_mode = mir_power_mode_off;
-        else
-            output->power_mode = mir_power_mode_on;
-    }
-
-    apply_configuration(context->connection, conf);
-    mir_display_config_destroy(conf);
-}
-
 static void display_change_callback(MirConnection *connection, void *context)
 {
     (void)context;
@@ -174,10 +157,9 @@ static void display_change_callback(MirConnection *connection, void *context)
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d power_mode: %d\n",
+        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d\n",
                output->output_id, output->connected,
-               output->used, output->position_x, output->position_y,
-               output->power_mode);
+               output->used, output->position_x, output->position_y);
     }
 
     mir_display_config_destroy(conf);
@@ -211,10 +193,6 @@ static void event_callback(
         {
             configure_display(ctx, configuration_mode_vertical);
         }
-        else if (event->key.key_code == XKB_KEY_p)
-        {
-            toggle_power_between_on_and_off(ctx);
-        }
     }
 }
 
@@ -228,8 +206,7 @@ int main(int argc, char *argv[])
                "has the focus, use the following keys to change the display configuration:\n"
                " c: clone outputs\n"
                " h: arrange outputs horizontally in the virtual space\n"
-               " v: arrange outputs vertically in the virtual space\n"
-               " p: Toggle display power on/off\n");
+               " v: arrange outputs vertically in the virtual space\n");
 
         return 1;
     }
