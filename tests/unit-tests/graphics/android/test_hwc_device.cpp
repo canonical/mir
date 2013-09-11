@@ -38,14 +38,14 @@ namespace geom=mir::geometry;
 
 template<class T>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                                                std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
+                                                std::shared_ptr<mga::HWCLayerList> const& organizer,
                                                 std::shared_ptr<mga::DisplaySupportProvider> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator);
 
 template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                                                std::shared_ptr<mga::HWCLayerOrganizer> const&, 
+                                                std::shared_ptr<mga::HWCLayerList> const&, 
                                                 std::shared_ptr<mga::DisplaySupportProvider> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
@@ -55,7 +55,7 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
 template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                                                std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
+                                                std::shared_ptr<mga::HWCLayerList> const& organizer,
                                                 std::shared_ptr<mga::DisplaySupportProvider> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {

@@ -80,6 +80,7 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
 }
 
+#if 0
 TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
 {
     using namespace testing;
@@ -187,3 +188,4 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
     hwc_layer_1 target_layer = *list[0];
     EXPECT_THAT(target_layer, MatchesLayer( expected_layer ));
 }
+#endif

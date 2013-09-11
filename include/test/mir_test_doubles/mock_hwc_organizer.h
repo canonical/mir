@@ -30,10 +30,10 @@ namespace test
 namespace doubles
 {
 
-struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
+struct MockHWCOrganizer : public graphics::android::HWCLayerList
 {
     ~MockHWCOrganizer() noexcept {}
-    MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
+    MOCK_CONST_METHOD0(native_list, hwc_display_contents_1_t*());
     MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::Buffer> const&));
 };
 
