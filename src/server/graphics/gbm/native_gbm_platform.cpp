@@ -24,14 +24,18 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/platform_ipc_package.h"
 
+#include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 
-void mgg::NativeGBMPlatform::initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* fd)
+void mgg::NativeGBMPlatform::initialize(
+    std::function<void(int)> const& auth_magic,
+    int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* fd)
 {
+    auth_magic_func = auth_magic;
     drm_fd = fd[0];
     gbm.setup(drm_fd);
 }
@@ -48,11 +52,31 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package(
     {
         NativeGBMPlatformIPCPackage(int fd)
         {
-            ipc_fds.push_back(dup(fd));
+            ipc_fds.push_back(fd);
         }
     };
+    char* busid = drmGetBusid(drm_fd);
+    if (!busid)
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
+    int auth_fd = drmOpen(NULL, busid);
+    free(busid);
 
-    return std::make_shared<NativeGBMPlatformIPCPackage>(drm_fd);
+    drm_magic_t magic;
+    int ret = -1;
+    if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
+    {
+        close(auth_fd);
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
+    }
+
+    auth_magic_func(magic);
+
+    std::cerr << "AUTH_MAGIC success" << std::endl;
+    return std::make_shared<NativeGBMPlatformIPCPackage>(auth_fd);
 }
 
 std::shared_ptr<mg::InternalClient> mgg::NativeGBMPlatform::create_internal_client()
