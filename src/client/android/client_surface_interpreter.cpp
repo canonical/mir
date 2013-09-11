@@ -65,6 +65,9 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
             return driver_pixel_format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0;
+        case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
+            printf("Hm\n");
+            return 1;
         default:
             printf("BAD %i\n", key);
             throw std::runtime_error("driver requested unsupported query");
