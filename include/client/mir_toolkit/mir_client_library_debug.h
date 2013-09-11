@@ -23,18 +23,6 @@
 /* This header defines debug interfaces that aren't expected to be generally useful
  * and do not have the same API-stability guarantees that the main API has */
 
-/* if set before any calls to the api functions, assigning to this pointer will allow user to
- * override calls to mir_connect() and mir_connection_release(). This is mostly useful in test scenarios
- */
-extern MirWaitHandle* (*mir_connect_impl)(
-    char const *server,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context);
-
-extern void (*mir_connection_release_impl) (MirConnection *connection);
-
-
 /**
  * Return the ID of a surface (only useful for debug output).
  *   \param [in] surface  The surface

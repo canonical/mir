@@ -29,6 +29,17 @@ namespace mcl = mir::client;
 namespace mtf=mir_test_framework;
 namespace geom = mir::geometry;
 
+/* if set before any calls to the api functions, assigning to this pointer will allow user to
+ * override calls to mir_connect() and mir_connection_release(). This is mostly useful in test scenarios
+ */
+extern MirWaitHandle* (*mir_connect_impl)(
+    char const *server,
+    char const *app_name,
+    mir_connected_callback callback,
+    void *context);
+extern void (*mir_connection_release_impl) (MirConnection *connection);
+
+
 namespace
 {
 class StubClientBuffer : public mcl::ClientBuffer
