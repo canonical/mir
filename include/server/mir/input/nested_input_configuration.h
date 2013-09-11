@@ -39,7 +39,11 @@ public:
     virtual ~NestedInputConfiguration();
 
 private:
+    droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() override;
+
     std::shared_ptr<NestedInputRelay> const input_relay;
+
+    android::CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
 };
 }
 }

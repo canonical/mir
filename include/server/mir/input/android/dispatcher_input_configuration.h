@@ -99,7 +99,7 @@ public:
     virtual bool is_key_repeat_enabled();
 
 protected:
-    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
+    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() = 0;
 
     virtual std::shared_ptr<InputThread> the_dispatcher_thread();
 
@@ -113,6 +113,7 @@ protected:
     std::shared_ptr<input::InputReport> const input_report;
 
     CachedPtr<input::InputManager> input_manager;
+
 private:
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputRegistrar> input_registrar;
@@ -120,7 +121,6 @@ private:
     CachedPtr<shell::InputTargeter> input_targeter;
 
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
-    CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
 };
 }
 }
