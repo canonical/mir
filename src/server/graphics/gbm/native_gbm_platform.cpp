@@ -75,7 +75,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package(
 
     auth_magic_func(magic);
 
-    std::cerr << "AUTH_MAGIC success" << std::endl;
     return std::make_shared<NativeGBMPlatformIPCPackage>(auth_fd);
 }
 

@@ -25,7 +25,6 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <iostream>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -62,7 +61,6 @@ connection{connection}
                 BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir callback Platform Connection Error: "));
             }
             mir_wait_for(mir_connection_drm_auth_magic(c, magic, auth_magic_callback, NULL));
-            std::cerr << "AUTH MAGIC" << std::endl;
         };
     native_platform->initialize(auth_magic, pkg.data_items, pkg.data, pkg.fd_items, pkg.fd);
 }

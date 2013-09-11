@@ -88,7 +88,6 @@ void mgn::detail::NestedOutput::release_current()
 void mgn::detail::NestedOutput::post_update()
 {
     eglSwapBuffers(egl_display, egl_surface);
-    //mir_surface_swap_buffers_sync(mir_surface);
 }
 
 bool mgn::detail::NestedOutput::can_bypass() const
