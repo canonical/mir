@@ -121,18 +121,12 @@ int main(int argc, char* argv[])
     mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
 
-    int i = 3;
     for(;;)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(disp, egl_surface);
         assert(rc == EGL_TRUE);
         gl_animation.step();
-        if (i > 0)
-        {
-            sleep(1);
-            i--;
-        }
     }
 
     eglDestroySurface(disp, egl_surface);

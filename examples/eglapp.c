@@ -167,6 +167,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     };
     EGLint neglconfigs;
     EGLBoolean ok;
+    EGLint swapinterval = 1;
     char *mir_socket = NULL;
 
     if (argc > 1)
@@ -182,7 +183,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 switch (arg[1])
                 {
                 case 'n':
-                    //swapinterval = 0;
+                    swapinterval = 0;
                     break;
                 case 'o':
                     {
@@ -334,12 +335,14 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     *width = surfaceparm.width;
     *height = surfaceparm.height;
+
+    eglSwapInterval(egldisplay, swapinterval);
+
     return 1;
 }
 
 mir_eglapp_bool mir_eglapp_make_current()
 {
-    EGLint swapinterval = 1;
     EGLint ctxattribs[] =
     {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -353,8 +356,6 @@ mir_eglapp_bool mir_eglapp_make_current()
 
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
-
-    eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;
 
