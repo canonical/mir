@@ -84,10 +84,7 @@ void mir_eglapp_swap_buffers(void)
     dtime = now - lasttime;
     if (dtime)
     {
-        MirNativeBuffer *native;
-        mir_surface_get_current_buffer(surface, &native);
-
-        printf("%d FPS, flags %u\n", dcount, native->flags);
+        printf("%d FPS\n", dcount);
         lasttime = now;
         lastcount = count;
     }
