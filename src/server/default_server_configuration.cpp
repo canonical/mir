@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/default_server_status.h"
 #include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
@@ -930,6 +931,16 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         []()
         {
             return std::make_shared<mir::AsioMainLoop>();
+        });
+}
+
+
+std::shared_ptr<mir::ServerStatus> mir::DefaultServerConfiguration::the_server_status()
+{
+    return server_status(
+        []()
+        {
+            return std::make_shared<mir::DefaultServerStatus>();
         });
 }
 
