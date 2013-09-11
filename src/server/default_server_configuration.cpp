@@ -350,7 +350,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 the_host_connection(),
                 the_nested_input_relay(),
                 the_display_report(),
-                create_native_platform());
+                create_native_platform(the_display_report()));
         });
 }
 

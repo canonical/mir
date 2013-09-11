@@ -54,7 +54,7 @@ void mgg::NativeGBMPlatform::fill_ipc_package(std::shared_ptr<mg::BufferIPCPacke
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::fill_ipc_package is not implemented yet!"));
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform()
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
     return std::make_shared<mgg::NativeGBMPlatform>();
 }
