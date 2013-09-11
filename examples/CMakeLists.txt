@@ -52,6 +52,11 @@ target_link_libraries(mir_demo_client_progressbar mirclient)
 add_executable(mir_demo_client_display_config demo_client_display_config.c)
 target_link_libraries(mir_demo_client_display_config eglapp)
 
+if (MIR_PLATFORM STREQUAL "gbm")
+add_executable(mir_demo_client_egl_image demo_client_egl_image.cpp)
+target_link_libraries(mir_demo_client_egl_image eglapp ${GBM_LIBRARIES} -lpthread)
+endif()
+
 add_executable(mir_demo_client_flicker
   flicker.c
 )

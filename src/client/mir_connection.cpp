@@ -269,7 +269,7 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    //std::lock_guard<std::recursive_mutex> lock(mutex);
 
     mir::protobuf::DRMMagic request;
     request.set_magic(magic);

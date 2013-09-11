@@ -25,6 +25,7 @@
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -35,6 +36,9 @@
 #include <stdexcept>
 #include <gbm.h>
 #include <cassert>
+#include <iostream>
+#include <thread>
+#include <mutex>
 
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -42,6 +46,8 @@ namespace geom = mir::geometry;
 
 namespace
 {
+
+std::recursive_mutex gbm_mutex;
 
 class EGLImageBufferTextureBinder : public mgg::BufferTextureBinder
 {
@@ -61,31 +67,39 @@ public:
 
     void bind_to_texture()
     {
+        std::lock_guard<std::recursive_mutex> lock{gbm_mutex};
         ensure_egl_image();
 
+        std::cerr << " ====== mir TargetTexture2dOES ======" << std::endl;
         egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+        std::cerr << " ====== mir TargetTexture2dOES end ======" << std::endl;
     }
 
 private:
     void ensure_egl_image()
     {
+
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
-
             const EGLint image_attrs[] =
             {
                 EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
                 EGL_NONE
             };
 
+            std::cerr << " ====== " << std::this_thread::get_id() << ": CreateImagekhr ======" << std::endl;
+
             egl_image = egl_extensions->eglCreateImageKHR(egl_display, EGL_NO_CONTEXT,
                                                           EGL_NATIVE_PIXMAP_KHR,
                                                           reinterpret_cast<void*>(bo_raw),
                                                           image_attrs);
             if (egl_image == EGL_NO_IMAGE_KHR)
+            {
+                std::cerr << "EGL error " << eglGetError() << std::endl;
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGLImage from GBM bo"));
+            }
         }
     }
 
@@ -100,7 +114,11 @@ struct GBMBODeleter
     void operator()(gbm_bo* handle) const
     {
         if (handle)
+        {
+
+            std::cerr << "Destroying gbm bo gem " << gbm_bo_get_handle(handle).u32 << std::endl;
             gbm_bo_destroy(handle);
+        }
     }
 };
 
@@ -118,6 +136,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
 
 std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
 {
+    std::lock_guard<std::recursive_mutex> lock{gbm_mutex};
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
     uint32_t gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
@@ -152,6 +171,8 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
         bo_flags |= GBM_BO_USE_SCANOUT;
     }
 
+    auto drm_fd = gbm_device_get_fd(device);
+
     gbm_bo *bo_raw = gbm_bo_create(
         device,
         buffer_properties.size.width.as_uint32_t(),
@@ -161,6 +182,9 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
 
     if (!bo_raw)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
+
+    std::cerr << std::this_thread::get_id() << ": bo create fd " << drm_fd << " device " << device
+              << "gem handle " << gbm_bo_get_handle(bo_raw).u32 << std::endl;
 
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 

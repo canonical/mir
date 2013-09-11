@@ -80,7 +80,8 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     : gbm_handle{handle},
       bo_flags{bo_flags},
       texture_binder{std::move(texture_binder)},
-      prime_fd{-1}
+      prime_fd{-1},
+      gem_name{0}
 {
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
@@ -95,6 +96,20 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
             boost::enable_error_info(
                 std::runtime_error(msg)) << boost::errinfo_errno(errno));
     }
+
+    struct drm_gem_flink flink;
+    flink.handle = gem_handle;
+
+    ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    if (ret)
+    {
+        std::string const msg("Failed to get flink name from gbm bo");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(msg)) << boost::errinfo_errno(errno));
+    }
+
+    gem_name = flink.name;
 }
 
 mgg::GBMBuffer::~GBMBuffer()
@@ -129,6 +144,8 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
 
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
+    temp->data_items = 1;
+    temp->data[0] = gem_name;
     temp->stride = stride().as_uint32_t();
     temp->bo = gbm_handle.get();
 
