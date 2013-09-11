@@ -64,7 +64,7 @@ public:
                         true,
                         true,
                         geom::Point{0,0},
-                        0, 0, mir_power_mode_on},
+                        0, 0},
           card{mg::DisplayConfigurationCardId{0}, 1}
     {
     }
@@ -79,7 +79,7 @@ public:
         f(configuration);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode /* power_mode */)
+    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot configure output\n"));
     }
