@@ -33,7 +33,7 @@ typedef struct MirBufferPackage
     int fd_items;
 
     int data[mir_buffer_package_max];
-    int unused1;
+    int unused1;  /* Retain ABI compatibility (avoid rebuilding Mesa) */
 
     int fd[mir_buffer_package_max];
 
