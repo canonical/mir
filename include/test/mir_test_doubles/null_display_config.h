@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
 
 #include "mir/graphics/display_configuration.h"
 
@@ -27,19 +27,25 @@ namespace test
 {
 namespace doubles
 {
-class NullDisplayConfiguration : public graphics::DisplayConfiguration
+
+struct NullDisplayConfig : public graphics::DisplayConfiguration
 {
-    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
+    NullDisplayConfig()
     {
     }
-    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
+    virtual void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
     {
     }
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    virtual void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
+    {
+    }
+    virtual void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
     {
     }
 };
+
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_H_ */
+
+#endif /*MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_ */

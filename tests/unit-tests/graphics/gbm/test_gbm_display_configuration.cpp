@@ -197,8 +197,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             true,
             geom::Point(),
             1,
-            0,
-            mir_power_mode_on
+            0
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -212,8 +211,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             false,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            std::numeric_limits<size_t>::max()
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -227,8 +225,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             false,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            std::numeric_limits<size_t>::max()
         }
     };
 
@@ -381,8 +378,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             true,
             geom::Point(),
             1,
-            0,
-            mir_power_mode_on
+            0
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -396,8 +392,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             false,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            std::numeric_limits<size_t>::max() 
         },
     };
 
@@ -415,8 +410,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             true,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            std::numeric_limits<size_t>::max()
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -430,8 +424,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             false,
             geom::Point(),
             1,
-            0,
-            mir_power_mode_on
+            0
         },
     };
 
