@@ -19,8 +19,7 @@
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/nested_input_relay.h"
 
-#include <boost/exception/all.hpp>
-#include <stdexcept>
+#include <InputDispatcher.h>
 
 namespace mi = mir::input;
 
@@ -37,4 +36,16 @@ mi::NestedInputConfiguration::NestedInputConfiguration(
 
 mi::NestedInputConfiguration::~NestedInputConfiguration()
 {
+}
+
+droidinput::sp<droidinput::InputDispatcherInterface> mi::NestedInputConfiguration::the_dispatcher()
+{
+    return dispatcher(
+        [this]()
+        {
+            auto const result = new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
+            input_relay->set_dispatcher(result);
+
+            return result;
+        });
 }
