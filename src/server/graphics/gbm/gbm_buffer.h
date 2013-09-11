@@ -73,7 +73,6 @@ private:
     uint32_t bo_flags;
     std::unique_ptr<BufferTextureBinder> const texture_binder;
     int prime_fd;
-    uint32_t gem_name;
 };
 
 }
