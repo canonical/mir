@@ -28,6 +28,7 @@
 
 #include <EGL/egl.h>
 
+#include <mutex>
 #include <unordered_map>
 
 namespace mir
@@ -121,6 +122,7 @@ private:
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
 
+    std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
 };
