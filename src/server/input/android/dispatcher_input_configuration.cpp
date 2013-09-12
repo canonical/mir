@@ -98,15 +98,6 @@ droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DispatcherInputC
         });
 }
 
-droidinput::sp<droidinput::InputDispatcherInterface> mia::DispatcherInputConfiguration::the_dispatcher()
-{
-    return dispatcher(
-        [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
-        {
-            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
-        });
-}
-
 std::shared_ptr<mia::InputThread> mia::DispatcherInputConfiguration::the_dispatcher_thread()
 {
     return dispatcher_thread(

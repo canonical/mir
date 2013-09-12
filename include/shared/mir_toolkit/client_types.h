@@ -22,7 +22,6 @@
 #define MIR_TOOLKIT_CLIENT_TYPES_H_
 
 #include <mir_toolkit/event.h>
-#include <mir_toolkit/common.h>
 
 #include <stddef.h>
 
@@ -230,7 +229,7 @@ typedef struct MirDisplayMode
     uint32_t vertical_resolution;
     uint32_t horizontal_resolution;
     double refresh_rate;
-} MirDisplayMode;
+}MirDisplayMode;
 
 enum { mir_display_output_id_invalid = 0 };
 
@@ -256,8 +255,6 @@ typedef struct MirDisplayOutput
 
     uint32_t physical_width_mm;
     uint32_t physical_height_mm;
-    
-    MirPowerMode power_mode;
 } MirDisplayOutput;
 
 typedef struct MirDisplayConfiguration

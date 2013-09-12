@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/native_platform.h"
 
 namespace mir
 {
@@ -31,7 +32,7 @@ namespace android
 class GraphicBufferAllocator;
 class FramebufferFactory;
 
-class AndroidPlatform : public Platform
+class AndroidPlatform : public Platform, public NativePlatform
 {
 public:
     /* From Platform */
@@ -47,6 +48,8 @@ public:
                           std::shared_ptr<graphics::Buffer> const& buffer) const;
 
 private:
+    void initialize(int data_items, int const* data, int fd_items, int const* fd) override;
+
     // TODO a design that has this and create_buffer_allocator is missing simplicity
     virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
         const std::shared_ptr<BufferInitializer>& buffer_initializer);
