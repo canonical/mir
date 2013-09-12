@@ -247,10 +247,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             if (help)
             {
                 printf("Usage: %s [<options>]\n"
-                       "  -f     Force full screen\n"
-                       "  -h     Show this help text\n"
-                       "  -o ID  Force placement on output monitor ID\n"
-                       "  -n     Don't sync to vblank\n"
+                       "  -h               Show this help text\n"
+                       "  -f               Force full screen\n"
+                       "  -o ID            Force placement on output monitor ID\n"
+                       "  -n               Don't sync to vblank\n"
+                       "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        , argv[0]);
                 return 0;
