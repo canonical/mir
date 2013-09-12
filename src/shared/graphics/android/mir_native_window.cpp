@@ -186,15 +186,7 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
-  //  if (cancel_queue.empty())
-        *buffer_to_driver = driver_interpreter->driver_requests_buffer();
-   // else
-   // {
-   //     *buffer_to_driver = cancel_queue.back();
-   //     cancel_queue.pop_back();
-   // }
-    auto b= *buffer_to_driver;
-    printf("DEQUEUE! [0x%X] w %i h %i s %i, f %i u %X ha %X\n", (int)b, b->width, b->height, b->stride, b->format, b->usage, (int)b->handle);
+    *buffer_to_driver = driver_interpreter->driver_requests_buffer();
     return 0;
 }
 
