@@ -109,7 +109,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                                       output.top_left, output.current_mode_index,
                                       power_mode);
         });
-        display->configure(conf);
+        display->configure(*conf.get());
     }
     else if (event.type == mir_event_type_motion &&
              session_manager)
