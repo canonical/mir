@@ -90,6 +90,7 @@ int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
+    printf("DEQUE.\n");
     *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
@@ -107,6 +108,7 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
+    printf("QUEuue.\n");
     auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
     auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
@@ -125,19 +127,25 @@ int setSwapInterval_static (struct ANativeWindow* window, int interval)
 int lockBuffer_static(struct ANativeWindow* /*window*/,
                       struct ANativeWindowBuffer* /*buffer*/)
 {
+    printf("LOCK\n");
     return 0;
 }
 
 int cancelBuffer_deprecated_static(struct ANativeWindow* /*window*/,
                         struct ANativeWindowBuffer* /*buffer*/)
 {
+    printf("cancel. dep\n");
     return 0;
 }
 
-int cancelBuffer_static(struct ANativeWindow* /*window*/,
-                        struct ANativeWindowBuffer* /*buffer*/, int /*fence_fd*/)
+int cancelBuffer_static(struct ANativeWindow* window,
+                        struct ANativeWindowBuffer* buffer, int fd)
 {
-    return 0;
+printf("CANCEL!\n");
+    auto ioctl_control = std::make_shared<IoctlControl>();
+    auto fence = std::make_shared<mga::SyncFence>(fd, ioctl_control);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
+    return self->queueBuffer(buffer, fence);
 }
 
 }
@@ -178,7 +186,15 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
-    *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+  //  if (cancel_queue.empty())
+        *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+   // else
+   // {
+   //     *buffer_to_driver = cancel_queue.back();
+   //     cancel_queue.pop_back();
+   // }
+    auto b= *buffer_to_driver;
+    printf("DEQUEUE! [0x%X] w %i h %i s %i, f %i u %X ha %X\n", (int)b, b->width, b->height, b->stride, b->format, b->usage, (int)b->handle);
     return 0;
 }
 
@@ -188,9 +204,18 @@ int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::s
     return 0;
 }
 
+int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer)
+{
+    (void) buffer;
+    printf("CANCEL!\n");
+
+ //   cancel_queue.push_back(buffer);
+    return 0;
+}
 int mga::MirNativeWindow::query(int key, int* value ) const
 {
     *value = driver_interpreter->driver_requests_info(key);
+    printf("querying %i returns %i\n", key, *value);
     return 0;
 }
 
@@ -200,6 +225,7 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
     va_list args;
     va_copy(args, arg_list);
 
+    int a,b;
     int driver_format;
     switch(key)
     {
@@ -207,7 +233,12 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
             driver_format = va_arg(args, int);
             driver_interpreter->dispatch_driver_request_format(driver_format);
             break;
+        case NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS:
+            a = va_arg(args, int);
+            b = va_arg(args, int);
+            printf("SIZE CHANGE REQUEST %i %i\n", a, b); 
         default:
+            printf("UNSUPPORTED PERFORM! %i\n", key);
             break;
     }
 

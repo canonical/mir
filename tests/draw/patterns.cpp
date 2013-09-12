@@ -54,6 +54,7 @@ bool mtd::DrawPatternSolid::check(const std::shared_ptr<MirGraphicsRegion>& regi
         {
             if (pixel[j*region->stride + i] != color_value)
             {
+                printf("FALSE! 0x%X should be 0x%X\n", pixel[j*region->stride + i], color_value);
                 return false;
             }
         }
