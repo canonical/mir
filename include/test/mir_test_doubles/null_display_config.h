@@ -16,12 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
-#define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
-
-#include <gmock/gmock.h>
+#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -30,17 +28,24 @@ namespace test
 namespace doubles
 {
 
-struct MockPacker : public graphics::BufferIPCPacker
+struct NullDisplayConfig : public graphics::DisplayConfiguration
 {
-    ~MockPacker() noexcept {}
-    MOCK_METHOD1(pack_fd, void(int));
-    MOCK_METHOD1(pack_data, void(int));
-    MOCK_METHOD1(pack_stride, void(geometry::Stride));
-    MOCK_METHOD1(pack_flags, void(unsigned int));
+    NullDisplayConfig()
+    {
+    }
+    virtual void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
+    {
+    }
+    virtual void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
+    {
+    }
+    virtual void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    {
+    }
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_ */
+#endif /*MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_ */

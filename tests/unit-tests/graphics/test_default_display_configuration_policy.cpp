@@ -54,8 +54,7 @@ public:
                 false,
                 geom::Point{geom::X{123}, geom::Y{343}},
                 1,
-                0,
-                mir_power_mode_on
+                0
             });
         /* Connected without modes */
         outputs.push_back(
@@ -71,8 +70,7 @@ public:
                 false,
                 geom::Point(),
                 std::numeric_limits<size_t>::max(),
-                std::numeric_limits<size_t>::max(),
-                mir_power_mode_on
+                std::numeric_limits<size_t>::max()
             });
         /* Connected with a single mode */
         outputs.push_back(
@@ -92,8 +90,7 @@ public:
                 false,
                 geom::Point(),
                 0,
-                0,
-                mir_power_mode_on
+                0
             });
         /* Not connected */
         outputs.push_back(
@@ -111,8 +108,7 @@ public:
                 false,
                 geom::Point(),
                 1,
-                0,
-                mir_power_mode_on
+                0
             });
     }
 
@@ -127,8 +123,8 @@ public:
             f(output);
     }
 
-    MOCK_METHOD5(configure_output, void(mg::DisplayConfigurationOutputId, bool,
-                                        geom::Point, size_t, MirPowerMode));
+    MOCK_METHOD4(configure_output, void(mg::DisplayConfigurationOutputId, bool,
+                                        geom::Point, size_t));
 
 private:
     mg::DisplayConfigurationCardId const card_id;
@@ -139,8 +135,6 @@ private:
 
 TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
-    using namespace ::testing;
-
     mg::DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf;
 
@@ -149,30 +143,14 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
         if (output.connected && output.modes.size() > 0)
         {
             EXPECT_CALL(conf, configure_output(output.id, true, geom::Point(),
-                                               output.preferred_mode_index, _));
+                                               output.preferred_mode_index));
         }
         else
         {
             EXPECT_CALL(conf, configure_output(output.id, false, output.top_left,
-                                               output.current_mode_index, _));
+                                               output.current_mode_index));
         }
     });
 
     policy.apply_to(conf);
 }
-
-TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
-{
-    using namespace ::testing;
-
-    mg::DefaultDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf;
-
-    conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
-    {
-        EXPECT_CALL(conf, configure_output(output.id, _, _, _, mir_power_mode_on));
-    });
-
-    policy.apply_to(conf);
-}
-

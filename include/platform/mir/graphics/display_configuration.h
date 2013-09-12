@@ -23,7 +23,6 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/pixel_format.h"
-#include "mir_toolkit/common.h"
 
 #include <functional>
 #include <vector>
@@ -106,8 +105,6 @@ struct DisplayConfigurationOutput
     size_t current_mode_index;
     /** The index in the 'pixel_format' vector of the current output pixel format. */
     size_t current_format_index;
-    /** Current power mode **/
-    MirPowerMode power_mode;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
@@ -137,7 +134,7 @@ public:
 
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used,
-                                  geometry::Point top_left, size_t mode_index, MirPowerMode power_mode) = 0;
+                                  geometry::Point top_left, size_t mode_index) = 0;
 
 protected:
     DisplayConfiguration() = default;
