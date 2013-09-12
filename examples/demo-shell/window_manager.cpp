@@ -22,8 +22,6 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
 
 #include <linux/input.h>
 
@@ -32,7 +30,6 @@
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
-namespace mg = mir::graphics;
 
 namespace
 {
@@ -53,11 +50,6 @@ void me::WindowManager::set_session_manager(
     std::shared_ptr<msh::SessionManager> const& sm)
 {
     session_manager = sm;
-}
-
-void me::WindowManager::set_display(std::shared_ptr<mg::Display> const& dpy)
-{
-    display = dpy;
 }
 
 mir::geometry::Point average_pointer(MirMotionEvent const& motion)
@@ -81,35 +73,15 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
 
 bool me::WindowManager::handle(MirEvent const& event)
 {
-    // TODO: Fix android configuration and remove static hack ~racarr
-    static bool display_off = false;
     assert(focus_controller);
-    assert(display);
 
     if (event.key.type == mir_event_type_key &&
-        event.key.action == mir_key_action_down)
+        event.key.action == mir_key_action_down &&
+        event.key.modifiers & mir_key_modifier_alt &&
+        event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
     {
-//        if (event.key.modifiers & mir_key_modifier_alt &&
-//            event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
-//        {
-//            focus_controller->focus_next();
-//            return true;
-//        }
-        auto conf = display->configuration();
-        conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-        {
-            MirPowerMode power_mode;
-            if (display_off == true)
-                power_mode = mir_power_mode_on;
-            else
-                power_mode = mir_power_mode_off;
-            display_off = !display_off;
-
-            conf->configure_output(output.id, output.used,
-                                      output.top_left, output.current_mode_index,
-                                      power_mode);
-        });
-        display->configure(*conf.get());
+        focus_controller->focus_next();
+        return true;
     }
     else if (event.type == mir_event_type_motion &&
              session_manager)
