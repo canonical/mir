@@ -50,45 +50,6 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_NONE
 };
 
-class AndroidDisplayConfiguration : public mg::DisplayConfiguration
-{
-public:
-    AndroidDisplayConfiguration(geom::Size const& display_size)
-        : configuration{mg::DisplayConfigurationOutputId{1},
-                        mg::DisplayConfigurationCardId{0},
-                        mg::DisplayConfigurationOutputType::lvds,
-                        {geom::PixelFormat::abgr_8888},
-                        {mg::DisplayConfigurationMode{display_size,0.0f}},
-                        0,
-                        geom::Size{0,0},
-                        true,
-                        true,
-                        geom::Point{0,0},
-                        0, 0, mir_power_mode_on},
-          card{mg::DisplayConfigurationCardId{0}, 1}
-    {
-    }
-
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
-    {
-        f(card);
-    }
-
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
-    {
-        f(configuration);
-    }
-
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode power_mode)
-    {
-        configuration.power_mode = power_mode;
-    }
-
-private:
-    mg::DisplayConfigurationOutput configuration;
-    mg::DisplayConfigurationCard const card;
-};
-
 EGLDisplay create_and_initialize_display()
 {
     EGLint major, minor;
@@ -160,7 +121,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-                         native_window, egl_display, egl_context_shared)}
+                         native_window, egl_display, egl_context_shared)},
+      current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
 
@@ -186,7 +148,7 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
-    return std::make_shared<AndroidDisplayConfiguration>(display_buffer->view_area().size);
+    return std::make_shared<mga::AndroidDisplayConfiguration>(current_configuration);
 }
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
@@ -195,6 +157,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     {
         display_buffer->set_power_mode(output.power_mode);
     });
+    current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(
