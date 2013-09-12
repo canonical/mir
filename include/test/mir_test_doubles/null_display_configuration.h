@@ -35,7 +35,7 @@ class NullDisplayConfiguration : public graphics::DisplayConfiguration
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
     {
     }
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPowerMode) override
     {
     }
 };
