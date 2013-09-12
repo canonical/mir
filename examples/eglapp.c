@@ -32,8 +32,6 @@ static MirConnection *connection;
 static MirSurface *surface;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
-static EGLContext eglcontext;
-static EGLConfig eglconfig;
 static volatile sig_atomic_t running = 0;
 
 #define CHECK(_cond, _err) \
@@ -165,7 +163,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         mir_eglapp_handle_input,
         NULL
     };
+    EGLConfig eglconfig;
     EGLint neglconfigs;
+    EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
     char *mir_socket = NULL;
@@ -323,12 +323,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             NULL);
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
-    eglcontext = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
+    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
                               ctxattribs);
-    CHECK(eglcontext != EGL_NO_CONTEXT, "eglCreateContext shared failed");
+    CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
 
-    ok = eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, eglcontext);
-    CHECK(ok, "Can't eglMakeCurrent shared");
+    ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
+    CHECK(ok, "Can't eglMakeCurrent");
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
@@ -338,24 +338,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     eglSwapInterval(egldisplay, swapinterval);
 
-    return 1;
-}
-
-mir_eglapp_bool mir_eglapp_make_current()
-{
-    EGLint ctxattribs[] =
-    {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-    EGLBoolean ok;
-
-    EGLContext eglctx = eglCreateContext(egldisplay, eglconfig, eglcontext,
-                                  ctxattribs);
-    CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
-
-    ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
-    CHECK(ok, "Can't eglMakeCurrent");
 
     running = 1;
 
