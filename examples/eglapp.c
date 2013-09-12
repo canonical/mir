@@ -338,7 +338,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     eglSwapInterval(egldisplay, swapinterval);
 
-
     running = 1;
 
     return 1;
