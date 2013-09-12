@@ -171,6 +171,8 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     }
     EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
         .Times(1);
+    EXPECT_CALL(*mock_packer, pack_flags(testing::_))
+        .Times(1);
 
     platform->fill_ipc_package(mock_packer, mock_buffer);
 }
