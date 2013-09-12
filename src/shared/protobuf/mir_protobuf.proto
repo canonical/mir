@@ -29,7 +29,8 @@ message Buffer {
   repeated sint32 fd = 2;
   repeated int32  data = 3;
   optional int32  fds_on_side_channel = 4;
-  optional int32 stride = 5;
+  optional int32  stride = 5;
+  optional uint32 flags = 6;
 
   optional string error = 127;
 }

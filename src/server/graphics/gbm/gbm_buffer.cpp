@@ -130,6 +130,7 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
+    temp->flags = can_bypass() ? mir_buffer_flag_can_scanout : 0;
     temp->bo = gbm_handle.get();
 
     return temp;

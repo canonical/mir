@@ -39,6 +39,7 @@ TEST(ProtobufBufferPacker, packing)
         packer.pack_data(i);
 
     packer.pack_stride(dummy_stride);
+    packer.pack_flags(123);
 
     EXPECT_EQ(num_fd, response.fd_size());
     EXPECT_EQ(num_int, response.data_size());
@@ -47,4 +48,5 @@ TEST(ProtobufBufferPacker, packing)
     for (int i = 0; i < response.data_size(); ++i)
         EXPECT_EQ(i, response.data(i));
     EXPECT_EQ(dummy_stride.as_uint32_t(), static_cast<unsigned int>(response.stride()));
+    EXPECT_EQ(123U, response.flags());
 }
