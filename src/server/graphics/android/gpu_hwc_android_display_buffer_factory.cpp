@@ -168,7 +168,7 @@ public:
         }
         else
         {
-            hwc_device->blank_or_unblank_screen(true); // TODO: Be more granular with the standby and suspend settings.
+            hwc_device->blank_or_unblank_screen(true); // TODO: Can we be more granular with the standby and suspend settings?
             blanked = true;
         }
         cond.notify_all();

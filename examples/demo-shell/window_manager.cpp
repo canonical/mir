@@ -103,12 +103,13 @@ bool me::WindowManager::handle(MirEvent const& event)
                 power_mode = mir_power_mode_on;
             else
                 power_mode = mir_power_mode_off;
+            display_off = !display_off;
 
             conf->configure_output(output.id, output.used,
                                       output.top_left, output.current_mode_index,
                                       power_mode);
         });
-
+        display->configure(conf);
     }
     else if (event.type == mir_event_type_motion &&
              session_manager)
