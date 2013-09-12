@@ -88,6 +88,7 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         count = 0;
         break;
     default:
+        fprintf(stderr, "Unrecognised pixel format!\n");
         count = 0;
         break;
     }
@@ -117,19 +118,23 @@ static void draw_window(Window *win)
     mir_surface_swap_buffers_sync(win->surface);
 }
 
+#define NO_OF_WINDOWS 3
+#define TRACE_MESSAGES
+#define ALPHA 0x50
+
 int main(int argc, char *argv[])
 {
     MirConnection *conn;
-    MirSurfaceParameters parm;
-    Window win[3];
+    MirSurfaceParameters parm = {0};
+    Window win[NO_OF_WINDOWS];
     unsigned int f;
 
     (void)argc;
 
-    conn = mir_connect_sync(NULL, argv[0]);
+    conn = mir_connect_sync(argv[1], argv[0]);
     if (!mir_connection_is_valid(conn))
     {
-        fprintf(stderr, "Could not connect to a display server.\n");
+        fprintf(stderr, "Could not connect to a display server: %s.\n", mir_connection_get_error_message(conn));
         return 1;
     }
 
@@ -157,6 +162,10 @@ int main(int argc, char *argv[])
         parm.pixel_format = formats[0];
     }
 
+#ifdef TRACE_MESSAGES
+    fprintf(stderr, "pixel formats=%u, index=%u, format=%u\n", valid_formats, f, parm.pixel_format);
+#endif
+
     parm.name = "red";
     parm.width = 225;
     parm.height = 225;
@@ -164,8 +173,9 @@ int main(int argc, char *argv[])
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
-    win[0].fill.a = 0x50;
+    win[0].fill.a = ALPHA;
 
+#if NO_OF_WINDOWS > 1
     parm.name = "green";
     parm.width = 300;
     parm.height = 150;
@@ -173,8 +183,10 @@ int main(int argc, char *argv[])
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
-    win[1].fill.a = 0x50;
+    win[1].fill.a = ALPHA;
+#endif
 
+#if NO_OF_WINDOWS > 2
     parm.name = "blue";
     parm.width = 150;
     parm.height = 300;
@@ -182,21 +194,41 @@ int main(int argc, char *argv[])
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
-    win[2].fill.a = 0x50;
+    win[2].fill.a = ALPHA;
+#endif
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
+#ifdef TRACE_MESSAGES
+    for (Window const* w = win; w != win+NO_OF_WINDOWS; ++w)
+    {
+        if (!mir_surface_is_valid(w->surface))
+        {
+            fprintf(stderr, "Invalid surface %td: %s.\n", w-win, mir_surface_get_error_message(w->surface));
+        }
+        else
+        {
+            mir_surface_get_parameters (w->surface, &parm);
+            fprintf(stderr, "Valid surface %td: name=%s, width=%d, height=%d, output=%d.\n", w-win, parm.name, parm.width, parm.height, parm.output_id);
+        }
+    }
+#endif
+
     while (running)
     {
         int w;
-        for (w = 0; w < (int)(sizeof(win)/sizeof(win[0])); w++)
+        for (w = 0; w != NO_OF_WINDOWS; ++w)
             draw_window(win + w);
     }
 
     mir_surface_release_sync(win[0].surface);
+#if NO_OF_WINDOWS > 1
     mir_surface_release_sync(win[1].surface);
+#endif
+#if NO_OF_WINDOWS > 2
     mir_surface_release_sync(win[2].surface);
+#endif
     mir_connection_release(conn);
 
     return 0;
