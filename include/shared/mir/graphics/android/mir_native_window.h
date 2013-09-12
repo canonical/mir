@@ -23,7 +23,6 @@
 #include <cstdarg>
 #include <memory>
 
-#include <deque>
 namespace mir
 {
 namespace graphics 
@@ -43,10 +42,8 @@ public:
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<SyncObject> const& fence);
     int setSwapInterval(int interval);
-    int cancelBuffer(struct ANativeWindowBuffer* buffer);
 private:
 
-    std::deque<ANativeWindowBuffer*> cancel_queue;
     std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
 };
 

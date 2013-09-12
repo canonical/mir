@@ -289,6 +289,19 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
     EXPECT_EQ(0, ret);
 }
 
+TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_behavior)
+{
+    using namespace testing;
+    ANativeWindowBuffer buffer;
+    int fence_fd = 33;
+    auto window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
+
+    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
+        .Times(1);
+
+    window->queueBuffer(window.get(), &buffer, fence_fd);
+}
+
 #if 0
 TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_behavior)
 {
