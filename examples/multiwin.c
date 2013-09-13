@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef struct
 {
@@ -119,9 +120,8 @@ static void draw_window(Window *win)
 }
 
 #define NO_OF_WINDOWS 3
-#define TRACE_MESSAGES
-#define ALPHA 0x50
-//#define ALPHA 0xe0
+//#define TRACE_MESSAGES
+uint8_t alpha = 0x50;
 
 int main(int argc, char *argv[])
 {
@@ -130,9 +130,9 @@ int main(int argc, char *argv[])
     Window win[NO_OF_WINDOWS];
     unsigned int f;
 
-    (void)argc;
-
     conn = mir_connect_sync(argv[1], argv[0]);
+    if (argc > 2) alpha = strtol(argv[2], 0, 0);
+
     if (!mir_connection_is_valid(conn))
     {
         fprintf(stderr, "Could not connect to a display server: %s.\n", mir_connection_get_error_message(conn));
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
-    win[0].fill.a = ALPHA;
+    win[0].fill.a = alpha;
 
 #if NO_OF_WINDOWS > 1
     parm.name = "green";
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
-    win[1].fill.a = ALPHA;
+    win[1].fill.a = alpha;
 #endif
 
 #if NO_OF_WINDOWS > 2
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
-    win[2].fill.a = ALPHA;
+    win[2].fill.a = alpha;
 #endif
 
     signal(SIGINT, shutdown);
