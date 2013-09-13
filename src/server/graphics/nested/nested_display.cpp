@@ -66,7 +66,7 @@ void mgn::detail::EGLDisplayHandle::initialize()
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
-    egl_context_ = eglCreateContext(egl_display, choose_config(detail::egl_attribs), EGL_NO_CONTEXT, egl_context_attribs);
+    egl_context_ = eglCreateContext(egl_display, choose_config(egl_attribs), EGL_NO_CONTEXT, egl_context_attribs);
     if (egl_context_ == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
 }
