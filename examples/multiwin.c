@@ -121,6 +121,7 @@ static void draw_window(Window *win)
 #define NO_OF_WINDOWS 3
 #define TRACE_MESSAGES
 #define ALPHA 0x50
+//#define ALPHA 0xe0
 
 int main(int argc, char *argv[])
 {
