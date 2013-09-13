@@ -60,6 +60,8 @@ public:
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
 
     void schedule_set_crtc();
+    
+    void set_power_mode(MirPowerMode mode) override;
 
 private:
     BufferObject* get_front_buffer_object();
