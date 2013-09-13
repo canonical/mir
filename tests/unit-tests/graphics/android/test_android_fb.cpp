@@ -631,15 +631,3 @@ TYPED_TEST(AndroidTestFramebufferInit, android_display_configuration_info)
     EXPECT_EQ(0, disp_conf.current_mode_index);
     //TODO fill physical_size_mm fields accordingly;
 }
-
-//Cannot configure android displays at this time
-TYPED_TEST(AndroidTestFramebufferInit, android_display_configure_output)
-{
-    auto display = make_display<TypeParam>(this->native_win, this->mock_display_report);
-    auto config = display->configuration();
-
-    mg::DisplayConfigurationOutputId id{0};
-    EXPECT_THROW({
-        config->configure_output(id, true, geom::Point{0,0}, 0, mir_power_mode_on);
-    }, std::runtime_error);
-}

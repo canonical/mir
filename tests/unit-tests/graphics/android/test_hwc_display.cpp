@@ -62,6 +62,11 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
 {
     using namespace testing;
 
+    geom::Size fake_display_size{223, 332};
+    EXPECT_CALL(*mock_hwc_device, display_size())
+        .Times(AnyNumber())
+        .WillRepeatedly(Return(fake_display_size)); 
+
     auto display = create_display();
 
     testing::InSequence sequence_enforcer;
@@ -80,8 +85,8 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
 
     geom::Size fake_display_size{223, 332};
     EXPECT_CALL(*mock_hwc_device, display_size())
-        .Times(1)
-        .WillOnce(Return(fake_display_size)); 
+        .Times(AnyNumber())
+        .WillRepeatedly(Return(fake_display_size)); 
     auto display = create_display();
     
     std::vector<geom::Rectangle> areas;
