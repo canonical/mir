@@ -66,22 +66,7 @@ void mgn::detail::EGLDisplayHandle::initialize()
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
-    static const EGLint context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-
-    static const EGLint config_attr[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-
-    egl_context_ = eglCreateContext(egl_display, choose_config(config_attr), EGL_NO_CONTEXT, context_attr);
+    egl_context_ = eglCreateContext(egl_display, choose_config(detail::egl_attribs), EGL_NO_CONTEXT, egl_context_attribs);
     if (egl_context_ == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
 }
@@ -125,11 +110,30 @@ mgn::NestedDisplay::NestedDisplay(
     event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
+    egl_pixel_format{mir_pixel_format_xbgr_8888},
     outputs{}
 {
     egl_display.initialize();
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
     configure(*configuration());
+
+
+    static unsigned const max_formats = 32;
+    MirPixelFormat formats[max_formats];
+    unsigned int valid_formats;
+
+    mir_connection_get_available_surface_formats(*connection, formats, max_formats, &valid_formats);
+
+    // Find an opaque buffer format
+    for (auto f = formats; f != formats+valid_formats; ++f)
+    {
+        if (*f == mir_pixel_format_xbgr_8888 ||
+            *f == mir_pixel_format_xrgb_8888)
+        {
+            egl_pixel_format = *f;
+            break;
+        }
+    }
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
@@ -163,14 +167,13 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                 geometry::Rectangle const area{output.top_left, output.modes[output.current_mode_index].size};
 
                 auto const& egl_display_mode = output.modes[output.current_mode_index];
-                auto const egl_display_format = output.pixel_formats[output.current_format_index];
 
                 MirSurfaceParameters const request_params =
                     {
                         "Mir nested display",
                         egl_display_mode.size.width.as_int(),
                         egl_display_mode.size.height.as_int(),
-                        MirPixelFormat(egl_display_format),
+                        MirPixelFormat(egl_pixel_format),
                         mir_buffer_usage_hardware,
                         static_cast<uint32_t>(output.id.as_value())
                     };
