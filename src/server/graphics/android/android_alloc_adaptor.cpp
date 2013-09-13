@@ -76,7 +76,6 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
             buffer->mir_dereference();
         });
 
-    printf("BUFFER ALLOC w %i h %i s %i format %i\n", width, height, stride, format);
     buffer->width = width;
     buffer->height = height;
     buffer->stride = stride;

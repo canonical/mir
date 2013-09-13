@@ -34,9 +34,7 @@ MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
 
-    buffer_to_driver->stride = buffer_to_driver->width;//* 4;
     buffer_to_driver->format = driver_pixel_format;
-//    buffer_to_driver->format = 0;
 
     return buffer_to_driver.get();
 }
@@ -51,13 +49,11 @@ void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer*, std
 
 void mcla::ClientSurfaceInterpreter::dispatch_driver_request_format(int format)
 {
-    printf("SETTING FORMAT! %i\n", format);
     driver_pixel_format = format;
 }
 
 int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
 {
-    printf("QUERY! %i\n", key);
     switch (key)
     {
         case NATIVE_WINDOW_WIDTH:
@@ -67,12 +63,11 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
             return surface.get_parameters().height;
         case NATIVE_WINDOW_FORMAT:
-            printf("FORMAT QUERY %i\n", driver_pixel_format);
             return driver_pixel_format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0;
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
-            return 1;
+            return 2;
         default:
             throw std::runtime_error("driver requested unsupported query");
     }

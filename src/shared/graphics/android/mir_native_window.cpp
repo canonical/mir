@@ -90,7 +90,6 @@ int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
-    printf("DEQUE.\n");
     *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
@@ -108,7 +107,6 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
-    printf("QUEuue.\n");
     auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
     auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
@@ -127,7 +125,6 @@ int setSwapInterval_static (struct ANativeWindow* window, int interval)
 int lockBuffer_static(struct ANativeWindow* /*window*/,
                       struct ANativeWindowBuffer* /*buffer*/)
 {
-    printf("LOCK\n");
     return 0;
 }
 
@@ -205,7 +202,6 @@ int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer,
 int mga::MirNativeWindow::query(int key, int* value ) const
 {
     *value = driver_interpreter->driver_requests_info(key);
-    printf("querying %i returns %i\n", key, *value);
     return 0;
 }
 
@@ -215,7 +211,6 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
     va_list args;
     va_copy(args, arg_list);
 
-    int a,b;
     int driver_format;
     switch(key)
     {
@@ -223,12 +218,7 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
             driver_format = va_arg(args, int);
             driver_interpreter->dispatch_driver_request_format(driver_format);
             break;
-        case NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS:
-            a = va_arg(args, int);
-            b = va_arg(args, int);
-            printf("SIZE CHANGE REQUEST %i %i\n", a, b); 
         default:
-            printf("UNSUPPORTED PERFORM! %i\n", key);
             break;
     }
 
