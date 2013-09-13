@@ -110,11 +110,30 @@ mgn::NestedDisplay::NestedDisplay(
     event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
+    egl_display_format{mir_pixel_format_xbgr_8888},
     outputs{}
 {
     egl_display.initialize();
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
     configure(*configuration());
+
+
+    static unsigned const max_formats = 32;
+    MirPixelFormat formats[max_formats];
+    unsigned int valid_formats;
+
+    mir_connection_get_available_surface_formats(*connection, formats, max_formats, &valid_formats);
+
+    // Find an opaque buffer format
+    for (auto f = formats; f != formats+valid_formats; ++f)
+    {
+        if (*f == mir_pixel_format_xbgr_8888 ||
+            *f == mir_pixel_format_xrgb_8888)
+        {
+            egl_display_format = *f;
+            break;
+        }
+    }
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
@@ -148,7 +167,6 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                 geometry::Rectangle const area{output.top_left, output.modes[output.current_mode_index].size};
 
                 auto const& egl_display_mode = output.modes[output.current_mode_index];
-                auto const egl_display_format = output.pixel_formats[output.current_format_index];
 
                 MirSurfaceParameters const request_params =
                     {

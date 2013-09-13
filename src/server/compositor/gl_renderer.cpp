@@ -281,7 +281,6 @@ void mc::GLRenderer::render(
 void mc::GLRenderer::clear(unsigned long frame)
 {
     frameno = frame;
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
