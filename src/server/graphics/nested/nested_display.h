@@ -121,7 +121,7 @@ private:
     std::shared_ptr<input::EventFilter> const event_handler;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
-    MirPixelFormat egl_display_format;
+    MirPixelFormat egl_pixel_format;
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;

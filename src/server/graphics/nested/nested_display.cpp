@@ -110,7 +110,7 @@ mgn::NestedDisplay::NestedDisplay(
     event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
-    egl_display_format{mir_pixel_format_xbgr_8888},
+    egl_pixel_format{mir_pixel_format_xbgr_8888},
     outputs{}
 {
     egl_display.initialize();
@@ -130,7 +130,7 @@ mgn::NestedDisplay::NestedDisplay(
         if (*f == mir_pixel_format_xbgr_8888 ||
             *f == mir_pixel_format_xrgb_8888)
         {
-            egl_display_format = *f;
+            egl_pixel_format = *f;
             break;
         }
     }
@@ -173,7 +173,7 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                         "Mir nested display",
                         egl_display_mode.size.width.as_int(),
                         egl_display_mode.size.height.as_int(),
-                        MirPixelFormat(egl_display_format),
+                        MirPixelFormat(egl_pixel_format),
                         mir_buffer_usage_hardware,
                         static_cast<uint32_t>(output.id.as_value())
                     };
