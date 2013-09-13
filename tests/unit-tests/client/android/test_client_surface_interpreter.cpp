@@ -236,3 +236,15 @@ TEST_F(AndroidInterpreterTest, native_window_height_query_hook)
 
     EXPECT_EQ(surf_params.height, height);
 }
+
+/* this is query key is a bit confusing from the system/window.h description.
+   what it means is the minimum number of buffers that the server reserves for its own use in steady 
+   state. The drivers consider 'steady state' to begin after the first call to queueBuffer*/
+TEST_F(AndroidInterpreterTest, native_window_minimum_undequeued_query_hook)
+{
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
+
+    auto num_buffers = interpreter.driver_requests_info(NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS);
+    EXPECT_EQ(1, num_buffers);
+}
