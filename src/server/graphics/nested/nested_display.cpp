@@ -173,7 +173,7 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                         "Mir nested display",
                         egl_display_mode.size.width.as_int(),
                         egl_display_mode.size.height.as_int(),
-                        MirPixelFormat(egl_pixel_format),
+                        egl_pixel_format,
                         mir_buffer_usage_hardware,
                         static_cast<uint32_t>(output.id.as_value())
                     };
