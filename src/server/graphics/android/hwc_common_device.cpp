@@ -101,9 +101,11 @@ void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
     int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank);
     if (err)
     {
+        std::string blanking_status_msg = "Could not " + 
+            (blank ? std::string("blank") : std::string("unblank")) + " display";
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Could not blank/unblank display")) <<
+                std::runtime_error(blanking_status_msg)) <<
             boost::errinfo_errno(-err));
     }    
 }
