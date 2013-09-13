@@ -120,7 +120,7 @@ static void draw_window(Window *win)
 }
 
 #define NO_OF_WINDOWS 3
-//#define TRACE_MESSAGES
+#define TRACE_MESSAGES
 uint8_t alpha = 0x50;
 
 int main(int argc, char *argv[])
@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
 
     conn = mir_connect_sync(argv[1], argv[0]);
     if (argc > 2) alpha = strtol(argv[2], 0, 0);
+
 
     if (!mir_connection_is_valid(conn))
     {
@@ -164,6 +165,7 @@ int main(int argc, char *argv[])
     }
 
 #ifdef TRACE_MESSAGES
+    fprintf(stderr, "alpha=%x\n", alpha);
     fprintf(stderr, "pixel formats=%u, index=%u, format=%u\n", valid_formats, f, parm.pixel_format);
 #endif
 
