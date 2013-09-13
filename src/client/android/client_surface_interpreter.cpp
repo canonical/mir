@@ -72,7 +72,7 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0;
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
-            return 2;
+            return 1;
         default:
             throw std::runtime_error("driver requested unsupported query");
     }
