@@ -138,6 +138,7 @@ mgn::NestedDisplay::~NestedDisplay() noexcept
 
 void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
+    std::unique_lock<std::mutex> lock(outputs_mutex);
     for (auto& i : outputs)
         f(*i.second);
 }
@@ -192,7 +193,11 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
 
     auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
-    outputs.swap(result);
+    {
+        std::unique_lock<std::mutex> lock(outputs_mutex);
+        outputs.swap(result);
+    }
+
     mir_connection_apply_display_config(*connection, conf);
 }
 
