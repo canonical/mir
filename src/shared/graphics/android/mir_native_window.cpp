@@ -131,21 +131,19 @@ int lockBuffer_static(struct ANativeWindow* /*window*/,
     return 0;
 }
 
-int cancelBuffer_deprecated_static(struct ANativeWindow* /*window*/,
-                        struct ANativeWindowBuffer* /*buffer*/)
+int cancelBuffer_deprecated_static(struct ANativeWindow* window,
+                        struct ANativeWindowBuffer* buffer)
 {
-    printf("cancel. dep\n");
-    return 0;
+    return cancelBuffer_static(window, buffer, -1);
 }
 
 int cancelBuffer_static(struct ANativeWindow* window,
-                        struct ANativeWindowBuffer* buffer, int fd)
+                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
-printf("CANCEL!\n");
     auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mga::SyncFence>(fd, ioctl_control);
+    auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->queueBuffer(buffer, fence);
+    return self->cancelBuffer(buffer, fence);
 }
 
 }
@@ -190,20 +188,20 @@ int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_
     return 0;
 }
 
-int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::SyncObject> const& fence)
+int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer,
+                                      std::shared_ptr<mga::SyncObject> const& fence)
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
 
-int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer)
+int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer,
+                                       std::shared_ptr<mga::SyncObject> const& fence)
 {
-    (void) buffer;
-    printf("CANCEL!\n");
-
- //   cancel_queue.push_back(buffer);
+    driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
+
 int mga::MirNativeWindow::query(int key, int* value ) const
 {
     *value = driver_interpreter->driver_requests_info(key);

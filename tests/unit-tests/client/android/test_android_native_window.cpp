@@ -294,31 +294,11 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_behavior)
     using namespace testing;
     ANativeWindowBuffer buffer;
     int fence_fd = 33;
-    auto window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
         .Times(1);
 
-    window->queueBuffer(window.get(), &buffer, fence_fd);
+    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
+    auto rc = window->cancelBuffer(window.get(), &buffer, fence_fd);
+    EXPECT_EQ(0, rc);
 }
-
-#if 0
-TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_behavior)
-{
-    ANativeWindowBuffer buffer1, buffer2;
-    EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
-        .Times(2)
-        .WillOnce(Return(&buffer1));
-        .WillOnce(Return(&buffer2));
-
-    auto window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
-
-    ANativeWindowBuffer *tmp;
-    window->dequeueBuffer(window.get(), &tmp, -1);
-    EXPECT_EQ(tmp, &buffer1);
-    window->cancelBuffer(window.get(), tmp, -1);
-    window->dequeueBuffer(window.get(), &tmp, -1);
-    window->cancelBuffer(window.get(), tmp, -1);
-
-}
-#endif

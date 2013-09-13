@@ -41,6 +41,7 @@ public:
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<SyncObject> const& fence);
+    int cancelBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<SyncObject> const& fence);
     int setSwapInterval(int interval);
 private:
 
