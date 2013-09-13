@@ -225,30 +225,22 @@ struct TestClient
         eglChooseConfig(disp, attribs, zz, 100, &n);
         egl_config = zz[0];
             eglGetConfigAttrib(disp, egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
-    printf("CONFIGS! %i: 0x%X (visual id %i)\n", n, (int) egl_config, visual_id);
        
     
-    printf("CREATING WIN SURFACE\n"); 
         egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
-        if (egl_surface == EGL_NO_SURFACE)
-            printf("SURFACE FAIL!!! %X\n", (int) eglGetError());
 
         context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-        int rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
-        if(rc == EGL_FALSE)
-            printf("FAIL! MAKE CURRENT RC %i\n", rc);
+        eglMakeCurrent(disp, egl_surface, egl_surface, context);
 
         glClearColor(1.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if( eglSwapBuffers(disp, egl_surface) == EGL_TRUE)
-            printf("SWAPBUF SUCESS!\n");
+        eglSwapBuffers(disp, egl_surface);
         
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
         /* release */
         mir_connection_release(connection);
-    printf("SUCESS!\n");
         return 0;
 
     }
@@ -373,16 +365,13 @@ struct StubServerGenerator : public mt::StubServerTool
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {
-        printf("REQUEST NEXT\n");
         {
             std::unique_lock<std::mutex> lk(next_guard);
             next_received = true;
             next_cv.notify_all();
 
             while (!next_allowed) {
-            printf("wait.\n");
                 allow_cv.wait(lk);
-            printf("unwait.\n");
             }
             next_allowed = false;
         }
@@ -406,7 +395,6 @@ struct StubServerGenerator : public mt::StubServerTool
         while (!next_received)
             next_cv.wait(lk);
         next_received = false;
-        printf("done wait.\n");
     }
 
     void allow_next_continue()
@@ -482,14 +470,12 @@ struct TestClientIPCRender : public testing::Test
         android_buffer = allocator->alloc_buffer(properties);
         second_android_buffer = allocator->alloc_buffer(properties);
         third_android_buffer = allocator->alloc_buffer(properties);
-        fourth_android_buffer = allocator->alloc_buffer(properties);
 
         buffer_converter = std::make_shared<mtd::TestGrallocMapper>();
 
         handle = android_buffer->native_buffer_handle();
         second_handle = second_android_buffer->native_buffer_handle();
         third_handle = third_android_buffer->native_buffer_handle();
-        fourth_handle = fourth_android_buffer->native_buffer_handle();
 
         /* start a server */
         mock_server = std::make_shared<mt::StubServerGenerator>(handle, 14);
@@ -517,12 +503,10 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<MirNativeBuffer> handle;
     std::shared_ptr<MirNativeBuffer> second_handle;
     std::shared_ptr<MirNativeBuffer> third_handle;
-    std::shared_ptr<MirNativeBuffer> fourth_handle;
 
     std::shared_ptr<mg::Buffer> android_buffer;
     std::shared_ptr<mg::Buffer> second_android_buffer;
     std::shared_ptr<mg::Buffer> third_android_buffer;
-    std::shared_ptr<mg::Buffer> fourth_android_buffer;
     std::shared_ptr<mga::AndroidGraphicBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
@@ -606,36 +590,23 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     /* activate client */
     render_accelerated_process->cont();
 
-    printf("ooo\n");
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     //1st DEQUEUE! (cancelled)
 
-    printf("WAIT 1 DONE.\n");
     mock_server->set_handle(second_handle, 15);
     mock_server->allow_next_continue();
 
     mock_server->wait_on_next_buffer();
     //2nd DEQUEUE! (canceled)
-    printf("WAIT 2 DONE.\n");
     mock_server->set_handle(third_handle, 16);
     mock_server->allow_next_continue();
 
-#if 0
-    mock_server->wait_on_next_buffer();
-    //2nd DEQUEUE! (canceled)
-    printf("WAIT 3 DONE.\n");
-    mock_server->set_handle(fourth_handle, 17);
-    mock_server->allow_next_continue();
-#endif
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    std::cout << "1 : " << red_pattern.check(buffer_converter->graphic_region_from_handle(handle)) << std::endl;
-    std::cout << "2 : " << red_pattern.check(buffer_converter->graphic_region_from_handle(second_handle)) << std::endl;
-    std::cout << "3 : " << red_pattern.check(buffer_converter->graphic_region_from_handle(third_handle)) << std::endl;
-    std::cout << "4 : " << red_pattern.check(buffer_converter->graphic_region_from_handle(fourth_handle)) << std::endl;
+    EXPECT_TRUE(red_pattern.check(buffer_converter->graphic_region_from_handle(second_handle)));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
