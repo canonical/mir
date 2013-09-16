@@ -146,7 +146,8 @@ void msh::MediatingDisplayChanger::configure_for_hardware_change(
 
     display_configuration_policy->apply_to(*conf);
     base_configuration = conf;
-    apply_base_config(pause_resume_system);
+    if (base_configuration_applied)
+        apply_base_config(pause_resume_system);
 
     /*
      * Clear all the per-session configurations, since they may have become
