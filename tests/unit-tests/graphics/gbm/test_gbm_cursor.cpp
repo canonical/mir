@@ -39,7 +39,7 @@ namespace
 struct MockKMSOutput : public mgg::KMSOutput
 {
     MOCK_METHOD0(reset, void());
-    MOCK_METHOD3(configure, void(geom::Displacement, size_t, MirPowerMode));
+    MOCK_METHOD2(configure, void(geom::Displacement, size_t));
     MOCK_CONST_METHOD0(size, geom::Size());
 
     MOCK_METHOD1(set_crtc, bool(uint32_t));
@@ -50,6 +50,8 @@ struct MockKMSOutput : public mgg::KMSOutput
     MOCK_METHOD1(move_cursor, void(geom::Point));
     MOCK_METHOD0(clear_cursor, void());
     MOCK_CONST_METHOD0(has_cursor, bool());
+
+    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
 };
 
 struct StubKMSOutputContainer : public mgg::KMSOutputContainer

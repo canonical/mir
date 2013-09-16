@@ -172,11 +172,10 @@ geom::Size mgg::RealKMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index, MirPowerMode new_power_mode)
+void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
 {
     fb_offset = offset;
     mode_index = kms_mode_index;
-    power_mode = new_power_mode;
 }
 
 bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
@@ -324,4 +323,10 @@ void mgg::RealKMSOutput::restore_saved_crtc()
 
         using_saved_crtc = true;
     }
+}
+
+void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
+{
+    // TODO:
+    (void) mode;
 }
