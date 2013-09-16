@@ -44,6 +44,8 @@ struct ClientContext
     ConfigurationMode mode;
     volatile sig_atomic_t running;
     volatile sig_atomic_t reconfigure;
+    
+    volatile int screen_disabled;
 };
 
 static int apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
@@ -154,9 +156,15 @@ static void toggle_power_between_on_and_off(struct ClientContext *context)
     {
         MirDisplayOutput *output = &conf->outputs[i];
         if (output->power_mode == mir_power_mode_on)
+        {
             output->power_mode = mir_power_mode_off;
+            context->screen_disabled = 1;
+        }
         else
+        {
             output->power_mode = mir_power_mode_on;
+            context->screen_disabled = 0;
+        }
     }
 
     apply_configuration(context->connection, conf);
@@ -237,7 +245,7 @@ int main(int argc, char *argv[])
     MirConnection *connection = mir_eglapp_native_connection();
     MirSurface *surface = mir_eglapp_native_surface();
 
-    struct ClientContext ctx = {connection, configuration_mode_unknown, 1, 0};
+    struct ClientContext ctx = {connection, configuration_mode_unknown, 1, 0, 0};
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
@@ -255,6 +263,12 @@ int main(int argc, char *argv[])
                      mod == 2 ? 1.0f : 0.0f,
                      1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // TODO: We avoid swapping buffers while the display is paused,
+        // to prevent hanging the server side thread.
+        while (ctx->screen_disabled)
+        {
+        }
         mir_eglapp_swap_buffers();
 
         if (ctx.reconfigure)
