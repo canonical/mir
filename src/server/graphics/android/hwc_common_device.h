@@ -22,6 +22,9 @@
 
 #include <hardware/hwcomposer.h>
 
+#include <mutex>
+#include <condition_variable>
+
 namespace mir
 {
 namespace graphics
@@ -59,6 +62,10 @@ protected:
 
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
+protected:
+    std::mutex blanked_mutex;
+    std::condition_variable blanked_cond;
+    bool blanked;
 private:
     HWCCallbacks callbacks;
 };

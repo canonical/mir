@@ -46,7 +46,8 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                       std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
     : hwc_device(hwc_device),
-      coordinator(coordinator) 
+      coordinator(coordinator),
+      blanked(false)
 {
     callbacks.hooks.invalidate = invalidate_hook;
     callbacks.hooks.vsync = vsync_hook;
@@ -98,6 +99,7 @@ void mga::HWCCommonDevice::notify_vsync()
 
 void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
 {
+    std::unique_guard<std::mutex> lg(blanked-mutex)
     int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank);
     if (err)
     {
@@ -108,4 +110,6 @@ void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
                 std::runtime_error(blanking_status_msg)) <<
             boost::errinfo_errno(-err));
     }    
+    blanked = blank;
+    blanked_cond.notify_all();
 }

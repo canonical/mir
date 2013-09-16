@@ -87,6 +87,9 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& b
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
+    std::unique_lock<std::mutex> lg(blanked_mutex);
+    while (blanked)
+        blanked_cond.wait(lg);
     /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
