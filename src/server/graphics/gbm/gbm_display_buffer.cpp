@@ -107,7 +107,8 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
       area(area),
-      needs_set_crtc{false}
+      needs_set_crtc{false},
+      power_mode(mir_power_mode_on)
 {
     egl.setup(platform->gbm, surface_gbm.get(), shared_context);
 
@@ -175,6 +176,9 @@ void mgg::GBMDisplayBuffer::post_update()
 void mgg::GBMDisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
+    std::unique_lock<std::mutex> lg(mutex);
+//    while (power_mode != mir_power_mode_on)
+//        cond.wait(lg);
     /*
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
@@ -324,8 +328,13 @@ void mgg::GBMDisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
-void mgg::GBMDisplayBuffer::set_power_mode(MirPowerMode mode)
+void mgg::GBMDisplayBuffer::set_power_mode(MirPowerMode new_mode)
 {
-    // TODO: Implement
-    (void) mode;
+    std::unique_lock<std::mutex> lg(mutex);
+    power_mode = new_mode;
+//    if (power_mode != mir_power_mode_on)
+    for (auto& output : outputs)
+        output->set_power_mode(power_mode);
+        
+    cond.notify_all();
 }

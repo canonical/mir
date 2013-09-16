@@ -72,6 +72,7 @@ private:
     bool has_cursor_;
 
     MirPowerMode power_mode;
+    int dpms_enum_id;
 };
 
 }
