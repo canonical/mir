@@ -33,6 +33,21 @@ namespace mgn = mir::graphics::nested;
 namespace mgnw = mir::graphics::nested::mir_api_wrappers;
 namespace geom = mir::geometry;
 
+EGLint const mgn::detail::nested_egl_config_attribs[] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 0,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
+
+EGLint const mgn::detail::nested_egl_context_attribs[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 2,
+    EGL_NONE
+};
+
 mgn::detail::EGLSurfaceHandle::EGLSurfaceHandle(EGLDisplay display, EGLNativeWindowType native_window, EGLConfig cfg)
     : egl_display(display),
       egl_surface(eglCreateWindowSurface(egl_display, cfg, native_window, NULL))
@@ -66,7 +81,7 @@ void mgn::detail::EGLDisplayHandle::initialize()
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
-    egl_context_ = eglCreateContext(egl_display, choose_config(egl_attribs), EGL_NO_CONTEXT, egl_context_attribs);
+    egl_context_ = eglCreateContext(egl_display, choose_config(detail::nested_egl_config_attribs), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
     if (egl_context_ == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
 }
@@ -255,8 +270,8 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
     public:
         NestedGLContext(detail::EGLDisplayHandle const& egl_display) :
             egl_display{egl_display},
-            egl_config{egl_display.choose_config(detail::egl_attribs)},
-            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::egl_context_attribs)}
+            egl_config{egl_display.choose_config(detail::nested_egl_config_attribs)},
+            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)}
         {
         }
 
