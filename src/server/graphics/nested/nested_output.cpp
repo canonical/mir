@@ -96,12 +96,6 @@ bool mgn::detail::NestedOutput::can_bypass() const
     return false;
 }
 
-void mgn::detail::NestedOutput::set_power_mode(MirPowerMode mode)
-{
-    (void) mode;
-    // TODO: We should support this by passing up to the host Mir via DisplayOutputConfiguration.
-}
-
 mgn::detail::NestedOutput::~NestedOutput() noexcept
 {
 }

@@ -48,7 +48,7 @@ protected:
     std::shared_ptr<mga::AndroidDisplay> create_display()
     {
         auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(mock_hwc_device);
-        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_report);
+        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_hwc_device, mock_display_report);
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;

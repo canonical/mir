@@ -24,6 +24,7 @@
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
+#include "display_support_provider.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -110,6 +111,7 @@ private:
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
                                     std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
+                                    std::shared_ptr<DisplaySupportProvider> const& display_provider,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
       egl_display{create_and_initialize_display()},
@@ -121,7 +123,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-                         native_window, egl_display, egl_context_shared)},
+          native_window, egl_display, egl_context_shared)},
+      display_provider(display_provider),
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
@@ -155,7 +158,11 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
 {
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
-        display_buffer->set_power_mode(output.power_mode);
+        // TODO: Properly support multiple monitor.
+        if (output.power_mode == mir_power_mode_on)
+            display_provider->blank_or_unblank_screen(false);
+        else
+            display_provider->blank_or_unblank_screen(true);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

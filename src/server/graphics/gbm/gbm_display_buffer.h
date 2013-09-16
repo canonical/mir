@@ -25,8 +25,6 @@
 #include <vector>
 #include <memory>
 #include <atomic>
-#include <mutex>
-#include <condition_variable>
 
 namespace mir
 {
@@ -62,8 +60,6 @@ public:
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
     void schedule_set_crtc();
     
-    void set_power_mode(MirPowerMode mode) override;
-
 private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
@@ -80,10 +76,6 @@ private:
     helpers::EGLHelper egl;
     geometry::Rectangle area;
     std::atomic<bool> needs_set_crtc;
-    
-    MirPowerMode power_mode;
-    std::mutex mutex;
-    std::condition_variable cond;
 };
 
 }

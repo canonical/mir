@@ -136,8 +136,6 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
             auto bounding_rect = group.bounding_rectangle();
             std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
             
-            MirPowerMode power_mode; // TODO: Hack
-
             group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
             {
                 uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
@@ -146,9 +144,8 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                 auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                     conf_output.current_mode_index);
                 kms_output->reset();
-                // TODO: Set power mode
-                power_mode = conf_output.power_mode;
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
+                kms_output->set_power_mode(conf_output.power_mode);
                 kms_outputs.push_back(kms_output);
             });
 
@@ -161,7 +158,6 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                                                                       std::move(surface),
                                                                       bounding_rect,
                                                                       shared_egl.context()}};
-            db->set_power_mode(power_mode);
             display_buffers_new.push_back(std::move(db));
         });
 
