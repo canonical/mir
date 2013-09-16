@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
 
         // TODO: We avoid swapping buffers while the display is paused,
         // to prevent hanging the server side thread.
-        while (ctx->screen_disabled)
+        while (ctx.screen_disabled)
         {
         }
         mir_eglapp_swap_buffers();
