@@ -11,6 +11,7 @@ add_library(
   android_buffer_allocator.cpp
   buffer.cpp
   android_display.cpp
+  android_display_configuration.cpp
   gpu_hwc_android_display_buffer_factory.cpp
   hwc_layerlist.cpp
   hwc10_device.cpp

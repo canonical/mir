@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/egl_resources.h"
 #include "android_framebuffer_window.h"
+#include "android_display_configuration.h"
 
 #include <EGL/egl.h>
 #include <memory>
@@ -74,6 +75,8 @@ private:
     EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface_dummy;
     std::unique_ptr<DisplayBuffer> display_buffer;
+    
+    AndroidDisplayConfiguration current_configuration;
 };
 
 }
