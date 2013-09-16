@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
     ctx.mode = configuration_mode_unknown;
     ctx.running = 1;
     ctx.reconfigure = 0; 
-    ctx.screen_disabled = 0;
+    ctx.screen_daisabled = 0;
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
@@ -286,8 +286,8 @@ int main(int argc, char *argv[])
             {
                 ctx.screen_disabled_condition.wait(lg);
             }
+            mir_eglapp_swap_buffers();
         }
-        mir_eglapp_swap_buffers();
 
         if (ctx.reconfigure)
         {
