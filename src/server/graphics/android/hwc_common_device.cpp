@@ -99,7 +99,8 @@ void mga::HWCCommonDevice::notify_vsync()
 
 void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
 {
-    std::unique_guard<std::mutex> lg(blanked-mutex)
+    std::unique_lock<std::mutex> lg(blanked_mutex);
+                                             
     int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank);
     if (err)
     {
