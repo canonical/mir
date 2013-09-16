@@ -263,7 +263,9 @@ int main(int argc, char *argv[])
                      mod == 2 ? 1.0f : 0.0f,
                      1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
+        // TODO: We avoid swapping buffers while the display is paused,
+        // to prevent hanging the server side thread.
         while (ctx->screen_disabled)
         {
         }
