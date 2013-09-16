@@ -30,6 +30,9 @@
 #include <string.h>
 #include <time.h>
 
+#include <mutex>
+#include <condition_variable>
+
 typedef enum
 {
     configuration_mode_unknown,
@@ -46,6 +49,8 @@ struct ClientContext
     volatile sig_atomic_t reconfigure;
     
     volatile int screen_disabled;
+    std::mutex screen_disabled_mutex;
+    std::condition_variable screen_disabled_condition;
 };
 
 static int apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
@@ -150,6 +155,8 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
 
 static void toggle_power_between_on_and_off(struct ClientContext *context)
 {
+    std::unique_lock<std::mutex> lg(context->screen_disabled_mutex);
+
     MirDisplayConfiguration *conf = 
         mir_connection_create_display_config(context->connection);
     for (uint32_t i = 0; i < conf->num_outputs; i++)
@@ -169,6 +176,8 @@ static void toggle_power_between_on_and_off(struct ClientContext *context)
 
     apply_configuration(context->connection, conf);
     mir_display_config_destroy(conf);
+
+    context->screen_disabled_condition.notify_all();
 }
 
 static void display_change_callback(MirConnection *connection, void *context)
@@ -245,7 +254,12 @@ int main(int argc, char *argv[])
     MirConnection *connection = mir_eglapp_native_connection();
     MirSurface *surface = mir_eglapp_native_surface();
 
-    struct ClientContext ctx = {connection, configuration_mode_unknown, 1, 0, 0};
+    struct ClientContext ctx;
+    ctx.connection = connection;
+    ctx.mode = configuration_mode_unknown;
+    ctx.running = 1;
+    ctx.reconfigure = 0; 
+    ctx.screen_disabled = 0;
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
@@ -265,9 +279,13 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         // TODO: We avoid swapping buffers while the display is paused,
-        // to prevent hanging the server side thread.
-        while (ctx.screen_disabled)
+        // to prevent hanging the server side IPC thread.
         {
+            std::unique_lock<std::mutex> lg(ctx.screen_disabled_mutex);
+            while (ctx.screen_disabled)
+            {
+                ctx.screen_disabled_condition.wait(lg);
+            }
         }
         mir_eglapp_swap_buffers();
 
