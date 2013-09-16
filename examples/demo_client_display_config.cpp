@@ -289,12 +289,15 @@ int main(int argc, char *argv[])
                 ctx.screen_disabled_condition.wait(lg);
             }
             mir_eglapp_swap_buffers();
-        }
 
-        if (ctx.reconfigure)
-        {
-            configure_display(&ctx, ctx.mode);
-            ctx.reconfigure = 0;
+            if (!ctx.screen_disabled)
+            {
+                if (ctx.reconfigure)
+                {
+                    configure_display(&ctx, ctx.mode);
+                    ctx.reconfigure = 0;
+                }
+            }
         }
     }
 
