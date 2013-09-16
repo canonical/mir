@@ -78,6 +78,14 @@ typedef enum MirLifecycleState
     mir_lifecycle_state_will_suspend,
     mir_lifecycle_state_resumed
 } MirLifecycleState;
+
+typedef enum MirPowerMode
+{
+    mir_power_mode_on, /* Display in use. */
+    mir_power_mode_standby, /* Blanked, low power. */
+    mir_power_mode_suspend, /* Blanked, lowest power. */
+    mir_power_mode_off /* Powered down. */
+} MirPowerMode;
 /**@}*/
 
 #endif

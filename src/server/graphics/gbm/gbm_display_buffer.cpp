@@ -323,3 +323,9 @@ void mgg::GBMDisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;
 }
+
+void mgg::GBMDisplayBuffer::set_power_mode(MirPowerMode mode)
+{
+    // TODO: Implement
+    (void) mode;
+}

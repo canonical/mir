@@ -144,7 +144,8 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                 auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                     conf_output.current_mode_index);
                 kms_output->reset();
-                kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
+                // TODO: Set power mode
+                kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index, conf_output.power_mode);
                 kms_outputs.push_back(kms_output);
             });
 
