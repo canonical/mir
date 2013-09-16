@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/stub_display_support_provider.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -91,7 +92,8 @@ std::shared_ptr<mg::Display> make_display<DummyGPUDisplayType>(
     std::shared_ptr<mg::DisplayReport> const& listener)
 {
     auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
-    return std::make_shared<mga::AndroidDisplay>(fbwin, db_factory, listener);
+    return std::make_shared<mga::AndroidDisplay>(fbwin, db_factory, 
+        std::make_shared<mtd::StubDisplaySupportProvider>(), listener);
 }
 
 template <>
@@ -103,7 +105,8 @@ std::shared_ptr<mg::Display> make_display<DummyHWCDisplayType>(
     ON_CALL(*mock_hwc_device, display_size())
         .WillByDefault(testing::Return(display_size)); 
     auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(mock_hwc_device);
-    return std::make_shared<mga::AndroidDisplay>(fbwin, db_factory, listener);
+    return std::make_shared<mga::AndroidDisplay>(fbwin, db_factory,
+        std::make_shared<mtd::StubDisplaySupportProvider>(), listener);
 }
 
 

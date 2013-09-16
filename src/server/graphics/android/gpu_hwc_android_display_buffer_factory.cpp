@@ -26,8 +26,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <mutex>
-#include <condition_variable>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
@@ -114,12 +112,6 @@ public:
         return false;
     }
     
-    void set_power_mode(MirPowerMode mode) override
-    {
-        // TODO: We should support this.
-        (void) mode;
-    }
-
 protected:
     std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
     EGLDisplay const egl_display;
@@ -149,36 +141,12 @@ public:
 
     void post_update() override
     {
-        std::unique_lock<std::mutex> lg(mutex);
-        
-        while (blanked)
-            cond.wait(lg);
-
         hwc_device->commit_frame(egl_display, egl_surface);
-    }
-
-    void set_power_mode(MirPowerMode mode) override
-    {
-        std::unique_lock<std::mutex> lg(mutex);
-
-        if (mode == mir_power_mode_on)
-        {
-            hwc_device->blank_or_unblank_screen(false);
-            blanked = false;
-        }
-        else
-        {
-            hwc_device->blank_or_unblank_screen(true); // TODO: Can we be more granular with the standby and suspend settings?
-            blanked = true;
-        }
-        cond.notify_all();
     }
 
 private:
     std::shared_ptr<mga::HWCDevice> const hwc_device;
     
-    std::mutex mutex;
-    std::condition_variable cond;
     bool blanked;
 };
 

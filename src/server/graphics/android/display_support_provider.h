@@ -44,6 +44,8 @@ public:
     //post immediately, or be deferred.
     virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual void sync_to_display(bool sync) = 0;
+    
+    virtual void blank_or_unblank_screen(bool blank) = 0;
 protected:
     DisplaySupportProvider() = default;
     DisplaySupportProvider& operator=(DisplaySupportProvider const&) = delete;

@@ -61,8 +61,6 @@ public:
 
     void schedule_set_crtc();
     
-    void set_power_mode(MirPowerMode mode) override;
-
 private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
