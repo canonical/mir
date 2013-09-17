@@ -286,14 +286,10 @@ int main(int argc, char *argv[])
 
         // TODO: We avoid swapping buffers while the display is paused,
         // to prevent hanging the server side IPC thread.
-        {
-            std::unique_lock<std::mutex> lg(ctx.screen_disabled_mutex);
-            while (ctx.screen_disabled)
-            {
-                ctx.screen_disabled_condition.wait(lg);
-            }
-            mir_eglapp_swap_buffers();
-        }
+        std::unique_lock<std::mutex> lg(ctx.screen_disabled_mutex);
+        while (ctx.screen_disabled)
+            ctx.screen_disabled_condition.wait(lg);
+        mir_eglapp_swap_buffers();
         
         if (!ctx.screen_disabled)
         {
