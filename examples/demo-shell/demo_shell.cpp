@@ -98,7 +98,6 @@ try
             // and the SessionStore
             wm->set_focus_controller(config.the_focus_controller());
             wm->set_session_manager(config.the_session_manager());
-            wm->set_display(config.the_display());
         });
     return 0;
 }
