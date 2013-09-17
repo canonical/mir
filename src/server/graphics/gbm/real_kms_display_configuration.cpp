@@ -229,6 +229,8 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     else
     {
         auto& output = *iter;
+        
+        printf("THIS CODE IS NTO DEAD YAY\n");
 
         output.modes = modes;
         output.preferred_mode_index = preferred_mode_index;
