@@ -127,7 +127,8 @@ void msh::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Se
                                output.current_mode_index,
                                mir_power_mode_on);
     });
-    configure(session, conf);
+    if (conf != active_configuration())
+        configure(session, conf);
 }
 
 void msh::MediatingDisplayChanger::configure(
