@@ -155,8 +155,10 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
 
 static void toggle_power_between_on_and_off(struct ClientContext *context)
 {
+    printf("Entering DPMS toggle \n");
     std::unique_lock<std::mutex> lg(context->screen_disabled_mutex);
 
+    printf("Acquired screen lock \n");
     MirDisplayConfiguration *conf = 
         mir_connection_create_display_config(context->connection);
     for (uint32_t i = 0; i < conf->num_outputs; i++)
@@ -166,11 +168,13 @@ static void toggle_power_between_on_and_off(struct ClientContext *context)
             continue;
         if (context->screen_disabled == 0)
         {
+            printf("Powering off \n");
             output->power_mode = mir_power_mode_off;
             context->screen_disabled = 1;
         }
         else
         {
+            printf("Powering on \n");
             output->power_mode = mir_power_mode_on;
             context->screen_disabled = 0;
         }
