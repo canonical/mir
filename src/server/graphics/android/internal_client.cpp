@@ -35,12 +35,13 @@ EGLNativeDisplayType mga::InternalClient::egl_native_display()
 
 EGLNativeWindowType mga::InternalClient::egl_native_window(std::shared_ptr<InternalSurface> const& surface)
 {
-    if (!client_window)
+    if (!client_windows[surface])
     {
         auto cache = std::make_shared<mga::InterpreterCache>();
         auto interpreter = std::make_shared<mga::InternalClientWindow>(surface, cache); 
-        client_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+        client_windows[surface] = std::make_shared<mga::MirNativeWindow>(interpreter);
+        return client_windows[surface];
     }
 
-    return client_window.get();
+    return client_windows[surface];
 }
