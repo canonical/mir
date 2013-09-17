@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
 #include <mir/geometry/rectangle.h>
-#include <mir_toolkit/common.h>
 
 #include <memory>
 
@@ -50,7 +49,7 @@ public:
 
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
-    
+
 protected:
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;

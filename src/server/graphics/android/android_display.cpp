@@ -158,7 +158,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
 {
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
-        // TODO: Properly support multiple monitor.
+        // TODO: Properly support multiple outputs
         if (output.power_mode == mir_power_mode_on)
             display_provider->blank_or_unblank_screen(false);
         else

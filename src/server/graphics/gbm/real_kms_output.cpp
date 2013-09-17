@@ -162,7 +162,8 @@ void mgg::RealKMSOutput::reset()
 
     if (!connector)
         BOOST_THROW_EXCEPTION(std::runtime_error("No DRM connector found\n"));
-    
+
+    // TODO: What if we can't locate the DPMS property?
     for (int i = 0; i < connector->count_props; i++)
     {
         auto prop = drmModeGetProperty(drm_fd, connector->props[i]);
@@ -200,10 +201,10 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
             connector_name(connector.get()) +
             " has no associated CRTC to set a framebuffer on"));
 
-    auto  ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
-                               fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
-                               &connector->connector_id, 1,
-                               &connector->modes[mode_index]);
+    auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
+                              fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
+                              &connector->connector_id, 1,
+                              &connector->modes[mode_index]);
     if (ret)
     {
         current_crtc = nullptr;
@@ -353,8 +354,7 @@ void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
     if (power_mode != mode)
     {
         power_mode = mode;
-        power_cond.notify_all();
         drmModeConnectorSetProperty(drm_fd, connector_id,
-                                  dpms_enum_id, mode);
+                                   dpms_enum_id, mode);
     }
 }

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
-/home/racarr/src/mir/gbm-dpms/examples/demo-sh */
+ */
 
 #include "window_manager.h"
 
@@ -92,43 +92,39 @@ bool me::WindowManager::handle(MirEvent const& event)
     static bool display_off = false;
     assert(focus_controller);
     assert(display);
+    assert(compositor);
 
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
     {
-//        if (event.key.modifiers & mir_key_modifier_alt &&
-//            event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
-//        {
-//            focus_controller->focus_next();
-//            return true;
-//        }
+        if (event.key.modifiers & mir_key_modifier_alt &&
+            event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
+        {
+            focus_controller->focus_next();
+            return true;
+        }
         if (event.key.modifiers & mir_key_modifier_alt && event.key.scan_code == KEY_P)
         {
             compositor->stop();
-            printf("Toggling dpms \n");
             auto conf = display->configuration();
             conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
             {
                 MirPowerMode power_mode;
                 if (!output.used) return;
 
-                printf("Togglin display, display off: %d \n", display_off);
                 if (display_off == true)
                     power_mode = mir_power_mode_on;
                 else
                     power_mode = mir_power_mode_off;
 
-                printf("Configuring output \n");
                 conf->configure_output(output.id, output.used,
-                                       output.top_left, output.current_mode_index,
+                                       output.top_left, 
+                                       output.current_mode_index,
                                        power_mode);
-                printf("configured output\n");
             });
             display_off = !display_off;
 
-            printf("Configuring display \n");
             display->configure(*conf.get());
-            printf("Configured display \n");
             compositor->start();
             return true;
         }

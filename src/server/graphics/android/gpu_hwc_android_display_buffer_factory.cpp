@@ -25,7 +25,6 @@
 #include "mir/graphics/egl_resources.h"
 
 #include <boost/throw_exception.hpp>
-
 #include <stdexcept>
 
 namespace mg = mir::graphics;
