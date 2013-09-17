@@ -36,38 +36,7 @@
 typedef enum
 {
     configuration_mode_unknown,
-[ 34%] Built target eglapp
-[ 34%] Built target mir_demo_client_basic
-[ 34%] Built target mir_demo_client_display_config
-[ 36%] Built target mir_demo_client_eglflash
-[ 36%] Built target mir_demo_client_eglplasma
-[ 36%] Built target mir_demo_client_egltriangle
-[ 36%] Built target mir_demo_client_fingerpaint
-[ 39%] Built target mir_demo_client_flicker
-[ 39%] Built target mir_demo_client_multiwin
-[ 39%] Built target mir_demo_client_progressbar
-[ 39%] Built target mirdraw
-[ 39%] Built target mir_demo_client_scroll
-[ 41%] Built target mirnestedgraphics
-[ 41%] Built target mirsharedgeometry
-[ 43%] Built target mirplatform
-[ 50%] Built target mircompositor
-[ 60%] Built target mirinput
-[ 63%] Built target mirlogging
-[ 65%] Built target mirlttng
-[ 67%] Built target mirsurfaces
-[ 69%] Built target miroptions
-[ 78%] Built target mirshell
-[ 86%] Built target mirfrontend
-[ 86%] Built target mirtime
-[ 89%] Built target mirserver
-[ 91%] Built target mir_demo_server_basic
-[ 91%] Built target mir_demo_standalone_input_filter
-[ 93%] Built target mir_demo_standalone_render_surfaces
-[ 95%] Built target mir_demo_standalone_render_to_fb
-[ 97%] Built target mir_demo_standalone_inprocess_egl
-[100%] Built target mir_demo_server_shell
-phablet@ubuntu-phablet:~/src/gbm-dpms/build/examp    configuration_mode_clone,
+    configuration_mode_clone,
     configuration_mode_horizontal,
     configuration_mode_vertical
 } ConfigurationMode;
