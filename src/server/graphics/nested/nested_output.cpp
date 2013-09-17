@@ -37,21 +37,6 @@ mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
     mir_surface_release_sync(mir_surface);
 }
 
-EGLint const mgn::detail::egl_attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-EGLint const mgn::detail::egl_context_attribs[] = {
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-
 mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
@@ -59,8 +44,8 @@ mgn::detail::NestedOutput::NestedOutput(
     std::shared_ptr<input::EventFilter> const& event_handler) :
     egl_display(egl_display),
     mir_surface{mir_surface},
-    egl_config{egl_display.choose_config(egl_attribs)},
-    egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), egl_context_attribs)},
+    egl_config{egl_display.choose_config(nested_egl_config_attribs)},
+    egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     event_handler{event_handler},
     egl_surface{egl_display, egl_display.native_window(egl_config, mir_surface), egl_config}

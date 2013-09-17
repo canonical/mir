@@ -78,9 +78,6 @@ private:
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
 };
-
-extern EGLint const egl_attribs[];
-extern EGLint const egl_context_attribs[];
 }
 }
 }
