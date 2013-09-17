@@ -106,3 +106,9 @@ void mfd::ProtobufBufferPacker::pack_stride(geometry::Stride stride)
 {
     buffer_response->set_stride(stride.as_uint32_t());
 }
+
+void mfd::ProtobufBufferPacker::pack_flags(unsigned int flags)
+{
+    buffer_response->set_flags(flags);
+}
+

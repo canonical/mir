@@ -146,6 +146,7 @@ void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& 
     }
 
     packer->pack_stride(buffer->stride()); 
+    packer->pack_flags(native_handle->flags);
 }
 
 void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
