@@ -48,7 +48,7 @@ struct ClientContext
     volatile sig_atomic_t running;
     volatile sig_atomic_t reconfigure;
     
-    volatile int screen_disabled;
+    int screen_disabled;
     std::mutex screen_disabled_mutex;
     std::condition_variable screen_disabled_condition;
 };
@@ -291,14 +291,14 @@ int main(int argc, char *argv[])
             ctx.screen_disabled_condition.wait(lg);
         mir_eglapp_swap_buffers();
         
-        if (!ctx.screen_disabled)
-        {
-            if (ctx.reconfigure)
-            {
-                configure_display(&ctx, ctx.mode);
-                ctx.reconfigure = 0;
-            }
-        }
+//        if (!ctx.screen_disabled)
+//        {
+//            if (ctx.reconfigure)
+//            {
+//                configure_display(&ctx, ctx.mode);
+//                ctx.reconfigure = 0;
+//            }
+//        }
     }
 
     mir_eglapp_shutdown();
