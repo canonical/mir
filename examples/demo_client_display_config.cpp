@@ -164,7 +164,7 @@ static void toggle_power_between_on_and_off(struct ClientContext *context)
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        if (!output->connected)
+        if (!output->used)
             continue;
         if (context->screen_disabled == 0)
         {
