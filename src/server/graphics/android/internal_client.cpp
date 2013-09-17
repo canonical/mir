@@ -24,7 +24,6 @@
 namespace mga=mir::graphics::android;
 
 mga::InternalClient::InternalClient()
-    : client_window(0)
 {
 }
 
@@ -40,8 +39,8 @@ EGLNativeWindowType mga::InternalClient::egl_native_window(std::shared_ptr<Inter
         auto cache = std::make_shared<mga::InterpreterCache>();
         auto interpreter = std::make_shared<mga::InternalClientWindow>(surface, cache); 
         client_windows[surface] = std::make_shared<mga::MirNativeWindow>(interpreter);
-        return client_windows[surface];
+        return client_windows[surface].get();
     }
 
-    return client_windows[surface];
+    return client_windows[surface].get();
 }
