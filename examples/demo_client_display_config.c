@@ -30,9 +30,6 @@
 #include <string.h>
 #include <time.h>
 
-#include <mutex>
-#include <condition_variable>
-
 typedef enum
 {
     configuration_mode_unknown,
@@ -47,10 +44,6 @@ struct ClientContext
     ConfigurationMode mode;
     volatile sig_atomic_t running;
     volatile sig_atomic_t reconfigure;
-    
-    int screen_disabled;
-    std::mutex screen_disabled_mutex;
-    std::condition_variable screen_disabled_condition;
 };
 
 static int apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
@@ -153,39 +146,6 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
     mir_display_config_destroy(conf);
 }
 
-static void toggle_power_between_on_and_off(struct ClientContext *context)
-{
-    printf("Entering DPMS toggle \n");
-    std::unique_lock<std::mutex> lg(context->screen_disabled_mutex);
-
-    printf("Acquired screen lock \n");
-    MirDisplayConfiguration *conf = 
-        mir_connection_create_display_config(context->connection);
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
-    {
-        MirDisplayOutput *output = &conf->outputs[i];
-        if (!output->used)
-            continue;
-        if (context->screen_disabled == 0)
-        {
-            printf("Powering off \n");
-            output->power_mode = mir_power_mode_off;
-            context->screen_disabled = 1;
-        }
-        else
-        {
-            printf("Powering on \n");
-            output->power_mode = mir_power_mode_on;
-            context->screen_disabled = 0;
-        }
-    }
-
-    apply_configuration(context->connection, conf);
-    mir_display_config_destroy(conf);
-
-    context->screen_disabled_condition.notify_all();
-}
-
 static void display_change_callback(MirConnection *connection, void *context)
 {
     (void)context;
@@ -197,10 +157,9 @@ static void display_change_callback(MirConnection *connection, void *context)
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d power_mode: %d\n",
+        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d\n",
                output->output_id, output->connected,
-               output->used, output->position_x, output->position_y,
-               output->power_mode);
+               output->used, output->position_x, output->position_y);
     }
 
     mir_display_config_destroy(conf);
@@ -234,10 +193,6 @@ static void event_callback(
         {
             configure_display(ctx, configuration_mode_vertical);
         }
-        else if (event->key.key_code == XKB_KEY_p)
-        {
-            toggle_power_between_on_and_off(ctx);
-        }
     }
 }
 
@@ -251,8 +206,7 @@ int main(int argc, char *argv[])
                "has the focus, use the following keys to change the display configuration:\n"
                " c: clone outputs\n"
                " h: arrange outputs horizontally in the virtual space\n"
-               " v: arrange outputs vertically in the virtual space\n"
-               " p: Toggle display power on/off\n");
+               " v: arrange outputs vertically in the virtual space\n");
 
         return 1;
     }
@@ -260,12 +214,7 @@ int main(int argc, char *argv[])
     MirConnection *connection = mir_eglapp_native_connection();
     MirSurface *surface = mir_eglapp_native_surface();
 
-    struct ClientContext ctx;
-    ctx.connection = connection;
-    ctx.mode = configuration_mode_unknown;
-    ctx.running = 1;
-    ctx.reconfigure = 0; 
-    ctx.screen_disabled = 0;
+    struct ClientContext ctx = {connection, configuration_mode_unknown, 1, 0};
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
@@ -283,20 +232,8 @@ int main(int argc, char *argv[])
                      mod == 2 ? 1.0f : 0.0f,
                      1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        mir_eglapp_swap_buffers();
 
-        // TODO: We avoid swapping buffers while the display is paused,
-        // to prevent hanging the server side IPC thread.
-        {
-            printf("About to take lock rendering \n");
-            std::unique_lock<std::mutex> lg(ctx.screen_disabled_mutex);
-            printf("Took lock rendering \n");
-            while (ctx.screen_disabled)
-                ctx.screen_disabled_condition.wait(lg);
-            printf("About to swap buffers \n");
-            mir_eglapp_swap_buffers();
-            printf("About to release lock rendering \n");
-        }
-        
         if (ctx.reconfigure)
         {
             configure_display(&ctx, ctx.mode);
