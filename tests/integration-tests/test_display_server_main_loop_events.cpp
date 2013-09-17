@@ -250,14 +250,6 @@ public:
         return mock_display_changer;
     }
 
-    std::shared_ptr<mir::ServerStatus> the_server_status() override
-    {
-        if (!mock_server_status)
-            mock_server_status = std::make_shared<testing::NiceMock<mtd::MockServerStatus>>();
-
-        return mock_server_status;
-    }
-
     std::shared_ptr<MockDisplay> the_mock_display()
     {
         the_display();
@@ -288,12 +280,6 @@ public:
         return mock_display_changer;
     }
 
-    std::shared_ptr<mtd::MockServerStatus> the_mock_server_status()
-    {
-        the_server_status();
-        return mock_server_status;
-    }
-
     void emit_pause_event_and_wait_for_handler()
     {
         kill(getpid(), pause_signal);
@@ -321,13 +307,77 @@ private:
     std::shared_ptr<MockCommunicator> mock_communicator;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
     std::shared_ptr<MockDisplayChanger> mock_display_changer;
-    std::shared_ptr<mtd::MockServerStatus> mock_server_status;
 
     mt::Pipe p;
     int const pause_signal;
     int const resume_signal;
 };
 
+class TestServerStatusConfig : public mtf::TestingServerConfiguration
+{
+public:
+    TestServerStatusConfig()
+        : pause_signal{SIGUSR1}, resume_signal{SIGUSR2}
+    {
+    }
+
+    std::shared_ptr<mg::Display> the_display() override
+    {
+        if (!mock_display)
+        {
+            auto display = mtf::TestingServerConfiguration::the_display();
+            mock_display = std::make_shared<MockDisplay>(display,
+                                                         pause_signal,
+                                                         resume_signal,
+                                                         p.read_fd());
+        }
+
+        return mock_display;
+    }
+
+    std::shared_ptr<mir::ServerStatus> the_server_status() override
+    {
+        if (!mock_server_status)
+            mock_server_status = std::make_shared<mtd::MockServerStatus>();
+
+        return mock_server_status;
+    }
+
+    std::shared_ptr<MockDisplay> the_mock_display()
+    {
+        the_display();
+        return mock_display;
+    }
+
+    std::shared_ptr<mtd::MockServerStatus> the_mock_server_status()
+    {
+        the_server_status();
+        return mock_server_status;
+    }
+
+    void emit_pause_event_and_wait_for_handler()
+    {
+        kill(getpid(), pause_signal);
+        while (!mock_display->pause_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
+    }
+
+    void emit_resume_event_and_wait_for_handler()
+    {
+        kill(getpid(), resume_signal);
+        while (!mock_display->resume_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
+    }
+
+private:
+    std::shared_ptr<MockDisplay> mock_display;
+    std::shared_ptr<mtd::MockServerStatus> mock_server_status;
+
+    mt::Pipe p;
+    int const pause_signal;
+    int const resume_signal;
+};
+  
 }
 
 TEST(DisplayServerMainLoopEvents, display_server_shuts_down_properly_on_sigint)
@@ -604,41 +654,18 @@ TEST(DisplayServerMainLoopEvents, server_status)
 {
     using namespace testing;
 
-    TestMainLoopServerConfig server_config;
+    TestServerStatusConfig server_config;
 
-    auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
-    auto mock_communicator = server_config.the_mock_communicator();
-    auto mock_input_manager = server_config.the_mock_input_manager();
-    auto mock_display_changer = server_config.the_mock_display_changer();
     auto mock_server_status = server_config.the_mock_server_status();
 
     {
         InSequence s;
 
-        /* Start */
-        EXPECT_CALL(*mock_communicator, start()).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
-        EXPECT_CALL(*mock_input_manager, start()).Times(1);
-
-        /* Pause */
-        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
-        EXPECT_CALL(*mock_communicator, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
         EXPECT_CALL(*mock_server_status, paused()).Times(1);
-
-        /* Resume */
         EXPECT_CALL(*mock_display, resume()).Times(1);
-        EXPECT_CALL(*mock_communicator, start()).Times(1);
-        EXPECT_CALL(*mock_input_manager, start()).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_server_status, resumed()).Times(1);
-
-        /* Stop */
-        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
-        EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
 
     mir::run_mir(server_config,
