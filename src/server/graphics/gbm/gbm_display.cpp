@@ -123,6 +123,7 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
+    printf("Configuring from gbm display \n");
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
 

@@ -200,17 +200,10 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
             connector_name(connector.get()) +
             " has no associated CRTC to set a framebuffer on"));
 
-    int ret = 0;
-    if (fb_id != 0)
-        ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
-                                  fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
-                                  &connector->connector_id, 1,
-                                  &connector->modes[mode_index]);
-    else
-        ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
-                                  0, 0, 0,
-                                  0, 0,
-                                  0);
+    auto  ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
+                               fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
+                               &connector->connector_id, 1,
+                               &connector->modes[mode_index]);
     if (ret)
     {
         current_crtc = nullptr;
@@ -223,6 +216,7 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
 
 bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 {
+    std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
         return true;
     if (!current_crtc)
@@ -235,6 +229,7 @@ bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 
 void mgg::RealKMSOutput::wait_for_page_flip()
 {
+    std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
         return;
     if (!current_crtc)
@@ -353,7 +348,13 @@ void mgg::RealKMSOutput::restore_saved_crtc()
 
 void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
 {
-    power_mode = mode;
-    drmModeConnectorSetProperty(drm_fd, connector_id,
-                                dpms_enum_id, mode);
+    std::lock_guard<std::mutex> lg(power_mutex);
+
+    if (power_mode != mode)
+    {
+        power_mode = mode;
+        power_cond.notify_all();
+        drmModeConnectorSetProperty(drm_fd, connector_id,
+                                  dpms_enum_id, mode);
+    }
 }

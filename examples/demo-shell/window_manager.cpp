@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
- */
+/home/racarr/src/mir/gbm-dpms/examples/demo-sh */
 
 #include "window_manager.h"
 
@@ -22,6 +22,9 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
+#include "mir/compositor/compositor.h"
 
 #include <linux/input.h>
 
@@ -30,6 +33,8 @@
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
+namespace mg = mir::graphics;
+namespace mc = mir::compositor;
 
 namespace
 {
@@ -50,6 +55,16 @@ void me::WindowManager::set_session_manager(
     std::shared_ptr<msh::SessionManager> const& sm)
 {
     session_manager = sm;
+}
+
+void me::WindowManager::set_display(std::shared_ptr<mg::Display> const& dpy)
+{
+    display = dpy;
+}
+
+void me::WindowManager::set_compositor(std::shared_ptr<mc::Compositor> const& cptor)
+{
+    compositor = cptor;
 }
 
 mir::geometry::Point average_pointer(MirMotionEvent const& motion)
@@ -73,15 +88,50 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
 
 bool me::WindowManager::handle(MirEvent const& event)
 {
+    // TODO: Fix android configuration and remove static hack ~racarr
+    static bool display_off = false;
     assert(focus_controller);
+    assert(display);
 
     if (event.key.type == mir_event_type_key &&
-        event.key.action == mir_key_action_down &&
-        event.key.modifiers & mir_key_modifier_alt &&
-        event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
+        event.key.action == mir_key_action_down)
     {
-        focus_controller->focus_next();
-        return true;
+//        if (event.key.modifiers & mir_key_modifier_alt &&
+//            event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
+//        {
+//            focus_controller->focus_next();
+//            return true;
+//        }
+        if (event.key.modifiers & mir_key_modifier_alt && event.key.scan_code == KEY_P)
+        {
+            compositor->stop();
+            printf("Toggling dpms \n");
+            auto conf = display->configuration();
+            conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+            {
+                MirPowerMode power_mode;
+                if (!output.used) return;
+
+                printf("Togglin display, display off: %d \n", display_off);
+                if (display_off == true)
+                    power_mode = mir_power_mode_on;
+                else
+                    power_mode = mir_power_mode_off;
+
+                printf("Configuring output \n");
+                conf->configure_output(output.id, output.used,
+                                       output.top_left, output.current_mode_index,
+                                       power_mode);
+                printf("configured output\n");
+            });
+            display_off = !display_off;
+
+            printf("Configuring display \n");
+            display->configure(*conf.get());
+            printf("Configured display \n");
+            compositor->start();
+            return true;
+        }
     }
     else if (event.type == mir_event_type_motion &&
              session_manager)

@@ -23,6 +23,8 @@
 #include "drm_mode_resources.h"
 
 #include <memory>
+#include <mutex>
+#include <condition_variable>
 
 namespace mir
 {
@@ -73,6 +75,9 @@ private:
 
     MirPowerMode power_mode;
     int dpms_enum_id;
+    
+    std::mutex power_mutex;
+    std::condition_variable power_cond;
 };
 
 }
