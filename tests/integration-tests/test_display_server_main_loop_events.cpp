@@ -22,12 +22,14 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/main_loop.h"
 #include "mir/display_changer.h"
+#include "mir/server_status.h"
 
 #include "mir_test/pipe.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
 #include "mir_test_doubles/mock_compositor.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_server_status.h"
 #include "mir/run_mir.h"
 
 #include <gtest/gtest.h>
@@ -248,6 +250,14 @@ public:
         return mock_display_changer;
     }
 
+    std::shared_ptr<mir::ServerStatus> the_server_status() override
+    {
+        if (!mock_server_status)
+            mock_server_status = std::make_shared<testing::NiceMock<mtd::MockServerStatus>>();
+
+        return mock_server_status;
+    }
+
     std::shared_ptr<MockDisplay> the_mock_display()
     {
         the_display();
@@ -278,6 +288,12 @@ public:
         return mock_display_changer;
     }
 
+    std::shared_ptr<mtd::MockServerStatus> the_mock_server_status()
+    {
+        the_server_status();
+        return mock_server_status;
+    }
+
     void emit_pause_event_and_wait_for_handler()
     {
         kill(getpid(), pause_signal);
@@ -305,6 +321,7 @@ private:
     std::shared_ptr<MockCommunicator> mock_communicator;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
     std::shared_ptr<MockDisplayChanger> mock_display_changer;
+    std::shared_ptr<mtd::MockServerStatus> mock_server_status;
 
     mt::Pipe p;
     int const pause_signal;
@@ -577,6 +594,61 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
                             server_config.emit_configuration_change_event_and_wait_for_handler();
                             server_config.emit_resume_event_and_wait_for_handler();
 
+                            kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
+                 });
+}
+
+TEST(DisplayServerMainLoopEvents, server_status)
+{
+    using namespace testing;
+
+    TestMainLoopServerConfig server_config;
+
+    auto mock_compositor = server_config.the_mock_compositor();
+    auto mock_display = server_config.the_mock_display();
+    auto mock_communicator = server_config.the_mock_communicator();
+    auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_display_changer = server_config.the_mock_display_changer();
+    auto mock_server_status = server_config.the_mock_server_status();
+
+    {
+        InSequence s;
+
+        /* Start */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
+
+        /* Pause */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+        EXPECT_CALL(*mock_display, pause()).Times(1);
+        EXPECT_CALL(*mock_server_status, paused()).Times(1);
+
+        /* Resume */
+        EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_server_status, resumed()).Times(1);
+
+        /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+    }
+
+    mir::run_mir(server_config,
+                 [&server_config](mir::DisplayServer&)
+                 {
+                    std::thread t{
+                        [&]
+                        {
+                            server_config.emit_pause_event_and_wait_for_handler();
+                            server_config.emit_resume_event_and_wait_for_handler();
                             kill(getpid(), SIGTERM);
                         }};
                     t.detach();
