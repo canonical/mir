@@ -23,6 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/display_configuration.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -113,6 +114,20 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
             config_map.erase(session);
         });
 
+}
+
+void msh::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const& session)
+{
+    auto conf = active_configuration();
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        if (!output.used) return;
+        conf->configure_output(output.id, output.used,
+                               output.top_left, 
+                               output.current_mode_index,
+                               mir_power_mode_on);
+    });
+    configure(session, conf);
 }
 
 void msh::MediatingDisplayChanger::configure(

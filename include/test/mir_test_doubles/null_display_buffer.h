@@ -36,7 +36,6 @@ public:
     void release_current() {}
     void post_update() {}
     bool can_bypass() const override { return false; }
-    void set_power_mode(MirPowerMode /* mode */) {}
 };
 
 }

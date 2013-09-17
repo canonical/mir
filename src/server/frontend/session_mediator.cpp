@@ -181,6 +181,8 @@ void mf::SessionMediator::next_buffer(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         report->session_next_buffer_called(session->name());
+        
+        display_changer->ensure_display_powered(session);
 
         auto surface = session->get_surface(SurfaceId(request->value()));
 
