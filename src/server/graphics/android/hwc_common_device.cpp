@@ -114,3 +114,11 @@ void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
     blanked = blank;
     blanked_cond.notify_all();
 }
+
+std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
+{
+    std::unique_lock<std::mutex> lg(blanked_mutex);
+    while(blanked)
+        blanked_cond.wait(lg);
+    return std::move(lg);
+}

@@ -123,7 +123,6 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
-    printf("Configuring from gbm display \n");
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -136,7 +135,7 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
         {
             auto bounding_rect = group.bounding_rectangle();
             std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
-            
+
             group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
             {
                 uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
