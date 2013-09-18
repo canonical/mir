@@ -253,9 +253,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (standalone_opt, po::value<bool>(),
             "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
-            "Host socket filename. [string:default=$MIR_SOCKET]")
+            "Host socket filename. [string:default={$MIR_SOCKET,/tmp/mir_socket}]")
         ("file,f", po::value<std::string>(),
-            "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket/$PID")
+            "Socket filename. [string:default=/tmp/mir_socket")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so")
         ("enable-input,i", po::value<bool>(),
@@ -303,25 +303,11 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    std::string default_file;
-    auto runtime_env = getenv("XDG_RUNTIME_DIR");
-    if (runtime_env)
-    {
-        auto dir = std::string(runtime_env) + "/mir_socket";
-        if (mkdir(dir.c_str(), 0700) != -1)
-            default_file = str(boost::format("%1%/%2%") % dir % getpid());
-        else
-            default_file = mir::default_server_socket;
-    }
-    else
-        default_file = mir::default_server_socket;
-
-    auto socket_file = the_options()->get(server_socket_opt, default_file.c_str());
+    auto socket_file = the_options()->get(server_socket_opt, mir::default_server_socket);
 
     // Record this for any children that want to know how to connect to us.
     // By both listening to this env var on startup and resetting it here,
-    // we allow infinitely nested Mir servers without having to set a
-    // bunch of options each time you want to launch a new server.
+    // we make it easier to nest Mir servers.
     setenv("MIR_SOCKET", socket_file.c_str(), 1);
 
     return socket_file;
