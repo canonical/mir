@@ -967,7 +967,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
             if (!options->is_set(standalone_opt))
             {
                 if (!options->is_set(host_socket_opt))
-                    BOOST_THROW_EXCEPTION(std::logic_error("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
+                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
 
                 auto host_socket = options->get(host_socket_opt, "");
                 auto server_socket = the_socket_file();
