@@ -235,6 +235,7 @@ protected:
     // own options. This MUST be called before the first invocation of
     // the_options() - typically during construction.
     boost::program_options::options_description_easy_init add_options();
+    virtual void parse_options(std::shared_ptr<options::ProgramOption> options) const;
     virtual std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();

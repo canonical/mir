@@ -294,15 +294,18 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return the_options()->get(server_socket_opt, default_server_socket);
 }
 
+void mir::DefaultServerConfiguration::parse_options(std::shared_ptr<mir::options::ProgramOption> options) const
+{
+    parse_arguments(*program_options, options, argc, argv);
+    parse_environment(*program_options, options); 
+}
+
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
 {
     if (!options)
     {
         auto options = std::make_shared<mir::options::ProgramOption>();
-
-        parse_arguments(*program_options, options, argc, argv);
-        parse_environment(*program_options, options);
-
+        parse_options(options);
         this->options = options;
     }
     return options;
