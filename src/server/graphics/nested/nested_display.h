@@ -28,6 +28,7 @@
 
 #include <EGL/egl.h>
 
+#include <mutex>
 #include <unordered_map>
 
 namespace mir
@@ -66,20 +67,24 @@ public:
     explicit EGLDisplayHandle(MirConnection* connection);
     ~EGLDisplayHandle() noexcept;
 
-    void initialize() const;
+    void initialize();
     EGLConfig choose_config(const EGLint attrib_list[]) const;
-    std::shared_ptr<EGLSurfaceHandle> create_egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const;
-
+    EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
+    EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }
 
 private:
     EGLDisplay egl_display;
+    EGLContext egl_context_;
 
     EGLDisplayHandle(EGLDisplayHandle const&) = delete;
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
 };
 
 class NestedOutput;
+
+extern EGLint const nested_egl_config_attribs[];
+extern EGLint const nested_egl_context_attribs[];
 }
 
 class HostConnection;
@@ -118,8 +123,10 @@ private:
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<input::EventFilter> const event_handler;
     std::shared_ptr<DisplayReport> const display_report;
-    detail::EGLDisplayHandle const egl_display;
+    detail::EGLDisplayHandle egl_display;
+    MirPixelFormat egl_pixel_format;
 
+    std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
 };
