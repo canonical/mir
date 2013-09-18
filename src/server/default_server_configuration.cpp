@@ -231,8 +231,9 @@ void parse_environment(
     // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
     // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
     auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
-    if (!host_socket)
-        setenv("MIR_SERVER_HOST_SOCKET", getenv("MIR_SOCKET"), 1);
+    auto mir_socket = getenv("MIR_SOCKET");
+    if (!host_socket && mir_socket)
+        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
 
     options->parse_environment(desc, "MIR_SERVER_");
 }
