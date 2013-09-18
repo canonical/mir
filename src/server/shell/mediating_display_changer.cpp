@@ -118,11 +118,13 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
 
 void msh::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const& session)
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
     bool switched = false;
-    
-    return;
 
-    auto conf = active_configuration();
+    auto it = config_map.find(session);
+    if (it == config_map.end())
+        return;
+    auto conf = it->second;
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
         if (!output.used) return;
