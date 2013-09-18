@@ -253,9 +253,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,/tmp/mir_socket}]")
         ("file,f", po::value<std::string>(),
-            "Socket filename. [string:default=/tmp/mir_socket")
+            "Socket filename. [string:default=/tmp/mir_socket]")
         (platform_graphics_lib, po::value<std::string>(),
-            "Library to use for platform graphics support [default=libmirplatformgraphics.so")
+            "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
         (display_report_opt, po::value<std::string>(),
