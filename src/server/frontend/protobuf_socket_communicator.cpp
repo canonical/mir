@@ -41,7 +41,29 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::function<void()> const& force_requests_to_complete,
     std::shared_ptr<CommunicatorReport> const& report)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
+    socket_handle(0),
     acceptor(io_service, socket_file),
+    io_service_threads(threads),
+    ipc_factory(ipc_factory),
+    session_authorizer(session_authorizer),
+    next_session_id(0),
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
+    force_requests_to_complete(force_requests_to_complete),
+    report(report)
+{
+    start_accept();
+}
+
+mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
+    int socket_handle,
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+    int threads,
+    std::function<void()> const& force_requests_to_complete,
+    std::shared_ptr<CommunicatorReport> const& report)
+:   socket_file(),
+    socket_handle(socket_handle),
+    acceptor(io_service, boost::asio::local::stream_protocol(), socket_handle),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
     session_authorizer(session_authorizer),
@@ -126,7 +148,8 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 
     connected_sessions->clear();
 
-    std::remove(socket_file.c_str());
+    if (!socket_file.empty()) std::remove(socket_file.c_str());
+    if (!socket_handle) close(socket_handle);
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(

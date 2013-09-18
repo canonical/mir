@@ -67,6 +67,14 @@ public:
         int threads,
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<CommunicatorReport> const& report);
+
+    explicit ProtobufSocketCommunicator(
+        int socket_handle,
+        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+        int threads,
+        std::function<void()> const& force_requests_to_complete,
+        std::shared_ptr<CommunicatorReport> const& report);
     ~ProtobufSocketCommunicator();
     void start();
     void stop();
@@ -78,6 +86,7 @@ private:
     int next_id();
 
     const std::string socket_file;
+    int const socket_handle;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::vector<std::thread> io_service_threads;
