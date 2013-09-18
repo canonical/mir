@@ -19,6 +19,7 @@
 #include "mir/graphics/nested/nested_platform.h"
 #include "mir/graphics/nested/host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "nested_display.h"
 
@@ -28,6 +29,12 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
+
+void auth_magic_callback(int status, void * /*context*/)
+{
+    if (status)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir auth magic error: "));
+}
 
 mgn::NestedPlatform::NestedPlatform(
     std::shared_ptr<HostConnection> const& connection,
@@ -46,7 +53,16 @@ connection{connection}
 
     MirPlatformPackage pkg;
     mir_connection_get_platform(*connection, &pkg);
-    native_platform->initialize(pkg.data_items, pkg.data, pkg.fd_items, pkg.fd);
+    MirConnection* c = *connection;
+    auto auth_magic = [c] (int magic)
+        {
+            if (!mir_connection_is_valid(c))
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir callback Platform Connection Error: "));
+            }
+            mir_wait_for(mir_connection_drm_auth_magic(c, magic, auth_magic_callback, NULL));
+        };
+    native_platform->initialize(auth_magic, pkg.data_items, pkg.data, pkg.fd_items, pkg.fd);
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept
