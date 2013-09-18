@@ -182,6 +182,10 @@ void mf::SessionMediator::next_buffer(
 
         report->session_next_buffer_called(session->name());
         
+        // We ensure the client has not powered down the outputs, so that
+        // swap_buffer will not block indefinitely, leaving the client
+        // in a position where it can not turn back on the
+        // outputs.
         display_changer->ensure_display_powered(session);
 
         auto surface = session->get_surface(SurfaceId(request->value()));
