@@ -87,9 +87,7 @@
 #include "mir/graphics/native_platform.h"
 #include "mir/graphics/nested/nested_platform.h"
 
-#include <boost/format.hpp>
 #include <map>
-#include <unistd.h>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
