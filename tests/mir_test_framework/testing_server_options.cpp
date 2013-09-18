@@ -307,7 +307,7 @@ void mtf::TestingServerConfiguration::on_exit()
 {
 }
 
-std::string mtf::TestingServerConfiguration::the_socket_file() const
+std::string mtf::TestingServerConfiguration::the_socket() const
 {
     return test_socket_file();
 }

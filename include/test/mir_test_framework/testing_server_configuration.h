@@ -50,7 +50,7 @@ public:
     // which do not leverage input.
     std::shared_ptr<input::InputConfiguration> the_input_configuration();
 
-    virtual std::string the_socket_file() const override;
+    virtual std::string the_socket() const override;
     using DefaultServerConfiguration::the_options;
 
 

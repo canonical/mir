@@ -304,7 +304,7 @@ private:
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
-    virtual std::string the_socket_file() const;
+    virtual std::string the_socket() const;
 };
 }
 

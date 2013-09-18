@@ -300,7 +300,7 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
     return program_options->add_options();
 }
 
-std::string mir::DefaultServerConfiguration::the_socket_file() const
+std::string mir::DefaultServerConfiguration::the_socket() const
 {
     auto socket_file = the_options()->get(server_socket_opt, mir::default_server_socket);
 
@@ -974,7 +974,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
 
                 auto host_socket = options->get(host_socket_opt, "");
-                auto server_socket = the_socket_file();
+                auto server_socket = the_socket();
 
                 if (server_socket == host_socket)
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));

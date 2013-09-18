@@ -210,7 +210,7 @@ TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_GBM(nested_platform_connects_and_d
     };
 
     MyHostServerConfiguration host_config;
-    ClientConfig<NestedServerConfiguration> client_config(host_config.the_socket_file());
+    ClientConfig<NestedServerConfiguration> client_config(host_config.the_socket());
 
 
     launch_server_process(host_config);
@@ -266,7 +266,7 @@ TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_GBM(on_exit_display_objects_should
     };
 
     HostServerConfiguration host_config;
-    ClientConfig<MyNestedServerConfiguration> client_config(host_config.the_socket_file());
+    ClientConfig<MyNestedServerConfiguration> client_config(host_config.the_socket());
 
     launch_server_process(host_config);
     launch_client_process(client_config);
