@@ -119,6 +119,8 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
 void msh::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const& session)
 {
     bool switched = false;
+    
+    return;
 
     auto conf = active_configuration();
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
