@@ -55,6 +55,8 @@ private:
     gbm_device* const device;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+
+    bool bypass_env;
 };
 
 }
