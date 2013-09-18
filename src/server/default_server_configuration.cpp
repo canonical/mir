@@ -87,7 +87,9 @@
 #include "mir/graphics/native_platform.h"
 #include "mir/graphics/nested/nested_platform.h"
 
+#include <boost/format.hpp>
 #include <map>
+#include <unistd.h>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -175,7 +177,8 @@ char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
 char const* const legacy_input_report_opt     = "legacy-input-report";
 char const* const input_report_opt            = "input-report";
-char const* const nested_mode_opt             = "nested-mode";
+char const* const host_socket_opt             = "host-socket";
+char const* const standalone_opt              = "standalone";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -225,6 +228,12 @@ void parse_environment(
     boost::program_options::options_description& desc,
     std::shared_ptr<mir::options::ProgramOption> const& options)
 {
+    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
+    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
+    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
+    if (!host_socket)
+        setenv("MIR_SERVER_HOST_SOCKET", getenv("MIR_SOCKET"), 1);
+
     options->parse_environment(desc, "MIR_SERVER_");
 }
 }
@@ -240,10 +249,12 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
-        (nested_mode_opt, po::value<std::string>(),
-            "Run mir in nested mode. Host socket filename.")
+        (standalone_opt, po::value<bool>(),
+            "Run mir in standalone mode. [bool:default=false]")
+        (host_socket_opt, po::value<std::string>(),
+            "Host socket filename. [string:default=$MIR_SOCKET]")
         ("file,f", po::value<std::string>(),
-            "Socket filename")
+            "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket/$PID")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so")
         ("enable-input,i", po::value<bool>(),
@@ -291,7 +302,22 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get(server_socket_opt, default_server_socket);
+    std::string default_file;
+    std::string runtime_env = getenv("XDG_RUNTIME_DIR");
+    if (!runtime_env.empty())
+        default_file = str(boost::format("%1%/mir_socket/%2%") % runtime_env % getpid());
+    else
+        default_file = mir::default_server_socket;
+
+    auto socket_file = the_options()->get(server_socket_opt, default_file.c_str());
+
+    // Record this for any children that want to know how to connect to us.
+    // By both listening to this env var on startup and resetting it here,
+    // we allow infinitely nested Mir servers without having to set a
+    // bunch of options each time you want to launch a new server.
+    setenv("MIR_SOCKET", socket_file.c_str(), 1);
+
+    return socket_file;
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
@@ -332,17 +358,12 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         {
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
 
-            if (!the_options()->is_set(nested_mode_opt))
+            // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
+            if (the_options()->get(standalone_opt, false) || !the_options()->is_set(host_socket_opt))
             {
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
             }
-
-            const std::string host_socket = the_options()->get(nested_mode_opt, default_server_socket);
-            const std::string server_socket = the_options()->get(server_socket_opt, default_server_socket);
-
-            if (server_socket == host_socket)
-                throw mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
 
@@ -595,10 +616,10 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             return std::make_shared<mi::NullInputConfiguration>();
         }
-        else if (options->is_set(nested_mode_opt))
+        // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
+        else if (options->get(standalone_opt, false) || !options->is_set(host_socket_opt))
         {
-            return std::make_shared<mi::NestedInputConfiguration>(
-                the_nested_input_relay(),
+            return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -606,7 +627,8 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            return std::make_shared<mia::DefaultInputConfiguration>(
+            return std::make_shared<mi::NestedInputConfiguration>(
+                the_nested_input_relay(),
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -951,11 +973,20 @@ auto mir::DefaultServerConfiguration::the_host_connection()
         {
             auto const options = the_options();
 
-            if (options->is_set(nested_mode_opt))
+            if (!options->get(standalone_opt, false))
             {
+                if (!options->is_set(host_socket_opt))
+                    BOOST_THROW_EXCEPTION(std::logic_error("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
+
+                auto host_socket = options->get(host_socket_opt, "");
+                auto server_socket = the_socket_file();
+
+                if (server_socket == host_socket)
+                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+
                 return std::make_shared<graphics::nested::HostConnection>(
-                    options->get(nested_mode_opt, default_server_socket),
-                    options->get(server_socket_opt, default_server_socket));
+                    host_socket,
+                    server_socket);
             }
             else
             {
