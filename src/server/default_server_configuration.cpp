@@ -366,7 +366,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
 
             // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-            if (the_options()->get(standalone_opt, false) || !the_options()->is_set(host_socket_opt))
+            if (the_options()->is_set(standalone_opt) || !the_options()->is_set(host_socket_opt))
             {
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
@@ -624,7 +624,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
             return std::make_shared<mi::NullInputConfiguration>();
         }
         // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-        else if (options->get(standalone_opt, false) || !options->is_set(host_socket_opt))
+        else if (options->is_set(standalone_opt) || !options->is_set(host_socket_opt))
         {
             return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
@@ -980,7 +980,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
         {
             auto const options = the_options();
 
-            if (!options->get(standalone_opt, false))
+            if (!options->is_set(standalone_opt))
             {
                 if (!options->is_set(host_socket_opt))
                     BOOST_THROW_EXCEPTION(std::logic_error("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
