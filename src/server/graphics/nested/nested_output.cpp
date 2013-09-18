@@ -37,21 +37,6 @@ mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
     mir_surface_release_sync(mir_surface);
 }
 
-EGLint const mgn::detail::egl_attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-EGLint const mgn::detail::egl_context_attribs[] = {
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-
 mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
@@ -59,11 +44,11 @@ mgn::detail::NestedOutput::NestedOutput(
     std::shared_ptr<input::EventFilter> const& event_handler) :
     egl_display(egl_display),
     mir_surface{mir_surface},
-    egl_config{egl_display.choose_config(egl_attribs)},
-    egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
+    egl_config{egl_display.choose_config(nested_egl_config_attribs)},
+    egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     event_handler{event_handler},
-    display_egl_surface{egl_display.create_egl_surface(egl_config, mir_surface)}
+    egl_surface{egl_display, egl_display.native_window(egl_config, mir_surface), egl_config}
 {
     MirEventDelegate ed = {event_thunk, this};
     mir_surface_set_event_handler(mir_surface, &ed);
@@ -76,7 +61,7 @@ geom::Rectangle mgn::detail::NestedOutput::view_area() const
 
 void mgn::detail::NestedOutput::make_current()
 {
-    if (eglMakeCurrent(egl_display, *display_egl_surface, *display_egl_surface, egl_context) != EGL_TRUE)
+    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
 }
 
@@ -87,7 +72,7 @@ void mgn::detail::NestedOutput::release_current()
 
 void mgn::detail::NestedOutput::post_update()
 {
-    eglSwapBuffers(egl_display, *display_egl_surface);
+    eglSwapBuffers(egl_display, egl_surface);
 }
 
 bool mgn::detail::NestedOutput::can_bypass() const

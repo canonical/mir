@@ -19,6 +19,7 @@
 #define MIR_GRAPHICS_NATIVE_PLATFORM_H_
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -41,7 +42,7 @@ class NativePlatform
 public:
     NativePlatform() {}
 
-    virtual void initialize(int data_items, int const* data, int fd_items, int const* fd) = 0;
+    virtual void initialize(std::function<void(int)> const& auth_magic, int data_items, int const* data, int fd_items, int const* fd) = 0;
 
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;

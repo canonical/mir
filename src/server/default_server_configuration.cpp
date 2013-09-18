@@ -194,7 +194,7 @@ char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 
 void parse_arguments(
     boost::program_options::options_description desc,
-    std::shared_ptr<mir::options::ProgramOption> const& options,
+    mir::options::ProgramOption& options,
     int argc,
     char const* argv[])
 {
@@ -205,9 +205,9 @@ void parse_arguments(
         desc.add_options()
             ("help,h", "this help text");
 
-        options->parse_arguments(desc, argc, argv);
+        options.parse_arguments(desc, argc, argv);
 
-        if (options->is_set("help"))
+        if (options.is_set("help"))
         {
             std::ostringstream help_text;
             help_text << desc;
@@ -224,9 +224,9 @@ void parse_arguments(
 
 void parse_environment(
     boost::program_options::options_description& desc,
-    std::shared_ptr<mir::options::ProgramOption> const& options)
+    mir::options::ProgramOption& options)
 {
-    options->parse_environment(desc, "MIR_SERVER_");
+    options.parse_environment(desc, "MIR_SERVER_");
 }
 }
 
@@ -295,15 +295,18 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return the_options()->get(server_socket_opt, default_server_socket);
 }
 
+void mir::DefaultServerConfiguration::parse_options(mir::options::ProgramOption& options) const
+{
+    parse_arguments(*program_options, options, argc, argv);
+    parse_environment(*program_options, options); 
+}
+
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
 {
     if (!options)
     {
         auto options = std::make_shared<mir::options::ProgramOption>();
-
-        parse_arguments(*program_options, options, argc, argv);
-        parse_environment(*program_options, options);
-
+        parse_options(*options);
         this->options = options;
     }
     return options;
