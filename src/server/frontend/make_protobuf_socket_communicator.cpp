@@ -37,18 +37,20 @@ mir::DefaultServerConfiguration::the_communicator()
         {
             auto const threads = the_options()->get("ipc-thread-pool", 10);
             auto shell_sessions = the_shell_session_container();
+            auto const& shutdown_sessions = [shell_sessions]
+            {
+                shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
+                {
+                    session->force_requests_to_complete();
+                });
+            };
+
             return std::make_shared<mf::ProtobufSocketCommunicator>(
                 the_socket_file(),
                 the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
                 the_session_authorizer(),
                 threads,
-                [shell_sessions]
-                {
-                    shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-                    {
-                        session->force_requests_to_complete();
-                    });
-                },
+                shutdown_sessions,
                 std::make_shared<mf::NullCommunicatorReport>());
         });
 }
