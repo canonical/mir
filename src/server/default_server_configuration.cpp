@@ -275,6 +275,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "If specified, logfiles are written into this "
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
+        ("socket-fd", "Generate a socket fd (avoids publishing socket on filesystem)")
         ("ipc-thread-pool", po::value<int>(),
             "threads in frontend thread pool. [int:default=10]")
         ("vt", po::value<int>(),
