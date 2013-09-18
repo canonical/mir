@@ -304,9 +304,15 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
     std::string default_file;
-    std::string runtime_env = getenv("XDG_RUNTIME_DIR");
-    if (!runtime_env.empty())
-        default_file = str(boost::format("%1%/mir_socket/%2%") % runtime_env % getpid());
+    auto runtime_env = getenv("XDG_RUNTIME_DIR");
+    if (runtime_env)
+    {
+        auto dir = std::string(runtime_env) + "/mir_socket";
+        if (mkdir(dir.c_str(), 0700) != -1)
+            default_file = str(boost::format("%1%/%2%") % dir % getpid());
+        else
+            default_file = mir::default_server_socket;
+    }
     else
         default_file = mir::default_server_socket;
 
