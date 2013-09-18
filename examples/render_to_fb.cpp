@@ -26,6 +26,7 @@
 #include "mir/report_exception.h"
 
 #include <csignal>
+#include <iostream>
 
 namespace mg=mir::graphics;
 namespace ml=mir::logging;
