@@ -21,7 +21,7 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
-#include "mir/server_status.h"
+#include "mir/pause_resume_listener.h"
 #include "mir/display_changer.h"
 
 #include "mir/compositor/compositor.h"
@@ -75,7 +75,7 @@ struct mir::DisplayServer::Private
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
-          server_status{config.the_server_status()},
+          pause_resume_listener{config.the_pause_resume_listener()},
           display_changer{config.the_display_changer()},
           paused{false},
           configure_display_on_resume{false}
@@ -115,7 +115,7 @@ struct mir::DisplayServer::Private
             return false;
         }
 
-        server_status->paused();
+        pause_resume_listener->paused();
 
         return true;
     }
@@ -153,7 +153,7 @@ struct mir::DisplayServer::Private
             return false;
         }
 
-        server_status->resumed();
+        pause_resume_listener->resumed();
 
         return true;
     }
@@ -179,7 +179,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mf::Communicator> const communicator;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
-    std::shared_ptr<mir::ServerStatus> const server_status;
+    std::shared_ptr<mir::PauseResumeListener> const pause_resume_listener;
     std::shared_ptr<mir::DisplayChanger> const display_changer;
     bool paused;
     bool configure_display_on_resume;

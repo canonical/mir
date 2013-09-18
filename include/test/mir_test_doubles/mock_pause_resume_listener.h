@@ -16,25 +16,29 @@
  * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#ifndef MIR_DEFAULT_SERVER_STATUS_H_
-#define MIR_DEFAULT_SERVER_STATUS_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_PAUSE_RESUME_LISTENER_H_
+#define MIR_TEST_DOUBLES_MOCK_PAUSE_RESUME_LISTENER_H_
 
-#include "mir/server_status.h"
+#include "mir/pause_resume_listener.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-class DefaultServerStatus : public virtual ServerStatus
+namespace test
+{
+namespace doubles
+{
+
+class MockPauseResumeListener : public mir::PauseResumeListener
 {
 public:
-    virtual void paused()
-    {
-    }
-
-    virtual void resumed()
-    {
-    }
+    MOCK_METHOD0(paused, void());
+    MOCK_METHOD0(resumed, void());
 };
-  
+
+}
+}
 }
 
-#endif /* MIR_DEFAULT_SERVER_STATUS_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_PAUSE_RESUME_LISTENER_H_ */
