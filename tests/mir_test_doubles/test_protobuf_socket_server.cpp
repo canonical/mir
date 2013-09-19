@@ -21,6 +21,7 @@
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir/frontend/communicator_report.h"
 #include "src/server/frontend/protobuf_socket_communicator.h"
+#include "src/server/frontend/server_connection_implementations.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -34,7 +35,7 @@ std::shared_ptr<mf::Communicator> make_communicator(
     std::shared_ptr<mf::CommunicatorReport> const& report)
 {
     return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_name,
+        std::make_shared<mf::FileSocketConnection>(socket_name),
         factory,
         std::make_shared<mtd::StubSessionAuthorizer>(),
         10,

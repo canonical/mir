@@ -28,6 +28,7 @@
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/null_input_configuration.h"
+#include "src/server/frontend/server_connection_implementations.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -307,9 +308,12 @@ void mtf::TestingServerConfiguration::on_exit()
 {
 }
 
-std::string mtf::TestingServerConfiguration::the_socket() const
+std::shared_ptr<mf::SocketConnection> mtf::TestingServerConfiguration::the_socket()
 {
-    return test_socket_file();
+    return socket([this]
+    {
+        return std::make_shared<mf::FileSocketConnection>(test_socket_file());
+    });
 }
 
 

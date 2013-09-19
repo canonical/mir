@@ -31,6 +31,7 @@
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/socket_connection.h"
 #include "mir/frontend/global_event_sender.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
@@ -169,7 +170,6 @@ private:
     }
 };
 
-char const* const server_socket_opt           = "file";
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
@@ -237,6 +237,8 @@ void parse_environment(
 }
 }
 
+char const* const mir::server_socket_opt = "file";
+
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     argc(argc),
     argv(argv),
@@ -300,22 +302,10 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
     return program_options->add_options();
 }
 
-std::string mir::DefaultServerConfiguration::the_socket() const
+void mir::DefaultServerConfiguration::parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const
 {
-    auto socket_file = the_options()->get(server_socket_opt, mir::default_server_socket);
-
-    // Record this for any children that want to know how to connect to us.
-    // By both listening to this env var on startup and resetting it here,
-    // we make it easier to nest Mir servers.
-    setenv("MIR_SOCKET", socket_file.c_str(), 1);
-
-    return socket_file;
-}
-
-void mir::DefaultServerConfiguration::parse_options(mir::options::ProgramOption& options) const
-{
-    parse_arguments(*program_options, options, argc, argv);
-    parse_environment(*program_options, options); 
+    parse_arguments(options_description, options, argc, argv);
+    parse_environment(options_description, options); 
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
@@ -323,7 +313,7 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
     if (!options)
     {
         auto options = std::make_shared<mir::options::ProgramOption>();
-        parse_options(*options);
+        parse_options(*program_options, *options);
         this->options = options;
     }
     return options;
@@ -974,7 +964,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
 
                 auto host_socket = options->get(host_socket_opt, "");
-                auto server_socket = the_socket();
+                auto server_socket = the_socket()->client_uri();
 
                 if (server_socket == host_socket)
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));

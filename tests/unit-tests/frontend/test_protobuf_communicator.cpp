@@ -21,6 +21,7 @@
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/server/frontend/protobuf_socket_communicator.h"
+#include "src/server/frontend/server_connection_implementations.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -319,11 +320,13 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
         .Times(2);
 
     auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
-                    "./test_socket1", ipc_factory, 
-                    std::make_shared<mtd::StubSessionAuthorizer>(), 10,
-                    std::bind(&MockForceRequests::force_requests_to_complete,
-                              &mock_force_requests),
-                    std::make_shared<mf::NullCommunicatorReport>());
+        std::make_shared<mf::FileSocketConnection>("./test_socket1"),
+        ipc_factory,
+        std::make_shared<mtd::StubSessionAuthorizer>(),
+        10,
+        std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
+        std::make_shared<mf::NullCommunicatorReport>());
+
     comms->start();
     comms->stop();
 }

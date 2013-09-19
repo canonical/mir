@@ -48,6 +48,7 @@ class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
+class SocketConnection;
 }
 
 namespace shell
@@ -235,12 +236,13 @@ protected:
     // own options. This MUST be called before the first invocation of
     // the_options() - typically during construction.
     boost::program_options::options_description_easy_init add_options();
-    virtual void parse_options(options::ProgramOption& options) const;
+    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
     virtual std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
+    virtual std::shared_ptr<frontend::SocketConnection> the_socket();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
@@ -291,6 +293,7 @@ protected:
     CachedPtr<input::NestedInputRelay> nested_input_relay;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
+    CachedPtr<frontend::SocketConnection> socket;
 
 private:
     int const argc;
@@ -303,9 +306,10 @@ private:
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
-
-    virtual std::string the_socket() const;
 };
+
+extern char const* const server_socket_opt;
+extern char const default_server_socket[];
 }
 
 
