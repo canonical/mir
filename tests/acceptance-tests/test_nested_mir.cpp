@@ -79,7 +79,7 @@ struct FakeCommandLine
     FakeCommandLine(std::string const& host_socket)
     {
         char const** to = argv;
-        for(auto from : { "--file", "NestedServer", "--nested-mode", host_socket.c_str(), "--enable-input", "off"})
+        for(auto from : { "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
         {
             *to++ = from;
         }
