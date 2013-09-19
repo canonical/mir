@@ -16,20 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/shared_library.h"
-#include "mir/graphics/platform.h"
+#include "graphics.h"
+
+#include "mir/default_server_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/default_display_configuration_policy.h"
-
-#include "mir/logging/display_report.h"
-#include "mir/logging/dumb_console_logger.h"
-
-#include "mir/options/program_option.h"
-
-#include "graphics.h"
+#include "mir/graphics/platform.h"
+#include "mir/report_exception.h"
 
 #include <csignal>
+#include <iostream>
 
 namespace mg=mir::graphics;
 namespace ml=mir::logging;
@@ -37,17 +34,16 @@ namespace mo=mir::options;
 
 namespace
 {
-
 volatile std::sig_atomic_t running = true;
 
 void signal_handler(int /*signum*/)
 {
     running = false;
 }
-
 }
 
-int main(int, char**)
+int main(int argc, char const** argv)
+try
 {
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
@@ -58,12 +54,10 @@ int main(int, char**)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    mir::SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
-    auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto report = std::make_shared<ml::DisplayReport>(logger);
-    auto platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform")(std::make_shared<mo::ProgramOption>(), report);
-    auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-    auto display = platform->create_display(conf_policy);
+    mir::DefaultServerConfiguration conf{argc, argv};
+
+    auto platform = conf.the_graphics_platform();
+    auto display = platform->create_display(std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
 
     mir::draw::glAnimationBasic gl_animation;
 
@@ -88,4 +82,9 @@ int main(int, char**)
     }
 
     return 0;
+}
+catch (...)
+{
+    mir::report_exception(std::cerr);
+    return 1;
 }
