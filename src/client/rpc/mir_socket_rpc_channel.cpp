@@ -46,6 +46,7 @@
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
+#include <iostream>
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
@@ -55,13 +56,25 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
-    endpoint(endpoint),
     socket(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control)
 {
-    socket.connect(endpoint);
+    if (endpoint.find("fd://") == 0)
+    {
+        std::cerr << "DEBUG: endpoint=" << endpoint << std::endl;
+        auto const fd = atoi(endpoint.data()+5);
+        std::cerr << "DEBUG: fd=" << fd << std::endl;
+
+        boost::system::error_code error;
+        error = socket.assign(boost::asio::local::stream_protocol(), fd, error);
+        std::cerr << "DEBUG: error=" << error << " (" << error.message() << ")" << std::endl;
+    }
+    else
+    {
+        socket.connect(boost::asio::local::stream_protocol::endpoint(endpoint));
+    }
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
 

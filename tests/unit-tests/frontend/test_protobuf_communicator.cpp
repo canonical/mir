@@ -60,6 +60,10 @@ struct ProtobufCommunicator : public ::testing::Test
 {
     static void SetUpTestCase()
     {
+    }
+
+    void SetUp()
+    {
 //        socket_connection = std::make_shared<mf::FileSocketConnection>("./test_socket");
         socket_connection = std::make_shared<mf::SocketPairConnection>();
         communicator_report = std::make_shared<MockCommunicatorReport>();
@@ -68,10 +72,7 @@ struct ProtobufCommunicator : public ::testing::Test
             socket_connection,
             stub_server_tool,
             communicator_report);
-    }
 
-    void SetUp()
-    {
         using namespace testing;
         EXPECT_CALL(*communicator_report, error(_)).Times(AnyNumber());
         stub_server->comm->start();
@@ -84,14 +85,15 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server->comm->stop();
         testing::Mock::VerifyAndClearExpectations(communicator_report.get());
         client.reset();
-    }
 
-    static void TearDownTestCase()
-    {
         stub_server.reset();
         stub_server_tool.reset();
         communicator_report.reset();
         socket_connection.reset();
+    }
+
+    static void TearDownTestCase()
+    {
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;

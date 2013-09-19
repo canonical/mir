@@ -44,6 +44,7 @@ std::string mf::FileSocketConnection::client_uri() const
     return filename;
 }
 
+#include <iostream>
 mf::SocketPairConnection::SocketPairConnection()
 {
     if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, socket_fd))
@@ -56,10 +57,13 @@ mf::SocketPairConnection::SocketPairConnection()
     char buffer[42];
     sprintf(buffer, "fd://%d", socket_fd[client]);
     filename = buffer;
+
+    std::cerr << "DEBUG (" << __PRETTY_FUNCTION__ << "), server_fd=" << socket_fd[server] << ", client_fd=" << socket_fd[client] << std::endl;
 }
 
-mf::SocketPairConnection::~SocketPairConnection()
+mf::SocketPairConnection::~SocketPairConnection() noexcept
 {
+    std::cerr << "DEBUG (" << __PRETTY_FUNCTION__ << "), server_fd=" << socket_fd[server] << ", client_fd=" << socket_fd[client] << std::endl;
     close(socket_fd[client]);
     close(socket_fd[server]);
 }

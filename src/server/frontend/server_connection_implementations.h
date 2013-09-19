@@ -45,7 +45,7 @@ class SocketPairConnection : public SocketConnection
 public:
     SocketPairConnection();
 
-    ~SocketPairConnection();
+    ~SocketPairConnection() noexcept;
 
     boost::asio::local::stream_protocol::acceptor acceptor(boost::asio::io_service& io_service) const;
 
