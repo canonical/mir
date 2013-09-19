@@ -30,17 +30,32 @@ namespace msh = mir::shell;
 
 std::shared_ptr<mf::SocketConnection> mir::DefaultServerConfiguration::the_socket()
 {
-    return socket([this]
+    return socket([this]() -> std::shared_ptr<mf::SocketConnection>
     {
-        auto const& socket_file = the_options()->get(server_socket_opt, default_server_socket);
-        auto const& result = std::make_shared<mf::FileSocketConnection>(socket_file);
+        auto const& options = the_options();
+        if (options->is_set("socket-fd"))
+        {
+            auto const& result = std::make_shared<mf::SocketPairConnection>();
 
-        // Record this for any children that want to know how to connect to us.
-        // By both listening to this env var on startup and resetting it here,
-        // we make it easier to nest Mir servers.
-        setenv("MIR_SOCKET", result->client_uri().c_str(), 1);
+            // Record this for any children that want to know how to connect to us.
+            // By both listening to this env var on startup and resetting it here,
+            // we make it easier to nest Mir servers.
+            setenv("MIR_SOCKET", result->client_uri().c_str(), 1);
 
-        return result;
+            return result;
+        }
+        else
+        {
+            auto const& socket_file = options->get(server_socket_opt, default_server_socket);
+            auto const& result = std::make_shared<mf::FileSocketConnection>(socket_file);
+
+            // Record this for any children that want to know how to connect to us.
+            // By both listening to this env var on startup and resetting it here,
+            // we make it easier to nest Mir servers.
+            setenv("MIR_SOCKET", result->client_uri().c_str(), 1);
+
+            return result;
+        }
     });
 }
 
