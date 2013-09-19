@@ -47,7 +47,7 @@ std::string mf::FileSocketConnection::client_uri() const
 #include <iostream>
 mf::SocketPairConnection::SocketPairConnection()
 {
-    if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, socket_fd))
+    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
