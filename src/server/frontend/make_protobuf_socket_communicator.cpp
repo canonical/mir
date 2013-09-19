@@ -35,14 +35,7 @@ std::shared_ptr<mf::SocketConnection> mir::DefaultServerConfiguration::the_socke
         auto const& options = the_options();
         if (options->is_set("socket-fd"))
         {
-            auto const& result = std::make_shared<mf::SocketPairConnection>();
-
-            // Record this for any children that want to know how to connect to us.
-            // By both listening to this env var on startup and resetting it here,
-            // we make it easier to nest Mir servers.
-            setenv("MIR_SOCKET", result->client_uri().c_str(), 1);
-
-            return result;
+            return std::make_shared<mf::SocketPairConnection>();
         }
         else
         {
