@@ -1990,10 +1990,10 @@ TEST_F(CursorInputMapperTest, WhenModeIsPointer_PopulateDeviceInfo_ReturnsRangeF
     mapper->populateDeviceInfo(&info);
 
     // Initially there may not be a valid motion range.
-    ASSERT_EQ(NULL, info.getMotionRange(AINPUT_MOTION_RANGE_X, AINPUT_SOURCE_MOUSE));
-    ASSERT_EQ(NULL, info.getMotionRange(AINPUT_MOTION_RANGE_Y, AINPUT_SOURCE_MOUSE));
+    ASSERT_EQ(NULL, info.getMotionRange(AMOTION_EVENT_AXIS_X, AINPUT_SOURCE_MOUSE));
+    ASSERT_EQ(NULL, info.getMotionRange(AMOTION_EVENT_AXIS_Y, AINPUT_SOURCE_MOUSE));
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info,
-            AINPUT_MOTION_RANGE_PRESSURE, AINPUT_SOURCE_MOUSE, 0.0f, 1.0f, 0.0f, 0.0f));
+            AMOTION_EVENT_AXIS_PRESSURE, AINPUT_SOURCE_MOUSE, 0.0f, 1.0f, 0.0f, 0.0f));
 
     // When the bounds are set, then there should be a valid motion range.
     mFakePointerController->setBounds(1, 2, 800 - 1, 480 - 1);
@@ -2002,13 +2002,13 @@ TEST_F(CursorInputMapperTest, WhenModeIsPointer_PopulateDeviceInfo_ReturnsRangeF
     mapper->populateDeviceInfo(&info2);
 
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info2,
-            AINPUT_MOTION_RANGE_X, AINPUT_SOURCE_MOUSE,
+            AMOTION_EVENT_AXIS_X, AINPUT_SOURCE_MOUSE,
             1, 800 - 1, 0.0f, 0.0f));
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info2,
-            AINPUT_MOTION_RANGE_Y, AINPUT_SOURCE_MOUSE,
+            AMOTION_EVENT_AXIS_Y, AINPUT_SOURCE_MOUSE,
             2, 480 - 1, 0.0f, 0.0f));
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info2,
-            AINPUT_MOTION_RANGE_PRESSURE, AINPUT_SOURCE_MOUSE,
+            AMOTION_EVENT_AXIS_PRESSURE, AINPUT_SOURCE_MOUSE,
             0.0f, 1.0f, 0.0f, 0.0f));
 }
 
@@ -2021,13 +2021,13 @@ TEST_F(CursorInputMapperTest, WhenModeIsNavigation_PopulateDeviceInfo_ReturnsSca
     mapper->populateDeviceInfo(&info);
 
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info,
-            AINPUT_MOTION_RANGE_X, AINPUT_SOURCE_TRACKBALL,
+            AMOTION_EVENT_AXIS_X, AINPUT_SOURCE_TRACKBALL,
             -1.0f, 1.0f, 0.0f, 1.0f / TRACKBALL_MOVEMENT_THRESHOLD));
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info,
-            AINPUT_MOTION_RANGE_Y, AINPUT_SOURCE_TRACKBALL,
+            AMOTION_EVENT_AXIS_Y, AINPUT_SOURCE_TRACKBALL,
             -1.0f, 1.0f, 0.0f, 1.0f / TRACKBALL_MOVEMENT_THRESHOLD));
     ASSERT_NO_FATAL_FAILURE(assertMotionRange(info,
-            AINPUT_MOTION_RANGE_PRESSURE, AINPUT_SOURCE_TRACKBALL,
+            AMOTION_EVENT_AXIS_PRESSURE, AINPUT_SOURCE_TRACKBALL,
             0.0f, 1.0f, 0.0f, 0.0f));
 }
 
