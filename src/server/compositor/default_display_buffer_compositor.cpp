@@ -89,7 +89,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
             local_frameno = global_frameno;
     }
 
-    static bool const bypass_env{[] { auto const env = getenv("MIR_BYPASS"); return !env || env[0] != '0'; }()};
+    static bool const bypass_env{[]{ auto const env = getenv("MIR_BYPASS"); return !env || env[0] != '0'; }()};
     bool bypassed = false;
 
     if (bypass_env && display_buffer.can_bypass())
