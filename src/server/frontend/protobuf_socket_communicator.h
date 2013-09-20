@@ -56,6 +56,26 @@ class MessageSender;
 
 class CommunicatorReport;
 
+// Temporary class to hoist functionality apart
+class SessionCreator
+{
+public:
+    explicit SessionCreator(
+        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer);
+    ~SessionCreator() noexcept;
+    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+
+private:
+    int next_id();
+
+    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
+    std::shared_ptr<SessionAuthorizer> const session_authorizer;
+    std::atomic<int> next_session_id;
+    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
+};
+
+
 class ProtobufSocketCommunicator : public Communicator
 {
 public:
@@ -76,18 +96,14 @@ private:
     void start_accept();
     void on_new_connection(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
                            boost::system::error_code const& ec);
-    int next_id();
 
     std::shared_ptr<SocketConnection> const socket_connection;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::vector<std::thread> io_service_threads;
-    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
-    std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    std::atomic<int> next_session_id;
-    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
     std::function<void()> const force_requests_to_complete;
     std::shared_ptr<CommunicatorReport> const report;
+    SessionCreator impl;
 };
 
 }

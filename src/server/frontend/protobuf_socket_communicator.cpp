@@ -43,12 +43,9 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 :   socket_connection(socket_connection),
     acceptor(socket_connection->acceptor(io_service)),
     io_service_threads(threads),
-    ipc_factory(ipc_factory),
-    session_authorizer(session_authorizer),
-    next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
     force_requests_to_complete(force_requests_to_complete),
-    report(report)
+    report(report),
+    impl(ipc_factory, session_authorizer)
 {
     start_accept();
 }
@@ -65,14 +62,6 @@ void mf::ProtobufSocketCommunicator::start_accept()
             socket,
             ba::placeholders::error));
 }
-
-int mf::ProtobufSocketCommunicator::next_id()
-{
-    int id = next_session_id.load();
-    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
-}
-
 
 void mf::ProtobufSocketCommunicator::start()
 {
@@ -123,8 +112,6 @@ void mf::ProtobufSocketCommunicator::stop()
 mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     stop();
-
-    connected_sessions->clear();
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
@@ -133,27 +120,52 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        auto messenger = std::make_shared<detail::SocketMessenger>(socket);
-        auto client_pid = messenger->client_pid(); 
-        if (session_authorizer->connection_is_allowed(client_pid))
-        {
-            auto authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
-            auto event_sink = std::make_shared<detail::EventSender>(messenger);
-            auto msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
-                messenger,
-                ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
-                ipc_factory->resource_cache(),
-                ipc_factory->report());
-            auto const& session = std::make_shared<mfd::SocketSession>(
-                messenger,
-                next_id(),
-                connected_sessions,
-                msg_processor);
-            connected_sessions->add(session);
-            session->read_next_message();
-        }
+        impl.create_session_for(socket);
     }
     start_accept();
+}
+
+mf::SessionCreator::SessionCreator(
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+:   ipc_factory(ipc_factory),
+    session_authorizer(session_authorizer),
+    next_session_id(0),
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
+{
+}
+
+mf::SessionCreator::~SessionCreator()
+{
+    connected_sessions->clear();
+}
+
+int mf::SessionCreator::next_id()
+{
+    int id = next_session_id.load();
+    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
+    return id;
+}
+
+void mf::SessionCreator::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+{
+    auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
+    auto const client_pid = messenger->client_pid();
+
+    if (session_authorizer->connection_is_allowed(client_pid))
+    {
+        auto const authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
+        auto const event_sink = std::make_shared<detail::EventSender>(messenger);
+        auto const msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
+            messenger,
+            ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
+            ipc_factory->resource_cache(),
+            ipc_factory->report());
+
+        const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);
+        connected_sessions->add(session);
+        session->read_next_message();
+    }
 }
 
 void mf::NullCommunicatorReport::error(std::exception const& /*error*/)
