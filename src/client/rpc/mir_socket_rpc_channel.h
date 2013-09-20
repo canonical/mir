@@ -68,7 +68,6 @@ private:
     std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
-    boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
 
     static size_t const size_of_header = 2;
