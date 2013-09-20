@@ -95,8 +95,7 @@ public:
     // using the supplied socket.
     explicit ProtobufSocketCommunicator(
         std::shared_ptr<SocketConnection> const& socket_connection,
-        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+        std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<CommunicatorReport> const& report);

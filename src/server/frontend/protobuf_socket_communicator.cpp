@@ -35,8 +35,7 @@ namespace ba = boost::asio;
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::shared_ptr<SocketConnection> const& socket_connection,
-    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+    std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
     std::function<void()> const& force_requests_to_complete,
     std::shared_ptr<CommunicatorReport> const& report)
@@ -45,7 +44,7 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     io_service_threads(threads),
     force_requests_to_complete(force_requests_to_complete),
     report(report),
-    session_creator{std::make_shared<ProtobufSessionCreator>(ipc_factory, session_authorizer)}
+    session_creator{session_creator}
 {
     start_accept();
 }

@@ -328,8 +328,7 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
 
     auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
         std::make_shared<mf::FileSocketConnection>("./test_socket1"),
-        ipc_factory,
-        std::make_shared<mtd::StubSessionAuthorizer>(),
+        std::make_shared<mf::ProtobufSessionCreator>(ipc_factory, std::make_shared<mtd::StubSessionAuthorizer>()),
         10,
         std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
         std::make_shared<mf::NullCommunicatorReport>());

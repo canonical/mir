@@ -36,8 +36,7 @@ std::shared_ptr<mf::Communicator> make_communicator(
 {
     return std::make_shared<mf::ProtobufSocketCommunicator>(
         socket_connection,
-        factory,
-        std::make_shared<mtd::StubSessionAuthorizer>(),
+        std::make_shared<mf::ProtobufSessionCreator>(factory, std::make_shared<mtd::StubSessionAuthorizer>()),
         10,
         []{},
         report);
