@@ -37,7 +37,7 @@ class CrossProcessSync
     // Try to signal the other side that we are ready for at most duration milliseconds.
     // Throws a std::runtime_error if not successful.
     void try_signal_ready_for(
-        const std::chrono::milliseconds& duration = std::chrono::milliseconds(2000));
+        const std::chrono::milliseconds& duration = std::chrono::milliseconds(30000));
 
     // Wait for the other sides to signal readiness for at most duration milliseconds.
     // Returns the number of ready signals that have been collected since creation.

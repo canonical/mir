@@ -151,7 +151,7 @@ struct InputClient : ClientConfig
 
         try
         {
-            input_cb_setup_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
+            input_cb_setup_fence.try_signal_ready_for();
         } catch (const std::runtime_error& e)
         {
             std::cout << e.what() << std::endl;
@@ -932,7 +932,7 @@ TEST_F(TestClientInput, DISABLED_ON_ANDROID(hidden_clients_do_not_receive_pointe
         void exec()
         {
             // Ensure we stack on top of the first client
-            first_client_ready.wait_for_signal_ready_for(std::chrono::milliseconds(30000));
+            first_client_ready.wait_for_signal_ready_for();
             InputClient::exec();
         }
 
