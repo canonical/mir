@@ -9,7 +9,7 @@ set(
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
   global_event_sender.cpp
-
+  server_connection_implementations.cpp
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp

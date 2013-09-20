@@ -48,6 +48,7 @@ class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
+class SocketConnection;
 }
 
 namespace shell
@@ -242,6 +243,7 @@ protected:
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
+    virtual std::shared_ptr<frontend::SocketConnection> the_socket();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
@@ -293,6 +295,7 @@ protected:
     CachedPtr<input::NestedInputRelay> nested_input_relay;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
+    CachedPtr<frontend::SocketConnection> socket;
 
 private:
     int const argc;
@@ -305,9 +308,10 @@ private:
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
-
-    virtual std::string the_socket_file() const;
 };
+
+extern char const* const server_socket_opt;
+extern char const default_server_socket[];
 }
 
 

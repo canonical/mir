@@ -27,6 +27,7 @@ namespace frontend
 {
 class Communicator;
 class CommunicatorReport;
+class SocketConnection;
 }
 
 namespace protobuf
@@ -43,7 +44,16 @@ struct TestProtobufServer
         std::shared_ptr<protobuf::DisplayServer> const& tool);
 
     TestProtobufServer(
+        std::shared_ptr<frontend::SocketConnection> const& socket_connection,
+        std::shared_ptr<protobuf::DisplayServer> const& tool);
+
+    TestProtobufServer(
         std::string const& socket_name,
+        std::shared_ptr<protobuf::DisplayServer> const& tool,
+        std::shared_ptr<frontend::CommunicatorReport> const& report);
+
+    TestProtobufServer(
+        std::shared_ptr<frontend::SocketConnection> const& socket_connection,
         std::shared_ptr<protobuf::DisplayServer> const& tool,
         std::shared_ptr<frontend::CommunicatorReport> const& report);
 

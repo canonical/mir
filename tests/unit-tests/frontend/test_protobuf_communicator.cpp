@@ -21,6 +21,7 @@
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/server/frontend/protobuf_socket_communicator.h"
+#include "src/server/frontend/server_connection_implementations.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -59,20 +60,23 @@ struct ProtobufCommunicator : public ::testing::Test
 {
     static void SetUpTestCase()
     {
-        communicator_report = std::make_shared<MockCommunicatorReport>();
-        stub_server_tool = std::make_shared<mt::StubServerTool>();
-        stub_server = std::make_shared<mt::TestProtobufServer>(
-            "./test_socket",
-            stub_server_tool,
-            communicator_report);
     }
 
     void SetUp()
     {
+        socket_connection = std::make_shared<mf::FileSocketConnection>("./test_socket");
+//        socket_connection = std::make_shared<mf::SocketPairConnection>();
+        communicator_report = std::make_shared<MockCommunicatorReport>();
+        stub_server_tool = std::make_shared<mt::StubServerTool>();
+        stub_server = std::make_shared<mt::TestProtobufServer>(
+            socket_connection,
+            stub_server_tool,
+            communicator_report);
+
         using namespace testing;
         EXPECT_CALL(*communicator_report, error(_)).Times(AnyNumber());
         stub_server->comm->start();
-        client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+        client = std::make_shared<mt::TestProtobufClient>(socket_connection->client_uri(), 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -81,24 +85,28 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server->comm->stop();
         testing::Mock::VerifyAndClearExpectations(communicator_report.get());
         client.reset();
+
+        stub_server.reset();
+        stub_server_tool.reset();
+        communicator_report.reset();
+        socket_connection.reset();
     }
 
     static void TearDownTestCase()
     {
-        stub_server.reset();
-        stub_server_tool.reset();
-        communicator_report.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;
     static std::shared_ptr<MockCommunicatorReport> communicator_report;
     static std::shared_ptr<mt::StubServerTool> stub_server_tool;
 private:
+    static std::shared_ptr<mf::SocketConnection> socket_connection;
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
 std::shared_ptr<mt::StubServerTool> ProtobufCommunicator::stub_server_tool;
 std::shared_ptr<MockCommunicatorReport> ProtobufCommunicator::communicator_report;
+std::shared_ptr<mf::SocketConnection> ProtobufCommunicator::socket_connection;
 std::shared_ptr<mt::TestProtobufServer> ProtobufCommunicator::stub_server;
 
 TEST_F(ProtobufCommunicator, create_surface_results_in_a_callback)
@@ -319,11 +327,13 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
         .Times(2);
 
     auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
-                    "./test_socket1", ipc_factory, 
-                    std::make_shared<mtd::StubSessionAuthorizer>(), 10,
-                    std::bind(&MockForceRequests::force_requests_to_complete,
-                              &mock_force_requests),
-                    std::make_shared<mf::NullCommunicatorReport>());
+        std::make_shared<mf::FileSocketConnection>("./test_socket1"),
+        ipc_factory,
+        std::make_shared<mtd::StubSessionAuthorizer>(),
+        10,
+        std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
+        std::make_shared<mf::NullCommunicatorReport>());
+
     comms->start();
     comms->stop();
 }

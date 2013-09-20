@@ -22,6 +22,7 @@
 #include "connected_sessions.h"
 
 #include "mir/frontend/communicator.h"
+#include "mir/frontend/socket_connection.h"
 
 #include <boost/asio.hpp>
 
@@ -61,15 +62,15 @@ public:
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
     explicit ProtobufSocketCommunicator(
-        const std::string& socket_file,
+        std::shared_ptr<SocketConnection> const& socket_connection,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         int threads,
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<CommunicatorReport> const& report);
-    ~ProtobufSocketCommunicator();
-    void start();
-    void stop();
+    ~ProtobufSocketCommunicator() noexcept;
+    void start() override;
+    void stop() override;
 
 private:
     void start_accept();
@@ -77,7 +78,7 @@ private:
                            boost::system::error_code const& ec);
     int next_id();
 
-    const std::string socket_file;
+    std::shared_ptr<SocketConnection> const socket_connection;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::vector<std::thread> io_service_threads;

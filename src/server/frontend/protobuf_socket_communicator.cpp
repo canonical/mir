@@ -34,14 +34,14 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
-    std::string const& socket_file,
+    std::shared_ptr<SocketConnection> const& socket_connection,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     int threads,
     std::function<void()> const& force_requests_to_complete,
     std::shared_ptr<CommunicatorReport> const& report)
-:   socket_file((std::remove(socket_file.c_str()), socket_file)),
-    acceptor(io_service, socket_file),
+:   socket_connection(socket_connection),
+    acceptor(socket_connection->acceptor(io_service)),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
     session_authorizer(session_authorizer),
@@ -125,8 +125,6 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
     stop();
 
     connected_sessions->clear();
-
-    std::remove(socket_file.c_str());
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
