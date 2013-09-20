@@ -151,7 +151,7 @@ struct InputClient : ClientConfig
 
         try
         {
-            input_cb_setup_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
+            input_cb_setup_fence.try_signal_ready_for();
         } catch (const std::runtime_error& e)
         {
             std::cout << e.what() << std::endl;
@@ -859,7 +859,7 @@ TEST_F(TestClientInput, DISABLED_ON_ANDROID(hidden_clients_do_not_receive_pointe
     
     static std::string const test_client_name = "1";
     static std::string const test_client_2_name = "2";
-    mtf::CrossProcessSync fence, second_client_done_fence;
+    mtf::CrossProcessSync fence, first_client_ready_fence, second_client_done_fence;
 
     struct ServerConfiguration : public mtf::InputTestingServerConfiguration
     {
@@ -916,20 +916,23 @@ TEST_F(TestClientInput, DISABLED_ON_ANDROID(hidden_clients_do_not_receive_pointe
             EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(2, 2))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
-    } client_1{fence};
+    } client_1{first_client_ready_fence};
     struct ButtonClientTwo : InputClient
     {
+        mtf::CrossProcessSync first_client_ready;
         mtf::CrossProcessSync done_fence;
 
-        ButtonClientTwo(mtf::CrossProcessSync const& fence, mtf::CrossProcessSync const& done_fence) 
+        ButtonClientTwo(mtf::CrossProcessSync const& fence, mtf::CrossProcessSync const& first_client_ready,
+                        mtf::CrossProcessSync const& done_fence) 
             : InputClient(fence, test_client_2_name),
+              first_client_ready(first_client_ready),
               done_fence(done_fence)
         {
         }
         void exec()
         {
             // Ensure we stack on top of the first client
-            input_cb_setup_fence.wait_for_signal_ready_for(std::chrono::milliseconds(4000));
+            first_client_ready.wait_for_signal_ready_for();
             InputClient::exec();
         }
 
@@ -940,7 +943,7 @@ TEST_F(TestClientInput, DISABLED_ON_ANDROID(hidden_clients_do_not_receive_pointe
             EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(1, 1))).Times(1)
                 .WillOnce(DoAll(SignalFence(&done_fence), mt::WakeUp(&events_received)));
         }
-    } client_2{fence, second_client_done_fence};
+    } client_2{fence, first_client_ready_fence, second_client_done_fence};
 
     // Client 2 is launched second so will be the first to receive input
 
