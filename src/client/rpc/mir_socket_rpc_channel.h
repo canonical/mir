@@ -57,9 +57,17 @@ public:
                         std::shared_ptr<DisplayConfiguration> const& disp_config,
                         std::shared_ptr<RpcReport> const& rpc_report,
                         std::shared_ptr<LifecycleControl> const& lifecycle_control);
+
+    MirSocketRpcChannel(int native_socket,
+                        std::shared_ptr<SurfaceMap> const& surface_map,
+                        std::shared_ptr<DisplayConfiguration> const& disp_config,
+                        std::shared_ptr<RpcReport> const& rpc_report,
+                        std::shared_ptr<LifecycleControl> const& lifecycle_control);
     ~MirSocketRpcChannel();
 
 private:
+    void init();
+
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);

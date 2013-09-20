@@ -61,7 +61,29 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     lifecycle_control(lifecycle_control)
 {
     socket.connect(endpoint);
+    init();
+}
 
+mclr::MirSocketRpcChannel::MirSocketRpcChannel(
+    int native_socket,
+    std::shared_ptr<mcl::SurfaceMap> const& surface_map,
+    std::shared_ptr<DisplayConfiguration> const& disp_config,
+    std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
+    rpc_report(rpc_report),
+    pending_calls(rpc_report),
+    work(io_service),
+    socket(io_service),
+    surface_map(surface_map),
+    display_configuration(disp_config),
+    lifecycle_control(lifecycle_control)
+{
+    socket.assign(boost::asio::local::stream_protocol(), native_socket);
+    init();
+}
+
+void mclr::MirSocketRpcChannel::init()
+{
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
 
     // Our IO threads must not recieve any signals
