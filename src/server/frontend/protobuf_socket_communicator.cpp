@@ -45,7 +45,7 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     io_service_threads(threads),
     force_requests_to_complete(force_requests_to_complete),
     report(report),
-    impl(ipc_factory, session_authorizer)
+    session_creator{std::make_shared<ProtobufSessionCreator>(ipc_factory, session_authorizer)}
 {
     start_accept();
 }
@@ -120,12 +120,12 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        impl.create_session_for(socket);
+        session_creator->create_session_for(socket);
     }
     start_accept();
 }
 
-mf::SessionCreator::SessionCreator(
+mf::ProtobufSessionCreator::ProtobufSessionCreator(
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
 :   ipc_factory(ipc_factory),
@@ -135,19 +135,17 @@ mf::SessionCreator::SessionCreator(
 {
 }
 
-mf::SessionCreator::~SessionCreator()
+mf::ProtobufSessionCreator::~ProtobufSessionCreator()
 {
     connected_sessions->clear();
 }
 
-int mf::SessionCreator::next_id()
+int mf::ProtobufSessionCreator::next_id()
 {
-    int id = next_session_id.load();
-    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
+    return next_session_id.fetch_add(1);
 }
 
-void mf::SessionCreator::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
     auto const client_pid = messenger->client_pid();

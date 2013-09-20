@@ -60,10 +60,22 @@ class CommunicatorReport;
 class SessionCreator
 {
 public:
-    explicit SessionCreator(
+    virtual void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket) = 0;
+
+protected:
+    SessionCreator() = default;
+    virtual ~SessionCreator() noexcept = default;
+    SessionCreator(SessionCreator const&) = delete;
+    SessionCreator& operator=(SessionCreator const&) = delete;
+};
+
+class ProtobufSessionCreator : public SessionCreator
+{
+public:
+    ProtobufSessionCreator(
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer);
-    ~SessionCreator() noexcept;
+    ~ProtobufSessionCreator() noexcept;
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
 private:
@@ -103,7 +115,7 @@ private:
     std::vector<std::thread> io_service_threads;
     std::function<void()> const force_requests_to_complete;
     std::shared_ptr<CommunicatorReport> const report;
-    SessionCreator impl;
+    std::shared_ptr<SessionCreator> session_creator;
 };
 
 }
