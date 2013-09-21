@@ -48,7 +48,7 @@ protected:
     std::shared_ptr<mga::AndroidDisplay> create_display()
     {
         auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(mock_hwc_device);
-        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_report);
+        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_hwc_device, mock_display_report);
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
@@ -61,6 +61,11 @@ protected:
 TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
 {
     using namespace testing;
+
+    geom::Size fake_display_size{223, 332};
+    EXPECT_CALL(*mock_hwc_device, display_size())
+        .Times(AnyNumber())
+        .WillRepeatedly(Return(fake_display_size)); 
 
     auto display = create_display();
 
@@ -80,8 +85,8 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
 
     geom::Size fake_display_size{223, 332};
     EXPECT_CALL(*mock_hwc_device, display_size())
-        .Times(1)
-        .WillOnce(Return(fake_display_size)); 
+        .Times(AnyNumber())
+        .WillRepeatedly(Return(fake_display_size)); 
     auto display = create_display();
     
     std::vector<geom::Rectangle> areas;
@@ -98,4 +103,52 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};
     EXPECT_EQ(view_area.size, fake_display_size);
     EXPECT_EQ(view_area.top_left, origin_pt);
+}
+
+TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
+{
+    using namespace testing;
+
+    geom::Size fake_display_size{223, 332};
+    EXPECT_CALL(*mock_hwc_device, display_size())
+        .Times(1)
+        .WillOnce(Return(fake_display_size)); 
+    auto display = create_display();
+    
+    auto on_configuration = display->configuration();
+    on_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        on_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
+                                           mir_power_mode_on);
+    });
+    auto off_configuration = display->configuration();
+    off_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        off_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
+                                           mir_power_mode_off);
+    });
+    auto standby_configuration = display->configuration();
+    standby_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        standby_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
+                                           mir_power_mode_standby);
+    });
+    auto suspend_configuration = display->configuration();
+    suspend_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        suspend_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
+                                           mir_power_mode_suspend);
+    });
+
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(false));
+        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(true));
+        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(true));
+        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(true));
+    }
+    display->configure(*on_configuration.get());
+    display->configure(*off_configuration.get());
+    display->configure(*suspend_configuration.get());
+    display->configure(*standby_configuration.get());
 }

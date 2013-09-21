@@ -21,17 +21,20 @@
 #include "android_framebuffer_window.h"
 #include "gpu_android_display_buffer_factory.h"
 #include "hwc_android_display_buffer_factory.h"
+#include "hwc_device.h"
+#include "fb_device.h"
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_gpu_display(
     std::shared_ptr<ANativeWindow> const& native_window,
+    std::shared_ptr<DisplaySupportProvider> const& display_provider,
     std::shared_ptr<DisplayReport> const& display_report) const
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow>(native_window);
     auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
-    return std::make_shared<AndroidDisplay>(window, db_factory, display_report);
+    return std::make_shared<AndroidDisplay>(window, db_factory, display_provider, display_report);
 }
 
 std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_hwc_display(
@@ -41,5 +44,5 @@ std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_hwc_di
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow>(anw);
     auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(hwc_device);
-    return std::make_shared<AndroidDisplay>(window, db_factory, display_report);
+    return std::make_shared<AndroidDisplay>(window, db_factory, hwc_device, display_report);
 }

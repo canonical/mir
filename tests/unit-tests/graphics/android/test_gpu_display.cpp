@@ -21,6 +21,7 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/stub_display_support_provider.h"
 #include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
@@ -45,7 +46,7 @@ protected:
     std::shared_ptr<mga::AndroidDisplay> create_display()
     {
         auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
-        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_report);
+        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, std::make_shared<mtd::StubDisplaySupportProvider>(), mock_display_report);
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
