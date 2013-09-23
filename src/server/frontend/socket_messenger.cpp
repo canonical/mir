@@ -49,6 +49,8 @@ void mfd::SocketMessenger::send(std::string const& body)
         static_cast<unsigned char>((size >> 8) & 0xff),
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
+    
+    std::unique_lock<std::mutex> lg(message_lock);
 
     whole_message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
