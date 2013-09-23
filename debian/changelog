@@ -1,4 +1,4 @@
-mir (0.0.10+13.10.20130904-0ubuntu1) saucy; urgency=low
+mir (0.0.11+13.10.20130904-0ubuntu1) saucy; urgency=low
 
   [ Kevin DuBois ]
   * fix lp:1220441 (a test for android display ID was not updated). (LP:
