@@ -63,14 +63,14 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
     std::shared_ptr<mf::Connector> the_connector() override
     {
-        struct NullCommunicator : public mf::Connector
+        struct NullConnector : public mf::Connector
         {
             void start() {}
             void stop() {}
             int client_socket_fd() const override { return 0; }
         };
 
-        return std::make_shared<NullCommunicator>();
+        return std::make_shared<NullConnector>();
     }
 
     std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator() override
