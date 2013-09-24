@@ -29,6 +29,11 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
+namespace
+{
+char const* const no_server_socket_opt        = "no-file";
+}
+
 std::shared_ptr<mf::SessionCreator>
 mir::DefaultServerConfiguration::the_session_creator()
 {
@@ -57,12 +62,23 @@ mir::DefaultServerConfiguration::the_connector()
                 });
             };
 
-            return std::make_shared<mf::PublishedSocketConnector>(
-                the_socket_file(),
-                the_session_creator(),
-                threads,
-                force_requests_to_complete,
-                std::make_shared<mf::NullConnectorReport>());
+            if (the_options()->is_set("no-file"))
+            {
+                return std::make_shared<mf::BasicConnector>(
+                    the_session_creator(),
+                    threads,
+                    force_requests_to_complete,
+                    std::make_shared<mf::NullConnectorReport>());
+            }
+            else
+            {
+                return std::make_shared<mf::PublishedSocketConnector>(
+                    the_socket_file(),
+                    the_session_creator(),
+                    threads,
+                    force_requests_to_complete,
+                    std::make_shared<mf::NullConnectorReport>());
+            }
         });
 }
 

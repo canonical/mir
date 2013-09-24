@@ -171,6 +171,7 @@ private:
 };
 
 char const* const server_socket_opt           = "file";
+char const* const no_server_socket_opt        = "no-file";
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
@@ -255,6 +256,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "Host socket filename. [string:default={$MIR_SOCKET,/tmp/mir_socket}]")
         ("file,f", po::value<std::string>(),
             "Socket filename. [string:default=/tmp/mir_socket]")
+        (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
         ("enable-input,i", po::value<bool>(),
