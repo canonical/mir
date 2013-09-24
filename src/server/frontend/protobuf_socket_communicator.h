@@ -22,6 +22,7 @@
 #include "connected_sessions.h"
 
 #include "mir/frontend/communicator.h"
+#include "mir/frontend/session_creator.h"
 
 #include <boost/asio.hpp>
 
@@ -55,6 +56,25 @@ class MessageSender;
 
 class CommunicatorReport;
 
+class ProtobufSessionCreator : public SessionCreator
+{
+public:
+    ProtobufSessionCreator(
+        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer);
+    ~ProtobufSessionCreator() noexcept;
+    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+
+private:
+    int next_id();
+
+    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
+    std::shared_ptr<SessionAuthorizer> const session_authorizer;
+    std::atomic<int> next_session_id;
+    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
+};
+
+
 class ProtobufSocketCommunicator : public Communicator
 {
 public:
@@ -62,31 +82,26 @@ public:
     // using the supplied socket.
     explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
-        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+        std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<CommunicatorReport> const& report);
-    ~ProtobufSocketCommunicator();
-    void start();
-    void stop();
+    ~ProtobufSocketCommunicator() noexcept;
+    void start() override;
+    void stop() override;
 
 private:
     void start_accept();
     void on_new_connection(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
                            boost::system::error_code const& ec);
-    int next_id();
 
     const std::string socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::vector<std::thread> io_service_threads;
-    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
-    std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    std::atomic<int> next_session_id;
-    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
     std::function<void()> const force_requests_to_complete;
     std::shared_ptr<CommunicatorReport> const report;
+    std::shared_ptr<SessionCreator> session_creator;
 };
 
 }

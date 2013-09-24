@@ -25,9 +25,19 @@
 #include "mir/frontend/communicator_report.h"
 
 namespace mf = mir::frontend;
-namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 namespace msh = mir::shell;
+
+std::shared_ptr<mf::SessionCreator>
+mir::DefaultServerConfiguration::the_session_creator()
+{
+    return session_creator([this]
+        {
+            return std::make_shared<mf::ProtobufSessionCreator>(
+                the_ipc_factory(the_frontend_shell(),
+                the_buffer_allocator()),
+                the_session_authorizer());
+        });
+}
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::the_communicator()
@@ -37,18 +47,19 @@ mir::DefaultServerConfiguration::the_communicator()
         {
             auto const threads = the_options()->get("ipc-thread-pool", 10);
             auto shell_sessions = the_shell_session_container();
+            auto const& force_requests_to_complete = [shell_sessions]
+            {
+                shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
+                {
+                    session->force_requests_to_complete();
+                });
+            };
+
             return std::make_shared<mf::ProtobufSocketCommunicator>(
                 the_socket_file(),
-                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                the_session_authorizer(),
+                the_session_creator(),
                 threads,
-                [shell_sessions]
-                {
-                    shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-                    {
-                        session->force_requests_to_complete();
-                    });
-                },
+                force_requests_to_complete,
                 std::make_shared<mf::NullCommunicatorReport>());
         });
 }

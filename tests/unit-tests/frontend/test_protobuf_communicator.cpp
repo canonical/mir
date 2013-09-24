@@ -59,16 +59,17 @@ struct ProtobufCommunicator : public ::testing::Test
 {
     static void SetUpTestCase()
     {
+    }
+
+    void SetUp()
+    {
         communicator_report = std::make_shared<MockCommunicatorReport>();
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>(
             "./test_socket",
             stub_server_tool,
             communicator_report);
-    }
 
-    void SetUp()
-    {
         using namespace testing;
         EXPECT_CALL(*communicator_report, error(_)).Times(AnyNumber());
         stub_server->comm->start();
@@ -81,13 +82,14 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server->comm->stop();
         testing::Mock::VerifyAndClearExpectations(communicator_report.get());
         client.reset();
+
+        stub_server.reset();
+        stub_server_tool.reset();
+        communicator_report.reset();
     }
 
     static void TearDownTestCase()
     {
-        stub_server.reset();
-        stub_server_tool.reset();
-        communicator_report.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;
@@ -319,11 +321,12 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
         .Times(2);
 
     auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
-                    "./test_socket1", ipc_factory, 
-                    std::make_shared<mtd::StubSessionAuthorizer>(), 10,
-                    std::bind(&MockForceRequests::force_requests_to_complete,
-                              &mock_force_requests),
-                    std::make_shared<mf::NullCommunicatorReport>());
+        "./test_socket1",
+        std::make_shared<mf::ProtobufSessionCreator>(ipc_factory, std::make_shared<mtd::StubSessionAuthorizer>()),
+        10,
+        std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
+        std::make_shared<mf::NullCommunicatorReport>());
+
     comms->start();
     comms->stop();
 }

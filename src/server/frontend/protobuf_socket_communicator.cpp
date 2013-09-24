@@ -34,21 +34,17 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
-    std::string const& socket_file,
-    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+    const std::string& socket_file,
+    std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
     std::function<void()> const& force_requests_to_complete,
     std::shared_ptr<CommunicatorReport> const& report)
-:   socket_file((std::remove(socket_file.c_str()), socket_file)),
+:   socket_file(socket_file),
     acceptor(io_service, socket_file),
     io_service_threads(threads),
-    ipc_factory(ipc_factory),
-    session_authorizer(session_authorizer),
-    next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
     force_requests_to_complete(force_requests_to_complete),
-    report(report)
+    report(report),
+    session_creator{session_creator}
 {
     start_accept();
 }
@@ -65,14 +61,6 @@ void mf::ProtobufSocketCommunicator::start_accept()
             socket,
             ba::placeholders::error));
 }
-
-int mf::ProtobufSocketCommunicator::next_id()
-{
-    int id = next_session_id.load();
-    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
-}
-
 
 void mf::ProtobufSocketCommunicator::start()
 {
@@ -123,9 +111,6 @@ void mf::ProtobufSocketCommunicator::stop()
 mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     stop();
-
-    connected_sessions->clear();
-
     std::remove(socket_file.c_str());
 }
 
@@ -135,27 +120,50 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        auto messenger = std::make_shared<detail::SocketMessenger>(socket);
-        auto client_pid = messenger->client_pid(); 
-        if (session_authorizer->connection_is_allowed(client_pid))
-        {
-            auto authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
-            auto event_sink = std::make_shared<detail::EventSender>(messenger);
-            auto msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
-                messenger,
-                ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
-                ipc_factory->resource_cache(),
-                ipc_factory->report());
-            auto const& session = std::make_shared<mfd::SocketSession>(
-                messenger,
-                next_id(),
-                connected_sessions,
-                msg_processor);
-            connected_sessions->add(session);
-            session->read_next_message();
-        }
+        session_creator->create_session_for(socket);
     }
     start_accept();
+}
+
+mf::ProtobufSessionCreator::ProtobufSessionCreator(
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+:   ipc_factory(ipc_factory),
+    session_authorizer(session_authorizer),
+    next_session_id(0),
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
+{
+}
+
+mf::ProtobufSessionCreator::~ProtobufSessionCreator()
+{
+    connected_sessions->clear();
+}
+
+int mf::ProtobufSessionCreator::next_id()
+{
+    return next_session_id.fetch_add(1);
+}
+
+void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+{
+    auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
+    auto const client_pid = messenger->client_pid();
+
+    if (session_authorizer->connection_is_allowed(client_pid))
+    {
+        auto const authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
+        auto const event_sink = std::make_shared<detail::EventSender>(messenger);
+        auto const msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
+            messenger,
+            ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
+            ipc_factory->resource_cache(),
+            ipc_factory->report());
+
+        const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);
+        connected_sessions->add(session);
+        session->read_next_message();
+    }
 }
 
 void mf::NullCommunicatorReport::error(std::exception const& /*error*/)
