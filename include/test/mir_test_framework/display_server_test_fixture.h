@@ -47,7 +47,14 @@ public:
 
     void launch_client_process(TestingClientConfiguration& config);
 
+    //clients respect the tests-use-real-graphics option by default. use
+    //this function to force the use of the default client configuraiton
+    void use_default_connect_functions();
 private:
+    MirWaitHandle* (*default_mir_connect_impl)
+        (char const*, char const*, mir_connected_callback, void*);
+    void (*default_mir_connection_release_impl) (MirConnection *connection);
+
     static TestingProcessManager process_manager;
     static TestingServerConfiguration default_parameters;
 
@@ -59,7 +66,7 @@ private:
 class BespokeDisplayServerTestFixture : public testing::Test
 {
 public:
-    BespokeDisplayServerTestFixture();
+    BespokeDisplayServerTestFixture(std::shared_ptr<mir::options::Option> const& options);
     ~BespokeDisplayServerTestFixture();
 
     void launch_server_process(TestingServerConfiguration& config);

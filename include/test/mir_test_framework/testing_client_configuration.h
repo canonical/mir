@@ -41,16 +41,6 @@ struct TestingClientConfiguration
     // Code to run in client process
     virtual void exec() = 0;
 
-    void set_client_configuration(std::shared_ptr<mir::options::Option> const& options);
-
-    //force client configuration to use default connect and disconnect functions
-    void use_default_connect_functions();
-
-private:
-    MirWaitHandle* (*default_mir_connect_impl)
-        (char const *server, char const *app_name, mir_connected_callback callback, void *context);
-
-    void (*default_mir_connection_release_impl) (MirConnection *connection);
 };
 
 }

@@ -154,6 +154,7 @@ void mir_connection_release_override(MirConnection *connection)
 
 }
 
+#if 0
 mtf::TestingClientConfiguration::TestingClientConfiguration()
     : default_mir_connect_impl(mir_connect_impl),
       default_mir_connection_release_impl(mir_connection_release_impl)
@@ -179,3 +180,4 @@ mtf::TestingClientConfiguration::~TestingClientConfiguration()
 {
     use_default_connect_functions();
 }
+#endif

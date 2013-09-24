@@ -25,6 +25,10 @@ namespace mtf = mir_test_framework;
 mtf::TestingProcessManager mir_test_framework::DefaultDisplayServerTestFixture::process_manager;
 mtf::TestingServerConfiguration mir_test_framework::DefaultDisplayServerTestFixture::default_parameters;
 
+DefaultDisplayServerTestFixture::DefaultDisplayServerTestFixture()
+{
+}
+
 void DefaultDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
     config.set_client_configuration(default_parameters.the_options());
