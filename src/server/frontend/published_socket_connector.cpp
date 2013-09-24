@@ -19,7 +19,7 @@
 #include "published_socket_connector.h"
 #include "protobuf_session_creator.h"
 
-#include "mir/frontend/communicator_report.h"
+#include "mir/frontend/connector_report.h"
 
 #include <boost/signals2.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -36,15 +36,17 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
     std::function<void()> const& force_requests_to_complete,
-    std::shared_ptr<CommunicatorReport> const& report)
-:   socket_file(socket_file),
-    acceptor(io_service, socket_file),
-    io_service_threads(threads),
-    force_requests_to_complete(force_requests_to_complete),
-    report(report),
-    session_creator{session_creator}
+    std::shared_ptr<ConnectorReport> const& report)
+:   BasicConnector(session_creator, threads, force_requests_to_complete, report),
+    socket_file(socket_file),
+    acceptor(io_service, socket_file)
 {
     start_accept();
+}
+
+mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
+{
+    std::remove(socket_file.c_str());
 }
 
 void mf::PublishedSocketConnector::start_accept()
@@ -60,7 +62,30 @@ void mf::PublishedSocketConnector::start_accept()
             ba::placeholders::error));
 }
 
-void mf::PublishedSocketConnector::start()
+void mf::PublishedSocketConnector::on_new_connection(
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
+    boost::system::error_code const& ec)
+{
+    if (!ec)
+    {
+        create_session_for(socket);
+    }
+    start_accept();
+}
+
+mf::BasicConnector::BasicConnector(
+    std::shared_ptr<SessionCreator> const& session_creator,
+    int threads,
+    std::function<void()> const& force_requests_to_complete,
+    std::shared_ptr<ConnectorReport> const& report)
+:   io_service_threads(threads),
+    force_requests_to_complete(force_requests_to_complete),
+    report(report),
+    session_creator{session_creator}
+{
+}
+
+void mf::BasicConnector::start()
 {
     auto run_io_service = [this]
     {
@@ -82,12 +107,12 @@ void mf::PublishedSocketConnector::start()
     }
 }
 
-void mf::PublishedSocketConnector::stop()
+void mf::BasicConnector::stop()
 {
     /* Stop processing new requests */
     io_service.stop();
 
-    /* 
+    /*
      * Ensure that any pending requests will complete (i.e., that they
      * will not block indefinitely waiting for a resource from the server)
      */
@@ -106,7 +131,12 @@ void mf::PublishedSocketConnector::stop()
     io_service.reset();
 }
 
-int mf::PublishedSocketConnector::client_socket_fd() const
+void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const
+{
+    session_creator->create_session_for(server_socket);
+}
+
+int mf::BasicConnector::client_socket_fd() const
 {
     enum { server, client, size };
     int socket_fd[size];
@@ -121,28 +151,16 @@ int mf::PublishedSocketConnector::client_socket_fd() const
     auto const server_socket = std::make_shared<boost::asio::local::stream_protocol::socket>(
         io_service, boost::asio::local::stream_protocol(), socket_fd[server]);
 
-    session_creator->create_session_for(server_socket);
+    create_session_for(server_socket);
 
     return socket_fd[client];
 }
 
-mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
+mf::BasicConnector::~BasicConnector() noexcept
 {
     stop();
-    std::remove(socket_file.c_str());
 }
 
-void mf::PublishedSocketConnector::on_new_connection(
-    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
-    boost::system::error_code const& ec)
-{
-    if (!ec)
-    {
-        session_creator->create_session_for(socket);
-    }
-    start_accept();
-}
-
-void mf::NullCommunicatorReport::error(std::exception const& /*error*/)
+void mf::NullConnectorReport::error(std::exception const& /*error*/)
 {
 }

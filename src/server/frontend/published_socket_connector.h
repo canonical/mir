@@ -41,10 +41,35 @@ namespace mir
 namespace frontend
 {
 class SessionCreator;
-class CommunicatorReport;
+class ConnectorReport;
+
+// Makes provides a client-side socket fd for each connection
+class BasicConnector : public Connector
+{
+public:
+    explicit BasicConnector(
+        std::shared_ptr<SessionCreator> const& session_creator,
+        int threads,
+        std::function<void()> const& force_requests_to_complete,
+        std::shared_ptr<ConnectorReport> const& report);
+    ~BasicConnector() noexcept;
+    void start() override;
+    void stop() override;
+    int client_socket_fd() const override;
+
+protected:
+    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
+    boost::asio::io_service mutable io_service;
+
+private:
+    std::vector<std::thread> io_service_threads;
+    std::function<void()> const force_requests_to_complete;
+    std::shared_ptr<ConnectorReport> const report;
+    std::shared_ptr<SessionCreator> const session_creator;
+};
 
 /// Accept connections over a published socket
-class PublishedSocketConnector : public Connector
+class PublishedSocketConnector : public BasicConnector
 {
 public:
     explicit PublishedSocketConnector(
@@ -52,11 +77,8 @@ public:
         std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
         std::function<void()> const& force_requests_to_complete,
-        std::shared_ptr<CommunicatorReport> const& report);
+        std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
-    void start() override;
-    void stop() override;
-    int client_socket_fd() const override;
 
 private:
     void start_accept();
@@ -64,14 +86,8 @@ private:
                            boost::system::error_code const& ec);
 
     const std::string socket_file;
-    boost::asio::io_service mutable io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
-    std::vector<std::thread> io_service_threads;
-    std::function<void()> const force_requests_to_complete;
-    std::shared_ptr<CommunicatorReport> const report;
-    std::shared_ptr<SessionCreator> session_creator;
 };
-
 }
 }
 

@@ -24,7 +24,7 @@
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 #include "published_socket_connector.h"
-#include "mir/frontend/communicator_report.h"
+#include "mir/frontend/connector_report.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -62,7 +62,7 @@ mir::DefaultServerConfiguration::the_connector()
                 the_session_creator(),
                 threads,
                 force_requests_to_complete,
-                std::make_shared<mf::NullCommunicatorReport>());
+                std::make_shared<mf::NullConnectorReport>());
         });
 }
 
