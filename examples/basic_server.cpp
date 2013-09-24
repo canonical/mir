@@ -18,16 +18,51 @@
 
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
+#include "mir/options/option.h"
 #include "server_configuration.h"
+#include "mir/frontend/connector.h"
 
 #include <iostream>
+
+namespace
+{
+char const* const launch_child_opt = "launch-child";
+
+struct ServerConfiguration : mir::examples::ServerConfiguration
+{
+    ServerConfiguration(int argc, char const** argv) :
+        mir::examples::ServerConfiguration(argc, argv)
+    {
+        namespace po = boost::program_options;
+
+        add_options()
+            (launch_child_opt, po::value<std::string>(), "system() command launch client(s)");
+    }
+
+    void launch_client()
+    {
+        if (the_options()->is_set(launch_child_opt))
+        {
+            char buffer[128] = {0};
+            sprintf(buffer, "fd://%d", the_connector()->client_socket_fd());
+            setenv("MIR_SOCKET", buffer, 1);
+            std::cerr <<
+                "$MIR_SOCKET=" << buffer <<
+                ", launch=\"" << the_options()->get(launch_child_opt, "").c_str() << '\"' << std::endl;
+            system(the_options()->get(launch_child_opt, "").c_str());
+        }
+    }
+
+    using mir::examples::ServerConfiguration::the_options;
+};
+}
 
 int main(int argc, char const* argv[])
 try
 {
-    mir::examples::ServerConfiguration config(argc, argv);
+    ServerConfiguration config(argc, argv);
 
-    run_mir(config, [](mir::DisplayServer&) {/* empty init */});
+    run_mir(config, [&](mir::DisplayServer&){ config.launch_client(); });
     return 0;
 }
 catch (...)
