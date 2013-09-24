@@ -26,7 +26,7 @@
 
 namespace
 {
-char const* const launch_child_opt = "launch-child";
+char const* const launch_child_opt = "launch-client";
 
 struct ServerConfiguration : mir::examples::ServerConfiguration
 {
@@ -36,7 +36,7 @@ struct ServerConfiguration : mir::examples::ServerConfiguration
         namespace po = boost::program_options;
 
         add_options()
-            (launch_child_opt, po::value<std::string>(), "system() command launch client(s)");
+            (launch_child_opt, po::value<std::string>(), "system() command to launch client");
     }
 
     void launch_client()
