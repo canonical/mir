@@ -64,7 +64,7 @@ void mf::PublishedSocketConnector::start_accept()
 
 void mf::PublishedSocketConnector::start()
 {
-    auto run_io_service = [&]
+    auto run_io_service = [this]
     {
         while (true)
         try
@@ -80,7 +80,7 @@ void mf::PublishedSocketConnector::start()
 
     for (auto& thread : io_service_threads)
     {
-        thread = std::move(std::thread(run_io_service));
+        thread = std::thread(run_io_service);
     }
 }
 
