@@ -1367,6 +1367,8 @@ TEST_F(InputDeviceTest, WhenMappersAreRegistered_DeviceIsNotIgnoredAndForwardsRe
 
     // Event handling.
     RawEvent event;
+    event.type = EV_KEY; // some arbitrary event type and code
+    event.code = KEY_A;
     mDevice->process(&event, 1);
 
     ASSERT_NO_FATAL_FAILURE(mapper1->assertProcessWasCalled());
