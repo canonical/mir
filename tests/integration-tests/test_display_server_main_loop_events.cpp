@@ -22,12 +22,14 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/main_loop.h"
 #include "mir/display_changer.h"
+#include "mir/pause_resume_listener.h"
 
 #include "mir_test/pipe.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
 #include "mir_test_doubles/mock_compositor.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_pause_resume_listener.h"
 #include "mir/run_mir.h"
 
 #include <gtest/gtest.h>
@@ -311,6 +313,71 @@ private:
     int const resume_signal;
 };
 
+class TestPauseResumeListenerConfig : public mtf::TestingServerConfiguration
+{
+public:
+    TestPauseResumeListenerConfig()
+        : pause_signal{SIGUSR1}, resume_signal{SIGUSR2}
+    {
+    }
+
+    std::shared_ptr<mg::Display> the_display() override
+    {
+        if (!mock_display)
+        {
+            auto display = mtf::TestingServerConfiguration::the_display();
+            mock_display = std::make_shared<MockDisplay>(display,
+                                                         pause_signal,
+                                                         resume_signal,
+                                                         p.read_fd());
+        }
+
+        return mock_display;
+    }
+
+    std::shared_ptr<mir::PauseResumeListener> the_pause_resume_listener() override
+    {
+        if (!mock_pause_resume_listener)
+            mock_pause_resume_listener = std::make_shared<mtd::MockPauseResumeListener>();
+
+        return mock_pause_resume_listener;
+    }
+
+    std::shared_ptr<MockDisplay> the_mock_display()
+    {
+        the_display();
+        return mock_display;
+    }
+
+    std::shared_ptr<mtd::MockPauseResumeListener> the_mock_pause_resume_listener()
+    {
+        the_pause_resume_listener();
+        return mock_pause_resume_listener;
+    }
+
+    void emit_pause_event_and_wait_for_handler()
+    {
+        kill(getpid(), pause_signal);
+        while (!mock_display->pause_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
+    }
+
+    void emit_resume_event_and_wait_for_handler()
+    {
+        kill(getpid(), resume_signal);
+        while (!mock_display->resume_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
+    }
+
+private:
+    std::shared_ptr<MockDisplay> mock_display;
+    std::shared_ptr<mtd::MockPauseResumeListener> mock_pause_resume_listener;
+
+    mt::Pipe p;
+    int const pause_signal;
+    int const resume_signal;
+};
+  
 }
 
 TEST(DisplayServerMainLoopEvents, display_server_shuts_down_properly_on_sigint)
@@ -577,6 +644,38 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
                             server_config.emit_configuration_change_event_and_wait_for_handler();
                             server_config.emit_resume_event_and_wait_for_handler();
 
+                            kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
+                 });
+}
+
+TEST(DisplayServerMainLoopEvents, pause_resume_listener)
+{
+    using namespace testing;
+
+    TestPauseResumeListenerConfig server_config;
+
+    auto mock_display = server_config.the_mock_display();
+    auto mock_pause_resume_listener = server_config.the_mock_pause_resume_listener();
+
+    {
+        InSequence s;
+
+        EXPECT_CALL(*mock_display, pause()).Times(1);
+        EXPECT_CALL(*mock_pause_resume_listener, paused()).Times(1);
+        EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_pause_resume_listener, resumed()).Times(1);
+    }
+
+    mir::run_mir(server_config,
+                 [&server_config](mir::DisplayServer&)
+                 {
+                    std::thread t{
+                        [&]
+                        {
+                            server_config.emit_pause_event_and_wait_for_handler();
+                            server_config.emit_resume_event_and_wait_for_handler();
                             kill(getpid(), SIGTERM);
                         }};
                     t.detach();

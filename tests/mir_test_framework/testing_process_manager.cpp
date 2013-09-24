@@ -32,7 +32,7 @@ namespace mir_test_framework
 {
 void startup_pause()
 {
-    if (!detect_server(test_socket_file(), std::chrono::milliseconds(10000)))
+    if (!detect_server(test_socket_file(), std::chrono::minutes(2)))
         throw std::runtime_error("Failed to find server");
 }
 }

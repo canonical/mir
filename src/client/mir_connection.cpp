@@ -434,6 +434,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         display_request->set_current_mode(output.current_mode); 
         display_request->set_position_x(output.position_x); 
         display_request->set_position_y(output.position_y); 
+        display_request->set_power_mode(output.power_mode);
     }
 
     server.configure_display(0, &request, &display_configuration_response,

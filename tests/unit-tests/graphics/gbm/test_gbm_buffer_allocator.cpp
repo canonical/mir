@@ -30,6 +30,7 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir/graphics/null_display_report.h"
 
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 #include <algorithm>
@@ -90,6 +91,69 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
+}
+
+TEST_F(GBMBufferAllocatorTest, large_hardware_buffers_bypass)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    const mg::BufferProperties properties(geom::Size{1280, 800},
+                                          geom::PixelFormat::argb_8888,
+                                          mg::BufferUsage::hardware);
+
+    auto buf = allocator->alloc_buffer(properties);
+    ASSERT_TRUE(buf.get() != NULL);
+    EXPECT_TRUE(buf->can_bypass());
+}
+
+TEST_F(GBMBufferAllocatorTest, small_buffers_dont_bypass)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    const mg::BufferProperties properties(geom::Size{100, 100},
+                                          geom::PixelFormat::argb_8888,
+                                          mg::BufferUsage::hardware);
+
+    auto buf = allocator->alloc_buffer(properties);
+    ASSERT_TRUE(buf.get() != NULL);
+    EXPECT_FALSE(buf->can_bypass());
+}
+
+TEST_F(GBMBufferAllocatorTest, software_buffers_dont_bypass)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    const mg::BufferProperties properties(geom::Size{1920, 1200},
+                                          geom::PixelFormat::argb_8888,
+                                          mg::BufferUsage::software);
+
+    auto buf = allocator->alloc_buffer(properties);
+    ASSERT_TRUE(buf.get() != NULL);
+    EXPECT_FALSE(buf->can_bypass());
+}
+
+TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    const mg::BufferProperties properties(geom::Size{1280, 800},
+                                          geom::PixelFormat::argb_8888,
+                                          mg::BufferUsage::hardware);
+
+    setenv("MIR_BYPASS", "0", 1);
+    mgg::GBMBufferAllocator alloc(platform->gbm.device,
+                                  mock_buffer_initializer);
+    auto buf = alloc.alloc_buffer(properties);
+    ASSERT_TRUE(buf.get() != NULL);
+    EXPECT_FALSE(buf->can_bypass());
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)

@@ -181,6 +181,12 @@ void mf::SessionMediator::next_buffer(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         report->session_next_buffer_called(session->name());
+        
+        // We ensure the client has not powered down the outputs, so that
+        // swap_buffer will not block indefinitely, leaving the client
+        // in a position where it can not turn back on the
+        // outputs.
+        display_changer->ensure_display_powered(session);
 
         auto surface = session->get_surface(SurfaceId(request->value()));
 
@@ -299,7 +305,7 @@ void mf::SessionMediator::configure_display(
             mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
             config->configure_output(output_id, output.used(),
                                      geom::Point{output.position_x(), output.position_y()},
-                                     output.current_mode());
+                                     output.current_mode(), static_cast<MirPowerMode>(output.power_mode()));
         }
 
         display_changer->configure(session, config);

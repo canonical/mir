@@ -55,14 +55,35 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
-    endpoint(endpoint),
     socket(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control)
 {
     socket.connect(endpoint);
+    init();
+}
 
+mclr::MirSocketRpcChannel::MirSocketRpcChannel(
+    int native_socket,
+    std::shared_ptr<mcl::SurfaceMap> const& surface_map,
+    std::shared_ptr<DisplayConfiguration> const& disp_config,
+    std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
+    rpc_report(rpc_report),
+    pending_calls(rpc_report),
+    work(io_service),
+    socket(io_service),
+    surface_map(surface_map),
+    display_configuration(disp_config),
+    lifecycle_control(lifecycle_control)
+{
+    socket.assign(boost::asio::local::stream_protocol(), native_socket);
+    init();
+}
+
+void mclr::MirSocketRpcChannel::init()
+{
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
 
     // Our IO threads must not recieve any signals
@@ -74,9 +95,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
-            
 
-    io_service_thread = std::move(std::thread(run_io_service));
+    io_service_thread = std::thread(run_io_service);
 
     // Restore previous signals.
     if ((error = pthread_sigmask(SIG_SETMASK, &old_mask, NULL)))

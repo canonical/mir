@@ -32,6 +32,7 @@
 #include "mir/input/input_platform.h"
 #include "mir/graphics/internal_client.h"
 #include "mir/graphics/internal_surface.h"
+#include "mir/frontend/event_sink.h"
 
 #include "graphics.h"
 
@@ -71,6 +72,16 @@ me::InprocessEGLClient::~InprocessEGLClient()
     client_thread.join();
 }
 
+namespace
+{
+struct NullEventSink : mf::EventSink
+{
+    void handle_event(MirEvent const& /*e*/) {}
+    void handle_lifecycle_event(MirLifecycleState /*state*/) {}
+    void handle_display_config_change(mg::DisplayConfiguration const& /*config*/) {}
+};
+}
+
 void me::InprocessEGLClient::thread_loop()
 {
     geom::Size const surface_size{512, 512};
@@ -81,7 +92,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto session = session_manager->open_session("Inprocess client",
-                                                 std::shared_ptr<mf::EventSink>());
+                                                 std::make_shared<NullEventSink>());
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(session_manager->create_surface_for(session, params));
 

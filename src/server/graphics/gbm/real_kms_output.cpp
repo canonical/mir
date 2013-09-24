@@ -25,7 +25,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace mgg = mir::graphics::gbm;
+namespace mg = mir::graphics;
+namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
 
 namespace
@@ -131,7 +132,8 @@ mgg::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
                                   std::shared_ptr<PageFlipper> const& page_flipper)
     : drm_fd{drm_fd}, connector_id{connector_id}, page_flipper{page_flipper},
       connector(), mode_index{0}, current_crtc(), saved_crtc(),
-      using_saved_crtc{true}, has_cursor_{false}
+      using_saved_crtc{true}, has_cursor_{false},
+      power_mode(mir_power_mode_on)
 {
     reset();
 
@@ -160,6 +162,21 @@ void mgg::RealKMSOutput::reset()
 
     if (!connector)
         BOOST_THROW_EXCEPTION(std::runtime_error("No DRM connector found\n"));
+
+    // TODO: What if we can't locate the DPMS property?
+    for (int i = 0; i < connector->count_props; i++)
+    {
+        auto prop = drmModeGetProperty(drm_fd, connector->props[i]);
+        if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
+            if (!strcmp(prop->name, "DPMS"))
+            {
+                dpms_enum_id = connector->props[i];
+                drmModeFreeProperty(prop);
+                break;
+            }
+            drmModeFreeProperty(prop);
+        }
+    }
 
     /* Discard previously current crtc */
     current_crtc = nullptr;
@@ -200,6 +217,9 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
 
 bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 {
+    std::unique_lock<std::mutex> lg(power_mutex);
+    if (power_mode != mir_power_mode_on)
+        return true;
     if (!current_crtc)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
             connector_name(connector.get()) +
@@ -210,6 +230,9 @@ bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 
 void mgg::RealKMSOutput::wait_for_page_flip()
 {
+    std::unique_lock<std::mutex> lg(power_mutex);
+    if (power_mode != mir_power_mode_on)
+        return;
     if (!current_crtc)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
             connector_name(connector.get()) +
@@ -321,5 +344,17 @@ void mgg::RealKMSOutput::restore_saved_crtc()
                        &connector->connector_id, 1, &saved_crtc.mode);
 
         using_saved_crtc = true;
+    }
+}
+
+void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
+{
+    std::lock_guard<std::mutex> lg(power_mutex);
+
+    if (power_mode != mode)
+    {
+        power_mode = mode;
+        drmModeConnectorSetProperty(drm_fd, connector_id,
+                                   dpms_enum_id, mode);
     }
 }

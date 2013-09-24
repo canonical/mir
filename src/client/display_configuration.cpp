@@ -96,6 +96,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     output.used = msg.used();
     output.physical_width_mm = msg.physical_width_mm();
     output.physical_height_mm = msg.physical_height_mm();
+    output.power_mode = static_cast<MirPowerMode>(msg.power_mode());
 }
 
 }

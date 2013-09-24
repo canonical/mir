@@ -110,7 +110,7 @@ public:
     {
         return false;
     }
-
+    
 protected:
     std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
     EGLDisplay const egl_display;
@@ -126,7 +126,8 @@ public:
                      EGLContext egl_context_shared,
                      std::shared_ptr<mga::HWCDevice> const& hwc_device)
         : GPUDisplayBuffer{native_win, egl_display, egl_context_shared},
-          hwc_device{hwc_device}
+          hwc_device{hwc_device},
+          blanked(false)
     {
     }
 
@@ -144,6 +145,8 @@ public:
 
 private:
     std::shared_ptr<mga::HWCDevice> const hwc_device;
+    
+    bool blanked;
 };
 
 }

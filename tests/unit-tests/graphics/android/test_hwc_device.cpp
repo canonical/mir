@@ -162,7 +162,7 @@ TYPED_TEST(HWCCommon, test_hwc_turns_on_display_after_proc_registration)
     testing::Mock::VerifyAndClearExpectations(this->mock_device.get());
 }
 
-TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_error)
+TYPED_TEST(HWCCommon, test_hwc_ensures_unblank_during_initialization)
 {
     using namespace testing;
 
@@ -173,6 +173,25 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_error)
     EXPECT_THROW({
         auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer,
                                                  this->mock_fbdev, this->mock_vsync);
+    }, std::runtime_error);
+}
+
+TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_or_unblank_error)
+{
+    using namespace testing;
+
+    InSequence seq;
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer,
+                                             this->mock_fbdev, this->mock_vsync);
+    EXPECT_THROW({
+            device->blank_or_unblank_screen(true);
     }, std::runtime_error);
 }
 

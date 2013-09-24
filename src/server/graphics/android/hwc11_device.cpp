@@ -56,8 +56,6 @@ geom::Size mga::HWC11Device::display_size() const
                                         HWC_DISPLAY_NO_ATTRIBUTE};
 
     int size_values[2];
-    /* note: some hwc modules (adreno320) do not accept any request list other than what surfaceflinger's requests,
-     * despite what the hwc header says. from what I've seen so far, this is harmless, other than a logcat msg */ 
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                      size_request, size_values);
 
@@ -83,6 +81,8 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& b
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
+    auto lg = lock_unblanked();
+
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
     hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
@@ -92,8 +92,8 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
 
-    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer,
-       updating the fb target before committing */
+    /* note, swapbuffers will go around through the driver and call
+       set_next_frontbuffer, updating the fb target before committing */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));

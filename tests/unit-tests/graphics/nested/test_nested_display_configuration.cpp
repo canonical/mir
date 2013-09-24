@@ -119,7 +119,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
             default_connected,
             default_used,
             default_physical_width_mm,
-            default_physical_height_mm
+            default_physical_height_mm,
+            mir_power_mode_on
         }};
 
         init_output(outputs, modes, formats);
@@ -160,7 +161,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
                 default_connected,
                 default_used,
                 default_physical_width_mm,
-                default_physical_height_mm
+                default_physical_height_mm,
+                mir_power_mode_on
             },
             {
                 default_num_modes,
@@ -178,7 +180,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
                 default_connected,
                 default_used,
                 default_physical_width_mm,
-                default_physical_height_mm
+                default_physical_height_mm,
+                mir_power_mode_on
             },
             {
                 default_num_modes,
@@ -196,7 +199,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
                 default_connected,
                 default_used,
                 default_physical_width_mm,
-                default_physical_height_mm
+                default_physical_height_mm,
+                mir_power_mode_on
             },
         };
 
@@ -252,7 +256,8 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
     geom::Point const top_left{10,20};
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
-    config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, default_current_mode);
+    config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true,
+        top_left, default_current_mode, mir_power_mode_on);
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(1));
@@ -273,11 +278,11 @@ TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_mode)
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, -1);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, -1, mir_power_mode_on);},
         std::runtime_error);
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, too_big_mode_index);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, too_big_mode_index, mir_power_mode_on);},
         std::runtime_error);
 }
 
@@ -287,11 +292,11 @@ TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_output)
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id+1), true, top_left, default_current_mode);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id+1), true, top_left, default_current_mode, mir_power_mode_on);},
         std::runtime_error);
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id-1), true, top_left, default_current_mode);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id-1), true, top_left, default_current_mode, mir_power_mode_on);},
         std::runtime_error);
 }
 
@@ -321,7 +326,7 @@ TEST_F(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
     geom::Point const top_left{100,200};
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
 
-    config.configure_output(id, true, top_left, 1);
+    config.configure_output(id, true, top_left, 1, mir_power_mode_on);
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(3));

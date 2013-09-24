@@ -286,21 +286,18 @@ public:
         {
         public:
             RenderResourcesBufferInitializer()
-                : img_renderer{mir_image.pixel_data,
-                               geom::Size{mir_image.width, mir_image.height},
-                               mir_image.bytes_per_pixel}
             {
             }
 
             void operator()(mg::Buffer& buffer)
             {
+                mt::ImageRenderer img_renderer{mir_image.pixel_data,
+                               geom::Size{mir_image.width, mir_image.height},
+                               mir_image.bytes_per_pixel};
                 mt::BufferRenderTarget brt{buffer};
                 brt.make_current();
                 img_renderer.render();
             }
-
-        private:
-            mt::ImageRenderer img_renderer;
         };
 
         return std::make_shared<RenderResourcesBufferInitializer>();

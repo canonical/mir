@@ -22,6 +22,9 @@
 
 #include <hardware/hwcomposer.h>
 
+#include <mutex>
+#include <condition_variable>
+
 namespace mir
 {
 namespace graphics
@@ -49,6 +52,8 @@ public:
     virtual geometry::Size display_size() const = 0;
     virtual void set_next_frontbuffer(std::shared_ptr<Buffer> const& buffer) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
+    
+    void blank_or_unblank_screen(bool blank);
 
     void notify_vsync();
 protected:
@@ -57,8 +62,15 @@ protected:
 
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
+protected:
+    std::unique_lock<std::mutex> lock_unblanked();
+
 private:
     HWCCallbacks callbacks;
+
+    std::mutex blanked_mutex;
+    std::condition_variable blanked_cond;
+    bool blanked;
 };
 
 }
