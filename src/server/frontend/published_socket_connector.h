@@ -56,6 +56,7 @@ public:
     ~PublishedSocketConnector() noexcept;
     void start() override;
     void stop() override;
+    int client_socket_fd() const override;
 
 private:
     void start_accept();
@@ -63,7 +64,7 @@ private:
                            boost::system::error_code const& ec);
 
     const std::string socket_file;
-    boost::asio::io_service io_service;
+    boost::asio::io_service mutable io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::vector<std::thread> io_service_threads;
     std::function<void()> const force_requests_to_complete;

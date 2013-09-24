@@ -272,6 +272,7 @@ public:
         {
             void start() {}
             void stop() {}
+            int client_socket_fd() const override { return 0; }
         };
 
         return std::make_shared<NullCommunicator>();

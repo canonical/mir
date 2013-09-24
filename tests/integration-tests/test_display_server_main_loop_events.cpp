@@ -58,6 +58,7 @@ class MockConnector : public mf::Connector
 public:
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
+    MOCK_CONST_METHOD0(client_socket_fd, int());
 };
 
 class MockDisplayChanger : public mir::DisplayChanger

@@ -30,6 +30,8 @@ public:
     virtual void start() = 0;
     virtual void stop() = 0;
 
+    virtual int client_socket_fd() const = 0;
+
 protected:
     Connector() = default;
     virtual ~Connector() = default;

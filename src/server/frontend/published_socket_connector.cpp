@@ -22,6 +22,10 @@
 #include "mir/frontend/communicator_report.h"
 
 #include <boost/signals2.hpp>
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <sys/socket.h>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
@@ -100,6 +104,26 @@ void mf::PublishedSocketConnector::stop()
 
     /* Prepare for a potential restart */
     io_service.reset();
+}
+
+int mf::PublishedSocketConnector::client_socket_fd() const
+{
+    enum { server, client, size };
+    int socket_fd[size];
+
+    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Could not create socket pair")) << boost::errinfo_errno(errno));
+    }
+
+    auto const server_socket = std::make_shared<boost::asio::local::stream_protocol::socket>(
+        io_service, boost::asio::local::stream_protocol(), socket_fd[server]);
+
+    session_creator->create_session_for(server_socket);
+
+    return socket_fd[client];
 }
 
 mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
