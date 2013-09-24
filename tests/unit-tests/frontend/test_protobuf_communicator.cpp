@@ -20,7 +20,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/resource_cache.h"
-#include "src/server/frontend/protobuf_socket_communicator.h"
+#include "src/server/frontend/published_socket_connector.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -320,7 +320,7 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
     EXPECT_CALL(mock_force_requests, force_requests_to_complete())
         .Times(2);
 
-    auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
+    auto comms = std::make_shared<mf::PublishedSocketConnector>(
         "./test_socket1",
         std::make_shared<mf::ProtobufSessionCreator>(ipc_factory, std::make_shared<mtd::StubSessionAuthorizer>()),
         10,

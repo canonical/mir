@@ -75,18 +75,17 @@ private:
 };
 
 
-class ProtobufSocketCommunicator : public Connector
+/// Accept connections over a published socket
+class PublishedSocketConnector : public Connector
 {
 public:
-    // Create communicator based on Boost asio and Google protobufs
-    // using the supplied socket.
-    explicit ProtobufSocketCommunicator(
+    explicit PublishedSocketConnector(
         const std::string& socket_file,
         std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<CommunicatorReport> const& report);
-    ~ProtobufSocketCommunicator() noexcept;
+    ~PublishedSocketConnector() noexcept;
     void start() override;
     void stop() override;
 

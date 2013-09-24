@@ -21,7 +21,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
-#include "protobuf_socket_communicator.h"
+#include "published_socket_connector.h"
 #include "mir/frontend/communicator_report.h"
 
 namespace mf = mir::frontend;
@@ -55,7 +55,7 @@ mir::DefaultServerConfiguration::the_connector()
                 });
             };
 
-            return std::make_shared<mf::ProtobufSocketCommunicator>(
+            return std::make_shared<mf::PublishedSocketConnector>(
                 the_socket_file(),
                 the_session_creator(),
                 threads,

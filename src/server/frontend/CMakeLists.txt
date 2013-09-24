@@ -18,7 +18,7 @@ set(
 )
 
 list(APPEND FRONTEND_SOURCES
-  protobuf_socket_communicator.cpp
+  published_socket_connector.cpp
   make_protobuf_socket_communicator.cpp
   socket_session.cpp
 )

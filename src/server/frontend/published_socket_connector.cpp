@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "protobuf_socket_communicator.h"
+#include "published_socket_connector.h"
 #include "protobuf_message_processor.h"
 #include "socket_session.h"
 
@@ -33,7 +33,7 @@ namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
-mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
+mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
@@ -49,20 +49,20 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     start_accept();
 }
 
-void mf::ProtobufSocketCommunicator::start_accept()
+void mf::PublishedSocketConnector::start_accept()
 {
     auto socket = std::make_shared<boost::asio::local::stream_protocol::socket>(io_service);
 
     acceptor.async_accept(
         *socket,
         boost::bind(
-            &ProtobufSocketCommunicator::on_new_connection,
+            &PublishedSocketConnector::on_new_connection,
             this,
             socket,
             ba::placeholders::error));
 }
 
-void mf::ProtobufSocketCommunicator::start()
+void mf::PublishedSocketConnector::start()
 {
     auto run_io_service = [&]
     {
@@ -84,7 +84,7 @@ void mf::ProtobufSocketCommunicator::start()
     }
 }
 
-void mf::ProtobufSocketCommunicator::stop()
+void mf::PublishedSocketConnector::stop()
 {
     /* Stop processing new requests */
     io_service.stop();
@@ -108,13 +108,13 @@ void mf::ProtobufSocketCommunicator::stop()
     io_service.reset();
 }
 
-mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
+mf::PublishedSocketConnector::~PublishedSocketConnector()
 {
     stop();
     std::remove(socket_file.c_str());
 }
 
-void mf::ProtobufSocketCommunicator::on_new_connection(
+void mf::PublishedSocketConnector::on_new_connection(
     std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
     boost::system::error_code const& ec)
 {
