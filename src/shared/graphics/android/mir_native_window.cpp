@@ -18,7 +18,7 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "syncfence.h"
+#include "mir/graphics/android/syncfence.h"
 
 
 namespace mga=mir::graphics::android;

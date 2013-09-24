@@ -39,22 +39,6 @@ protected:
     SyncObject(SyncObject const&) = delete;
     SyncObject& operator=(SyncObject const&) = delete;
 };
-
-class SyncFence : public SyncObject
-{
-public:
-    SyncFence();
-    SyncFence(int fd);
-    ~SyncFence() noexcept;
-
-    void wait();
-
-private:
-    SyncFence(SyncFence const&) = delete;
-    SyncFence& operator=(SyncFence const&) = delete;
-    int const fence_fd;
-};
-
 }
 }
 }

@@ -20,13 +20,27 @@
 
 #include "mir/graphics/android/sync_object.h"
 
-
 namespace mir
 {
 namespace graphics
 {
 namespace android
 {
+
+class SyncFence : public SyncObject
+{
+public:
+    SyncFence();
+    SyncFence(int fd);
+    ~SyncFence() noexcept;
+
+    void wait();
+
+private:
+    SyncFence(SyncFence const&) = delete;
+    SyncFence& operator=(SyncFence const&) = delete;
+    int const fence_fd;
+};
 
 }
 }

@@ -20,7 +20,7 @@
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
-#include "mir/graphics/android/sync_object.h"
+#include "mir/graphics/android/syncfence.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
