@@ -104,8 +104,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-    auto ioc = std::make_shared<mga::IoctlControl>();
-    mga::SyncFence fence(displays[HWC_DISPLAY_PRIMARY]->retireFenceFd, ioc);
+    mga::SyncFence fence(displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }
 
