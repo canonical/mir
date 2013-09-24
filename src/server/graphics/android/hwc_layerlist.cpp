@@ -41,7 +41,7 @@ mga::HWCRect::HWCRect(geom::Rectangle& rect)
 mga::HWCDefaultLayer::HWCDefaultLayer(std::initializer_list<mga::HWCRect> list)
 {
     /* default values.*/
-    self.compositionType = HWC_FRAMEBUFFER;
+    self.compositionType = HWC_FRAMEBUFFER_TARGET;
     self.hints = 0;
     self.flags = 0;
     self.transform = 0;
@@ -80,7 +80,7 @@ mga::HWCFBLayer::HWCFBLayer(
         HWCRect display_frame_rect)
     : HWCDefaultLayer{display_frame_rect}
 {
-    self.compositionType = HWC_FRAMEBUFFER;
+    self.compositionType = HWC_FRAMEBUFFER_TARGET;
 
     self.handle = native_handle;
     self.sourceCrop = display_frame_rect;

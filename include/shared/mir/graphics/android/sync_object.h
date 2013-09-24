@@ -19,12 +19,45 @@
 #ifndef MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
 #define MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
 
+#include <memory>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
+//todo: this should be in the kernel headers
+#define SYNC_IOC_WAIT 0x40043E00
+
 namespace mir
 {
 namespace graphics
 {
 namespace android
 {
+
+class IoctlWrapper
+{
+public:
+    virtual ~IoctlWrapper() {}
+    virtual int ioctl(int fd, unsigned long int request, int* timeout) const = 0;
+    virtual int close(int fd) const = 0;
+
+protected:
+    IoctlWrapper() = default;
+    IoctlWrapper(IoctlWrapper const&) = delete;
+    IoctlWrapper& operator=(IoctlWrapper const&) = delete;
+};
+
+class IoctlControl : public IoctlWrapper
+{
+public:
+    int ioctl(int fd, unsigned long int request, int* timeout) const
+    {
+        return ::ioctl(fd, request, timeout);
+    }
+    int close(int fd) const
+    {
+        return ::close(fd);
+    }
+};
 
 class SyncObject
 {
@@ -38,6 +71,21 @@ protected:
     SyncObject& operator=(SyncObject const&) = delete;
 };
 
+class SyncFence : public SyncObject
+{
+public:
+    SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
+    ~SyncFence() noexcept;
+
+    void wait();
+
+private:
+    SyncFence(SyncFence const&) = delete;
+    SyncFence& operator=(SyncFence const&) = delete;
+
+    std::shared_ptr<IoctlWrapper> const ioctl_wrapper;
+    int const fence_fd;
+};
 
 }
 }

@@ -20,6 +20,7 @@
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
+#include "mir/graphics/android/sync_object.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -33,8 +34,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_list(organizer),
-      fb_device(fbdev),
-      wait_for_vsync(true)
+      fb_device(fbdev)
 {
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
@@ -79,17 +79,12 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     layer_list->set_fb_target(buffer);
-
-    if (wait_for_vsync)
-    {
-        fb_device->set_next_frontbuffer(buffer);
-    }
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
-    //note, although we only have a primary display right now, set the secondard to nullptr, as exynos hwc
-    //expects it
+    //note, although we only have a primary display right now,
+    //      set the second display to nullptr, as exynos hwc always derefs displays[1]
     hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
 
     if (hwc_device->prepare(hwc_device.get(), 1, displays))
@@ -97,7 +92,8 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
 
-    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer, updating displays */
+    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer,
+       updating the fb target before committing */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
@@ -108,16 +104,12 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-    if (displays[HWC_DISPLAY_PRIMARY]->retireFenceFd > 0)
-        close(displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
-
-    if (wait_for_vsync)
-    {
-        coordinator->wait_for_vsync();
-    }
+    auto ioc = std::make_shared<mga::IoctlControl>();
+    mga::SyncFence fence(displays[HWC_DISPLAY_PRIMARY]->retireFenceFd, ioc);
+    fence.wait();
 }
 
-void mga::HWC11Device::sync_to_display(bool sync)
+void mga::HWC11Device::sync_to_display(bool)
 {
-    wait_for_vsync = sync;
+    //TODO return error code, running not synced to vsync is not supported
 }

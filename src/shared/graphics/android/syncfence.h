@@ -20,8 +20,6 @@
 
 #include "mir/graphics/android/sync_object.h"
 
-#include <memory>
-#define SYNC_IOC_WAIT 0x40043E00
 
 namespace mir
 {
@@ -29,35 +27,6 @@ namespace graphics
 {
 namespace android
 {
-
-class IoctlWrapper
-{
-public:
-    virtual ~IoctlWrapper() {}
-    virtual int ioctl(int fd, unsigned long int request, int* timeout) const = 0;
-    virtual int close(int fd) const = 0;
-
-protected:
-    IoctlWrapper() = default;
-    IoctlWrapper(IoctlWrapper const&) = delete;
-    IoctlWrapper& operator=(IoctlWrapper const&) = delete;
-};
-
-class SyncFence : public SyncObject
-{
-public:
-    SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
-    ~SyncFence() noexcept;
-
-    void wait();
-
-private:
-    SyncFence(SyncFence const&) = delete;
-    SyncFence& operator=(SyncFence const&) = delete;
-
-    std::shared_ptr<IoctlWrapper> const ioctl_wrapper;
-    int const fence_fd;
-};
 
 }
 }
