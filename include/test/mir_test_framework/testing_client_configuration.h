@@ -46,7 +46,6 @@ struct TestingClientConfiguration
 
     // Code to run in client process
     virtual void exec() = 0;
-
 };
 
 }
