@@ -602,8 +602,6 @@ public:
     inline bool haveRelativeVWheel() const { return mHaveRelWheel; }
     inline bool haveRelativeHWheel() const { return mHaveRelHWheel; }
 
-    inline int32_t getRelativeX() const { return mRelX; }
-    inline int32_t getRelativeY() const { return mRelY; }
     inline int32_t getRelativeVWheel() const { return mRelWheel; }
     inline int32_t getRelativeHWheel() const { return mRelHWheel; }
 
@@ -611,8 +609,6 @@ private:
     bool mHaveRelWheel;
     bool mHaveRelHWheel;
 
-    int32_t mRelX;
-    int32_t mRelY;
     int32_t mRelWheel;
     int32_t mRelHWheel;
 

@@ -65,7 +65,8 @@ class StubFDBuffer : public mtd::StubBuffer
 {
 public:
     StubFDBuffer(mg::BufferProperties const& properties)
-        : StubBuffer(properties)
+        : StubBuffer(properties),
+          properties{properties}
     {
         fd = open("/dev/zero", O_RDONLY);
         if (fd < 0)
@@ -82,6 +83,14 @@ public:
         native_buffer->data[0] = 0xDEADBEEF;
         native_buffer->fd_items = 1;
         native_buffer->fd[0] = fd;
+
+        native_buffer->flags = 0;
+        if (properties.size.width.as_int() >= 800 &&
+            properties.size.height.as_int() >= 600 &&
+            properties.usage == mg::BufferUsage::hardware)
+        {
+            native_buffer->flags |= mir_buffer_flag_can_scanout;
+        }
         return native_buffer;
 #else
         return std::shared_ptr<MirNativeBuffer>();
@@ -94,6 +103,7 @@ public:
     }
 private:
     int fd;
+    const mg::BufferProperties properties;
 };
 
 class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
@@ -125,7 +135,7 @@ public:
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
-            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0};
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
 
         f(dummy_output_config);
     }
@@ -180,6 +190,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
         }
 
         packer->pack_stride(buffer->stride());
+        packer->pack_flags(native_handle->flags);
 #else
         (void)packer;
         (void)buffer;

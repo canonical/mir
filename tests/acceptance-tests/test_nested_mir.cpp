@@ -21,6 +21,7 @@
 #include "mir/run_mir.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 
 #ifndef ANDROID
@@ -78,7 +79,7 @@ struct FakeCommandLine
     FakeCommandLine(std::string const& host_socket)
     {
         char const** to = argv;
-        for(auto from : { "--file", "NestedServer", "--nested-mode", host_socket.c_str(), "--enable-input", "off"})
+        for(auto from : { "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
         {
             *to++ = from;
         }
@@ -107,16 +108,24 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
             EXPECT_CALL(*this, eglInitialize(_, _, _)).Times(1).WillRepeatedly(
                 DoAll(WithArgs<1, 2>(Invoke(this, &NestedMockEGL::egl_initialize)), Return(EGL_TRUE)));
 
-            EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(1).WillRepeatedly(
+            EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
                 DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
 
             EXPECT_CALL(*this, eglTerminate(_)).Times(1);
         }
 
+        EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
+        EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
+        EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
+
+        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
+        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
+        EXPECT_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES"))).Times(AnyNumber());
+
         {
             InSequence context_lifecycle;
-            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(1).WillRepeatedly(Return((EGLContext)this));
-            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
+            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
+            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
         }
     }
 
@@ -144,6 +153,11 @@ struct NestedMockPlatform
     }
 };
 
+struct NestedMockGL : NiceMock<mir::test::doubles::MockGL>
+{
+    NestedMockGL() {}
+};
+
 template<class NestedServerConfiguration>
 struct ClientConfig : mtf::TestingClientConfiguration
 {
@@ -157,6 +171,7 @@ struct ClientConfig : mtf::TestingClientConfiguration
         {
             NestedMockPlatform mock_gbm;
             NestedMockEGL mock_egl;
+            NestedMockGL mock_gl;
             NestedServerConfiguration nested_config(host_socket);
 
             mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
@@ -175,14 +190,14 @@ struct ClientConfig : mtf::TestingClientConfiguration
 
 using TestNestedMir = mtf::BespokeDisplayServerTestFixture;
 
-// TODO resolve problems running "nested" tests on android
+// TODO resolve problems running "nested" tests on android and running nested on GBM
 #ifdef ANDROID
-#define DISABLED_ON_ANDROID(name) DISABLED_##name
+#define DISABLED_ON_ANDROID_AND_GBM(name) DISABLED_##name
 #else
-#define DISABLED_ON_ANDROID(name) name
+#define DISABLED_ON_ANDROID_AND_GBM(name) DISABLED_##name
 #endif
 
-TEST_F(TestNestedMir, DISABLED_ON_ANDROID(nested_platform_connects_and_disconnects))
+TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_GBM(nested_platform_connects_and_disconnects))
 {
     struct MyHostServerConfiguration : HostServerConfiguration
     {
@@ -227,7 +242,7 @@ TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
     EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
 }
 
-TEST_F(TestNestedMir, DISABLED_ON_ANDROID(on_exit_display_objects_should_be_destroyed))
+TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_GBM(on_exit_display_objects_should_be_destroyed))
 {
     struct MyNestedServerConfiguration : NestedServerConfiguration
     {

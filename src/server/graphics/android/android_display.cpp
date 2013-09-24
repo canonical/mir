@@ -24,6 +24,7 @@
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
+#include "display_support_provider.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -48,45 +49,6 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_WIDTH, 1,
     EGL_HEIGHT, 1,
     EGL_NONE
-};
-
-class AndroidDisplayConfiguration : public mg::DisplayConfiguration
-{
-public:
-    AndroidDisplayConfiguration(geom::Size const& display_size)
-        : configuration{mg::DisplayConfigurationOutputId{1},
-                        mg::DisplayConfigurationCardId{0},
-                        mg::DisplayConfigurationOutputType::lvds,
-                        {geom::PixelFormat::abgr_8888},
-                        {mg::DisplayConfigurationMode{display_size,0.0f}},
-                        0,
-                        geom::Size{0,0},
-                        true,
-                        true,
-                        geom::Point{0,0},
-                        0, 0},
-          card{mg::DisplayConfigurationCardId{0}, 1}
-    {
-    }
-
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
-    {
-        f(card);
-    }
-
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
-    {
-        f(configuration);
-    }
-
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot configure output\n"));
-    }
-
-private:
-    mg::DisplayConfigurationOutput const configuration;
-    mg::DisplayConfigurationCard const card;
 };
 
 EGLDisplay create_and_initialize_display()
@@ -149,6 +111,7 @@ private:
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
                                     std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
+                                    std::shared_ptr<DisplaySupportProvider> const& display_provider,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
       egl_display{create_and_initialize_display()},
@@ -160,7 +123,9 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-                         native_window, egl_display, egl_context_shared)}
+          native_window, egl_display, egl_context_shared)},
+      display_provider(display_provider),
+      current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
 
@@ -186,11 +151,20 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
-    return std::make_shared<AndroidDisplayConfiguration>(display_buffer->view_area().size);
+    return std::make_shared<mga::AndroidDisplayConfiguration>(current_configuration);
 }
 
-void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
+void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    {
+        // TODO: Properly support multiple outputs
+        if (output.power_mode == mir_power_mode_on)
+            display_provider->blank_or_unblank_screen(false);
+        else
+            display_provider->blank_or_unblank_screen(true);
+    });
+    current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(

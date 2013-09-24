@@ -100,7 +100,7 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     else
     {
         auto fb_native_win = fb_factory->create_fb_native_window(fb_dev);
-        display = display_factory->create_gpu_display(fb_native_win, display_report);
+        display = display_factory->create_gpu_display(fb_native_win, fb_dev, display_report);
         display_report->report_gpu_composition_in_use();
     }
 

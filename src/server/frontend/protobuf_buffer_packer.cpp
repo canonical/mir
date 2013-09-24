@@ -65,6 +65,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
     protobuf_output.set_position_y(display_output.top_left.y.as_uint32_t());
     protobuf_output.set_current_mode(display_output.current_mode_index);
     protobuf_output.set_current_format(display_output.current_format_index);
+    protobuf_output.set_power_mode(static_cast<uint32_t>(display_output.power_mode));
 }
 
 }
@@ -106,3 +107,9 @@ void mfd::ProtobufBufferPacker::pack_stride(geometry::Stride stride)
 {
     buffer_response->set_stride(stride.as_uint32_t());
 }
+
+void mfd::ProtobufBufferPacker::pack_flags(unsigned int flags)
+{
+    buffer_response->set_flags(flags);
+}
+

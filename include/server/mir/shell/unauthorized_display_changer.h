@@ -34,6 +34,8 @@ public:
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
     void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
 
+    void ensure_display_powered(std::shared_ptr<frontend::Session> const& session);
+
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;
 };

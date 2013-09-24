@@ -123,6 +123,7 @@ public:
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
+    virtual std::shared_ptr<PauseResumeListener>    the_pause_resume_listener();
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
@@ -235,6 +236,7 @@ protected:
     // own options. This MUST be called before the first invocation of
     // the_options() - typically during construction.
     boost::program_options::options_description_easy_init add_options();
+    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
     virtual std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
@@ -285,6 +287,7 @@ protected:
     CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
+    CachedPtr<PauseResumeListener> pause_resume_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<input::NestedInputRelay> nested_input_relay;
