@@ -35,7 +35,6 @@ struct MockSyncFence : public mga::SyncObject
     ~MockSyncFence() noexcept {}
     MOCK_METHOD0(wait, void());
 };
-
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()

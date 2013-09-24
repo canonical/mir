@@ -74,7 +74,6 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
     }
 }
 
-
 mga::HWCFBLayer::HWCFBLayer(
         buffer_handle_t native_handle,
         HWCRect display_frame_rect)
