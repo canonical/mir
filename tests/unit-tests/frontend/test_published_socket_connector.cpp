@@ -395,7 +395,39 @@ TEST_F(PublishedSocketConnector, connection_using_socket_fd)
         &client->connection,
         google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::connect_done));
 
-    client->wait_for_connect_done();
+    EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
+    EXPECT_CALL(*client, disconnect_done()).Times(testing::AtLeast(0));
+
+    client->display_server.create_surface(
+        0,
+        &client->surface_parameters,
+        &client->surface,
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::create_surface_done));
+
+    client->wait_for_create_surface();
+
+    EXPECT_TRUE(client->surface.has_buffer());
+    EXPECT_CALL(*client, next_buffer_done()).Times(8);
+
+    for (int i = 0; i != 8; ++i)
+    {
+        client->display_server.next_buffer(
+            0,
+            &client->surface.id(),
+            client->surface.mutable_buffer(),
+            google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::next_buffer_done));
+
+        client->wait_for_next_buffer();
+        EXPECT_TRUE(client->surface.has_buffer());
+    }
+
+    client->display_server.disconnect(
+        0,
+        &client->ignored,
+        &client->ignored,
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
+
+    client->wait_for_disconnect_done();
 
     EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
