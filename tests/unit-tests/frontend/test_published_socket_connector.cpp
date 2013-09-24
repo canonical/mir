@@ -96,7 +96,6 @@ struct PublishedSocketConnector : public ::testing::Test
     std::shared_ptr<mt::TestProtobufClient> client;
     static std::shared_ptr<MockCommunicatorReport> communicator_report;
     static std::shared_ptr<mt::StubServerTool> stub_server_tool;
-private:
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
@@ -380,3 +379,24 @@ TEST_F(PublishedSocketConnector, configure_display)
 
     client->wait_for_configure_display_done();
 }
+
+TEST_F(PublishedSocketConnector, connection_using_socket_fd)
+{
+    char buffer[128] = {0};
+    sprintf(buffer, "fd://%d", stub_server->comm->client_socket_fd());
+    auto client = std::make_shared<mt::TestProtobufClient>(buffer, 100);
+    client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+
+    EXPECT_CALL(*client, connect_done()).Times(1);
+
+    client->display_server.connect(
+        0,
+        &client->connect_parameters,
+        &client->connection,
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::connect_done));
+
+    client->wait_for_connect_done();
+
+    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
+}
+
