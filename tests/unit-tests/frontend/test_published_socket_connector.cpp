@@ -56,7 +56,7 @@ public:
 };
 }
 
-struct ProtobufCommunicator : public ::testing::Test
+struct PublishedSocketConnector : public ::testing::Test
 {
     static void SetUpTestCase()
     {
@@ -100,11 +100,11 @@ private:
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
-std::shared_ptr<mt::StubServerTool> ProtobufCommunicator::stub_server_tool;
-std::shared_ptr<MockCommunicatorReport> ProtobufCommunicator::communicator_report;
-std::shared_ptr<mt::TestProtobufServer> ProtobufCommunicator::stub_server;
+std::shared_ptr<mt::StubServerTool> PublishedSocketConnector::stub_server_tool;
+std::shared_ptr<MockCommunicatorReport> PublishedSocketConnector::communicator_report;
+std::shared_ptr<mt::TestProtobufServer> PublishedSocketConnector::stub_server;
 
-TEST_F(ProtobufCommunicator, create_surface_results_in_a_callback)
+TEST_F(PublishedSocketConnector, create_surface_results_in_a_callback)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
 
@@ -117,7 +117,7 @@ TEST_F(ProtobufCommunicator, create_surface_results_in_a_callback)
     client->wait_for_create_surface();
 }
 
-TEST_F(ProtobufCommunicator, connection_sets_app_name)
+TEST_F(PublishedSocketConnector, connection_sets_app_name)
 {
     EXPECT_CALL(*client, connect_done()).Times(1);
 
@@ -134,7 +134,7 @@ TEST_F(ProtobufCommunicator, connection_sets_app_name)
     EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
 
-TEST_F(ProtobufCommunicator, create_surface_sets_surface_name)
+TEST_F(PublishedSocketConnector, create_surface_sets_surface_name)
 {
     EXPECT_CALL(*client, connect_done()).Times(1);
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -163,7 +163,7 @@ TEST_F(ProtobufCommunicator, create_surface_sets_surface_name)
 }
 
 
-TEST_F(ProtobufCommunicator,
+TEST_F(PublishedSocketConnector,
         create_surface_results_in_a_surface_being_created)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -187,7 +187,7 @@ MATCHER_P(InvocationMethodEq, name, "")
 
 }
 
-TEST_F(ProtobufCommunicator, double_disconnection_attempt_throws_exception)
+TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
 {
     using namespace testing;
 
@@ -222,7 +222,7 @@ TEST_F(ProtobufCommunicator, double_disconnection_attempt_throws_exception)
     }, std::runtime_error);
 }
 
-TEST_F(ProtobufCommunicator, getting_and_advancing_buffers)
+TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
     EXPECT_CALL(*client, disconnect_done()).Times(testing::AtLeast(0));
@@ -259,7 +259,7 @@ TEST_F(ProtobufCommunicator, getting_and_advancing_buffers)
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufCommunicator,
+TEST_F(PublishedSocketConnector,
        connect_create_surface_then_disconnect_a_session)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -281,7 +281,7 @@ TEST_F(ProtobufCommunicator,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufCommunicator, drm_auth_magic_is_processed_by_the_server)
+TEST_F(PublishedSocketConnector, drm_auth_magic_is_processed_by_the_server)
 {
     mir::protobuf::DRMMagic magic;
     mir::protobuf::DRMAuthMagicStatus status;
@@ -311,7 +311,7 @@ public:
 
 }
 
-TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
+TEST_F(PublishedSocketConnector, forces_requests_to_complete_when_stopping)
 {
     MockForceRequests mock_force_requests;
     auto stub_server_tool = std::make_shared<mt::StubServerTool>();
@@ -332,7 +332,7 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
     comms->stop();
 }
 
-TEST_F(ProtobufCommunicator, disorderly_disconnection_handled)
+TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
 {
     using namespace testing;
 
@@ -367,7 +367,7 @@ TEST_F(ProtobufCommunicator, disorderly_disconnection_handled)
     while (!done && cv.wait_until(lock, deadline) != std::cv_status::timeout);
 }
 
-TEST_F(ProtobufCommunicator, configure_display)
+TEST_F(PublishedSocketConnector, configure_display)
 {
     EXPECT_CALL(*client, display_configure_done())
         .Times(1);
