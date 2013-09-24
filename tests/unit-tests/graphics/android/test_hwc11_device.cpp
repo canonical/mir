@@ -130,37 +130,6 @@ TEST_F(HWC11Device, test_hwc_commit_order_with_vsync)
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
-    EXPECT_CALL(*mock_vsync, wait_for_vsync())
-        .Times(1);
-
-    device.commit_frame(dpy, surf);
-
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_prepare_content.numHwLayers);
-    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_set_content.numHwLayers);
-    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
-}
-
-TEST_F(HWC11Device, test_hwc_commit_order_without_vsync)
-{
-    using namespace testing;
-
-    mga::HWC11Device device(mock_device, mock_hwc_layers, mock_display_support_provider, mock_vsync);
-    device.sync_to_display(false);
-
-    //the order here is very important. eglSwapBuffers will alter the layerlist,
-    //so it must come before assembling the data for set
-    InSequence seq;
-    EXPECT_CALL(*mock_hwc_layers, native_list())
-        .Times(1);
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1);
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(1);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
-        .Times(1);
-    EXPECT_CALL(*mock_vsync, wait_for_vsync())
-        .Times(0);
 
     device.commit_frame(dpy, surf);
 
@@ -241,26 +210,5 @@ TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_adds_to_layerlist)
         .Times(1);
  
     mga::HWC11Device device(mock_device, mock_hwc_layers, mock_display_support_provider, mock_vsync);
-    device.set_next_frontbuffer(mock_buffer);
-}
-
-TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts_vsync)
-{
-    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(*this->mock_display_support_provider, set_next_frontbuffer(mock_buffer))
-        .Times(1);
-
-    mga::HWC11Device device(mock_device, mock_hwc_layers, mock_display_support_provider, mock_vsync);
-    device.set_next_frontbuffer(mock_buffer);
-}
-
-TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts_no_sync)
-{
-    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(*this->mock_display_support_provider, set_next_frontbuffer(mock_buffer))
-        .Times(0);
-
-    mga::HWC11Device device(mock_device, mock_hwc_layers, mock_display_support_provider, mock_vsync);
-    device.sync_to_display(false);
     device.set_next_frontbuffer(mock_buffer);
 }
