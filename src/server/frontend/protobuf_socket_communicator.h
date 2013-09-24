@@ -23,6 +23,7 @@
 
 #include "mir/frontend/communicator.h"
 #include "mir/frontend/socket_connection.h"
+#include "mir/frontend/session_creator.h"
 
 #include <boost/asio.hpp>
 
@@ -55,19 +56,6 @@ class MessageSender;
 }
 
 class CommunicatorReport;
-
-// Temporary class to hoist functionality apart
-class SessionCreator
-{
-public:
-    virtual void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket) = 0;
-
-protected:
-    SessionCreator() = default;
-    virtual ~SessionCreator() noexcept = default;
-    SessionCreator(SessionCreator const&) = delete;
-    SessionCreator& operator=(SessionCreator const&) = delete;
-};
 
 class ProtobufSessionCreator : public SessionCreator
 {

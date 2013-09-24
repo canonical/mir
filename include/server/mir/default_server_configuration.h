@@ -43,6 +43,7 @@ namespace frontend
 class Shell;
 class Communicator;
 class ProtobufIpcFactory;
+class SessionCreator;
 class SessionMediatorReport;
 class MessageProcessorReport;
 class SessionAuthorizer;
@@ -169,6 +170,11 @@ public:
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
+    /** @name frontend configuration - internal dependencies
+     * internal dependencies of frontend
+     *  @{ */
+    virtual std::shared_ptr<frontend::SessionCreator>         the_session_creator();
+    /** @} */
     /** @} */
 
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
@@ -268,6 +274,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
+    CachedPtr<frontend::SessionCreator>    session_creator;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;

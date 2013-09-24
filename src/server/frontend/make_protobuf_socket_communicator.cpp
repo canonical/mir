@@ -52,6 +52,18 @@ std::shared_ptr<mf::SocketConnection> mir::DefaultServerConfiguration::the_socke
     });
 }
 
+std::shared_ptr<mf::SessionCreator>
+mir::DefaultServerConfiguration::the_session_creator()
+{
+    return session_creator([this]
+        {
+            return std::make_shared<mf::ProtobufSessionCreator>(
+                the_ipc_factory(the_frontend_shell(),
+                the_buffer_allocator()),
+                the_session_authorizer());
+        });
+}
+
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::the_communicator()
 {
@@ -68,13 +80,9 @@ mir::DefaultServerConfiguration::the_communicator()
                 });
             };
 
-            auto const session_creator = std::make_shared<mf::ProtobufSessionCreator>(
-                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                the_session_authorizer());
-
             return std::make_shared<mf::ProtobufSocketCommunicator>(
                 the_socket(),
-                session_creator,
+                the_session_creator(),
                 threads,
                 force_requests_to_complete,
                 std::make_shared<mf::NullCommunicatorReport>());
