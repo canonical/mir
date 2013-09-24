@@ -28,7 +28,7 @@ namespace mf = mir::frontend;
 
 namespace
 {
-std::shared_ptr<mf::Connector> make_communicator(
+std::shared_ptr<mf::Connector> make_connector(
     std::string const& socket_name,
     std::shared_ptr<mf::ProtobufIpcFactory> const& factory,
     std::shared_ptr<mf::CommunicatorReport> const& report)
@@ -53,6 +53,6 @@ mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
     const std::shared_ptr<protobuf::DisplayServer>& tool,
     std::shared_ptr<frontend::CommunicatorReport> const& report) :
-    comm(make_communicator(socket_name, std::make_shared<mtd::StubIpcFactory>(*tool), report))
+    comm(make_connector(socket_name, std::make_shared<mtd::StubIpcFactory>(*tool), report))
 {
 }
