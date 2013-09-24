@@ -21,6 +21,7 @@
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir/frontend/communicator_report.h"
 #include "src/server/frontend/published_socket_connector.h"
+#include "src/server/frontend/protobuf_session_creator.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;

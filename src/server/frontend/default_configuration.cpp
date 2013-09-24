@@ -17,6 +17,8 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "protobuf_session_creator.h"
+
 #include "mir/options/option.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/session_container.h"

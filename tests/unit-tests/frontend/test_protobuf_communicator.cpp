@@ -21,6 +21,7 @@
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/server/frontend/published_socket_connector.h"
+#include "src/server/frontend/protobuf_session_creator.h"
 
 #include "mir_protobuf.pb.h"
 

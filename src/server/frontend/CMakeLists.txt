@@ -10,6 +10,7 @@ set(
   null_message_processor.cpp
   global_event_sender.cpp
   published_socket_connector.cpp
+  protobuf_session_creator.cpp
   socket_session.cpp
   resource_cache.cpp
   socket_messenger.cpp

@@ -19,14 +19,10 @@
 #ifndef MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 
-#include "connected_sessions.h"
-
 #include "mir/frontend/connector.h"
-#include "mir/frontend/session_creator.h"
 
 #include <boost/asio.hpp>
 
-#include <atomic>
 #include <thread>
 #include <string>
 #include <vector>
@@ -44,36 +40,8 @@ namespace mir
 {
 namespace frontend
 {
-class ResourceCache;
-class ProtobufIpcFactory;
-class SessionAuthorizer;
-
-namespace detail
-{
-struct SocketSession;
-class MessageSender;
-}
-
+class SessionCreator;
 class CommunicatorReport;
-
-class ProtobufSessionCreator : public SessionCreator
-{
-public:
-    ProtobufSessionCreator(
-        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        std::shared_ptr<SessionAuthorizer> const& session_authorizer);
-    ~ProtobufSessionCreator() noexcept;
-    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
-
-private:
-    int next_id();
-
-    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
-    std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    std::atomic<int> next_session_id;
-    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
-};
-
 
 /// Accept connections over a published socket
 class PublishedSocketConnector : public Connector
