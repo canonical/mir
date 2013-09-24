@@ -38,3 +38,8 @@ void msh::UnauthorizedDisplayChanger::configure(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
+
+void msh::UnauthorizedDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
+}

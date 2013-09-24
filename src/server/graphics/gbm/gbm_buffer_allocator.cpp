@@ -114,6 +114,9 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
           egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
     assert(buffer_initializer.get() != 0);
+
+    const char *env = getenv("MIR_BYPASS");
+    bypass_env = env ? env[0] != '0' : true;
 }
 
 std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
@@ -145,7 +148,8 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
      *       resizing). We may also want to check for
      *       mir_surface_state_fullscreen later when it's fully wired up.
      */
-    if (buffer_properties.usage == BufferUsage::hardware &&
+    if (bypass_env &&
+        buffer_properties.usage == BufferUsage::hardware &&
         buffer_properties.size.width.as_uint32_t() >= 800 &&
         buffer_properties.size.height.as_uint32_t() >= 600)
     {

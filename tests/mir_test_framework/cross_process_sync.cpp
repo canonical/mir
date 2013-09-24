@@ -68,6 +68,11 @@ mtf::CrossProcessSync& mtf::CrossProcessSync::operator=(const mtf::CrossProcessS
     return *this;
 }
 
+void mtf::CrossProcessSync::try_signal_ready_for()
+{
+    try_signal_ready_for(std::chrono::minutes(2));
+}
+
 void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds& duration)
 {
     static const short empty_revents = 0;
@@ -92,6 +97,11 @@ void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds
             ::boost::enable_error_info(std::runtime_error("Error while writing to pipe"))
             << boost::errinfo_errno(errno));
     }
+}
+
+unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for()
+{
+    return wait_for_signal_ready_for(std::chrono::minutes(2));
 }
 
 unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono::milliseconds& duration)
