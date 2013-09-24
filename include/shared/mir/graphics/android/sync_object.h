@@ -19,8 +19,6 @@
 #ifndef MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
 #define MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
 
-#include <memory>
-
 namespace mir
 {
 namespace graphics
@@ -39,6 +37,8 @@ protected:
     SyncObject(SyncObject const&) = delete;
     SyncObject& operator=(SyncObject const&) = delete;
 };
+
+
 }
 }
 }
