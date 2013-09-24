@@ -40,9 +40,9 @@ mir::DefaultServerConfiguration::the_session_creator()
 }
 
 std::shared_ptr<mf::Connector>
-mir::DefaultServerConfiguration::the_communicator()
+mir::DefaultServerConfiguration::the_connector()
 {
-    return communicator(
+    return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
             auto const threads = the_options()->get("ipc-thread-pool", 10);

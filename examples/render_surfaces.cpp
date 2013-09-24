@@ -266,7 +266,7 @@ public:
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
     // Stub out server connectivity.
-    std::shared_ptr<mf::Connector> the_communicator() override
+    std::shared_ptr<mf::Connector> the_connector() override
     {
         struct NullCommunicator : public mf::Connector
         {
