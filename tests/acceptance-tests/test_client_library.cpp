@@ -826,8 +826,6 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
     {
         void exec()
         {
-            //we are testing the connect function itself, so force using default
-            use_default_connect_functions();
 
             mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
@@ -843,6 +841,8 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
         }
     } client_config;
 
+    //we are testing the connect function itself, so force using default
+    use_default_connect_functions();
     launch_client_process(client_config);
 }
 
@@ -852,9 +852,6 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
     {
         void exec()
         {
-            //we are testing the connect function itself, so force using default
-            use_default_connect_functions();
-
             mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
 
             MirSurfaceParameters const request_params =
@@ -875,6 +872,8 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
         }
     } client_config;
 
+    //we are testing the connect function itself, so force using default
+    use_default_connect_functions();
     launch_client_process(client_config);
 }
 

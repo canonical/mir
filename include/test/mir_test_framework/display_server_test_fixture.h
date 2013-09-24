@@ -47,7 +47,14 @@ public:
 
     void launch_client_process(TestingClientConfiguration& config);
 
+    //clients respect the tests-use-real-graphics option by default. use
+    //this function to force the use of the default client configuraiton
+    void use_default_connect_functions();
 private:
+    MirWaitHandle* (*default_mir_connect_impl)
+        (char const*, char const*, mir_connected_callback, void*);
+    void (*default_mir_connection_release_impl) (MirConnection *connection);
+
     static TestingProcessManager process_manager;
     static TestingServerConfiguration default_parameters;
 
@@ -70,6 +77,7 @@ public:
     void kill_client_processes();
     void terminate_client_processes();
 
+    void use_default_connect_functions();
     void run_in_test_process(std::function<void()> const& run_code);
 
 protected:
@@ -77,8 +85,12 @@ protected:
     virtual void TearDown();
 
 private:
+    MirWaitHandle* (*default_mir_connect_impl)
+        (char const*, char const*, mir_connected_callback, void*);
+    void (*default_mir_connection_release_impl) (MirConnection *connection);
     std::shared_ptr<mir::options::Option> server_options;
     TestingProcessManager process_manager;
+    bool use_default_fns;
 };
 
 }

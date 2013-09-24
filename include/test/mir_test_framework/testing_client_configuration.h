@@ -20,6 +20,7 @@
 #define MIR_TESTING_CLIENT_CONFIGURATION
 
 #include "mir_toolkit/mir_client_library_debug.h"
+#include "src/client/default_connection_configuration.h"
 #include <memory>
 
 namespace mir
@@ -32,25 +33,20 @@ class Option;
 
 namespace mir_test_framework
 {
+struct StubConnectionConfiguration : public mir::client::DefaultConnectionConfiguration
+{
+    StubConnectionConfiguration(std::string const& socket_file);
+    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override;
+};
 
 struct TestingClientConfiguration
 {
-    TestingClientConfiguration();
-    virtual ~TestingClientConfiguration();
+    TestingClientConfiguration() {}
+    virtual ~TestingClientConfiguration() {}
 
     // Code to run in client process
     virtual void exec() = 0;
 
-    void set_client_configuration(std::shared_ptr<mir::options::Option> const& options);
-
-    //force client configuration to use default connect and disconnect functions
-    void use_default_connect_functions();
-
-private:
-    MirWaitHandle* (*default_mir_connect_impl)
-        (char const *server, char const *app_name, mir_connected_callback callback, void *context);
-
-    void (*default_mir_connection_release_impl) (MirConnection *connection);
 };
 
 }

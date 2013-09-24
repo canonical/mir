@@ -29,15 +29,6 @@ namespace mcl = mir::client;
 namespace mtf=mir_test_framework;
 namespace geom = mir::geometry;
 
-/* if set before any calls to the api functions, assigning to this pointer will allow user to
- * override calls to mir_connect() and mir_connection_release(). This is mostly useful in test scenarios
- */
-extern MirWaitHandle* (*mir_connect_impl)(
-    char const *server,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context);
-extern void (*mir_connection_release_impl) (MirConnection *connection);
 
 namespace
 {
@@ -121,61 +112,14 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
     }
 };
 
-struct StubConnectionConfiguration : public mcl::DefaultConnectionConfiguration
-{
-    StubConnectionConfiguration(std::string const& socket_file)
-        : DefaultConnectionConfiguration(socket_file)
-    {
-    }
-
-    std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
-    {
-        return std::make_shared<StubClientPlatformFactory>();
-    }
-};
-
-MirWaitHandle* mir_connect_test_override(
-    char const *socket_file,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context)
-{
-    StubConnectionConfiguration conf(socket_file);
-    auto connection = new MirConnection(conf);
-    return connection->connect(app_name, callback, context);
 }
 
-void mir_connection_release_override(MirConnection *connection)
-{
-    auto wait_handle = connection->disconnect();
-    wait_handle->wait_for_all();
-    delete connection;
-}
-
-}
-
-mtf::TestingClientConfiguration::TestingClientConfiguration()
-    : default_mir_connect_impl(mir_connect_impl),
-      default_mir_connection_release_impl(mir_connection_release_impl)
+mtf::StubConnectionConfiguration::StubConnectionConfiguration(std::string const& socket_file)
+    : DefaultConnectionConfiguration(socket_file)
 {
 }
 
-void mtf::TestingClientConfiguration::use_default_connect_functions()
+std::shared_ptr<mcl::ClientPlatformFactory> mtf::StubConnectionConfiguration::the_client_platform_factory()
 {
-    mir_connect_impl = default_mir_connect_impl;
-    mir_connection_release_impl = default_mir_connection_release_impl;
-}
-
-void mtf::TestingClientConfiguration::set_client_configuration(std::shared_ptr<mir::options::Option> const& options)
-{
-    if (!options->get("tests-use-real-graphics", false))
-    {
-        mir_connect_impl = mir_connect_test_override;
-        mir_connection_release_impl = mir_connection_release_override;
-    }
-}
-
-mtf::TestingClientConfiguration::~TestingClientConfiguration()
-{
-    use_default_connect_functions();
+    return std::make_shared<StubClientPlatformFactory>();
 }

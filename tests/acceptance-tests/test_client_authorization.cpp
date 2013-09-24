@@ -232,9 +232,6 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
 
         void exec() override
         {
-            //we are testing the connect function itself, so force using default
-            use_default_connect_functions();
-
             pid_t client_pid = getpid();
             shared_region->post_client_process_pid(client_pid);
 
@@ -258,5 +255,9 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
 
         ClientPidTestFixture::SharedRegion* shared_region;
     } client_config(shared_region);
+
+    //we are testing the connect function itself, so force using default
+    use_default_connect_functions();
+
     launch_client_process(client_config);    
 }
