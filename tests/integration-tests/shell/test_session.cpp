@@ -29,7 +29,7 @@
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
@@ -61,9 +61,9 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         return input_configuration;
     }
 
-    std::shared_ptr<mf::Communicator> the_communicator() override
+    std::shared_ptr<mf::Connector> the_communicator() override
     {
-        struct NullCommunicator : public mf::Communicator
+        struct NullCommunicator : public mf::Connector
         {
             void start() {}
             void stop() {}

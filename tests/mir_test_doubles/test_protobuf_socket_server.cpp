@@ -28,7 +28,7 @@ namespace mf = mir::frontend;
 
 namespace
 {
-std::shared_ptr<mf::Communicator> make_communicator(
+std::shared_ptr<mf::Connector> make_communicator(
     std::string const& socket_name,
     std::shared_ptr<mf::ProtobufIpcFactory> const& factory,
     std::shared_ptr<mf::CommunicatorReport> const& report)

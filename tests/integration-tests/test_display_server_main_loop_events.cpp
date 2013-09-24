@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/compositor.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/main_loop.h"
@@ -53,7 +53,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
-class MockCommunicator : public mf::Communicator
+class MockCommunicator : public mf::Connector
 {
 public:
     MOCK_METHOD0(start, void());
@@ -226,7 +226,7 @@ public:
         return mock_compositor;
     }
 
-    std::shared_ptr<mf::Communicator> the_communicator() override
+    std::shared_ptr<mf::Connector> the_communicator() override
     {
         if (!mock_communicator)
             mock_communicator = std::make_shared<MockCommunicator>();

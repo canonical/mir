@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

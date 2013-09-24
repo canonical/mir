@@ -21,7 +21,7 @@
 
 #include "connected_sessions.h"
 
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/frontend/session_creator.h"
 
 #include <boost/asio.hpp>
@@ -75,7 +75,7 @@ private:
 };
 
 
-class ProtobufSocketCommunicator : public Communicator
+class ProtobufSocketCommunicator : public Connector
 {
 public:
     // Create communicator based on Boost asio and Google protobufs

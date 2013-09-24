@@ -25,7 +25,7 @@
 #include "mir/display_changer.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
 
@@ -176,7 +176,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Display> const display;
     std::shared_ptr<input::InputConfiguration> const input_configuration;
     std::shared_ptr<mc::Compositor> const compositor;
-    std::shared_ptr<mf::Communicator> const communicator;
+    std::shared_ptr<mf::Connector> const communicator;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::PauseResumeListener> const pause_resume_listener;

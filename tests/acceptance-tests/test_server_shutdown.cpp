@@ -326,7 +326,7 @@ TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(server_releases_reso
      */
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
-    std::weak_ptr<mir::frontend::Communicator> communicator = server_config->the_communicator();
+    std::weak_ptr<mir::frontend::Connector> communicator = server_config->the_communicator();
     std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
 
     server_config.reset();

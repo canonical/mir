@@ -41,7 +41,7 @@ class RendererFactory;
 namespace frontend
 {
 class Shell;
-class Communicator;
+class Connector;
 class ProtobufIpcFactory;
 class SessionCreator;
 class SessionMediatorReport;
@@ -119,7 +119,7 @@ public:
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::Communicator> the_communicator();
+    virtual std::shared_ptr<frontend::Connector> the_communicator();
     virtual std::shared_ptr<graphics::Display>      the_display();
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
@@ -249,7 +249,7 @@ protected:
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
-    CachedPtr<frontend::Communicator> communicator;
+    CachedPtr<frontend::Connector> communicator;
     CachedPtr<shell::SessionManager> session_manager;
 
 

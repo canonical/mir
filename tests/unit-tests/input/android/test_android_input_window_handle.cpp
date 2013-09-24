@@ -79,7 +79,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
         .WillOnce(Return(testing_server_fd));
 
     // For now since we are just doing keyboard input we only need surface size,
-    // for touch/pointer events we will need a position
+    // for tou.hpointer events we will need a position
     EXPECT_CALL(mock_surface, size())
         .Times(1)
         .WillOnce(Return(default_surface_size));

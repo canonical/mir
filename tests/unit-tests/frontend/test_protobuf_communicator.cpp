@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/server/frontend/protobuf_socket_communicator.h"
