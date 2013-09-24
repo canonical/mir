@@ -487,6 +487,7 @@ private:
 
     virtual status_t getAbsoluteAxisInfo(int32_t deviceId, int axis,
             RawAbsoluteAxisInfo* outAxisInfo) const {
+        outAxisInfo->clear();
         Device* device = getDevice(deviceId);
         if (device) {
             ssize_t index = device->absoluteAxes.indexOfKey(axis);
