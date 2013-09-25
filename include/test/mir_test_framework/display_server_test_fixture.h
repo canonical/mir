@@ -36,6 +36,7 @@ using namespace ::mir;
 class DefaultDisplayServerTestFixture : public testing::Test
 {
 public:
+    DefaultDisplayServerTestFixture();
     ~DefaultDisplayServerTestFixture();
 
     static void SetUpTestCase();

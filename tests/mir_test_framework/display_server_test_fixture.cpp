@@ -47,9 +47,11 @@ void DefaultDisplayServerTestFixture::TearDownTestCase()
     process_manager.tear_down_server();
 }
 
-DefaultDisplayServerTestFixture::~DefaultDisplayServerTestFixture()
+DefaultDisplayServerTestFixture::DefaultDisplayServerTestFixture()
 {
 }
+
+DefaultDisplayServerTestFixture::~DefaultDisplayServerTestFixture() {}
 
 
 void BespokeDisplayServerTestFixture::launch_server_process(TestingServerConfiguration& functor)
