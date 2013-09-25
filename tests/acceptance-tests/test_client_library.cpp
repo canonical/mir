@@ -521,6 +521,12 @@ TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
 
             mir_connection_release(connection);
         }
+
+        // this test relies on gbm drivers, use real graphics always
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
     launch_client_process(client_config);
