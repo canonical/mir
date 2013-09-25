@@ -22,13 +22,10 @@
 #include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_process_manager.h"
-#include "mir_test_framework/testing_client_configuration.h"
 #include <gtest/gtest.h>
 
 #include <memory>
 #include <functional>
-
-#include "mir_toolkit/mir_client_library_debug.h"
 
 namespace mir_test_framework
 {
@@ -39,7 +36,6 @@ using namespace ::mir;
 class DefaultDisplayServerTestFixture : public testing::Test
 {
 public:
-    DefaultDisplayServerTestFixture();
     ~DefaultDisplayServerTestFixture();
 
     static void SetUpTestCase();
@@ -48,10 +44,6 @@ public:
     void launch_client_process(TestingClientConfiguration& config);
 
 private:
-    MirWaitHandle* (*default_mir_connect_impl)
-        (char const*, char const*, mir_connected_callback, void*);
-    void (*default_mir_connection_release_impl) (MirConnection *connection);
-
     static TestingProcessManager process_manager;
     static TestingServerConfiguration default_parameters;
 
@@ -81,11 +73,8 @@ protected:
     virtual void TearDown();
 
 private:
-    MirWaitHandle* (*default_mir_connect_impl)
-        (char const*, char const*, mir_connected_callback, void*);
-    void (*default_mir_connection_release_impl) (MirConnection *connection);
-    std::shared_ptr<mir::options::Option> server_options;
     TestingProcessManager process_manager;
+    std::shared_ptr<mir::options::Option> server_options;
 };
 
 }

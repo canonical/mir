@@ -146,8 +146,7 @@ void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguratio
         if (!config.use_real_graphics(test_options))
         {
             mir_connect_impl = mir_connect_test_override;
-            mir_connection_release_impl = mir_connection_release_override; 
-
+            mir_connection_release_impl = mir_connection_release_override;
         }
         config.exec();
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);

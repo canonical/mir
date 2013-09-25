@@ -262,6 +262,5 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
 
         ClientPidTestFixture::SharedRegion* shared_region;
     } client_config(shared_region);
-
     launch_client_process(client_config);    
 }

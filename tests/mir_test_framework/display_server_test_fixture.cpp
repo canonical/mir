@@ -26,10 +26,6 @@ namespace mtf = mir_test_framework;
 mtf::TestingProcessManager mir_test_framework::DefaultDisplayServerTestFixture::process_manager;
 mtf::TestingServerConfiguration mir_test_framework::DefaultDisplayServerTestFixture::default_parameters;
 
-DefaultDisplayServerTestFixture::DefaultDisplayServerTestFixture()
-{
-}
-
 void DefaultDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
     process_manager.launch_client_process(config, *default_parameters.the_options());
@@ -103,10 +99,9 @@ void BespokeDisplayServerTestFixture::TearDown()
     process_manager.tear_down_all();
 }
 
-BespokeDisplayServerTestFixture::BespokeDisplayServerTestFixture()
+BespokeDisplayServerTestFixture::BespokeDisplayServerTestFixture() :
+    process_manager()
 {
 }
 
-BespokeDisplayServerTestFixture::~BespokeDisplayServerTestFixture()
-{
-}
+BespokeDisplayServerTestFixture::~BespokeDisplayServerTestFixture() {}

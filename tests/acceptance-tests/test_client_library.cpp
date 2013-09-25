@@ -819,7 +819,6 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
     {
         void exec()
         {
-
             mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
 
