@@ -16,11 +16,13 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/run_mir.h"
-#include "mir/report_exception.h"
-#include "mir/options/option.h"
 #include "server_configuration.h"
+
+#include "mir/abnormal_exit.h"
 #include "mir/frontend/connector.h"
+#include "mir/options/option.h"
+#include "mir/report_exception.h"
+#include "mir/run_mir.h"
 
 #include <iostream>
 
@@ -46,7 +48,8 @@ struct ServerConfiguration : mir::examples::ServerConfiguration
             char buffer[128] = {0};
             sprintf(buffer, "fd://%d", the_connector()->client_socket_fd());
             setenv("MIR_SOCKET", buffer, 1);
-            (void)system((the_options()->get(launch_child_opt, "") + "&").c_str());
+            auto ignore = system((the_options()->get(launch_child_opt, "") + "&").c_str());
+            (void)ignore;
         }
     }
 
