@@ -20,7 +20,7 @@
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
-#include "mir_test_doubles/mock_hwc_organizer.h"
+#include "mir_test_doubles/mock_hwc_layerlist.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -38,7 +38,7 @@ protected:
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_display_support_provider = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
-        mock_hwc_layers = std::make_shared<testing::NiceMock<mtd::MockHWCOrganizer>>();
+        mock_hwc_layers = std::make_shared<testing::NiceMock<mtd::MockHWCLayerList>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_egl.silence_uninteresting();
 
@@ -49,7 +49,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
-    std::shared_ptr<mtd::MockHWCOrganizer> mock_hwc_layers;
+    std::shared_ptr<mtd::MockHWCLayerList> mock_hwc_layers;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
     EGLDisplay dpy;
