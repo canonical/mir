@@ -40,8 +40,7 @@ mir::DefaultServerConfiguration::the_session_creator()
     return session_creator([this]
         {
             return std::make_shared<mf::ProtobufSessionCreator>(
-                the_ipc_factory(the_frontend_shell(),
-                the_buffer_allocator()),
+                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
                 the_session_authorizer());
         });
 }
@@ -62,7 +61,7 @@ mir::DefaultServerConfiguration::the_connector()
                 });
             };
 
-            if (the_options()->is_set("no-file"))
+            if (the_options()->is_set(no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_session_creator(),
