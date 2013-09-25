@@ -62,10 +62,20 @@ public:
     /* Clears the property map. */
     void clear() { options = boost::program_options::variables_map(); }
 
-//    /* Adds a property.
-//     * Replaces the property with the same key if it is already present.
-//     */
-//    void addProperty(const String8& key, const String8& value);
+    /* Adds a property.
+     * Replaces the property with the same key if it is already present.
+     */
+    void addProperty(const String8& key, const String8& value)
+    {
+        namespace po = boost::program_options;
+        options.insert(std::make_pair(key, po::variable_value(value, false)));
+    }
+
+    void addAll(const PropertyMap* other)
+    {
+        options.insert(other->options.begin(), other->options.end());
+    }
+
 //
 //    /* Returns true if the property map contains the specified key. */
 //    bool hasProperty(const String8& key) const;
