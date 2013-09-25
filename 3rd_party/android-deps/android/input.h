@@ -460,27 +460,6 @@ enum {
     AINPUT_KEYBOARD_TYPE_ALPHABETIC = 2
 };
 
-/*
- * Constants used to retrieve information about the range of motion for a particular
- * coordinate of a motion event.
- *
- * Refer to the documentation on android.view.InputDevice for more details about input sources
- * and their correct interpretation.
- *
- * DEPRECATION NOTICE: These constants are deprecated.  Use AMOTION_EVENT_AXIS_* constants instead.
- */
-enum {
-    AINPUT_MOTION_RANGE_X = AMOTION_EVENT_AXIS_X,
-    AINPUT_MOTION_RANGE_Y = AMOTION_EVENT_AXIS_Y,
-    AINPUT_MOTION_RANGE_PRESSURE = AMOTION_EVENT_AXIS_PRESSURE,
-    AINPUT_MOTION_RANGE_SIZE = AMOTION_EVENT_AXIS_SIZE,
-    AINPUT_MOTION_RANGE_TOUCH_MAJOR = AMOTION_EVENT_AXIS_TOUCH_MAJOR,
-    AINPUT_MOTION_RANGE_TOUCH_MINOR = AMOTION_EVENT_AXIS_TOUCH_MINOR,
-    AINPUT_MOTION_RANGE_TOOL_MAJOR = AMOTION_EVENT_AXIS_TOOL_MAJOR,
-    AINPUT_MOTION_RANGE_TOOL_MINOR = AMOTION_EVENT_AXIS_TOOL_MINOR,
-    AINPUT_MOTION_RANGE_ORIENTATION = AMOTION_EVENT_AXIS_ORIENTATION
-} __attribute__ ((deprecated));
-
 #ifdef __cplusplus
 }
 #endif
