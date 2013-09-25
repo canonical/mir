@@ -30,13 +30,6 @@
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
-// TODO resolve problems running tests on android
-#ifdef ANDROID
-#define DISABLED_ON_ANDROID(name) DISABLED_##name
-#else
-#define DISABLED_ON_ANDROID(name) name
-#endif
-
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
@@ -147,7 +140,7 @@ struct EventObservingClient : ClientConfigCommon
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(a_surface_is_notified_of_receiving_focus))
+TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus)
 {
     using namespace ::testing;
 
@@ -176,7 +169,7 @@ ACTION_P(SignalFence, fence)
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(two_surfaces_are_notified_of_gaining_and_losing_focus))
+TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
     
