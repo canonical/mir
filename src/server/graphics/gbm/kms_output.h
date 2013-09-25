@@ -44,6 +44,7 @@ public:
     virtual geometry::Size size() const = 0;
 
     virtual bool set_crtc(uint32_t fb_id) = 0;
+    virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(uint32_t fb_id) = 0;
     virtual void wait_for_page_flip() = 0;
 

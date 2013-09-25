@@ -38,7 +38,8 @@ bool encoder_is_used(mgg::DRMModeResources const& resources, uint32_t encoder_id
 
     resources.for_each_connector([&](mgg::DRMModeConnectorUPtr connector)
     {
-        if (connector->encoder_id == encoder_id)
+        if (connector->encoder_id == encoder_id &&
+            connector->connection == DRM_MODE_CONNECTED)
         {
             auto encoder = resources.encoder(connector->encoder_id);
             if (encoder)
@@ -59,11 +60,14 @@ bool crtc_is_used(mgg::DRMModeResources const& resources, uint32_t crtc_id)
 
     resources.for_each_connector([&](mgg::DRMModeConnectorUPtr connector)
     {
-        auto encoder = resources.encoder(connector->encoder_id);
-        if (encoder)
+        if (connector->connection == DRM_MODE_CONNECTED)
         {
-            if (encoder->crtc_id == crtc_id)
-                crtc_used = true;
+            auto encoder = resources.encoder(connector->encoder_id);
+            if (encoder)
+            {
+                if (encoder->crtc_id == crtc_id)
+                    crtc_used = true;
+            }
         }
     });
 
@@ -213,6 +217,32 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
 
     using_saved_crtc = false;
     return true;
+}
+
+void mgg::RealKMSOutput::clear_crtc()
+{
+    /*
+     * In order to actually clear the output, we need to have a crtc
+     * connected to the output/connector so that we can disconnect
+     * it. However, not being able to get a crtc is OK, since it means
+     * that the output cannot be displaying anything anyway.
+     */
+    if (!ensure_crtc())
+        return;
+
+    auto result = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
+                                 0, 0, 0, nullptr, 0, nullptr);
+    if (result)
+    {
+        std::string const msg =
+            "Couldn't clear output " + connector_name(connector.get());
+
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error(msg))
+                << (boost::error_info<KMSOutput, decltype(result)>(result)));
+    }
+
+    current_crtc = nullptr;
 }
 
 bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
