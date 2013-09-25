@@ -234,3 +234,62 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
         output.wait_for_page_flip();
     }, std::runtime_error);
 }
+
+TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
+{
+    using namespace testing;
+
+    setup_outputs_connected_crtc();
+
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
+        .Times(1)
+        .WillOnce(Return(0));
+
+    output.clear_crtc();
+}
+
+TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
+{
+    using namespace testing;
+
+    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+    uint32_t const possible_crtcs_mask_empty{0x0};
+
+    resources.reset();
+
+    resources.add_encoder(encoder_ids[0], invalid_id, possible_crtcs_mask_empty);
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_VGA,
+                            DRM_MODE_CONNECTED, encoder_ids[0],
+                            modes_empty, possible_encoder_ids1, geom::Size());
+
+    resources.prepare();
+
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, 0, 0, 0, nullptr, 0, nullptr))
+        .Times(0);
+
+    output.clear_crtc();
+}
+
+TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
+{
+    using namespace testing;
+
+    setup_outputs_connected_crtc();
+
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        output.clear_crtc();
+    }, std::runtime_error);
+}
