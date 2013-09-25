@@ -16,6 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/testing_client_configuration.h"
 #include "src/client/mir_connection.h"

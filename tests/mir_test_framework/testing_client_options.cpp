@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/testing_client_configuration.h"
+#include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir/options/program_option.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/client_platform_factory.h"

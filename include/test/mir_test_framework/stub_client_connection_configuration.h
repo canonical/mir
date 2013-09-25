@@ -16,24 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TESTING_CLIENT_CONFIGURATION
-#define MIR_TESTING_CLIENT_CONFIGURATION
+#ifndef MIR_TESTING_STUB_CLIENT_CONNECTION_CONFIGURATION
+#define MIR_TESTING_STUB_CLIENT_CONNECTION_CONFIGURATION
 
-#include "mir_toolkit/mir_client_library_debug.h"
 #include "src/client/default_connection_configuration.h"
 #include <memory>
 
 namespace mir_test_framework
 {
 
-struct TestingClientConfiguration
+struct StubConnectionConfiguration : public mir::client::DefaultConnectionConfiguration
 {
-    TestingClientConfiguration() {}
-    virtual ~TestingClientConfiguration() {}
-
-    // Code to run in client process
-    virtual void exec() = 0;
+    StubConnectionConfiguration(std::string const& socket_file);
+    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override;
 };
 
 }
-#endif /* MIR_TESTING_CLIENT_CONFIGURATION */
+#endif /* MIR_TESTING_STUB_CLIENT_CONNECTION_CONFIGURATION */
