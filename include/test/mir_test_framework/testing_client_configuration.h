@@ -19,20 +19,24 @@
 #ifndef MIR_TESTING_CLIENT_CONFIGURATION
 #define MIR_TESTING_CLIENT_CONFIGURATION
 
-#include "mir_toolkit/mir_client_library_debug.h"
-#include "src/client/default_connection_configuration.h"
-#include <memory>
+#include "mir/options/option.h"
 
 namespace mir_test_framework
 {
 
 struct TestingClientConfiguration
 {
-    TestingClientConfiguration() {}
-    virtual ~TestingClientConfiguration() {}
+    virtual ~TestingClientConfiguration() = default;
 
     // Code to run in client process
     virtual void exec() = 0;
+
+    //clients respect the tests-use-real-graphics option by default. use
+    //this function to force the use of the default client configuraiton
+    virtual bool use_real_graphics(mir::options::Option const& options)
+    {
+        return options.get("tests-use-real-graphics", false);
+    } 
 };
 
 }

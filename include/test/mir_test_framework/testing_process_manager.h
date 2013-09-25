@@ -33,6 +33,10 @@
 namespace mir
 {
 class DisplayServer;
+namespace options
+{
+class Option;
+}
 }
 
 namespace mir_test_framework
@@ -47,7 +51,8 @@ public:
     ~TestingProcessManager();
 
     void launch_server_process(TestingServerConfiguration& config);
-    void launch_client_process(TestingClientConfiguration& config);
+    void launch_client_process(TestingClientConfiguration& config,
+                               mir::options::Option const& test_options);
 
     void tear_down_clients();
     void tear_down_server();

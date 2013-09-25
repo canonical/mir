@@ -839,10 +839,15 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
                 FAIL() << error;
             }
         }
+
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
-    //we are testing the connect function itself, so force using default
-    use_default_connect_functions();
     launch_client_process(client_config);
 }
 
@@ -870,10 +875,15 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
 
             mir_connection_release(connection);
         }
+
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
-    //we are testing the connect function itself, so force using default
-    use_default_connect_functions();
     launch_client_process(client_config);
 }
 
