@@ -382,6 +382,7 @@ TEST_F(PublishedSocketConnector, configure_display)
 
 TEST_F(PublishedSocketConnector, connection_using_socket_fd)
 {
+    int const next_buffer_calls{8};
     char buffer[128] = {0};
     sprintf(buffer, "fd://%d", stub_server->comm->client_socket_fd());
     auto client = std::make_shared<mt::TestProtobufClient>(buffer, 100);
@@ -407,9 +408,9 @@ TEST_F(PublishedSocketConnector, connection_using_socket_fd)
     client->wait_for_create_surface();
 
     EXPECT_TRUE(client->surface.has_buffer());
-    EXPECT_CALL(*client, next_buffer_done()).Times(8);
+    EXPECT_CALL(*client, next_buffer_done()).Times(next_buffer_calls);
 
-    for (int i = 0; i != 8; ++i)
+    for (int i = 0; i != next_buffer_calls; ++i)
     {
         client->display_server.next_buffer(
             0,

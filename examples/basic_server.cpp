@@ -46,7 +46,7 @@ struct ServerConfiguration : mir::examples::ServerConfiguration
             char buffer[128] = {0};
             sprintf(buffer, "fd://%d", the_connector()->client_socket_fd());
             setenv("MIR_SOCKET", buffer, 1);
-            system((the_options()->get(launch_child_opt, "") + "&").c_str());
+            (void)system((the_options()->get(launch_child_opt, "") + "&").c_str());
         }
     }
 

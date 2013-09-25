@@ -43,7 +43,7 @@ namespace frontend
 class SessionCreator;
 class ConnectorReport;
 
-// Makes provides a client-side socket fd for each connection
+/// provides a client-side socket fd for each connection
 class BasicConnector : public Connector
 {
 public:
