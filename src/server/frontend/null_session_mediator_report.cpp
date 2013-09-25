@@ -46,6 +46,10 @@ void mir::frontend::NullSessionMediatorReport::session_configure_surface_called(
 {
 }
 
+void mir::frontend::NullSessionMediatorReport::session_configure_display_called(std::string const&)
+{
+}
+
 void mir::frontend::NullSessionMediatorReport::session_error(
         std::string const&,
         char const* ,

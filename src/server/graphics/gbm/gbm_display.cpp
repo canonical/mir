@@ -129,6 +129,16 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
         std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
 
+        /* Reset the state of all outputs */
+        kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+        {
+            uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
+            auto kms_output = output_container.get_kms_output_for(connector_id);
+            kms_output->clear_cursor();
+            kms_output->reset();
+        });
+
+        /* Set up used outputs */
         OverlappingOutputGrouping grouping{conf};
 
         grouping.for_each_group([&](OverlappingOutputGroup const& group)
@@ -143,7 +153,6 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 
                 auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                     conf_output.current_mode_index);
-                kms_output->reset();
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
                 kms_output->set_power_mode(conf_output.power_mode);
                 kms_outputs.push_back(kms_output);
@@ -165,6 +174,9 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 
         /* Store applied configuration */
         current_display_configuration = kms_conf;
+
+        /* Clear connected but unused outputs */
+        clear_connected_unused_outputs();
     }
 
     if (cursor) cursor->show_at_last_known_position();
@@ -206,7 +218,6 @@ void mgg::GBMDisplay::resume()
     try
     {
         platform->drm.set_master();
-        if (cursor) cursor->show_at_last_known_position();
     }
     catch(std::runtime_error const& e)
     {
@@ -214,10 +225,21 @@ void mgg::GBMDisplay::resume()
         throw;
     }
 
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    for (auto& db_ptr : display_buffers)
-        db_ptr->schedule_set_crtc();
+        /*
+         * After resuming (e.g. because we switched back to the display server VT)
+         * we need to reset the CRTCs. For active displays we schedule a CRTC reset
+         * on the next swap. For connected but unused outputs we clear the CRTC.
+         */
+        for (auto& db_ptr : display_buffers)
+            db_ptr->schedule_set_crtc();
+
+        clear_connected_unused_outputs();
+    }
+
+    if (cursor) cursor->show_at_last_known_position();
 }
 
 auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
@@ -254,4 +276,17 @@ std::unique_ptr<mg::GLContext> mgg::GBMDisplay::create_gl_context()
 {
     return std::unique_ptr<GBMGLContext>{
         new GBMGLContext{platform->gbm, shared_egl.context()}};
+}
+
+void mgg::GBMDisplay::clear_connected_unused_outputs()
+{
+    current_display_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    {
+        if (conf_output.connected && !conf_output.used)
+        {
+            uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
+            auto kms_output = output_container.get_kms_output_for(connector_id);
+            kms_output->clear_crtc();
+        }
+    });
 }
