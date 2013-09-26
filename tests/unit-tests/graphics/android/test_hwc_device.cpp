@@ -207,7 +207,7 @@ TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
     InSequence seq;
     //from constructor
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        .Times(1)
+        .Times(Exactly(1))
         .WillOnce(Return(0));
      //from destructor
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
