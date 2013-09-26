@@ -88,17 +88,18 @@ void mclr::MirSocketRpcChannel::init()
 {
     io_service_thread = std::thread([&]
         {
+            // Our IO threads must not receive any signals
+            sigset_t all_signals;
+            sigfillset(&all_signals);
+
+            if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
+                BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
+
+            top:
             try
             {
-                // Our IO threads must not receive any signals
-                sigset_t all_signals;
-                sigfillset(&all_signals);
-
-                if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
-                    BOOST_THROW_EXCEPTION(
-                        boost::enable_error_info(
-                            std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
-
                 io_service.run();
             }
             catch (std::exception const& x)
@@ -107,8 +108,9 @@ void mclr::MirSocketRpcChannel::init()
                    "): ERROR: " << boost::diagnostic_information(x) << std::endl;
 
                 // TODO @@@ Deal with error @@@
-                io_service.stop();
-                kill(getpid(), SIGTERM);
+                goto top;
+//                io_service.stop();
+//                kill(getpid(), SIGTERM);
             }
         });
 
