@@ -184,15 +184,39 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_or_unblank_error)
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
         .Times(1)
         .WillOnce(Return(0));
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .Times(1)
         .WillOnce(Return(-1));
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(1)
+        .WillOnce(Return(0));
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
     EXPECT_THROW({
             device->blank_or_unblank_screen(true);
     }, std::runtime_error);
+}
+
+TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
+{
+    using namespace testing;
+
+    //we start off unblanked
+
+    InSequence seq;
+    //from constructor
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(Exactly(1))
+        .WillOnce(Return(0));
+     //from destructor
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(1)
+        .WillOnce(Return(0));
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
+                                             this->mock_fbdev, this->mock_vsync);
+    device->blank_or_unblank_screen(false);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
