@@ -75,7 +75,7 @@ protected:
 
 private:
     TestingProcessManager process_manager;
-    std::shared_ptr<mir::options::Option> server_options;
+    std::shared_ptr<mir::options::Option> test_options;
 };
 
 }

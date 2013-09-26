@@ -56,13 +56,13 @@ DefaultDisplayServerTestFixture::~DefaultDisplayServerTestFixture() {}
 
 void BespokeDisplayServerTestFixture::launch_server_process(TestingServerConfiguration& functor)
 {
-    server_options = functor.the_options();
+    test_options = functor.the_options();
     process_manager.launch_server_process(functor);
 }
 
 void BespokeDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
-    process_manager.launch_client_process(config, *server_options);
+    process_manager.launch_client_process(config, *test_options);
 }
 
 bool BespokeDisplayServerTestFixture::shutdown_server_process()
