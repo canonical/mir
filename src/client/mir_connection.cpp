@@ -179,13 +179,22 @@ MirWaitHandle* MirConnection::release_surface(
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
-    mir::protobuf::SurfaceId message;
-    message.set_value(surface->id());
-    server.release_surface(0, &message, &void_response,
-                    gp::NewCallback(this, &MirConnection::released, surf_release));
+    try
+    {
+        mir::protobuf::SurfaceId message;
+        message.set_value(surface->id());
+        server.release_surface(0, &message, &void_response,
+                        gp::NewCallback(this, &MirConnection::released, surf_release));
+    }
+    catch (std::exception const& x)
+    {
+        set_error_message(std::string("release_surface: ") + x.what());
+        released(surf_release);
+    }
 
     std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
     release_wait_handles.push_back(new_wait_handle);
+
     return new_wait_handle;
 }
 
