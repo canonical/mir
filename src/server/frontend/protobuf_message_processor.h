@@ -58,7 +58,7 @@ public:
 private:
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response,
-        std::vector<int32_t> const& fds);
+        std::vector<std::vector<int32_t>> const& fd_sets);
 
     template<class ResultMessage>
     void send_response(::google::protobuf::uint32 id, ResultMessage* response);

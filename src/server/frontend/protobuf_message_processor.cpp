@@ -50,7 +50,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
-    send_response(id, static_cast<google::protobuf::Message*>(response), fd);
+    send_response(id, static_cast<google::protobuf::Message*>(response), {fd});
     resource_cache->free_resource(response);
 }
 
@@ -60,7 +60,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_platform()) :
         std::vector<int32_t>();
 
-    send_response(id, static_cast<google::protobuf::Message*>(response), fd);
+    send_response(id, static_cast<google::protobuf::Message*>(response), {fd});
     resource_cache->free_resource(response);
 }
 
@@ -70,11 +70,8 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     const auto& buffer_fd = response->has_buffer() ?
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
-    std::vector<int32_t> fds;
-    fds.insert(fds.end(), surface_fd.begin(), surface_fd.end());
-    fds.insert(fds.end(), buffer_fd.begin(), buffer_fd.end());
 
-    send_response(id, static_cast<google::protobuf::Message*>(response), fds);
+    send_response(id, static_cast<google::protobuf::Message*>(response), {surface_fd, buffer_fd});;
     resource_cache->free_resource(response);
 }
 
@@ -125,13 +122,13 @@ void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
-    send_response(id, response, std::vector<int32_t>());
+    send_response(id, response, std::vector<std::vector<int32_t>>());
 }
 
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response,
-    std::vector<int32_t> const& fds)
+    std::vector<std::vector<int32_t>> const& fd_sets)
 {
     response->SerializeToString(&send_response_buffer);
 
@@ -140,7 +137,7 @@ void mfd::ProtobufMessageProcessor::send_response(
 
     send_response_result.SerializeToString(&send_response_buffer);
 
-    sender->send(send_response_buffer, fds);
+    sender->send(send_response_buffer, fd_sets);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)

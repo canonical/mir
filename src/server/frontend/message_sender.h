@@ -31,7 +31,7 @@ class MessageSender
 {
 public:
     virtual void send(std::string const& body) = 0;
-    virtual void send(std::string const& body, std::vector<int32_t> const& fds) = 0;
+    virtual void send(std::string const& body, std::vector<std::vector<int32_t>> const& fds) = 0;
 
 protected:
     MessageSender() = default;
