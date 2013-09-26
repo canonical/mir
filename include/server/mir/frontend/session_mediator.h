@@ -21,8 +21,9 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
+#include "mir/frontend/surface_id.h"
 
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <mutex>
 
@@ -108,6 +109,10 @@ public:
                         google::protobuf::Closure* done) override;
 
 private:
+    void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
+                              std::shared_ptr<graphics::Buffer> const& graphics_buffer,
+                              bool need_full_ipc);
+
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
@@ -119,7 +124,7 @@ private:
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::shared_ptr<graphics::Buffer> client_buffer_resource;
+    std::unordered_map<SurfaceId,std::shared_ptr<graphics::Buffer>> client_buffer_resource;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

@@ -545,6 +545,44 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
+TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_surfaces)
+{
+    using namespace testing;
+
+    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mp::SurfaceParameters surface_request;
+    mp::Surface surface_response;
+
+    /*
+     * Note that the surface created by the first create_surface() call is
+     * the pre-created stubbed_session->mock_surface. Further create_surface()
+     * invocations create new surfaces in stubbed_session->mock_surfaces[].
+     */
+    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
+        .WillOnce(Return(stub_buffer1));
+
+    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    auto refcount = stub_buffer1.use_count();
+
+    /* Creating a new surface should not affect other surfaces' buffers */
+    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    EXPECT_EQ(refcount, stub_buffer1.use_count());
+
+    mp::SurfaceId buffer_request{surface_response.id()};
+    mp::Buffer buffer_response;
+
+    /* Getting the next buffer of a surface should not affect other surfaces' buffers */
+    mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    EXPECT_EQ(refcount, stub_buffer1.use_count());
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
 TEST_F(SessionMediatorTest, display_config_request)
 {
     using namespace testing;
