@@ -97,8 +97,6 @@ void mclr::MirSocketRpcChannel::init()
                     boost::enable_error_info(
                         std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
 
-            top:
-
             boost::asio::async_read(
                 socket,
                 boost::asio::buffer(header_bytes),
@@ -115,10 +113,9 @@ void mclr::MirSocketRpcChannel::init()
                 std::cerr << "DEBUG (" << __PRETTY_FUNCTION__ <<
                    "): ERROR: " << boost::diagnostic_information(x) << std::endl;
 
-                // TODO @@@ Deal with error @@@
-                goto top;
-//                io_service.stop();
-//                kill(getpid(), SIGTERM);
+                io_service.stop();
+                kill(getpid(), SIGTERM);
+                pending_calls.force_completion();
             }
         });
 }
@@ -258,15 +255,8 @@ void mclr::MirSocketRpcChannel::CallMethod(
     // Only save details after serialization succeeds
     auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
 
-//    try
-//    {
-        // Only send message when details saved for handling response
-        send_message(invocation, send_buffer, invocation);
-//    }
-//    catch (std::exception const& x)
-//    {
-//        complete->Run();
-//    }
+    // Only send message when details saved for handling response
+    send_message(invocation, send_buffer, invocation);
 }
 
 void mclr::MirSocketRpcChannel::send_message(
@@ -274,11 +264,6 @@ void mclr::MirSocketRpcChannel::send_message(
     detail::SendBuffer& send_buffer,
     mir::protobuf::wire::Invocation const& invocation)
 {
-    if (io_service.stopped())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Not connected to server"));
-    }
-
     const size_t size = body.ByteSize();
     const unsigned char header_bytes[2] =
     {
@@ -300,7 +285,7 @@ void mclr::MirSocketRpcChannel::send_message(
     if (error)
     {
         rpc_report->invocation_failed(invocation, error);
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server: " + error.message()));
     }
     else
         rpc_report->invocation_succeeded(invocation);
@@ -364,7 +349,7 @@ void mclr::MirSocketRpcChannel::read_message()
     catch (std::exception const& x)
     {
         rpc_report->result_processing_failed(result, x);
-        throw;
+        // Eat this exception as it doesn't affect rpc
     }
 }
 
