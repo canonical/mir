@@ -82,8 +82,6 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     init();
 }
 
-#include <boost/exception/diagnostic_information.hpp> // DEBUG
-
 void mclr::MirSocketRpcChannel::init()
 {
     io_service_thread = std::thread([&]
@@ -110,9 +108,9 @@ void mclr::MirSocketRpcChannel::init()
             }
             catch (std::exception const& x)
             {
-                std::cerr << "DEBUG (" << __PRETTY_FUNCTION__ <<
-                   "): ERROR: " << boost::diagnostic_information(x) << std::endl;
+                rpc_report->connection_failure(x);
 
+                // TODO enable configuring the kill mechanism
                 io_service.stop();
                 kill(getpid(), SIGTERM);
                 pending_calls.force_completion();
