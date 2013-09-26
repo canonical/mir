@@ -1,8 +1,12 @@
-mir (0.0.11+13.10.20130904-0ubuntu2) UNRELEASED; urgency=low
+mir (0.0.12-0ubuntu1) UNRELEASED; urgency=low
 
+  [ kg ]
   * bump version for ABI break (LP: #1229212)
 
- -- kg <kg@kg-MacBookPro>  Mon, 23 Sep 2013 12:15:11 -0500
+  [ Robert Ancell ]
+  * Bump version to 0.0.12
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Thu, 26 Sep 2013 09:34:23 +1200
 
 mir (0.0.10+13.10.20130904-0ubuntu1) saucy; urgency=low
 
