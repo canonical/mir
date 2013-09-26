@@ -32,8 +32,6 @@ class Buffer;
 
 namespace android
 {
-class HWCDefaultLayer;
-typedef struct std::vector<std::shared_ptr<HWCDefaultLayer>> LayerList;
  
 struct HWCRect
 {
@@ -63,34 +61,40 @@ protected:
 
 struct HWCFBLayer : public HWCDefaultLayer
 {
-    HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
-               HWCRect& display_frame_rect);
+    HWCFBLayer();
+    HWCFBLayer(buffer_handle_t native_buf,
+               HWCRect display_frame_rect);
 };
 
-class HWCLayerOrganizer
+class HWCLayerList
 {
 public:
-    virtual ~HWCLayerOrganizer() = default;
-    virtual const LayerList& native_list() const = 0;
+    virtual ~HWCLayerList() = default;
+
+    virtual hwc_display_contents_1_t* native_list() const = 0;
     virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
 
 protected:
-    HWCLayerOrganizer() = default;
-    HWCLayerOrganizer& operator=(HWCLayerOrganizer const&) = delete;
-    HWCLayerOrganizer(HWCLayerOrganizer const&) = delete;
+    HWCLayerList() = default;
+    HWCLayerList& operator=(HWCLayerList const&) = delete;
+    HWCLayerList(HWCLayerList const&) = delete;
 
 };
 
-class HWCLayerList : public HWCLayerOrganizer
+class LayerList : public HWCLayerList
 {
 public:
-    HWCLayerList();
-    const LayerList& native_list() const;
+    LayerList();
 
     void set_fb_target(std::shared_ptr<Buffer> const&);
+    hwc_display_contents_1_t* native_list() const;
 
 private:
-    LayerList layer_list;
+    std::vector<std::shared_ptr<HWCDefaultLayer>> layer_list;
+    void update_list();
+
+    static size_t const fb_position = 0u;
+    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 };
 
 }

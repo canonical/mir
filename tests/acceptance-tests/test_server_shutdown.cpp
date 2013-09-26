@@ -326,19 +326,19 @@ TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(server_releases_reso
      */
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
-    std::weak_ptr<mir::frontend::Communicator> communicator = server_config->the_communicator();
+    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
     std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
 
     server_config.reset();
 
     EXPECT_EQ(0, display.use_count());
     EXPECT_EQ(0, compositor.use_count());
-    EXPECT_EQ(0, communicator.use_count());
+    EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
 
     if (display.use_count() != 0 ||
         compositor.use_count() != 0 ||
-        communicator.use_count() != 0 ||
+        connector.use_count() != 0 ||
         input_manager.use_count() != 0)
     {
         resources_freed_failure.set();

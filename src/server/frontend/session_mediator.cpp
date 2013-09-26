@@ -298,6 +298,8 @@ void mf::SessionMediator::configure_display(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+        report->session_configure_display_called(session->name());
+
         auto config = display_changer->active_configuration();
         for (auto i=0; i < request->display_output_size(); i++)
         {   

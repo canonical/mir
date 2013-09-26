@@ -18,28 +18,14 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "syncfence.h"
+#include "mir/graphics/android/syncfence.h"
 
-#include <unistd.h>
-#include <sys/ioctl.h>
 
 namespace mga=mir::graphics::android;
 
 namespace
 {
 
-class IoctlControl : public mga::IoctlWrapper
-{
-public:
-    int ioctl(int fd, unsigned long int request, int* timeout) const
-    {
-        return ::ioctl(fd, request, timeout);
-    }
-    int close(int fd) const
-    {
-        return ::close(fd);
-    }
-};
 
 static int query_static(const ANativeWindow* anw, int key, int* value);
 static int perform_static(ANativeWindow* anw, int key, ...);
@@ -99,8 +85,7 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mga::SyncFence>(-1, ioctl_control);
+    auto fence = std::make_shared<mga::SyncFence>();
     return self->queueBuffer(buffer, fence);
 }
 
@@ -108,8 +93,7 @@ int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
+    auto fence = std::make_shared<mga::SyncFence>(fence_fd);
     return self->queueBuffer(buffer, fence);
 
 }
