@@ -19,7 +19,8 @@
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
 
-namespace mfd = mir::frontend::detail;
+namespace mf = mir::frontend;
+namespace mfd = mf::detail;
 namespace bs = boost::system;
 namespace ba = boost::asio;
 
@@ -43,10 +44,10 @@ pid_t mfd::SocketMessenger::client_pid()
 
 void mfd::SocketMessenger::send(std::string const& body)
 {
-    send(body, std::vector<std::vector<int32_t>>());
+    send(body, mf::FdSets());
 }
 
-void mfd::SocketMessenger::send(std::string const& body, std::vector<std::vector<int32_t>> const& fd_set)
+void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =

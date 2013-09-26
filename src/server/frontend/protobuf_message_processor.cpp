@@ -122,13 +122,13 @@ void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
-    send_response(id, response, std::vector<std::vector<int32_t>>());
+    send_response(id, response, FdSets());
 }
 
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response,
-    std::vector<std::vector<int32_t>> const& fd_sets)
+    FdSets const& fd_sets)
 {
     response->SerializeToString(&send_response_buffer);
 

@@ -20,6 +20,8 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
+#include "fd_sets.h"
+
 #include "message_processor.h"
 #include "message_sender.h"
 
@@ -58,7 +60,7 @@ public:
 private:
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response,
-        std::vector<std::vector<int32_t>> const& fd_sets);
+        FdSets const& fd_sets);
 
     template<class ResultMessage>
     void send_response(::google::protobuf::uint32 id, ResultMessage* response);
