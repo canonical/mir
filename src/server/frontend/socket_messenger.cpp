@@ -43,6 +43,11 @@ pid_t mfd::SocketMessenger::client_pid()
 
 void mfd::SocketMessenger::send(std::string const& body)
 {
+    send(body, std::vector<int32_t>());
+}
+
+void mfd::SocketMessenger::send(std::string const& body, std::vector<int32_t> const& fds)
+{
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
     {
@@ -63,9 +68,11 @@ void mfd::SocketMessenger::send(std::string const& body)
     // mf::SessionMediator::create_surface
     boost::system::error_code err;
     ba::write(*socket, ba::buffer(whole_message), err);
+    
+    send_fds_locked(lg, fds);
 }
 
-void mfd::SocketMessenger::send_fds(std::vector<int32_t> const& fds)
+void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<int32_t> const& fds)
 {
     auto n_fds = fds.size();
     if (n_fds > 0)

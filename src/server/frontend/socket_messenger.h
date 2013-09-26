@@ -35,7 +35,7 @@ public:
     SocketMessenger(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
     void send(std::string const& body);
-    void send_fds(std::vector<int32_t> const& fds);
+    void send(std::string const& body, std::vector<int32_t> const& fds);
 
     void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size); 
     pid_t client_pid();
@@ -45,6 +45,8 @@ private:
     
     std::mutex message_lock;
     std::vector<char> whole_message;
+    
+    void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<int32_t> const& fds);
 };
 }
 }
