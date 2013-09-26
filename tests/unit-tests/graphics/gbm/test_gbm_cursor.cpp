@@ -43,6 +43,7 @@ struct MockKMSOutput : public mgg::KMSOutput
     MOCK_CONST_METHOD0(size, geom::Size());
 
     MOCK_METHOD1(set_crtc, bool(uint32_t));
+    MOCK_METHOD0(clear_crtc, void());
     MOCK_METHOD1(schedule_page_flip, bool(uint32_t));
     MOCK_METHOD0(wait_for_page_flip, void());
 

@@ -75,10 +75,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
-    static bool got_bypass_env = false;
-    static bool bypass_env = true;
-    bool bypassed = false;
-
     /*
      * Increment frame counts for each tick of the fastest instance of
      * DefaultDisplayBufferCompositor. This means for the fastest refresh
@@ -93,14 +89,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
             local_frameno = global_frameno;
     }
 
-    if (!got_bypass_env)
-    {
-        const char *env = getenv("MIR_BYPASS");
-        if (env != NULL)
-            bypass_env = env[0] != '0';
-
-        got_bypass_env = true;
-    }
+    static bool const bypass_env{[]{ auto const env = getenv("MIR_BYPASS"); return !env || env[0] != '0'; }()};
+    bool bypassed = false;
 
     if (bypass_env && display_buffer.can_bypass())
     {

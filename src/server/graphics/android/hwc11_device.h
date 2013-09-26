@@ -29,14 +29,14 @@ class Buffer;
 
 namespace android
 {
-class HWCLayerOrganizer;
+class HWCLayerList;
 class HWCVsyncCoordinator;
 
 class HWC11Device : public HWCCommonDevice
 {
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<HWCLayerOrganizer> const& organizer,
+                std::shared_ptr<HWCLayerList> const& layer_list,
                 std::shared_ptr<DisplaySupportProvider> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
     ~HWC11Device() noexcept;
@@ -50,10 +50,9 @@ public:
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
-    std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
+    std::shared_ptr<HWCLayerList> const layer_list;
     std::shared_ptr<DisplaySupportProvider> const fb_device;
     unsigned int primary_display_config;
-    bool wait_for_vsync;
 };
 
 }

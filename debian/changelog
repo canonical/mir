@@ -1,3 +1,13 @@
+mir (0.0.12-0ubuntu1) UNRELEASED; urgency=low
+
+  [ kg ]
+  * bump version for ABI break (LP: #1229212)
+
+  [ Robert Ancell ]
+  * Bump version to 0.0.12
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Thu, 26 Sep 2013 09:34:23 +1200
+
 mir (0.0.11+13.10.20130924.1-0ubuntu1) saucy; urgency=low
 
   [ kg ]

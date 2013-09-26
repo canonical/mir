@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk
  */
 
-#ifndef MIR_FRONTEND_COMMUNICATOR_REPORT_H_
-#define MIR_FRONTEND_COMMUNICATOR_REPORT_H_
+#ifndef MIR_FRONTEND_CONNECTOR_REPORT_H_
+#define MIR_FRONTEND_CONNECTOR_REPORT_H_
 
 #include <stdexcept>
 
@@ -26,20 +26,20 @@ namespace mir
 namespace frontend
 {
 
-class CommunicatorReport
+class ConnectorReport
 {
 public:
 
     virtual void error(std::exception const& error) = 0;
 
 protected:
-    virtual ~CommunicatorReport() = default;
-    CommunicatorReport() = default;
-    CommunicatorReport(const CommunicatorReport&) = delete;
-    CommunicatorReport& operator=(const CommunicatorReport&) = delete;
+    virtual ~ConnectorReport() = default;
+    ConnectorReport() = default;
+    ConnectorReport(const ConnectorReport&) = delete;
+    ConnectorReport& operator=(const ConnectorReport&) = delete;
 };
 
-class NullCommunicatorReport : public CommunicatorReport
+class NullConnectorReport : public ConnectorReport
 {
 public:
 
@@ -48,4 +48,4 @@ public:
 }
 }
 
-#endif // MIR_FRONTEND_COMMUNICATOR_REPORT_H_
+#endif // MIR_FRONTEND_CONNECTOR_REPORT_H_

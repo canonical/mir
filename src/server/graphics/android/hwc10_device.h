@@ -26,7 +26,6 @@ namespace graphics
 {
 namespace android
 {
-class HWCLayerOrganizer;
 class DisplaySupportProvider;
 
 class HWC10Device : public HWCCommonDevice
