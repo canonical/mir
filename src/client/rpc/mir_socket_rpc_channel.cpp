@@ -98,6 +98,14 @@ void mclr::MirSocketRpcChannel::init()
                         std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
 
             top:
+
+            boost::asio::async_read(
+                socket,
+                boost::asio::buffer(header_bytes),
+                boost::asio::transfer_exactly(sizeof header_bytes),
+                boost::bind(&MirSocketRpcChannel::on_header_read, this,
+                    boost::asio::placeholders::error));
+
             try
             {
                 io_service.run();
@@ -113,13 +121,6 @@ void mclr::MirSocketRpcChannel::init()
 //                kill(getpid(), SIGTERM);
             }
         });
-
-    boost::asio::async_read(
-        socket,
-        boost::asio::buffer(header_bytes),
-        boost::asio::transfer_exactly(sizeof header_bytes),
-        boost::bind(&MirSocketRpcChannel::on_header_read, this,
-            boost::asio::placeholders::error));
 }
 
 mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
