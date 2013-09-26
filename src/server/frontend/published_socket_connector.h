@@ -19,13 +19,10 @@
 #ifndef MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 
-#include "connected_sessions.h"
-
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include <boost/asio.hpp>
 
-#include <atomic>
 #include <thread>
 #include <string>
 #include <vector>
@@ -43,52 +40,54 @@ namespace mir
 {
 namespace frontend
 {
-class ResourceCache;
-class ProtobufIpcFactory;
-class SessionAuthorizer;
+class SessionCreator;
+class ConnectorReport;
 
-namespace detail
-{
-struct SocketSession;
-class MessageSender;
-}
-
-class CommunicatorReport;
-
-class ProtobufSocketCommunicator : public Communicator
+/// provides a client-side socket fd for each connection
+class BasicConnector : public Connector
 {
 public:
-    // Create communicator based on Boost asio and Google protobufs
-    // using the supplied socket.
-    explicit ProtobufSocketCommunicator(
-        const std::string& socket_file,
-        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+    explicit BasicConnector(
+        std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
         std::function<void()> const& force_requests_to_complete,
-        std::shared_ptr<CommunicatorReport> const& report);
-    ~ProtobufSocketCommunicator();
-    void start();
-    void stop();
+        std::shared_ptr<ConnectorReport> const& report);
+    ~BasicConnector() noexcept;
+    void start() override;
+    void stop() override;
+    int client_socket_fd() const override;
+
+protected:
+    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
+    boost::asio::io_service mutable io_service;
+
+private:
+    std::vector<std::thread> io_service_threads;
+    std::function<void()> const force_requests_to_complete;
+    std::shared_ptr<ConnectorReport> const report;
+    std::shared_ptr<SessionCreator> const session_creator;
+};
+
+/// Accept connections over a published socket
+class PublishedSocketConnector : public BasicConnector
+{
+public:
+    explicit PublishedSocketConnector(
+        const std::string& socket_file,
+        std::shared_ptr<SessionCreator> const& session_creator,
+        int threads,
+        std::function<void()> const& force_requests_to_complete,
+        std::shared_ptr<ConnectorReport> const& report);
+    ~PublishedSocketConnector() noexcept;
 
 private:
     void start_accept();
     void on_new_connection(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
                            boost::system::error_code const& ec);
-    int next_id();
 
     const std::string socket_file;
-    boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
-    std::vector<std::thread> io_service_threads;
-    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
-    std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    std::atomic<int> next_session_id;
-    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
-    std::function<void()> const force_requests_to_complete;
-    std::shared_ptr<CommunicatorReport> const report;
 };
-
 }
 }
 
