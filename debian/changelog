@@ -1,3 +1,106 @@
+mir (0.0.12-0ubuntu1) UNRELEASED; urgency=low
+
+  [ kg ]
+  * bump version for ABI break (LP: #1229212)
+
+  [ Robert Ancell ]
+  * Bump version to 0.0.12
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Thu, 26 Sep 2013 09:34:23 +1200
+
+mir (0.0.11+13.10.20130924.1-0ubuntu1) saucy; urgency=low
+
+  [ kg ]
+  * bump version for ABI break (LP: #1229212)
+
+  [ Robert Ancell ]
+  * Allow an application to override the options being populated.
+  * Pass the program options to parse_options().
+  * Add missing include for std::cerr.
+  * Report when paused and resumed via configuration. (LP: #1192843)
+  * Add missing directory separator when searching for a config file to
+    parse.
+
+  [ Kevin Gunn ]
+  * change test timeouts and fix fence.
+
+  [ Alexandros Frantzis ]
+  * examples: Only check key information for key events This fixes a
+    memory error reported by valgrind for examples that use eglapp.
+  * shell: Apply the base configuration on a hardware change only if no
+    per-session configuration is active.
+  * graphics: consolidated fixed for nested code and examples on android
+    stack.
+
+  [ Eleni Maria Stea ]
+  * graphics: Pull in Eleni's changes to get the DRM fd to init GBM from
+    the host Mir instance.
+
+  [ Didier Roche ]
+  * remove (unused in the ppa as we have libmirserver3) hack to force
+    depending and building against the exact same version.
+
+  [ Robert Carr ]
+  * Add DPMS configuration API. (LP: #1193222)
+  * Deduplicate mtd::NullDisplayConfig and
+    mtd::NullDisplayConfiguration.
+  * Fix multiple internal client surfaces on android. (LP: #1228144)
+  * change test timeouts and fix fence.
+  * Add DPMS API and GBM/android impls.
+
+  [ Kevin DuBois ]
+  * platform, graphics: support nested (mir-on-mir) rendering on the
+    Android platform.
+
+  [ Michael Terry ]
+  * Change how Mir chooses socket locations to make it simpler for a
+    nested-Mir world, by using MIR_SOCKET as the host socket if no other
+    host socket is provided and passing MIR_SOCKET on to any children.
+    Also, change --nested-mode to --host-socket for clarity and add --
+    standalone to force standalone mode.
+
+  [ Daniel d'Andrada ]
+  * android-input housekeeping - Updated README - Removed some dead
+    code.
+
+  [ Daniel van Vugt ]
+  * Add DPMS configuration API. (LP: #1193222)
+  * Add a "flags" field to MirBufferPackage so that clients can find out
+    if the buffer they've been given is scanout-capable. This is
+    normally something a client should never need to know. However there
+    are two specialized cases where it's required to fix bugs in the
+    intel and radeon X drivers:   LP: #1218735, LP: #1218815 The intel
+    fix (already landed) contains a hack which will be updated after
+    this branch lands. (LP: #1218815, #1218735)
+  * GBM: Ensure that we don't create scanout buffers if bypass is
+    explicitly disabled from the environment. (LP: #1227133) . (LP:
+    #1227133)
+
+  [ Alan Griffiths ]
+  * graphics: Pull in Eleni's changes to get the DRM fd to init GBM from
+    the host Mir instance.
+  * input: Separate the code for dispatching input from that reading it.
+  * graphics: Hook up nested surfaces events to input.
+  * input: Connect nested input relay to input dispatch.
+  * graphics: Simplify NativeAndroidPlatform out of existence.
+  * tests: Fixes to get the tests "passing" on android/arm stack. (LP:
+    #1226284)
+  * graphics: consolidated fixed for nested code and examples on android
+    stack.
+  * examples: add command-line options to examples so the Mir server
+    connection can be selected.
+  * change test timeouts and fix fence.
+  * client: Add client side support for connecting via an existing FD.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Revert revision 1054 ABI-change (the libmirclient3 one), which seems
+    to cause a lot of problems.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1081
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 24 Sep 2013 06:04:59 +0000
+
 mir (0.0.10+13.10.20130904-0ubuntu1) saucy; urgency=low
 
   [ Kevin DuBois ]

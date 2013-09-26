@@ -19,7 +19,6 @@
 #include "src/server/graphics/android/hwc10_device.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
-#include "mir_test_doubles/mock_hwc_organizer.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include <gtest/gtest.h>

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
-#define MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_
 
 #include "src/server/graphics/android/hwc_layerlist.h"
 
@@ -30,14 +30,14 @@ namespace test
 namespace doubles
 {
 
-struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
+struct MockHWCLayerList : public graphics::android::HWCLayerList
 {
-    ~MockHWCOrganizer() noexcept {}
-    MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
+    ~MockHWCLayerList() noexcept {}
+    MOCK_CONST_METHOD0(native_list, hwc_display_contents_1_t*());
     MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::Buffer> const&));
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_ */

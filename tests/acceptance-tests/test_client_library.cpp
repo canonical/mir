@@ -22,7 +22,7 @@
 #include "mir_toolkit/mir_client_library_debug.h"
 #include "src/client/client_buffer.h"
 
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include "mir_protobuf.pb.h"
 
