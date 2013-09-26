@@ -1161,7 +1161,7 @@ TEST_F(InputReaderTest, MarkSupportedKeyCodes_ForwardsRequestsToMappers) {
 TEST_F(InputReaderTest, LoopOnce_WhenDeviceScanFinished_SendsConfigurationChanged) {
     addDevice(1, String8("ignored"), INPUT_DEVICE_CLASS_KEYBOARD, NULL);
 
-    NotifyConfigurationChangedArgs args;
+    NotifyConfigurationChangedArgs args{0};
 
     ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyConfigurationChangedWasCalled(&args));
     ASSERT_EQ(ARBITRARY_TIME, args.eventTime);
