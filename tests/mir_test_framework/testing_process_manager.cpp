@@ -41,7 +41,7 @@ mtf::TestingProcessManager::TestingProcessManager() :
     is_test_process(true),
     server_process_was_started(false)
 {
-    // In case an earlier test died strangely
+    // In case an earlier test left a stray file
     std::remove(test_socket_file().c_str());
 }
 

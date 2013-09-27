@@ -198,11 +198,19 @@ MirWaitHandle* MirConnection::release_surface(
     return new_wait_handle;
 }
 
+#include <iostream>
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
+        if (!connect_result.has_platform() || !connect_result.has_display_configuration())
+        {
+            if (!connect_result.has_error())
+            {
+                set_error_message("Connect failed");
+            }
+        }
         /*
          * We need to create the client platform after the connection has been
          * established, to ensure that the client platform has access to all
