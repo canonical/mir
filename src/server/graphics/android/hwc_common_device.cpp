@@ -97,22 +97,24 @@ void mga::HWCCommonDevice::notify_vsync()
     coordinator->notify_vsync();
 }
 
-void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank)
+void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank_request)
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
-                                             
-    int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank);
-    if (err)
+
+    if (blank_request != blanked)
     {
-        std::string blanking_status_msg = "Could not " + 
-            (blank ? std::string("blank") : std::string("unblank")) + " display";
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(blanking_status_msg)) <<
-            boost::errinfo_errno(-err));
-    }    
-    blanked = blank;
-    blanked_cond.notify_all();
+        if(auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank_request))
+        {
+            std::string blanking_status_msg = "Could not " + 
+                (blank_request ? std::string("blank") : std::string("unblank")) + " display";
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error(blanking_status_msg)) <<
+                boost::errinfo_errno(-err));
+        }    
+        blanked = blank_request;
+        blanked_cond.notify_all();
+    }
 }
 
 std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
