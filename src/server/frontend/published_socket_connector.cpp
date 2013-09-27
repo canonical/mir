@@ -51,6 +51,8 @@ mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
 
 void mf::PublishedSocketConnector::start_accept()
 {
+    report->listening_on(socket_file);
+
     auto socket = std::make_shared<boost::asio::local::stream_protocol::socket>(io_service);
 
     acceptor.async_accept(
@@ -78,9 +80,9 @@ mf::BasicConnector::BasicConnector(
     int threads,
     std::function<void()> const& force_requests_to_complete,
     std::shared_ptr<ConnectorReport> const& report)
-:   io_service_threads(threads),
+:   report(report),
+    io_service_threads(threads),
     force_requests_to_complete(force_requests_to_complete),
-    report(report),
     session_creator{session_creator}
 {
 }
@@ -92,7 +94,9 @@ void mf::BasicConnector::start()
         while (true)
         try
         {
+            report->thread_start();
             io_service.run();
+            report->thread_end();
             return;
         }
         catch (std::exception const& e)
@@ -101,6 +105,7 @@ void mf::BasicConnector::start()
         }
     };
 
+    report->starting_threads(io_service_threads.size());
     for (auto& thread : io_service_threads)
     {
         thread = std::thread(run_io_service);
@@ -118,6 +123,8 @@ void mf::BasicConnector::stop()
      */
     force_requests_to_complete();
 
+    report->stopping_threads(io_service_threads.size());
+
     /* Wait for all io processing threads to finish */
     for (auto& thread : io_service_threads)
     {
@@ -133,6 +140,7 @@ void mf::BasicConnector::stop()
 
 void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const
 {
+    report->creating_session_for(server_socket->native_handle());
     session_creator->create_session_for(server_socket);
 }
 
@@ -151,6 +159,8 @@ int mf::BasicConnector::client_socket_fd() const
     auto const server_socket = std::make_shared<boost::asio::local::stream_protocol::socket>(
         io_service, boost::asio::local::stream_protocol(), socket_fd[server]);
 
+    report->creating_socket_pair(socket_fd[server], socket_fd[client]);
+
     create_session_for(server_socket);
 
     return socket_fd[client];
@@ -159,6 +169,34 @@ int mf::BasicConnector::client_socket_fd() const
 mf::BasicConnector::~BasicConnector() noexcept
 {
     stop();
+}
+
+void mf::NullConnectorReport::thread_start()
+{
+}
+
+void mf::NullConnectorReport::thread_end()
+{
+}
+
+void mf::NullConnectorReport::starting_threads(int /*count*/)
+{
+}
+
+void mf::NullConnectorReport::stopping_threads(int /*count*/)
+{
+}
+
+void mf::NullConnectorReport::creating_session_for(int /*socket_handle*/)
+{
+}
+
+void mf::NullConnectorReport::creating_socket_pair(int /*server_handle*/, int /*client_handle*/)
+{
+}
+
+void mf::NullConnectorReport::listening_on(std::string const& /*endpoint*/)
+{
 }
 
 void mf::NullConnectorReport::error(std::exception const& /*error*/)

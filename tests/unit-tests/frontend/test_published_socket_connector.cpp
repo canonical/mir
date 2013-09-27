@@ -52,6 +52,16 @@ public:
 
     ~MockCommunicatorReport() noexcept {}
 
+    MOCK_METHOD0(thread_start, void ());
+    MOCK_METHOD0(thread_end, void());
+    MOCK_METHOD1(starting_threads, void (int count));
+    MOCK_METHOD1(stopping_threads, void(int count));
+
+    MOCK_METHOD1(creating_session_for, void(int socket_handle));
+    MOCK_METHOD2(creating_socket_pair, void(int server_handle, int client_handle));
+
+    MOCK_METHOD1(listening_on, void(std::string const& endpoint));
+
     MOCK_METHOD1(error, void (std::exception const& error));
 };
 }

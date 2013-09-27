@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_CONNECTOR_REPORT_H_
 
 #include <stdexcept>
+#include <string>
 
 namespace mir
 {
@@ -29,6 +30,16 @@ namespace frontend
 class ConnectorReport
 {
 public:
+
+    virtual void thread_start() = 0;
+    virtual void thread_end() = 0;
+    virtual void starting_threads(int count) = 0;
+    virtual void stopping_threads(int count) = 0;
+
+    virtual void creating_session_for(int socket_handle) = 0;
+    virtual void creating_socket_pair(int server_handle, int client_handle) = 0;
+
+    virtual void listening_on(std::string const& endpoint) = 0;
 
     virtual void error(std::exception const& error) = 0;
 
@@ -42,6 +53,15 @@ protected:
 class NullConnectorReport : public ConnectorReport
 {
 public:
+    void thread_start();
+    void thread_end();
+    void starting_threads(int count);
+    void stopping_threads(int count);
+
+    void creating_session_for(int socket_handle);
+    void creating_socket_pair(int server_handle, int client_handle);
+
+    void listening_on(std::string const& endpoint);
 
     void error(std::exception const& error);
 };
