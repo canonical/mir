@@ -36,7 +36,8 @@ void mo::ProgramOption::parse_arguments(
     int argc,
     char const* argv[])
 {
-    po::store(po::parse_command_line(argc, argv, desc), options);
+    // TODO: Don't allow unregistered options, once we allow better overriding of option parsing
+    po::store(po::command_line_parser(argc, argv).options(desc).allow_unregistered().run(), options);
     po::notify(options);
 }
 
