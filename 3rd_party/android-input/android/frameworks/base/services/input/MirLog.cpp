@@ -14,13 +14,143 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
-#include <std/Log.h>
+// License of the original configureInitialState() function:
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <android/log.h>
 #include <std/MirLog.h>
+#include <cctype>
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
+#define kMaxTagLen  16      /* from the long-dead utils/Log.cpp */
+#define kTagSetSize 16      /* arbitrary */
+
+namespace
+{
+    struct LogState {
+        /* global minimum priority */
+        int     globalMinPriority;
+
+        /* tags and priorities */
+        struct {
+            char    tag[kMaxTagLen];
+            int     minPriority;
+        } tagSet[kTagSetSize];
+    } gLogState = { .globalMinPriority = ANDROID_LOG_UNKNOWN };
+}
+
+/*
+ * Configure logging based on ANDROID_LOG_TAGS environment variable.  We
+ * need to parse a string that looks like
+ *
+ *   *:v jdwp:d dalvikvm:d dalvikvm-gc:i dalvikvmi:i
+ *
+ * The tag (or '*' for the global level) comes first, followed by a colon
+ * and a letter indicating the minimum priority level we're expected to log.
+ * This can be used to reveal or conceal logs with specific tags.
+ *
+ * We also want to check ANDROID_PRINTF_LOG to determine how the output
+ * will look.
+ */
+static void configureInitialState(struct LogState* logState)
+{
+    /* global min priority defaults to "info" level */
+    logState->globalMinPriority = ANDROID_LOG_INFO;
+
+    int entry = 0;
+
+    /*
+     * This is based on the the long-dead utils/Log.cpp code.
+     */
+    const char* tags = getenv("ANDROID_LOG_TAGS");
+    if (tags != NULL) {
+        while (*tags != '\0') {
+            char tagName[kMaxTagLen];
+            int i, minPrio;
+
+            while (isspace(*tags))
+                tags++;
+
+            i = 0;
+            while (*tags != '\0' && !isspace(*tags) && *tags != ':' &&
+                i < kMaxTagLen)
+            {
+                tagName[i++] = *tags++;
+            }
+            if (i == kMaxTagLen) {
+                break;
+            }
+            tagName[i] = '\0';
+
+            /* default priority, if there's no ":" part; also zero out '*' */
+            minPrio = ANDROID_LOG_VERBOSE;
+            if (tagName[0] == '*' && tagName[1] == '\0') {
+                minPrio = ANDROID_LOG_DEBUG;
+                tagName[0] = '\0';
+            }
+
+            if (*tags == ':') {
+                tags++;
+                if (*tags >= '0' && *tags <= '9') {
+                    if (*tags >= ('0' + ANDROID_LOG_SILENT))
+                        minPrio = ANDROID_LOG_VERBOSE;
+                    else
+                        minPrio = *tags - '\0';
+                } else {
+                    switch (*tags) {
+                    case 'v':   minPrio = ANDROID_LOG_VERBOSE;  break;
+                    case 'd':   minPrio = ANDROID_LOG_DEBUG;    break;
+                    case 'i':   minPrio = ANDROID_LOG_INFO;     break;
+                    case 'w':   minPrio = ANDROID_LOG_WARN;     break;
+                    case 'e':   minPrio = ANDROID_LOG_ERROR;    break;
+                    case 'f':   minPrio = ANDROID_LOG_FATAL;    break;
+                    case 's':   minPrio = ANDROID_LOG_SILENT;   break;
+                    default:    minPrio = ANDROID_LOG_DEFAULT;  break;
+                    }
+                }
+
+                tags++;
+                if (*tags != '\0' && !isspace(*tags)) {
+                    break;
+                }
+            }
+
+            if (tagName[0] == 0) {
+                logState->globalMinPriority = minPrio;
+            } else {
+                logState->tagSet[entry].minPriority = minPrio;
+                strcpy(logState->tagSet[entry].tag, tagName);
+                entry++;
+            }
+        }
+    }
+
+    if (entry < kTagSetSize) {
+        // Mark the end of this array
+        logState->tagSet[entry].minPriority = ANDROID_LOG_UNKNOWN;
+        logState->tagSet[entry].tag[0] = '\0';
+    }
+}
 
 extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, ...)
 {
@@ -30,7 +160,29 @@ extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, .
     int result = vsnprintf(buffer, sizeof buffer - 1, fmt, ap);
     va_end(ap);
 
-    mir::write_to_log(prio, buffer);
+    if (gLogState.globalMinPriority == ANDROID_LOG_UNKNOWN) {
+        configureInitialState(&gLogState);
+    }
+
+    /* see if this log tag is configured */
+    int minPrio = gLogState.globalMinPriority;
+    for (int i = 0; i < kTagSetSize; i++) {
+        if (gLogState.tagSet[i].minPriority == ANDROID_LOG_UNKNOWN)
+            break;      /* reached end of configured values */
+
+        if (strcmp(gLogState.tagSet[i].tag, tag) == 0) {
+            minPrio = gLogState.tagSet[i].minPriority;
+            break;
+        }
+    }
+
+    if (prio >= minPrio) {
+        char taggedBuffer[1024];
+        sprintf(taggedBuffer, "[%s]%s", tag, buffer);
+        mir::write_to_log(prio, taggedBuffer);
+    } else {
+        // filter out log message
+    }
 
     return result;
 }
