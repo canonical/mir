@@ -77,7 +77,8 @@ void assign_result(void *result, void **context)
 
 }
 
-MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+MirWaitHandle* mir_default_connect(
+    char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
@@ -93,7 +94,7 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
             else
                 sock = mir::default_server_socket;
         }
- 
+
         mcl::DefaultConnectionConfiguration conf{sock};
 
         MirConnection* connection = new MirConnection(conf);
@@ -108,6 +109,42 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         callback(error_connection, context);
         return 0;
     }
+}
+
+
+void mir_default_connection_release(MirConnection * connection)
+{
+    if (!error_connections.contains(connection))
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_all();
+    }
+    else
+    {
+        error_connections.remove(connection);
+    }
+
+    delete connection;
+}
+
+//mir_connect and mir_connection_release can be overridden by test code that sets these function
+//pointers to do things like stub out the graphics drivers or change the connection configuration.
+
+//TODO: we could have a more comprehensive solution that allows us to substitute any of the functions
+//for test purposes, not just the connect functions
+MirWaitHandle* (*mir_connect_impl)(
+    char const *server, char const *app_name,
+    mir_connected_callback callback, void *context) = mir_default_connect;
+void (*mir_connection_release_impl) (MirConnection *connection) = mir_default_connection_release;
+
+MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+{
+    return mir_connect_impl(socket_file, name, callback, context);
+}
+
+void mir_connection_release(MirConnection *connection)
+{
+    return mir_connection_release_impl(connection);
 }
 
 MirConnection *mir_connect_sync(char const *server,
@@ -129,21 +166,6 @@ int mir_connection_is_valid(MirConnection * connection)
 char const * mir_connection_get_error_message(MirConnection * connection)
 {
     return connection->get_error_message();
-}
-
-void mir_connection_release(MirConnection * connection)
-{
-    if (!error_connections.contains(connection))
-    {
-        auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
-    }
-    else
-    {
-        error_connections.remove(connection);
-    }
-
-    delete connection;
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
