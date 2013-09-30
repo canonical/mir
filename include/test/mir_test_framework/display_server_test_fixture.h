@@ -46,6 +46,7 @@ public:
 
 private:
     static TestingProcessManager process_manager;
+    static TestingServerConfiguration default_parameters;
 
     virtual void TearDown();
 };
@@ -74,6 +75,7 @@ protected:
 
 private:
     TestingProcessManager process_manager;
+    std::shared_ptr<mir::options::Option> test_options;
 };
 
 }

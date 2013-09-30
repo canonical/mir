@@ -34,13 +34,6 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
-// TODO resolve problems running tests on android
-#ifdef ANDROID
-#define DISABLED_ON_ANDROID(name) DISABLED_##name
-#else
-#define DISABLED_ON_ANDROID(name) name
-#endif
-
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
@@ -77,7 +70,7 @@ struct SurfaceCreatingClient : public mtf::TestingClientConfiguration
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(the_shell_surface_configurator_is_notified_of_attribute_changes))
+TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notified_of_attribute_changes)
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
@@ -116,7 +109,7 @@ TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(the_shell_surface_co
     launch_client_process(client_config);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, DISABLED_ON_ANDROID(the_shell_surface_configurator_may_interfere_with_attribute_changes))
+TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_interfere_with_attribute_changes)
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
