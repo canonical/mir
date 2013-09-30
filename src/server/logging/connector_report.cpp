@@ -54,7 +54,7 @@ void ml::ConnectorReport::thread_end()
 void ml::ConnectorReport::starting_threads(int count)
 {
     std::stringstream ss;
-    ss << "Starting " << count << ") ended.";
+    ss << "Starting " << count << " threads.";
     logger->log<Logger::informational>(ss.str(), component);
 }
 
@@ -89,7 +89,7 @@ void ml::ConnectorReport::listening_on(std::string const& endpoint)
 void ml::ConnectorReport::error(std::exception const& error)
 {
     std::stringstream ss;
-    ss << "thread (" << std::this_thread::get_id() << ") Error: " << boost::diagnostic_information(error) << std::endl;
+    ss << "thread (" << std::this_thread::get_id() << ") Error: " << boost::diagnostic_information(error);
 
     logger->log<ml::Logger::warning>(ss.str(), component);
 }
