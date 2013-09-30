@@ -67,8 +67,7 @@ void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
     // function has completed (if it would be executed asynchronously.
     // NOTE: we rely on this synchronous behavior as per the comment in
     // mf::SessionMediator::create_surface
-    boost::system::error_code err;
-    ba::write(*socket, ba::buffer(whole_message), err);
+    ba::write(*socket, ba::buffer(whole_message));
 
     for (auto const& fds : fd_set)
         send_fds_locked(lg, fds);

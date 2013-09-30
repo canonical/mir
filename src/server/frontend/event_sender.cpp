@@ -80,5 +80,14 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
     mir::protobuf::wire::Result result;
     result.add_events(send_buffer);
     result.SerializeToString(&send_buffer);
-    sender->send(send_buffer);
+
+    try
+    {
+        sender->send(send_buffer);
+    }
+    catch (std::exception const& error)
+    {
+        // TODO: We should report this state.
+        (void) error;
+    }
 }
