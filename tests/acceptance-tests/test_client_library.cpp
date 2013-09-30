@@ -42,13 +42,6 @@ namespace mc = mir::compositor;
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
 
-// TODO resolve problems running tests on android
-#ifdef ANDROID
-#define DISABLED_ON_ANDROID(name) DISABLED_##name
-#else
-#define DISABLED_ON_ANDROID(name) name
-#endif
-
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
@@ -157,7 +150,7 @@ TEST_F(DefaultDisplayServerTestFixture, synchronous_connection)
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_library_creates_surface))
+TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -220,7 +213,7 @@ TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_library_creat
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(surface_types))
+TEST_F(DefaultDisplayServerTestFixture, surface_types)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -295,7 +288,7 @@ TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(surface_types))
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_can_set_surface_state))
+TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -363,7 +356,7 @@ TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_can_set_surfa
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_receives_surface_state_events))
+TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -528,13 +521,19 @@ TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
 
             mir_connection_release(connection);
         }
+
+        // this test relies on gbm drivers, use real graphics always
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
     launch_client_process(client_config);
 }
 #endif
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_library_creates_multiple_surfaces))
+TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
 
@@ -612,7 +611,7 @@ TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_library_creat
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_library_accesses_and_advances_buffers))
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buffers)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -652,7 +651,7 @@ TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(client_library_acces
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(fully_synchronous_client))
+TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -694,7 +693,7 @@ TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(fully_synchronous_cl
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(highly_threaded_client))
+TEST_F(DefaultDisplayServerTestFixture, highly_threaded_client)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -838,6 +837,13 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
                 FAIL() << error;
             }
         }
+
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
     launch_client_process(client_config);
@@ -867,6 +873,13 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
 
             mir_connection_release(connection);
         }
+
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
     launch_client_process(client_config);
@@ -878,7 +891,7 @@ static void SIGIO_handler(int /*signo*/)
     signalled = true;
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(ClientLibraryThreadsHandleNoSignals))
+TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -961,7 +974,7 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientS
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_ON_ANDROID(MultiSurfaceClientTracksBufferFdsCorrectly))
+TEST_F(DefaultDisplayServerTestFixture, MultiSurfaceClientTracksBufferFdsCorrectly)
 {
     struct ClientConfig : ClientConfigCommon
     {
