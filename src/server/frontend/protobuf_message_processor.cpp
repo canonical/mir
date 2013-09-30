@@ -71,7 +71,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
 
-    send_response(id, static_cast<google::protobuf::Message*>(response), {surface_fd, buffer_fd});;
+    send_response(id, response, {surface_fd, buffer_fd});;
     resource_cache->free_resource(response);
 }
 
