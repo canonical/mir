@@ -112,7 +112,7 @@ void mclr::MirSocketRpcChannel::init()
 
                 // TODO enable configuring the kill mechanism
                 io_service.stop();
-                kill(getpid(), SIGTERM);
+                raise(SIGTERM);
                 pending_calls.force_completion();
             }
         });
