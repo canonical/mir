@@ -44,7 +44,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
 template<class ResultMessage>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
 {
-    send_response(id, response);
+    send_response(id, static_cast<google::protobuf::Message*>(response));
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
