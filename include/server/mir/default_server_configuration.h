@@ -249,6 +249,8 @@ protected:
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
+    virtual int ipc_threads() const;
+
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<shell::SessionManager> session_manager;
 
