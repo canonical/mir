@@ -68,14 +68,14 @@ void ml::ConnectorReport::stopping_threads(int count)
 void ml::ConnectorReport::creating_session_for(int socket_handle)
 {
     std::stringstream ss;
-    ss << "Creating session for socket " << socket_handle;
+    ss << "thread (" << std::this_thread::get_id() << ") Creating session for socket " << socket_handle;
     logger->log<Logger::informational>(ss.str(), component);
 }
 
 void ml::ConnectorReport::creating_socket_pair(int server_handle, int client_handle)
 {
     std::stringstream ss;
-    ss << "Creating socket pair (server=" << server_handle << ", client=" << client_handle << ").";
+    ss << "thread (" << std::this_thread::get_id() << ") Creating socket pair (server=" << server_handle << ", client=" << client_handle << ").";
     logger->log<Logger::informational>(ss.str(), component);
 }
 
@@ -89,7 +89,7 @@ void ml::ConnectorReport::listening_on(std::string const& endpoint)
 void ml::ConnectorReport::error(std::exception const& error)
 {
     std::stringstream ss;
-    ss << "Error: " << boost::diagnostic_information(error) << std::endl;
+    ss << "thread (" << std::this_thread::get_id() << ") Error: " << boost::diagnostic_information(error) << std::endl;
 
     logger->log<ml::Logger::warning>(ss.str(), component);
 }

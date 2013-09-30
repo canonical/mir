@@ -1035,13 +1035,14 @@ auto mir::DefaultServerConfiguration::the_connector_report()
             {
                 return std::make_shared<ml::ConnectorReport>(the_logger());
             }
-//            else if (opt == lttng_opt_value)
-//            {
-//                return std::make_shared<mir::lttng::ConnectorReport>();
-//            }
-            else
+            else if (opt == off_opt_value)
             {
                 return std::make_shared<mf::NullConnectorReport>();
+            }
+            else
+            {
+                throw AbnormalExit(std::string("Invalid ") + connector_report_opt + " option: " + opt +
+                    " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
             }
         });
 }
