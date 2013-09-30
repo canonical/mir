@@ -44,13 +44,13 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
 template<class ResultMessage>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
 {
-    send_response(id, static_cast<google::protobuf::Message*>(response));
+    send_response(id, response);
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
-    send_response(id, static_cast<google::protobuf::Message*>(response), {fd});
+    send_response(id, response, {fd});
     resource_cache->free_resource(response);
 }
 
@@ -60,7 +60,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_platform()) :
         std::vector<int32_t>();
 
-    send_response(id, static_cast<google::protobuf::Message*>(response), {fd});
+    send_response(id, response, {fd});
     resource_cache->free_resource(response);
 }
 
