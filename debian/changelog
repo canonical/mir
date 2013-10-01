@@ -1,3 +1,19 @@
+mir (0.0.12+13.10.20131001.1-0ubuntu1) saucy; urgency=low
+
+  [ Michael Terry ]
+  * merge latest dev branch.
+
+  [ Kevin DuBois ]
+  * merge latest dev branch.
+
+  [ Daniel d'Andrada ]
+  * merge latest dev branch.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1086
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Oct 2013 10:04:25 +0000
+
 mir (0.0.12+13.10.20130926.1-0ubuntu1) saucy; urgency=low
 
   [ kg ]
