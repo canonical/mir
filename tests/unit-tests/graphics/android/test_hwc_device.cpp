@@ -176,7 +176,7 @@ TYPED_TEST(HWCCommon, test_hwc_ensures_unblank_during_initialization)
     }, std::runtime_error);
 }
 
-TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_or_unblank_error)
+TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
 {
     using namespace testing;
 
@@ -194,8 +194,34 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_or_unblank_error)
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
     EXPECT_THROW({
-            device->blank_or_unblank_screen(true);
+            device->set_screen_blank(true);
     }, std::runtime_error);
+}
+
+TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
+{
+    using namespace testing;
+
+    InSequence seq;
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 1))
+        .Times(1);
+
+    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 0))
+        .Times(1);
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(1)
+        .WillOnce(Return(0));
+
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(1)
+        .WillOnce(Return(0));
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
+                                             this->mock_fbdev, this->mock_vsync);
+    device->set_screen_on(false);
 }
 
 TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
@@ -216,7 +242,7 @@ TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
-    device->blank_or_unblank_screen(false);
+    device->set_screen_blank(false);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
