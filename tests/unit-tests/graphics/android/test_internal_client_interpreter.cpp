@@ -19,6 +19,7 @@
 #include "src/server/graphics/android/internal_client_window.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
+#include "mir_test_doubles/mock_fence.h"
 #include "mir/graphics/internal_surface.h"
 
 #include <gtest/gtest.h>
@@ -65,11 +66,6 @@ struct InternalClientWindow : public ::testing::Test
     geom::Size sz;
 };
 
-struct MockSyncFence : public mga::SyncObject
-{
-    ~MockSyncFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
 }
 
 TEST_F(InternalClientWindow, driver_requests_buffer)
@@ -91,7 +87,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
 TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
-    auto mock_sync = std::make_shared<MockSyncFence>();
+    auto mock_sync = std::make_shared<mtd::MockFence>();
 
     Sequence seq;
     EXPECT_CALL(*mock_sync, wait())

@@ -40,7 +40,7 @@ MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<mga::SyncObject> const& sync_fence)
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<mga::Fence> const& sync_fence)
 {
     sync_fence->wait();
     mir_wait_for(surface.next_buffer(empty, NULL));

@@ -21,6 +21,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
@@ -79,8 +80,9 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
 std::shared_ptr<mga::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
     geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
 {
+    auto fence = std::make_shared<mga::SyncFence>();
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
-    auto buffer = std::make_shared<Buffer>(native_handle, egl_extensions);
+    auto buffer = std::make_shared<Buffer>(native_handle, fence, egl_extensions);
     (*buffer_initializer)(*buffer);
     return buffer;
 }

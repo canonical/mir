@@ -15,10 +15,10 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
-#define MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
+#ifndef MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
+#define MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
 
-#include "mir/graphics/android/sync_object.h"
+#include "mir/graphics/android/fence.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace graphics
 namespace android
 {
 
-class SyncFence : public SyncObject
+class SyncFence : public Fence
 {
 public:
     SyncFence();
@@ -35,6 +35,7 @@ public:
     ~SyncFence() noexcept;
 
     void wait();
+    void merge_with(Fence&& merge_fence);
 
 private:
     SyncFence(SyncFence const&) = delete;
@@ -45,4 +46,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_SYNCFENCE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_ */

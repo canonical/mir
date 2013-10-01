@@ -18,7 +18,6 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/graphics/android/sync_object.h"
 #include "src/client/mir_client_surface.h"
 
 #include <gmock/gmock.h>
@@ -29,17 +28,11 @@ namespace mga=mir::graphics::android;
 namespace
 {
 
-struct MockSyncFence : public mga::SyncObject
-{
-    ~MockSyncFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
-
 class MockAndroidDriverInterpreter : public mga::AndroidDriverInterpreter
 {
 public:
     MOCK_METHOD0(driver_requests_buffer, ANativeWindowBuffer*());
-    MOCK_METHOD2(driver_returns_buffer, void(ANativeWindowBuffer*, std::shared_ptr<mga::SyncObject>const& ));
+    MOCK_METHOD2(driver_returns_buffer, void(ANativeWindowBuffer*, std::shared_ptr<mga::Fence>const& ));
     MOCK_METHOD1(dispatch_driver_request_format, void(int));
     MOCK_CONST_METHOD1(driver_requests_info, int(int));
     MOCK_METHOD1(sync_to_display, void(bool));

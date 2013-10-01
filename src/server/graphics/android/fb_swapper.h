@@ -30,7 +30,7 @@ class Buffer;
 
 namespace android
 {
-//TODO: remove this interface. FBSimpleSwapper should inherit from mc::BufferSwapper
+
 class FBSwapper{
 public:
     virtual ~FBSwapper() = default;

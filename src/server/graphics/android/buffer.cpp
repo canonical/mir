@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/android/fence.h"
 #include "android_format_conversion-inl.h"
 #include "buffer.h"
 
@@ -32,8 +33,10 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
+                    std::shared_ptr<Fence> const& fence,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
     : native_buffer(buffer_handle),
+      buffer_fence(fence),
       egl_extensions(extensions)
 {
 }
@@ -103,4 +106,14 @@ bool mga::Buffer::can_bypass() const
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
     return native_buffer; 
+}
+
+void mga::Buffer::raise_fence(mga::Fence&& fence)
+{
+    buffer_fence->merge_with(std::move(fence));
+}
+
+std::shared_ptr<mga::Fence> mga::Buffer::fence() const
+{
+    return nullptr;
 }

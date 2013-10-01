@@ -18,7 +18,7 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/graphics/android/syncfence.h"
+#include "mir/graphics/android/sync_fence.h"
 
 
 namespace mga=mir::graphics::android;
@@ -166,7 +166,7 @@ int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_
     return 0;
 }
 
-int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::SyncObject> const& fence)
+int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::Fence> const& fence)
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;

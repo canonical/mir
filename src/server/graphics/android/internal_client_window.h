@@ -38,7 +38,7 @@ public:
     InternalClientWindow(std::shared_ptr<InternalSurface> const&,
                          std::shared_ptr<InterpreterResourceCache> const&);
     ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
+    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<Fence> const&);
     void dispatch_driver_request_format(int);
     int  driver_requests_info(int) const;
     void sync_to_display(bool sync); 

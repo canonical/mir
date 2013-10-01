@@ -45,6 +45,8 @@ public:
         ON_CALL(*mock_buffer, size())
             .WillByDefault(Return(default_size));
 
+        //mock_fb_swapper = std::make_shared<mga::MockFBSwapper>();
+
     }
 
     int width; 
@@ -80,19 +82,32 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
 }
 
-TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
+
+//consume_empty_buffer()
+//produce_rendered_buffer()
+//consume_rendered_buffer()
+//produce_empty_buffer()
+
+//consume_buffer
+//produce_from_render
+TEST_F(HWCLayerListTest, hwc_list_creation_loads_latest_fb_target)
 {
     using namespace testing;
    
     hwc_rect_t expected_sc, expected_df, expected_visible;
     expected_sc = {0, 0, width, height};
     expected_df = expected_visible = expected_sc;
+//    EXPECT_CALL(*mock_buffer_tracker, consume_fb_to_post(_,_))
+//        .Times(1)
+//        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer)),
+//                        SetArgReferee<1>(mock_sync_fence));
+        
     EXPECT_CALL(*mock_buffer, size())
         .Times(1)
         .WillOnce(Return(default_size));
 
+//    mga::LayerList layerlist(mock_fb_swapper);
     mga::LayerList layerlist;
-    layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list(); 
     ASSERT_EQ(1u, list->numHwLayers);

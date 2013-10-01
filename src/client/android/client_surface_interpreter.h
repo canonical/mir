@@ -35,7 +35,7 @@ public:
     explicit ClientSurfaceInterpreter(ClientSurface& surface);
 
     MirNativeBuffer* driver_requests_buffer();
-    void driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<graphics::android::SyncObject> const&);
+    void driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<graphics::android::Fence> const&);
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
     void sync_to_display(bool);

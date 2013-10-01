@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/syncfence.h"
+#include "mir/graphics/android/sync_fence.h"
 
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -51,4 +51,8 @@ void mga::SyncFence::wait()
         int timeout = -1;
         ::ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
     }
+}
+
+void mga::SyncFence::merge_with(mga::Fence&&)
+{
 }

@@ -20,7 +20,7 @@
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
-#include "mir/graphics/android/syncfence.h"
+#include "mir/graphics/android/sync_fence.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -30,11 +30,9 @@ namespace geom=mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerList> const& layer_list,
-                              std::shared_ptr<DisplaySupportProvider> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list(layer_list),
-      fb_device(fbdev)
+      layer_list(layer_list)
 {
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);

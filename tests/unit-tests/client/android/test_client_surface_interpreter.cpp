@@ -19,6 +19,7 @@
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
+#include "mir_test_doubles/mock_fence.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -27,14 +28,10 @@ namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
-struct MockSyncFence : public mga::SyncObject
-{
-    ~MockSyncFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
@@ -93,12 +90,12 @@ protected:
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
         mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
-        mock_sync = std::make_shared<NiceMock<MockSyncFence>>();
+        mock_sync = std::make_shared<NiceMock<mtd::MockFence>>();
     }
 
     MirSurfaceParameters surf_params;
     std::shared_ptr<MockClientBuffer> mock_client_buffer;
-    std::shared_ptr<MockSyncFence> mock_sync;
+    std::shared_ptr<mtd::MockFence> mock_sync;
 };
 
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)

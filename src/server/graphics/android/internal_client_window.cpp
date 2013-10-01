@@ -44,7 +44,7 @@ ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
 }
 
 void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handle,
-                                                      std::shared_ptr<SyncObject> const& fence)
+                                                      std::shared_ptr<Fence> const& fence)
 {
     fence->wait();
     resource_cache->retrieve_buffer(handle);

@@ -21,6 +21,7 @@
 
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 
 #include <gtest/gtest.h>
@@ -35,12 +36,6 @@ namespace mc=mir::compositor;
 
 namespace
 {
-
-struct StubFence : public mga::SyncObject
-{
-    virtual ~StubFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
 
 struct MockFBSwapper : public mga::FBSwapper
 {
@@ -62,7 +57,7 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         ON_CALL(*mock_display_poster, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        stub_sync = std::make_shared<StubFence>();
+        stub_sync = std::make_shared<mtd::MockFence>();
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
@@ -71,7 +66,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_poster;
-    std::shared_ptr<StubFence> stub_sync;
+    std::shared_ptr<mtd::MockFence> stub_sync;
 };
 }
 

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
-#define MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
+#ifndef MIR_GRAPHICS_ANDROID_FENCE_H_
+#define MIR_GRAPHICS_ANDROID_FENCE_H_
 
 namespace mir
 {
@@ -26,16 +26,17 @@ namespace graphics
 namespace android
 {
 
-class SyncObject
+class Fence
 {
 public:
-    virtual ~SyncObject() = default;
+    virtual ~Fence() = default;
     virtual void wait() = 0;
+    virtual void merge_with(Fence&& merge_fence) = 0;
 
 protected:
-    SyncObject() = default;
-    SyncObject(SyncObject const&) = delete;
-    SyncObject& operator=(SyncObject const&) = delete;
+    Fence() = default;
+    Fence(Fence const&) = delete;
+    Fence& operator=(Fence const&) = delete;
 };
 
 
@@ -43,4 +44,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_FENCE_H_ */
