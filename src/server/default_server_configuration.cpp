@@ -289,7 +289,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool.")
+            "threads in frontend thread pool. [int:default=10]")
         ("vt", po::value<int>(),
             "VT to run on or 0 to use current. [int:default=0]");
 }
