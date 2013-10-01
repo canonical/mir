@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2013 Canonical Ltd.
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +26,12 @@
 
 #include <mir/logging/logger.h>
 #include <mir/logging/input_report.h>
+#include <mir_test/fake_event_hub.h>
 
 namespace ml  = mir::logging;
 
 using std::string;
+using mir::input::android::FakeEventHub;
 
 namespace
 {
@@ -297,415 +300,6 @@ private:
         mNotifySwitchArgsQueue.push_back(*args);
     }
 };
-
-
-// --- FakeEventHub ---
-
-class FakeEventHub : public EventHubInterface {
-    struct KeyInfo {
-        int32_t keyCode;
-        uint32_t flags;
-    };
-
-    struct Device {
-        InputDeviceIdentifier identifier;
-        uint32_t classes;
-        PropertyMap configuration;
-        KeyedVector<int, RawAbsoluteAxisInfo> absoluteAxes;
-        KeyedVector<int, bool> relativeAxes;
-        KeyedVector<int32_t, int32_t> keyCodeStates;
-        KeyedVector<int32_t, int32_t> scanCodeStates;
-        KeyedVector<int32_t, int32_t> switchStates;
-        KeyedVector<int32_t, int32_t> absoluteAxisValue;
-        KeyedVector<int32_t, KeyInfo> keysByScanCode;
-        KeyedVector<int32_t, KeyInfo> keysByUsageCode;
-        KeyedVector<int32_t, bool> leds;
-        Vector<VirtualKeyDefinition> virtualKeys;
-
-        Device(uint32_t classes) :
-                classes(classes) {
-        }
-    };
-
-    KeyedVector<int32_t, Device*> mDevices;
-    Vector<String8> mExcludedDevices;
-    List<RawEvent> mEvents;
-
-protected:
-    virtual ~FakeEventHub() {
-        for (size_t i = 0; i < mDevices.size(); i++) {
-            delete mDevices.valueAt(i);
-        }
-    }
-
-public:
-    FakeEventHub() { }
-
-    void addDevice(int32_t deviceId, const String8& name, uint32_t classes) {
-        Device* device = new Device(classes);
-        device->identifier.name = name;
-        mDevices.add(deviceId, device);
-
-        enqueueEvent(ARBITRARY_TIME, deviceId, EventHubInterface::DEVICE_ADDED, 0, 0);
-    }
-
-    void removeDevice(int32_t deviceId) {
-        delete mDevices.valueFor(deviceId);
-        mDevices.removeItem(deviceId);
-
-        enqueueEvent(ARBITRARY_TIME, deviceId, EventHubInterface::DEVICE_REMOVED, 0, 0);
-    }
-
-    void finishDeviceScan() {
-        enqueueEvent(ARBITRARY_TIME, 0, EventHubInterface::FINISHED_DEVICE_SCAN, 0, 0);
-    }
-
-    void addConfigurationProperty(int32_t deviceId, const String8& key, const String8& value) {
-        Device* device = getDevice(deviceId);
-        device->configuration.addProperty(key, value);
-    }
-
-    void addConfigurationMap(int32_t deviceId, const PropertyMap* configuration) {
-        Device* device = getDevice(deviceId);
-        device->configuration.addAll(configuration);
-    }
-
-    void addAbsoluteAxis(int32_t deviceId, int axis,
-            int32_t minValue, int32_t maxValue, int flat, int fuzz, int resolution = 0) {
-        Device* device = getDevice(deviceId);
-
-        RawAbsoluteAxisInfo info;
-        info.valid = true;
-        info.minValue = minValue;
-        info.maxValue = maxValue;
-        info.flat = flat;
-        info.fuzz = fuzz;
-        info.resolution = resolution;
-        device->absoluteAxes.add(axis, info);
-    }
-
-    void addRelativeAxis(int32_t deviceId, int32_t axis) {
-        Device* device = getDevice(deviceId);
-        device->relativeAxes.add(axis, true);
-    }
-
-    void setKeyCodeState(int32_t deviceId, int32_t keyCode, int32_t state) {
-        Device* device = getDevice(deviceId);
-        device->keyCodeStates.replaceValueFor(keyCode, state);
-    }
-
-    void setScanCodeState(int32_t deviceId, int32_t scanCode, int32_t state) {
-        Device* device = getDevice(deviceId);
-        device->scanCodeStates.replaceValueFor(scanCode, state);
-    }
-
-    void setSwitchState(int32_t deviceId, int32_t switchCode, int32_t state) {
-        Device* device = getDevice(deviceId);
-        device->switchStates.replaceValueFor(switchCode, state);
-    }
-
-    void setAbsoluteAxisValue(int32_t deviceId, int32_t axis, int32_t value) {
-        Device* device = getDevice(deviceId);
-        device->absoluteAxisValue.replaceValueFor(axis, value);
-    }
-
-    void addKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
-            int32_t keyCode, uint32_t flags) {
-        Device* device = getDevice(deviceId);
-        KeyInfo info;
-        info.keyCode = keyCode;
-        info.flags = flags;
-        if (scanCode) {
-            device->keysByScanCode.add(scanCode, info);
-        }
-        if (usageCode) {
-            device->keysByUsageCode.add(usageCode, info);
-        }
-    }
-
-    void addLed(int32_t deviceId, int32_t led, bool initialState) {
-        Device* device = getDevice(deviceId);
-        device->leds.add(led, initialState);
-    }
-
-    bool getLedState(int32_t deviceId, int32_t led) {
-        Device* device = getDevice(deviceId);
-        return device->leds.valueFor(led);
-    }
-
-    Vector<String8>& getExcludedDevices() {
-        return mExcludedDevices;
-    }
-
-    void addVirtualKeyDefinition(int32_t deviceId, const VirtualKeyDefinition& definition) {
-        Device* device = getDevice(deviceId);
-        device->virtualKeys.push(definition);
-    }
-
-    void enqueueEvent(nsecs_t when, int32_t deviceId, int32_t type,
-            int32_t code, int32_t value) {
-        RawEvent event;
-        event.when = when;
-        event.deviceId = deviceId;
-        event.type = type;
-        event.code = code;
-        event.value = value;
-        mEvents.push_back(event);
-
-        if (type == EV_ABS) {
-            setAbsoluteAxisValue(deviceId, code, value);
-        }
-    }
-
-    void assertQueueIsEmpty() {
-        ASSERT_EQ(size_t(0), mEvents.size())
-                << "Expected the event queue to be empty (fully consumed).";
-    }
-
-private:
-    Device* getDevice(int32_t deviceId) const {
-        ssize_t index = mDevices.indexOfKey(deviceId);
-        return index >= 0 ? mDevices.valueAt(index) : NULL;
-    }
-
-    virtual uint32_t getDeviceClasses(int32_t deviceId) const {
-        Device* device = getDevice(deviceId);
-        return device ? device->classes : 0;
-    }
-
-    virtual InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const {
-        Device* device = getDevice(deviceId);
-        return device ? device->identifier : InputDeviceIdentifier();
-    }
-
-    virtual void getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            *outConfiguration = device->configuration;
-        }
-    }
-
-    virtual status_t getAbsoluteAxisInfo(int32_t deviceId, int axis,
-            RawAbsoluteAxisInfo* outAxisInfo) const {
-        outAxisInfo->clear();
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->absoluteAxes.indexOfKey(axis);
-            if (index >= 0) {
-                *outAxisInfo = device->absoluteAxes.valueAt(index);
-                return OK;
-            }
-        }
-        return -1;
-    }
-
-    virtual bool hasRelativeAxis(int32_t deviceId, int axis) const {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            return device->relativeAxes.indexOfKey(axis) >= 0;
-        }
-        return false;
-    }
-
-    bool hasInputProperty(int32_t deviceId, int property) const override {
-        (void)deviceId;
-        (void)property;
-        return false;
-    }
-
-    virtual status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
-            int32_t* outKeycode, uint32_t* outFlags) const {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            const KeyInfo* key = getKey(device, scanCode, usageCode);
-            if (key) {
-                if (outKeycode) {
-                    *outKeycode = key->keyCode;
-                }
-                if (outFlags) {
-                    *outFlags = key->flags;
-                }
-                return OK;
-            }
-        }
-        return NAME_NOT_FOUND;
-    }
-
-    const KeyInfo* getKey(Device* device, int32_t scanCode, int32_t usageCode) const {
-        if (usageCode) {
-            ssize_t index = device->keysByUsageCode.indexOfKey(usageCode);
-            if (index >= 0) {
-                return &device->keysByUsageCode.valueAt(index);
-            }
-        }
-        if (scanCode) {
-            ssize_t index = device->keysByScanCode.indexOfKey(scanCode);
-            if (index >= 0) {
-                return &device->keysByScanCode.valueAt(index);
-            }
-        }
-        return NULL;
-    }
-
-    status_t mapAxis(int32_t deviceId, int32_t scanCode, AxisInfo* outAxisInfo) const override {
-        (void)deviceId;
-        (void)scanCode;
-        (void)outAxisInfo;
-        return NAME_NOT_FOUND;
-    }
-
-    virtual void setExcludedDevices(const Vector<String8>& devices) {
-        mExcludedDevices = devices;
-    }
-
-    size_t getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize) override {
-        (void)timeoutMillis;
-        (void)bufferSize;
-
-        if (mEvents.empty()) {
-            return 0;
-        }
-
-        *buffer = *mEvents.begin();
-        mEvents.erase(mEvents.begin());
-        return 1;
-    }
-
-    int32_t getScanCodeState(int32_t deviceId, int32_t scanCode) const override {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->scanCodeStates.indexOfKey(scanCode);
-            if (index >= 0) {
-                return device->scanCodeStates.valueAt(index);
-            }
-        }
-        return AKEY_STATE_UNKNOWN;
-    }
-
-    int32_t getKeyCodeState(int32_t deviceId, int32_t keyCode) const override {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->keyCodeStates.indexOfKey(keyCode);
-            if (index >= 0) {
-                return device->keyCodeStates.valueAt(index);
-            }
-        }
-        return AKEY_STATE_UNKNOWN;
-    }
-
-    int32_t getSwitchState(int32_t deviceId, int32_t sw) const override {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->switchStates.indexOfKey(sw);
-            if (index >= 0) {
-                return device->switchStates.valueAt(index);
-            }
-        }
-        return AKEY_STATE_UNKNOWN;
-    }
-
-    virtual status_t getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
-            int32_t* outValue) const {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->absoluteAxisValue.indexOfKey(axis);
-            if (index >= 0) {
-                *outValue = device->absoluteAxisValue.valueAt(index);
-                return OK;
-            }
-        }
-        *outValue = 0;
-        return -1;
-    }
-
-    virtual bool markSupportedKeyCodes(int32_t deviceId, size_t numCodes, const int32_t* keyCodes,
-            uint8_t* outFlags) const {
-        bool result = false;
-        Device* device = getDevice(deviceId);
-        if (device) {
-            for (size_t i = 0; i < numCodes; i++) {
-                for (size_t j = 0; j < device->keysByScanCode.size(); j++) {
-                    if (keyCodes[i] == device->keysByScanCode.valueAt(j).keyCode) {
-                        outFlags[i] = 1;
-                        result = true;
-                    }
-                }
-                for (size_t j = 0; j < device->keysByUsageCode.size(); j++) {
-                    if (keyCodes[i] == device->keysByUsageCode.valueAt(j).keyCode) {
-                        outFlags[i] = 1;
-                        result = true;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    virtual bool hasScanCode(int32_t deviceId, int32_t scanCode) const {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->keysByScanCode.indexOfKey(scanCode);
-            return index >= 0;
-        }
-        return false;
-    }
-
-    virtual bool hasLed(int32_t deviceId, int32_t led) const {
-        Device* device = getDevice(deviceId);
-        return device && device->leds.indexOfKey(led) >= 0;
-    }
-
-    virtual void setLedState(int32_t deviceId, int32_t led, bool on) {
-        Device* device = getDevice(deviceId);
-        if (device) {
-            ssize_t index = device->leds.indexOfKey(led);
-            if (index >= 0) {
-                device->leds.replaceValueAt(led, on);
-            } else {
-                ADD_FAILURE()
-                        << "Attempted to set the state of an LED that the EventHub declared "
-                        "was not present.  led=" << led;
-            }
-        }
-    }
-
-    void getVirtualKeyDefinitions(int32_t deviceId,
-            Vector<VirtualKeyDefinition>& outVirtualKeys) const override {
-        outVirtualKeys.clear();
-
-        Device* device = getDevice(deviceId);
-        if (device) {
-            outVirtualKeys.appendVector(device->virtualKeys);
-        }
-    }
-
-    sp<KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const override {
-        (void)deviceId;
-        return NULL;
-    }
-
-    bool setKeyboardLayoutOverlay(int32_t deviceId, const sp<KeyCharacterMap>& map) override {
-        (void)deviceId;
-        (void)map;
-        return false;
-    }
-
-    void vibrate(int32_t /*deviceId*/, nsecs_t /*duration*/) override {}
-
-    void cancelVibrate(int32_t /*deviceId*/) override {}
-
-    void wake() override {}
-
-    void dump(String8& /*dump*/) override {}
-
-    void monitor() override {}
-
-    void flush() override {}
-
-    void requestReopenDevices() override {}
-
-};
-
 
 // --- FakeInputReaderContext ---
 
@@ -1001,7 +595,8 @@ protected:
         mFakeEventHub->finishDeviceScan();
         mReader->loopOnce();
         mReader->loopOnce();
-        mFakeEventHub->assertQueueIsEmpty();
+        ASSERT_EQ(size_t(0), mFakeEventHub->eventsQueueSize())
+            << "Expected the event queue to be empty (fully consumed).";
     }
 
     FakeInputMapper* addDeviceWithFakeInputMapper(int32_t deviceId,
@@ -1017,16 +612,16 @@ protected:
 };
 
 TEST_F(InputReaderTest, GetInputDevices) {
-    ASSERT_NO_FATAL_FAILURE(addDevice(1, String8("keyboard"),
+    ASSERT_NO_FATAL_FAILURE(addDevice(2, String8("keyboard"),
             INPUT_DEVICE_CLASS_KEYBOARD, NULL));
-    ASSERT_NO_FATAL_FAILURE(addDevice(2, String8("ignored"),
+    ASSERT_NO_FATAL_FAILURE(addDevice(3, String8("ignored"),
             0, NULL)); // no classes so device will be ignored
 
     Vector<InputDeviceInfo> inputDevices;
     mReader->getInputDevices(inputDevices);
 
     ASSERT_EQ(1U, inputDevices.size());
-    ASSERT_EQ(1, inputDevices[0].getId());
+    ASSERT_EQ(2, inputDevices[0].getId());
     ASSERT_STREQ("keyboard", inputDevices[0].getIdentifier().name.c_str());
     ASSERT_EQ(AINPUT_KEYBOARD_TYPE_NON_ALPHABETIC, inputDevices[0].getKeyboardType());
     ASSERT_EQ(AINPUT_SOURCE_KEYBOARD, inputDevices[0].getSources());
@@ -1035,7 +630,7 @@ TEST_F(InputReaderTest, GetInputDevices) {
     // Should also have received a notification describing the new input devices.
     inputDevices = mFakePolicy->getInputDevices();
     ASSERT_EQ(1U, inputDevices.size());
-    ASSERT_EQ(1, inputDevices[0].getId());
+    ASSERT_EQ(2, inputDevices[0].getId());
     ASSERT_STREQ("keyboard", inputDevices[0].getIdentifier().name.c_str());
     ASSERT_EQ(AINPUT_KEYBOARD_TYPE_NON_ALPHABETIC, inputDevices[0].getKeyboardType());
     ASSERT_EQ(AINPUT_SOURCE_KEYBOARD, inputDevices[0].getSources());
@@ -1159,7 +754,7 @@ TEST_F(InputReaderTest, MarkSupportedKeyCodes_ForwardsRequestsToMappers) {
 }
 
 TEST_F(InputReaderTest, LoopOnce_WhenDeviceScanFinished_SendsConfigurationChanged) {
-    addDevice(1, String8("ignored"), INPUT_DEVICE_CLASS_KEYBOARD, NULL);
+    addDevice(2, String8("ignored"), INPUT_DEVICE_CLASS_KEYBOARD, NULL);
 
     NotifyConfigurationChangedArgs args{0};
 
@@ -1172,9 +767,9 @@ TEST_F(InputReaderTest, LoopOnce_ForwardsRawEventsToMappers) {
     ASSERT_NO_FATAL_FAILURE(mapper = addDeviceWithFakeInputMapper(1, String8("fake"),
             INPUT_DEVICE_CLASS_KEYBOARD, AINPUT_SOURCE_KEYBOARD, NULL));
 
-    mFakeEventHub->enqueueEvent(0, 1, EV_KEY, KEY_A, 1);
+    mFakeEventHub->synthesize_event(0, 1, EV_KEY, KEY_A, 1);
     mReader->loopOnce();
-    ASSERT_NO_FATAL_FAILURE(mFakeEventHub->assertQueueIsEmpty());
+    EXPECT_EQ(size_t(0), mFakeEventHub->eventsQueueSize());
 
     RawEvent event;
     ASSERT_NO_FATAL_FAILURE(mapper->assertProcessWasCalled(&event));
@@ -1227,7 +822,7 @@ protected:
 };
 
 const char* InputDeviceTest::DEVICE_NAME = "device";
-const int32_t InputDeviceTest::DEVICE_ID = 1;
+const int32_t InputDeviceTest::DEVICE_ID = 2;
 const int32_t InputDeviceTest::DEVICE_GENERATION = 2;
 const uint32_t InputDeviceTest::DEVICE_CLASSES = INPUT_DEVICE_CLASS_KEYBOARD
         | INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_JOYSTICK;
@@ -1479,7 +1074,7 @@ protected:
 };
 
 const char* InputMapperTest::DEVICE_NAME = "device";
-const int32_t InputMapperTest::DEVICE_ID = 1;
+const int32_t InputMapperTest::DEVICE_ID = 2;
 const int32_t InputMapperTest::DEVICE_GENERATION = 2;
 const uint32_t InputMapperTest::DEVICE_CLASSES = 0; // not needed for current tests
 
