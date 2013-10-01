@@ -211,8 +211,10 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         {
             if (!connect_result.has_error())
             {
-                set_error_message("Connect failed");
+                // We're handling an error scenario that means we're not sync'd
+                // with the client code - a callback isn't safe (or needed)
                 safe_to_callback = false;
+                set_error_message("Connect failed");
             }
         }
         /*

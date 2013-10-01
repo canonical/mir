@@ -82,9 +82,9 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     init();
 }
 
-// TODO enable configuring the kill mechanism
 void mclr::MirSocketRpcChannel::notify_disconnected()
 {
+    // TODO enable configuring the kill mechanism
     io_service.stop();
     raise (SIGTERM);
     pending_calls.force_completion();
