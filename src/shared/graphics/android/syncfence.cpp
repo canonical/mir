@@ -48,6 +48,21 @@ void mga::SyncFence::wait()
     }
 }
 
-void mga::SyncFence::merge_with(mga::Fence&&)
+void mga::SyncFence::merge_with(mga::Fence&& fence)
 {
+    if(fence_fd < 0)
+    {
+        fence_fd = fence.extract_native_handle(); 
+    }
+    else 
+    {
+        auto new_fence_fd = ops->ioctl(fence_fd, SYNC_IOC_MERGE, nullptr);
+        close(fence_fd);
+        fence_fd = new_fence_fd;
+    }
+}
+
+int mga::SyncFence::extract_native_handle()
+{
+    return 8;
 }

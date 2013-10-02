@@ -66,11 +66,14 @@ public:
 
     void wait();
     void merge_with(Fence&& merge_fence);
+    int extract_native_handle();
 
 private:
     SyncFence(SyncFence const&) = delete;
     SyncFence& operator=(SyncFence const&) = delete;
-    int const fence_fd;
+
+    int fence_fd;
+    std::shared_ptr<SyncFileOps> const ops;
 };
 
 }
