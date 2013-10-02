@@ -1,7 +1,6 @@
 set(
   MIR_COMPOSITOR_SRCS
 
-  basic_display_buffer_compositor.cpp
   default_display_buffer_compositor.cpp
   default_display_buffer_compositor_factory.cpp
   temporary_buffers.cpp
