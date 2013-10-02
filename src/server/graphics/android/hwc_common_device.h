@@ -53,7 +53,7 @@ public:
     virtual void set_next_frontbuffer(std::shared_ptr<Buffer> const& buffer) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
     
-    void blank_or_unblank_screen(bool blank);
+    virtual void mode(MirPowerMode mode);
 
     void notify_vsync();
 protected:
@@ -66,11 +66,14 @@ protected:
     std::unique_lock<std::mutex> lock_unblanked();
 
 private:
+    int turn_screen_on() const noexcept(true);
+    int turn_screen_off() const noexcept(true);
+
     HWCCallbacks callbacks;
 
     std::mutex blanked_mutex;
     std::condition_variable blanked_cond;
-    bool blanked;
+    MirPowerMode current_mode; 
 };
 
 }
