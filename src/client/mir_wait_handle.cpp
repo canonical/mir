@@ -59,10 +59,14 @@ void MirWaitHandle::wait_for_all()  // wait for all results you expect
 
 void MirWaitHandle::wait_for_pending(std::chrono::milliseconds limit)
 {
+    using std::chrono::steady_clock;
+
     std::unique_lock<std::mutex> lock(guard);
 
-    if (received < expecting)
-        wait_condition.wait_for(lock, limit);
+    auto time_limit = steady_clock::now() + limit;
+
+    while (received < expecting && steady_clock::now() < time_limit)
+        wait_condition.wait_until(lock, time_limit);
 }
 
 
