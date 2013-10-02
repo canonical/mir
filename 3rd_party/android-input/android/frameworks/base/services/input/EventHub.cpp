@@ -955,6 +955,11 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
     char buffer[80];
 
     ALOGV("Opening device: %s", devicePath);
+    if (hasDeviceByPathLocked(String8(devicePath)))
+    {
+        ALOGV("Not opening device (%s), as it is already opened", devicePath);
+        return -1;
+    }
 
     int fd = open(devicePath, O_RDWR | O_CLOEXEC);
     if(fd < 0) {
@@ -1529,6 +1534,15 @@ void EventHub::flush() {
             readSize = read(device->fd, readBuffer, bufferSize);
         } while (readSize > 0);
     }
+}
+
+bool EventHub::hasDeviceByPathLocked(String8 const& path)
+{
+    for (size_t i = 0; i < mDevices.size(); i++) {
+        auto const& device = mDevices.valueAt(i);
+        if (device->path == path) return true;
+    }
+    return false;
 }
 
 }; // namespace android
