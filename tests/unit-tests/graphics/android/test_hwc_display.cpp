@@ -142,10 +142,10 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
 
     {
         InSequence seq;
-        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(false));
-        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(true));
-        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(true));
-        EXPECT_CALL(*mock_hwc_device, blank_or_unblank_screen(true));
+        EXPECT_CALL(*mock_hwc_device, apply_display_state(mga::DisplayState::DisplayOn));
+        EXPECT_CALL(*mock_hwc_device, apply_display_state(mga::DisplayState::DisplayOff));
+        EXPECT_CALL(*mock_hwc_device, apply_display_state(mga::DisplayState::DisplayOff));
+        EXPECT_CALL(*mock_hwc_device, apply_display_state(mga::DisplayState::DisplayOff));
     }
     display->configure(*on_configuration.get());
     display->configure(*off_configuration.get());

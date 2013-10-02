@@ -47,7 +47,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
                                       std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
     : hwc_device(hwc_device),
       coordinator(coordinator),
-      blanked(false)
+      current_state(mga::DisplayState::DisplayOn)
 {
     callbacks.hooks.invalidate = invalidate_hook;
     callbacks.hooks.vsync = vsync_hook;
@@ -56,30 +56,20 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
-    int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0);
-    if (err)
+    if(auto err = turn_screen_on())
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Could not unblank display")) <<
             boost::errinfo_errno(-err));
     }
-    
-    err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
-    if (err)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Could not enable HWC vsync "
-                                   "notifications")) <<
-            boost::errinfo_errno(-err));
-    }
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
 {
-    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
-    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
+    std::unique_lock<std::mutex> lg(blanked_mutex);
+    if(current_state == mga::DisplayState::DisplayOn)
+        turn_screen_off();
 }
 
 geom::PixelFormat mga::HWCCommonDevice::display_format() const
@@ -97,30 +87,55 @@ void mga::HWCCommonDevice::notify_vsync()
     coordinator->notify_vsync();
 }
 
-void mga::HWCCommonDevice::blank_or_unblank_screen(bool blank_request)
+void mga::HWCCommonDevice::apply_display_state(DisplayState state_request)
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
 
-    if (blank_request != blanked)
+    int err = 0;
+    if ((state_request == mga::DisplayState::DisplayOn) && 
+        (current_state == mga::DisplayState::DisplayOff))
     {
-        if(auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, blank_request))
-        {
-            std::string blanking_status_msg = "Could not " + 
-                (blank_request ? std::string("blank") : std::string("unblank")) + " display";
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error(blanking_status_msg)) <<
-                boost::errinfo_errno(-err));
-        }    
-        blanked = blank_request;
-        blanked_cond.notify_all();
+        err = turn_screen_on();
     }
+
+    if ((state_request == mga::DisplayState::DisplayOff) && 
+        (current_state == mga::DisplayState::DisplayOn))
+    {
+        err = turn_screen_off();
+    }
+
+    if(err)
+    {
+        std::string blanking_status_msg = "Could not " + 
+            ((state_request == mga::DisplayState::DisplayOff) ? std::string("blank") : std::string("unblank")) + " display";
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(blanking_status_msg)) <<
+            boost::errinfo_errno(-err));
+    }
+   
+    current_state = state_request; 
+    blanked_cond.notify_all();
 }
 
 std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
-    while(blanked)
+    while(current_state == mga::DisplayState::DisplayOff)
         blanked_cond.wait(lg);
     return std::move(lg);
+}
+
+int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
+{
+    if(auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        return err;
+    return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
+}
+
+int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
+{
+    if(auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
+        return err;
+    return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }

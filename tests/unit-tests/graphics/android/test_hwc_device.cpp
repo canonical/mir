@@ -194,7 +194,7 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
     EXPECT_THROW({
-            device->set_screen_blank(true);
+        device->apply_display_state(mga::DisplayState::DisplayOff);
     }, std::runtime_error);
 }
 
@@ -215,13 +215,9 @@ TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
         .Times(1)
         .WillOnce(Return(0));
 
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(1)
-        .WillOnce(Return(0));
-
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
-    device->set_screen_on(false);
+    device->apply_display_state(mga::DisplayState::DisplayOff);
 }
 
 TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
@@ -242,7 +238,7 @@ TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
-    device->set_screen_blank(false);
+    device->apply_display_state(mga::DisplayState::DisplayOn);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)

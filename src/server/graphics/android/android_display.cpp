@@ -160,9 +160,9 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     {
         // TODO: Properly support multiple outputs
         if (output.power_mode == mir_power_mode_on)
-            display_provider->blank_or_unblank_screen(false);
+            display_provider->apply_display_state(mga::DisplayState::DisplayOn);
         else
-            display_provider->blank_or_unblank_screen(true);
+            display_provider->apply_display_state(mga::DisplayState::DisplayOff);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

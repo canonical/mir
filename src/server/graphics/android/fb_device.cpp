@@ -79,8 +79,8 @@ void mga::FBDevice::sync_to_display(bool sync)
     }
 }
 
-void mga::FBDevice::blank_or_unblank_screen(bool blank)
+void mga::FBDevice::apply_display_state(DisplayState state)
 {
     // TODO: Implement
-    (void) blank;
+    (void) state;
 }
