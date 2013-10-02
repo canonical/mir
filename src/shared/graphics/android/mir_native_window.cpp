@@ -97,7 +97,6 @@ int queueBuffer_static(struct ANativeWindow* window,
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, fence_fd);
     return self->queueBuffer(buffer, fence);
-
 }
 
 int setSwapInterval_static (struct ANativeWindow* window, int interval)

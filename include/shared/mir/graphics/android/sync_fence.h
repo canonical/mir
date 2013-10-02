@@ -24,6 +24,15 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+//FIXME: (lp-1229884) this ioctl code should be taken from kernel headers
+#define SYNC_IOC_WAIT 0x40043E00
+#define SYNC_IOC_MERGE 0x444
+typedef struct sync_merge_data_t {
+ int32_t fd2;
+ char name[32];
+ int32_t fence;
+} sync_merge_data_t;
+
 namespace mir
 {
 namespace graphics
@@ -65,8 +74,8 @@ public:
     ~SyncFence() noexcept;
 
     void wait();
-    void merge_with(Fence&& merge_fence);
-    int extract_native_handle();
+    void merge_with(Fence const& merge_fence);
+    int copy_native_handle() const;
 
 private:
     SyncFence(SyncFence const&) = delete;

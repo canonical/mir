@@ -96,27 +96,8 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
     EXPECT_EQ(expected_stride, buffer.stride());
 }
 
-TEST_F(AndroidGraphicBufferBasic, raise_fence_merges_with_existing)
+TEST_F(AndroidGraphicBufferBasic, get_fence)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_sync_fence, lvalue_merge_with(_))
-        .Times(1);
     mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
- 
-    mtd::MockFence fence;
-    buffer.raise_fence(std::move(fence));
+    EXPECT_EQ(mock_sync_fence, buffer.fence());
 }
-
-#if 0
-TEST_F(AndroidGraphicBufferBasic, extract_native_fence)
-{
-    using namespace testing;
-
-    auto dummy_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    EXPECT_GT(0, dummy_fd);
-    SyncFence fence(dummy_fd);
-
-    mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
-    EXPECT_EQ(dummy_fd, buffer.native_fence());
-}
-#endif

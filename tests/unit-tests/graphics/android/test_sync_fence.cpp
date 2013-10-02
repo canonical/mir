@@ -23,10 +23,6 @@
 #include <gmock/gmock.h>
 #include <memory>
 
-//FIXME: (lp-1229884) this ioctl code should be taken from kernel headers
-#define SYNC_IOC_WAIT 0x40043E00
-#define SYNC_IOC_MERGE 0x444
-
 namespace mga = mir::graphics::android;
 namespace mtd = mir::test::doubles;
 
@@ -54,9 +50,25 @@ protected:
 };
 
 
+MATCHER_P(TimeoutMatches, value,
+          std::string("timeout should be: " + testing::PrintToString(value)))
+{
+    int* timeout = static_cast<int*>(arg);
+    if (!timeout)
+        return false;
+    return value == *timeout;
+}
+
+MATCHER_P(MergeMatches, value,
+          std::string("merge should be: " + testing::PrintToString(value)))
+{
+    (void) arg;
+    return true;
+}
+
 TEST_F(SyncSwTest, sync_wait)
 {
-    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_WAIT, (void*)-1))
+    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_WAIT, TimeoutMatches(-1)))
         .Times(1);
     mga::SyncFence fence1(mock_fops, dummy_fd);
     fence1.wait();
@@ -66,18 +78,42 @@ TEST_F(SyncSwTest, sync_wait)
     fence2.wait();
 }
 
+
+namespace
+{
+struct IoctlSetter
+{
+    IoctlSetter(int fd)
+        : fd(fd)
+    {
+    }
+    int merge_setter(int, int, void* data)
+    {
+        auto b = static_cast<sync_merge_data_t*>(data);
+        b->fence = fd;
+        return 0;
+    }
+    int fd;
+};
+}
 TEST_F(SyncSwTest, sync_merge_with_valid_fd)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_MERGE, _))
-        .Times(1);
+    int dummy_fd2 = 44;
+    int out_fd = 88;
+    IoctlSetter setter(out_fd);
+
+    sync_merge_data_t expected_data_in { dummy_fd2, "name", 0 };
+
+    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_MERGE, MergeMatches(expected_data_in)))
+        .Times(1)
+        .WillOnce(Invoke(&setter, &IoctlSetter::merge_setter));
 
     mga::SyncFence fence1(mock_fops, dummy_fd);
-    mga::SyncFence fence2(mock_fops, dummy_fd);
-    mga::SyncFence fence3(mock_fops, invalid_fd);
+    auto mock_fops2 = std::make_shared<MockFileOps>();
+    mga::SyncFence fence2(mock_fops2, dummy_fd2);
 
     fence1.merge_with(std::move(fence2));
-    fence1.merge_with(std::move(fence3));
 }
 
 TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
@@ -87,24 +123,20 @@ TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
         .Times(0);
 
     mga::SyncFence fence1(mock_fops, invalid_fd);
-    mga::SyncFence fence2(mock_fops, invalid_fd);
-    mga::SyncFence fence3(mock_fops, dummy_fd);
+    mga::SyncFence fence2(mock_fops, dummy_fd);
 
     fence1.merge_with(std::move(fence2));
-    fence1.merge_with(std::move(fence3));
 }
 
-TEST_F(SyncSwTest, extract_dups_fd)
+TEST_F(SyncSwTest, copy_dups_fd)
 {
     using namespace testing;
     int fd2 = dummy_fd + 1;
     EXPECT_CALL(*mock_fops, dup(dummy_fd))
-        .Times(0)
+        .Times(1)
         .WillOnce(Return(fd2));;
 
     mga::SyncFence fence(mock_fops, dummy_fd);
 
-    EXPECT_EQ(fd2, fence.extract_native_handle());
+    EXPECT_EQ(fd2, fence.copy_native_handle());
 }
-
-

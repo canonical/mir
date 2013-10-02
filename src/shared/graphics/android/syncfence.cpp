@@ -18,11 +18,6 @@
 
 #include "mir/graphics/android/sync_fence.h"
 
-
-//FIXME: (lp-1229884) this ioctl code should be taken from kernel headers
-#define SYNC_IOC_WAIT 0x40043E00
-#define SYNC_IOC_MERGE 0x444
-
 namespace mga = mir::graphics::android;
 
 mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, int fd)
@@ -48,21 +43,31 @@ void mga::SyncFence::wait()
     }
 }
 
-void mga::SyncFence::merge_with(mga::Fence&& fence)
+void mga::SyncFence::merge_with(mga::Fence const& fence)
 {
-    if(fence_fd < 0)
+    auto merge_fd = fence.copy_native_handle();
+    if (merge_fd < 0)
     {
-        fence_fd = fence.extract_native_handle(); 
+        return;
+    }
+
+    if (fence_fd < 0)
+    {
+        //our fence was invalid, adopt the other fence
+        fence_fd = merge_fd; 
     }
     else 
     {
-        auto new_fence_fd = ops->ioctl(fence_fd, SYNC_IOC_MERGE, nullptr);
-        close(fence_fd);
-        fence_fd = new_fence_fd;
+        //both fences were valid, must merge
+        sync_merge_data_t data { merge_fd, "mirfence", -1 };
+        ops->ioctl(fence_fd, SYNC_IOC_MERGE, &data);
+        ops->close(fence_fd);
+        ops->close(merge_fd);
+        fence_fd = data.fence;
     }
 }
 
-int mga::SyncFence::extract_native_handle()
+int mga::SyncFence::copy_native_handle() const
 {
-    return 8;
+    return ops->dup(fence_fd);
 }

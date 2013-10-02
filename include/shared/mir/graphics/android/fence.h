@@ -31,8 +31,9 @@ class Fence
 public:
     virtual ~Fence() = default;
     virtual void wait() = 0;
-    virtual void merge_with(Fence&& merge_fence) = 0;
-    virtual int extract_native_handle() = 0;
+    virtual void merge_with(Fence const& merge_fence) = 0;
+
+    virtual int copy_native_handle() const = 0;
 
 protected:
     Fence() = default;

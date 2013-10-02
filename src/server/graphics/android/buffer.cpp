@@ -108,12 +108,7 @@ std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
     return native_buffer; 
 }
 
-void mga::Buffer::raise_fence(mga::Fence&& fence)
-{
-    buffer_fence->merge_with(std::move(fence));
-}
-
 std::shared_ptr<mga::Fence> mga::Buffer::fence() const
 {
-    return nullptr;
+    return buffer_fence;
 }
