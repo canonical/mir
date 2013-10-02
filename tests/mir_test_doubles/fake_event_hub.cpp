@@ -43,7 +43,7 @@ using namespace android;
 
 namespace {
     // An arbitrary time value.
-    const nsecs_t ARBITRARY_TIME = 1234;
+    const nsecs_t arbitrary_time = 1234;
 } // anonymous namespace
 
 FakeEventHub::FakeEventHub()
@@ -544,19 +544,19 @@ void FakeEventHub::addDevice(int32_t deviceId, const std::string& name, uint32_t
     device.identifier.name = name;
     device_from_id.insert(std::pair<int32_t, FakeDevice>(deviceId, device));
 
-    synthesize_event(ARBITRARY_TIME, deviceId, EventHubInterface::DEVICE_ADDED, 0, 0);
+    synthesize_event(arbitrary_time, deviceId, EventHubInterface::DEVICE_ADDED, 0, 0);
 }
 
 void FakeEventHub::removeDevice(int32_t device_id)
 {
     device_from_id.erase(device_id);
 
-    synthesize_event(ARBITRARY_TIME, device_id, EventHubInterface::DEVICE_REMOVED, 0, 0);
+    synthesize_event(arbitrary_time, device_id, EventHubInterface::DEVICE_REMOVED, 0, 0);
 }
 
 void FakeEventHub::finishDeviceScan()
 {
-    synthesize_event(ARBITRARY_TIME, 0, EventHubInterface::FINISHED_DEVICE_SCAN, 0, 0);
+    synthesize_event(arbitrary_time, 0, EventHubInterface::FINISHED_DEVICE_SCAN, 0, 0);
 }
 
 void FakeEventHub::addConfigurationProperty(int32_t device_id, const std::string& key, const std::string& value)
