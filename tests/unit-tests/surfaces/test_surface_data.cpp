@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/surfaces/surface_data.h"
+#include "src/server/surfaces/surface_data.h"
 
 #include "mir/geometry/rectangle.h"
 
