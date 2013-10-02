@@ -101,7 +101,8 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-    mga::SyncFence fence(displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    mga::SyncFence fence(ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }
 

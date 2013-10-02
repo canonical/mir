@@ -20,6 +20,10 @@
 
 #include "mir/graphics/android/fence.h"
 
+#include <memory>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 namespace mir
 {
 namespace graphics
@@ -27,11 +31,37 @@ namespace graphics
 namespace android
 {
 
+class SyncFileOps
+{
+public:
+    virtual ~SyncFileOps() = default;
+    virtual int ioctl(int, int, void*) = 0;
+    virtual int dup(int) = 0;
+    virtual int close(int) = 0;
+};
+
+class RealSyncFileOps : public SyncFileOps
+{
+public:
+    int ioctl(int fd, int req, void* dat)
+    {
+        return ::ioctl(fd, req, dat);
+    }
+
+    int dup(int fd)
+    {
+        return ::dup(fd);
+    }
+    int close(int fd)
+    {
+        return ::close(fd);
+    }
+};
+
 class SyncFence : public Fence
 {
 public:
-    SyncFence();
-    SyncFence(int fd);
+    SyncFence(std::shared_ptr<SyncFileOps> const&, int fd);
     ~SyncFence() noexcept;
 
     void wait();

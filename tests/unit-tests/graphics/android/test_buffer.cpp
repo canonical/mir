@@ -102,8 +102,8 @@ TEST_F(AndroidGraphicBufferBasic, raise_fence_merges_with_existing)
     EXPECT_CALL(*mock_sync_fence, lvalue_merge_with(_))
         .Times(1);
     mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
-
-    mga::SyncFence fence;
+ 
+    mtd::MockFence fence;
     buffer.raise_fence(std::move(fence));
 }
 

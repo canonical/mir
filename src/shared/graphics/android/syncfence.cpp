@@ -18,21 +18,16 @@
 
 #include "mir/graphics/android/sync_fence.h"
 
-#include <unistd.h>
-#include <sys/ioctl.h>
 
 //FIXME: (lp-1229884) this ioctl code should be taken from kernel headers
 #define SYNC_IOC_WAIT 0x40043E00
+#define SYNC_IOC_MERGE 0x444
 
 namespace mga = mir::graphics::android;
 
-mga::SyncFence::SyncFence()
-    : fence_fd(-1)
-{
-}
-
-mga::SyncFence::SyncFence(int fd)
-   : fence_fd(fd)
+mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, int fd)
+   : fence_fd(fd),
+     ops(ops)
 {
 }
 
@@ -40,7 +35,7 @@ mga::SyncFence::~SyncFence() noexcept
 {
     if (fence_fd > 0)
     {
-        ::close(fence_fd);
+        ops->close(fence_fd);
     }
 }
 
@@ -49,7 +44,7 @@ void mga::SyncFence::wait()
     if (fence_fd > 0)
     {
         int timeout = -1;
-        ::ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
+        ops->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
     }
 }
 

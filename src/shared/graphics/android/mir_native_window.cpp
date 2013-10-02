@@ -85,7 +85,8 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto fence = std::make_shared<mga::SyncFence>();
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
     return self->queueBuffer(buffer, fence);
 }
 
@@ -93,7 +94,8 @@ int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto fence = std::make_shared<mga::SyncFence>(fence_fd);
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto fence = std::make_shared<mga::SyncFence>(ops, fence_fd);
     return self->queueBuffer(buffer, fence);
 
 }
