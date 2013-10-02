@@ -194,8 +194,28 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
     EXPECT_THROW({
-        device->apply_display_state(mga::DisplayState::DisplayOff);
+        device->mode(mir_power_mode_off);
     }, std::runtime_error);
+}
+
+TYPED_TEST(HWCCommon, test_hwc_suspend_standby_turn_off)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(3)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(3)
+        .WillOnce(Return(0));
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
+                                             this->mock_fbdev, this->mock_vsync);
+    device->mode(mir_power_mode_off);
+    device->mode(mir_power_mode_on);
+    device->mode(mir_power_mode_suspend);
+    device->mode(mir_power_mode_on);
+    device->mode(mir_power_mode_standby);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
@@ -217,7 +237,7 @@ TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
-    device->apply_display_state(mga::DisplayState::DisplayOff);
+    device->mode(mir_power_mode_off);
 }
 
 TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
@@ -238,7 +258,7 @@ TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
                                              this->mock_fbdev, this->mock_vsync);
-    device->apply_display_state(mga::DisplayState::DisplayOn);
+    device->mode(mir_power_mode_on);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)

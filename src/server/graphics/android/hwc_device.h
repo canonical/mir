@@ -43,7 +43,7 @@ public:
 
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
     
-    void apply_display_state(DisplayState state) = 0;
+    virtual void mode(MirPowerMode mode) = 0;
 private:
     HWCDevice(HWCDevice const&) = delete;
     HWCDevice& operator=(HWCDevice const&) = delete;

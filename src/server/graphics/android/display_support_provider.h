@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 
+#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 #include <memory>
@@ -32,12 +33,6 @@ class Buffer;
 namespace android
 {
 
-enum class DisplayState
-{
-    DisplayOn = 0,
-    DisplayOff = 1,
-};
-
 class DisplaySupportProvider
 {
 public:
@@ -50,7 +45,7 @@ public:
     //post immediately, or be deferred.
     virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual void sync_to_display(bool sync) = 0;
-    virtual void apply_display_state(DisplayState state) = 0;
+    virtual void mode(MirPowerMode mode) = 0;
 
 protected:
     DisplaySupportProvider() = default;

@@ -53,7 +53,7 @@ public:
     virtual void set_next_frontbuffer(std::shared_ptr<Buffer> const& buffer) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
     
-    void apply_display_state(DisplayState state);
+    virtual void mode(MirPowerMode mode);
 
     void notify_vsync();
 protected:
@@ -73,7 +73,7 @@ private:
 
     std::mutex blanked_mutex;
     std::condition_variable blanked_cond;
-    DisplayState current_state; 
+    MirPowerMode current_mode; 
 };
 
 }

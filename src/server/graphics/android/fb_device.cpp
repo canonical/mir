@@ -79,8 +79,8 @@ void mga::FBDevice::sync_to_display(bool sync)
     }
 }
 
-void mga::FBDevice::apply_display_state(DisplayState state)
+void mga::FBDevice::mode(MirPowerMode mode)
 {
     // TODO: Implement
-    (void) state;
+    (void) mode;
 }

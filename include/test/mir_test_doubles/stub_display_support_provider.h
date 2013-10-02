@@ -36,7 +36,7 @@ struct StubDisplaySupportProvider : public graphics::android::DisplaySupportProv
     unsigned int number_of_framebuffers_available() const { return 0; }
     void set_next_frontbuffer(std::shared_ptr<mir::graphics::Buffer> const&) {}
     void sync_to_display(bool) {}
-    void apply_display_state(graphics::android::DisplayState) {}
+    void mode(MirPowerMode) {}
 };
 
 }
