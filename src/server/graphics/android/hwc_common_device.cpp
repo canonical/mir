@@ -56,7 +56,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
-    if(auto err = turn_screen_on())
+    if (auto err = turn_screen_on())
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
@@ -68,7 +68,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
-    if(current_mode == mir_power_mode_on)
+    if (current_mode == mir_power_mode_on)
         turn_screen_off();
 }
 
@@ -111,7 +111,7 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
         err = turn_screen_off();
     }
 
-    if(err)
+    if (err)
     {
         std::string blanking_status_msg = "Could not " + 
             ((mode_request == mir_power_mode_off) ? std::string("blank") : std::string("unblank")) + " display";
@@ -135,14 +135,14 @@ std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
 
 int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
 {
-    if(auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
         return err;
     return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
 }
 
 int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
 {
-    if(auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
+    if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
         return err;
     return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
