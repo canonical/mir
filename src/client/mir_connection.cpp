@@ -63,7 +63,6 @@ private:
 
 }
 
-
 MirConnection::MirConnection() :
     channel(),
     server(0),
@@ -91,6 +90,10 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection() noexcept
 {
+    // We don't die while if are pending callbacks (as they touch this).
+    // But, if after 500ms we don't get a call, assume it won't happen.
+    connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
+
     std::lock_guard<std::mutex> lock(connection_guard);
     valid_connections.erase(this);
 
@@ -200,6 +203,7 @@ MirWaitHandle* MirConnection::release_surface(
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
+    bool safe_to_callback = true;
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -207,6 +211,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         {
             if (!connect_result.has_error())
             {
+                // We're handling an error scenario that means we're not sync'd
+                // with the client code - a callback isn't safe (or needed)
+                safe_to_callback = false;
                 set_error_message("Connect failed");
             }
         }
@@ -220,7 +227,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         display_configuration->set_configuration(connect_result.display_configuration());
     }
 
-    callback(this, context);
+    if (safe_to_callback) callback(this, context);
     connect_wait_handle.result_received();
 }
 
@@ -232,6 +239,7 @@ MirWaitHandle* MirConnection::connect(
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     connect_parameters.set_application_name(app_name);
+    connect_wait_handle.expect_result();
     server.connect(
         0,
         &connect_parameters,

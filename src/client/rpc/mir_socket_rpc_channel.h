@@ -93,6 +93,7 @@ private:
     size_t read_message_header();
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
+    void notify_disconnected();
 
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
