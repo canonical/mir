@@ -16,6 +16,7 @@ set(
   test_nested_mir.cpp
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
+  test_server_disconnect.cpp
 )
 
 list(APPEND SOURCES
