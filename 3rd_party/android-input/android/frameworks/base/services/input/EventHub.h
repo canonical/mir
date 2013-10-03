@@ -395,6 +395,7 @@ private:
 
     int32_t mNextDeviceId;
 
+    bool hasDeviceByPathLocked(String8 const& path);
     KeyedVector<int32_t, Device*> mDevices;
 
     Device *mOpeningDevices;
