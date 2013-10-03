@@ -28,6 +28,7 @@
 #include "bypass.h"
 #include <mutex>
 #include <cstdlib>
+#include <vector>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -64,7 +65,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<mc::Renderer> const& renderer,
     std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
-    : mc::BasicDisplayBufferCompositor{display_buffer},
+    : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
       overlay_renderer{overlay_renderer},
@@ -118,7 +119,17 @@ void mc::DefaultDisplayBufferCompositor::composite()
     }
 
     if (!bypassed)
-        mc::BasicDisplayBufferCompositor::composite();
+    {
+        // preserves buffers used in rendering until after post_update()
+        std::vector<std::shared_ptr<void>> saved_resources;
+        auto save_resource = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
+    
+        display_buffer.make_current();
+    
+        compose(display_buffer.view_area(), save_resource);
+    
+        display_buffer.post_update();
+    }
 }
 
 void mc::DefaultDisplayBufferCompositor::compose(

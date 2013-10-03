@@ -82,34 +82,45 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     init();
 }
 
+void mclr::MirSocketRpcChannel::notify_disconnected()
+{
+    // TODO enable configuring the kill mechanism
+    io_service.stop();
+    raise (SIGTERM);
+    pending_calls.force_completion();
+}
+
 void mclr::MirSocketRpcChannel::init()
 {
-    auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
+    io_service_thread = std::thread([&]
+        {
+            // Our IO threads must not receive any signals
+            sigset_t all_signals;
+            sigfillset(&all_signals);
 
-    // Our IO threads must not recieve any signals
-    sigset_t all_signals;
-    sigfillset(&all_signals);
-    sigset_t old_mask;
-    int error;
-    if ((error = pthread_sigmask(SIG_BLOCK, &all_signals, &old_mask)))
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
+            if (auto error = pthread_sigmask(SIG_BLOCK, &all_signals, NULL))
+                BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
 
-    io_service_thread = std::thread(run_io_service);
+            boost::asio::async_read(
+                socket,
+                boost::asio::buffer(header_bytes),
+                boost::asio::transfer_exactly(sizeof header_bytes),
+                boost::bind(&MirSocketRpcChannel::on_header_read, this,
+                    boost::asio::placeholders::error));
 
-    // Restore previous signals.
-    if ((error = pthread_sigmask(SIG_SETMASK, &old_mask, NULL)))
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to restore signal mask")) << boost::errinfo_errno(error));
+            try
+            {
+                io_service.run();
+            }
+            catch (std::exception const& x)
+            {
+                rpc_report->connection_failure(x);
 
-    boost::asio::async_read(
-        socket,
-        boost::asio::buffer(header_bytes),
-        boost::asio::transfer_exactly(sizeof header_bytes),
-        boost::bind(&MirSocketRpcChannel::on_header_read, this,
-            boost::asio::placeholders::error));
+                notify_disconnected();
+            }
+        });
 }
 
 mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
@@ -268,6 +279,7 @@ void mclr::MirSocketRpcChannel::send_message(
     body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
 
     boost::system::error_code error;
+
     boost::asio::write(
         socket,
         boost::asio::buffer(send_buffer),
@@ -276,8 +288,7 @@ void mclr::MirSocketRpcChannel::send_message(
     if (error)
     {
         rpc_report->invocation_failed(invocation, error);
-        
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server: " + error.message()));
     }
     else
         rpc_report->invocation_succeeded(invocation);
@@ -292,6 +303,7 @@ void mclr::MirSocketRpcChannel::on_header_read(const boost::system::error_code& 
         if (!pending_calls.empty() || error != boost::asio::error::eof)
         {
             rpc_report->header_receipt_failed(error);
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message header: " + error.message()));
         }
 
         return;
@@ -322,6 +334,7 @@ void mclr::MirSocketRpcChannel::read_message()
     catch (std::exception const& x)
     {
         rpc_report->result_receipt_failed(x);
+        throw;
     }
 
     try
@@ -339,6 +352,7 @@ void mclr::MirSocketRpcChannel::read_message()
     catch (std::exception const& x)
     {
         rpc_report->result_processing_failed(result, x);
+        // Eat this exception as it doesn't affect rpc
     }
 }
 
@@ -406,7 +420,7 @@ mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const s
     boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
     if (error)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message body: " + error.message()));
     }
 
     std::istream in(&message);

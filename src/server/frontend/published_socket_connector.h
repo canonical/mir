@@ -60,11 +60,11 @@ public:
 protected:
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
     boost::asio::io_service mutable io_service;
+    std::shared_ptr<ConnectorReport> const report;
 
 private:
     std::vector<std::thread> io_service_threads;
     std::function<void()> const force_requests_to_complete;
-    std::shared_ptr<ConnectorReport> const report;
     std::shared_ptr<SessionCreator> const session_creator;
 };
 

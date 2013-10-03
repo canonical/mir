@@ -22,6 +22,7 @@
 
 #include "mir_protobuf_wire.pb.h"
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <sstream>
 
 namespace ml = mir::logging;
@@ -154,4 +155,12 @@ void mcll::RpcReport::file_descriptors_received(
         ss << f << " ";
 
     logger->log<ml::Logger::debug>(ss.str(), component);
+}
+
+void mcll::RpcReport::connection_failure(std::exception const& x)
+{
+    std::stringstream ss;
+    ss << "Connection failure: " << boost::diagnostic_information(x) << std::endl;
+
+    logger->log<ml::Logger::warning>(ss.str(), component);
 }
