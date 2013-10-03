@@ -45,14 +45,17 @@ struct FBDevice : public ::testing::Test
 
         dummy_buffer = std::make_shared<ANativeWindowBuffer>();
         dummy_buffer->handle = (buffer_handle_t) 0x4893;
+        native_buffer = std::make_shared<MirNativeBuffer>();
+        native_buffer->buffer = dummy_buffer.get();
         ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(dummy_buffer));
+            .WillByDefault(Return(native_buffer));
     }
 
     unsigned int width, height, format, fbnum;
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
+    std::shared_ptr<MirNativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
 };
 

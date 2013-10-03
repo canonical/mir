@@ -56,6 +56,8 @@ protected:
         anwb->stride = (int) stride.as_uint32_t();
         anwb->handle  = native_buffer_handle.get();
 
+        native_buffer.buffer = anwb.get();
+        native_buffer.fence = -1;
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -64,6 +66,7 @@ protected:
             .WillByDefault(testing::Return(stride));
     }
 
+    MirNativeBuffer native_buffer;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> anwb;
     std::shared_ptr<native_handle_t> native_buffer_handle;
@@ -79,7 +82,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     geom::Stride dummy_stride(4390);
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .WillOnce(testing::Return(anwb));
+        .WillOnce(testing::Return(native_buffer));
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(testing::Return(dummy_stride));
 

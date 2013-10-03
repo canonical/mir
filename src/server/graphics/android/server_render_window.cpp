@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"
@@ -44,21 +45,27 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
 {
 }
 
-ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
+MirNativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
-    auto handle = buffer->native_buffer_handle().get();
-    resource_cache->store_buffer(buffer, handle);
-    return handle;
+    auto handle = buffer->native_buffer_handle();
+    resource_cache->store_buffer(buffer, handle->buffer);
+    return handle.get();
 }
 
+
+// TODO: VERY MESSY DONT LAND THIS without fd test
 //sync object could be passed to hwc. we don't need to that yet though
-void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<Fence> const& fence)
+void mga::ServerRenderWindow::driver_returns_buffer(MirNativeBuffer& buffer)
 {
-    fence->wait();
-    auto buffer = resource_cache->retrieve_buffer(returned_handle); 
-    poster->set_next_frontbuffer(buffer);
-    swapper->compositor_release(buffer);
+    //TODO: pass fence to HWC instead of waiting here
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    mga::SyncFence sync_fence(ops, buffer.fence_fd);
+    sync_fence.wait();
+
+    auto buffer_resource = resource_cache->retrieve_buffer(buffer.buffer); 
+    poster->set_next_frontbuffer(buffer_resource);
+    swapper->compositor_release(buffer_resource);
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)

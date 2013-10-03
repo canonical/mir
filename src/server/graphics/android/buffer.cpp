@@ -18,7 +18,7 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
-#include "mir/graphics/android/fence.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "android_format_conversion-inl.h"
 #include "buffer.h"
 
@@ -104,32 +104,20 @@ bool mga::Buffer::can_bypass() const
     return false;
 }
 
-
-
-std::shared_ptr<mga::Fence> mga::Buffer::guard_contents()
+std::shared_ptr<MirNativeBuffer> mga::Buffer::native_buffer_handle() const
 {
     std::unique_lock<std::mutex> lk(content_lock);
     while (!content_usable)
         content_cv.wait(lk);
     content_usable = false;
-
-    return std::shared_ptr<mga::Fence>(&buffer_fence, [this](mga::Fence*)
+   
+    return std::shared_ptr<MirNativeBuffer>(
+        new MirNativeBuffer{native_buffer.get(), buffer_fence->copy_native_handle()},
+        [this](MirNativeBuffer* buffer)
         {
-            unguard_contents();
-        }
+            auto ops = std::make_shared<mga::RealSyncFileOps>();
+            mga::SyncFence sync_fence(ops, buffer->fence_fd);
+            buffer_fence->merge_with(sync_fence);
+            delete buffer;
+        });
 }
-
-std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
-{
-    while (content_usable)
-        
-    return native_buffer; 
-}
-
-void mga::Buffer::unguard_contents()
-{
-    std::unique_lock<std::mutex> lk(content_lock);
-    content_usable = true;
-    content_cv.notify_all();
-}
- 

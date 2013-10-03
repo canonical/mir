@@ -23,14 +23,14 @@
 #include "mir/graphics/buffer_basic.h"
 #include "buffer_usage.h"
 
+#include <mutex>
+#include <condition_variable>
 #include <map>
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-
-typedef int NativeFence;
 
 namespace mir
 {
@@ -41,17 +41,7 @@ namespace android
 {
 
 class Fence;
-class FencedBuffer: public BufferBasic
-{
-public:
-    virtual ~FencedBuffer() = default;
-    /* protect color buffer contents. upon release of the fence, the
-       contents will be available for use. You may merge in new fences
-       to Fence to force further usage of the contents to wait for completion*/
-    virtual std::shared_ptr<Fence> guard_contents() = 0;
-};
-
-class Buffer: public FencedBuffer
+class Buffer: public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
@@ -65,15 +55,12 @@ public:
     void bind_to_texture();
     bool can_bypass() const override;
 
-    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
-    std::shared_ptr<Fence> guard_contents();
+    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
 private:
-    void unguard_contents();
-
-    std::mutex content_lock;
-    std::condition_variable content_cv;
-    bool content_usable;
+    std::mutex mutable content_lock;
+    std::condition_variable mutable content_cv;
+    bool mutable content_usable;
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
