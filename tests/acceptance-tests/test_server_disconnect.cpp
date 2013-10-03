@@ -52,17 +52,20 @@ struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
 
         auto connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
         mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
-
         auto surface = mir_connection_create_surface_sync(connection, &params);
 
+        bool signalled = false;
+
         EXPECT_CALL(mock_event_handler, handle(mir_lifecycle_connection_lost)).Times(1).
-            WillOnce(testing::InvokeWithoutArgs([] {raise(SIGTERM); }));
+            WillOnce(testing::InvokeWithoutArgs([&] { signalled = true; }));
 
         sync.signal_ready();
 
-        auto time_limit = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(100);
+        using clock = std::chrono::high_resolution_clock;
 
-        while (std::chrono::high_resolution_clock::now() < time_limit)
+        auto time_limit = clock::now() + std::chrono::seconds(2);
+
+        while (!signalled && clock::now() < time_limit)
         {
             mir_surface_swap_buffers_sync(surface);
         }
@@ -80,12 +83,9 @@ TEST_F(ServerDisconnect, client_detects_server_shutdown)
     MyTestingClientConfiguration client_config;
     launch_client_process(client_config);
 
-    run_in_test_process([&]
+    run_in_test_process([this, &client_config]
     {
         client_config.sync.wait_for_signal_ready_for();
         shutdown_server_process();
     });
 }
-
-
-
