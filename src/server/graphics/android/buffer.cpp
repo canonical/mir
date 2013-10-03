@@ -70,6 +70,8 @@ geom::PixelFormat mga::Buffer::pixel_format() const
 
 void mga::Buffer::bind_to_texture()
 {
+    buffer_fence->wait();
+
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot bind buffer to texture without EGL context\n"));
