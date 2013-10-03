@@ -4,6 +4,7 @@
 set -e
 
 BUILD_DIR=build-android-arm
+NUM_JOBS=$(( `grep -c ^processor /proc/cpuinfo` + 1 ))
 
 if [ "$MIR_NDK_PATH" = "" ]; then
     export MIR_NDK_PATH=`pwd`/partial-armhf-chroot
@@ -32,6 +33,6 @@ pushd ${BUILD_DIR} > /dev/null
       -DMIR_PLATFORM=android \
       .. 
 
-    cmake --build .
+    cmake --build . -- -j${NUM_JOBS}
 
 popd ${BUILD_DIR} > /dev/null 

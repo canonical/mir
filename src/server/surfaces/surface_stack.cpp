@@ -22,7 +22,7 @@
 #include "mir/compositor/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
-#include "mir/surfaces/surface_state.h"
+#include "surface_state.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_factory.h"
 #include "mir/surfaces/buffer_stream.h"

@@ -19,7 +19,8 @@
 #ifndef MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 #define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 
-#include "mir/compositor/basic_display_buffer_compositor.h"
+#include "mir/compositor/display_buffer_compositor.h"
+#include <memory>
 
 namespace mir
 {
@@ -34,7 +35,7 @@ class Scene;
 class Renderer;
 class OverlayRenderer;
 
-class DefaultDisplayBufferCompositor : public BasicDisplayBufferCompositor
+class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
 {
 public:
     DefaultDisplayBufferCompositor(
@@ -45,11 +46,9 @@ public:
 
     void composite() override;
 
-    void compose(
-        mir::geometry::Rectangle const& view_area,
-        std::function<void(std::shared_ptr<void> const&)> save_resource);
-
 private:
+    graphics::DisplayBuffer& display_buffer;
+
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
