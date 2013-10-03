@@ -18,10 +18,10 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_framebuffer_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_simple_swapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_device.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layerlist.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layerlist.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_interpreter_buffer_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_external_refcount.cpp
 )
