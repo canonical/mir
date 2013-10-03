@@ -42,7 +42,7 @@ public:
     void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
     void sync_to_display(bool sync);
     
-    void blank_or_unblank_screen(bool blank);
+    virtual void mode(MirPowerMode mode);
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };

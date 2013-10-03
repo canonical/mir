@@ -97,9 +97,10 @@ MirWaitHandle* mir_default_connect(
 
         mcl::DefaultConnectionConfiguration conf{sock};
 
-        MirConnection* connection = new MirConnection(conf);
-
-        return connection->connect(name, callback, context);
+        std::unique_ptr<MirConnection> connection{new MirConnection(conf)};
+        auto const result = connection->connect(name, callback, context);
+        connection.release();
+        return result;
     }
     catch (std::exception const& x)
     {

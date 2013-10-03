@@ -82,6 +82,14 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     init();
 }
 
+void mclr::MirSocketRpcChannel::notify_disconnected()
+{
+    // TODO enable configuring the kill mechanism
+    io_service.stop();
+    raise (SIGTERM);
+    pending_calls.force_completion();
+}
+
 void mclr::MirSocketRpcChannel::init()
 {
     io_service_thread = std::thread([&]
@@ -110,10 +118,7 @@ void mclr::MirSocketRpcChannel::init()
             {
                 rpc_report->connection_failure(x);
 
-                // TODO enable configuring the kill mechanism
-                io_service.stop();
-                raise(SIGTERM);
-                pending_calls.force_completion();
+                notify_disconnected();
             }
         });
 }
