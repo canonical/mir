@@ -345,8 +345,13 @@ void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * g
 }
 
 MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_callback callback, void * context)
+try
 {
     return surface->next_buffer(callback, context);
+}
+catch (std::exception const&)
+{
+    return 0;
 }
 
 void mir_surface_swap_buffers_sync(MirSurface *surface)

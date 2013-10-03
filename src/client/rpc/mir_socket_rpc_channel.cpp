@@ -30,18 +30,11 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
-
 #include <boost/bind.hpp>
-#include <boost/throw_exception.hpp>
 
-#include <cstring>
-#include <sstream>
 #include <stdexcept>
 
-#include <pthread.h>
 #include <signal.h>
-
-#include <stdio.h>
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
@@ -86,7 +79,7 @@ void mclr::MirSocketRpcChannel::notify_disconnected()
 {
     // TODO enable configuring the kill mechanism
     io_service.stop();
-    raise (SIGTERM);
+    lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
     pending_calls.force_completion();
 }
 

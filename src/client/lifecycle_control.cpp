@@ -18,12 +18,23 @@
 
 #include "lifecycle_control.h"
 
-#include <memory>
+#include <signal.h>
 
 namespace mcl = mir::client;
 
+namespace
+{
+void default_lifecycle_event_handler(MirLifecycleState transition)
+{
+    if (transition == mir_lifecycle_connection_lost)
+    {
+        raise(SIGTERM);
+    }
+}
+}
+
 mcl::LifecycleControl::LifecycleControl()
-    : handle_lifecycle_event([](MirLifecycleState){})
+    : handle_lifecycle_event(default_lifecycle_event_handler)
 {
 }
 
