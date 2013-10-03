@@ -76,7 +76,8 @@ typedef enum MirSurfaceFocusState
 typedef enum MirLifecycleState
 {
     mir_lifecycle_state_will_suspend,
-    mir_lifecycle_state_resumed
+    mir_lifecycle_state_resumed,
+    mir_lifecycle_connection_lost
 } MirLifecycleState;
 
 typedef enum MirPowerMode
