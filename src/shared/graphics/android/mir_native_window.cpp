@@ -85,18 +85,14 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
-    return self->queueBuffer(buffer, fence);
+    return self->queueBuffer(buffer, -1);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, fence_fd);
-    return self->queueBuffer(buffer, fence);
+    return self->queueBuffer(buffer, fence_fd);
 }
 
 int setSwapInterval_static (struct ANativeWindow* window, int interval)
@@ -163,13 +159,15 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
-    *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+    auto buffer = driver_interpreter->driver_requests_buffer();
+    *buffer_to_driver =  buffer->buffer;
     return 0;
 }
 
-int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::Fence> const& fence)
+int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
 {
-    driver_interpreter->driver_returns_buffer(buffer, fence);
+    MirNativeBuffer native_buffer{buffer, fence};
+    driver_interpreter->driver_returns_buffer(native_buffer);
     return 0;
 }
 

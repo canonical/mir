@@ -46,7 +46,13 @@ typedef struct MirBufferPackage
 
 #ifdef ANDROID
 struct ANativeWindowBuffer;
-typedef struct ANativeWindowBuffer MirNativeBuffer;
+typedef struct MirAndroidNativeBuffer
+{
+    ANativeWindowBuffer *buffer;
+    int fence_fd;
+} MirAndroidNativeBuffer;
+
+typedef struct MirAndroidNativeBuffer MirNativeBuffer;
 #else
 typedef struct MirBufferPackage MirNativeBuffer; 
 #endif

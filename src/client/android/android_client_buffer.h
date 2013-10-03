@@ -46,7 +46,7 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
+    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;

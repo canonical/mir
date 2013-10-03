@@ -45,8 +45,10 @@ class FencedBuffer: public BufferBasic
 {
 public:
     virtual ~FencedBuffer() = default;
-    virtual void raise_fence(Fence&& fence) = 0;
-    virtual std::shared_ptr<Fence> fence() const = 0;
+    /* protect color buffer contents. upon release of the fence, the
+       contents will be available for use. You may merge in new fences
+       to Fence to force further usage of the contents to wait for completion*/
+    virtual std::shared_ptr<Fence> guard_contents() = 0;
 };
 
 class Buffer: public FencedBuffer
@@ -62,12 +64,17 @@ public:
     geometry::PixelFormat pixel_format() const;
     void bind_to_texture();
     bool can_bypass() const override;
-    virtual void raise_fence(Fence&& fence);
 
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
-    std::shared_ptr<Fence> fence() const;
+    std::shared_ptr<Fence> guard_contents();
 
 private:
+    void unguard_contents();
+
+    std::mutex content_lock;
+    std::condition_variable content_cv;
+    bool content_usable;
+
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
     std::shared_ptr<ANativeWindowBuffer> native_buffer;

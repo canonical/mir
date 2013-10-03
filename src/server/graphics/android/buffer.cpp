@@ -35,7 +35,8 @@ namespace geom=mir::geometry;
 mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
                     std::shared_ptr<Fence> const& fence,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
-    : native_buffer(buffer_handle),
+    : content_usable(true),
+      native_buffer(buffer_handle),
       buffer_fence(fence),
       egl_extensions(extensions)
 {
@@ -103,37 +104,32 @@ bool mga::Buffer::can_bypass() const
     return false;
 }
 
-std::unique_ptr<mga::Fence> secure_buffer_usage_rights()
+
+
+std::shared_ptr<mga::Fence> mga::Buffer::guard_contents()
 {
-    lk
-    while(!rights_available)
-        cv.wait();
-    rights_secured = false;
-    return std::unique_ptr(&fence,
-             [this]()
-             {
-                release_usage_rights();
-             };
+    std::unique_lock<std::mutex> lk(content_lock);
+    while (!content_usable)
+        content_cv.wait(lk);
+    content_usable = false;
+
+    return std::shared_ptr<mga::Fence>(&buffer_fence, [this](mga::Fence*)
+        {
+            unguard_contents();
+        }
 }
- 
+
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
+    while (content_usable)
+        
     return native_buffer; 
 }
 
-void release_usage_rights(fence)
+void mga::Buffer::unguard_contents()
 {
-    fence->merge()
+    std::unique_lock<std::mutex> lk(content_lock);
+    content_usable = true;
+    content_cv.notify_all();
 }
-
-int mga::Buffer::native_fence() const
-{
-    return buffer_fence;
-}
-
-void mga::Buffer::raise_fence(mga::Fence&& fence)
-{
-    buffer_fence->merge_with(std::move(fence));
-    native_buffer->
-}
-
+ 

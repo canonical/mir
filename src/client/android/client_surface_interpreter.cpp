@@ -17,6 +17,7 @@
  */
 
 #include "client_surface_interpreter.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "../client_buffer.h"
 #include <stdexcept>
 
@@ -33,16 +34,21 @@ MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
-    buffer_to_driver->format = driver_pixel_format;
+    buffer_to_driver->buffer->format = driver_pixel_format;
 
     return buffer_to_driver.get();
 }
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<mga::Fence> const& sync_fence)
+
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer& buffer)
 {
-    sync_fence->wait();
+    //TODO: pass fence to server instead of waiting here
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    mga::SyncFence sync_fence(ops, buffer.fence_fd);
+    sync_fence.wait();
+
     mir_wait_for(surface.next_buffer(empty, NULL));
 }
 

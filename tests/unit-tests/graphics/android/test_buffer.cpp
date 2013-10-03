@@ -81,9 +81,20 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
 TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_when_asked)
 {
     using namespace testing;
+    int fake_fence_fd = 948;
+
+    EXPECT_CALL(*mock_sync_fence, merge_with(_))
+        .Times(1);
 
     mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
-    EXPECT_EQ(mock_buffer_handle, buffer.native_buffer_handle());
+    auto native_resource = buffer.native_buffer_handle();
+
+    auto native_buffer = native_resource->buffer;
+    auto native_fence  = native_resource->fence;
+    EXPECT_EQ(mock_buffer_handle.get(), native_resource->buffer);
+    EXPECT_EQ(mock_sync_fence.get(), native_resource->fence);
+
+    native_resource->fence = fake_fence_fd;
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
@@ -106,7 +117,6 @@ TEST_F(AndroidGraphicBufferBasic, guard_contents)
     mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
     {
         auto fence = buffer.guard_contents();
-        fence->merge_with(second_fence();
     }
 
     {
