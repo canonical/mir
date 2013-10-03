@@ -35,7 +35,6 @@ public:
 
     void hide() {}
     void show() {}
-    void destroy() {}
     void force_requests_to_complete() {}
 
     geometry::Size size() const
