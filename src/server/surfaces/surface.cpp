@@ -19,7 +19,7 @@
  */
 
 #include "mir/surfaces/surface.h"
-#include "mir/surfaces/surface_state.h"
+#include "surface_state.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
