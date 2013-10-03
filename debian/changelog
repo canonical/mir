@@ -1,4 +1,4 @@
-mir (0.0.12-0ubuntu2) UNRELEASED; urgency=low
+mir (0.0.13-0ubuntu2) UNRELEASED; urgency=low
 
   [ kg ]
   * bump version for ABI break (LP: #1229212)
