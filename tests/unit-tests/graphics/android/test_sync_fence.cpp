@@ -19,6 +19,8 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "mir_test_doubles/mock_fence.h"
 
+#include <android/linux/sync.h>
+#include <sys/ioctl.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <memory>
@@ -89,7 +91,7 @@ struct IoctlSetter
     }
     int merge_setter(int, int, void* data)
     {
-        auto b = static_cast<sync_merge_data_t*>(data);
+        auto b = static_cast<struct sync_merge_data*>(data);
         b->fence = fd;
         return 0;
     }
@@ -103,7 +105,7 @@ TEST_F(SyncSwTest, sync_merge_with_valid_fd)
     int out_fd = 88;
     IoctlSetter setter(out_fd);
 
-    sync_merge_data_t expected_data_in { dummy_fd2, "name", 0 };
+    struct sync_merge_data expected_data_in { dummy_fd2, "name", 0 };
 
     EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_MERGE, MergeMatches(expected_data_in)))
         .Times(1)

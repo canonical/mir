@@ -20,9 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 
 #include "mir_toolkit/mir_native_buffer.h"
-#include <system/window.h>
-#include <memory>
-
 
 namespace mir
 {

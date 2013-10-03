@@ -19,19 +19,7 @@
 #define MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
 
 #include "mir/graphics/android/fence.h"
-
 #include <memory>
-#include <sys/ioctl.h>
-#include <unistd.h>
-
-//FIXME: (lp-1229884) this ioctl code should be taken from kernel headers
-#define SYNC_IOC_WAIT 0x40043E00
-#define SYNC_IOC_MERGE 0x444
-typedef struct sync_merge_data_t {
- int32_t fd2;
- char name[32];
- int32_t fence;
-} sync_merge_data_t;
 
 namespace mir
 {
@@ -52,19 +40,9 @@ public:
 class RealSyncFileOps : public SyncFileOps
 {
 public:
-    int ioctl(int fd, int req, void* dat)
-    {
-        return ::ioctl(fd, req, dat);
-    }
-
-    int dup(int fd)
-    {
-        return ::dup(fd);
-    }
-    int close(int fd)
-    {
-        return ::close(fd);
-    }
+    int ioctl(int fd, int req, void* dat);
+    int dup(int fd);
+    int close(int fd);
 };
 
 class SyncFence : public Fence

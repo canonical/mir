@@ -81,14 +81,6 @@ geom::PixelFormat mcla::AndroidClientBuffer::pixel_format() const
 
 std::shared_ptr<MirNativeBuffer> mcla::AndroidClientBuffer::native_buffer_handle() const
 {
-    
     return std::make_shared<MirNativeBuffer>(
         MirNativeBuffer{native_window_buffer.get(), -1});
-    //    native_window_buffer.get(),
-#if 0
-{
-         native_window_buffer.get(),
-         -1 //todo: support fences on client side. for now just set as usable
-        }); 
-#endif
 }

@@ -18,6 +18,10 @@
 
 #include "mir/graphics/android/sync_fence.h"
 
+#include <android/linux/sync.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 namespace mga = mir::graphics::android;
 
 mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, int fd)
@@ -59,7 +63,7 @@ void mga::SyncFence::merge_with(mga::Fence const& fence)
     else 
     {
         //both fences were valid, must merge
-        sync_merge_data_t data { merge_fd, "mirfence", -1 };
+        struct sync_merge_data data { merge_fd, "mirfence", -1 };
         ops->ioctl(fence_fd, SYNC_IOC_MERGE, &data);
         ops->close(fence_fd);
         ops->close(merge_fd);
@@ -70,4 +74,19 @@ void mga::SyncFence::merge_with(mga::Fence const& fence)
 int mga::SyncFence::copy_native_handle() const
 {
     return ops->dup(fence_fd);
+}
+
+int mga::RealSyncFileOps::ioctl(int fd, int req, void* dat)
+{
+    return ::ioctl(fd, req, dat);
+}
+
+int mga::RealSyncFileOps::dup(int fd)
+{
+    return ::dup(fd);
+}
+
+int mga::RealSyncFileOps::close(int fd)
+{
+    return ::close(fd);
 }

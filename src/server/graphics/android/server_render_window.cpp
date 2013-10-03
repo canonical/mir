@@ -26,6 +26,7 @@
 #include "android_format_conversion-inl.h"
 #include "interpreter_resource_cache.h"
 
+#include <system/window.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
