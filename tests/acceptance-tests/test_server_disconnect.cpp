@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -32,33 +33,45 @@ namespace
 struct MockEventHandler
 {
     MOCK_METHOD1(handle, void(MirLifecycleState transition));
-};
 
-void my_event_handler(MirConnection*, MirLifecycleState transition, void*);
+    static void handle(MirConnection*, MirLifecycleState transition, void* event_handler)
+    {
+        static_cast<MockEventHandler*>(event_handler)->handle(transition);
+    }
+};
 
 struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
 {
     void exec() override
     {
+        static MirSurfaceParameters const params =
+            { __PRETTY_FUNCTION__, 33, 45, mir_pixel_format_abgr_8888,
+              mir_buffer_usage_hardware, mir_display_output_id_invalid };
+
         MockEventHandler mock_event_handler;
 
         auto connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
-        mir_connection_set_lifecycle_event_callback(connection, &my_event_handler, &mock_event_handler);
+        mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
 
-        EXPECT_CALL(mock_event_handler, handle(mir_lifecycle_connection_lost)).Times(1);
+        auto surface = mir_connection_create_surface_sync(connection, &params);
+
+        EXPECT_CALL(mock_event_handler, handle(mir_lifecycle_connection_lost)).Times(1).
+            WillOnce(testing::InvokeWithoutArgs([] {raise(SIGTERM); }));
+
+        sync.signal_ready();
+
+        auto time_limit = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(100);
+
+        while (std::chrono::high_resolution_clock::now() < time_limit)
+        {
+            mir_surface_swap_buffers_sync(surface);
+        }
     }
+
+    MyTestingClientConfiguration(mtf::CrossProcessSync& sync) : sync(sync) {}
+private:
+    mtf::CrossProcessSync& sync;
 };
-
-
-void my_event_handler(MirConnection*, MirLifecycleState transition, void* event_handler)
-{
-    static_cast<MockEventHandler*>(event_handler)->handle(transition);
-
-    if (transition == mir_lifecycle_connection_lost)
-    {
-        raise(SIGTERM);
-    }
-}
 }
 
 TEST_F(ServerDisconnect, client_detects_server_shutdown)
@@ -66,6 +79,15 @@ TEST_F(ServerDisconnect, client_detects_server_shutdown)
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
+    mtf::CrossProcessSync sync;
+    MyTestingClientConfiguration client_config{sync};
+    launch_client_process(client_config);
+
+    run_in_test_process([&]
+    {
+        sync.wait_for_signal_ready_for();
+        shutdown_server_process();
+    });
 }
 
 
