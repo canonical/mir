@@ -45,6 +45,7 @@ class FencedBuffer: public BufferBasic
 {
 public:
     virtual ~FencedBuffer() = default;
+    virtual void raise_fence(Fence&& fence) = 0;
     virtual std::shared_ptr<Fence> fence() const = 0;
 };
 
@@ -61,6 +62,7 @@ public:
     geometry::PixelFormat pixel_format() const;
     void bind_to_texture();
     bool can_bypass() const override;
+    virtual void raise_fence(Fence&& fence);
 
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
     std::shared_ptr<Fence> fence() const;

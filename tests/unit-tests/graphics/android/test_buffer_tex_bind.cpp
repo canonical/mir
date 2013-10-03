@@ -343,3 +343,13 @@ TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
         .WillOnce(Return((second_fake_egl_image)));
     buffer.bind_to_texture();
 }
+
+TEST_F(AndroidGraphicBufferBasic, bind_to_texture_waits_on_fence)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_sync_fence, wait())
+        .Times(1);
+
+    mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
+    buffer.bind_to_texture();
+}

@@ -102,13 +102,38 @@ bool mga::Buffer::can_bypass() const
 {
     return false;
 }
+
+std::unique_ptr<mga::Fence> secure_buffer_usage_rights()
+{
+    lk
+    while(!rights_available)
+        cv.wait();
+    rights_secured = false;
+    return std::unique_ptr(&fence,
+             [this]()
+             {
+                release_usage_rights();
+             };
+}
  
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
     return native_buffer; 
 }
 
-std::shared_ptr<mga::Fence> mga::Buffer::fence() const
+void release_usage_rights(fence)
+{
+    fence->merge()
+}
+
+int mga::Buffer::native_fence() const
 {
     return buffer_fence;
 }
+
+void mga::Buffer::raise_fence(mga::Fence&& fence)
+{
+    buffer_fence->merge_with(std::move(fence));
+    native_buffer->
+}
+
