@@ -58,165 +58,74 @@ msh::Surface::Surface(
 
 msh::Surface::~Surface() noexcept
 {
-    if (surface.lock())
-    {
-        destroy();
-    }
+    builder->destroy_surface(surface);
 }
 
 void msh::Surface::hide()
 {
-    if (auto const& s = surface.lock())
-    {
-        s->set_hidden(true);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    surface->set_hidden(true);
 }
 
 void msh::Surface::show()
 {
-    if (auto const& s = surface.lock())
-    {
-        s->set_hidden(false);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
-void msh::Surface::destroy()
-{
-    builder->destroy_surface(surface);
+    surface->set_hidden(false);
 }
 
 void msh::Surface::force_requests_to_complete()
 {
-    if (auto const& s = surface.lock())
-    {
-        s->force_requests_to_complete();
-    }
+    surface->force_requests_to_complete();
 }
 
 mir::geometry::Size msh::Surface::size() const
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->size();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->size();
 }
 
 void msh::Surface::move_to(geometry::Point const& p)
 {
-    if (auto const& s = surface.lock())
-    {
-        s->move_to(p);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    surface->move_to(p);
 }
 
 mir::geometry::Point msh::Surface::top_left() const
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->top_left();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->top_left();
 }
 
 std::string msh::Surface::name() const
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->name();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->name();
 }
 
 mir::geometry::PixelFormat msh::Surface::pixel_format() const
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->pixel_format();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->pixel_format();
 }
 
 std::shared_ptr<mg::Buffer> msh::Surface::advance_client_buffer()
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->advance_client_buffer();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->advance_client_buffer();
 }
 
 void msh::Surface::allow_framedropping(bool allow)
 {
-    if (auto const& s = surface.lock())
-    {
-        s->allow_framedropping(allow);
-    }
+    surface->allow_framedropping(allow);
 }
  
 void msh::Surface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
-    if (auto const& s = surface.lock())
-    {
-        auto buf = s->snapshot_buffer();
-        exec(*buf);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    auto buf = surface->snapshot_buffer();
+    exec(*buf);
 }
 
 bool msh::Surface::supports_input() const
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->supports_input();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->supports_input();
 }
 
 int msh::Surface::client_input_fd() const
 {
-    if (auto const& s = surface.lock())
-    {
-        return s->client_input_fd();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return surface->client_input_fd();
 }
 
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
@@ -319,33 +228,15 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 
 void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
-    auto s = surface.lock();
-    if (s)
-        targeter->focus_changed(s->input_channel());
-    else
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    targeter->focus_changed(surface->input_channel());
 }
 
 void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
 {
-    if (auto const& s = surface.lock())
-    {
-        s->set_input_region(region);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    surface->set_input_region(region);
 }
 
 void msh::Surface::raise(std::shared_ptr<msh::SurfaceController> const& controller)
 {
-    if (auto const& s = surface.lock())
-    {
-        controller->raise(s);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    controller->raise(surface);
 }

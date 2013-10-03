@@ -191,195 +191,18 @@ TEST_F(ShellSurface, destroy)
     EXPECT_CALL(surface_builder, create_surface(nullptr, _)).Times(AnyNumber());
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
+    {
+        msh::Surface test(
+                          nullptr,
+                          mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
+                          msh::a_surface(), stub_id, stub_sender);
+        
+        Mock::VerifyAndClearExpectations(&test);
+        EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
+        Mock::VerifyAndClearExpectations(&test);
+    }
 
-    Mock::VerifyAndClearExpectations(&test);
-    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
-
-    // Check destroy_surface is called immediately
-    test.destroy();
-
-    Mock::VerifyAndClearExpectations(&test);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
-}
-
-TEST_F(ShellSurface, size_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.size();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.size();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, top_left_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.top_left();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.top_left();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, name_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.name();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.name();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, pixel_format_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.pixel_format();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.pixel_format();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, hide_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.hide();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.hide();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, show_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.show();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.show();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, destroy_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.destroy();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_NO_THROW({
-        test.destroy();
-    });
-}
-
-TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.force_requests_to_complete();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_NO_THROW({
-        test.force_requests_to_complete();
-    });
-}
-
-TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    EXPECT_NO_THROW({
-        test.advance_client_buffer();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.advance_client_buffer();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, input_fds_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-            msh::a_surface(), stub_id, stub_sender);
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-            test.client_input_fd();
-    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, attributes)
@@ -520,43 +343,6 @@ TEST_F(ShellSurface, take_input_focus)
     EXPECT_CALL(targeter, focus_changed(_)).Times(1);
     
     test.take_input_focus(mt::fake_shared(targeter));
-}
-
-TEST_F(ShellSurface, take_input_focus_throw_behavior)
-{
-    using namespace ::testing;
-
-    msh::Surface test(
-        nullptr,
-        mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-        msh::a_surface(), stub_id, stub_sender);
-    surface_builder.reset_surface();
-
-    mtd::StubInputTargeter targeter;
-    
-    EXPECT_THROW({
-            test.take_input_focus(mt::fake_shared(targeter));
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, set_input_region_throw_behavior)
-{
-    using namespace ::testing;
-    
-    msh::Surface test(
-        nullptr,
-        mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-        msh::a_surface(), stub_id, stub_sender);
-    
-    EXPECT_NO_THROW({
-            test.set_input_region(std::vector<geom::Rectangle>{});
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-            test.set_input_region(std::vector<geom::Rectangle>{});
-    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
