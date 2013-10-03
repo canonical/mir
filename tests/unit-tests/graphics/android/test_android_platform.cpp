@@ -22,11 +22,13 @@
 #include "mir/options/program_option.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test/fake_shared.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace mo=mir::options;
@@ -52,23 +54,21 @@ protected:
             native_buffer_handle->data[i] = i;
         }
  
-        anwb = std::make_shared<ANativeWindowBuffer>();
-        anwb->stride = (int) stride.as_uint32_t();
-        anwb->handle  = native_buffer_handle.get();
-
-        native_buffer.buffer = anwb.get();
-        native_buffer.fence = -1;
+        anwb.stride = (int) stride.as_uint32_t();
+        anwb.handle  = native_buffer_handle.get();
+        native_buffer.buffer = &anwb;
+        native_buffer.fence_fd = -1;
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(testing::Return(anwb));
+            .WillByDefault(testing::Return(mt::fake_shared(native_buffer)));
         ON_CALL(*mock_buffer, stride())
             .WillByDefault(testing::Return(stride));
     }
 
     MirNativeBuffer native_buffer;
+    ANativeWindowBuffer anwb;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<ANativeWindowBuffer> anwb;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
     geom::Stride stride;
@@ -82,7 +82,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     geom::Stride dummy_stride(4390);
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .WillOnce(testing::Return(native_buffer));
+        .WillOnce(testing::Return(mt::fake_shared(native_buffer)));
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(testing::Return(dummy_stride));
 
