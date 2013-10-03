@@ -68,9 +68,7 @@ struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
         }
     }
 
-    MyTestingClientConfiguration(mtf::CrossProcessSync& sync) : sync(sync) {}
-private:
-    mtf::CrossProcessSync& sync;
+    mtf::CrossProcessSync sync;
 };
 }
 
@@ -79,13 +77,12 @@ TEST_F(ServerDisconnect, client_detects_server_shutdown)
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
-    mtf::CrossProcessSync sync;
-    MyTestingClientConfiguration client_config{sync};
+    MyTestingClientConfiguration client_config;
     launch_client_process(client_config);
 
     run_in_test_process([&]
     {
-        sync.wait_for_signal_ready_for();
+        client_config.sync.wait_for_signal_ready_for();
         shutdown_server_process();
     });
 }
