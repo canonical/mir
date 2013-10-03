@@ -28,10 +28,6 @@ namespace graphics
 {
 class DisplayBuffer;
 }
-namespace geometry
-{
-struct Rectangle;
-}
 namespace compositor
 {
 

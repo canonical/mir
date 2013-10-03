@@ -126,7 +126,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         display_buffer.make_current();
 
-        mir::geometry::Rectangle const& view_area = display_buffer.view_area();
+        auto const& view_area = display_buffer.view_area();
         renderer->clear(local_frameno);
         mc::RenderingOperator applicator(*renderer, save_resource);
         FilterForVisibleSceneInRegion selector(view_area);
