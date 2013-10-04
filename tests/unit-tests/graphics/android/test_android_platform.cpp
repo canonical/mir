@@ -23,7 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test/fake_shared.h"
-#include "stub_native_buffer.h"
+#include "mir_test_doubles/stub_native_buffer.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -54,19 +54,20 @@ protected:
         {
             native_buffer_handle->data[i] = i;
         }
- 
-        native_buffer.stride = (int) stride.as_uint32_t();
-//        native_buffer.handle  = native_buffer_handle.get();
-//        native_buffer.fence_fd = -1;
+
+        native_buffer = mtd::create_stub_buffer(); 
+        native_buffer->stride = (int) stride.as_uint32_t();
+        native_buffer->handle = native_buffer_handle.get();
+        native_buffer->fence = -1;
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(testing::Return(mt::fake_shared(native_buffer)));
+            .WillByDefault(testing::Return(native_buffer));
         ON_CALL(*mock_buffer, stride())
             .WillByDefault(testing::Return(stride));
     }
 
-    mtd::StubAndroidNativeBuffer native_buffer;
+    std::shared_ptr<mga::NativeBuffer> native_buffer;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
@@ -81,7 +82,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     geom::Stride dummy_stride(4390);
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .WillOnce(testing::Return(mt::fake_shared(native_buffer)));
+        .WillOnce(testing::Return(native_buffer));
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(testing::Return(dummy_stride));
 

@@ -34,22 +34,23 @@ namespace mt=mir::test;
 namespace
 {
 
-struct StubAndroidNativeBuffer : public mga::NativeBuffer
+native_handle_t dummy_handle;
+std::shared_ptr<mga::NativeBuffer> create_stub_buffer()
 {
-    StubAndroidNativeBuffer()
-        : NativeBuffer(mt::fake_shared(handle))
-    {
-    }
-    native_handle_t handle;
-
-};
+    return std::shared_ptr<mga::NativeBuffer>(
+        new mga::NativeBuffer(mt::fake_shared(dummy_handle)),
+        [](mga::NativeBuffer* buffer)
+        {
+            buffer->mir_dereference();
+        });
+}
 
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
     {
         using namespace testing;
-        buffer = std::make_shared<StubAndroidNativeBuffer>();
+        buffer = create_stub_buffer();
         ON_CALL(*this, native_buffer_handle())
             .WillByDefault(Return(buffer));
     }
@@ -66,7 +67,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
 
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
 
-    std::shared_ptr<StubAndroidNativeBuffer> buffer;
+    std::shared_ptr<mga::NativeBuffer> buffer;
     native_handle_t handle;
 };
 
@@ -124,7 +125,7 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
 {
     using namespace testing;
-    auto buffer = std::make_shared<StubAndroidNativeBuffer>();
+    auto buffer = create_stub_buffer();
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);

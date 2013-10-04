@@ -36,7 +36,7 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface>
     format = mga::to_android_format(geometry::PixelFormat(surface->pixel_format()));
 }
 
-MirNativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
+ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
     auto buffer = surface->advance_client_buffer();
     auto handle = buffer->native_buffer_handle().get();

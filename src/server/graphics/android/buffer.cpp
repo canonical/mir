@@ -38,6 +38,7 @@ mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
     : content_usable(true),
       native_buffer(buffer_handle),
       buffer_fence(fence),
+      sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       egl_extensions(extensions)
 {
 }
@@ -113,16 +114,14 @@ std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
         content_cv.wait(lk);
     content_usable = false;
 
-    return native_buffer;  
-#if 0 
-    return std::shared_ptr<MirNativeBuffer>(
-        new NativeBuffer{native_buffer.get(), buffer_fence->copy_native_handle()},
+    //copy the fence out to the native user
+    native_buffer->fence = buffer_fence->copy_native_handle();
+
+    return std::shared_ptr<mga::NativeBuffer>(
+        native_buffer.get(),
         [this](NativeBuffer* buffer)
         {
-            auto ops = std::make_shared<mga::RealSyncFileOps>();
-            mga::SyncFence sync_fence(ops, buffer->fence_fd);
+            mga::SyncFence sync_fence(sync_ops, buffer->fence);
             buffer_fence->merge_with(sync_fence);
-            delete buffer;
         });
-#endif
 }

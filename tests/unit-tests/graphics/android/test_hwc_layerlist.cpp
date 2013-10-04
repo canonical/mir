@@ -19,7 +19,7 @@
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "hwc_struct_helper-inl.h"
-#include "stub_native_buffer.h"
+#include "mir_test_doubles/stub_native_buffer.h"
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
@@ -37,8 +37,8 @@ public:
         height = 876; 
         default_size = geom::Size{width, height};
 
-        native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        native_handle_1 = mtd::create_stub_buffer();
+        native_handle_2 = mtd::create_stub_buffer();
 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         ON_CALL(*mock_buffer, native_buffer_handle())

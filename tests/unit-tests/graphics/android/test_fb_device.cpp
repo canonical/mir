@@ -20,7 +20,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
 #include "mir_test_doubles/mock_android_hw.h"
-#include "stub_native_buffer.h"
+#include "mir_test_doubles/stub_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -44,7 +44,7 @@ struct FBDevice : public ::testing::Test
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
-        native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        native_buffer = mtd::create_stub_buffer(); 
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
     }
