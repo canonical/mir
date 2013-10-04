@@ -23,6 +23,8 @@
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/frontend/protobuf_session_creator.h"
 
+#include <cstdio>
+
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
@@ -34,6 +36,9 @@ std::shared_ptr<mf::Connector> make_connector(
     std::shared_ptr<mf::ProtobufIpcFactory> const& factory,
     std::shared_ptr<mf::ConnectorReport> const& report)
 {
+    // Clear up after in case socket left by earlier test
+    std::remove(socket_name.c_str());
+
     return std::make_shared<mf::PublishedSocketConnector>(
         socket_name,
         std::make_shared<mf::ProtobufSessionCreator>(factory, std::make_shared<mtd::StubSessionAuthorizer>()),
