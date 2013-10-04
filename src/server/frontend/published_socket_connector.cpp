@@ -46,7 +46,7 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
 
 mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
 {
-    std::remove(socket_file.c_str());
+    remove_endpoint();
 }
 
 void mf::PublishedSocketConnector::start_accept()
@@ -62,6 +62,11 @@ void mf::PublishedSocketConnector::start_accept()
             this,
             socket,
             ba::placeholders::error));
+}
+
+void mf::PublishedSocketConnector::remove_endpoint() const
+{
+    std::remove(socket_file.c_str());
 }
 
 void mf::PublishedSocketConnector::on_new_connection(
@@ -164,6 +169,10 @@ int mf::BasicConnector::client_socket_fd() const
     create_session_for(server_socket);
 
     return socket_fd[client];
+}
+
+void mf::BasicConnector::remove_endpoint() const
+{
 }
 
 mf::BasicConnector::~BasicConnector() noexcept
