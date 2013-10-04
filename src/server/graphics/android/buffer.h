@@ -59,6 +59,8 @@ public:
     std::shared_ptr<NativeBuffer> native_buffer_handle() const;
 
 private:
+    void release_native_fence(int fence_fd) const;
+
     std::mutex mutable content_lock;
     std::condition_variable mutable content_cv;
     bool mutable content_usable;

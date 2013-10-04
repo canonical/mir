@@ -103,25 +103,30 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_and_updates_fence_when_r
     native_resource->fence = release_fake_fence_fd;
 }
 
-TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_with_negative_fd)
+TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
 {
     using namespace testing;
-    int acquire_fake_fence_fd = 948;
-    int release_fake_fence_fd = -21;
+    int acquire_fake_fence_fd1 = 948;
+    int acquire_fake_fence_fd2 = 954;
 
     EXPECT_CALL(*mock_sync_fence, copy_native_handle())
-        .Times(1)
-        .WillOnce(Return(acquire_fake_fence_fd));
+        .Times(2)
+        .WillOnce(Return(acquire_fake_fence_fd1))
+        .WillOnce(Return(acquire_fake_fence_fd2));
     EXPECT_CALL(*mock_sync_fence, merge_with(_))
-        .Times(0);
+        .Times(2);
 
     mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
-    auto native_resource = buffer.native_buffer_handle();
-
-    EXPECT_EQ(mock_buffer_handle, native_resource);
-    EXPECT_EQ(acquire_fake_fence_fd, native_resource->fence);
-
-    native_resource->fence = release_fake_fence_fd;
+    {
+        auto native_resource = buffer.native_buffer_handle();
+        EXPECT_EQ(mock_buffer_handle, native_resource);
+        EXPECT_EQ(acquire_fake_fence_fd1, native_resource->fence);
+    }
+    {
+        auto native_resource = buffer.native_buffer_handle();
+        EXPECT_EQ(mock_buffer_handle, native_resource);
+        EXPECT_EQ(acquire_fake_fence_fd2, native_resource->fence);
+    }
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
