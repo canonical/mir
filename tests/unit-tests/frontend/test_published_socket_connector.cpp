@@ -221,7 +221,7 @@ TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
     Mock::VerifyAndClearExpectations(client.get());
 
     EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
-    EXPECT_CALL(*client, disconnect_done()).Times(0);
+    EXPECT_CALL(*client, disconnect_done()).Times(AnyNumber());
 
     EXPECT_THROW({
     // We don't know if this will be called, so it can't auto destruct
