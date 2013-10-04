@@ -170,7 +170,6 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_hook_callable)
     ASSERT_NE(nullptr, window->dequeueBuffer_DEPRECATED);
     window->dequeueBuffer_DEPRECATED(window.get(), &tmp);
 }
-#if 0
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_buffer)
 {
@@ -178,11 +177,12 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
 
     ANativeWindowBuffer* returned_buffer;
     ANativeWindowBuffer fake_buffer;
+    MirNativeBuffer fake_buf {&fake_buffer, -1};
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .Times(1)
-        .WillOnce(Return(&fake_buffer));
+        .WillOnce(Return(&fake_buf));
 
     window->dequeueBuffer_DEPRECATED(window.get(), &returned_buffer);
     EXPECT_EQ(&fake_buffer, returned_buffer);
@@ -198,12 +198,13 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
     window->queueBuffer(window.get(), tmp, -1);
 }
 
-MATCHER_P(MirNativeBufferMatches, value, str(""))
+MATCHER_P(MirNativeBufferMatches, value, "")
 {
     if (arg.buffer != value.buffer)
         return false;
     if (arg.fence_fd != value.fence_fd)
         return false;
+    return true;
 }
 
 TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
@@ -234,9 +235,11 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_passes_buffer_bac
 {
     using namespace testing;
     ANativeWindowBuffer buffer;
+    int fence_fd = -1; //deprecated should always have -1 fd
+    MirNativeBuffer test_buffer{&buffer, fence_fd};
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
-    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer))
+    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(MirNativeBufferMatches(test_buffer)))
         .Times(1);
 
     window->queueBuffer_DEPRECATED(window.get(), &buffer);
@@ -299,4 +302,3 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
     auto ret = window->dequeueBuffer(window.get(), &tmp, &fencefd);
     EXPECT_EQ(0, ret);
 }
-#endif

@@ -20,10 +20,12 @@
 #include "src/client/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
 #include "mir_test_doubles/mock_fence.h"
+#include "mir_test/fake_shared.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mt=mir::test;
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
@@ -112,14 +114,13 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
     interpreter.driver_requests_buffer();
 }
 
-#if 0
 TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
 {
     using namespace testing;
     native_handle_t handle;
     ANativeWindowBuffer buf;
-    buffer.handle = &handle;
-    MirNativeWindowBuffer buffer{&buf, -1}; 
+    buf.handle = &handle;
+    MirNativeBuffer buffer{&buf, -1}; 
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
@@ -134,7 +135,7 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
     auto returned_buffer = interpreter.driver_requests_buffer();
     EXPECT_EQ(buffer.buffer, returned_buffer->buffer);
 }
-#endif
+
 TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 {
     using namespace testing;
@@ -149,22 +150,6 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 
     interpreter.driver_returns_buffer(buf);
 }
-
-#if 0
-TEST_F(AndroidInterpreterTest, native_window_queue_waits_on_fence)
-{
-    using namespace testing;
-    ANativeWindowBuffer buffer;
-
-    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
-
-    EXPECT_CALL(*mock_sync, wait())
-        .Times(1);
-
-    interpreter.driver_returns_buffer(&buffer, mock_sync);
-}
-#endif
 
 /* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */
 TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
