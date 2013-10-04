@@ -18,9 +18,9 @@
 
 #include "mir/graphics/android/sync_fence.h"
 
-#include <android/linux/sync.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
+#include <android/linux/sync.h>
 
 namespace mga = mir::graphics::android;
 
