@@ -24,6 +24,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <atomic>
+
 namespace mtf = mir_test_framework;
 
 using ServerDisconnect = mtf::BespokeDisplayServerTestFixture;
@@ -54,10 +56,10 @@ struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
         mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
         auto surface = mir_connection_create_surface_sync(connection, &params);
 
-        bool signalled = false;
+        std::atomic<bool> signalled(false);
 
         EXPECT_CALL(mock_event_handler, handle(mir_lifecycle_connection_lost)).Times(1).
-            WillOnce(testing::InvokeWithoutArgs([&] { signalled = true; }));
+            WillOnce(testing::InvokeWithoutArgs([&] { signalled.store(true); }));
 
         sync.signal_ready();
 
@@ -65,7 +67,7 @@ struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
 
         auto time_limit = clock::now() + std::chrono::seconds(2);
 
-        while (!signalled && clock::now() < time_limit)
+        while (!signalled.load() && clock::now() < time_limit)
         {
             mir_surface_swap_buffers_sync(surface);
         }
