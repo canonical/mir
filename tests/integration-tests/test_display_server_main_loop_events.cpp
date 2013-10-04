@@ -59,6 +59,7 @@ public:
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
     MOCK_CONST_METHOD0(client_socket_fd, int());
+    MOCK_CONST_METHOD0(remove_endpoint, void());
 };
 
 class MockDisplayChanger : public mir::DisplayChanger

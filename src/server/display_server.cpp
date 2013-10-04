@@ -214,5 +214,7 @@ void mir::DisplayServer::run()
 
 void mir::DisplayServer::stop()
 {
+    // We avoid a stale endpoint by removing it first.
+    p->connector->remove_endpoint();
     p->main_loop->stop();
 }
