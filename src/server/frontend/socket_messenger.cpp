@@ -19,6 +19,11 @@
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
 
+#include <errno.h>
+#include <string.h>
+
+#include <stdexcept>
+
 namespace mf = mir::frontend;
 namespace mfd = mf::detail;
 namespace bs = boost::system;
@@ -107,7 +112,9 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
         for (auto &fd: fds)
             data[i++] = fd;
 
-        sendmsg(socket->native_handle(), &header, 0);
+        auto sent = sendmsg(socket->native_handle(), &header, 0);
+        if (sent < 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
 }
 
