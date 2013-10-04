@@ -46,8 +46,8 @@ public:
                        std::shared_ptr<DisplaySupportProvider> const& display_poster,
                        std::shared_ptr<InterpreterResourceCache> const&);
 
-    MirNativeBuffer* driver_requests_buffer();
-    void driver_returns_buffer(MirNativeBuffer&);
+    ANativeWindowBuffer* driver_requests_buffer();
+    void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd);
     void dispatch_driver_request_format(int format);
     int driver_requests_info(int key) const;
     void sync_to_display(bool sync);

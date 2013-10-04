@@ -33,8 +33,8 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
    native_handle(handle),
    buffer_pf(pf), buffer_stride{stride}
 {
-    auto tmp = new mga::MirNativeBuffer(handle);
-    native_window_buffer = std::shared_ptr<mga::MirNativeBuffer>(tmp, [](mga::MirNativeBuffer* buffer)
+    auto tmp = new mga::NativeBuffer(handle);
+    native_window_buffer = std::shared_ptr<mga::NativeBuffer>(tmp, [](mga::NativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });
@@ -79,8 +79,7 @@ geom::PixelFormat mcla::AndroidClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-std::shared_ptr<MirNativeBuffer> mcla::AndroidClientBuffer::native_buffer_handle() const
+std::shared_ptr<mir::graphics::NativeBuffer> mcla::AndroidClientBuffer::native_buffer_handle() const
 {
-    return std::make_shared<MirNativeBuffer>(
-        MirNativeBuffer{native_window_buffer.get(), -1});
+    return native_window_buffer;
 }

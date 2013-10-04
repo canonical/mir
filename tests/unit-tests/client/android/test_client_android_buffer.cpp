@@ -141,7 +141,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
     int32_t const expected_stride_in_pixels =
         static_cast<int32_t>(stride.as_uint32_t() / geom::bytes_per_pixel(pf));
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
-    auto native_handle = buffer.native_buffer_handle()->buffer;
+    auto native_handle = buffer.native_buffer_handle();
 
     ASSERT_NE(nullptr, native_handle);
     EXPECT_EQ(package.get(), native_handle->handle);
@@ -154,7 +154,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
 {
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
-    auto native_handle = buffer.native_buffer_handle()->buffer;
+    auto native_handle = buffer.native_buffer_handle();
 
     ASSERT_NE(nullptr, native_handle);
     ASSERT_NE(nullptr, native_handle->common.incRef);

@@ -26,7 +26,6 @@
 #include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
-#include "mir_test/fake_shared.h"
 
 #include "mir/frontend/connector.h"
 
@@ -331,12 +330,10 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(handle_id);
-
-        auto buffer = handle->buffer;
-        response->mutable_buffer()->set_stride(buffer->stride);
+        response->mutable_buffer()->set_stride(handle->stride);
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = buffer->handle;
+        native_handle_t const* native_handle = handle->handle;
         for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -369,9 +366,8 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_buffer_id(handle_id);
 
         response->set_fds_on_side_channel(1);
-        auto buffer = handle->buffer;
-        native_handle_t const* native_handle = buffer->handle;
-        response->set_stride(buffer->stride);
+        native_handle_t const* native_handle = handle->handle;
+        response->set_stride(handle->stride);
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -518,7 +514,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*handle->buffer));
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(rendered_pattern.check(region));
 }
 
@@ -531,7 +527,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    auto region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*handle->buffer));
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(rendered_pattern0.check(region));
 
     mock_server->set_handle(second_handle, 15);
@@ -540,7 +536,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    auto second_region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*second_handle->buffer));
+    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
     EXPECT_TRUE(rendered_pattern1.check(second_region));
 }
 
@@ -558,7 +554,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*handle->buffer));
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(rendered_pattern.check(region));
 }
 
@@ -577,7 +573,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*handle->buffer));
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(red_pattern.check(region));
 }
 
@@ -600,9 +596,9 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*handle->buffer));
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(red_pattern.check(region));
 
-    auto second_region = buffer_converter->graphic_region_from_handle(mt::fake_shared(*second_handle->buffer));
+    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
     EXPECT_TRUE(green_pattern.check(second_region));
 }

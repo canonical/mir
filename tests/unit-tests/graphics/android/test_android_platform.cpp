@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test/fake_shared.h"
+#include "stub_native_buffer.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -54,10 +55,9 @@ protected:
             native_buffer_handle->data[i] = i;
         }
  
-        anwb.stride = (int) stride.as_uint32_t();
-        anwb.handle  = native_buffer_handle.get();
-        native_buffer.buffer = &anwb;
-        native_buffer.fence_fd = -1;
+        native_buffer.stride = (int) stride.as_uint32_t();
+//        native_buffer.handle  = native_buffer_handle.get();
+//        native_buffer.fence_fd = -1;
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -66,8 +66,7 @@ protected:
             .WillByDefault(testing::Return(stride));
     }
 
-    MirNativeBuffer native_buffer;
-    ANativeWindowBuffer anwb;
+    mtd::StubAndroidNativeBuffer native_buffer;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;

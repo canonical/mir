@@ -50,7 +50,7 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
-std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
+std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
@@ -70,8 +70,8 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     AndroidBufferHandleDeleter del1(alloc_dev);
     std::shared_ptr<native_handle_t> handle(buf_handle, del1);
 
-    auto tmp = new mga::MirNativeBuffer(handle);
-    std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](MirNativeBuffer* buffer)
+    auto tmp = new mga::NativeBuffer(handle);
+    std::shared_ptr<mga::NativeBuffer> buffer(tmp, [](NativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });

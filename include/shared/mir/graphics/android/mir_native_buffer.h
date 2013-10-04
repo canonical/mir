@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_
 
+#include "mir_toolkit/mir_native_buffer.h"
 #include <system/window.h>
 #include <memory>
 #include <mutex>
@@ -30,15 +31,23 @@ namespace graphics
 namespace android
 {
 
-struct MirNativeBuffer : public ANativeWindowBuffer
+struct NativeBuffer : public MirNativeBuffer
 {
-    MirNativeBuffer(std::shared_ptr<const native_handle_t> const&);
+    //internal allocation
+    NativeBuffer(std::shared_ptr<const native_handle_t> const&);
+    //external allocation
+    NativeBuffer(ANativeWindowBuffer const&, int fence_fd);
+
     void driver_reference();
     void driver_dereference();
     void mir_dereference();
 
+    //potentially rework
+    int fence;
+protected:
+    virtual ~NativeBuffer();
+
 private:
-    ~MirNativeBuffer();
 
     std::shared_ptr<const native_handle_t> const handle_resource;
     std::mutex mutex;

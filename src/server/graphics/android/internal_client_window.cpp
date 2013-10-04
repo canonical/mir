@@ -40,18 +40,18 @@ MirNativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
     auto buffer = surface->advance_client_buffer();
     auto handle = buffer->native_buffer_handle().get();
-    resource_cache->store_buffer(buffer, handle->buffer);
+    resource_cache->store_buffer(buffer, handle);
     return handle;
 }
 
-void mga::InternalClientWindow::driver_returns_buffer(MirNativeBuffer& handle)
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
     //TODO: pass fence to compositor instead of forcing wait here
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence sync_fence(ops, handle.fence_fd);
+    mga::SyncFence sync_fence(ops, fence_fd);
     sync_fence.wait();
 
-    resource_cache->retrieve_buffer(handle.buffer);
+    resource_cache->retrieve_buffer(buffer);
     /* here, the mc::TemporaryBuffer will destruct, triggering buffer advance */
 }
 

@@ -22,13 +22,11 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/buffer_properties.h"
 
-#include "mir_test/fake_shared.h"
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 
 #include <gtest/gtest.h>
 
-namespace mt=mir::test;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
@@ -67,7 +65,7 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
     mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto test_buffer = allocator->alloc_buffer(sw_properties);
 
-    auto region = sw_renderer.graphic_region_from_handle(mt::fake_shared(*test_buffer->native_buffer_handle()->buffer));
+    auto region = sw_renderer.graphic_region_from_handle(test_buffer->native_buffer_handle());
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     red_pattern.draw(region);
     EXPECT_TRUE(red_pattern.check(region));

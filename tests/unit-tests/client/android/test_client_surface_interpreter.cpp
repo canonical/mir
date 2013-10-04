@@ -16,32 +16,40 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/native_buffer.h"
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
-#include "mir_test_doubles/mock_fence.h"
 #include "mir_test/fake_shared.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mt=mir::test;
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
-namespace mtd=mir::test::doubles;
+namespace mt=mir::test;
 
 namespace
 {
+
+struct StubAndroidNativeBuffer : public mga::NativeBuffer
+{
+    StubAndroidNativeBuffer()
+        : NativeBuffer(mt::fake_shared(handle))
+    {
+    }
+    native_handle_t handle;
+
+};
+
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
     {
         using namespace testing;
-        anw = std::make_shared<ANativeWindowBuffer>();
-        buffer = std::make_shared<MirNativeBuffer>();
-        buffer->buffer = anw.get();
+        buffer = std::make_shared<StubAndroidNativeBuffer>();
         ON_CALL(*this, native_buffer_handle())
             .WillByDefault(Return(buffer));
     }
@@ -56,10 +64,9 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_METHOD0(increment_age, void());
 
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
 
-    std::shared_ptr<ANativeWindowBuffer> anw;
-    std::shared_ptr<MirNativeBuffer> buffer;
+    std::shared_ptr<StubAndroidNativeBuffer> buffer;
     native_handle_t handle;
 };
 
@@ -117,30 +124,26 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
 {
     using namespace testing;
-    native_handle_t handle;
-    ANativeWindowBuffer buf;
-    buf.handle = &handle;
-    MirNativeBuffer buffer{&buf, -1}; 
+    auto buffer = std::make_shared<StubAndroidNativeBuffer>();
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     EXPECT_CALL(*mock_client_buffer, native_buffer_handle())
         .Times(1)
-        .WillOnce(Return(mt::fake_shared(buffer)));
+        .WillOnce(Return(buffer));
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
 
     auto returned_buffer = interpreter.driver_requests_buffer();
-    EXPECT_EQ(buffer.buffer, returned_buffer->buffer);
+    EXPECT_EQ(buffer.get(), returned_buffer);
 }
 
 TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 {
     using namespace testing;
     ANativeWindowBuffer buffer;
-    MirNativeBuffer buf{&buffer, -1};
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
@@ -148,7 +151,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     EXPECT_CALL(mock_surface, next_buffer(_,_))
         .Times(1);
 
-    interpreter.driver_returns_buffer(buf);
+    interpreter.driver_returns_buffer(&buffer, -1);
 }
 
 /* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */

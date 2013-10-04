@@ -35,7 +35,7 @@ class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     explicit AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device);
-    std::shared_ptr<ANativeWindowBuffer> alloc_buffer(geometry::Size,
+    std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size,
             geometry::PixelFormat, BufferUsage usage);
 
     /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used to check buffer contents */

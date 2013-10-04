@@ -32,7 +32,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
+mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
                     std::shared_ptr<Fence> const& fence,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
     : content_usable(true),
@@ -106,20 +106,23 @@ bool mga::Buffer::can_bypass() const
     return false;
 }
 
-std::shared_ptr<MirNativeBuffer> mga::Buffer::native_buffer_handle() const
+std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
 {
     std::unique_lock<std::mutex> lk(content_lock);
     while (!content_usable)
         content_cv.wait(lk);
     content_usable = false;
-   
+
+    return native_buffer;  
+#if 0 
     return std::shared_ptr<MirNativeBuffer>(
-        new MirNativeBuffer{native_buffer.get(), buffer_fence->copy_native_handle()},
-        [this](MirNativeBuffer* buffer)
+        new NativeBuffer{native_buffer.get(), buffer_fence->copy_native_handle()},
+        [this](NativeBuffer* buffer)
         {
             auto ops = std::make_shared<mga::RealSyncFileOps>();
             mga::SyncFence sync_fence(ops, buffer->fence_fd);
             buffer_fence->merge_with(sync_fence);
             delete buffer;
         });
+#endif
 }

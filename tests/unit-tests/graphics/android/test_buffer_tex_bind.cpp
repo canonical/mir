@@ -17,9 +17,10 @@
  */
 
 #include "src/server/graphics/android/buffer.h"
-#include "mir_test_doubles/mock_egl.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"
+#include "stub_native_buffer.h"
 
 #include <system/window.h>
 #include <stdexcept>
@@ -37,7 +38,7 @@ public:
     {
         using namespace testing;
 
-        stub_buffer = std::make_shared<ANativeWindowBuffer>();
+        stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         size = geom::Size{300, 220};
         pf = geom::PixelFormat::abgr_8888;
         extensions = std::make_shared<mg::EGLExtensions>();
@@ -57,7 +58,7 @@ public:
     std::shared_ptr<mtd::MockFence> mock_sync_fence;
     std::shared_ptr<mg::EGLExtensions> extensions;
     std::shared_ptr<mga::Buffer> buffer;
-    std::shared_ptr<ANativeWindowBuffer> stub_buffer;
+    std::shared_ptr<mtd::StubAndroidNativeBuffer> stub_buffer;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)

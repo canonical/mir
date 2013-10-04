@@ -19,8 +19,9 @@
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/native_buffer.h"
 
-
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 namespace
@@ -160,14 +161,13 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
-    *buffer_to_driver =  buffer->buffer;
+    *buffer_to_driver =  buffer;
     return 0;
 }
 
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
 {
-    MirNativeBuffer native_buffer{buffer, fence};
-    driver_interpreter->driver_returns_buffer(native_buffer);
+    driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
 

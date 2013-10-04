@@ -25,6 +25,7 @@
 #include "default_framebuffer_factory.h"
 #include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_ipc_packer.h"
@@ -83,7 +84,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
 void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                                             std::shared_ptr<mg::Buffer> const& buffer) const
 {
-    auto native_buffer = buffer->native_buffer_handle()->buffer;
+    auto native_buffer = buffer->native_buffer_handle();
     auto buffer_handle = native_buffer->handle;
 
     int offset = 0;

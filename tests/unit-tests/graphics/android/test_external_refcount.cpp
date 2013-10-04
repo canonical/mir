@@ -26,10 +26,10 @@ TEST(AndroidRefcount, driver_hooks)
 {
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
-    mga::MirNativeBuffer* driver_reference = nullptr;
+    mga::NativeBuffer* driver_reference = nullptr;
     {
-        auto tmp = new mga::MirNativeBuffer(native_handle_resource);
-        std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](mga::MirNativeBuffer* buffer)
+        auto tmp = new mga::NativeBuffer(native_handle_resource);
+        std::shared_ptr<mga::NativeBuffer> buffer(tmp, [](mga::NativeBuffer* buffer)
             {
                 buffer->mir_dereference();
             });
@@ -49,11 +49,11 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
     {
-        std::shared_ptr<mga::MirNativeBuffer> mir_reference;
-        mga::MirNativeBuffer* driver_reference = nullptr;
+        std::shared_ptr<mga::NativeBuffer> mir_reference;
+        mga::NativeBuffer* driver_reference = nullptr;
         {
-            auto tmp = new mga::MirNativeBuffer(native_handle_resource);
-            mir_reference = std::shared_ptr<mga::MirNativeBuffer>(tmp, [](mga::MirNativeBuffer* buffer)
+            auto tmp = new mga::NativeBuffer(native_handle_resource);
+            mir_reference = std::shared_ptr<mga::NativeBuffer>(tmp, [](mga::NativeBuffer* buffer)
                 {
                     buffer->mir_dereference();
                 });

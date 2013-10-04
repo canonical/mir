@@ -24,17 +24,17 @@ namespace
 {
 void incref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::MirNativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::NativeBuffer*>(base);
     buffer->driver_reference();
 }
 void decref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::MirNativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::NativeBuffer*>(base);
     buffer->driver_dereference();
 }
 }
 
-mga::MirNativeBuffer::MirNativeBuffer(std::shared_ptr<const native_handle_t> const& handle)
+mga::NativeBuffer::NativeBuffer(std::shared_ptr<const native_handle_t> const& handle)
     : handle_resource(handle),
       mir_reference(true),
       driver_references(0)
@@ -44,13 +44,13 @@ mga::MirNativeBuffer::MirNativeBuffer(std::shared_ptr<const native_handle_t> con
 }
 
 
-void mga::MirNativeBuffer::driver_reference()
+void mga::NativeBuffer::driver_reference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references++;
 }
 
-void mga::MirNativeBuffer::driver_dereference()
+void mga::NativeBuffer::driver_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references--;
@@ -60,7 +60,7 @@ void mga::MirNativeBuffer::driver_dereference()
     }
 }
 
-void mga::MirNativeBuffer::mir_dereference()
+void mga::NativeBuffer::mir_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     mir_reference = false;
@@ -70,6 +70,6 @@ void mga::MirNativeBuffer::mir_dereference()
     }
 }
 
-mga::MirNativeBuffer::~MirNativeBuffer()
+mga::NativeBuffer::~NativeBuffer()
 {
 }

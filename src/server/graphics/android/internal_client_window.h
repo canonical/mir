@@ -38,8 +38,8 @@ class InternalClientWindow : public AndroidDriverInterpreter
 public:
     InternalClientWindow(std::shared_ptr<InternalSurface> const&,
                          std::shared_ptr<InterpreterResourceCache> const&);
-    MirNativeBuffer* driver_requests_buffer();
-    void driver_returns_buffer(MirNativeBuffer&);
+    ANativeWindowBuffer* driver_requests_buffer();
+    void driver_returns_buffer(ANativeWindowBuffer*, int);
     void dispatch_driver_request_format(int);
     int  driver_requests_info(int) const;
     void sync_to_display(bool sync); 

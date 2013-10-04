@@ -46,25 +46,25 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
 {
 }
 
-MirNativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
+ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle();
-    resource_cache->store_buffer(buffer, handle->buffer);
+    resource_cache->store_buffer(buffer, handle.get());
     return handle.get();
 }
 
 
 // TODO: VERY MESSY DONT LAND THIS without fd test
 //sync object could be passed to hwc. we don't need to that yet though
-void mga::ServerRenderWindow::driver_returns_buffer(MirNativeBuffer& buffer)
+void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
     //TODO: pass fence to HWC instead of waiting here
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence sync_fence(ops, buffer.fence_fd);
+    mga::SyncFence sync_fence(ops, fence_fd);
     sync_fence.wait();
 
-    auto buffer_resource = resource_cache->retrieve_buffer(buffer.buffer); 
+    auto buffer_resource = resource_cache->retrieve_buffer(buffer); 
     poster->set_next_frontbuffer(buffer_resource);
     swapper->compositor_release(buffer_resource);
 }

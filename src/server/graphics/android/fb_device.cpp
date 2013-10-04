@@ -42,7 +42,7 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
 void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
-    if (fb_device->post(fb_device.get(), handle->buffer->handle) != 0)
+    if (fb_device->post(fb_device.get(), handle->handle) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }

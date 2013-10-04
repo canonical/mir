@@ -31,11 +31,11 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
 {
 }
 
-MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
+ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
-    buffer_to_driver->buffer->format = driver_pixel_format;
+    buffer_to_driver->format = driver_pixel_format;
 
     return buffer_to_driver.get();
 }
@@ -43,11 +43,11 @@ MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
 
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer& buffer)
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
 {
     //TODO: pass fence to server instead of waiting here
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence sync_fence(ops, buffer.fence_fd);
+    mga::SyncFence sync_fence(ops, fence_fd);
     sync_fence.wait();
 
     mir_wait_for(surface.next_buffer(empty, NULL));

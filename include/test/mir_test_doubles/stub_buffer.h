@@ -52,12 +52,12 @@ public:
 
     virtual geometry::PixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
 #ifndef ANDROID
-        return std::make_shared<MirNativeBuffer>();
+        return std::make_shared<graphics::NativeBuffer>();
 #else
-        return std::shared_ptr<MirNativeBuffer>();
+        return std::shared_ptr<graphics::NativeBuffer>();
 #endif
     }
     virtual void bind_to_texture() {}

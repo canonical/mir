@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test/fake_shared.h"
+#include "stub_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -78,8 +79,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
     using namespace testing;
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
-    ANativeWindowBuffer stub_anw;
-    MirNativeBuffer stub_buffer{&stub_anw, 0};
+    mtd::StubAndroidNativeBuffer stub_buffer;
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
@@ -89,7 +89,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
         .WillOnce(Return(mt::fake_shared(stub_buffer)));
 
     std::shared_ptr<mg::Buffer> tmp = mock_buffer1;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, &stub_anw))
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, &stub_buffer))
         .Times(1);
 
     auto rc_buffer = render_window.driver_requests_buffer();
@@ -99,10 +99,9 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 {
     using namespace testing;
-    ANativeWindowBuffer stub_anw;
-    MirNativeBuffer stub_buffer {&stub_anw, 0};
+    mtd::StubAndroidNativeBuffer stub_buffer;
  
-    EXPECT_CALL(*mock_cache, retrieve_buffer(&stub_anw))
+    EXPECT_CALL(*mock_cache, retrieve_buffer(&stub_buffer))
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
@@ -121,15 +120,14 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
 
-    render_window.driver_returns_buffer(stub_buffer);
+    render_window.driver_returns_buffer(&stub_buffer, -1);
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 }
 
 TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
 {
     using namespace testing;
-    ANativeWindowBuffer stub_anw;
-    MirNativeBuffer stub_buffer {&stub_anw, 0};
+    mtd::StubAndroidNativeBuffer stub_buffer;
     EXPECT_CALL(*mock_cache, retrieve_buffer(_))
         .Times(1)
         .WillOnce(Return(mock_buffer1));
@@ -149,7 +147,7 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
         .Times(1);
 
     auto handle1 = render_window.driver_requests_buffer();
-    render_window.driver_returns_buffer(*handle1);
+    render_window.driver_returns_buffer(handle1, -1);
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)

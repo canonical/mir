@@ -21,6 +21,7 @@
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir/graphics/internal_surface.h"
+#include "stub_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -49,9 +50,7 @@ struct InternalClientWindow : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         mock_surface = std::make_shared<MockInternalSurface>();
         mock_buffer = std::make_shared<mtd::MockBuffer>();
-        stub_anw = std::make_shared<ANativeWindowBuffer>();
-        stub_native_buffer = std::make_shared<MirNativeBuffer>();
-        stub_native_buffer->buffer = stub_anw.get();
+        stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
         ON_CALL(*mock_surface, advance_client_buffer())
             .WillByDefault(Return(mock_buffer));
@@ -61,8 +60,7 @@ struct InternalClientWindow : public ::testing::Test
             .WillByDefault(Return(stub_native_buffer));
     }
 
-    std::shared_ptr<MirNativeBuffer> stub_native_buffer;
-    std::shared_ptr<ANativeWindowBuffer> stub_anw;
+    std::shared_ptr<mg::NativeBuffer> stub_native_buffer;
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockInternalSurface> mock_surface;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
@@ -79,13 +77,13 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);
     std::shared_ptr<mg::Buffer> tmp = mock_buffer;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_native_buffer.get()))
         .Times(1);
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_buffer = interpreter.driver_requests_buffer();
     ASSERT_NE(nullptr, test_buffer);
-    EXPECT_EQ(stub_anw.get(), test_buffer->buffer); 
+    EXPECT_EQ(stub_native_buffer.get(), test_buffer); 
 }
 
 #if 0
@@ -97,7 +95,7 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
     Sequence seq;
     EXPECT_CALL(*mock_sync, wait())
         .InSequence(seq);
-    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_native_buffer.get()))
         .InSequence(seq)
         .WillOnce(Return(mock_buffer));
 

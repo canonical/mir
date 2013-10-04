@@ -19,7 +19,8 @@
 #ifndef MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 #define MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 
-#include "mir_toolkit/mir_native_buffer.h"
+#include <system/window.h>
+#include <memory>
 
 namespace mir
 {
@@ -30,8 +31,8 @@ namespace android
 class AndroidDriverInterpreter
 {
 public:
-    virtual MirNativeBuffer* driver_requests_buffer() = 0;
-    virtual void driver_returns_buffer(MirNativeBuffer&) = 0;
+    virtual ANativeWindowBuffer* driver_requests_buffer() = 0;
+    virtual void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) = 0;
     virtual void dispatch_driver_request_format(int format) = 0;
     virtual int driver_requests_info(int key) const = 0;
     virtual void sync_to_display(bool sync) = 0; 
