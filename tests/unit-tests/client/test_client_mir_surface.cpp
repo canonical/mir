@@ -292,6 +292,9 @@ struct MirClientSurfaceTest : public testing::Test
 {
     void SetUp()
     {
+        // In case an earlier test left a stray file
+        std::remove("./test_socket_surface");
+
         mock_server_tool = std::make_shared<mt::MockServerPackageGenerator>();
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server_tool);
 

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/surfaces/surface_data.h"
+#include "surface_data.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace geom=mir::geometry;

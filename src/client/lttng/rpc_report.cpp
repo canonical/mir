@@ -99,3 +99,7 @@ void mcl::lttng::RpcReport::file_descriptors_received(
     mir_tracepoint(mir_client_rpc, file_descriptors_received,
                    fds.data(), fds.size());
 }
+
+void mcl::lttng::RpcReport::connection_failure(std::exception const& /*ex*/)
+{
+}

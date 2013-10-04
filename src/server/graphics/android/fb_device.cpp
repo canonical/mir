@@ -79,8 +79,8 @@ void mga::FBDevice::sync_to_display(bool sync)
     }
 }
 
-void mga::FBDevice::blank_or_unblank_screen(bool blank)
+void mga::FBDevice::mode(MirPowerMode mode)
 {
     // TODO: Implement
-    (void) blank;
+    (void) mode;
 }

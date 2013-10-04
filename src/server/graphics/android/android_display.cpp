@@ -156,13 +156,10 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
-    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         // TODO: Properly support multiple outputs
-        if (output.power_mode == mir_power_mode_on)
-            display_provider->blank_or_unblank_screen(false);
-        else
-            display_provider->blank_or_unblank_screen(true);
+        display_provider->mode(output.power_mode);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

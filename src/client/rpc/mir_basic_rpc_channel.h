@@ -62,6 +62,8 @@ public:
 
     void complete_response(mir::protobuf::wire::Result& result);
 
+    void force_completion();
+
     bool empty() const;
 
 private:

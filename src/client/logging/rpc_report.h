@@ -41,26 +41,28 @@ class RpcReport : public rpc::RpcReport
 public:
     RpcReport(std::shared_ptr<mir::logging::Logger> const& logger);
 
-    void invocation_requested(mir::protobuf::wire::Invocation const& invocation);
-    void invocation_succeeded(mir::protobuf::wire::Invocation const& invocation);
+    void invocation_requested(mir::protobuf::wire::Invocation const& invocation) override;
+    void invocation_succeeded(mir::protobuf::wire::Invocation const& invocation) override;
     void invocation_failed(mir::protobuf::wire::Invocation const& invocation,
-                           boost::system::error_code const& error);
+                           boost::system::error_code const& error) override;
 
-    void header_receipt_failed(boost::system::error_code const& error);
-    void result_receipt_succeeded(mir::protobuf::wire::Result const& result);
-    void result_receipt_failed(std::exception const& ex);
+    void header_receipt_failed(boost::system::error_code const& error) override;
+    void result_receipt_succeeded(mir::protobuf::wire::Result const& result) override;
+    void result_receipt_failed(std::exception const& ex) override;
 
-    void event_parsing_succeeded(MirEvent const& event);
-    void event_parsing_failed(mir::protobuf::Event const& event);
+    void event_parsing_succeeded(MirEvent const& event) override;
+    void event_parsing_failed(mir::protobuf::Event const& event) override;
 
-    void orphaned_result(mir::protobuf::wire::Result const& result);
-    void complete_response(mir::protobuf::wire::Result const& result);
+    void orphaned_result(mir::protobuf::wire::Result const& result) override;
+    void complete_response(mir::protobuf::wire::Result const& result) override;
 
     void result_processing_failed(mir::protobuf::wire::Result const& result,
-                                  std::exception const& ex);
+                                  std::exception const& ex) override;
 
     void file_descriptors_received(google::protobuf::Message const& response,
-                                   std::vector<int32_t> const& fds);
+                                   std::vector<int32_t> const& fds) override;
+
+    void connection_failure(std::exception const& ex) override;
 
 private:
     std::shared_ptr<mir::logging::Logger> const logger;

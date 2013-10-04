@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 #define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 
-#include "mir/surfaces/surface_state.h"
+#include "surface_state.h"
 
 #include <vector>
 #include <functional>

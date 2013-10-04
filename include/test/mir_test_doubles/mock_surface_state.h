@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 
-#include "mir/surfaces/surface_state.h"
+#include "src/server/surfaces/surface_state.h"
 #include <gmock/gmock.h>
 
 namespace mir

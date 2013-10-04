@@ -37,7 +37,7 @@ public:
     MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
     MOCK_METHOD1(set_next_frontbuffer, void(std::shared_ptr<mir::graphics::Buffer> const&));
     MOCK_METHOD1(sync_to_display, void(bool));
-    MOCK_METHOD1(blank_or_unblank_screen, void(bool));
+    MOCK_METHOD1(mode, void(MirPowerMode));
 };
 }
 }

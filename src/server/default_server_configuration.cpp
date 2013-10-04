@@ -68,6 +68,7 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/input_manager.h"
+#include "mir/logging/connector_report.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -176,6 +177,7 @@ char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
 char const* const legacy_input_report_opt     = "legacy-input-report";
+char const* const connector_report_opt        = "connector-report";
 char const* const input_report_opt            = "input-report";
 char const* const host_socket_opt             = "host-socket";
 char const* const standalone_opt              = "standalone";
@@ -261,6 +263,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
+        (connector_report_opt, po::value<std::string>(),
+            "How to handle the Connector report. [{log,off}:default=off]")
         (display_report_opt, po::value<std::string>(),
             "How to handle the Display report. [{log,off}:default=off]")
         (input_report_opt, po::value<std::string>(),
@@ -1016,6 +1020,30 @@ mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
         []
         {
             return std::make_shared<msh::BroadcastingSessionEventSink>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_connector_report()
+    -> std::shared_ptr<mf::ConnectorReport>
+{
+    return connector_report([this]
+        () -> std::shared_ptr<mf::ConnectorReport>
+        {
+            auto opt = the_options()->get(connector_report_opt, off_opt_value);
+
+            if (opt == log_opt_value)
+            {
+                return std::make_shared<ml::ConnectorReport>(the_logger());
+            }
+            else if (opt == off_opt_value)
+            {
+                return std::make_shared<mf::NullConnectorReport>();
+            }
+            else
+            {
+                throw AbnormalExit(std::string("Invalid ") + connector_report_opt + " option: " + opt +
+                    " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
+            }
         });
 }
 

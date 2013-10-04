@@ -46,11 +46,21 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-class MockCommunicatorReport : public mf::ConnectorReport
+class MockConnectorReport : public mf::ConnectorReport
 {
 public:
 
-    ~MockCommunicatorReport() noexcept {}
+    ~MockConnectorReport() noexcept {}
+
+    MOCK_METHOD0(thread_start, void ());
+    MOCK_METHOD0(thread_end, void());
+    MOCK_METHOD1(starting_threads, void (int count));
+    MOCK_METHOD1(stopping_threads, void(int count));
+
+    MOCK_METHOD1(creating_session_for, void(int socket_handle));
+    MOCK_METHOD2(creating_socket_pair, void(int server_handle, int client_handle));
+
+    MOCK_METHOD1(listening_on, void(std::string const& endpoint));
 
     MOCK_METHOD1(error, void (std::exception const& error));
 };
@@ -64,7 +74,7 @@ struct PublishedSocketConnector : public ::testing::Test
 
     void SetUp()
     {
-        communicator_report = std::make_shared<MockCommunicatorReport>();
+        communicator_report = std::make_shared<MockConnectorReport>();
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>(
             "./test_socket",
@@ -94,13 +104,13 @@ struct PublishedSocketConnector : public ::testing::Test
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;
-    static std::shared_ptr<MockCommunicatorReport> communicator_report;
+    static std::shared_ptr<MockConnectorReport> communicator_report;
     static std::shared_ptr<mt::StubServerTool> stub_server_tool;
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
 std::shared_ptr<mt::StubServerTool> PublishedSocketConnector::stub_server_tool;
-std::shared_ptr<MockCommunicatorReport> PublishedSocketConnector::communicator_report;
+std::shared_ptr<MockConnectorReport> PublishedSocketConnector::communicator_report;
 std::shared_ptr<mt::TestProtobufServer> PublishedSocketConnector::stub_server;
 
 TEST_F(PublishedSocketConnector, create_surface_results_in_a_callback)
