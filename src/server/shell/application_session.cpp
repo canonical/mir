@@ -52,6 +52,11 @@ msh::ApplicationSession::ApplicationSession(
 
 msh::ApplicationSession::~ApplicationSession()
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    for (auto const& pair_id_surface : surfaces)
+    {
+        session_listener->destroying_surface(*this, pair_id_surface.second);
+    }
 }
 
 mf::SurfaceId msh::ApplicationSession::next_id()
