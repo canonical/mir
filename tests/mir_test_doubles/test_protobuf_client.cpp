@@ -29,6 +29,16 @@
 
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+std::shared_ptr<mir::client::LifecycleControl> make_lifecycle_control()
+{
+    auto const result = std::make_shared<mir::client::LifecycleControl>();
+    result->set_lifecycle_event_handler([](MirLifecycleState) {});
+    return result;
+}
+}
+
 mir::test::TestProtobufClient::TestProtobufClient(
     std::string socket_file,
     int timeout_ms) :
@@ -38,7 +48,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
-        std::make_shared<mir::client::LifecycleControl>())),
+        make_lifecycle_control())),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
