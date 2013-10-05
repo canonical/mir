@@ -54,9 +54,6 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
     return handle.get();
 }
 
-
-// TODO: VERY MESSY DONT LAND THIS without fd test
-//sync object could be passed to hwc. we don't need to that yet though
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
     //TODO: pass fence to HWC instead of waiting here

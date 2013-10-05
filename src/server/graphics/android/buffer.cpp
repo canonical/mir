@@ -69,8 +69,30 @@ geom::PixelFormat mga::Buffer::pixel_format() const
     return mga::to_mir_format(native_buffer->format);
 }
 
+bool mga::Buffer::can_bypass() const
+{
+    return false;
+}
+
+void mga::Buffer::wait_for_content_available() const
+{
+    std::unique_lock<std::mutex> lk(content_lock);
+    while (!content_usable)
+        content_cv.wait(lk);
+    content_usable = false;
+}
+
+void mga::Buffer::release_content() const
+{
+    std::unique_lock<std::mutex> lk(content_lock);
+    content_usable = true;
+    content_cv.notify_all();
+}
+
 void mga::Buffer::bind_to_texture()
 {
+    //we are about to use the color buffer. make sure we own it, and its ready
+    wait_for_content_available();
     buffer_fence->wait();
 
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -100,28 +122,24 @@ void mga::Buffer::bind_to_texture()
     }
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-}
 
-bool mga::Buffer::can_bypass() const
-{
-    return false;
+    //note: this is wrong to do here, however, we don't have the infrastructure to pass the
+    //  texture resource to the compositor. We are guarnteed no tearing by the swapper algorithm
+    release_content();
 }
 
 std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
 {
-    std::unique_lock<std::mutex> lk(content_lock);
-    while (!content_usable)
-        content_cv.wait(lk);
-    content_usable = false;
+    wait_for_content_available();
 
     //copy the fence out to the native user
     native_buffer->fence = buffer_fence->copy_native_handle();
-
     return std::shared_ptr<mga::NativeBuffer>(
         native_buffer.get(),
         [this](NativeBuffer* buffer)
         {
             mga::SyncFence sync_fence(sync_ops, buffer->fence);
             buffer_fence->merge_with(sync_fence);
+            release_content();
         });
 }

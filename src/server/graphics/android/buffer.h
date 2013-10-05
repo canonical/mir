@@ -56,10 +56,13 @@ public:
     void bind_to_texture();
     bool can_bypass() const override;
 
+    //note, you will get the native representation of an android buffer, including
+    //the fences associated with the buffer. You must close these fences
     std::shared_ptr<NativeBuffer> native_buffer_handle() const;
 
 private:
-    void release_native_fence(int fence_fd) const;
+    void wait_for_content_available() const;
+    void release_content() const;
 
     std::mutex mutable content_lock;
     std::condition_variable mutable content_cv;
