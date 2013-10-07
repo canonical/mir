@@ -32,10 +32,11 @@ namespace graphics
 {
 
 #ifdef ANDROID
-//MirNativeBuffer must be C89 compatible. Internally, we use mg::NativeBuffer
+//MirNativeBuffer must be C89 compatible. Internally, we use mg::NativeBuffer so 
+//we're not stuck with POD types
 typedef struct android::NativeBuffer NativeBuffer;
 #else
-typedef struct NativeBuffer ::MirNativeBuffer
+typedef struct MirBufferPackage NativeBuffer;
 #endif
 
 }
