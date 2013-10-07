@@ -22,7 +22,7 @@
 namespace geom=mir::geometry;
 namespace ms = mir::surfaces;
 
-ms::SurfaceData::SurfaceData(std::string const& name, geom::Rectangle rect, std::function<void()> change_cb)
+ms::SurfaceData::SurfaceData(std::string const& name, geom::Rectangle rect, std::function<void()> change_cb, bool nonrectangular)
     : notify_change(change_cb),
       surface_name(name),
       surface_rect(rect),
@@ -30,6 +30,7 @@ ms::SurfaceData::SurfaceData(std::string const& name, geom::Rectangle rect, std:
       surface_alpha(1.0f),
       first_frame_posted(false),
       hidden(false),
+      nonrectangular(nonrectangular),
       input_rectangles{surface_rect}
 {
 }
@@ -93,7 +94,7 @@ bool ms::SurfaceData::should_be_rendered_in(geom::Rectangle const& rect) const
 
 bool ms::SurfaceData::shaped() const
 {
-    return false; // TODO: get the real answer from the surface pixelformat
+    return nonrectangular;
 }
 
 void ms::SurfaceData::apply_alpha(float alpha)
