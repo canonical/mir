@@ -112,10 +112,8 @@ TEST_F(SyncSwTest, sync_merge_with_valid_fd)
         .WillOnce(Invoke(&setter, &IoctlSetter::merge_setter));
 
     mga::SyncFence fence1(mock_fops, dummy_fd);
-    auto mock_fops2 = std::make_shared<MockFileOps>();
-    mga::SyncFence fence2(mock_fops2, dummy_fd2);
 
-    fence1.merge_with(std::move(fence2));
+    fence1.merge_with(dummy_fd2);
 }
 
 TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
@@ -125,9 +123,8 @@ TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
         .Times(0);
 
     mga::SyncFence fence1(mock_fops, invalid_fd);
-    mga::SyncFence fence2(mock_fops, dummy_fd);
 
-    fence1.merge_with(std::move(fence2));
+    fence1.merge_with(dummy_fd);
 }
 
 TEST_F(SyncSwTest, copy_dups_fd)

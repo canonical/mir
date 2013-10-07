@@ -35,8 +35,7 @@ namespace geom=mir::geometry;
 mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
                     std::shared_ptr<Fence> const& fence,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
-    : content_usable(true),
-      native_buffer(buffer_handle),
+    : native_buffer(buffer_handle),
       buffer_fence(fence),
       sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       egl_extensions(extensions)
@@ -74,25 +73,11 @@ bool mga::Buffer::can_bypass() const
     return false;
 }
 
-void mga::Buffer::wait_for_content_available() const
-{
-    std::unique_lock<std::mutex> lk(content_lock);
-    while (!content_usable)
-        content_cv.wait(lk);
-    content_usable = false;
-}
-
-void mga::Buffer::release_content() const
-{
-    std::unique_lock<std::mutex> lk(content_lock);
-    content_usable = true;
-    content_cv.notify_all();
-}
-
 void mga::Buffer::bind_to_texture()
 {
     //we are about to use the color buffer. make sure we own it, and its ready
-    wait_for_content_available();
+    std::unique_lock<std::mutex> lk(content_lock);
+
     buffer_fence->wait();
 
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -123,23 +108,23 @@ void mga::Buffer::bind_to_texture()
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
-    //note: this is wrong to do here, however, we don't have the infrastructure to pass the
-    //  texture resource to the compositor. We are guarnteed no tearing by the swapper algorithm
-    release_content();
+    //note: we should transfer the content_lock to the compositor until the rendering is complete
+    //      since we can't do that yet, we rely on the swapper algorithm to ensure the texture is 
+    //      owned by the compositor until the render is done
 }
 
 std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
 {
-    wait_for_content_available();
+    std::unique_lock<std::mutex> lk(content_lock);
 
     //copy the fence out to the native user
     native_buffer->fence = buffer_fence->copy_native_handle();
     return std::shared_ptr<mga::NativeBuffer>(
         native_buffer.get(),
-        [this](NativeBuffer* buffer)
+        [this,&lk](NativeBuffer* buffer)
         {
             mga::SyncFence sync_fence(sync_ops, buffer->fence);
             buffer_fence->merge_with(sync_fence);
-            release_content();
+            lk.unlock();
         });
 }

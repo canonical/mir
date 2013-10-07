@@ -52,7 +52,7 @@ public:
     ~SyncFence() noexcept;
 
     void wait();
-    void merge_with(Fence const& merge_fence);
+    void merge_with(int merge_fd);
     int copy_native_handle() const;
 
 private:

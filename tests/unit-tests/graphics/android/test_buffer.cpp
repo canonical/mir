@@ -55,7 +55,7 @@ protected:
         mock_sync_fence = std::make_shared<mtd::MockFence>();
     }
 
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockFence> mock_sync_fence;
     std::shared_ptr<mga::NativeBuffer> mock_buffer_handle;
     geom::PixelFormat pf;

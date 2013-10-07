@@ -61,12 +61,7 @@ public:
     std::shared_ptr<NativeBuffer> native_buffer_handle() const;
 
 private:
-    void wait_for_content_available() const;
-    void release_content() const;
-
     std::mutex mutable content_lock;
-    std::condition_variable mutable content_cv;
-    bool mutable content_usable;
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 

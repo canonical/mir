@@ -47,9 +47,8 @@ void mga::SyncFence::wait()
     }
 }
 
-void mga::SyncFence::merge_with(mga::Fence const& fence)
+void mga::SyncFence::merge_with(int merge_fd)
 {
-    auto merge_fd = fence.copy_native_handle();
     if (merge_fd < 0)
     {
         return;
