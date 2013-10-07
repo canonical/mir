@@ -91,9 +91,10 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_and_updates_fence_when_r
     EXPECT_CALL(*mock_sync_fence, copy_native_handle())
         .Times(1)
         .WillOnce(Return(acquire_fake_fence_fd));
-    EXPECT_CALL(*mock_sync_fence, merge_with(_))
+    EXPECT_CALL(*mock_sync_fence, merge_with(release_fake_fence_fd))
         .Times(1);
 
+printf("ok.\n");
     mga::Buffer buffer(mock_buffer_handle, mock_sync_fence, extensions);
     auto native_resource = buffer.native_buffer_handle();
 
@@ -101,6 +102,7 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_and_updates_fence_when_r
     EXPECT_EQ(acquire_fake_fence_fd, native_resource->fence);
 
     native_resource->fence = release_fake_fence_fd;
+printf("Zoo\n");
 }
 
 TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)

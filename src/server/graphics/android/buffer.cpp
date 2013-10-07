@@ -37,7 +37,6 @@ mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
     : native_buffer(buffer_handle),
       buffer_fence(fence),
-      sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       egl_extensions(extensions)
 {
 }
@@ -75,9 +74,7 @@ bool mga::Buffer::can_bypass() const
 
 void mga::Buffer::bind_to_texture()
 {
-    //we are about to use the color buffer. make sure we own it, and its ready
     std::unique_lock<std::mutex> lk(content_lock);
-
     buffer_fence->wait();
 
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -108,9 +105,9 @@ void mga::Buffer::bind_to_texture()
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
-    //note: we should transfer the content_lock to the compositor until the rendering is complete
-    //      since we can't do that yet, we rely on the swapper algorithm to ensure the texture is 
-    //      owned by the compositor until the render is done
+    //note: this is wrong to do here if we don't update the fence. however, we don't have the
+    //      infrastructure to pass the texture resource to the compositor yet. We are guaranteed
+    //      no tearing by the swapper algorithm
 }
 
 std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
@@ -119,12 +116,16 @@ std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
 
     //copy the fence out to the native user
     native_buffer->fence = buffer_fence->copy_native_handle();
-    return std::shared_ptr<mga::NativeBuffer>(
+
+    auto native_resource = std::shared_ptr<mga::NativeBuffer>(
         native_buffer.get(),
-        [this,&lk](NativeBuffer* buffer)
+        [this](NativeBuffer* buffer)
         {
-            mga::SyncFence sync_fence(sync_ops, buffer->fence);
-            buffer_fence->merge_with(sync_fence);
-            lk.unlock();
+            buffer_fence->merge_with(buffer->fence);
+            content_lock.unlock();
         });
+
+    //lock remains in effect until the native handle is released 
+    lk.release();
+    return native_resource;
 }
