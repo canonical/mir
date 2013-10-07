@@ -31,7 +31,7 @@ class EventFilter
 public:
     virtual ~EventFilter() = default;
 
-    // Return true to filter it out or false to let it be handled by other filters and/or dispatched to surfaces
+    // \return true indicates the event was consumed by the filter
     virtual bool handle(MirEvent const& event) = 0;
 
 protected:
