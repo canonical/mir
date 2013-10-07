@@ -304,6 +304,8 @@ protected:
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
+    int default_ipc_threads = 10;
+
 private:
     int const argc;
     char const** const argv;

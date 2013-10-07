@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <unistd.h>
+#include <signal.h>
 
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
@@ -201,6 +202,18 @@ MirWaitHandle* MirConnection::release_surface(
     return new_wait_handle;
 }
 
+namespace
+{
+void default_lifecycle_event_handler(MirLifecycleState transition)
+{
+    if (transition == mir_lifecycle_connection_lost)
+    {
+        raise(SIGTERM);
+    }
+}
+}
+
+
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     bool safe_to_callback = true;
@@ -225,6 +238,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result.display_configuration());
+        lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
     }
 
     if (safe_to_callback) callback(this, context);
