@@ -37,6 +37,7 @@ class HWC11Device : public HWCCommonDevice
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCLayerList> const& layer_list,
+                std::shared_ptr<DisplaySupportProvider> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
     ~HWC11Device() noexcept;
 
@@ -50,6 +51,7 @@ public:
 
 private:
     std::shared_ptr<HWCLayerList> const layer_list;
+    std::shared_ptr<DisplaySupportProvider> const fb_device;
     unsigned int primary_display_config;
 };
 

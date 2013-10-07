@@ -30,9 +30,11 @@ namespace geom=mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerList> const& layer_list,
+                              std::shared_ptr<DisplaySupportProvider> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list(layer_list)
+      layer_list(layer_list),
+      fb_device(fbdev)
 {
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);

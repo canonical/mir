@@ -33,7 +33,8 @@ class AndroidHWCFactory : public HWCFactory
 {
 public:
     std::shared_ptr<HWCDevice> create_hwc_1_1(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device) const;
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+        std::shared_ptr<DisplaySupportProvider> const& fb_device) const;
 
     std::shared_ptr<HWCDevice> create_hwc_1_0(
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,

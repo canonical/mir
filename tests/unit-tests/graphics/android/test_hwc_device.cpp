@@ -56,10 +56,10 @@ template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const& layer_list,
-                                                std::shared_ptr<mga::DisplaySupportProvider> const&,
+                                                std::shared_ptr<mga::DisplaySupportProvider> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
-    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, coordinator);
+    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fbdev, coordinator);
 }
 
 namespace

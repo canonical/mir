@@ -40,6 +40,8 @@ ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
     auto buffer = surface->advance_client_buffer();
     auto handle = buffer->native_buffer_handle().get();
+    //TODO: pass fence to driver instead of closing here
+    close(handle->fence); 
     resource_cache->store_buffer(buffer, handle);
     return handle;
 }

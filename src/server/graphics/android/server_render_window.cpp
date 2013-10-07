@@ -50,6 +50,8 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle();
+    //TODO: pass fence to driver instead of closing here
+    close(handle->fence); 
     resource_cache->store_buffer(buffer, handle.get());
     return handle.get();
 }
@@ -61,7 +63,7 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer,
     mga::SyncFence sync_fence(ops, fence_fd);
     sync_fence.wait();
 
-    auto buffer_resource = resource_cache->retrieve_buffer(buffer); 
+    auto buffer_resource = resource_cache->retrieve_buffer(buffer);
     poster->set_next_frontbuffer(buffer_resource);
     swapper->compositor_release(buffer_resource);
 }

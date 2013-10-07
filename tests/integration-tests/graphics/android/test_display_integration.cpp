@@ -171,7 +171,7 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     auto layerlist = std::make_shared<mga::LayerList>();
 
     auto syncer = std::make_shared<mga::HWCVsync>();
-    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, syncer);
+    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device, syncer);
     auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(hwc);
     auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, hwc, mock_display_report);
 
