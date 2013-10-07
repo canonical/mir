@@ -57,7 +57,7 @@ BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
 
 bool BypassFilter::operator()(const CompositingCriteria &criteria)
 {
-    if (criteria.alpha() != 1.0f)
+    if (criteria.alpha() != 1.0f || criteria.shaped())
         return false;
 
     if (!all_orthogonal)
