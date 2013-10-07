@@ -277,9 +277,26 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const MirDisplayMode *mode = &output->modes[output->current_mode];
 
-    unsigned int valid_formats;
+    const unsigned int max_formats = 10;
+    unsigned int format[max_formats];
+    unsigned int nformats;
+
     mir_connection_get_available_surface_formats(connection,
-        &surfaceparm.pixel_format, 1, &valid_formats);
+        format, max_formats, &nformats);
+
+    surfaceparm.pixel_format = format[0];
+    /* Try to find a format without alpha channel, for performance */
+    for (unsigned int f = 0; f < nformats; f++)
+    {
+        /* It would be nice if you could *calculate* alpha size from format */
+        if (format[f] == mir_pixel_format_xbgr_8888 ||
+            format[f] == mir_pixel_format_xrgb_8888 ||
+            format[f] == mir_pixel_format_bgr_888)
+        {
+            surfaceparm.pixel_format = format[f];
+            break;
+        }
+    }
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), "
            "supports %d pixel formats\n",
