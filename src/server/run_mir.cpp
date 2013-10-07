@@ -20,9 +20,33 @@
 #include "mir/display_server.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
+#include "mir/frontend/connector.h"
 
 #include <csignal>
+#include <cstdlib>
 #include <cassert>
+
+namespace
+{
+std::weak_ptr<mir::frontend::Connector> weak_connector;
+
+extern "C" void delete_endpoint()
+{
+    if (auto connector = weak_connector.lock())
+    {
+        weak_connector.reset();
+        connector->remove_endpoint();
+    }
+}
+
+extern "C" void sigsegv_or_sigabrt(int sig)
+{
+    delete_endpoint();
+
+    // Thou shalt not return from SIGSEGV handler
+    if (sig == SIGSEGV) exit(EXIT_FAILURE);
+}
+}
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
@@ -33,12 +57,20 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
         {SIGINT, SIGTERM},
         [&server_ptr](int)
         {
+            delete_endpoint();
             assert(server_ptr);
             server_ptr->stop();
         });
 
     DisplayServer server(config);
     server_ptr = &server;
+
+    weak_connector = config.the_connector();
+
+    signal(SIGSEGV, &sigsegv_or_sigabrt);
+    signal(SIGABRT, &sigsegv_or_sigabrt);
+
+    std::atexit(&delete_endpoint);
 
     init(server);
     server.run();
