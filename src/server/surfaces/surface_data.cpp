@@ -91,6 +91,11 @@ bool ms::SurfaceData::should_be_rendered_in(geom::Rectangle const& rect) const
     return rect.overlaps(surface_rect);
 }
 
+bool ms::SurfaceData::shaped() const
+{
+    return false; // TODO: get the real answer from the surface pixelformat
+}
+
 void ms::SurfaceData::apply_alpha(float alpha)
 {
     {

@@ -40,6 +40,7 @@ public:
     glm::mat4 const& transformation() const;
     float alpha() const;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const;
+    bool shaped() const;
 
     //mi::Surface
     std::string const& name() const;

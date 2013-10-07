@@ -59,6 +59,11 @@ public:
         return rect.overlaps(r);
     }
 
+    bool shaped() const override
+    {
+        return false;
+    }
+
 private:
     mir::geometry::Rectangle rect;
     glm::mat4 trans;
