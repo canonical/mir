@@ -221,12 +221,10 @@ TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
     Mock::VerifyAndClearExpectations(client.get());
 
     EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
-    EXPECT_CALL(*client, disconnect_done()).Times(0);
+    EXPECT_CALL(*client, disconnect_done()).Times(1);
 
     EXPECT_THROW({
-    // We don't know if this will be called, so it can't auto destruct
-    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
-    client->display_server.disconnect(0, &client->ignored, &client->ignored, new_callback.get());
+    client->display_server.disconnect(0, &client->ignored, &client->ignored, google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
     client->wait_for_disconnect_done();
     }, std::runtime_error);
 }

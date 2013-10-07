@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,7 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com
+ * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
 #ifndef MIR_TEST_FAKE_EVENT_HUB_H_
@@ -43,6 +44,29 @@ namespace android
 class FakeEventHub : public droidinput::EventHubInterface
 {
 public:
+    struct KeyInfo {
+        int32_t keyCode;
+        uint32_t flags;
+    };
+
+    typedef struct FakeDevice
+    {
+        uint32_t classes;
+        droidinput::InputDeviceIdentifier identifier;
+        droidinput::PropertyMap configuration;
+        droidinput::KeyedVector<int, droidinput::RawAbsoluteAxisInfo> absoluteAxes;
+        droidinput::KeyedVector<int, bool> relativeAxes;
+        droidinput::KeyedVector<int32_t, int32_t> keyCodeStates;
+        droidinput::KeyedVector<int32_t, int32_t> scanCodeStates;
+        droidinput::KeyedVector<int32_t, int32_t> switchStates;
+        droidinput::KeyedVector<int32_t, int32_t> absoluteAxisValue;
+        droidinput::KeyedVector<int32_t, KeyInfo> keysByScanCode;
+        droidinput::KeyedVector<int32_t, KeyInfo> keysByUsageCode;
+        droidinput::KeyedVector<int32_t, bool> leds;
+        droidinput::Vector<droidinput::VirtualKeyDefinition> virtualKeys;
+        std::map<int, bool> input_properties;
+    } FakeDevice;
+
     FakeEventHub();
     virtual ~FakeEventHub();
 
@@ -52,62 +76,41 @@ public:
     // cursor device in the android input stack.
     static const int BuiltInCursorID = droidinput::BUILT_IN_KEYBOARD_ID + 1;
 
-    virtual uint32_t getDeviceClasses(int32_t deviceId) const;
-
-    virtual droidinput::InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const;
-
-    virtual void getConfiguration(int32_t deviceId,
-            droidinput::PropertyMap* outConfiguration) const;
-
-    virtual droidinput::status_t getAbsoluteAxisInfo(int32_t deviceId, int axis,
-            droidinput::RawAbsoluteAxisInfo* outAxisInfo) const;
-
-    virtual bool hasRelativeAxis(int32_t deviceId, int axis) const;
-
-    virtual bool hasInputProperty(int32_t deviceId, int property) const;
-
-    virtual droidinput::status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
-            int32_t* outKeycode, uint32_t* outFlags) const;
-
-    virtual droidinput::status_t mapAxis(int32_t deviceId, int32_t scanCode,
-            droidinput::AxisInfo* outAxisInfo) const;
-
-    virtual void setExcludedDevices(const droidinput::Vector<droidinput::String8>& devices);
-
-    virtual size_t getEvents(int timeoutMillis, droidinput::RawEvent* buffer,
-            size_t bufferSize);
-
-    virtual int32_t getScanCodeState(int32_t deviceId, int32_t scanCode) const;
-    virtual int32_t getKeyCodeState(int32_t deviceId, int32_t keyCode) const;
-    virtual int32_t getSwitchState(int32_t deviceId, int32_t sw) const;
-    virtual droidinput::status_t getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
-                                          int32_t* outValue) const;
-
-    virtual bool markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
-            const int32_t* keyCodes, uint8_t* outFlags) const;
-
-    virtual bool hasScanCode(int32_t deviceId, int32_t scanCode) const;
-    virtual bool hasLed(int32_t deviceId, int32_t led) const;
-    virtual void setLedState(int32_t deviceId, int32_t led, bool on);
-
-    virtual void getVirtualKeyDefinitions(int32_t deviceId,
-            droidinput::Vector<droidinput::VirtualKeyDefinition>& outVirtualKeys) const;
-
-    virtual droidinput::sp<droidinput::KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const;
-    virtual bool setKeyboardLayoutOverlay(int32_t deviceId,
-                                          const droidinput::sp<droidinput::KeyCharacterMap>& map);
-
-    virtual void vibrate(int32_t deviceId, nsecs_t duration);
-    virtual void cancelVibrate(int32_t deviceId);
-
-    virtual void requestReopenDevices();
-
-    virtual void wake();
-
-    virtual void dump(droidinput::String8& dump);
-
-    virtual void monitor();
-    virtual void flush();
+    // From EventHubInterface
+    uint32_t getDeviceClasses(int32_t deviceId) const override;
+    droidinput::InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const override;
+    void getConfiguration(int32_t deviceId, droidinput::PropertyMap* outConfiguration) const override;
+    droidinput::status_t getAbsoluteAxisInfo(int32_t deviceId, int axis,
+                                  droidinput::RawAbsoluteAxisInfo* outAxisInfo) const override;
+    bool hasRelativeAxis(int32_t deviceId, int axis) const override;
+    bool hasInputProperty(int32_t deviceId, int property) const override;
+    droidinput::status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode, int32_t* outKeycode,
+            uint32_t* outFlags) const override;
+    droidinput::status_t mapAxis(int32_t deviceId, int32_t scanCode,
+            droidinput::AxisInfo* outAxisInfo) const override;
+    void setExcludedDevices(const droidinput::Vector<droidinput::String8>& devices) override;
+    size_t getEvents(int timeoutMillis, droidinput::RawEvent* buffer, size_t bufferSize) override;
+    int32_t getScanCodeState(int32_t deviceId, int32_t scanCode) const override;
+    int32_t getKeyCodeState(int32_t deviceId, int32_t keyCode) const override;
+    int32_t getSwitchState(int32_t deviceId, int32_t sw) const override;
+    droidinput::status_t getAbsoluteAxisValue(int32_t deviceId, int32_t axis, int32_t* outValue) const override;
+    bool markSupportedKeyCodes(int32_t deviceId, size_t numCodes, const int32_t* keyCodes,
+            uint8_t* outFlags) const override;
+    bool hasScanCode(int32_t deviceId, int32_t scanCode) const override;
+    bool hasLed(int32_t deviceId, int32_t led) const override;
+    void setLedState(int32_t deviceId, int32_t led, bool on) override;
+    void getVirtualKeyDefinitions(int32_t deviceId,
+            droidinput::Vector<droidinput::VirtualKeyDefinition>& outVirtualKeys) const override;
+    droidinput::sp<droidinput::KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const override;
+    bool setKeyboardLayoutOverlay(int32_t deviceId,
+            const droidinput::sp<droidinput::KeyCharacterMap>& map) override;
+    void vibrate(int32_t deviceId, nsecs_t duration) override;
+    void cancelVibrate(int32_t deviceId) override;
+    void requestReopenDevices() override;
+    void wake() override;
+    void dump(droidinput::String8& dump) override;
+    void monitor() override;
+    void flush() override;
 
     void synthesize_builtin_keyboard_added();
     void synthesize_builtin_cursor_added();
@@ -116,21 +119,42 @@ public:
     void synthesize_event(const synthesis::KeyParameters &parameters);
     void synthesize_event(const synthesis::ButtonParameters &parameters);
     void synthesize_event(const synthesis::MotionParameters &parameters);
+    void synthesize_event(nsecs_t when, int32_t deviceId, int32_t type, int32_t code, int32_t value);
+
+    void addDevice(int32_t deviceId, const std::string& name, uint32_t classes);
+    void removeDevice(int32_t deviceId);
+    void finishDeviceScan();
+    void addConfigurationProperty(int32_t device_id, const std::string& key, const std::string& value);
+    void addConfigurationMap(int32_t device_id, const droidinput::PropertyMap* configuration);
+    void addAbsoluteAxis(int32_t device_id, int axis, int32_t minValue, int32_t maxValue,
+                           int flat, int fuzz, int resolution = 0);
+    void addRelativeAxis(int32_t device_id, int32_t axis);
+    void setKeyCodeState(int32_t deviceId, int32_t keyCode, int32_t state);
+    void setScanCodeState(int32_t deviceId, int32_t scanCode, int32_t state);
+    void setSwitchState(int32_t deviceId, int32_t switchCode, int32_t state);
+    void setAbsoluteAxisValue(int32_t deviceId, int32_t axis, int32_t value);
+    void addKey(int32_t deviceId, int32_t scanCode, int32_t usageCode, int32_t keyCode, uint32_t flags);
+    void addLed(int32_t deviceId, int32_t led, bool initialState);
+    bool getLedState(int32_t deviceId, int32_t led);
+    droidinput::Vector<std::string>& getExcludedDevices();
+    void addVirtualKeyDefinition(int32_t deviceId, const droidinput::VirtualKeyDefinition& definition);
+    const FakeDevice* getDevice(int32_t deviceId) const;
+    FakeDevice* getDevice(int32_t deviceId);
+    size_t eventsQueueSize() const;
 
     // list of RawEvents available for consumption via getEvents
     std::mutex guard;
     std::list<droidinput::RawEvent> events_available;
 
-    typedef struct FakeDevice
-    {
-        uint32_t classes;
-        droidinput::InputDeviceIdentifier identifier;
-        std::map<int, bool> input_properties;
-    } FakeDevice;
 
     std::map<int32_t, FakeDevice> device_from_id;
 
     droidinput::KeyMap keymap;
+
+    droidinput::Vector<droidinput::String8> excluded_devices;
+
+private:
+    const KeyInfo* getKey(const FakeDevice* device, int32_t scanCode, int32_t usageCode) const;
 
 };
 }
