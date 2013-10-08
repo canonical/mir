@@ -202,7 +202,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
     int fence_fd = 33;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
-    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
+    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, fence_fd))
         .Times(1);
 
     window->queueBuffer(window.get(), &buffer, fence_fd);
