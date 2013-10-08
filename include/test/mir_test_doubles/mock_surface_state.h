@@ -60,6 +60,7 @@ public:
     MOCK_METHOD0(frame_posted, void());
     MOCK_METHOD1(set_hidden, void(bool));
     MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const&));
+    MOCK_CONST_METHOD0(shaped, bool());
 };
 
 typedef ::testing::NiceMock<MockSurfaceState> StubSurfaceState;
