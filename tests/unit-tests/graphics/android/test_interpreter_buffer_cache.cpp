@@ -17,11 +17,13 @@
  */
 
 #include "src/server/graphics/android/interpreter_cache.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
@@ -50,7 +52,7 @@ TEST_F(InterpreterResourceTest, deposit_buffer)
     mga::InterpreterCache cache;
     cache.store_buffer(stub_buffer1, native_buffer1);
 
-    auto test_buffer = cache.retrieve_buffer(native_buffer1);
+    auto test_buffer = cache.retrieve_buffer(native_buffer1.get());
     EXPECT_EQ(stub_buffer1, test_buffer);
 }
 
@@ -88,10 +90,13 @@ TEST_F(InterpreterResourceTest, update_fence_for)
     mga::InterpreterCache cache;
 
     cache.store_buffer(stub_buffer1, native_buffer1);
+    cache.update_native_fence(native_buffer1.get(), fence);
 
-    cache.update_fence(native_buffer, fence);
+    EXPECT_EQ(fence, native_buffer1->fence);
 
-    EXPECT_EQ(native_buffer1->fence, fence);
+    EXPECT_THROW({
+        cache.update_native_fence(nullptr, fence);
+    }, std::runtime_error);
 }
 
 TEST_F(InterpreterResourceTest, retreive_buffer_with_bad_key_throws)

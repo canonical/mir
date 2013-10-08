@@ -77,7 +77,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);
     std::shared_ptr<mg::Buffer> tmp = mock_buffer;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_native_buffer.get()))
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_native_buffer))
         .Times(1);
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);

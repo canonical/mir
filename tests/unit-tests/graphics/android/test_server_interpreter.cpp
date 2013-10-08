@@ -36,7 +36,6 @@ namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 
 namespace
 {
@@ -89,7 +88,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
         .WillOnce(Return(stub_buffer));
 
     std::shared_ptr<mg::Buffer> tmp = mock_buffer1;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_buffer.get()))
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_buffer))
         .Times(1);
 
     auto rc_buffer = render_window.driver_requests_buffer();

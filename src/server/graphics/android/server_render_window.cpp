@@ -50,7 +50,7 @@ mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
     auto handle = buffer->native_buffer_handle();
     //TODO: pass fence to driver instead of closing here
     close(handle->fence); 
-    resource_cache->store_buffer(buffer, handle.get());
+    resource_cache->store_buffer(buffer, handle);
     return handle.get();
 }
 

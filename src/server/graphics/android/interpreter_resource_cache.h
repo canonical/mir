@@ -18,6 +18,7 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_
 #define MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_
+#include "mir/graphics/native_buffer.h"
 #include <system/window.h>
 #include <memory>
 
@@ -34,8 +35,10 @@ class InterpreterResourceCache
 public:
     InterpreterResourceCache() {}
 
-    virtual void store_buffer(std::shared_ptr<graphics::Buffer>const& buffer, ANativeWindowBuffer* key) = 0;
+    virtual void store_buffer(std::shared_ptr<graphics::Buffer>const& buffer,
+                              std::shared_ptr<graphics::NativeBuffer> const& key) = 0;
     virtual std::shared_ptr<graphics::Buffer> retrieve_buffer(ANativeWindowBuffer* key) = 0;
+    virtual void update_native_fence(ANativeWindowBuffer* key, int fence) = 0;
 
 protected:
     virtual ~InterpreterResourceCache() {}

@@ -41,11 +41,11 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface>
 mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
     auto buffer = surface->advance_client_buffer();
-    auto handle = buffer->native_buffer_handle().get();
+    auto handle = buffer->native_buffer_handle();
     //TODO: pass fence to driver instead of closing here
     close(handle->fence); 
     resource_cache->store_buffer(buffer, handle);
-    return handle;
+    return handle.get();
 }
 
 void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
