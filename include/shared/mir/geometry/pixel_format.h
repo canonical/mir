@@ -42,6 +42,12 @@ static inline size_t bytes_per_pixel(PixelFormat fmt)
     return (fmt == PixelFormat::bgr_888) ? 3 : 4;
 }
 
+static inline bool has_alpha(PixelFormat fmt)
+{
+    return (fmt == PixelFormat::abgr_8888) ||
+           (fmt == PixelFormat::argb_8888);
+}
+
 }
 }
 
