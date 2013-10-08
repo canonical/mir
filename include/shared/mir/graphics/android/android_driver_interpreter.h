@@ -31,8 +31,8 @@ namespace android
 class AndroidDriverInterpreter
 {
 public:
-    virtual ANativeWindowBuffer* driver_requests_buffer() = 0;
-    virtual void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) = 0;
+    virtual std::shared_ptr<NativeBuffer> driver_requests_buffer() = 0;
+    virtual void driver_returns_buffer(std::shared_ptr<NativeBuffer> const) = 0;
     virtual void dispatch_driver_request_format(int format) = 0;
     virtual int driver_requests_info(int key) const = 0;
     virtual void sync_to_display(bool sync) = 0; 
