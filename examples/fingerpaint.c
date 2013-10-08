@@ -282,9 +282,46 @@ int main(int argc, char *argv[])
     MirEventDelegate delegate = {&on_event, &canvas};
     unsigned int f;
 
-    (void)argc;
+    char *mir_socket = NULL;
 
-    conn = mir_connect_sync(NULL, argv[0]);
+    if (argc > 1)
+    {
+        int i;
+        for (i = 1; i < argc; i++)
+        {
+            int help = 0;
+            const char *arg = argv[i];
+
+            if (arg[0] == '-')
+            {
+                switch (arg[1])
+                {
+                case 'm':
+                    mir_socket = argv[++i];
+                    break;
+                case 'h':
+                default:
+                    help = 1;
+                    break;
+                }
+            }
+            else
+            {
+                help = 1;
+            }
+
+            if (help)
+            {
+                printf("Usage: %s [<options>]\n"
+                       "  -h               Show this help text\n"
+                       "  -m socket        Mir server socket\n"
+                       , argv[0]);
+                return 0;
+            }
+        }
+    }
+
+    conn = mir_connect_sync(mir_socket, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
         fprintf(stderr, "Could not connect to a display server.\n");

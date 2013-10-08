@@ -84,3 +84,7 @@ void mclr::NullRpcReport::file_descriptors_received(
     std::vector<int32_t> const& /*fds*/)
 {
 }
+
+void mclr::NullRpcReport::connection_failure(std::exception const& /*ex*/)
+{
+}

@@ -22,6 +22,8 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
+#include "mir/graphics/display_configuration.h"
+#include "mir_toolkit/common.h"
 
 #include <gbm.h>
 
@@ -42,6 +44,7 @@ public:
     virtual geometry::Size size() const = 0;
 
     virtual bool set_crtc(uint32_t fb_id) = 0;
+    virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(uint32_t fb_id) = 0;
     virtual void wait_for_page_flip() = 0;
 
@@ -49,6 +52,8 @@ public:
     virtual void move_cursor(geometry::Point destination) = 0;
     virtual void clear_cursor() = 0;
     virtual bool has_cursor() const = 0;
+    
+    virtual void set_power_mode(MirPowerMode mode) = 0;
 
 protected:
     KMSOutput() = default;

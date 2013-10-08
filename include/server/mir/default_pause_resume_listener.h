@@ -13,31 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
-#define MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
+#ifndef MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_
+#define MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_
 
-#include "src/server/graphics/android/hwc_layerlist.h"
-
-#include <gmock/gmock.h>
+#include "mir/pause_resume_listener.h"
 
 namespace mir
 {
-namespace test
+class DefaultPauseResumeListener : public virtual PauseResumeListener
 {
-namespace doubles
-{
+public:
+    virtual void paused()
+    {
+    }
 
-struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
-{
-    ~MockHWCOrganizer() noexcept {}
-    MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
-    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::Buffer> const&));
+    virtual void resumed()
+    {
+    }
 };
+  
+}
 
-}
-}
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_ */
+#endif /* MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_ */

@@ -99,7 +99,7 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
     packer->pack_stride(buffer->stride());
 }
 
-void mga::AndroidPlatform::initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* /*fd*/)
+void mga::AndroidPlatform::initialize(std::function<void(int)> const& /*auth_magic*/, int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* /*fd*/)
 {
 }
 

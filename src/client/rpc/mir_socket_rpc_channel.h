@@ -57,9 +57,17 @@ public:
                         std::shared_ptr<DisplayConfiguration> const& disp_config,
                         std::shared_ptr<RpcReport> const& rpc_report,
                         std::shared_ptr<LifecycleControl> const& lifecycle_control);
+
+    MirSocketRpcChannel(int native_socket,
+                        std::shared_ptr<SurfaceMap> const& surface_map,
+                        std::shared_ptr<DisplayConfiguration> const& disp_config,
+                        std::shared_ptr<RpcReport> const& rpc_report,
+                        std::shared_ptr<LifecycleControl> const& lifecycle_control);
     ~MirSocketRpcChannel();
 
 private:
+    void init();
+
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);
@@ -68,7 +76,6 @@ private:
     std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
-    boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
 
     static size_t const size_of_header = 2;
@@ -86,10 +93,12 @@ private:
     size_t read_message_header();
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
+    void notify_disconnected();
 
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
+    std::atomic<bool> disconnected;
 };
 
 }

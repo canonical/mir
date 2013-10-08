@@ -39,6 +39,9 @@ public:
     virtual void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
     {
     }
+    virtual void ensure_display_powered(std::shared_ptr<frontend::Session> const&)
+    {
+    }
 };
 }
 }

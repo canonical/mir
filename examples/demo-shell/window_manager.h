@@ -31,6 +31,14 @@ namespace shell
 class FocusController;
 class SessionManager;
 }
+namespace graphics
+{
+class Display;
+}
+namespace compositor
+{
+class Compositor;
+}
 namespace examples
 {
 
@@ -42,6 +50,8 @@ public:
 
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     void set_session_manager(std::shared_ptr<shell::SessionManager> const& sm);
+    void set_display(std::shared_ptr<graphics::Display> const& display);
+    void set_compositor(std::shared_ptr<compositor::Compositor> const& compositor);
     
     bool handle(MirEvent const& event) override;
 
@@ -52,6 +62,9 @@ protected:
 private:
     std::shared_ptr<shell::FocusController> focus_controller;
     std::shared_ptr<shell::SessionManager> session_manager;
+    std::shared_ptr<graphics::Display> display;
+    std::shared_ptr<compositor::Compositor> compositor;
+
     geometry::Displacement relative_click;  // Click location in window space
     geometry::Point click;                  // Click location in screen space
     int max_fingers;  // Maximum number of fingers touched during gesture

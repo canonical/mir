@@ -27,6 +27,8 @@ typedef int mir_eglapp_bool;
 struct MirConnection;
 struct MirSurface;
 
+extern float mir_eglapp_background_opacity;
+
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                                 unsigned int *width, unsigned int *height);
 void            mir_eglapp_swap_buffers(void);

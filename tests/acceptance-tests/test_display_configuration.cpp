@@ -77,7 +77,8 @@ class MockDisplay : public mtd::NullDisplay
 {
 public:
     MockDisplay()
-        : config{std::make_shared<mtd::StubDisplayConfig>()}
+        : config{std::make_shared<mtd::StubDisplayConfig>()},
+          handler_called{false}
     {
     }
 
@@ -101,7 +102,10 @@ public:
             {
                 char c;
                 if (read(fd, &c, 1) == 1)
+                {
                     handler();
+                    handler_called = true;
+                }
             });
     }
 
@@ -114,10 +118,17 @@ public:
         if (write(p.write_fd(), "a", 1)) {}
     }
 
+    void wait_for_configuration_change_handler()
+    {
+        while (!handler_called)
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    }
+
 private:
     std::shared_ptr<mg::DisplayConfiguration> config;
     mtd::NullDisplayBuffer display_buffer;
     mt::Pipe p;
+    std::atomic<bool> handler_called;
 };
 
 class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
@@ -707,5 +718,77 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
         verify_focus_change_expectations();
 
         simple_client_disconnect();
+    });
+}
+
+TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_per_session_config_is_active)
+{
+    mt::CrossProcessAction display_client_connect;
+    mt::CrossProcessAction display_client_apply_config;
+    mt::CrossProcessAction display_client_disconnect;
+    mt::CrossProcessAction verify_hw_config_change_expectations;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(mt::CrossProcessAction const& verify_hw_config_change_expectations)
+            : verify_hw_config_change_expectations{verify_hw_config_change_expectations}
+        {
+        }
+
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
+        {
+
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+
+            return platform;
+        }
+
+        void exec() override
+        {
+            t = std::thread([this](){
+                verify_hw_config_change_expectations.exec([&]
+                {
+                    using namespace testing;
+
+                    Mock::VerifyAndClearExpectations(&platform->mock_display);
+                    /*
+                     * A client with a per-session config is active, the base configuration
+                     * shouldn't be applied.
+                     */
+                    EXPECT_CALL(platform->mock_display, configure(_)).Times(0);
+                    platform->mock_display.emit_configuration_change_event(
+                        mt::fake_shared(changed_stub_display_config));
+                    platform->mock_display.wait_for_configuration_change_handler();
+                    Mock::VerifyAndClearExpectations(&platform->mock_display);
+                });
+            });
+        }
+
+        void on_exit() override
+        {
+            t.join();
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+        std::thread t;
+        mt::CrossProcessAction verify_hw_config_change_expectations;
+    } server_config{verify_hw_config_change_expectations};
+
+    DisplayClient display_client_config{display_client_connect,
+                                        display_client_apply_config,
+                                        display_client_disconnect};
+
+    launch_server_process(server_config);
+    launch_client_process(display_client_config);
+
+    run_in_test_process([&]
+    {
+        display_client_connect();
+        display_client_apply_config();
+
+        verify_hw_config_change_expectations();
+
+        display_client_disconnect();
     });
 }

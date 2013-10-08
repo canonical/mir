@@ -16,36 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
+#ifndef MIR_SURFACES_SURFACE_STATE_H_
+#define MIR_SURFACES_SURFACE_STATE_H_
 
-#include "mir/graphics/display_configuration.h"
+#include "mir/compositor/compositing_criteria.h"
+#include "mir/input/surface.h"
+#include "mutable_surface_state.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace surfaces
 {
 
-struct NullDisplayConfig : public graphics::DisplayConfiguration
+class SurfaceState : public compositor::CompositingCriteria, public input::Surface,
+                     public MutableSurfaceState 
 {
-    NullDisplayConfig()
-    {
-    }
-    virtual void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
-    {
-    }
-    virtual void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
-    {
-    }
-    virtual void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
-    {
-    }
+protected:
+    SurfaceState() = default; 
+    virtual ~SurfaceState() = default;
+    SurfaceState(const SurfaceState&) = delete;
+    SurfaceState& operator=(const SurfaceState& ) = delete;
 };
 
 }
 }
-}
-
-#endif /*MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_ */
+#endif /* MIR_SURFACES_SURFACE_STATE_H_ */

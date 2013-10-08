@@ -22,7 +22,7 @@
 #include "mir_toolkit/mir_client_library_debug.h"
 #include "src/client/client_buffer.h"
 
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -521,6 +521,12 @@ TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
 
             mir_connection_release(connection);
         }
+
+        // this test relies on gbm drivers, use real graphics always
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
     launch_client_process(client_config);
@@ -831,6 +837,13 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
                 FAIL() << error;
             }
         }
+
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
     } client_config;
 
     launch_client_process(client_config);
@@ -859,6 +872,13 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
 // TODO    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             mir_connection_release(connection);
+        }
+
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
         }
     } client_config;
 

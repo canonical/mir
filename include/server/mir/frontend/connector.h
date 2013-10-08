@@ -16,29 +16,29 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_COMMUNICATOR_H_
-#define MIR_FRONTEND_COMMUNICATOR_H_
+#ifndef MIR_FRONTEND_CONNECTOR_H_
+#define MIR_FRONTEND_CONNECTOR_H_
 
 namespace mir
 {
 namespace frontend
 {
-
-class Communicator
+/// Handle client process connections
+class Connector
 {
 public:
-    virtual ~Communicator() {}
-
     virtual void start() = 0;
     virtual void stop() = 0;
 
+    virtual int client_socket_fd() const = 0;
+
 protected:
-    Communicator() = default;
-    Communicator(const Communicator&) = delete;
-    Communicator& operator=(const Communicator&) = delete;
+    Connector() = default;
+    virtual ~Connector() = default;
+    Connector(const Connector&) = delete;
+    Connector& operator=(const Connector&) = delete;
 };
-
 }
 }
 
-#endif // MIR_FRONTEND_COMMUNICATOR_H_
+#endif // MIR_FRONTEND_CONNECTOR_H_

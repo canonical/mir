@@ -176,7 +176,7 @@ void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
     
-    std::chrono::seconds timeout(60);
+    std::chrono::minutes timeout(2);
     auto end_time = std::chrono::system_clock::now() + timeout;
     
     if (client_lifecycles[channel_name] == vanished)

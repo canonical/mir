@@ -41,7 +41,7 @@ mga::HWCRect::HWCRect(geom::Rectangle& rect)
 mga::HWCDefaultLayer::HWCDefaultLayer(std::initializer_list<mga::HWCRect> list)
 {
     /* default values.*/
-    self.compositionType = HWC_FRAMEBUFFER;
+    self.compositionType = HWC_FRAMEBUFFER_TARGET;
     self.hints = 0;
     self.flags = 0;
     self.transform = 0;
@@ -75,27 +75,31 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
 }
 
 mga::HWCFBLayer::HWCFBLayer(
-        std::shared_ptr<ANativeWindowBuffer> const& native_buf,
-        HWCRect& display_frame_rect)
+        buffer_handle_t native_handle,
+        HWCRect display_frame_rect)
     : HWCDefaultLayer{display_frame_rect}
 {
     self.compositionType = HWC_FRAMEBUFFER_TARGET;
-    self.handle = native_buf->handle;
 
+    self.handle = native_handle;
     self.sourceCrop = display_frame_rect;
     self.displayFrame = display_frame_rect;
 }
 
-mga::HWCLayerList::HWCLayerList()
+mga::HWCFBLayer::HWCFBLayer()
+    : HWCFBLayer{nullptr, mga::HWCRect{}}
 {
 }
 
-const mga::LayerList& mga::HWCLayerList::native_list() const
+mga::LayerList::LayerList()
+    : layer_list{std::make_shared<HWCFBLayer>()},
+      hwc_representation{std::make_shared<hwc_display_contents_1_t>()}
 {
-    return layer_list;
+    memset(hwc_representation.get(), 0, sizeof(hwc_display_contents_1_t));
+    update_list();
 }
 
-void mga::HWCLayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
+void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
 
@@ -103,13 +107,32 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
     geom::Rectangle rect{pt, buffer->size()};
     HWCRect display_rect(rect);
 
-    auto fb_layer = std::make_shared<HWCFBLayer>(handle, display_rect);
-    if (layer_list.empty())
-    {
-        layer_list.push_back(fb_layer);
-    }
-    else
-    {
-        layer_list[0] = fb_layer;
-    }
+    auto fb_layer = std::make_shared<HWCFBLayer>(handle->handle, display_rect);
+    layer_list[fb_position] = fb_layer;
+
+    update_list();
 } 
+
+void mga::LayerList::update_list()
+{
+    if (layer_list.size() != hwc_representation->numHwLayers)
+    {
+        auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
+        hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+            static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
+
+        hwc_representation->numHwLayers = layer_list.size();
+    }
+
+    auto i = 0u;
+    for( auto& layer : layer_list)
+    {
+        hwc_representation->hwLayers[i++] = *layer;
+    }
+    hwc_representation->retireFenceFd = -1;
+}
+
+hwc_display_contents_1_t* mga::LayerList::native_list() const
+{
+    return hwc_representation.get();
+}

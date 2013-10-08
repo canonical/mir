@@ -652,25 +652,6 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_vt_switch_not_permanent)
     }
 }
 
-namespace
-{
-    void realtime_compositor_thread(mc::SwitchingBundle &bundle,
-                                    unsigned long frames,
-                                    std::atomic<bool> &done)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        for (unsigned long frame = 0; frame < frames; frame++)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-            auto buf = bundle.compositor_acquire(frame);
-            bundle.compositor_release(buf);
-        }
-        done.store(true);
-    }
-}
-
 TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 {
     for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
@@ -683,10 +664,24 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 
         std::atomic<bool> done(false);
 
-        std::thread monitor1(realtime_compositor_thread,
-                             std::ref(bundle),
-                             compose_frames,
-                             std::ref(done));
+        std::thread monitor1([&]
+        {
+            for (unsigned long frame = 0; frame != compose_frames+3; frame++)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                auto buf = bundle.compositor_acquire(frame);
+                bundle.compositor_release(buf);
+
+                if (frame == compose_frames)
+                {
+                    // Tell the "client" to stop after compose_frames, but
+                    // don't stop rendering immediately to avoid blocking
+                    // if we rendered any twice
+                    done.store(true);
+                }
+            }
+        });
 
         bundle.client_release(bundle.client_acquire());
 
@@ -694,7 +689,6 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         {
             bundle.client_release(bundle.client_acquire());
             client_frames++;
-            std::this_thread::yield();
         }
 
         monitor1.join();

@@ -64,6 +64,12 @@ struct InternalClientWindow : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     geom::Size sz;
 };
+
+struct MockSyncFence : public mga::SyncObject
+{
+    ~MockSyncFence() noexcept {}
+    MOCK_METHOD0(wait, void());
+};
 }
 
 TEST_F(InternalClientWindow, driver_requests_buffer)
@@ -85,15 +91,18 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
 TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
-    std::shared_ptr<mga::SyncObject> fake_sync;
+    auto mock_sync = std::make_shared<MockSyncFence>();
 
+    Sequence seq;
+    EXPECT_CALL(*mock_sync, wait())
+        .InSequence(seq);
     EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
-        .Times(1)
+        .InSequence(seq)
         .WillOnce(Return(mock_buffer));
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_bufferptr = interpreter.driver_requests_buffer();
-    interpreter.driver_returns_buffer(test_bufferptr, fake_sync);
+    interpreter.driver_returns_buffer(test_bufferptr, mock_sync);
 }
 
 TEST_F(InternalClientWindow, size_test)

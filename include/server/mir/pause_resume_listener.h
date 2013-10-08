@@ -13,39 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk
+ * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_COMMUNICATOR_REPORT_H_
-#define MIR_FRONTEND_COMMUNICATOR_REPORT_H_
-
-#include <stdexcept>
+#ifndef MIR_PAUSE_RESUME_LISTENER_H_
+#define MIR_PAUSE_RESUME_LISTENER_H_
 
 namespace mir
 {
-namespace frontend
-{
 
-class CommunicatorReport
+class PauseResumeListener
 {
 public:
-
-    virtual void error(std::exception const& error) = 0;
+    virtual void paused() = 0;
+    virtual void resumed() = 0;
 
 protected:
-    virtual ~CommunicatorReport() = default;
-    CommunicatorReport() = default;
-    CommunicatorReport(const CommunicatorReport&) = delete;
-    CommunicatorReport& operator=(const CommunicatorReport&) = delete;
+    PauseResumeListener() = default;
+    virtual ~PauseResumeListener() = default;
+    PauseResumeListener(PauseResumeListener const&) = delete;
+    PauseResumeListener& operator=(PauseResumeListener const&) = delete;
 };
 
-class NullCommunicatorReport : public CommunicatorReport
-{
-public:
-
-    void error(std::exception const& error);
-};
-}
 }
 
-#endif // MIR_FRONTEND_COMMUNICATOR_REPORT_H_
+#endif /* MIR_PAUSE_RESUME_LISTENER_H_ */

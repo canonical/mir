@@ -30,7 +30,7 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/input_receiver_thread.h"
 
@@ -292,6 +292,9 @@ struct MirClientSurfaceTest : public testing::Test
 {
     void SetUp()
     {
+        // In case an earlier test left a stray file
+        std::remove("./test_socket_surface");
+
         mock_server_tool = std::make_shared<mt::MockServerPackageGenerator>();
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server_tool);
 

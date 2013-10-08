@@ -21,10 +21,11 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
+#include "mir/pause_resume_listener.h"
 #include "mir/display_changer.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
 
@@ -71,9 +72,10 @@ struct mir::DisplayServer::Private
           display{config.the_display()},
           input_configuration{config.the_input_configuration()},
           compositor{config.the_compositor()},
-          communicator{config.the_communicator()},
+          connector{config.the_connector()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
+          pause_resume_listener{config.the_pause_resume_listener()},
           display_changer{config.the_display_changer()},
           paused{false},
           configure_display_on_resume{false}
@@ -101,8 +103,8 @@ struct mir::DisplayServer::Private
                 [this] { compositor->start(); }};
 
             TryButRevertIfUnwinding comm{
-                [this] { communicator->stop(); },
-                [this] { communicator->start(); }};
+                [this] { connector->stop(); },
+                [this] { connector->start(); }};
 
             display->pause();
 
@@ -112,6 +114,8 @@ struct mir::DisplayServer::Private
         {
             return false;
         }
+
+        pause_resume_listener->paused();
 
         return true;
     }
@@ -125,8 +129,8 @@ struct mir::DisplayServer::Private
                 [this] { display->pause(); }};
 
             TryButRevertIfUnwinding comm{
-                [this] { communicator->start(); },
-                [this] { communicator->stop(); }};
+                [this] { connector->start(); },
+                [this] { connector->stop(); }};
 
             if (configure_display_on_resume)
             {
@@ -149,6 +153,8 @@ struct mir::DisplayServer::Private
             return false;
         }
 
+        pause_resume_listener->resumed();
+
         return true;
     }
 
@@ -170,9 +176,10 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Display> const display;
     std::shared_ptr<input::InputConfiguration> const input_configuration;
     std::shared_ptr<mc::Compositor> const compositor;
-    std::shared_ptr<mf::Communicator> const communicator;
+    std::shared_ptr<mf::Connector> const connector;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<mir::PauseResumeListener> const pause_resume_listener;
     std::shared_ptr<mir::DisplayChanger> const display_changer;
     bool paused;
     bool configure_display_on_resume;
@@ -194,7 +201,7 @@ mir::DisplayServer::~DisplayServer()
 
 void mir::DisplayServer::run()
 {
-    p->communicator->start();
+    p->connector->start();
     p->compositor->start();
     p->input_manager->start();
 
@@ -202,7 +209,7 @@ void mir::DisplayServer::run()
 
     p->input_manager->stop();
     p->compositor->stop();
-    p->communicator->stop();
+    p->connector->stop();
 }
 
 void mir::DisplayServer::stop()

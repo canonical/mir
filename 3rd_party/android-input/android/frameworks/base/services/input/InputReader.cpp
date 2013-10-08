@@ -2553,7 +2553,8 @@ void CursorInputMapper::fadePointer() {
 TouchInputMapper::TouchInputMapper(InputDevice* device) :
         InputMapper(device),
         mSource(0), mDeviceMode(DEVICE_MODE_DISABLED),
-        mSurfaceOrientation(-1), mSurfaceWidth(-1), mSurfaceHeight(-1) {
+        mSurfaceOrientation(-1), mSurfaceWidth(-1), mSurfaceHeight(-1),
+        mPointerUsage(POINTER_USAGE_NONE) {
 }
 
 TouchInputMapper::~TouchInputMapper() {
@@ -2912,7 +2913,7 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
     }
 
     // If moving between pointer modes, need to reset some state.
-    bool deviceModeChanged;
+    bool deviceModeChanged = false;
     if (mDeviceMode != oldDeviceMode) {
         deviceModeChanged = true;
         mOrientedRanges.clear();

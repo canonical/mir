@@ -78,3 +78,9 @@ void mga::FBDevice::sync_to_display(bool sync)
         fb_device->setSwapInterval(fb_device.get(), 0);
     }
 }
+
+void mga::FBDevice::mode(MirPowerMode mode)
+{
+    // TODO: Implement
+    (void) mode;
+}

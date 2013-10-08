@@ -80,16 +80,6 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
 }
 
-TEST_F(HWCLayerListTest, default_list)
-{
-    using namespace testing;
-
-    mga::HWCLayerList layerlist;
-
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(0u, list.size());
-}
-
 TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
 {
     using namespace testing;
@@ -101,12 +91,12 @@ TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
         .Times(1)
         .WillOnce(Return(default_size));
 
-    mga::HWCLayerList layerlist;
+    mga::LayerList layerlist;
     layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    hwc_layer_1 target_layer = *list[0];
+    ASSERT_EQ(1u, list->numHwLayers);
+    hwc_layer_1 target_layer = list->hwLayers[0];
     EXPECT_THAT(target_layer.sourceCrop, MatchesRect( expected_sc, "sourceCrop"));
     EXPECT_THAT(target_layer.displayFrame, MatchesRect( expected_df, "displayFrame"));
 
@@ -115,11 +105,23 @@ TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
     EXPECT_THAT(target_layer.visibleRegionScreen.rects[0], MatchesRect( expected_visible, "visible"));
 }
 
+TEST_F(HWCLayerListTest, fb_target)
+{
+    using namespace testing;
+
+    mga::LayerList layerlist;
+
+    auto list = layerlist.native_list(); 
+    ASSERT_EQ(1u, list->numHwLayers);
+    hwc_layer_1 target_layer = list->hwLayers[0];
+    EXPECT_EQ(nullptr, target_layer.handle); 
+}
+
 TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
 {
     using namespace testing;
 
-    mga::HWCLayerList layerlist;
+    mga::LayerList layerlist;
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1)
@@ -127,8 +129,8 @@ TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
 
     layerlist.set_fb_target(mock_buffer);
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    hwc_layer_1 target_layer = *list[0];
+    ASSERT_EQ(1u, list->numHwLayers);
+    hwc_layer_1 target_layer = list->hwLayers[0]; 
     EXPECT_EQ(stub_handle_1->handle, target_layer.handle); 
 }
 
@@ -136,7 +138,7 @@ TEST_F(HWCLayerListTest, set_fb_target_2x)
 {
     using namespace testing;
 
-    mga::HWCLayerList layerlist;
+    mga::LayerList layerlist;
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(2)
@@ -145,14 +147,14 @@ TEST_F(HWCLayerListTest, set_fb_target_2x)
 
     layerlist.set_fb_target(mock_buffer);
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    hwc_layer_1 target_layer = *list[0];
+    ASSERT_EQ(1u, list->numHwLayers);
+    hwc_layer_1 target_layer = list->hwLayers[0]; 
     EXPECT_EQ(stub_handle_1->handle, target_layer.handle); 
 
     layerlist.set_fb_target(mock_buffer);
     auto list_second = layerlist.native_list();
-    ASSERT_EQ(1u, list.size());
-    target_layer = *list[0];
+    ASSERT_EQ(1u, list_second->numHwLayers);
+    target_layer = list_second->hwLayers[0]; 
     EXPECT_EQ(stub_handle_2->handle, target_layer.handle); 
 }
 
@@ -160,7 +162,7 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
 {
     using namespace testing;
 
-    mga::HWCLayerList layerlist;
+    mga::LayerList layerlist;
     layerlist.set_fb_target(mock_buffer);
 
     hwc_rect_t source_region = {0,0,width, height};
@@ -181,7 +183,7 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
     expected_layer.releaseFenceFd = -1;
 
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    hwc_layer_1 target_layer = *list[0];
+    ASSERT_EQ(1u, list->numHwLayers);
+    hwc_layer_1 target_layer = list->hwLayers[0]; 
     EXPECT_THAT(target_layer, MatchesLayer( expected_layer ));
 }

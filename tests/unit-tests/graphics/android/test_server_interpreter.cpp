@@ -120,7 +120,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
     EXPECT_CALL(*stub_sync, wait())
-        .Times(0);
+        .Times(1);
 
     render_window.driver_returns_buffer(stub_anw.get(), stub_sync);
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());

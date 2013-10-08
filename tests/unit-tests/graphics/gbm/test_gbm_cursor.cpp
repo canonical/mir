@@ -43,6 +43,7 @@ struct MockKMSOutput : public mgg::KMSOutput
     MOCK_CONST_METHOD0(size, geom::Size());
 
     MOCK_METHOD1(set_crtc, bool(uint32_t));
+    MOCK_METHOD0(clear_crtc, void());
     MOCK_METHOD1(schedule_page_flip, bool(uint32_t));
     MOCK_METHOD0(wait_for_page_flip, void());
 
@@ -50,6 +51,8 @@ struct MockKMSOutput : public mgg::KMSOutput
     MOCK_METHOD1(move_cursor, void(geom::Point));
     MOCK_METHOD0(clear_cursor, void());
     MOCK_CONST_METHOD0(has_cursor, bool());
+
+    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
 };
 
 struct StubKMSOutputContainer : public mgg::KMSOutputContainer
@@ -102,7 +105,8 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 geom::Point{0, 0},
                 1,
-                0
+                0,
+                mir_power_mode_on    
             });
         outputs.push_back(
             {
@@ -120,7 +124,8 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 geom::Point{100, 50},
                 0,
-                0
+                0,
+                mir_power_mode_on    
             });
     }
 
@@ -136,7 +141,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t)
+                          geom::Point, size_t, MirPowerMode)
     {
     }
 

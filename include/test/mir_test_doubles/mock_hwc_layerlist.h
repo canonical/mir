@@ -16,28 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STATE_H_
-#define MIR_SURFACES_SURFACE_STATE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_
 
-#include "mir/compositor/compositing_criteria.h"
-#include "mir/input/surface.h"
-#include "mir/surfaces/mutable_surface_state.h"
+#include "src/server/graphics/android/hwc_layerlist.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace surfaces
+namespace test
+{
+namespace doubles
 {
 
-class SurfaceState : public compositor::CompositingCriteria, public input::Surface,
-                     public MutableSurfaceState 
+struct MockHWCLayerList : public graphics::android::HWCLayerList
 {
-protected:
-    SurfaceState() = default; 
-    virtual ~SurfaceState() = default;
-    SurfaceState(const SurfaceState&) = delete;
-    SurfaceState& operator=(const SurfaceState& ) = delete;
+    ~MockHWCLayerList() noexcept {}
+    MOCK_CONST_METHOD0(native_list, hwc_display_contents_1_t*());
+    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::Buffer> const&));
 };
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_STATE_H_ */
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_ */

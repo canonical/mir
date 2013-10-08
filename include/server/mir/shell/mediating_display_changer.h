@@ -57,6 +57,8 @@ public:
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
+    void ensure_display_powered(std::shared_ptr<frontend::Session> const& session);
+
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,

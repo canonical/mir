@@ -42,6 +42,8 @@ public:
     virtual void set_next_frontbuffer(std::shared_ptr<Buffer> const& buffer) = 0;
 
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
+    
+    virtual void mode(MirPowerMode mode) = 0;
 private:
     HWCDevice(HWCDevice const&) = delete;
     HWCDevice& operator=(HWCDevice const&) = delete;

@@ -20,6 +20,7 @@
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
+#include "mir/graphics/android/syncfence.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -28,13 +29,12 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HWCLayerOrganizer> const& organizer,
+                              std::shared_ptr<HWCLayerList> const& layer_list,
                               std::shared_ptr<DisplaySupportProvider> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_organizer(organizer),
-      fb_device(fbdev),
-      wait_for_vsync(true)
+      layer_list(layer_list),
+      fb_device(fbdev)
 {
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
@@ -55,8 +55,6 @@ geom::Size mga::HWC11Device::display_size() const
                                         HWC_DISPLAY_NO_ATTRIBUTE};
 
     int size_values[2];
-    /* note: some hwc modules (adreno320) do not accept any request list other than what surfaceflinger's requests,
-     * despite what the hwc header says. from what I've seen so far, this is harmless, other than a logcat msg */ 
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                      size_request, size_values);
 
@@ -77,52 +75,39 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    layer_organizer->set_fb_target(buffer);
-
-    if (wait_for_vsync)
-    {
-        fb_device->set_next_frontbuffer(buffer);
-    }
+    layer_list->set_fb_target(buffer);
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
-    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
+    auto lg = lock_unblanked();
+
+    //note, although we only have a primary display right now,
+    //      set the second display to nullptr, as exynos hwc always derefs displays[1]
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
+
+    if (hwc_device->prepare(hwc_device.get(), 1, displays))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+    }
+
+    /* note, swapbuffers will go around through the driver and call
+       set_next_frontbuffer, updating the fb target before committing */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
     }
 
-    auto& list = layer_organizer->native_list();
-
-    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size());
-    auto hwc_display_raw = static_cast<hwc_display_contents_1_t*>( ::operator new( struct_size));
-    auto hwc_display = std::unique_ptr<hwc_display_contents_1_t>(hwc_display_raw); 
-
-    auto i = 0u;
-    for( auto& layer : list)
-    {
-        hwc_display->hwLayers[i++] = *layer;
-    }
-    hwc_display->numHwLayers = list.size();
-    hwc_display->retireFenceFd = -1;
-
-    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display_raw);
-    if (rc != 0)
+    if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-    if (hwc_display->retireFenceFd > 0)
-        close(hwc_display->retireFenceFd);
-
-    if (wait_for_vsync)
-    {
-        coordinator->wait_for_vsync();
-    }
+    mga::SyncFence fence(displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
+    fence.wait();
 }
 
-void mga::HWC11Device::sync_to_display(bool sync)
+void mga::HWC11Device::sync_to_display(bool)
 {
-    wait_for_vsync = sync;
+    //TODO return error code, running not synced to vsync is not supported
 }

@@ -36,6 +36,7 @@ public:
     virtual float alpha() const = 0;
     virtual glm::mat4 const& transformation() const = 0;
     virtual bool should_be_rendered_in(geometry::Rectangle const& rect) const = 0;
+    virtual bool shaped() const = 0;  // meaning the pixel format has alpha
 
     virtual ~CompositingCriteria() = default;
 

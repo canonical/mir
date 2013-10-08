@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/default_pause_resume_listener.h"
 #include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
@@ -67,6 +68,7 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/input_manager.h"
+#include "mir/logging/connector_report.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -170,12 +172,15 @@ private:
 };
 
 char const* const server_socket_opt           = "file";
+char const* const no_server_socket_opt        = "no-file";
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
 char const* const legacy_input_report_opt     = "legacy-input-report";
+char const* const connector_report_opt        = "connector-report";
 char const* const input_report_opt            = "input-report";
-char const* const nested_mode_opt             = "nested-mode";
+char const* const host_socket_opt             = "host-socket";
+char const* const standalone_opt              = "standalone";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -193,7 +198,7 @@ char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 
 void parse_arguments(
     boost::program_options::options_description desc,
-    std::shared_ptr<mir::options::ProgramOption> const& options,
+    mir::options::ProgramOption& options,
     int argc,
     char const* argv[])
 {
@@ -204,9 +209,9 @@ void parse_arguments(
         desc.add_options()
             ("help,h", "this help text");
 
-        options->parse_arguments(desc, argc, argv);
+        options.parse_arguments(desc, argc, argv);
 
-        if (options->is_set("help"))
+        if (options.is_set("help"))
         {
             std::ostringstream help_text;
             help_text << desc;
@@ -223,9 +228,16 @@ void parse_arguments(
 
 void parse_environment(
     boost::program_options::options_description& desc,
-    std::shared_ptr<mir::options::ProgramOption> const& options)
+    mir::options::ProgramOption& options)
 {
-    options->parse_environment(desc, "MIR_SERVER_");
+    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
+    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
+    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
+    auto mir_socket = getenv("MIR_SOCKET");
+    if (!host_socket && mir_socket)
+        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
+
+    options.parse_environment(desc, "MIR_SERVER_");
 }
 }
 
@@ -240,14 +252,19 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
-        (nested_mode_opt, po::value<std::string>(),
-            "Run mir in nested mode. Host socket filename.")
+        (standalone_opt, po::value<bool>(),
+            "Run mir in standalone mode. [bool:default=false]")
+        (host_socket_opt, po::value<std::string>(),
+            "Host socket filename. [string:default={$MIR_SOCKET,/tmp/mir_socket}]")
         ("file,f", po::value<std::string>(),
-            "Socket filename")
+            "Socket filename. [string:default=/tmp/mir_socket]")
+        (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>(),
-            "Library to use for platform graphics support [default=libmirplatformgraphics.so")
+            "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
+        (connector_report_opt, po::value<std::string>(),
+            "How to handle the Connector report. [{log,off}:default=off]")
         (display_report_opt, po::value<std::string>(),
             "How to handle the Display report. [{log,off}:default=off]")
         (input_report_opt, po::value<std::string>(),
@@ -276,7 +293,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool. [int:default=10]")
+            "threads in frontend thread pool.")
         ("vt", po::value<int>(),
             "VT to run on or 0 to use current. [int:default=0]");
 }
@@ -291,7 +308,20 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get(server_socket_opt, default_server_socket);
+    auto socket_file = the_options()->get(server_socket_opt, mir::default_server_socket);
+
+    // Record this for any children that want to know how to connect to us.
+    // By both listening to this env var on startup and resetting it here,
+    // we make it easier to nest Mir servers.
+    setenv("MIR_SOCKET", socket_file.c_str(), 1);
+
+    return socket_file;
+}
+
+void mir::DefaultServerConfiguration::parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const
+{
+    parse_arguments(options_description, options, argc, argv);
+    parse_environment(options_description, options); 
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
@@ -299,10 +329,7 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
     if (!options)
     {
         auto options = std::make_shared<mir::options::ProgramOption>();
-
-        parse_arguments(*program_options, options, argc, argv);
-        parse_environment(*program_options, options);
-
+        parse_options(*program_options, *options);
         this->options = options;
     }
     return options;
@@ -332,17 +359,12 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         {
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
 
-            if (!the_options()->is_set(nested_mode_opt))
+            // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
+            if (the_options()->is_set(standalone_opt) || !the_options()->is_set(host_socket_opt))
             {
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
             }
-
-            const std::string host_socket = the_options()->get(nested_mode_opt, default_server_socket);
-            const std::string server_socket = the_options()->get(server_socket_opt, default_server_socket);
-
-            if (server_socket == host_socket)
-                throw mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
 
@@ -595,10 +617,10 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             return std::make_shared<mi::NullInputConfiguration>();
         }
-        else if (options->is_set(nested_mode_opt))
+        // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
+        else if (options->is_set(standalone_opt) || !options->is_set(host_socket_opt))
         {
-            return std::make_shared<mi::NestedInputConfiguration>(
-                the_nested_input_relay(),
+            return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -606,7 +628,8 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            return std::make_shared<mia::DefaultInputConfiguration>(
+            return std::make_shared<mi::NestedInputConfiguration>(
+                the_nested_input_relay(),
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -933,6 +956,16 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         });
 }
 
+
+std::shared_ptr<mir::PauseResumeListener> mir::DefaultServerConfiguration::the_pause_resume_listener()
+{
+    return pause_resume_listener(
+        []()
+        {
+            return std::make_shared<mir::DefaultPauseResumeListener>();
+        });
+}
+
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
 {
@@ -951,11 +984,20 @@ auto mir::DefaultServerConfiguration::the_host_connection()
         {
             auto const options = the_options();
 
-            if (options->is_set(nested_mode_opt))
+            if (!options->is_set(standalone_opt))
             {
+                if (!options->is_set(host_socket_opt))
+                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
+
+                auto host_socket = options->get(host_socket_opt, "");
+                auto server_socket = the_socket_file();
+
+                if (server_socket == host_socket)
+                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+
                 return std::make_shared<graphics::nested::HostConnection>(
-                    options->get(nested_mode_opt, default_server_socket),
-                    options->get(server_socket_opt, default_server_socket));
+                    host_socket,
+                    server_socket);
             }
             else
             {
@@ -978,6 +1020,30 @@ mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
         []
         {
             return std::make_shared<msh::BroadcastingSessionEventSink>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_connector_report()
+    -> std::shared_ptr<mf::ConnectorReport>
+{
+    return connector_report([this]
+        () -> std::shared_ptr<mf::ConnectorReport>
+        {
+            auto opt = the_options()->get(connector_report_opt, off_opt_value);
+
+            if (opt == log_opt_value)
+            {
+                return std::make_shared<ml::ConnectorReport>(the_logger());
+            }
+            else if (opt == off_opt_value)
+            {
+                return std::make_shared<mf::NullConnectorReport>();
+            }
+            else
+            {
+                throw AbnormalExit(std::string("Invalid ") + connector_report_opt + " option: " + opt +
+                    " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
+            }
         });
 }
 

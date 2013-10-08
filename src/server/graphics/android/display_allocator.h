@@ -33,6 +33,8 @@ namespace android
 class AndroidDisplay;
 class HWCDevice;
 class HWCDisplay;
+class DisplaySupportProvider;
+
 class DisplayAllocator
 {
 public:
@@ -41,6 +43,7 @@ public:
 
     virtual std::shared_ptr<AndroidDisplay> create_gpu_display(
         std::shared_ptr<ANativeWindow> const&,
+        std::shared_ptr<DisplaySupportProvider> const&,
         std::shared_ptr<DisplayReport> const&) const = 0;
 
     virtual std::shared_ptr<AndroidDisplay> create_hwc_display(

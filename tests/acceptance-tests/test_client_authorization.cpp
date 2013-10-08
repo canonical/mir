@@ -253,6 +253,13 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
             mir_connection_release(connection);
         }
 
+        //we are testing the connect function itself, without getting to the
+        // point where drivers are used, so force using production config
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
+
         ClientPidTestFixture::SharedRegion* shared_region;
     } client_config(shared_region);
     launch_client_process(client_config);    
