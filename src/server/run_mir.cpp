@@ -70,8 +70,7 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     weak_connector = config.the_connector();
 
-    for (auto sig : { SIGHUP, SIGQUIT, SIGILL, SIGABRT, SIGFPE,
-                      SIGSEGV, SIGPIPE, SIGALRM, SIGBUS})
+    for (auto sig : { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS })
         old_handler[sig] = signal(sig, handler);
 
     std::atexit(&delete_endpoint);
