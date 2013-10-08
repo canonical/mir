@@ -430,4 +430,4 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 
 INSTANTIATE_TEST_CASE_P(ServerShutdown,
     OnSignal,
-    ::testing::Values(SIGSEGV, SIGABRT, SIGILL, SIGFPE, SIGBUS, SIGPIPE));
+    ::testing::Values( SIGHUP, SIGQUIT, SIGILL, SIGABRT, SIGFPE, SIGSEGV, SIGPIPE, SIGALRM, SIGBUS));
