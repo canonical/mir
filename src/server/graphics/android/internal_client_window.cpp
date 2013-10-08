@@ -48,11 +48,7 @@ mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 
 void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
-    //TODO: pass fence to compositor instead of forcing wait here
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence sync_fence(ops, fence_fd);
-    sync_fence.wait();
-
+    resource_cache->update_native_fence(buffer, fence_fd);
     resource_cache->retrieve_buffer(buffer);
     /* here, the mc::TemporaryBuffer will destruct, triggering buffer advance */
 }
