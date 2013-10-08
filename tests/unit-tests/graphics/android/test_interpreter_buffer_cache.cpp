@@ -40,6 +40,7 @@ struct InterpreterResourceTest : public ::testing::Test
     std::shared_ptr<mtd::StubBuffer> stub_buffer1;
     std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     std::shared_ptr<mtd::StubBuffer> stub_buffer3;
+    std::shared_ptr<mg::NativeBuffer> native_buffer1;
     ANativeWindowBuffer *key1;
     ANativeWindowBuffer *key2;
     ANativeWindowBuffer *key3; 
