@@ -56,11 +56,7 @@ mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
-    //TODO: pass fence to HWC instead of waiting here
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence sync_fence(ops, fence_fd);
-    sync_fence.wait();
-
+    resource_cache->update_native_fence(buffer, fence_fd);
     auto buffer_resource = resource_cache->retrieve_buffer(buffer);
     poster->set_next_frontbuffer(buffer_resource);
     swapper->compositor_release(buffer_resource);
