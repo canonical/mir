@@ -98,6 +98,17 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
     }
 
+    //eglswapbuffers
+    //    //queue
+    //    //dequeue
+    //auto post_content = layer_list->secure_native_list()
+    //hwc_device->set(hwc_device.get(), 1, post_content)
+    //wait on retire fence
+    //program fences back into list is done automatically
+    //post content goes out of scope, mg::Buffers get their fences update automagically
+
+
+
     if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
