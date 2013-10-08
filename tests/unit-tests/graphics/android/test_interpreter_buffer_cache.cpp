@@ -82,6 +82,18 @@ TEST_F(InterpreterResourceTest, deposit_buffer_has_ownership)
     EXPECT_EQ(use_count_before, stub_buffer1.use_count());
 }
 
+TEST_F(InterpreterResourceTest, update_fence_for)
+{
+    int fence = 44;
+    mga::InterpreterCache cache;
+
+    cache.store_buffer(stub_buffer1, native_buffer1);
+
+    cache.update_fence(native_buffer, fence);
+
+    EXPECT_EQ(native_buffer1->fence, fence);
+}
+
 TEST_F(InterpreterResourceTest, retreive_buffer_with_bad_key_throws)
 {
     mga::InterpreterCache cache;
