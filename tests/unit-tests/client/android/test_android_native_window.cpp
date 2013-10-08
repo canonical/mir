@@ -152,7 +152,32 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
     EXPECT_EQ(fake_fence, fence_fd);
 }
 
+TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
+{
+    using namespace testing;
+    ANativeWindowBuffer* returned_buffer;
+    ANativeWindowBuffer buffer;
+    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
+
+    EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
+        .Times(1)
+        .WillOnce(Return(mt::fake_shared(mock_buffer)));
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(fake_buffer));
+    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
+        .Times(1);
+
+    int fence_fd = 33;
+    window->dequeueBuffer(window.get(), &returned_buffer, &fence_fd);
+    int release_fence_fd = 44;
+    window->queueBuffer(window.get(), returned_buffer, fence_fd);
+    EXPECT_EQ(fake_buffer.fence);
+}
+
+
 #if 0
+//unnessecary
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_indicates_buffer_immediately_usable)
 {
     ANativeWindowBuffer* returned_buffer;
@@ -195,19 +220,6 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
 
     ASSERT_NE(nullptr, window->queueBuffer);
     window->queueBuffer(window.get(), tmp, -1);
-}
-
-TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
-{
-    using namespace testing;
-    ANativeWindowBuffer buffer;
-    int fence_fd = 33;
-    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
-
-    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
-        .Times(1);
-
-    window->queueBuffer(window.get(), &buffer, fence_fd);
 }
 
 TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_hook_callable)
