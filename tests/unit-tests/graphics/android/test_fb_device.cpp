@@ -95,6 +95,23 @@ TEST_F(FBDevice, determine_fbnum)
     EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
 }
 
+TEST_F(FBDevice, commit_frame)
+{   
+    EGLDisplay dpy;
+    EGLSurface surf;
+    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
+        .Times(2)
+        .WillOnce(Return(EGL_FALSE));
+        .WillOnce(Return(EGL_TRUE));
+
+    mga::FBDevice fbdev(fb_hal_mock);
+
+    EXPECT_THROW({
+        fbdev->commit_frame(dpy, surf);
+    }, std::runtime_error);
+    fbdev->commit_frame(dpy, surf);
+}
+
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
 TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
 {
