@@ -79,27 +79,77 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
     using namespace testing;
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
+    auto stub_buffer = mtd::create_stub_buffer();
+
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
+    EXPECT_CALL(*mock_buffer1, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(stub_buffer));
+
+    std::shared_ptr<mg::Buffer> tmp = mock_buffer1;
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_buffer.get()))
+        .Times(1);
 
     auto rc_buffer = render_window.driver_requests_buffer();
-    EXPECT_EQ(mock_buffer1, rc_buffer);
+    EXPECT_EQ(stub_buffer.get(), rc_buffer);
 }
 
-TEST_F(ServerRenderWindowTest, driver_returns_buffer)
+TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 {
     using namespace testing;
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+    auto stub_buffer = mtd::create_stub_buffer();
+ 
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer.get()))
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
+    EXPECT_CALL(*mock_buffer1, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(stub_buffer));
+
+    render_window.driver_requests_buffer();
+    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
+
+    std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
+    EXPECT_CALL(*mock_swapper, compositor_release(buf1))
+        .Times(1);
+
+    render_window.driver_returns_buffer(stub_buffer.get(), -1);
+    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
+}
+
+TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
+{
+    using namespace testing;
+    auto stub_buffer = mtd::create_stub_buffer();
+    EXPECT_CALL(*mock_cache, retrieve_buffer(_))
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
+
+    mg::BufferID id{442}, returned_id;
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(_))
+        .Times(1);
+    std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
+    EXPECT_CALL(*mock_buffer1, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(stub_buffer));
+    EXPECT_CALL(*mock_display_poster, set_next_frontbuffer(buf1))
         .Times(1);
 
     auto handle1 = render_window.driver_requests_buffer();
     render_window.driver_returns_buffer(handle1, -1);
 }
 
-#if 0
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
     using namespace testing; 
@@ -175,4 +225,3 @@ TEST_F(ServerRenderWindowTest, driver_swapinterval_request)
 
     render_window.sync_to_display(false);
 }
-#endif

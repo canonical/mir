@@ -25,7 +25,9 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-namespace mga=mir::graphics::android;
+
+namespace mg=mir::graphics;
+namespace mga=mg::android;
 namespace geom=mir::geometry;
 
 mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface> const& surface,
@@ -36,7 +38,7 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface>
     format = mga::to_android_format(geometry::PixelFormat(surface->pixel_format()));
 }
 
-ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
+mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
     auto buffer = surface->advance_client_buffer();
     auto handle = buffer->native_buffer_handle().get();

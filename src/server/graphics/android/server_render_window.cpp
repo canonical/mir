@@ -24,43 +24,38 @@
 #include "fb_swapper.h"
 #include "buffer.h"
 #include "android_format_conversion-inl.h"
+#include "interpreter_resource_cache.h"
 
 #include <system/window.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-#include <thread>
-#include <chrono>
-namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
-                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
+                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster,
+                                            std::shared_ptr<InterpreterResourceCache> const& cache)
     : swapper(swapper),
       poster(display_poster),
+      resource_cache(cache),
       format(mga::to_android_format(poster->display_format()))
 {
 }
 
-std::shared_ptr<mg::Buffer> mga::ServerRenderWindow::driver_requests_buffer()
+mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
-    return swapper->compositor_acquire();
-#if 0
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle();
     //TODO: pass fence to driver instead of closing here
     close(handle->fence); 
     resource_cache->store_buffer(buffer, handle.get());
     return handle.get();
-#endif
 }
 
-void mga::ServerRenderWindow::driver_returns_buffer(std::shared_ptr<mg::Buffer> const& buffer)
+void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
-    swapper->compositor_release(buffer);
-
-#if 0
     //TODO: pass fence to HWC instead of waiting here
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     mga::SyncFence sync_fence(ops, fence_fd);
@@ -69,7 +64,6 @@ void mga::ServerRenderWindow::driver_returns_buffer(std::shared_ptr<mg::Buffer> 
     auto buffer_resource = resource_cache->retrieve_buffer(buffer);
     poster->set_next_frontbuffer(buffer_resource);
     swapper->compositor_release(buffer_resource);
-#endif
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)

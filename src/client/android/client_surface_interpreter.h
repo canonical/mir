@@ -34,7 +34,7 @@ class ClientSurfaceInterpreter : public graphics::android::AndroidDriverInterpre
 public:
     explicit ClientSurfaceInterpreter(ClientSurface& surface);
 
-    ANativeWindowBuffer* driver_requests_buffer();
+    graphics::NativeBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd );
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;

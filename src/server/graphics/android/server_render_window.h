@@ -21,16 +21,13 @@
 #define MIR_GRAPHICS_ANDROID_SERVER_RENDER_WINDOW_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
+#include "mir/graphics/native_buffer.h"
 #include "mir/geometry/pixel_format.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
 namespace android
@@ -38,13 +35,15 @@ namespace android
 
 class FBSwapper;
 class DisplaySupportProvider;
+class InterpreterResourceCache;
 class ServerRenderWindow : public AndroidDriverInterpreter 
 {
 public:
     ServerRenderWindow(std::shared_ptr<FBSwapper> const& swapper,
-                       std::shared_ptr<DisplaySupportProvider> const& display_poster);
+                       std::shared_ptr<DisplaySupportProvider> const& display_poster,
+                       std::shared_ptr<InterpreterResourceCache> const&);
 
-    ANativeWindowBuffer* driver_requests_buffer();
+    graphics::NativeBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd);
     void dispatch_driver_request_format(int format);
     int driver_requests_info(int key) const;
@@ -53,6 +52,7 @@ public:
 private:
     std::shared_ptr<FBSwapper> const swapper;
     std::shared_ptr<DisplaySupportProvider> const poster;
+    std::shared_ptr<InterpreterResourceCache> const resource_cache;
 
     int format;
 }; 

@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/interpreter_cache.h"
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -32,49 +32,53 @@ struct InterpreterResourceTest : public ::testing::Test
         stub_buffer1 = std::make_shared<mtd::StubBuffer>();
         stub_buffer2 = std::make_shared<mtd::StubBuffer>();
         stub_buffer3 = std::make_shared<mtd::StubBuffer>();
-        key1 = (ANativeWindowBuffer*)0x1;
-        key2 = (ANativeWindowBuffer*)0x2;
-        key3 = (ANativeWindowBuffer*)0x3;
+        native_buffer1 = mtd::create_stub_buffer();
+        native_buffer2 = mtd::create_stub_buffer();
+        native_buffer3 = mtd::create_stub_buffer();
     }
 
     std::shared_ptr<mtd::StubBuffer> stub_buffer1;
     std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     std::shared_ptr<mtd::StubBuffer> stub_buffer3;
     std::shared_ptr<mg::NativeBuffer> native_buffer1;
-    ANativeWindowBuffer *key1;
-    ANativeWindowBuffer *key2;
-    ANativeWindowBuffer *key3; 
+    std::shared_ptr<mg::NativeBuffer> native_buffer2;
+    std::shared_ptr<mg::NativeBuffer> native_buffer3;
 };
 
 TEST_F(InterpreterResourceTest, deposit_buffer)
 {
     mga::InterpreterCache cache;
-    cache.store_buffer(stub_buffer1, key1);
+    cache.store_buffer(stub_buffer1, native_buffer1);
 
-    auto test_buffer = cache.retrieve_buffer(key1);
+    auto test_buffer = cache.retrieve_buffer(native_buffer1);
     EXPECT_EQ(stub_buffer1, test_buffer);
 }
 
 TEST_F(InterpreterResourceTest, deposit_many_buffers)
 {
     mga::InterpreterCache cache;
-    cache.store_buffer(stub_buffer1, key1);
-    cache.store_buffer(stub_buffer2, key2);
-    cache.store_buffer(stub_buffer3, key3);
+    cache.store_buffer(stub_buffer1, native_buffer1);
+    cache.store_buffer(stub_buffer2, native_buffer2);
+    cache.store_buffer(stub_buffer3, native_buffer3);
 
-    EXPECT_EQ(stub_buffer3, cache.retrieve_buffer(key3));
-    EXPECT_EQ(stub_buffer1, cache.retrieve_buffer(key1));
-    EXPECT_EQ(stub_buffer2, cache.retrieve_buffer(key2));
+    EXPECT_EQ(stub_buffer3, cache.retrieve_buffer(native_buffer3.get()));
+    EXPECT_EQ(stub_buffer1, cache.retrieve_buffer(native_buffer1.get()));
+    EXPECT_EQ(stub_buffer2, cache.retrieve_buffer(native_buffer2.get()));
 }
 
 TEST_F(InterpreterResourceTest, deposit_buffer_has_ownership)
 {
     mga::InterpreterCache cache;
 
+    auto native_use_count_before = native_buffer1.use_count();
     auto use_count_before = stub_buffer1.use_count();
-    cache.store_buffer(stub_buffer1, key1);
+
+    cache.store_buffer(stub_buffer1, native_buffer1);
+    EXPECT_EQ(native_use_count_before+1, native_buffer1.use_count());
     EXPECT_EQ(use_count_before+1, stub_buffer1.use_count());
-    cache.retrieve_buffer(key1);
+
+    cache.retrieve_buffer(native_buffer1.get());
+    EXPECT_EQ(native_use_count_before, native_buffer1.use_count());
     EXPECT_EQ(use_count_before, stub_buffer1.use_count());
 }
 
@@ -82,6 +86,6 @@ TEST_F(InterpreterResourceTest, retreive_buffer_with_bad_key_throws)
 {
     mga::InterpreterCache cache;
     EXPECT_THROW({
-        cache.retrieve_buffer(key1);
+        cache.retrieve_buffer(native_buffer1.get());
     }, std::runtime_error);
 }

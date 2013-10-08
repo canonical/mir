@@ -31,7 +31,7 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
 {
 }
 
-ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
+mir::graphics::NativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
