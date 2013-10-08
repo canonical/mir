@@ -86,24 +86,22 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     EXPECT_EQ(stub_native_buffer.get(), test_buffer); 
 }
 
-#if 0
 TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
-    auto mock_sync = std::make_shared<mtd::MockFence>();
+    int fake_fence = 4848;
 
     Sequence seq;
-    EXPECT_CALL(*mock_sync, wait())
-        .InSequence(seq);
+    EXPECT_CALL(*mock_cache, update_native_fence(stub_native_buffer.get(), fake_fence))
+        .Times(1);
     EXPECT_CALL(*mock_cache, retrieve_buffer(stub_native_buffer.get()))
         .InSequence(seq)
         .WillOnce(Return(mock_buffer));
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_bufferptr = interpreter.driver_requests_buffer();
-    interpreter.driver_returns_buffer(test_bufferptr, mock_sync);
+    interpreter.driver_returns_buffer(test_bufferptr, fake_fence);
 }
-#endif
 
 TEST_F(InternalClientWindow, size_test)
 {

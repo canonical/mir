@@ -173,7 +173,7 @@ int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fe
     return 0;
 }
 
-int mga::MirNativeWindow::query(int key, int* value ) const
+int mga::MirNativeWindow::query(int key, int* value) const
 {
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
