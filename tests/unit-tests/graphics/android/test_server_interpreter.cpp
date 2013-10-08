@@ -76,9 +76,12 @@ struct ServerRenderWindowTest : public ::testing::Test
 TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 {
     using namespace testing;
+    int fake_fence = 844;
+
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
     auto stub_buffer = mtd::create_stub_buffer();
+    stub_buffer->fence = fake_fence;
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
@@ -93,6 +96,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 
     auto rc_buffer = render_window.driver_requests_buffer();
     EXPECT_EQ(stub_buffer.get(), rc_buffer);
+    EXPECT_EQ(fake_fence, rc_buffer->fence);
 }
 
 TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
