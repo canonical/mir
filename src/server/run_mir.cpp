@@ -39,12 +39,15 @@ extern "C" void delete_endpoint()
     }
 }
 
-extern "C" void sigsegv_or_sigabrt(int sig)
+extern "C" { typedef void (*sig_handler)(int); }
+
+volatile sig_handler old_handler[SIGUNUSED]  = { nullptr };
+
+extern "C" void handler(int sig)
 {
     delete_endpoint();
 
-    // Thou shalt not return from SIGSEGV handler
-    if (sig == SIGSEGV) exit(EXIT_FAILURE);
+    old_handler[sig](sig);
 }
 }
 
@@ -67,8 +70,8 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     weak_connector = config.the_connector();
 
-    signal(SIGSEGV, &sigsegv_or_sigabrt);
-    signal(SIGABRT, &sigsegv_or_sigabrt);
+    for (auto sig : {SIGSEGV, SIGABRT, SIGILL, SIGFPE, SIGBUS, SIGPIPE})
+        old_handler[sig] = signal(sig, handler);
 
     std::atexit(&delete_endpoint);
 

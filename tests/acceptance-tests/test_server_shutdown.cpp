@@ -396,17 +396,22 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
     });
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_segfault)
+struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
+
+TEST_P(OnSignal, removes_endpoint_on_signal)
 {
     struct ServerConfig : TestingServerConfiguration
     {
         void exec() override
         {
-            raise(SIGSEGV);
+            raise(sig);
         }
+
+        ServerConfig(int sig) : sig(sig) {}
+        int const sig;
     };
 
-    ServerConfig server_config;
+    ServerConfig server_config(GetParam());
     launch_server_process(server_config);
 
     run_in_test_process([&]
@@ -422,3 +427,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_segfault)
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
 }
+
+INSTANTIATE_TEST_CASE_P(ServerShutdown,
+    OnSignal,
+    ::testing::Values(SIGSEGV, SIGABRT, SIGILL, SIGFPE, SIGBUS, SIGPIPE));
