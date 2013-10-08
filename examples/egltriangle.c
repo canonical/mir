@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    glClearColor(MID_AUBERGINE, 1.0);
+    glClearColor(MID_AUBERGINE, mir_eglapp_background_opacity);
     glViewport(0, 0, width, height);
 
     glUseProgram(prog);
