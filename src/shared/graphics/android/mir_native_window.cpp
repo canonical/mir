@@ -70,16 +70,17 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
+    int fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->dequeueBuffer(buffer);
+    //todo: we have to close the fence
+    return self->dequeueBuffer(buffer, &fence_fd);
 }
 
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
-    *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->dequeueBuffer(buffer);
+    return self->dequeueBuffer(buffer, fence_fd);
 }
 
 int queueBuffer_deprecated_static(struct ANativeWindow* window,
@@ -158,10 +159,11 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
     return 0;
 }
 
-int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
+int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
     *buffer_to_driver =  buffer;
+    *fence_fd = buffer->fence;
     return 0;
 }
 

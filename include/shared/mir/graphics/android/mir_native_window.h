@@ -38,7 +38,7 @@ public:
 
     int query(int key, int* value) const;
     int perform(int key, va_list args );
-    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
+    int dequeueBuffer(struct ANativeWindowBuffer** buffer, int* fence);
     int queueBuffer(struct ANativeWindowBuffer* buffer, int fence);
     int setSwapInterval(int interval);
 private:
