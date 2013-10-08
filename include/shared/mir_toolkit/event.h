@@ -148,8 +148,6 @@ typedef struct
     float y_offset;
     float x_precision;
     float y_precision;
-    float vscroll;
-    float hscroll;
     nsecs_t down_time;
     nsecs_t event_time;
 
@@ -165,6 +163,9 @@ typedef struct
         float pressure;
         float orientation;
     } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+
+    float vscroll;
+    float hscroll;
 } MirMotionEvent;
 
 typedef struct
