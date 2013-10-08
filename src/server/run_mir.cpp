@@ -47,6 +47,11 @@ extern "C" void handler(int sig)
 {
     delete_endpoint();
 
+    if (!old_handler[sig])
+    {
+        _Exit(EXIT_FAILURE);
+    }
+
     old_handler[sig](sig);
 }
 }
