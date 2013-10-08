@@ -23,7 +23,7 @@
 
 namespace mir
 {
-const char default_server_socket[] = "/tmp/mir_socket";
+extern const char *const default_server_socket;
 }
 
 #endif
