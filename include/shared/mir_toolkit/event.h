@@ -148,6 +148,8 @@ typedef struct
     float y_offset;
     float x_precision;
     float y_precision;
+    float vscroll;
+    float hscroll;
     nsecs_t down_time;
     nsecs_t event_time;
 

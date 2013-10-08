@@ -59,9 +59,12 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.y_offset = mev->getYOffset();
             mir_event.motion.x_precision = mev->getXPrecision();
             mir_event.motion.y_precision = mev->getYPrecision();
+            mir_event.motion.vscroll = mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0);
+            mir_event.motion.hscroll = mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0);
             mir_event.motion.down_time = mev->getDownTime();
             mir_event.motion.event_time = mev->getEventTime();
             mir_event.motion.pointer_count = mev->getPointerCount();
+
             for(unsigned int i = 0; i < mev->getPointerCount(); i++)
             {
                     mir_event.motion.pointer_coordinates[i].id = mev->getPointerId(i);
