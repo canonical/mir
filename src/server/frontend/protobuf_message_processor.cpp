@@ -136,15 +136,8 @@ void mfd::ProtobufMessageProcessor::send_response(
     send_response_result.set_response(send_response_buffer);
 
     send_response_result.SerializeToString(&send_response_buffer);
-    try
-    {
-        sender->send(send_response_buffer, fd_sets);
-    }
-    catch (std::exception const& error)
-    {
-        report->exception_handled(display_server.get(), 
-            id, error);
-    }
+
+    sender->send(send_response_buffer, fd_sets);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
