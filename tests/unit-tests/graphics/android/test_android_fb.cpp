@@ -19,7 +19,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
 #include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_hwc_interface.h"

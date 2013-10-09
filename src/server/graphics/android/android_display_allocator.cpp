@@ -19,7 +19,6 @@
 #include "android_display_allocator.h"
 #include "android_display.h"
 #include "android_framebuffer_window.h"
-#include "gpu_android_display_buffer_factory.h"
 #include "hwc_android_display_buffer_factory.h"
 #include "hwc_device.h"
 #include "fb_device.h"

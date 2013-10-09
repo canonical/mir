@@ -54,7 +54,6 @@ protected:
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     std::shared_ptr<mtd::MockHWCInterface> mock_hwc_device;
-
     mtd::MockEGL mock_egl;
 };
 

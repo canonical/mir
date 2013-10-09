@@ -16,7 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gpu_android_display_buffer_factory.h"
 #include "hwc_android_display_buffer_factory.h"
 #include "android_framebuffer_window_query.h"
 #include "hwc_device.h"
