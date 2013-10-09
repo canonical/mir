@@ -22,7 +22,6 @@
 #include "hwc_device.h"
 #include "hwc_android_display_buffer_factory.h"
 #include "framebuffer_factory.h"
-#include "display_allocator.h"
 #include "android_display.h"
 
 #include <boost/throw_exception.hpp>
@@ -67,12 +66,10 @@ std::shared_ptr<hwc_composer_device_1> setup_hwc_dev()
 }
 
 // TODO this whole class seems to be a dismembered function call - replace with a function
-mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
-                                                  std::shared_ptr<HWCFactory> const& hwc_factory,
+mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<HWCFactory> const& hwc_factory,
                                                   std::shared_ptr<FramebufferFactory> const& fb_factory,
                                                   std::shared_ptr<DisplayReport> const& display_report)
-    : display_factory(display_factory),
-      hwc_factory(hwc_factory),
+    : hwc_factory(hwc_factory),
       fb_factory(fb_factory),
       fb_dev(fb_factory->create_fb_device()),
       display_report(display_report),

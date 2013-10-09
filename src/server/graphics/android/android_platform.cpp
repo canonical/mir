@@ -20,7 +20,6 @@
 #include "android_platform.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_hwc_factory.h"
-#include "android_display_allocator.h"
 #include "android_display_factory.h"
 #include "default_framebuffer_factory.h"
 #include "internal_client.h"
@@ -66,12 +65,11 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
 {
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
-    auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
 
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
     auto fb_factory = create_frame_buffer_factory(buffer_allocator);
-    mga::AndroidDisplayFactory display_factory(display_allocator, hwc_factory, fb_factory, display_report);
+    mga::AndroidDisplayFactory display_factory(hwc_factory, fb_factory, display_report);
     return display_factory.create_display();
 }
 

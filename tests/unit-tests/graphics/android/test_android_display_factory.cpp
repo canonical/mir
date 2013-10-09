@@ -19,7 +19,6 @@
 #include "src/server/graphics/android/display_support_provider.h"
 #include "src/server/graphics/android/android_display_factory.h"
 #include "src/server/graphics/android/hwc_factory.h"
-#include "src/server/graphics/android/android_display_allocator.h"
 #include "src/server/graphics/android/framebuffer_factory.h"
 #include "src/server/graphics/android/fb_device.h"
 #include "src/server/graphics/android/hwc_device.h"
@@ -55,20 +54,6 @@ struct MockHWCFactory: public mga::HWCFactory
                                                                        std::shared_ptr<mga::DisplaySupportProvider> const&));
 };
 
-struct MockDisplayAllocator: public mga::DisplayAllocator
-{
-    MockDisplayAllocator()
-    {
-        using namespace testing;
-        ON_CALL(*this, create_display(_,_,_))
-            .WillByDefault(Return(std::shared_ptr<mga::AndroidDisplay>()));
-
-    }
-    MOCK_CONST_METHOD3(create_display,
-        std::shared_ptr<mga::AndroidDisplay>(std::shared_ptr<mga::DisplaySupportProvider> const&,
-        std::shared_ptr<ANativeWindow> const&, std::shared_ptr<mg::DisplayReport> const&));
-};
-
 struct MockFNWFactory : public mga::FramebufferFactory
 {
     ~MockFNWFactory () noexcept {}
@@ -88,7 +73,6 @@ public:
     {
         using namespace testing;
         stub_anativewindow = std::make_shared<ANativeWindow>();
-        mock_display_allocator = std::make_shared<testing::NiceMock<MockDisplayAllocator>>();
         mock_hwc_factory = std::make_shared<testing::NiceMock<MockHWCFactory>>();
         mock_fnw_factory = std::make_shared<testing::NiceMock<MockFNWFactory>>();
         mock_fb_device = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
@@ -106,7 +90,6 @@ public:
     }
 
     std::shared_ptr<ANativeWindow> stub_anativewindow;
-    std::shared_ptr<MockDisplayAllocator> mock_display_allocator;
     std::shared_ptr<MockHWCFactory> mock_hwc_factory;
     std::shared_ptr<MockFNWFactory> mock_fnw_factory;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fb_device;
@@ -123,7 +106,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
         .Times(1);
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
+    mga::AndroidDisplayFactory display_factory(mock_hwc_factory, mock_fnw_factory, mock_display_report); 
 }
 
 /* this case occurs when the system cannot find the hwc library. it is a nonfatal error because we have a backup to try */
@@ -136,8 +119,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
-    EXPECT_CALL(*mock_display_allocator, create_display(_,_,_))
-        .Times(0);
 
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1);
@@ -146,13 +127,10 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1);
 
-    std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_display(_,_,tmp2))
-        .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
+    mga::AndroidDisplayFactory display_factory(mock_hwc_factory, mock_fnw_factory, mock_display_report); 
     display_factory.create_display();
 }
 
@@ -161,8 +139,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
-        .Times(0);
-    EXPECT_CALL(*mock_display_allocator, create_display(_,_,_))
         .Times(0);
     
     mtd::FailingHardwareModuleStub failing_hwc_module_stub;
@@ -175,13 +151,10 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
     std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1);
-    std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_display(_,_,tmp2))
-        .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
+    mga::AndroidDisplayFactory display_factory(mock_hwc_factory, mock_fnw_factory, mock_display_report); 
     display_factory.create_display();
 }
 
@@ -205,11 +178,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1);
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_display(tmp,stub_anativewindow,tmp2))
-        .Times(1);
 
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator,
-                                               mock_hwc_factory, mock_fnw_factory, mock_display_report);
+    mga::AndroidDisplayFactory display_factory(mock_hwc_factory, mock_fnw_factory, mock_display_report);
     display_factory.create_display();
 }
 
