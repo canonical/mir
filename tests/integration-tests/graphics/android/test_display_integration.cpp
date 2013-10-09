@@ -25,7 +25,7 @@
 #include "src/server/graphics/android/hwc_vsync.h"
 #include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
+#include "src/server/graphics/android/display_buffer_factory.h"
 #include "src/server/graphics/android/fb_device.h"
 
 #include "examples/graphics.h"
@@ -109,7 +109,7 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = resource_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, fb_device, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
@@ -143,7 +143,7 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
 
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, hwc,
                                                          mock_display_report);
 
@@ -171,7 +171,7 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device, syncer);
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, hwc, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)

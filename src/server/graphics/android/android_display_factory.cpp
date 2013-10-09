@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display_report.h"
 #include "android_display_factory.h"
-#include "hwc_android_display_buffer_factory.h"
+#include "display_buffer_factory.h"
 #include "display_resource_factory.h"
 #include "android_display.h"
 
@@ -96,6 +96,6 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 
     auto fb_native_win = resource_factory->create_fb_native_window(support_provider);
     auto window = std::make_shared<mga::AndroidFramebufferWindow>(fb_native_win);
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     return std::make_shared<AndroidDisplay>(window, db_factory, support_provider, display_report);
 }

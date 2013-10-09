@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
+#include "src/server/graphics/android/display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -77,7 +77,7 @@ TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
     EXPECT_CALL(this->mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
     .Times(Exactly(1));
 
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 

@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
+#include "src/server/graphics/android/display_buffer_factory.h"
 
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
@@ -47,7 +47,7 @@ protected:
 
     std::shared_ptr<mga::AndroidDisplay> create_display()
     {
-        auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+        auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
         return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_support_provider, mock_display_report);
     }
 

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "hwc_android_display_buffer_factory.h"
+#include "display_buffer_factory.h"
 #include "android_framebuffer_window_query.h"
 #include "display_support_provider.h"
 
@@ -114,7 +114,7 @@ protected:
 
 }
 
-std::unique_ptr<mg::DisplayBuffer> mga::HWCAndroidDisplayBufferFactory::create_display_buffer(
+std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
     std::shared_ptr<AndroidFramebufferWindowQuery> const& native_window,
     std::shared_ptr<DisplaySupportProvider> const& hwc_device,
     EGLDisplay egl_display,

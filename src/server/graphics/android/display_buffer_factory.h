@@ -28,9 +28,7 @@ namespace graphics
 namespace android
 {
 
-class HWCDevice;
-
-class HWCAndroidDisplayBufferFactory : public AndroidDisplayBufferFactory
+class DisplayBufferFactory : public AndroidDisplayBufferFactory
 {
 public:
     std::unique_ptr<DisplayBuffer> create_display_buffer(
