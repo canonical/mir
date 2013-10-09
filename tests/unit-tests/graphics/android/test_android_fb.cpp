@@ -89,7 +89,8 @@ std::shared_ptr<mg::Display> make_display(
 template <>
 std::shared_ptr<mg::Display> make_display<DummyGPUDisplayType>(
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin,
-    std::shared_ptr<mg::DisplayReport> const& listener)
+    std::shared_ptr<mg::DisplayReport> const& listener,
+    std::shared_ptr<mga::DisplaySupportProvider> const& support_provider)
 {
     auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
     return std::make_shared<mga::AndroidDisplay>(fbwin, db_factory, 
@@ -99,7 +100,8 @@ std::shared_ptr<mg::Display> make_display<DummyGPUDisplayType>(
 template <>
 std::shared_ptr<mg::Display> make_display<DummyHWCDisplayType>(
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin,
-    std::shared_ptr<mg::DisplayReport> const& listener)
+    std::shared_ptr<mg::DisplayReport> const& listener,
+    std::shared_ptr<mga::DisplaySupportProvider> const& support_provider)
 {
     auto mock_hwc_device = std::make_shared<mtd::MockHWCInterface>();
     ON_CALL(*mock_hwc_device, display_size())

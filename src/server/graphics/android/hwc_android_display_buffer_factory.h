@@ -33,15 +33,11 @@ class HWCDevice;
 class HWCAndroidDisplayBufferFactory : public AndroidDisplayBufferFactory
 {
 public:
-    HWCAndroidDisplayBufferFactory(std::shared_ptr<HWCDevice> const& hwc_device);
-
     std::unique_ptr<DisplayBuffer> create_display_buffer(
         std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
+        std::shared_ptr<DisplaySupportProvider> const& hwc_device,
         EGLDisplay egl_display,
         EGLContext egl_context_shared);
-
-private:
-    std::shared_ptr<HWCDevice> const hwc_device;
 };
 
 }

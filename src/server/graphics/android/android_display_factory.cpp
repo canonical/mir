@@ -20,6 +20,7 @@
 #include "android_display_factory.h"
 #include "hwc_factory.h"
 #include "hwc_device.h"
+#include "hwc_android_display_buffer_factory.h"
 #include "framebuffer_factory.h"
 #include "display_allocator.h"
 #include "android_display.h"
@@ -81,28 +82,26 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 {
-    std::shared_ptr<mg::Display> display;
+    std::shared_ptr<mga::DisplaySupportProvider> support_provider;
     //TODO: if hwc display creation fails, we could try the gpu display
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
-        auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev, fb_dev);
-        auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
-        display = display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
+        support_provider = hwc_factory->create_hwc_1_1(hwc_dev, fb_dev);
         display_report->report_hwc_composition_in_use(1,1);
     }
     else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
     {
-        auto hwc_device = hwc_factory->create_hwc_1_0(hwc_dev, fb_dev);
-        auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
-        display = display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
+        support_provider = hwc_factory->create_hwc_1_0(hwc_dev, fb_dev);
         display_report->report_hwc_composition_in_use(1,0);
     }
     else
     {
-        auto fb_native_win = fb_factory->create_fb_native_window(fb_dev);
-        display = display_factory->create_gpu_display(fb_native_win, fb_dev, display_report);
+        support_provider = fb_dev;
         display_report->report_gpu_composition_in_use();
     }
 
-    return display;
+    auto fb_native_win = fb_factory->create_fb_native_window(support_provider);
+    auto window = std::make_shared<mga::AndroidFramebufferWindow>(fb_native_win);
+    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
+    return std::make_shared<AndroidDisplay>(window, db_factory, support_provider, display_report);
 }

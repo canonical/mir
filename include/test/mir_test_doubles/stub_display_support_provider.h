@@ -37,6 +37,7 @@ struct StubDisplaySupportProvider : public graphics::android::DisplaySupportProv
     void set_next_frontbuffer(std::shared_ptr<mir::graphics::Buffer> const&) {}
     void sync_to_display(bool) {}
     void mode(MirPowerMode) {}
+    void commit_frame(EGLDisplay, EGLSurface) {}
 };
 
 }

@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
 #include "display_support_provider.h"
-#include <EGL/egl.h>
 
 namespace mir
 {
