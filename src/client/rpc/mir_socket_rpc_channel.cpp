@@ -30,18 +30,11 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
-
 #include <boost/bind.hpp>
-#include <boost/throw_exception.hpp>
 
-#include <cstring>
-#include <sstream>
 #include <stdexcept>
 
-#include <pthread.h>
 #include <signal.h>
-
-#include <stdio.h>
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
@@ -58,7 +51,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     socket(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
-    lifecycle_control(lifecycle_control)
+    lifecycle_control(lifecycle_control),
+    disconnected(false)
 {
     socket.connect(endpoint);
     init();
@@ -76,7 +70,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     socket(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
-    lifecycle_control(lifecycle_control)
+    lifecycle_control(lifecycle_control),
+    disconnected(false)
 {
     socket.assign(boost::asio::local::stream_protocol(), native_socket);
     init();
@@ -84,10 +79,12 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
 
 void mclr::MirSocketRpcChannel::notify_disconnected()
 {
-    // TODO enable configuring the kill mechanism
-    io_service.stop();
-    raise (SIGTERM);
-    pending_calls.force_completion();
+    if (!disconnected.exchange(true))
+    {
+        io_service.stop();
+        lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
+        pending_calls.force_completion();
+    }
 }
 
 void mclr::MirSocketRpcChannel::init()
@@ -288,6 +285,7 @@ void mclr::MirSocketRpcChannel::send_message(
     if (error)
     {
         rpc_report->invocation_failed(invocation, error);
+        notify_disconnected();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server: " + error.message()));
     }
     else

@@ -31,6 +31,7 @@ class EventFilter
 public:
     virtual ~EventFilter() = default;
 
+    // \return true indicates the event was consumed by the filter
     virtual bool handle(MirEvent const& event) = 0;
 
 protected:

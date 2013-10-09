@@ -123,24 +123,17 @@ void mc::DefaultDisplayBufferCompositor::composite()
         // preserves buffers used in rendering until after post_update()
         std::vector<std::shared_ptr<void>> saved_resources;
         auto save_resource = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
-    
+
         display_buffer.make_current();
-    
-        compose(display_buffer.view_area(), save_resource);
-    
+
+        auto const& view_area = display_buffer.view_area();
+        renderer->clear(local_frameno);
+        mc::RenderingOperator applicator(*renderer, save_resource);
+        FilterForVisibleSceneInRegion selector(view_area);
+        scene->for_each_if(selector, applicator);
+        overlay_renderer->render(view_area, save_resource);
+
         display_buffer.post_update();
     }
 }
 
-void mc::DefaultDisplayBufferCompositor::compose(
-    mir::geometry::Rectangle const& view_area,
-    std::function<void(std::shared_ptr<void> const&)> save_resource)
-{
-    renderer->clear(local_frameno);
-
-    mc::RenderingOperator applicator(*renderer, save_resource);
-    FilterForVisibleSceneInRegion selector(view_area);
-    scene->for_each_if(selector, applicator);
-
-    overlay_renderer->render(view_area, save_resource);
-}

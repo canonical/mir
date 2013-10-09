@@ -28,10 +28,6 @@ namespace graphics
 {
 class DisplayBuffer;
 }
-namespace geometry
-{
-struct Rectangle;
-}
 namespace compositor
 {
 
@@ -49,10 +45,6 @@ public:
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
     void composite() override;
-
-    void compose(
-        mir::geometry::Rectangle const& view_area,
-        std::function<void(std::shared_ptr<void> const&)> save_resource);
 
 private:
     graphics::DisplayBuffer& display_buffer;

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 
-#include "mir/surfaces/surface_state.h"
+#include "src/server/surfaces/surface_state.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -60,6 +60,7 @@ public:
     MOCK_METHOD0(frame_posted, void());
     MOCK_METHOD1(set_hidden, void(bool));
     MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const&));
+    MOCK_CONST_METHOD0(shaped, bool());
 };
 
 typedef ::testing::NiceMock<MockSurfaceState> StubSurfaceState;

@@ -67,10 +67,11 @@ struct SurfaceDataTest : public testing::Test
 
 TEST_F(SurfaceDataTest, basics)
 { 
-    ms::SurfaceData data{name, rect, null_change_cb};
+    ms::SurfaceData data{name, rect, null_change_cb, false};
     EXPECT_EQ(name, data.name());
     EXPECT_EQ(rect.size, data.size());
     EXPECT_EQ(rect.top_left, data.position());
+    EXPECT_FALSE(data.shaped());
 }
 
 TEST_F(SurfaceDataTest, update_position)
@@ -78,7 +79,7 @@ TEST_F(SurfaceDataTest, update_position)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData storage{name, rect, mock_change_cb};
+    ms::SurfaceData storage{name, rect, mock_change_cb, false};
     EXPECT_EQ(rect.top_left, storage.position());
 
     auto new_top_left = geom::Point{geom::X{6}, geom::Y{10}};
@@ -91,7 +92,7 @@ TEST_F(SurfaceDataTest, test_surface_set_rotation_updates_transform)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData storage{name, rect, mock_change_cb};
+    ms::SurfaceData storage{name, rect, mock_change_cb, false};
     auto original_transformation = storage.transformation();
 
     storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
@@ -106,7 +107,7 @@ TEST_F(SurfaceDataTest, test_surface_transformation_cache_refreshes)
     const geom::Size sz{geom::Width{85}, geom::Height{43}};
     const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
     const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
-    ms::SurfaceData storage{name, origin, null_change_cb};
+    ms::SurfaceData storage{name, origin, null_change_cb, false};
 
     glm::mat4 t0 = storage.transformation();
     storage.move_to(moved_pt.top_left);
@@ -125,7 +126,7 @@ TEST_F(SurfaceDataTest, test_surface_set_alpha_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
 
     float alpha = 0.5f;
     surface_state.apply_alpha(0.5f);
@@ -135,8 +136,9 @@ TEST_F(SurfaceDataTest, test_surface_set_alpha_notifies_changes)
 TEST_F(SurfaceDataTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
-    ms::SurfaceData surface_state{name, rect, null_change_cb};
+    ms::SurfaceData surface_state{name, rect, null_change_cb, false};
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
+    EXPECT_FALSE(surface_state.shaped());
 }
 
 TEST_F(SurfaceDataTest, test_surface_apply_rotation)
@@ -144,13 +146,13 @@ TEST_F(SurfaceDataTest, test_surface_apply_rotation)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
     surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
 TEST_F(SurfaceDataTest, test_surface_should_be_rendered_in)
 {
-    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
     geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
 
     //not renderable by default
@@ -179,7 +181,7 @@ TEST_F(SurfaceDataTest, test_surface_hidden_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
     surface_state.set_hidden(true);
 }
 
@@ -189,7 +191,7 @@ TEST_F(SurfaceDataTest, test_surface_frame_posted_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
     surface_state.frame_posted();
 }
 
@@ -198,7 +200,7 @@ TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
 {
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
-    ms::SurfaceData surface_state{name, geom::Rectangle{pt, one_by_one}, mock_change_cb};
+    ms::SurfaceData surface_state{name, geom::Rectangle{pt, one_by_one}, mock_change_cb, false};
 
     std::vector<geom::Point> contained_pt
     {
@@ -230,7 +232,7 @@ TEST_F(SurfaceDataTest, set_input_region)
         {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
     surface_state.set_input_region(rectangles);
 
     std::vector<geom::Point> contained_pt

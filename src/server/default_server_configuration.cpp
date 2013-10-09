@@ -255,9 +255,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (standalone_opt, po::value<bool>(),
             "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
-            "Host socket filename. [string:default={$MIR_SOCKET,/tmp/mir_socket}]")
+            "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
         ("file,f", po::value<std::string>(),
-            "Socket filename. [string:default=/tmp/mir_socket]")
+            "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
@@ -293,7 +293,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool. [int:default=10]")
+            "threads in frontend thread pool.")
         ("vt", po::value<int>(),
             "VT to run on or 0 to use current. [int:default=0]");
 }

@@ -21,7 +21,7 @@
 
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/input/surface.h"
-#include "mir/surfaces/mutable_surface_state.h"
+#include "mutable_surface_state.h"
 
 namespace mir
 {

@@ -1,6 +1,25 @@
+/*
+ * Copyright (C) 2012-2013 Canonical Ltd.
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "mir_test/fake_event_hub.h"
 
+// from android-input
 #include <androidfw/Keyboard.h>
+#include <std/Errors.h>
+
 #include <thread>
 #include <chrono>
 
@@ -17,19 +36,26 @@ using droidinput::KeyCharacterMap;
 using droidinput::VirtualKeyDefinition;
 
 namespace mi = mir::input;
-namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 
-mia::FakeEventHub::FakeEventHub()
+using mir::input::android::FakeEventHub;
+using namespace android;
+
+namespace {
+    // An arbitrary time value.
+    const nsecs_t arbitrary_time = 1234;
+} // anonymous namespace
+
+FakeEventHub::FakeEventHub()
 {
     keymap.loadGenericMaps();
 }
 
-mia::FakeEventHub::~FakeEventHub()
+FakeEventHub::~FakeEventHub()
 {
 }
 
-uint32_t mia::FakeEventHub::getDeviceClasses(int32_t deviceId) const
+uint32_t FakeEventHub::getDeviceClasses(int32_t deviceId) const
 {
     if (deviceId == BuiltInKeyboardID)
     {
@@ -52,7 +78,7 @@ uint32_t mia::FakeEventHub::getDeviceClasses(int32_t deviceId) const
     }
 }
 
-InputDeviceIdentifier mia::FakeEventHub::getDeviceIdentifier(int32_t deviceId) const
+InputDeviceIdentifier FakeEventHub::getDeviceIdentifier(int32_t deviceId) const
 {
     auto fake_device_iterator = device_from_id.find(deviceId);
 
@@ -66,38 +92,51 @@ InputDeviceIdentifier mia::FakeEventHub::getDeviceIdentifier(int32_t deviceId) c
     }
 }
 
-void mia::FakeEventHub::getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const
+void FakeEventHub::getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const
 {
-    (void)deviceId;
-    (void)outConfiguration;
+    auto device_iterator = device_from_id.find(deviceId);
+    if (device_iterator != device_from_id.end())
+    {
+        *outConfiguration = device_iterator->second.configuration;
+    }
 }
 
-status_t mia::FakeEventHub::getAbsoluteAxisInfo(int32_t deviceId, int axis,
+status_t FakeEventHub::getAbsoluteAxisInfo(int32_t deviceId, int axis,
         RawAbsoluteAxisInfo* outAxisInfo) const
 {
-    (void)deviceId;
-    (void)axis;
-    (void)outAxisInfo;
+    outAxisInfo->clear();
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->absoluteAxes.indexOfKey(axis);
+        if (index >= 0)
+        {
+            *outAxisInfo = device->absoluteAxes.valueAt(index);
+            return OK;
+        }
+    }
     return -1;
 }
 
-bool mia::FakeEventHub::hasRelativeAxis(int32_t deviceId, int axis) const
+bool FakeEventHub::hasRelativeAxis(int32_t deviceId, int axis) const
 {
-    (void)deviceId;
-    (void)axis;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        return device->relativeAxes.indexOfKey(axis) >= 0;
+    }
     return false;
 }
 
-bool mia::FakeEventHub::hasInputProperty(int32_t deviceId, int property) const
+bool FakeEventHub::hasInputProperty(int32_t deviceId, int property) const
 {
-    auto fake_device_iterator = device_from_id.find(deviceId);
+    const FakeDevice* device = getDevice(deviceId);
 
-    if (fake_device_iterator != device_from_id.end())
+    if (device)
     {
-        auto property_iterator =
-            fake_device_iterator->second.input_properties.find(property);
+        auto property_iterator = device->input_properties.find(property);
 
-        if (property_iterator != fake_device_iterator->second.input_properties.end())
+        if (property_iterator != device->input_properties.end())
         {
             return property_iterator->second;
         }
@@ -112,30 +151,71 @@ bool mia::FakeEventHub::hasInputProperty(int32_t deviceId, int property) const
     }
 }
 
-status_t mia::FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
+status_t FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
                               int32_t* outKeycode, uint32_t* outFlags) const
 {
-    (void)deviceId;
-    (void)usageCode;
-    keymap.keyLayoutMap->mapKey(scanCode, usageCode, outKeycode, outFlags);
-    return droidinput::OK;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        const KeyInfo* key = getKey(device, scanCode, usageCode);
+        if (key)
+        {
+            if (outKeycode)
+            {
+                *outKeycode = key->keyCode;
+            }
+            if (outFlags)
+            {
+                *outFlags = key->flags;
+            }
+            return OK;
+        }
+        return NAME_NOT_FOUND;
+    }
+    else
+    {
+        keymap.keyLayoutMap->mapKey(scanCode, usageCode, outKeycode, outFlags);
+        return droidinput::OK;
+    }
 }
 
-status_t mia::FakeEventHub::mapAxis(int32_t deviceId, int32_t scanCode,
+const FakeEventHub::KeyInfo* FakeEventHub::getKey(const FakeDevice* device,
+                                                  int32_t scanCode, int32_t usageCode) const
+{
+    if (usageCode)
+    {
+        ssize_t index = device->keysByUsageCode.indexOfKey(usageCode);
+        if (index >= 0)
+        {
+            return &device->keysByUsageCode.valueAt(index);
+        }
+    }
+    if (scanCode)
+    {
+        ssize_t index = device->keysByScanCode.indexOfKey(scanCode);
+        if (index >= 0)
+        {
+            return &device->keysByScanCode.valueAt(index);
+        }
+    }
+    return NULL;
+}
+
+status_t FakeEventHub::mapAxis(int32_t deviceId, int32_t scanCode,
                                AxisInfo* outAxisInfo) const
 {
     (void)deviceId;
     (void)scanCode;
     (void)outAxisInfo;
-    return -1;
+    return NAME_NOT_FOUND;
 }
 
-void mia::FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
+void FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
 {
-    (void)devices;
+    excluded_devices = devices;
 }
 
-size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
+size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
 {
     size_t num_events_obtained = 0;
     (void) timeoutMillis;
@@ -155,82 +235,145 @@ size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t 
     return num_events_obtained;
 }
 
-int32_t mia::FakeEventHub::getScanCodeState(int32_t deviceId, int32_t scanCode) const
+int32_t FakeEventHub::getScanCodeState(int32_t deviceId, int32_t scanCode) const
 {
-    (void)deviceId;
-    (void)scanCode;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->scanCodeStates.indexOfKey(scanCode);
+        if (index >= 0)
+        {
+            return device->scanCodeStates.valueAt(index);
+        }
+    }
     return AKEY_STATE_UNKNOWN;
 }
 
-int32_t mia::FakeEventHub::getKeyCodeState(int32_t deviceId, int32_t keyCode) const
+int32_t FakeEventHub::getKeyCodeState(int32_t deviceId, int32_t keyCode) const
 {
-    (void)deviceId;
-    (void)keyCode;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->keyCodeStates.indexOfKey(keyCode);
+        if (index >= 0)
+        {
+            return device->keyCodeStates.valueAt(index);
+        }
+    }
     return AKEY_STATE_UNKNOWN;
 }
 
-int32_t mia::FakeEventHub::getSwitchState(int32_t deviceId, int32_t sw) const
+int32_t FakeEventHub::getSwitchState(int32_t deviceId, int32_t sw) const
 {
-    (void)deviceId;
-    (void)sw;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->switchStates.indexOfKey(sw);
+        if (index >= 0)
+        {
+            return device->switchStates.valueAt(index);
+        }
+    }
     return AKEY_STATE_UNKNOWN;
 }
 
-status_t mia::FakeEventHub::getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
+status_t FakeEventHub::getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
         int32_t* outValue) const
 {
-    (void)deviceId;
-    (void)axis;
-    (void)outValue;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->absoluteAxisValue.indexOfKey(axis);
+        if (index >= 0)
+        {
+            *outValue = device->absoluteAxisValue.valueAt(index);
+            return OK;
+        }
+    }
+    *outValue = 0;
     return -1;
 }
 
-bool mia::FakeEventHub::markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
+bool FakeEventHub::markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
         const int32_t* keyCodes,
         uint8_t* outFlags) const
 {
-    (void)deviceId;
-    (void)numCodes;
-    (void)keyCodes;
-    (void)outFlags;
-    return true;
+    bool result = false;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        for (size_t i = 0; i < numCodes; i++)
+        {
+            for (size_t j = 0; j < device->keysByScanCode.size(); j++)
+            {
+                if (keyCodes[i] == device->keysByScanCode.valueAt(j).keyCode)
+                {
+                    outFlags[i] = 1;
+                    result = true;
+                }
+            }
+            for (size_t j = 0; j < device->keysByUsageCode.size(); j++)
+            {
+                if (keyCodes[i] == device->keysByUsageCode.valueAt(j).keyCode)
+                {
+                    outFlags[i] = 1;
+                    result = true;
+                }
+            }
+        }
+    }
+    return result;
 }
 
-bool mia::FakeEventHub::hasScanCode(int32_t deviceId, int32_t scanCode) const
+bool FakeEventHub::hasScanCode(int32_t deviceId, int32_t scanCode) const
 {
-    (void)deviceId;
-    (void)scanCode;
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->keysByScanCode.indexOfKey(scanCode);
+        return index >= 0;
+    }
     return false;
 }
 
-bool mia::FakeEventHub::hasLed(int32_t deviceId, int32_t led) const
+bool FakeEventHub::hasLed(int32_t deviceId, int32_t led) const
 {
-    (void)deviceId;
-    (void)led;
-    return false;
+    const FakeDevice* device = getDevice(deviceId);
+    return device && device->leds.indexOfKey(led) >= 0;
 }
 
-void mia::FakeEventHub::setLedState(int32_t deviceId, int32_t led, bool on)
+void FakeEventHub::setLedState(int32_t deviceId, int32_t led, bool on)
 {
-    (void)deviceId;
-    (void)led;
-    (void)on;
+    FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        ssize_t index = device->leds.indexOfKey(led);
+        if (index >= 0)
+        {
+            device->leds.replaceValueAt(led, on);
+        }
+    }
 }
 
-void mia::FakeEventHub::getVirtualKeyDefinitions(int32_t deviceId,
+void FakeEventHub::getVirtualKeyDefinitions(int32_t deviceId,
         Vector<VirtualKeyDefinition>& outVirtualKeys) const
 {
-    (void)deviceId;
-    (void)outVirtualKeys;
+    outVirtualKeys.clear();
+
+    const FakeDevice* device = getDevice(deviceId);
+    if (device)
+    {
+        outVirtualKeys.appendVector(device->virtualKeys);
+    }
 }
 
-sp<KeyCharacterMap> mia::FakeEventHub::getKeyCharacterMap(int32_t deviceId) const
+sp<KeyCharacterMap> FakeEventHub::getKeyCharacterMap(int32_t deviceId) const
 {
     (void)deviceId;
     return sp<KeyCharacterMap>();
 }
 
-bool mia::FakeEventHub::setKeyboardLayoutOverlay(int32_t deviceId,
+bool FakeEventHub::setKeyboardLayoutOverlay(int32_t deviceId,
         const sp<KeyCharacterMap>& map)
 {
     (void)deviceId;
@@ -238,39 +381,39 @@ bool mia::FakeEventHub::setKeyboardLayoutOverlay(int32_t deviceId,
     return true;
 }
 
-void mia::FakeEventHub::vibrate(int32_t deviceId, nsecs_t duration)
+void FakeEventHub::vibrate(int32_t deviceId, nsecs_t duration)
 {
     (void)deviceId;
     (void)duration;
 }
 
-void mia::FakeEventHub::cancelVibrate(int32_t deviceId)
+void FakeEventHub::cancelVibrate(int32_t deviceId)
 {
     (void)deviceId;
 }
 
-void mia::FakeEventHub::requestReopenDevices()
+void FakeEventHub::requestReopenDevices()
 {
 }
 
-void mia::FakeEventHub::wake()
+void FakeEventHub::wake()
 {
 }
 
-void mia::FakeEventHub::dump(droidinput::String8& dump)
+void FakeEventHub::dump(droidinput::String8& dump)
 {
     (void)dump;
 }
 
-void mia::FakeEventHub::monitor()
+void FakeEventHub::monitor()
 {
 }
 
-void mia::FakeEventHub::flush()
+void FakeEventHub::flush()
 {
 }
 
-void mia::FakeEventHub::synthesize_builtin_keyboard_added()
+void FakeEventHub::synthesize_builtin_keyboard_added()
 {
     RawEvent event;
     event.when = 0;
@@ -281,7 +424,7 @@ void mia::FakeEventHub::synthesize_builtin_keyboard_added()
     events_available.push_back(event);
 }
 
-void mia::FakeEventHub::synthesize_builtin_cursor_added()
+void FakeEventHub::synthesize_builtin_cursor_added()
 {
     RawEvent event;
     event.when = 0;
@@ -292,7 +435,7 @@ void mia::FakeEventHub::synthesize_builtin_cursor_added()
     events_available.push_back(event);
 }
 
-void mia::FakeEventHub::synthesize_device_scan_complete()
+void FakeEventHub::synthesize_device_scan_complete()
 {
     RawEvent event;
     event.when = 0;
@@ -302,7 +445,7 @@ void mia::FakeEventHub::synthesize_device_scan_complete()
     events_available.push_back(event);
 }
 
-void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
+void FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
 {
     RawEvent event;
     event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -323,7 +466,7 @@ void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
     events_available.push_back(event);
 }
 
-void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters)
+void FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters)
 {
     RawEvent event;
     event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -349,7 +492,7 @@ void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters
     events_available.push_back(event);
 }
 
-void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters)
+void FakeEventHub::synthesize_event(const mis::MotionParameters &parameters)
 {
     RawEvent event;
     event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -372,4 +515,176 @@ void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters
     event.type = EV_SYN;
     event.code = SYN_REPORT;
     events_available.push_back(event);
+}
+
+void FakeEventHub::synthesize_event(nsecs_t when, int32_t device_id, int32_t type, int32_t code, int32_t value)
+{
+    RawEvent event;
+    event.when = when;
+    event.deviceId = device_id;
+    event.type = type;
+    event.code = code;
+    event.value = value;
+
+    {
+        std::lock_guard<std::mutex> lg(guard);
+        events_available.push_back(event);
+    }
+
+    if (type == EV_ABS)
+    {
+        setAbsoluteAxisValue(device_id, code, value);
+    }
+}
+
+void FakeEventHub::addDevice(int32_t deviceId, const std::string& name, uint32_t classes)
+{
+    FakeDevice device;
+    device.classes = classes;
+    device.identifier.name = name;
+    device_from_id.insert(std::pair<int32_t, FakeDevice>(deviceId, device));
+
+    synthesize_event(arbitrary_time, deviceId, EventHubInterface::DEVICE_ADDED, 0, 0);
+}
+
+void FakeEventHub::removeDevice(int32_t device_id)
+{
+    device_from_id.erase(device_id);
+
+    synthesize_event(arbitrary_time, device_id, EventHubInterface::DEVICE_REMOVED, 0, 0);
+}
+
+void FakeEventHub::finishDeviceScan()
+{
+    synthesize_event(arbitrary_time, 0, EventHubInterface::FINISHED_DEVICE_SCAN, 0, 0);
+}
+
+void FakeEventHub::addConfigurationProperty(int32_t device_id, const std::string& key, const std::string& value)
+{
+    FakeDevice& device = device_from_id.at(device_id);
+    device.configuration.addProperty(key, value);
+}
+
+void FakeEventHub::addConfigurationMap(int32_t device_id, const PropertyMap* configuration)
+{
+    FakeDevice& device = device_from_id.at(device_id);
+    device.configuration.addAll(configuration);
+}
+
+void FakeEventHub::addAbsoluteAxis(int32_t device_id, int axis,
+        int32_t minValue, int32_t maxValue, int flat, int fuzz, int resolution)
+{
+    FakeDevice& device = device_from_id.at(device_id);
+
+    RawAbsoluteAxisInfo info;
+    info.valid = true;
+    info.minValue = minValue;
+    info.maxValue = maxValue;
+    info.flat = flat;
+    info.fuzz = fuzz;
+    info.resolution = resolution;
+    device.absoluteAxes.add(axis, info);
+}
+
+void FakeEventHub::addRelativeAxis(int32_t device_id, int32_t axis)
+{
+    FakeDevice& device = device_from_id.at(device_id);
+    device.relativeAxes.add(axis, true);
+}
+
+void FakeEventHub::setKeyCodeState(int32_t deviceId, int32_t keyCode, int32_t state)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    device.keyCodeStates.replaceValueFor(keyCode, state);
+}
+
+void FakeEventHub::setScanCodeState(int32_t deviceId, int32_t scanCode, int32_t state)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    device.scanCodeStates.replaceValueFor(scanCode, state);
+}
+
+void FakeEventHub::setSwitchState(int32_t deviceId, int32_t switchCode, int32_t state)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    device.switchStates.replaceValueFor(switchCode, state);
+}
+
+void FakeEventHub::setAbsoluteAxisValue(int32_t deviceId, int32_t axis, int32_t value)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    device.absoluteAxisValue.replaceValueFor(axis, value);
+}
+
+void FakeEventHub::addKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
+                          int32_t keyCode, uint32_t flags)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    KeyInfo info;
+    info.keyCode = keyCode;
+    info.flags = flags;
+    if (scanCode)
+    {
+        device.keysByScanCode.add(scanCode, info);
+    }
+    if (usageCode)
+    {
+        device.keysByUsageCode.add(usageCode, info);
+    }
+}
+
+void FakeEventHub::addLed(int32_t deviceId, int32_t led, bool initialState)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    device.leds.add(led, initialState);
+}
+
+bool FakeEventHub::getLedState(int32_t deviceId, int32_t led)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    return device.leds.valueFor(led);
+}
+
+Vector<std::string>& FakeEventHub::getExcludedDevices()
+{
+    return excluded_devices;
+}
+
+void FakeEventHub::addVirtualKeyDefinition(int32_t deviceId, const VirtualKeyDefinition& definition)
+{
+    FakeDevice& device = device_from_id.at(deviceId);
+    device.virtualKeys.push(definition);
+}
+
+FakeEventHub::FakeDevice* FakeEventHub::getDevice(int32_t deviceId)
+{
+    auto fake_device_iterator = device_from_id.find(deviceId);
+
+    if (fake_device_iterator != device_from_id.end())
+    {
+        return &(fake_device_iterator->second);
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+const FakeEventHub::FakeDevice* FakeEventHub::getDevice(int32_t deviceId) const
+{
+    auto fake_device_iterator = device_from_id.find(deviceId);
+
+    if (fake_device_iterator != device_from_id.end())
+    {
+        return &(fake_device_iterator->second);
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+size_t FakeEventHub::eventsQueueSize() const
+{
+    return events_available.size();
 }
