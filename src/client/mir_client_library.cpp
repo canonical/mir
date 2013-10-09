@@ -293,10 +293,22 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
     mcl::delete_config_storage(configuration);
 }
 
+namespace
+{
+template <typename Owned>
+inline std::unique_ptr<Owned, void(*)(Owned*)> unique_with_deleter(Owned* owned, void(*deleter)(Owned*))
+{
+    return {owned, deleter};
+}
+}
+
 //TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    auto config = mir_connection_create_display_config(connection);
+    auto const config = unique_with_deleter(
+        mir_connection_create_display_config(connection),
+        &mir_display_config_destroy);
+
     if (config->num_outputs < 1)
         return;
 
@@ -320,23 +332,21 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     }
 
     MirDisplayMode mode = state->modes[state->current_mode];
-   
+
     display_info->width = mode.horizontal_resolution;
     display_info->height = mode.vertical_resolution;
 
     unsigned int format_items;
-    if (state->num_output_formats > mir_supported_pixel_format_max) 
+    if (state->num_output_formats > mir_supported_pixel_format_max)
          format_items = mir_supported_pixel_format_max;
     else
          format_items = state->num_output_formats;
 
-    display_info->supported_pixel_format_items = format_items; 
+    display_info->supported_pixel_format_items = format_items;
     for(auto i=0u; i < format_items; i++)
     {
         display_info->supported_pixel_format[i] = state->output_formats[i];
     }
-
-    mir_display_config_destroy(config);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
