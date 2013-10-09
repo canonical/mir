@@ -14,6 +14,40 @@ mir (0.0.14-0ubuntu1) UNRELEASED; urgency=low
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Tue, 08 Oct 2013 18:13:17 -0500
 
+mir (0.0.13+13.10.20131003-0ubuntu1) saucy; urgency=low
+
+  [ kg ]
+  * bump version for ABI break (LP: #1229212)
+
+  [ Robert Ancell ]
+  * Bump version to 0.0.12
+
+  [ Kevin Gunn ]
+  * bump version to 0.0.13
+
+  [ Daniel d'Andrada ]
+  * Fix for LP#1233944 Fixes the Mir-side of bug
+    https://bugs.launchpad.net/mir/+bug/1233944 Event files are first
+    created with root:root permissions and only later udev rules are
+    applied to it, changing its permissions to root:android-input and
+    therefore making it readable by unity8-mir in short: Retry opening a
+    file when its permissions change as it might be readable now. (LP:
+    #1233944)
+
+  [ Robert Carr ]
+  * Fix for LP#1233944 Fixes the Mir-side of bug
+    https://bugs.launchpad.net/mir/+bug/1233944 Event files are first
+    created with root:root permissions and only later udev rules are
+    applied to it, changing its permissions to root:android-input and
+    therefore making it readable by unity8-mir in short: Retry opening a
+    file when its permissions change as it might be readable now. (LP:
+    #1233944)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1089
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 03 Oct 2013 06:34:41 +0000
+
 mir (0.0.12+13.10.20131001.1-0ubuntu1) saucy; urgency=low
 
   [ Michael Terry ]
