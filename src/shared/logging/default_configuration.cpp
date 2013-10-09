@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -12,43 +12,30 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+*
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/default_configuration.h"
 
-#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
-#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#include <cstdlib>
+#include <sstream>
 
-#include <cstdint>
-#include <cstddef>
-
-namespace mir
+namespace
 {
-namespace geometry
+const char* init()
 {
-enum class PixelFormat : uint32_t
-{
-    invalid,
-    abgr_8888,
-    xbgr_8888,
-    argb_8888,
-    xrgb_8888,
-    bgr_888
-};
+    std::ostringstream formatter;
 
-static inline size_t bytes_per_pixel(PixelFormat fmt)
-{
-    return (fmt == PixelFormat::bgr_888) ? 3 : 4;
-}
+    char const* dir = getenv("XDG_RUNTIME_DIR");
+    if (!dir) dir = "/tmp";
 
-static inline bool has_alpha(PixelFormat fmt)
-{
-    return (fmt == PixelFormat::abgr_8888) ||
-           (fmt == PixelFormat::argb_8888);
-}
+    formatter << dir << "/mir_socket";
 
+    static auto result = formatter.str();
+    return result.c_str();
 }
 }
 
-#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */
+const char *const mir::default_server_socket = init();
+

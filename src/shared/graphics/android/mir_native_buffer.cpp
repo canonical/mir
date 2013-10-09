@@ -56,6 +56,7 @@ void mga::NativeBuffer::driver_dereference()
     driver_references--;
     if ((!mir_reference) && (driver_references == 0))
     {
+        lk.unlock();
         delete this;
     }
 }
@@ -66,6 +67,7 @@ void mga::NativeBuffer::mir_dereference()
     mir_reference = false;
     if (driver_references == 0)
     {
+        lk.unlock();
         delete this;
     }
 }
