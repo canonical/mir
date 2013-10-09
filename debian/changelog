@@ -1,4 +1,4 @@
-mir (0.0.13-0ubuntu1) UNRELEASED; urgency=low
+mir (0.0.14-0ubuntu1) UNRELEASED; urgency=low
 
   [ kg ]
   * bump version for ABI break (LP: #1229212)
@@ -9,7 +9,10 @@ mir (0.0.13-0ubuntu1) UNRELEASED; urgency=low
   [ Kevin Gunn ]
   * bump version to 0.0.13
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Wed, 02 Oct 2013 19:57:55 -0500
+  [Kevin Gunn]
+  * bump version to 0.0.14
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Tue, 08 Oct 2013 18:13:17 -0500
 
 mir (0.0.12+13.10.20131001.1-0ubuntu1) saucy; urgency=low
 
