@@ -55,7 +55,7 @@ msh::ApplicationSession::~ApplicationSession()
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto const& pair_id_surface : surfaces)
     {
-        pair_id_surface.second->destroy();
+        session_listener->destroying_surface(*this, pair_id_surface.second);
     }
 }
 
@@ -116,7 +116,6 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     
     session_listener->destroying_surface(*this, p->second);
 
-    p->second->destroy();
     surfaces.erase(p);
 }
 
