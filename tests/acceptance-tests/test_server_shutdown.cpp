@@ -112,7 +112,9 @@ private:
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_blocked)
+using ServerShutdown = BespokeDisplayServerTestFixture;
+
+TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
 {
     Flag next_buffer_done1{"next_buffer_done1_c5d49978.tmp"};
     Flag next_buffer_done2{"next_buffer_done2_c5d49978.tmp"};
@@ -199,7 +201,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
     });
 }
 
-TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_with_connected_clients)
+TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clients)
 {
     Flag surface_created1{"surface_created1_7e9c69fc.tmp"};
     Flag surface_created2{"surface_created2_7e9c69fc.tmp"};
@@ -341,3 +343,91 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
         resources_freed_success.set();
     }
 }
+
+namespace
+{
+bool file_exists(std::string const& filename)
+{
+    struct stat statbuf;
+    return 0 == stat(filename.c_str(), &statbuf);
+}
+}
+
+TEST_F(ServerShutdown, server_removes_endpoint_on_normal_exit)
+{
+    using ServerConfig = TestingServerConfiguration;
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        shutdown_server_process();
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void exec() override
+        {
+            abort();
+        }
+    };
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        using std::chrono::steady_clock;
+        std::chrono::seconds const limit(2);
+
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        // shutdown should fail as the server aborted
+        ASSERT_FALSE(shutdown_server_process());
+
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
+
+TEST_P(OnSignal, removes_endpoint_on_signal)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void exec() override
+        {
+            raise(sig);
+        }
+
+        ServerConfig(int sig) : sig(sig) {}
+        int const sig;
+    };
+
+    ServerConfig server_config(GetParam());
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        using std::chrono::steady_clock;
+        std::chrono::seconds const limit(2);
+
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        // shutdown should fail as the server faulted
+        ASSERT_FALSE(shutdown_server_process());
+
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+INSTANTIATE_TEST_CASE_P(ServerShutdown,
+    OnSignal,
+    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));

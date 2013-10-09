@@ -20,9 +20,37 @@
 #include "mir/display_server.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
+#include "mir/frontend/connector.h"
 
 #include <csignal>
+#include <cstdlib>
 #include <cassert>
+
+namespace
+{
+std::weak_ptr<mir::frontend::Connector> weak_connector;
+
+extern "C" void delete_endpoint()
+{
+    if (auto connector = weak_connector.lock())
+    {
+        weak_connector.reset();
+        connector->remove_endpoint();
+    }
+}
+
+extern "C" { typedef void (*sig_handler)(int); }
+
+volatile sig_handler old_handler[SIGUNUSED]  = { nullptr };
+
+extern "C" void fatal_signal_cleanup(int sig)
+{
+    delete_endpoint();
+
+    signal(sig, old_handler[sig]);
+    raise(sig);
+}
+}
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
@@ -33,12 +61,20 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
         {SIGINT, SIGTERM},
         [&server_ptr](int)
         {
+            delete_endpoint();
             assert(server_ptr);
             server_ptr->stop();
         });
 
     DisplayServer server(config);
     server_ptr = &server;
+
+    weak_connector = config.the_connector();
+
+    for (auto sig : { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS })
+        old_handler[sig] = signal(sig, fatal_signal_cleanup);
+
+    std::atexit(&delete_endpoint);
 
     init(server);
     server.run();

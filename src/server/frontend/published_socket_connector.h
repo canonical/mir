@@ -56,6 +56,8 @@ public:
     void start() override;
     void stop() override;
     int client_socket_fd() const override;
+    void remove_endpoint() const override;
+
 
 protected:
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
@@ -79,6 +81,8 @@ public:
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
+
+    void remove_endpoint() const override;
 
 private:
     void start_accept();
