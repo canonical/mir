@@ -18,10 +18,8 @@
 
 #include "mir/graphics/display_report.h"
 #include "android_display_factory.h"
-#include "hwc_factory.h"
-#include "hwc_device.h"
 #include "hwc_android_display_buffer_factory.h"
-#include "framebuffer_factory.h"
+#include "display_resource_factory.h"
 #include "android_display.h"
 
 #include <boost/throw_exception.hpp>
@@ -66,14 +64,13 @@ std::shared_ptr<hwc_composer_device_1> setup_hwc_dev()
 }
 
 // TODO this whole class seems to be a dismembered function call - replace with a function
-mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<HWCFactory> const& hwc_factory,
-                                                  std::shared_ptr<FramebufferFactory> const& fb_factory,
-                                                  std::shared_ptr<DisplayReport> const& display_report)
-    : hwc_factory(hwc_factory),
-      fb_factory(fb_factory),
-      fb_dev(fb_factory->create_fb_device()),
-      display_report(display_report),
-      hwc_dev(setup_hwc_dev())
+mga::AndroidDisplayFactory::AndroidDisplayFactory(
+    std::shared_ptr<DisplayResourceFactory> const& resource_factory,
+    std::shared_ptr<DisplayReport> const& display_report)
+      : resource_factory(resource_factory),
+        fb_dev(resource_factory->create_fb_device()),
+        display_report(display_report),
+        hwc_dev(setup_hwc_dev())
 {
 }
 
@@ -83,12 +80,12 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     //TODO: if hwc display creation fails, we could try the gpu display
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
-        support_provider = hwc_factory->create_hwc_1_1(hwc_dev, fb_dev);
+        support_provider = resource_factory->create_hwc_1_1(hwc_dev, fb_dev);
         display_report->report_hwc_composition_in_use(1,1);
     }
     else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
     {
-        support_provider = hwc_factory->create_hwc_1_0(hwc_dev, fb_dev);
+        support_provider = resource_factory->create_hwc_1_0(hwc_dev, fb_dev);
         display_report->report_hwc_composition_in_use(1,0);
     }
     else
@@ -97,7 +94,7 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
         display_report->report_gpu_composition_in_use();
     }
 
-    auto fb_native_win = fb_factory->create_fb_native_window(support_provider);
+    auto fb_native_win = resource_factory->create_fb_native_window(support_provider);
     auto window = std::make_shared<mga::AndroidFramebufferWindow>(fb_native_win);
     auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>();
     return std::make_shared<AndroidDisplay>(window, db_factory, support_provider, display_report);

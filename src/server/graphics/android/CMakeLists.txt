@@ -18,12 +18,11 @@ add_library(
   hwc11_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp
-  android_hwc_factory.cpp
   android_framebuffer_window.cpp
   android_display_factory.cpp
   android_alloc_adaptor.cpp
   server_render_window.cpp
-  default_framebuffer_factory.cpp
+  resource_factory.cpp
   fb_simple_swapper.cpp
   fb_device.cpp
   internal_client_window.cpp

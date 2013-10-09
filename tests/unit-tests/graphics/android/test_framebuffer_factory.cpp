@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/default_framebuffer_factory.h"
+#include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
@@ -76,7 +76,7 @@ TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
  
     EXPECT_CALL(*mock_display_info_provider, number_of_framebuffers_available())
         .Times(1);
@@ -90,7 +90,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_size)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     geom::Width disp_width{44};
     geom::Height disp_height{4567654};
@@ -109,7 +109,7 @@ TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,mga::BufferUsage::use_framebuffer_gles))
         .Times(fake_fb_num);
@@ -123,7 +123,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
     geom::PixelFormat pf = geom::PixelFormat::abgr_8888; 
  
     EXPECT_CALL(*mock_display_info_provider, display_format())
@@ -141,14 +141,14 @@ TEST_F(FBFactory, test_device_creation_accesses_gralloc)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_device();
 }
 
 TEST_F(FBFactory, test_device_creation_throws_on_failure)
 {
     using namespace testing;
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -176,7 +176,7 @@ TEST_F(FBFactory, test_device_creation_resource_has_fb_close_on_destruct)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_device();
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());

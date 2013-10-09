@@ -16,10 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FRAMEBUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_FRAMEBUFFER_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_RESOURCE_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_RESOURCE_FACTORY_H_
 
 #include <system/window.h>
+#include <hardware/hwcomposer.h>
 #include <memory>
 
 namespace mir
@@ -30,18 +31,26 @@ namespace android
 {
 class DisplaySupportProvider;
 
-class FramebufferFactory
+class DisplayResourceFactory
 {
 public:
-    virtual ~FramebufferFactory() = default;
+    virtual ~DisplayResourceFactory() = default;
 
     virtual std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) const = 0;
-    virtual std::shared_ptr<DisplaySupportProvider> create_fb_device() const = 0; 
+    virtual std::shared_ptr<DisplaySupportProvider> create_fb_device() const = 0;
+
+    virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
+
+    virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_0(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
 
 protected:
-    FramebufferFactory() = default;
-    FramebufferFactory& operator=(FramebufferFactory const&) = delete;
-    FramebufferFactory(FramebufferFactory const&) = delete;
+    DisplayResourceFactory() = default;
+    DisplayResourceFactory& operator=(DisplayResourceFactory const&) = delete;
+    DisplayResourceFactory(DisplayResourceFactory const&) = delete;
 };
 
 }

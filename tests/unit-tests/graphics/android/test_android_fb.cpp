@@ -21,7 +21,6 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
-#include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_display_support_provider.h"

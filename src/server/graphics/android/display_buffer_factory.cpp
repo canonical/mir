@@ -18,7 +18,7 @@
 
 #include "hwc_android_display_buffer_factory.h"
 #include "android_framebuffer_window_query.h"
-#include "hwc_device.h"
+#include "display_support_provider.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
