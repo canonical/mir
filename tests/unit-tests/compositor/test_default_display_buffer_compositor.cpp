@@ -47,6 +47,7 @@ namespace
 struct MockScene : mc::Scene
 {
     MOCK_METHOD2(for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
+    MOCK_METHOD2(reverse_for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
     MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
@@ -70,6 +71,15 @@ struct FakeScene : mc::Scene
     void for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
     {
         for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+        {
+            mc::CompositingCriteria &info = **it;
+            if (filter(info)) renderable_operator(info, stub_stream);
+        }
+    }
+
+    void reverse_for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
+    {
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
             mc::CompositingCriteria &info = **it;
             if (filter(info)) renderable_operator(info, stub_stream);
