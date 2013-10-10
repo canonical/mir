@@ -1,3 +1,14 @@
+mir (0.0.14+13.10.20131010-0ubuntu1) saucy; urgency=low
+
+  [ Colin Watson ]
+  * Don't build-depend on valgrind on arm64 for now, as it is not yet
+    ported there.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1095
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 10 Oct 2013 01:17:01 +0000
+
 mir (0.0.14+13.10.20131009.4-0ubuntu1) saucy; urgency=low
 
   [ kg ]
