@@ -80,8 +80,10 @@ public:
 
 struct PublishedSocketConnector : public ::testing::Test
 {
+    static const char* const test_socket;
     static void SetUpTestCase()
     {
+        remove(test_socket);
     }
 
     void SetUp()
@@ -89,12 +91,12 @@ struct PublishedSocketConnector : public ::testing::Test
         communicator_report = std::make_shared<MockConnectorReport>();
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>(
-            "./test_socket",
+            test_socket,
             stub_server_tool,
             communicator_report);
 
         stub_server->comm->start();
-        client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+        client = std::make_shared<mt::TestProtobufClient>(test_socket, 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -118,6 +120,7 @@ struct PublishedSocketConnector : public ::testing::Test
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
+const char* const PublishedSocketConnector::test_socket = "./test_socket";
 std::shared_ptr<mt::StubServerTool> PublishedSocketConnector::stub_server_tool;
 std::shared_ptr<MockConnectorReport> PublishedSocketConnector::communicator_report;
 std::shared_ptr<mt::TestProtobufServer> PublishedSocketConnector::stub_server;
