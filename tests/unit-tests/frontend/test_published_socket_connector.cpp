@@ -49,6 +49,18 @@ namespace
 class MockConnectorReport : public mf::ConnectorReport
 {
 public:
+    MockConnectorReport()
+    {
+        using namespace testing;
+        EXPECT_CALL(*this, thread_start()).Times(AnyNumber());
+        EXPECT_CALL(*this, thread_end()).Times(AnyNumber());
+        EXPECT_CALL(*this, starting_threads(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, stopping_threads(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, creating_session_for(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, creating_socket_pair(_, _)).Times(AnyNumber());
+        EXPECT_CALL(*this, listening_on(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, error(_)).Times(AnyNumber());
+    }
 
     ~MockConnectorReport() noexcept {}
 
@@ -81,8 +93,6 @@ struct PublishedSocketConnector : public ::testing::Test
             stub_server_tool,
             communicator_report);
 
-        using namespace testing;
-        EXPECT_CALL(*communicator_report, error(_)).Times(AnyNumber());
         stub_server->comm->start();
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
@@ -91,7 +101,6 @@ struct PublishedSocketConnector : public ::testing::Test
     void TearDown()
     {
         stub_server->comm->stop();
-        testing::Mock::VerifyAndClearExpectations(communicator_report.get());
         client.reset();
 
         stub_server.reset();
