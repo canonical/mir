@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_doubles/stub_native_buffer.h"
-#include "mir/graphics/native_buffer.h"
+#include "mir/graphics/android/mir_native_buffer.h"
 
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
@@ -27,9 +27,9 @@ std::shared_ptr<mg::NativeBuffer> mtd::create_stub_buffer(
     std::shared_ptr<graphics::android::Fence> const& fence)
 {
     auto dummy_handle = std::make_shared<native_handle_t>();
-    return std::shared_ptr<mg::NativeBuffer>(
-        new mg::NativeBuffer(dummy_handle, fence),
-        [](mg::NativeBuffer* buffer)
+    return std::shared_ptr<mga::AndroidNativeBuffer>(
+        new mga::AndroidNativeBuffer(dummy_handle, fence),
+        [](mga::AndroidNativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });

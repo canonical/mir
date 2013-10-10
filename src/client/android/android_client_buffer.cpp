@@ -36,8 +36,8 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
-    auto tmp = new mga::NativeBuffer(handle, fence);
-    native_window_buffer = std::shared_ptr<mga::NativeBuffer>(tmp, [](mga::NativeBuffer* buffer)
+    auto tmp = new mga::AndroidNativeBuffer(handle, fence);
+    native_window_buffer = std::shared_ptr<mga::AndroidNativeBuffer>(tmp, [](mga::AndroidNativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });

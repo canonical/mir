@@ -54,7 +54,7 @@ private:
     void pack_native_window_buffer();
 
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
-    std::shared_ptr<mir::graphics::android::NativeBuffer> native_window_buffer;
+    std::shared_ptr<graphics::android::AndroidNativeBuffer> native_window_buffer;
     std::shared_ptr<const native_handle_t> native_handle;
     const geometry::PixelFormat buffer_pf;
     geometry::Stride const buffer_stride;

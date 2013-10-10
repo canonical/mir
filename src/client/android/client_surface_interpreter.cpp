@@ -35,8 +35,9 @@ mir::graphics::NativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buf
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->native_buffer_handle();
-    buffer_to_driver->format = driver_pixel_format;
 
+    ANativeWindowBuffer* anwb = *buffer_to_driver;
+    anwb->format = driver_pixel_format;
     return buffer_to_driver.get();
 }
 

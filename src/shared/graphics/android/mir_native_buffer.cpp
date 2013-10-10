@@ -24,17 +24,17 @@ namespace
 {
 void incref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::NativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::AndroidNativeBuffer*>(base);
     buffer->driver_reference();
 }
 void decref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::NativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::AndroidNativeBuffer*>(base);
     buffer->driver_dereference();
 }
 }
 
-mga::NativeBuffer::NativeBuffer(
+mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<const native_handle_t> const& handle,
     std::shared_ptr<Fence> const& fence)
     : fence(fence),
@@ -47,13 +47,13 @@ mga::NativeBuffer::NativeBuffer(
 }
 
 
-void mga::NativeBuffer::driver_reference()
+void mga::AndroidNativeBuffer::driver_reference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references++;
 }
 
-void mga::NativeBuffer::driver_dereference()
+void mga::AndroidNativeBuffer::driver_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references--;
@@ -64,7 +64,7 @@ void mga::NativeBuffer::driver_dereference()
     }
 }
 
-void mga::NativeBuffer::mir_dereference()
+void mga::AndroidNativeBuffer::mir_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     mir_reference = false;
@@ -75,27 +75,27 @@ void mga::NativeBuffer::mir_dereference()
     }
 }
 
-void mga::NativeBuffer::wait_for_content()
+void mga::AndroidNativeBuffer::wait_for_content()
 {
     fence->wait();
 }
 
 
-void mga::NativeBuffer::update_fence(NativeFence& merge_fd)
+void mga::AndroidNativeBuffer::update_fence(NativeFence& merge_fd)
 {
     fence->merge_with(merge_fd);
 }
 
-mga::NativeBuffer::operator ANativeWindowBuffer*()
+mga::AndroidNativeBuffer::operator ANativeWindowBuffer*()
 {
     return this;
 }
 
-mga::NativeBuffer::operator mga::NativeFence() const
+mga::AndroidNativeBuffer::operator mga::NativeFence() const
 {
     return fence->copy_native_handle();
 }
 
-mga::NativeBuffer::~NativeBuffer()
+mga::AndroidNativeBuffer::~AndroidNativeBuffer()
 {
 }

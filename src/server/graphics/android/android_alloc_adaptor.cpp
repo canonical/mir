@@ -73,8 +73,8 @@ std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
 
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
-    auto tmp = new mga::NativeBuffer(handle, fence);
-    std::shared_ptr<mga::NativeBuffer> buffer(tmp, [](NativeBuffer* buffer)
+    auto tmp = new mga::AndroidNativeBuffer(handle, fence);
+    std::shared_ptr<mga::AndroidNativeBuffer> buffer(tmp, [](AndroidNativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });

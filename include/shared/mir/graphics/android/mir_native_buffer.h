@@ -32,27 +32,28 @@ namespace android
 {
 class Fence;
 
-class MirNativeBuffer
+class NativeBuffer : public ANativeWindowBuffer 
 {
 public:
-    virtual ~MirNativeBuffer() = default;
+    virtual ~NativeBuffer() = default;
 
+    //todo: break inheritance by doing this
     virtual operator ANativeWindowBuffer*() = 0;
-    virtual operator NativeFence() = 0;
+    virtual operator NativeFence() const = 0;
 
     virtual void wait_for_content() = 0;
     virtual void update_fence(NativeFence& fence) = 0; 
 
 protected:
-    MirNativeBuffer() = default;
-    MirNativeBuffer(MirNativeBuffer const&) = delete;
-    MirNativeBuffer& operator=(MirNativeBuffer const&) = delete;
+    NativeBuffer() = default;
+    NativeBuffer(NativeBuffer const&) = delete;
+    NativeBuffer& operator=(NativeBuffer const&) = delete;
 };
 
-//todo:break the inheritance
-struct NativeBuffer : public ANativeWindowBuffer
+
+struct AndroidNativeBuffer : public NativeBuffer
 {
-    NativeBuffer(std::shared_ptr<const native_handle_t> const& handle,
+    AndroidNativeBuffer(std::shared_ptr<const native_handle_t> const& handle,
         std::shared_ptr<Fence> const& fence);
 
     operator ANativeWindowBuffer*();
@@ -65,9 +66,10 @@ struct NativeBuffer : public ANativeWindowBuffer
     void driver_dereference();
     void mir_dereference();
 private:
-    ~NativeBuffer();
+    ~AndroidNativeBuffer();
 
     std::shared_ptr<Fence> fence;
+//    std::shared_ptr<ANativeWindowBuffer> 
     std::shared_ptr<const native_handle_t> const handle_resource;
 
     std::mutex mutex;
