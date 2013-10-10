@@ -208,7 +208,7 @@ MATCHER_P(InvocationMethodEq, name, "")
 
 }
 
-TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
+TEST_F(PublishedSocketConnector, double_disconnection_does_not_break)
 {
     using namespace testing;
 
@@ -232,12 +232,31 @@ TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
 
     Mock::VerifyAndClearExpectations(client.get());
 
-    EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
+    // There is a race between the server closing the socket and
+    // the client sending the second "disconnect".
+    // Usually[*] the server wins and the "disconnect" fails resulting
+    // in an invocation_failed() report and an exception.
+    // Occasionally, the client wins and the message is sent to dying socket.
+    // [*] ON my desktop under valgrind "Usually" is ~49 times out of 50
+
+    EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_)).Times(AtMost(1));
     EXPECT_CALL(*client, disconnect_done()).Times(1);
 
-    EXPECT_THROW(
-        client->display_server.disconnect(0, &client->ignored, &client->ignored, google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done)),
-        std::runtime_error);
+    try
+    {
+        client->display_server.disconnect(
+            0,
+            &client->ignored,
+            &client->ignored,
+            google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
+
+        // the write beat the socket closing
+    }
+    catch (std::runtime_error const& x)
+    {
+        // the socket closing beat the write
+        EXPECT_THAT(x.what(), HasSubstr("Failed to send message to server:"));
+    }
 
     client->wait_for_disconnect_done();
 }
