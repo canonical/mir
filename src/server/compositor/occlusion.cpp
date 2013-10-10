@@ -45,9 +45,8 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
         trans[3][2] == 0.0f &&
         trans[3][3] == 1.0f;
 
-    // Weirdly transformed? Too hard to test. Just render it unconditionally.
     if (!orthogonal)
-        return false;
+        return false;  // Weirdly transformed. Assume never occluded.
 
     // This could be replaced by adding a "CompositingCriteria::rect()"
     int width = trans[0][0];
@@ -56,16 +55,15 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
     int y = trans[3][1] - height / 2;
     geometry::Rectangle window{{x, y}, {width, height}};
 
-    // Not weirdly transformed but also not on this monitor? Discard it.
     if (!criteria.should_be_rendered_in(display_buffer.view_area()))
-        return true;
+        return true;  // Not on the display, or invisible; definitely occluded.
 
-    bool occluded = true; // TODO
+    // TODO: Replace this with testing of coverage rects.contains(window)
+    //       when Rectangle-contains-Rectangle support lands.
+    //       But for now, let's just say only the top surface is visible...
+    bool occluded = !coverage.empty();
 
-    if (criteria.alpha() != 1.0f || criteria.shaped())
-        return false;
-
-    if (!occluded)
+    if (!occluded && criteria.alpha() == 1.0f && !criteria.shaped())
         coverage.push_back(window);
 
     return occluded;
@@ -77,7 +75,7 @@ void OcclusionMatch::operator()(const CompositingCriteria &,
     hidden.insert(&str);
 }
 
-bool OcclusionMatch::contains(const surfaces::BufferStream &stream) const
+bool OcclusionMatch::occluded(const surfaces::BufferStream &stream) const
 {
     return hidden.find(&stream) != hidden.end();
 }

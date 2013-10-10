@@ -53,7 +53,7 @@ public:
     void operator()(const CompositingCriteria &,
                     surfaces::BufferStream &stream) override;
 
-    bool contains(const surfaces::BufferStream &stream) const;
+    bool occluded(const surfaces::BufferStream &stream) const;
 
 private:
     typedef std::set<const surfaces::BufferStream*> BufferStreamSet;
