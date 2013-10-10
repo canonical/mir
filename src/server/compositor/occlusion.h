@@ -44,7 +44,7 @@ private:
     const graphics::DisplayBuffer &display_buffer;
 
     typedef std::vector<geometry::Rectangle> RectangleList;
-    RectangleList occlusions;
+    RectangleList coverage;
 };
 
 class OcclusionMatch : public OperatorForScene
@@ -57,7 +57,7 @@ public:
 
 private:
     typedef std::set<const surfaces::BufferStream*> BufferStreamSet;
-    BufferStreamSet occlusions;
+    BufferStreamSet hidden;
 };
 
 } // namespace compositor

@@ -65,7 +65,8 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
     if (criteria.alpha() != 1.0f || criteria.shaped())
         return false;
 
-    occlusions.push_back(window);
+    if (!occluded)
+        coverage.push_back(window);
 
     return occluded;
 }
@@ -73,10 +74,10 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
 void OcclusionMatch::operator()(const CompositingCriteria &,
                                 surfaces::BufferStream &str)
 {
-    occlusions.insert(&str);
+    hidden.insert(&str);
 }
 
 bool OcclusionMatch::contains(const surfaces::BufferStream &stream) const
 {
-    return occlusions.find(&stream) != occlusions.end();
+    return hidden.find(&stream) != hidden.end();
 }
