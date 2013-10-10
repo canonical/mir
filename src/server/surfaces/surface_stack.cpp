@@ -70,10 +70,9 @@ void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
                                            mc::OperatorForScene& op)
 {
     std::lock_guard<std::recursive_mutex> lg(guard);
-    for ( auto layer = layers_by_depth.rbegin()
-        ; layer != layers_by_depth.rend()
-        ; ++layer
-        )
+    for (auto layer = layers_by_depth.rbegin();
+         layer != layers_by_depth.rend();
+         ++layer)
     {
         auto surfaces = layer->second;
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
