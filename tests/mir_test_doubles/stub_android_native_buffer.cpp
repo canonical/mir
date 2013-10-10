@@ -23,13 +23,22 @@ namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 
-std::shared_ptr<mg::NativeBuffer> mtd::create_stub_buffer()
+std::shared_ptr<mg::NativeBuffer> mtd::create_stub_buffer(
+    std::shared_ptr<graphics::android::SyncFence> const& fence)
 {
     auto dummy_handle = std::make_shared<native_handle_t>();
     return std::shared_ptr<mg::NativeBuffer>(
-        new mg::NativeBuffer(dummy_handle),
+        new mg::NativeBuffer(dummy_handle, fence),
         [](mg::NativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });
+
+}
+
+std::shared_ptr<mg::NativeBuffer> mtd::create_stub_buffer()
+{
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto dummy_sync = std::make_shared<mga::SyncFence>(ops, -1);
+    return create_stub_buffer(dummy_sync);
 }

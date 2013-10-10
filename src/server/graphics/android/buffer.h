@@ -41,12 +41,10 @@ namespace android
 {
 
 class Fence;
-class SyncFileOps;
 class Buffer: public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
-           std::shared_ptr<Fence> const& fence,
            std::shared_ptr<EGLExtensions> const& extensions);
     ~Buffer();
 
@@ -67,7 +65,6 @@ private:
 
     std::shared_ptr<NativeBuffer> native_buffer;
     std::shared_ptr<Fence> buffer_fence;
-    std::shared_ptr<SyncFileOps> sync_ops;
     std::shared_ptr<EGLExtensions> egl_extensions;
 };
 

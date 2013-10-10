@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_NATIVE_BUFFER_H_
 
 #include "mir/graphics/native_buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include <memory>
 
 namespace mir
@@ -30,6 +31,8 @@ namespace doubles
 {
 
 std::shared_ptr<graphics::NativeBuffer> create_stub_buffer();
+std::shared_ptr<graphics::NativeBuffer> create_stub_buffer(
+    std::shared_ptr<graphics::android::SyncFence> const&);
 
 }
 }

@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
 #include "interpreter_cache.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

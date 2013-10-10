@@ -33,10 +33,9 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
-                    std::shared_ptr<Fence> const& fence,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
     : native_buffer(buffer_handle),
-      buffer_fence(fence),
+      buffer_fence(buffer_handle->fence),
       egl_extensions(extensions)
 {
 }
@@ -116,9 +115,8 @@ std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
 
     auto native_resource = std::shared_ptr<mga::NativeBuffer>(
         native_buffer.get(),
-        [this](NativeBuffer* buffer)
+        [this](NativeBuffer*)
         {
-            buffer_fence->merge_with(buffer->fence);
             content_lock.unlock();
         });
 

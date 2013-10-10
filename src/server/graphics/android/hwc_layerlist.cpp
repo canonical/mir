@@ -103,10 +103,7 @@ mga::LayerList::LayerList()
 void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
-
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence fence(ops, handle->fence);
-    fence.wait();
+    handle->fence->wait();
 
     geom::Point pt{0, 0};
     geom::Rectangle rect{pt, buffer->size()};
