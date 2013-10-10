@@ -86,9 +86,7 @@ public:
     {
     }
 
-    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&)
-    {
-    }
+    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&) {}
 
     void set_change_callback(std::function<void()> const& f)
     {

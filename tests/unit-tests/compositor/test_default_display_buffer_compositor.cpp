@@ -77,14 +77,7 @@ struct FakeScene : mc::Scene
         }
     }
 
-    void reverse_for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
-    {
-        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
-        {
-            mc::CompositingCriteria &info = **it;
-            if (filter(info)) renderable_operator(info, stub_stream);
-        }
-    }
+    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&) {}
 
     void set_change_callback(std::function<void()> const&) {}
 
