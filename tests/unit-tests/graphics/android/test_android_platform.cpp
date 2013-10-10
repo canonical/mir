@@ -56,10 +56,10 @@ protected:
             native_buffer_handle->data[i] = i;
         }
 
-        native_buffer = mtd::create_stub_buffer(); 
+        auto fence = std::make_shared<mtd::MockFence>();
+        native_buffer = mtd::create_stub_buffer(fence); 
         native_buffer->stride = (int) stride.as_uint32_t();
         native_buffer->handle = native_buffer_handle.get();
-        native_buffer->fence = std::make_shared<mtd::MockFence>();
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())

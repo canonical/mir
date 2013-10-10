@@ -49,7 +49,7 @@ void mga::SyncFence::wait()
     }
 }
 
-void mga::SyncFence::merge_with(int merge_fd)
+void mga::SyncFence::merge_with(NativeFence& merge_fd)
 {
     if (merge_fd < 0)
     {
@@ -59,7 +59,7 @@ void mga::SyncFence::merge_with(int merge_fd)
     if (fence_fd < 0)
     {
         //our fence was invalid, adopt the other fence
-        fence_fd = merge_fd; 
+        fence_fd = merge_fd;
     }
     else 
     {
@@ -70,9 +70,11 @@ void mga::SyncFence::merge_with(int merge_fd)
         ops->close(merge_fd);
         fence_fd = data.fence;
     }
+
+    merge_fd = -1; 
 }
 
-int mga::SyncFence::copy_native_handle() const
+mga::NativeFence mga::SyncFence::copy_native_handle() const
 {
     return ops->dup(fence_fd);
 }

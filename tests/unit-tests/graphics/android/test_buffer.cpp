@@ -83,20 +83,6 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
     EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
 }
 
-TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_with_fence)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_sync_fence, wait())
-        .Times(1);
-
-    mga::Buffer buffer(mock_buffer_handle, extensions);
-    auto native_resource = buffer.native_buffer_handle();
-
-    EXPECT_EQ(mock_buffer_handle, native_resource);
-    EXPECT_EQ(mock_sync_fence, native_resource->fence);
-}
-
 TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
 {
     using namespace testing;
@@ -114,14 +100,12 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
     {
         auto native_resource = buffer.native_buffer_handle();
         EXPECT_EQ(mock_buffer_handle, native_resource);
-        auto fence = native_resource->fence;
-        fence->merge_with(acquire_fake_fence_fd1);
+        native_resource->update_fence(acquire_fake_fence_fd1);
     }
     {
         auto native_resource = buffer.native_buffer_handle();
         EXPECT_EQ(mock_buffer_handle, native_resource);
-        auto fence = native_resource->fence;
-        fence->merge_with(acquire_fake_fence_fd2);
+        native_resource->update_fence(acquire_fake_fence_fd2);
     }
 }
 

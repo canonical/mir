@@ -40,7 +40,6 @@ struct EGLExtensions;
 namespace android
 {
 
-class Fence;
 class Buffer: public BufferBasic
 {
 public:
@@ -64,7 +63,6 @@ private:
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
     std::shared_ptr<NativeBuffer> native_buffer;
-    std::shared_ptr<Fence> buffer_fence;
     std::shared_ptr<EGLExtensions> egl_extensions;
 };
 

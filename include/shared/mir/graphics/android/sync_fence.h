@@ -52,8 +52,8 @@ public:
     ~SyncFence() noexcept;
 
     void wait();
-    void merge_with(int merge_fd);
-    int copy_native_handle() const;
+    void merge_with(NativeFence& merge_fd);
+    NativeFence copy_native_handle() const;
 
 private:
     SyncFence(SyncFence const&) = delete;

@@ -43,7 +43,7 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
 void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
-    handle->fence->wait();
+    handle->wait_for_content();
 
     if (fb_device->post(fb_device.get(), handle->handle) != 0)
     {

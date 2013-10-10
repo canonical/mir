@@ -46,8 +46,8 @@ protected:
         mock_fops = std::make_shared<MockFileOps>();
     }
 
-    int const dummy_fd = 3;
-    int const invalid_fd = -1;
+    int dummy_fd = 3;
+    int invalid_fd = -1;
     std::shared_ptr<MockFileOps> mock_fops;
 };
 

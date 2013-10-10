@@ -162,9 +162,10 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
-    *buffer_to_driver =  buffer;
+
+    *buffer_to_driver = *buffer;
     //driver is responsible for closing this native handle
-    *fence_fd = buffer->fence->copy_native_handle();
+    *fence_fd = *buffer;
     return 0;
 }
 

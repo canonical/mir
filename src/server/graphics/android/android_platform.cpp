@@ -87,8 +87,6 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
 {
     auto native_buffer = buffer->native_buffer_handle();
     auto buffer_handle = native_buffer->handle;
-    //todo: should be a fn on nativebuf
-    native_buffer->fence->wait();
 
     int offset = 0;
     for(auto i=0; i<buffer_handle->numFds; i++)

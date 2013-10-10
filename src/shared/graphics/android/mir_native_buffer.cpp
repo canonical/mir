@@ -75,6 +75,27 @@ void mga::NativeBuffer::mir_dereference()
     }
 }
 
+void mga::NativeBuffer::wait_for_content()
+{
+    fence->wait();
+}
+
+
+void mga::NativeBuffer::update_fence(NativeFence& merge_fd)
+{
+    fence->merge_with(merge_fd);
+}
+
+mga::NativeBuffer::operator ANativeWindowBuffer*()
+{
+    return this;
+}
+
+mga::NativeBuffer::operator mga::NativeFence() const
+{
+    return fence->copy_native_handle();
+}
+
 mga::NativeBuffer::~NativeBuffer()
 {
 }

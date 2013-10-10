@@ -80,10 +80,7 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
 std::shared_ptr<mga::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
     geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
 {
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
-    native_handle->fence = fence;
     auto buffer = std::make_shared<Buffer>(native_handle, egl_extensions);
     (*buffer_initializer)(*buffer);
     return buffer;

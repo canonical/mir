@@ -94,7 +94,6 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 
     auto rc_buffer = render_window.driver_requests_buffer();
     EXPECT_EQ(stub_buffer.get(), rc_buffer);
-    EXPECT_EQ(stub_sync, rc_buffer->fence);
 }
 
 TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)

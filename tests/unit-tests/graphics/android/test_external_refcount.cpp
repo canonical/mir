@@ -86,7 +86,7 @@ TEST(AndroidNativeBuffer, wait_for_fence)
             buffer->mir_dereference();
         });
 
-    buffer->wait_for_fence(); 
+    buffer->wait_for_content(); 
 }
 
 TEST(AndroidNativeBuffer, update_fence)
