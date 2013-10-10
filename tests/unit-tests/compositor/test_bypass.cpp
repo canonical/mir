@@ -88,6 +88,26 @@ TEST_F(BypassFilterTest, translucent_fullscreen_window_not_bypassed)
     EXPECT_FALSE(filter.fullscreen_on_top());
 }
 
+TEST_F(BypassFilterTest, hidden_fullscreen_window_not_bypassed)
+{
+    BypassFilter filter(display_buffer[0]);
+
+    StubCompositingCriteria win(0, 0, 1920, 1200, 1.0f, true, false);
+
+    EXPECT_FALSE(filter(win));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+}
+
+TEST_F(BypassFilterTest, unposted_fullscreen_window_not_bypassed)
+{
+    BypassFilter filter(display_buffer[0]);
+
+    StubCompositingCriteria win(0, 0, 1920, 1200, 1.0f, true, true, false);
+
+    EXPECT_FALSE(filter(win));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+}
+
 TEST_F(BypassFilterTest, shaped_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
@@ -208,6 +228,43 @@ TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top_rectangular)
     StubCompositingCriteria g(0, 0, 1920, 1200, 0.5f, false);
     EXPECT_FALSE(filter(g));
     EXPECT_FALSE(filter.fullscreen_on_top());
+}
+
+TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top_visible_posted)
+{
+    BypassFilter filter(display_buffer[0]);
+
+    StubCompositingCriteria a(0, 0, 1920, 1200, 1.0f, false);
+    EXPECT_FALSE(filter(a));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria b(1, 2, 3, 4);
+    EXPECT_FALSE(filter(b));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria c(0, 0, 1920, 1200);
+    EXPECT_TRUE(filter(c));
+    EXPECT_TRUE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria d(5, 6, 7, 8);
+    EXPECT_FALSE(filter(d));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria e(0, 0, 1920, 1200, 1.0f, true, false, true);
+    EXPECT_FALSE(filter(e));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria f(0, 0, 1920, 1200, 1.0f, true, true, false);
+    EXPECT_FALSE(filter(f));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria g(9, 10, 11, 12);
+    EXPECT_FALSE(filter(g));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    StubCompositingCriteria h(0, 0, 1920, 1200, 1.0f, true, true, true);
+    EXPECT_TRUE(filter(h));
+    EXPECT_TRUE(filter.fullscreen_on_top());
 }
 
 TEST_F(BypassFilterTest, multimonitor_one_bypassed)
