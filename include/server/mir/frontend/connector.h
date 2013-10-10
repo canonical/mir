@@ -31,6 +31,7 @@ public:
     virtual void stop() = 0;
 
     virtual int client_socket_fd() const = 0;
+    virtual void remove_endpoint() const = 0;
 
 protected:
     Connector() = default;
