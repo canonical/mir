@@ -36,9 +36,9 @@ void decref_hook(struct android_native_base_t* base)
 
 mga::NativeBuffer::NativeBuffer(
     std::shared_ptr<const native_handle_t> const& handle,
-    std::shared_ptr<SyncFence> const& fence)
-    : handle_resource(handle),
-      fence(fence),
+    std::shared_ptr<Fence> const& fence)
+    : fence(fence),
+      handle_resource(handle),
       mir_reference(true),
       driver_references(0)
 {

@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
 
@@ -70,7 +71,9 @@ std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     AndroidBufferHandleDeleter del1(alloc_dev);
     std::shared_ptr<native_handle_t> handle(buf_handle, del1);
 
-    auto tmp = new mga::NativeBuffer(handle);
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
+    auto tmp = new mga::NativeBuffer(handle, fence);
     std::shared_ptr<mga::NativeBuffer> buffer(tmp, [](NativeBuffer* buffer)
         {
             buffer->mir_dereference();

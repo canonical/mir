@@ -20,6 +20,7 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_fence.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -142,9 +143,12 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
 {
     using namespace testing;
 
-    int fake_fd = 442;
-    auto fake_buffer = mtd::create_stub_buffer();
-    fake_buffer->fence = fake_fd;
+    int fake_fd = 4948;
+    auto mock_sync = std::make_shared<mtd::MockFence>();
+    EXPECT_CALL(*mock_sync, copy_native_handle())
+        .Times(1)
+        .WillOnce(Return(fake_fd));
+    auto fake_buffer = mtd::create_stub_buffer(mock_sync);
 
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 

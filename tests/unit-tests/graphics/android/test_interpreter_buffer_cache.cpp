@@ -19,6 +19,7 @@
 #include "src/server/graphics/android/interpreter_cache.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_fence.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -31,14 +32,16 @@ struct InterpreterResourceTest : public ::testing::Test
 {
     void SetUp()
     {
+        mock_fence = std::make_shared<mtd::MockFence>();
         stub_buffer1 = std::make_shared<mtd::StubBuffer>();
         stub_buffer2 = std::make_shared<mtd::StubBuffer>();
         stub_buffer3 = std::make_shared<mtd::StubBuffer>();
-        native_buffer1 = mtd::create_stub_buffer();
+        native_buffer1 = mtd::create_stub_buffer(mock_fence);
         native_buffer2 = mtd::create_stub_buffer();
         native_buffer3 = mtd::create_stub_buffer();
     }
 
+    std::shared_ptr<mtd::MockFence> mock_fence;
     std::shared_ptr<mtd::StubBuffer> stub_buffer1;
     std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     std::shared_ptr<mtd::StubBuffer> stub_buffer3;
@@ -86,16 +89,17 @@ TEST_F(InterpreterResourceTest, deposit_buffer_has_ownership)
 
 TEST_F(InterpreterResourceTest, update_fence_for)
 {
-    int fence = 44;
+    int fence_fd = 44;
     mga::InterpreterCache cache;
 
-    cache.store_buffer(stub_buffer1, native_buffer1);
-    cache.update_native_fence(native_buffer1.get(), fence);
+    EXPECT_CALL(*mock_fence, merge_with(fence_fd))
+        .Times(1);
 
-    EXPECT_EQ(fence, native_buffer1->fence);
+    cache.store_buffer(stub_buffer1, native_buffer1);
+    cache.update_native_fence(native_buffer1.get(), fence_fd);
 
     EXPECT_THROW({
-        cache.update_native_fence(nullptr, fence);
+        cache.update_native_fence(nullptr, fence_fd);
     }, std::runtime_error);
 }
 

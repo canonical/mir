@@ -29,22 +29,22 @@ namespace graphics
 {
 namespace android
 {
-class SyncFence;
+class Fence;
 
 struct NativeBuffer : public ANativeWindowBuffer
 {
     NativeBuffer(std::shared_ptr<const native_handle_t> const& handle,
-        std::shared_ptr<SyncFence> const& fence;
+        std::shared_ptr<Fence> const& fence);
 
     void driver_reference();
     void driver_dereference();
     void mir_dereference();
 
+    std::shared_ptr<Fence> fence;
 private:
     ~NativeBuffer();
 
     std::shared_ptr<const native_handle_t> const handle_resource;
-    std::shared_ptr<SyncFence> fence;
 
     std::mutex mutex;
     bool mir_reference;

@@ -32,7 +32,7 @@ namespace doubles
 
 std::shared_ptr<graphics::NativeBuffer> create_stub_buffer();
 std::shared_ptr<graphics::NativeBuffer> create_stub_buffer(
-    std::shared_ptr<graphics::android::SyncFence> const&);
+    std::shared_ptr<graphics::android::Fence> const&);
 
 }
 }

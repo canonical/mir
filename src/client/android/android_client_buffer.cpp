@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "android_client_buffer.h"
 #include <hardware/gralloc.h>
@@ -33,7 +34,9 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
    native_handle(handle),
    buffer_pf(pf), buffer_stride{stride}
 {
-    auto tmp = new mga::NativeBuffer(handle);
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
+    auto tmp = new mga::NativeBuffer(handle, fence);
     native_window_buffer = std::shared_ptr<mga::NativeBuffer>(tmp, [](mga::NativeBuffer* buffer)
         {
             buffer->mir_dereference();

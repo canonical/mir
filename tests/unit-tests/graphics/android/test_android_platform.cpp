@@ -22,6 +22,7 @@
 #include "mir/options/program_option.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/mock_fence.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_native_buffer.h"
 #include <system/window.h>
@@ -58,7 +59,7 @@ protected:
         native_buffer = mtd::create_stub_buffer(); 
         native_buffer->stride = (int) stride.as_uint32_t();
         native_buffer->handle = native_buffer_handle.get();
-        native_buffer->fence = -1;
+        native_buffer->fence = std::make_shared<mtd::MockFence>();
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())

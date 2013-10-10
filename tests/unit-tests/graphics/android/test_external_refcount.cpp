@@ -17,18 +17,21 @@
  */
 
 #include "mir/graphics/android/mir_native_buffer.h"
+#include "mir_test_doubles/mock_fence.h"
 #include <memory>
 #include <gtest/gtest.h>
 
+namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 
 TEST(AndroidRefcount, driver_hooks)
 {
+    auto fence = std::make_shared<mtd::MockFence>();
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
     mga::NativeBuffer* driver_reference = nullptr;
     {
-        auto tmp = new mga::NativeBuffer(native_handle_resource);
+        auto tmp = new mga::NativeBuffer(native_handle_resource, fence);
         std::shared_ptr<mga::NativeBuffer> buffer(tmp, [](mga::NativeBuffer* buffer)
             {
                 buffer->mir_dereference();
@@ -46,13 +49,14 @@ TEST(AndroidRefcount, driver_hooks)
 
 TEST(AndroidRefcount, driver_hooks_mir_ref)
 {
+    auto fence = std::make_shared<mtd::MockFence>();
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
     {
         std::shared_ptr<mga::NativeBuffer> mir_reference;
         mga::NativeBuffer* driver_reference = nullptr;
         {
-            auto tmp = new mga::NativeBuffer(native_handle_resource);
+            auto tmp = new mga::NativeBuffer(native_handle_resource, fence);
             mir_reference = std::shared_ptr<mga::NativeBuffer>(tmp, [](mga::NativeBuffer* buffer)
                 {
                     buffer->mir_dereference();

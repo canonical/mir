@@ -88,7 +88,7 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_with_fence)
     using namespace testing;
 
     EXPECT_CALL(*mock_sync_fence, wait())
-        .Times(1)
+        .Times(1);
 
     mga::Buffer buffer(mock_buffer_handle, extensions);
     auto native_resource = buffer.native_buffer_handle();
@@ -104,8 +104,7 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
     int acquire_fake_fence_fd2 = 954;
 
     EXPECT_CALL(*mock_sync_fence, wait())
-        .Times(1)
-
+        .Times(1);
     EXPECT_CALL(*mock_sync_fence, merge_with(acquire_fake_fence_fd1))
         .Times(1);
     EXPECT_CALL(*mock_sync_fence, merge_with(acquire_fake_fence_fd2))
