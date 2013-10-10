@@ -256,7 +256,7 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
     stack.for_each_if(filter, renderable_operator);
 }
 
-TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out_reverse)
+TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
 {
     using namespace ::testing;
 
