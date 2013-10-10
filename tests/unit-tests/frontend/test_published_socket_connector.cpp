@@ -235,10 +235,11 @@ TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
     EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
     EXPECT_CALL(*client, disconnect_done()).Times(1);
 
-    EXPECT_THROW({
-    client->display_server.disconnect(0, &client->ignored, &client->ignored, google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
+    EXPECT_THROW(
+        client->display_server.disconnect(0, &client->ignored, &client->ignored, google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done)),
+        std::runtime_error);
+
     client->wait_for_disconnect_done();
-    }, std::runtime_error);
 }
 
 TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
