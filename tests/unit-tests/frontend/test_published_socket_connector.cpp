@@ -102,9 +102,9 @@ struct PublishedSocketConnector : public ::testing::Test
 
     void TearDown()
     {
-        stub_server->comm->stop();
         client.reset();
 
+        stub_server->comm->stop();
         stub_server.reset();
         stub_server_tool.reset();
         communicator_report.reset();
