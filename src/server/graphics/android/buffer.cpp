@@ -114,9 +114,6 @@ std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
 {
     std::unique_lock<std::mutex> lk(content_lock);
 
-    //copy the fence out to the native user
-    native_buffer->fence = buffer_fence->copy_native_handle();
-
     auto native_resource = std::shared_ptr<mga::NativeBuffer>(
         native_buffer.get(),
         [this](NativeBuffer* buffer)

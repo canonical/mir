@@ -29,6 +29,7 @@ namespace graphics
 {
 namespace android
 {
+class SyncFence;
 
 struct NativeBuffer : public ANativeWindowBuffer
 {
@@ -38,7 +39,7 @@ struct NativeBuffer : public ANativeWindowBuffer
     void driver_dereference();
     void mir_dereference();
 
-    int fence;
+    std::shared_ptr<SyncFence> fence;
 private:
     ~NativeBuffer();
 
