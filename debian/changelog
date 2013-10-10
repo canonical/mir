@@ -1,4 +1,15 @@
-mir (0.0.14-0ubuntu1) UNRELEASED; urgency=low
+mir (0.0.14+13.10.20131010-0ubuntu1) saucy; urgency=low
+
+  [ Colin Watson ]
+  * Don't build-depend on valgrind on arm64 for now, as it is not yet
+    ported there.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1095
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 10 Oct 2013 01:17:01 +0000
+
+mir (0.0.14+13.10.20131009.4-0ubuntu1) saucy; urgency=low
 
   [ kg ]
   * bump version for ABI break (LP: #1229212)
@@ -12,7 +23,21 @@ mir (0.0.14-0ubuntu1) UNRELEASED; urgency=low
   [Kevin Gunn]
   * bump version to 0.0.14
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Tue, 08 Oct 2013 18:13:17 -0500
+  [ Robert Carr ]
+  * Hold ms::Surface alive from msh::Surface, and remove the explicit
+    throw calls. This way holding a shared_ptr to msh::Surface becomes
+    safe (as long as you drop it eventually!). (LP: #1234609). (LP:
+    #1234609)
+
+  [ Alan Griffiths ]
+  * client: use lock_guard as it is simpler than unique_lock. (fix for
+    mallit) frontend: Remove the endpoint first when shutting down.
+    Fixes bug lp#1235159. (LP: #1235159)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1093
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 09 Oct 2013 21:57:59 +0000
 
 mir (0.0.13+13.10.20131003-0ubuntu1) saucy; urgency=low
 
