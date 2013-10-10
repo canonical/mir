@@ -39,13 +39,17 @@
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
+#include "../logging/rpc_report.h" // DEBUG
+#include "mir/logging/dumb_console_logger.h" // DEBUG
+
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
-    std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<RpcReport> const& /*rpc_report*/, // DEBUG
     std::shared_ptr<LifecycleControl> const& lifecycle_control) :
-    rpc_report(rpc_report),
+//  rpc_report(rpc_report), // DEBUG
+    rpc_report(std::make_shared<mcl::logging::RpcReport>(std::make_shared<mir::logging::DumbConsoleLogger>())), // DEBUG
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
