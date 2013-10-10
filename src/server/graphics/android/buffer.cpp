@@ -51,18 +51,21 @@ mga::Buffer::~Buffer()
 
 geom::Size mga::Buffer::size() const
 {
-    return {native_buffer->width, native_buffer->height};
+    ANativeWindowBuffer *anwb = *native_buffer;
+    return {anwb->width, anwb->height};
 }
 
 geom::Stride mga::Buffer::stride() const
 {
-    return geom::Stride{native_buffer->stride *
+    ANativeWindowBuffer *anwb = *native_buffer;
+    return geom::Stride{anwb->stride *
                         geom::bytes_per_pixel(pixel_format())};
 }
 
 geom::PixelFormat mga::Buffer::pixel_format() const
 {
-    return mga::to_mir_format(native_buffer->format);
+    ANativeWindowBuffer *anwb = *native_buffer;
+    return mga::to_mir_format(anwb->format);
 }
 
 bool mga::Buffer::can_bypass() const
@@ -73,7 +76,7 @@ bool mga::Buffer::can_bypass() const
 void mga::Buffer::bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
-//    buffer_fence->wait();
+    native_buffer->wait_for_content();
 
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {

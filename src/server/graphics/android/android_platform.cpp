@@ -86,7 +86,8 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
                                             std::shared_ptr<mg::Buffer> const& buffer) const
 {
     auto native_buffer = buffer->native_buffer_handle();
-    auto buffer_handle = native_buffer->handle;
+    ANativeWindowBuffer* anwb = *native_buffer;
+    auto buffer_handle = anwb->handle;
 
     int offset = 0;
     for(auto i=0; i<buffer_handle->numFds; i++)

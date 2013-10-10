@@ -58,6 +58,7 @@ private:
     std::shared_ptr<const native_handle_t> native_handle;
     const geometry::PixelFormat buffer_pf;
     geometry::Stride const buffer_stride;
+    geometry::Size const buffer_size;
 };
 
 }

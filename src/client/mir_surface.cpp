@@ -228,8 +228,14 @@ MirWaitHandle* MirSurface::release_surface(
 
 std::shared_ptr<MirNativeBuffer> MirSurface::get_current_buffer_package()
 {
+#ifndef ANDROID
+#error
+
     auto buffer = get_current_buffer();
     return buffer->native_buffer_handle();
+#else
+    return nullptr;
+#endif
 }
 
 std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()

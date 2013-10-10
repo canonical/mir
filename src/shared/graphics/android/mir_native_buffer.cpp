@@ -38,12 +38,14 @@ mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<const native_handle_t> const& handle,
     std::shared_ptr<Fence> const& fence)
     : fence(fence),
+      native_buffer(std::make_shared<ANativeWindowBuffer>()),
       handle_resource(handle),
       mir_reference(true),
       driver_references(0)
 {
-    common.incRef = incref_hook;
-    common.decRef = decref_hook;
+    native_buffer->common.incRef = incref_hook;
+    native_buffer->common.decRef = decref_hook;
+    native_buffer->handle = handle_resource.get();
 }
 
 
@@ -88,7 +90,7 @@ void mga::AndroidNativeBuffer::update_fence(NativeFence& merge_fd)
 
 mga::AndroidNativeBuffer::operator ANativeWindowBuffer*()
 {
-    return this;
+    return native_buffer.get();
 }
 
 mga::AndroidNativeBuffer::operator mga::NativeFence() const

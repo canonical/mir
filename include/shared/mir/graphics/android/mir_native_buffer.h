@@ -32,14 +32,14 @@ namespace android
 {
 class Fence;
 
-class NativeBuffer : public ANativeWindowBuffer 
+class NativeBuffer 
 {
 public:
     virtual ~NativeBuffer() = default;
 
-    //todo: break inheritance by doing this
-    virtual operator ANativeWindowBuffer*() = 0;
-    virtual operator NativeFence() const = 0;
+    virtual ANativeWindowBuffer* anwb() const = 0;
+    virtual native_handle_t handle() const = 0;
+    virtual NativeFence copy_fence() const = 0;
 
     virtual void wait_for_content() = 0;
     virtual void update_fence(NativeFence& fence) = 0; 
@@ -56,8 +56,9 @@ struct AndroidNativeBuffer : public NativeBuffer
     AndroidNativeBuffer(std::shared_ptr<const native_handle_t> const& handle,
         std::shared_ptr<Fence> const& fence);
 
-    operator ANativeWindowBuffer*();
-    operator NativeFence() const;
+    ANativeWindowBuffer* anwb() const;
+    native_handle_t handle() const;
+    NativeFence copy_fence() const;
 
     void wait_for_content();
     void update_fence(NativeFence& merge_fd);
@@ -69,7 +70,7 @@ private:
     ~AndroidNativeBuffer();
 
     std::shared_ptr<Fence> fence;
-//    std::shared_ptr<ANativeWindowBuffer> 
+    std::shared_ptr<ANativeWindowBuffer> const native_buffer; 
     std::shared_ptr<const native_handle_t> const handle_resource;
 
     std::mutex mutex;

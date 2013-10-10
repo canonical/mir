@@ -32,7 +32,7 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
                                                geom::Size size, geom::PixelFormat pf, geometry::Stride stride)
  : buffer_registrar(registrar),
    native_handle(handle),
-   buffer_pf(pf), buffer_stride{stride}
+   buffer_pf(pf), buffer_stride{stride}, buffer_size(size)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
@@ -42,12 +42,14 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
             buffer->mir_dereference();
         });
 
-    native_window_buffer->height = static_cast<int32_t>(size.height.as_uint32_t());
-    native_window_buffer->width =  static_cast<int32_t>(size.width.as_uint32_t());
-    native_window_buffer->stride = stride.as_uint32_t() /
+    //todo: a bit wonky, but we should have mga::AndroidNativeBuffer take this info in constructor
+    ANativeWindowBuffer* anwb = *native_window_buffer;
+    anwb->height = static_cast<int32_t>(buffer_size.height.as_uint32_t());
+    anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
+    anwb->stride = stride.as_uint32_t() /
                                    geom::bytes_per_pixel(buffer_pf);
-    native_window_buffer->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    native_window_buffer->handle = native_handle.get();
+    anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    anwb->handle = native_handle.get();
 }
 
 mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
@@ -69,7 +71,7 @@ std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_wri
 
 geom::Size mcla::AndroidClientBuffer::size() const
 {
-    return {native_window_buffer->width, native_window_buffer->height};
+    return buffer_size;
 }
 
 geom::Stride mcla::AndroidClientBuffer::stride() const

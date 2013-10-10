@@ -45,7 +45,8 @@ void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buff
     auto handle = buffer->native_buffer_handle();
     handle->wait_for_content();
 
-    if (fb_device->post(fb_device.get(), handle->handle) != 0)
+    ANativeWindowBuffer* anwb = *handle;
+    if (fb_device->post(fb_device.get(), anwb->handle) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }

@@ -109,7 +109,8 @@ void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
     geom::Rectangle rect{pt, buffer->size()};
     HWCRect display_rect(rect);
 
-    auto fb_layer = std::make_shared<HWCFBLayer>(handle->handle, display_rect);
+    ANativeWindowBuffer* anwb = *handle;
+    auto fb_layer = std::make_shared<HWCFBLayer>(anwb->handle, display_rect);
     layer_list[fb_position] = fb_layer;
 
     update_list();

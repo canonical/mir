@@ -79,12 +79,14 @@ std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
             buffer->mir_dereference();
         });
 
-    buffer->width = width;
-    buffer->height = height;
-    buffer->stride = stride;
-    buffer->handle = buf_handle;
-    buffer->format = format;
-    buffer->usage = usage_flag;
+    //todo: a bit wonky, but we should have mga::AndroidNativeBuffer take this info in constructor
+    ANativeWindowBuffer* anwb = *buffer;
+    anwb->width = width;
+    anwb->height = height;
+    anwb->stride = stride;
+    anwb->handle = buf_handle;
+    anwb->format = format;
+    anwb->usage = usage_flag;
 
     return buffer;
 }

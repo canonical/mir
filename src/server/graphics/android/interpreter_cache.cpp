@@ -27,8 +27,8 @@ namespace mga=mir::graphics::android;
 void mga::InterpreterCache::store_buffer(std::shared_ptr<mg::Buffer>const& buffer,
     std::shared_ptr<mg::NativeBuffer> const& key)
 {
-    native_buffers[key.get()] = key;
-    buffers_in_driver[key.get()] = buffer;
+    native_buffers[*key] = key;
+    buffers_in_driver[*key] = buffer;
 }
 
 std::shared_ptr<mg::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer* returned_handle)
