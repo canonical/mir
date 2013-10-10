@@ -75,7 +75,7 @@ bool mga::Buffer::can_bypass() const
 void mga::Buffer::bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
-    buffer_fence->wait();
+//    buffer_fence->wait();
 
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {

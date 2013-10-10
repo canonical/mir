@@ -17,6 +17,7 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
 #include "android_platform.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_hwc_factory.h"
@@ -86,6 +87,9 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
 {
     auto native_buffer = buffer->native_buffer_handle();
     auto buffer_handle = native_buffer->handle;
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    mga::SyncFence fence(ops, native_buffer->fence);
+    fence.wait();
 
     int offset = 0;
     for(auto i=0; i<buffer_handle->numFds; i++)
