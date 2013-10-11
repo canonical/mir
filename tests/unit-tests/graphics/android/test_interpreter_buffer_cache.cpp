@@ -18,8 +18,7 @@
 
 #include "src/server/graphics/android/interpreter_cache.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_native_buffer.h"
-#include "mir_test_doubles/mock_fence.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -32,20 +31,18 @@ struct InterpreterResourceTest : public ::testing::Test
 {
     void SetUp()
     {
-        mock_fence = std::make_shared<mtd::MockFence>();
         stub_buffer1 = std::make_shared<mtd::StubBuffer>();
         stub_buffer2 = std::make_shared<mtd::StubBuffer>();
         stub_buffer3 = std::make_shared<mtd::StubBuffer>();
-        native_buffer1 = mtd::create_stub_buffer(mock_fence);
-        native_buffer2 = mtd::create_stub_buffer();
-        native_buffer3 = mtd::create_stub_buffer();
+        native_buffer1 = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        native_buffer2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        native_buffer3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
     }
 
-    std::shared_ptr<mtd::MockFence> mock_fence;
     std::shared_ptr<mtd::StubBuffer> stub_buffer1;
     std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     std::shared_ptr<mtd::StubBuffer> stub_buffer3;
-    std::shared_ptr<mg::NativeBuffer> native_buffer1;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer1;
     std::shared_ptr<mg::NativeBuffer> native_buffer2;
     std::shared_ptr<mg::NativeBuffer> native_buffer3;
 };
@@ -92,7 +89,7 @@ TEST_F(InterpreterResourceTest, update_fence_for)
     int fence_fd = 44;
     mga::InterpreterCache cache;
 
-    EXPECT_CALL(*mock_fence, merge_with(fence_fd))
+    EXPECT_CALL(*native_buffer1, update_fence(fence_fd))
         .Times(1);
 
     cache.store_buffer(stub_buffer1, native_buffer1);

@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -57,7 +57,7 @@ protected:
         }
 
         auto fence = std::make_shared<mtd::MockFence>();
-        native_buffer = mtd::create_stub_buffer(fence);
+        native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         auto anwb = native_buffer->anwb();
         anwb->stride = (int) stride.as_uint32_t();
         anwb->handle = native_buffer_handle.get();

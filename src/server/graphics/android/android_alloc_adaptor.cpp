@@ -72,15 +72,15 @@ std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     std::shared_ptr<native_handle_t> handle(buf_handle, del1);
 
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
-    auto tmp = new mga::AndroidNativeBuffer(handle, fence);
-    std::shared_ptr<mga::AndroidNativeBuffer> buffer(tmp, [](AndroidNativeBuffer* buffer)
+    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
+
+    auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
+        new mga::RefCountedNativeBuffer(handle),
+        [](mga::RefCountedNativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });
 
-    //todo: a bit wonky, but we should have mga::AndroidNativeBuffer take this info in constructor
-    ANativeWindowBuffer* anwb = buffer->anwb();
     anwb->width = width;
     anwb->height = height;
     anwb->stride = stride;
@@ -88,7 +88,7 @@ std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     anwb->format = format;
     anwb->usage = usage_flag;
 
-    return buffer;
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence);
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)

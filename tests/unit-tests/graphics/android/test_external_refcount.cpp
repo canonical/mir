@@ -26,18 +26,17 @@ namespace mga=mir::graphics::android;
 
 TEST(AndroidRefcount, driver_hooks)
 {
-    auto fence = std::make_shared<mtd::MockFence>();
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
     ANativeWindowBuffer* driver_reference = nullptr;
     {
-        auto tmp = new mga::AndroidNativeBuffer(native_handle_resource, fence);
-        std::shared_ptr<mga::AndroidNativeBuffer> buffer(tmp, [](mga::AndroidNativeBuffer* buffer)
+        auto tmp = new mga::RefCountedNativeBuffer(native_handle_resource);
+        std::shared_ptr<mga::RefCountedNativeBuffer> buffer(tmp, [](mga::RefCountedNativeBuffer* buffer)
             {
                 buffer->mir_dereference();
             });
 
-        driver_reference = buffer->anwb();
+        driver_reference = buffer.get(); 
         driver_reference->common.incRef(&driver_reference->common);
         //Mir loses its reference, driver still has a ref
     }
@@ -49,19 +48,18 @@ TEST(AndroidRefcount, driver_hooks)
 
 TEST(AndroidRefcount, driver_hooks_mir_ref)
 {
-    auto fence = std::make_shared<mtd::MockFence>();
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
     {
-        std::shared_ptr<mga::AndroidNativeBuffer> mir_reference;
+        std::shared_ptr<mga::RefCountedNativeBuffer> mir_reference;
         ANativeWindowBuffer* driver_reference = nullptr;
         {
-            auto tmp = new mga::AndroidNativeBuffer(native_handle_resource, fence);
-            mir_reference = std::shared_ptr<mga::AndroidNativeBuffer>(tmp, [](mga::AndroidNativeBuffer* buffer)
+            auto tmp = new mga::RefCountedNativeBuffer(native_handle_resource);
+            mir_reference = std::shared_ptr<mga::RefCountedNativeBuffer>(tmp, [](mga::RefCountedNativeBuffer* buffer)
                 {
                     buffer->mir_dereference();
                 });
-            driver_reference = mir_reference->anwb();
+            driver_reference = tmp; 
             driver_reference->common.incRef(&driver_reference->common);
         }
 
@@ -78,15 +76,9 @@ TEST(AndroidAndroidNativeBuffer, wait_for_fence)
     EXPECT_CALL(*fence, wait())
         .Times(1);
 
-    auto native_handle_resource = std::make_shared<native_handle_t>();
-    std::shared_ptr<mga::AndroidNativeBuffer> buffer(
-        new mga::AndroidNativeBuffer(native_handle_resource, fence),
-        [](mga::AndroidNativeBuffer* buffer)
-        {
-            buffer->mir_dereference();
-        });
-
-    buffer->wait_for_content(); 
+    auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
+    mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
+    buffer.wait_for_content(); 
 }
 
 TEST(AndroidAndroidNativeBuffer, update_fence)
@@ -96,13 +88,7 @@ TEST(AndroidAndroidNativeBuffer, update_fence)
     EXPECT_CALL(*fence, merge_with(fake_fd))
         .Times(1);
 
-    auto native_handle_resource = std::make_shared<native_handle_t>();
-    std::shared_ptr<mga::AndroidNativeBuffer> buffer(
-        new mga::AndroidNativeBuffer(native_handle_resource, fence),
-        [](mga::AndroidNativeBuffer* buffer)
-        {
-            buffer->mir_dereference();
-        });
-
-    buffer->update_fence(fake_fd); 
+    auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
+    mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
+    buffer.update_fence(fake_fd); 
 }

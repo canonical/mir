@@ -18,44 +18,30 @@
 
 #include "mir/graphics/android/mir_native_buffer.h"
 
+#include <iostream>
 namespace mga=mir::graphics::android;
 
 namespace
 {
-void incref_hook(struct android_native_base_t* base)
+static void incref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::AndroidNativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::RefCountedNativeBuffer*>(base);
     buffer->driver_reference();
 }
 void decref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::AndroidNativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::RefCountedNativeBuffer*>(base);
     buffer->driver_dereference();
 }
 }
 
-mga::AndroidNativeBuffer::AndroidNativeBuffer(
-    std::shared_ptr<const native_handle_t> const& handle,
-    std::shared_ptr<Fence> const& fence)
-    : fence(fence),
-      native_buffer(std::make_shared<ANativeWindowBuffer>()),
-      handle_resource(handle),
-      mir_reference(true),
-      driver_references(0)
-{
-    native_buffer->common.incRef = incref_hook;
-    native_buffer->common.decRef = decref_hook;
-    native_buffer->handle = handle_resource.get();
-}
-
-
-void mga::AndroidNativeBuffer::driver_reference()
+void mga::RefCountedNativeBuffer::driver_reference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references++;
 }
 
-void mga::AndroidNativeBuffer::driver_dereference()
+void mga::RefCountedNativeBuffer::driver_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references--;
@@ -66,7 +52,7 @@ void mga::AndroidNativeBuffer::driver_dereference()
     }
 }
 
-void mga::AndroidNativeBuffer::mir_dereference()
+void mga::RefCountedNativeBuffer::mir_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     mir_reference = false;
@@ -77,11 +63,44 @@ void mga::AndroidNativeBuffer::mir_dereference()
     }
 }
 
+mga::RefCountedNativeBuffer::RefCountedNativeBuffer(
+    std::shared_ptr<const native_handle_t> const& handle)
+    : handle_resource(handle),
+      mir_reference(true),
+      driver_references(0)
+{
+    common.incRef = incref_hook;
+    common.decRef = decref_hook;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mga::AndroidNativeBuffer::AndroidNativeBuffer(
+    std::shared_ptr<ANativeWindowBuffer> const& anwb,
+    std::shared_ptr<Fence> const& fence)
+    : fence(fence),
+      native_window_buffer(anwb)
+{
+}
+
 void mga::AndroidNativeBuffer::wait_for_content()
 {
     fence->wait();
 }
-
 
 void mga::AndroidNativeBuffer::update_fence(NativeFence& merge_fd)
 {
@@ -90,19 +109,15 @@ void mga::AndroidNativeBuffer::update_fence(NativeFence& merge_fd)
 
 ANativeWindowBuffer* mga::AndroidNativeBuffer::anwb() const
 {
-    return native_buffer.get();
+    return native_window_buffer.get();
 }
 
 buffer_handle_t mga::AndroidNativeBuffer::handle() const
 {
-    return handle_resource.get();
+    return native_window_buffer->handle;
 }
 
 mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
 {
     return fence->copy_native_handle();
-}
-
-mga::AndroidNativeBuffer::~AndroidNativeBuffer()
-{
 }

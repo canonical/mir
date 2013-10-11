@@ -51,9 +51,27 @@ protected:
 };
 
 
+
+struct RefCountedNativeBuffer : public ANativeWindowBuffer
+{
+    RefCountedNativeBuffer(std::shared_ptr<const native_handle_t> const& handle);
+
+    void driver_reference();
+    void driver_dereference();
+    void mir_dereference();
+private:
+    ~RefCountedNativeBuffer() = default;
+
+    std::shared_ptr<const native_handle_t> const handle_resource;
+
+    std::mutex mutex;
+    bool mir_reference;
+    int driver_references;
+};
+
 struct AndroidNativeBuffer : public NativeBuffer
 {
-    AndroidNativeBuffer(std::shared_ptr<const native_handle_t> const& handle,
+    AndroidNativeBuffer(std::shared_ptr<ANativeWindowBuffer> const& handle,
         std::shared_ptr<Fence> const& fence);
 
     ANativeWindowBuffer* anwb() const;
@@ -63,19 +81,9 @@ struct AndroidNativeBuffer : public NativeBuffer
     void wait_for_content();
     void update_fence(NativeFence& merge_fd);
 
-    void driver_reference();
-    void driver_dereference();
-    void mir_dereference();
 private:
-    ~AndroidNativeBuffer();
-
     std::shared_ptr<Fence> fence;
-    std::shared_ptr<ANativeWindowBuffer> const native_buffer; 
-    std::shared_ptr<const native_handle_t> const handle_resource;
-
-    std::mutex mutex;
-    bool mir_reference;
-    int driver_references;
+    std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
 };
 
 }

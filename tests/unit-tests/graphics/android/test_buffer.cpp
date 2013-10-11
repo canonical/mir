@@ -23,7 +23,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
@@ -42,10 +42,9 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_sync_fence = std::make_shared<mtd::MockFence>();
-        mock_buffer_handle = mtd::create_stub_buffer(mock_sync_fence);
+        mock_native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
 
-        anwb = mock_buffer_handle->anwb();
+        anwb = mock_native_buffer->anwb();
         anwb->width = 44;
         anwb->height = 45;
         anwb->stride = 46;
@@ -59,8 +58,7 @@ protected:
 
     ANativeWindowBuffer *anwb;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    std::shared_ptr<mtd::MockFence> mock_sync_fence;
-    std::shared_ptr<mga::NativeBuffer> mock_buffer_handle;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
     geom::PixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;
@@ -71,7 +69,7 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
 
     geom::Size expected_size{anwb->width, anwb->height};
     EXPECT_EQ(expected_size, buffer.size());
@@ -81,7 +79,7 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
 }
 
@@ -91,22 +89,22 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
     int acquire_fake_fence_fd1 = 948;
     int acquire_fake_fence_fd2 = 954;
 
-    EXPECT_CALL(*mock_sync_fence, wait())
+    EXPECT_CALL(*mock_native_buffer, wait_for_content())
         .Times(1);
-    EXPECT_CALL(*mock_sync_fence, merge_with(acquire_fake_fence_fd1))
+    EXPECT_CALL(*mock_native_buffer, update_fence(acquire_fake_fence_fd1))
         .Times(1);
-    EXPECT_CALL(*mock_sync_fence, merge_with(acquire_fake_fence_fd2))
+    EXPECT_CALL(*mock_native_buffer, update_fence(acquire_fake_fence_fd2))
         .Times(1);
 
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
     {
         auto native_resource = buffer.native_buffer_handle();
-        EXPECT_EQ(mock_buffer_handle, native_resource);
+        EXPECT_EQ(mock_native_buffer, native_resource);
         native_resource->update_fence(acquire_fake_fence_fd1);
     }
     {
         auto native_resource = buffer.native_buffer_handle();
-        EXPECT_EQ(mock_buffer_handle, native_resource);
+        EXPECT_EQ(mock_native_buffer, native_resource);
         native_resource->update_fence(acquire_fake_fence_fd2);
     }
 }
@@ -117,6 +115,6 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 
     geom::Stride expected_stride{anwb->stride *
                                  geom::bytes_per_pixel(pf)};
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

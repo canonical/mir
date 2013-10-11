@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -60,7 +60,6 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         ON_CALL(*mock_display_poster, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        stub_sync = std::make_shared<mtd::MockFence>();
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
@@ -69,7 +68,6 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_poster;
-    std::shared_ptr<mtd::MockFence> stub_sync;
 };
 }
 
@@ -79,7 +77,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
-    auto stub_buffer = mtd::create_stub_buffer(stub_sync);
+    auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
@@ -89,7 +87,8 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
         .WillOnce(Return(stub_buffer));
 
     std::shared_ptr<mg::Buffer> tmp = mock_buffer1;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_buffer))
+    std::shared_ptr<mga::NativeBuffer> tmp2 = stub_buffer;
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, tmp2))
         .Times(1);
 
     auto rc_buffer = render_window.driver_requests_buffer();
@@ -100,7 +99,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 {
     using namespace testing;
     int fake_fence = 488;
-    auto stub_buffer = mtd::create_stub_buffer(stub_sync);
+    auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
  
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 

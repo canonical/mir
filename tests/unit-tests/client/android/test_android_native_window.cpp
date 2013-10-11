@@ -19,7 +19,7 @@
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "src/client/mir_client_surface.h"
-#include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_fence.h"
 
 #include <gmock/gmock.h>
@@ -36,7 +36,7 @@ class MockAndroidDriverInterpreter : public mga::AndroidDriverInterpreter
 {
 public:
     MockAndroidDriverInterpreter()
-     : buffer(mtd::create_stub_buffer())
+     : buffer(std::make_shared<mtd::StubAndroidNativeBuffer>())
     {
         using namespace testing;
         ON_CALL(*this, driver_requests_buffer())
@@ -148,7 +148,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
     EXPECT_CALL(*mock_sync, copy_native_handle())
         .Times(1)
         .WillOnce(Return(fake_fd));
-    auto fake_buffer = mtd::create_stub_buffer(mock_sync);
+    auto fake_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
@@ -178,7 +178,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
     using namespace testing;
 
     ANativeWindowBuffer* returned_buffer;
-    auto fake_buffer = mtd::create_stub_buffer();
+    auto fake_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())

@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir/graphics/internal_surface.h"
-#include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -50,7 +50,7 @@ struct InternalClientWindow : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         mock_surface = std::make_shared<MockInternalSurface>();
         mock_buffer = std::make_shared<mtd::MockBuffer>();
-        stub_native_buffer = mtd::create_stub_buffer(); 
+        stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
 
         ON_CALL(*mock_surface, advance_client_buffer())
             .WillByDefault(Return(mock_buffer));

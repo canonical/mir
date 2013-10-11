@@ -29,7 +29,6 @@ list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
 elseif (MIR_PLATFORM STREQUAL "android")
 list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_android_hw.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/stub_android_native_buffer.cpp
 )
 endif()
 

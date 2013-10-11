@@ -35,21 +35,23 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
    buffer_pf(pf), buffer_stride{stride}, buffer_size(size)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, -1); 
-    auto tmp = new mga::AndroidNativeBuffer(handle, fence);
-    native_window_buffer = std::shared_ptr<mga::AndroidNativeBuffer>(tmp, [](mga::AndroidNativeBuffer* buffer)
+    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
+
+    auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
+        new mga::RefCountedNativeBuffer(handle),
+        [](mga::RefCountedNativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });
 
-    //todo: a bit wonky, but we should have mga::AndroidNativeBuffer take this info in constructor
-    ANativeWindowBuffer* anwb = native_window_buffer->anwb();
     anwb->height = static_cast<int32_t>(buffer_size.height.as_uint32_t());
     anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
     anwb->stride = stride.as_uint32_t() /
                                    geom::bytes_per_pixel(buffer_pf);
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = native_handle.get();
+
+    native_window_buffer = std::make_shared<mga::AndroidNativeBuffer>(anwb, fence);
 }
 
 mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept

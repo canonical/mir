@@ -20,7 +20,7 @@
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
-#include "mir_test_doubles/stub_native_buffer.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test/fake_shared.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
@@ -31,13 +31,15 @@ namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 namespace mt=mir::test;
+namespace mtd=mir::test::doubles;
 
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
     {
         using namespace testing;
-        buffer = mt::doubles::create_stub_buffer();
+        buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+
         ON_CALL(*this, native_buffer_handle())
             .WillByDefault(Return(buffer));
     }
@@ -111,7 +113,7 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
 {
     using namespace testing;
-    auto buffer = mt::doubles::create_stub_buffer();
+    auto buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);

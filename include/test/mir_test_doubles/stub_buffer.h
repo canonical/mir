@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
-#include "stub_native_buffer.h"
+#include "mock_android_native_buffer.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
@@ -58,7 +58,7 @@ public:
 #ifndef ANDROID
         return std::make_shared<graphics::NativeBuffer>();
 #else
-        return std::shared_ptr<graphics::NativeBuffer>();
+        return std::make_shared<StubAndroidNativeBuffer>();
 #endif
     }
     virtual void bind_to_texture() {}
