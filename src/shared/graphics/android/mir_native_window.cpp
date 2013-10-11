@@ -163,9 +163,9 @@ int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_d
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
 
-    *buffer_to_driver = *buffer;
     //driver is responsible for closing this native handle
-    *fence_fd = *buffer;
+    *fence_fd = buffer->copy_fence();
+    *buffer_to_driver = buffer->anwb();
     return 0;
 }
 

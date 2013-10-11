@@ -57,9 +57,10 @@ protected:
         }
 
         auto fence = std::make_shared<mtd::MockFence>();
-        native_buffer = mtd::create_stub_buffer(fence); 
-        native_buffer->stride = (int) stride.as_uint32_t();
-        native_buffer->handle = native_buffer_handle.get();
+        native_buffer = mtd::create_stub_buffer(fence);
+        auto anwb = native_buffer->anwb();
+        anwb->stride = (int) stride.as_uint32_t();
+        anwb->handle = native_buffer_handle.get();
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())

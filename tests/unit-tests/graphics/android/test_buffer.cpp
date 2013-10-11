@@ -45,10 +45,11 @@ protected:
         mock_sync_fence = std::make_shared<mtd::MockFence>();
         mock_buffer_handle = mtd::create_stub_buffer(mock_sync_fence);
 
-        mock_buffer_handle->width = 44;
-        mock_buffer_handle->height = 45;
-        mock_buffer_handle->stride = 46;
-        mock_buffer_handle->format = HAL_PIXEL_FORMAT_RGBA_8888;
+        anwb = mock_buffer_handle->anwb();
+        anwb->width = 44;
+        anwb->height = 45;
+        anwb->stride = 46;
+        anwb->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         default_use = mga::BufferUsage::use_hardware;
         pf = geom::PixelFormat::abgr_8888;
@@ -56,6 +57,7 @@ protected:
         extensions = std::make_shared<mg::EGLExtensions>();
     }
 
+    ANativeWindowBuffer *anwb;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockFence> mock_sync_fence;
     std::shared_ptr<mga::NativeBuffer> mock_buffer_handle;
@@ -71,7 +73,7 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
 
     mga::Buffer buffer(mock_buffer_handle, extensions);
 
-    geom::Size expected_size{mock_buffer_handle->width, mock_buffer_handle->height};
+    geom::Size expected_size{anwb->width, anwb->height};
     EXPECT_EQ(expected_size, buffer.size());
 }
 
@@ -113,7 +115,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 {
     using namespace testing;
 
-    geom::Stride expected_stride{mock_buffer_handle->stride *
+    geom::Stride expected_stride{anwb->stride *
                                  geom::bytes_per_pixel(pf)};
     mga::Buffer buffer(mock_buffer_handle, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());

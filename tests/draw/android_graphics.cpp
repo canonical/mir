@@ -96,7 +96,7 @@ mtd::TestGrallocMapper::~TestGrallocMapper()
 }
 
 std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_handle(
-                        std::shared_ptr<ANativeWindowBuffer> const& package)
+    ANativeWindowBuffer* package)
 {
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;

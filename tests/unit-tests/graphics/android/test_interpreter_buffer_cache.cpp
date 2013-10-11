@@ -55,7 +55,7 @@ TEST_F(InterpreterResourceTest, deposit_buffer)
     mga::InterpreterCache cache;
     cache.store_buffer(stub_buffer1, native_buffer1);
 
-    auto test_buffer = cache.retrieve_buffer(native_buffer1.get());
+    auto test_buffer = cache.retrieve_buffer(native_buffer1->anwb());
     EXPECT_EQ(stub_buffer1, test_buffer);
 }
 
@@ -66,9 +66,9 @@ TEST_F(InterpreterResourceTest, deposit_many_buffers)
     cache.store_buffer(stub_buffer2, native_buffer2);
     cache.store_buffer(stub_buffer3, native_buffer3);
 
-    EXPECT_EQ(stub_buffer3, cache.retrieve_buffer(native_buffer3.get()));
-    EXPECT_EQ(stub_buffer1, cache.retrieve_buffer(native_buffer1.get()));
-    EXPECT_EQ(stub_buffer2, cache.retrieve_buffer(native_buffer2.get()));
+    EXPECT_EQ(stub_buffer3, cache.retrieve_buffer(native_buffer3->anwb()));
+    EXPECT_EQ(stub_buffer1, cache.retrieve_buffer(native_buffer1->anwb()));
+    EXPECT_EQ(stub_buffer2, cache.retrieve_buffer(native_buffer2->anwb()));
 }
 
 TEST_F(InterpreterResourceTest, deposit_buffer_has_ownership)
@@ -82,7 +82,7 @@ TEST_F(InterpreterResourceTest, deposit_buffer_has_ownership)
     EXPECT_EQ(native_use_count_before+1, native_buffer1.use_count());
     EXPECT_EQ(use_count_before+1, stub_buffer1.use_count());
 
-    cache.retrieve_buffer(native_buffer1.get());
+    cache.retrieve_buffer(native_buffer1->anwb());
     EXPECT_EQ(native_use_count_before, native_buffer1.use_count());
     EXPECT_EQ(use_count_before, stub_buffer1.use_count());
 }
@@ -96,7 +96,7 @@ TEST_F(InterpreterResourceTest, update_fence_for)
         .Times(1);
 
     cache.store_buffer(stub_buffer1, native_buffer1);
-    cache.update_native_fence(native_buffer1.get(), fence_fd);
+    cache.update_native_fence(native_buffer1->anwb(), fence_fd);
 
     EXPECT_THROW({
         cache.update_native_fence(nullptr, fence_fd);
@@ -107,6 +107,6 @@ TEST_F(InterpreterResourceTest, retreive_buffer_with_bad_key_throws)
 {
     mga::InterpreterCache cache;
     EXPECT_THROW({
-        cache.retrieve_buffer(native_buffer1.get());
+        cache.retrieve_buffer(native_buffer1->anwb());
     }, std::runtime_error);
 }

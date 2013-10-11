@@ -160,7 +160,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
     ANativeWindowBuffer* returned_buffer;
     window->dequeueBuffer(window.get(), &returned_buffer, &fence_fd);
 
-    EXPECT_EQ(fake_buffer.get(), returned_buffer);
+    EXPECT_EQ(fake_buffer->anwb(), returned_buffer);
     EXPECT_EQ(fake_fd, fence_fd);
 }
 
@@ -186,7 +186,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
         .WillOnce(Return(fake_buffer.get()));
 
     window->dequeueBuffer_DEPRECATED(window.get(), &returned_buffer);
-    EXPECT_EQ(fake_buffer.get(), returned_buffer);
+    EXPECT_EQ(fake_buffer->anwb(), returned_buffer);
 }
 
 /* queue hook tests */

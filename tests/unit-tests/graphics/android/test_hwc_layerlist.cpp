@@ -144,7 +144,7 @@ TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
     auto list = layerlist.native_list(); 
     ASSERT_EQ(1u, list->numHwLayers);
     hwc_layer_1 target_layer = list->hwLayers[0]; 
-    EXPECT_EQ(native_handle_1->handle, target_layer.handle); 
+    EXPECT_EQ(native_handle_1->handle(), target_layer.handle); 
 }
 
 TEST_F(HWCLayerListTest, set_fb_target_2x)
@@ -162,13 +162,13 @@ TEST_F(HWCLayerListTest, set_fb_target_2x)
     auto list = layerlist.native_list(); 
     ASSERT_EQ(1u, list->numHwLayers);
     hwc_layer_1 target_layer = list->hwLayers[0]; 
-    EXPECT_EQ(native_handle_1->handle, target_layer.handle); 
+    EXPECT_EQ(native_handle_1->handle(), target_layer.handle); 
 
     layerlist.set_fb_target(mock_buffer);
     auto list_second = layerlist.native_list();
     ASSERT_EQ(1u, list_second->numHwLayers);
     target_layer = list_second->hwLayers[0]; 
-    EXPECT_EQ(native_handle_2->handle, target_layer.handle); 
+    EXPECT_EQ(native_handle_2->handle(), target_layer.handle); 
 }
 
 TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
@@ -186,7 +186,7 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
     expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
     expected_layer.hints = 0;
     expected_layer.flags = 0;
-    expected_layer.handle = native_handle_1->handle;
+    expected_layer.handle = native_handle_1->handle();
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
     expected_layer.sourceCrop = source_region;

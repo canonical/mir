@@ -88,12 +88,17 @@ void mga::AndroidNativeBuffer::update_fence(NativeFence& merge_fd)
     fence->merge_with(merge_fd);
 }
 
-mga::AndroidNativeBuffer::operator ANativeWindowBuffer*()
+ANativeWindowBuffer* mga::AndroidNativeBuffer::anwb() const
 {
     return native_buffer.get();
 }
 
-mga::AndroidNativeBuffer::operator mga::NativeFence() const
+buffer_handle_t mga::AndroidNativeBuffer::handle() const
+{
+    return handle_resource.get();
+}
+
+mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
 {
     return fence->copy_native_handle();
 }

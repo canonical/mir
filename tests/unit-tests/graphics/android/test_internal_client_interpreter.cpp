@@ -92,15 +92,15 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
     int fake_fence = 4848;
 
     Sequence seq;
-    EXPECT_CALL(*mock_cache, update_native_fence(stub_native_buffer.get(), fake_fence))
+    EXPECT_CALL(*mock_cache, update_native_fence(stub_native_buffer->anwb(), fake_fence))
         .Times(1);
-    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_native_buffer.get()))
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_native_buffer->anwb()))
         .InSequence(seq)
         .WillOnce(Return(mock_buffer));
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_bufferptr = interpreter.driver_requests_buffer();
-    interpreter.driver_returns_buffer(test_bufferptr, fake_fence);
+    interpreter.driver_returns_buffer(test_bufferptr->anwb(), fake_fence);
 }
 
 TEST_F(InternalClientWindow, size_test)

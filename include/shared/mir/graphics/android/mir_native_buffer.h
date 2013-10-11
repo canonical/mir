@@ -38,7 +38,7 @@ public:
     virtual ~NativeBuffer() = default;
 
     virtual ANativeWindowBuffer* anwb() const = 0;
-    virtual native_handle_t handle() const = 0;
+    virtual buffer_handle_t handle() const = 0;
     virtual NativeFence copy_fence() const = 0;
 
     virtual void wait_for_content() = 0;
@@ -57,7 +57,7 @@ struct AndroidNativeBuffer : public NativeBuffer
         std::shared_ptr<Fence> const& fence);
 
     ANativeWindowBuffer* anwb() const;
-    native_handle_t handle() const;
+    buffer_handle_t handle() const;
     NativeFence copy_fence() const;
 
     void wait_for_content();

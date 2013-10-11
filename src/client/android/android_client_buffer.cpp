@@ -43,7 +43,7 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
         });
 
     //todo: a bit wonky, but we should have mga::AndroidNativeBuffer take this info in constructor
-    ANativeWindowBuffer* anwb = *native_window_buffer;
+    ANativeWindowBuffer* anwb = native_window_buffer->anwb();
     anwb->height = static_cast<int32_t>(buffer_size.height.as_uint32_t());
     anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
     anwb->stride = stride.as_uint32_t() /

@@ -61,7 +61,7 @@ TEST_F(FBDevice, set_next_frontbuffer_ok)
     using namespace testing;
     mga::FBDevice fbdev(fb_hal_mock);
 
-    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle))
+    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
         .Times(1);
 
     fbdev.set_next_frontbuffer(mock_buffer); 
@@ -72,7 +72,7 @@ TEST_F(FBDevice, set_next_frontbuffer_fail)
     using namespace testing;
     mga::FBDevice fbdev(fb_hal_mock);
 
-    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),native_buffer->handle))
+    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),native_buffer->handle()))
         .Times(1)
         .WillOnce(Return(-1));
 

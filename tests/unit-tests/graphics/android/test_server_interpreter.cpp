@@ -115,9 +115,9 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
     std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
-    EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer.get(), fake_fence))
+    EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer->anwb(), fake_fence))
         .Times(1);
-    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer.get()))
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer->anwb()))
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
@@ -125,7 +125,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     EXPECT_CALL(*mock_display_poster, set_next_frontbuffer(buf1))
         .Times(1);
 
-    render_window.driver_returns_buffer(stub_buffer.get(), fake_fence);
+    render_window.driver_returns_buffer(stub_buffer->anwb(), fake_fence);
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 }
 

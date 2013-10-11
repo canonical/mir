@@ -29,7 +29,7 @@ TEST(AndroidRefcount, driver_hooks)
     auto fence = std::make_shared<mtd::MockFence>();
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
-    mga::AndroidNativeBuffer* driver_reference = nullptr;
+    ANativeWindowBuffer* driver_reference = nullptr;
     {
         auto tmp = new mga::AndroidNativeBuffer(native_handle_resource, fence);
         std::shared_ptr<mga::AndroidNativeBuffer> buffer(tmp, [](mga::AndroidNativeBuffer* buffer)
@@ -37,7 +37,7 @@ TEST(AndroidRefcount, driver_hooks)
                 buffer->mir_dereference();
             });
 
-        driver_reference = buffer.get();
+        driver_reference = buffer->anwb();
         driver_reference->common.incRef(&driver_reference->common);
         //Mir loses its reference, driver still has a ref
     }
@@ -54,14 +54,14 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
     auto use_count_before = native_handle_resource.use_count();
     {
         std::shared_ptr<mga::AndroidNativeBuffer> mir_reference;
-        mga::AndroidNativeBuffer* driver_reference = nullptr;
+        ANativeWindowBuffer* driver_reference = nullptr;
         {
             auto tmp = new mga::AndroidNativeBuffer(native_handle_resource, fence);
             mir_reference = std::shared_ptr<mga::AndroidNativeBuffer>(tmp, [](mga::AndroidNativeBuffer* buffer)
                 {
                     buffer->mir_dereference();
                 });
-            driver_reference = mir_reference.get();
+            driver_reference = mir_reference->anwb();
             driver_reference->common.incRef(&driver_reference->common);
         }
 

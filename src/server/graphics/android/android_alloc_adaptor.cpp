@@ -80,7 +80,7 @@ std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
         });
 
     //todo: a bit wonky, but we should have mga::AndroidNativeBuffer take this info in constructor
-    ANativeWindowBuffer* anwb = *buffer;
+    ANativeWindowBuffer* anwb = buffer->anwb();
     anwb->width = width;
     anwb->height = height;
     anwb->stride = stride;
