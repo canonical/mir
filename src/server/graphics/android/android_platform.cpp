@@ -89,6 +89,8 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
     auto buffer_handle = native_buffer->handle();
 
     int offset = 0;
+    
+    printf("NUMFD %i %i\n", buffer_handle->numFds, buffer_handle->numInts);
     for(auto i=0; i<buffer_handle->numFds; i++)
     {
         packer->pack_fd(buffer_handle->data[offset++]);

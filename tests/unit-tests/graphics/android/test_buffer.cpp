@@ -89,8 +89,6 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
     int acquire_fake_fence_fd1 = 948;
     int acquire_fake_fence_fd2 = 954;
 
-    EXPECT_CALL(*mock_native_buffer, wait_for_content())
-        .Times(1);
     EXPECT_CALL(*mock_native_buffer, update_fence(acquire_fake_fence_fd1))
         .Times(1);
     EXPECT_CALL(*mock_native_buffer, update_fence(acquire_fake_fence_fd2))

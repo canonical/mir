@@ -144,23 +144,21 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
     using namespace testing;
 
     int fake_fd = 4948;
-    auto mock_sync = std::make_shared<mtd::MockFence>();
-    EXPECT_CALL(*mock_sync, copy_native_handle())
+    auto mock_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+    EXPECT_CALL(*mock_buffer, copy_fence())
         .Times(1)
         .WillOnce(Return(fake_fd));
-    auto fake_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
-
-    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
-
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .Times(1)
-        .WillOnce(Return(fake_buffer.get()));
+        .WillOnce(Return(mock_buffer.get()));
+
+    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     int fence_fd;
     ANativeWindowBuffer* returned_buffer;
     window->dequeueBuffer(window.get(), &returned_buffer, &fence_fd);
 
-    EXPECT_EQ(fake_buffer->anwb(), returned_buffer);
+    EXPECT_EQ(mock_buffer->anwb(), returned_buffer);
     EXPECT_EQ(fake_fd, fence_fd);
 }
 
