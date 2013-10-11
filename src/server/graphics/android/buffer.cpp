@@ -93,7 +93,7 @@ void mga::Buffer::bind_to_texture()
     if (it == egl_image_map.end())
     {
         image = egl_extensions->eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_buffer.get(), image_attrs);
+                                  native_buffer->anwb(), image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));

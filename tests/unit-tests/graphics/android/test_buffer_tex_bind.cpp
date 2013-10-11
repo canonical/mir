@@ -91,6 +91,20 @@ TEST_F(AndroidBufferBinding, buffer_only_makes_one_image_per_display)
     buffer.bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_anwb_is_bound)
+{
+    using namespace testing;
+    ANativeWindowBuffer *stub_anwb = reinterpret_cast<ANativeWindowBuffer*>(0xdeed);
+    EXPECT_CALL(*mock_native_buffer, anwb())
+        .Times(1)
+        .WillOnce(Return(stub_anwb));
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,stub_anwb,_))
+        .Times(Exactly(1));
+
+    mga::Buffer buffer(mock_native_buffer, extensions);
+    buffer.bind_to_texture();
+}
+
 TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
 {
     using namespace testing;
