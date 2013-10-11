@@ -107,9 +107,9 @@ void mga::Buffer::bind_to_texture()
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
-    //note: this is wrong to do here if we don't update the fence. however, we don't have the
-    //      infrastructure to pass the texture resource to the compositor yet. We are guaranteed
-    //      no tearing by the swapper algorithm
+    //TODO: we should make use of the android egl fence extension here to update the fence.
+    //      if the extension is not available, we should pass out a token that the user
+    //      will have to keep until the completion of the gl draw
 }
 
 std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
