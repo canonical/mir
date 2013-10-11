@@ -103,6 +103,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
         auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678);
         return std::make_shared<EGLNativeDisplayType>(fake_display);
     }
+
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
+    {
+        return nullptr;
+    }
 };
 
 struct StubClientPlatformFactory : public mcl::ClientPlatformFactory

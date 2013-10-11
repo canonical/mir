@@ -226,6 +226,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return std::shared_ptr<EGLNativeDisplayType>();
     }
+
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
+    {
+        return nullptr;
+    }
 };
 
 struct StubClientPlatformFactory : public mcl::ClientPlatformFactory

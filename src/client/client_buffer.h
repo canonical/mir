@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
@@ -35,11 +36,6 @@ struct MirBufferPackage;
 
 namespace mir
 {
-
-namespace graphics
-{
-class NativeBuffer;
-}
 
 namespace client
 {

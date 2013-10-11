@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_H_
 #define MIR_COMPOSITOR_BUFFER_H_
 
+#include "mir/graphics/native_buffer.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 
@@ -28,7 +29,6 @@ namespace mir
 {
 namespace graphics
 {
-class NativeBuffer;
 class BufferID;
 
 class Buffer

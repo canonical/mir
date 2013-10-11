@@ -19,7 +19,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
+#ifdef ANDROID
 #include "mock_android_native_buffer.h"
+#endif
+
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
