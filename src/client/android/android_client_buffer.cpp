@@ -36,7 +36,6 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1);
-
     auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
         new mga::RefCountedNativeBuffer(handle),
         [](mga::RefCountedNativeBuffer* buffer)

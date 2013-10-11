@@ -81,14 +81,6 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
 }
 
-#if 0
-//consume_empty_buffer()
-//produce_rendered_buffer()
-//consume_rendered_buffer()
-//produce_empty_buffer()
-
-//consume_buffer
-//produce_from_render
 TEST_F(HWCLayerListTest, hwc_list_creation_loads_latest_fb_target)
 {
     using namespace testing;
@@ -96,16 +88,10 @@ TEST_F(HWCLayerListTest, hwc_list_creation_loads_latest_fb_target)
     hwc_rect_t expected_sc, expected_df, expected_visible;
     expected_sc = {0, 0, width, height};
     expected_df = expected_visible = expected_sc;
-//    EXPECT_CALL(*mock_buffer_tracker, consume_fb_to_post(_,_))
-//        .Times(1)
-//        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer)),
-//                        SetArgReferee<1>(mock_sync_fence));
-        
     EXPECT_CALL(*mock_buffer, size())
         .Times(1)
         .WillOnce(Return(default_size));
 
-//    mga::LayerList layerlist(mock_fb_swapper);
     mga::LayerList layerlist;
 
     auto list = layerlist.native_list(); 
@@ -118,7 +104,7 @@ TEST_F(HWCLayerListTest, hwc_list_creation_loads_latest_fb_target)
     ASSERT_NE(nullptr, target_layer.visibleRegionScreen.rects); 
     EXPECT_THAT(target_layer.visibleRegionScreen.rects[0], MatchesRect( expected_visible, "visible"));
 }
-#endif
+
 TEST_F(HWCLayerListTest, fb_target)
 {
     using namespace testing;

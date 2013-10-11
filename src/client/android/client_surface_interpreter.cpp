@@ -27,7 +27,9 @@ namespace mga=mir::graphics::android;
 
 mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
  :  surface(surface),
-    driver_pixel_format(-1)
+    driver_pixel_format(-1),
+    sync_ops(std::make_shared<mga::RealSyncFileOps>())
+    
 {
 }
 
@@ -47,8 +49,7 @@ static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
 {
     //TODO: pass fence to server instead of waiting here
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence sync_fence(ops, fence_fd);
+    mga::SyncFence sync_fence(sync_ops, fence_fd);
     sync_fence.wait();
 
     mir_wait_for(surface.next_buffer(empty, NULL));

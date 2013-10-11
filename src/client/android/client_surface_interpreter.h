@@ -24,6 +24,13 @@
 
 namespace mir
 {
+namespace graphics
+{
+namespace android
+{
+class SyncFileOps;
+}
+} 
 namespace client
 {
 namespace android
@@ -43,6 +50,7 @@ public:
 private:
     ClientSurface& surface;
     int driver_pixel_format;
+    std::shared_ptr<graphics::android::SyncFileOps> const sync_ops;
 };
 
 }

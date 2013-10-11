@@ -61,6 +61,8 @@ private:
 
     int fence_fd;
     std::shared_ptr<SyncFileOps> const ops;
+
+    int const infinite_timeout = -1;
 };
 
 }

@@ -34,7 +34,8 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_list(layer_list),
-      fb_device(fbdev)
+      fb_device(fbdev), 
+      sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
@@ -103,8 +104,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-    auto ops = std::make_shared<mga::RealSyncFileOps>();
-    mga::SyncFence fence(ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
+    mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }
 
