@@ -35,8 +35,8 @@
 
 namespace mcl = mir::client;
 
-std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
+std::mutex MirConnection::connection_guard;
 
 namespace
 {
