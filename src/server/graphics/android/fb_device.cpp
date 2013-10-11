@@ -18,6 +18,7 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
 
 #include "fb_device.h"
 #include "buffer.h"

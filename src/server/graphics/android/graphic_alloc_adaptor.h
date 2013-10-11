@@ -22,13 +22,14 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 #include "buffer_usage.h"
-#include "mir/graphics/native_buffer.h"
 #include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+
+class NativeBuffer;
 namespace android
 {
 

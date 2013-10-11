@@ -21,7 +21,6 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
-#include "mir/graphics/native_buffer.h"
 
 #include <memory>
 
@@ -29,6 +28,7 @@ namespace mir
 {
 namespace graphics
 {
+class NativeBuffer;
 class BufferID;
 
 class Buffer

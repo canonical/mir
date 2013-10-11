@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_NATIVE_BUFFER_H_
 #define MIR_TEST_DOUBLES_MOCK_ANDROID_NATIVE_BUFFER_H_
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/native_buffer.h"
 #include <gmock/gmock.h> 
 
 namespace mir
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-struct MockAndroidNativeBuffer : public graphics::android::NativeBuffer
+struct MockAndroidNativeBuffer : public graphics::NativeBuffer
 {
     MockAndroidNativeBuffer()
     {

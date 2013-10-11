@@ -20,6 +20,7 @@
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test/draw/android_graphics.h"

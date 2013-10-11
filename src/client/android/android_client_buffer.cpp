@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "android_client_buffer.h"

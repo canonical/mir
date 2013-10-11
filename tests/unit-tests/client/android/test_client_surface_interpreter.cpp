@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/native_buffer.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
@@ -56,7 +56,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
 
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
 
-    std::shared_ptr<mga::NativeBuffer> buffer;
+    std::shared_ptr<mir::graphics::NativeBuffer> buffer;
     native_handle_t handle;
 };
 

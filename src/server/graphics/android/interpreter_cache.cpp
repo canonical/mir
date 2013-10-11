@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "interpreter_cache.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

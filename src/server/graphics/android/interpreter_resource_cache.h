@@ -18,7 +18,6 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_
 #define MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_
-#include "mir/graphics/native_buffer.h"
 #include <system/window.h>
 #include <memory>
 
@@ -27,6 +26,7 @@ namespace mir
 namespace graphics
 {
 class Buffer;
+class NativeBuffer;
 
 namespace android
 {

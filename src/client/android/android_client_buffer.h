@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
-#include "mir/graphics/native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
 #include "../aging_buffer.h"
 #include "android_registrar.h"
 

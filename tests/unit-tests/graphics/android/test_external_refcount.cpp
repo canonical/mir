@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
 #include "mir_test_doubles/mock_fence.h"
 #include <memory>
 #include <gtest/gtest.h>

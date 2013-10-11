@@ -16,9 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
 
-#include <iostream>
 namespace mga=mir::graphics::android;
 
 namespace

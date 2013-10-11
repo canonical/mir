@@ -22,6 +22,7 @@
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <gtest/gtest.h>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
@@ -51,8 +52,8 @@ public:
     int height; 
     geom::Size default_size;
 
-    std::shared_ptr<mga::NativeBuffer> native_handle_1;
-    std::shared_ptr<mga::NativeBuffer> native_handle_2;
+    std::shared_ptr<mg::NativeBuffer> native_handle_1;
+    std::shared_ptr<mg::NativeBuffer> native_handle_2;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 

@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "android_format_conversion-inl.h"
 #include "buffer.h"
@@ -111,11 +112,11 @@ void mga::Buffer::bind_to_texture()
     //      no tearing by the swapper algorithm
 }
 
-std::shared_ptr<mga::NativeBuffer> mga::Buffer::native_buffer_handle() const
+std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
 {
     std::unique_lock<std::mutex> lk(content_lock);
 
-    auto native_resource = std::shared_ptr<mga::NativeBuffer>(
+    auto native_resource = std::shared_ptr<mg::NativeBuffer>(
         native_buffer.get(),
         [this](NativeBuffer*)
         {

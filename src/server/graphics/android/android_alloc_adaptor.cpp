@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
@@ -51,7 +51,7 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
-std::shared_ptr<mga::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
+std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;

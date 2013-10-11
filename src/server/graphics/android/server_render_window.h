@@ -21,7 +21,6 @@
 #define MIR_GRAPHICS_ANDROID_SERVER_RENDER_WINDOW_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/graphics/native_buffer.h"
 #include "mir/geometry/pixel_format.h"
 
 #include <memory>
