@@ -1,3 +1,15 @@
+mir (0.0.14+13.10.20131011-0ubuntu1) saucy; urgency=low
+
+  [ thomas-voss ]
+  * Clean up duplicate instances of the valid connections set. Remove
+    the static instances from the header file. (LP: #1238312) Requested
+    to be merged directly to lp:mir by didrocks, tvoss. (LP: #1238312)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1097
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>   Fri, 11 Oct 2013 06:59:30 +0000
+
 mir (0.0.14+13.10.20131010-0ubuntu1) saucy; urgency=low
 
   [ Colin Watson ]
