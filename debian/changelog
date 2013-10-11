@@ -8,7 +8,7 @@ mir (0.0.14+13.10.20131011-0ubuntu1) saucy; urgency=low
   [ Ubuntu daily release ]
   * Automatic snapshot from revision 1097
 
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>   Fri, 11 Oct 2013 06:59:30 +0000
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Oct 2013 06:59:30 +0000
 
 mir (0.0.14+13.10.20131010-0ubuntu1) saucy; urgency=low
 
