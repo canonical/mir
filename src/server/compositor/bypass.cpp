@@ -85,15 +85,9 @@ bool BypassFilter::operator()(const CompositingCriteria &criteria)
         return false;
     }
 
-    // This could be replaced by adding a "CompositingCriteria::rect()"
-    int width = trans[0][0];
-    int height = trans[1][1];
-    int x = trans[3][0] - width / 2;
-    int y = trans[3][1] - height / 2;
-    geometry::Rectangle window{{x, y}, {width, height}};
-
     // Not weirdly transformed but also not on this monitor? Don't care...
-    if (!window.overlaps(display_buffer.view_area()))
+    // This will also check the surface is not hidden and has been posted.
+    if (!criteria.should_be_rendered_in(display_buffer.view_area()))
         return false;
 
     // Transformed perfectly to fit the monitor? Bypass!
