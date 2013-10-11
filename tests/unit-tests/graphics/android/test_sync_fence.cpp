@@ -64,8 +64,8 @@ MATCHER_P(TimeoutMatches, value,
 MATCHER_P(MergeMatches, value,
           std::string("merge should be: " + testing::PrintToString(value)))
 {
-    (void) arg;
-    return true;
+    auto argument = static_cast<struct sync_merge_data*>(arg);
+    return argument->fd2 == value.fd2;
 }
 
 TEST_F(SyncSwTest, sync_wait)
