@@ -62,6 +62,8 @@ private:
     MirDisplayConfiguration* const config;
 };
 
+std::mutex connection_guard;
+std::unordered_set<MirConnection*> valid_connections;
 }
 
 MirConnection::MirConnection() :
