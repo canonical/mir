@@ -143,9 +143,3 @@ TEST_F(InternalClientWindow, driver_sets_format)
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
 }
-
-TEST_F(InternalClientWindow, window_holds_buffer_resource_for_driver)
-{
-    mga::InternalClientWindow interpreter(mock_surface, mock_cache);
-
-}
