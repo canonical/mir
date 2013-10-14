@@ -93,6 +93,7 @@ TEST_F(HWCLayerListTest, hwc_list_creation_loads_latest_fb_target)
         .WillOnce(Return(default_size));
 
     mga::LayerList layerlist;
+    layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list(); 
     ASSERT_EQ(1u, list->numHwLayers);
