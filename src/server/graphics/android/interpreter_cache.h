@@ -33,11 +33,14 @@ class InterpreterCache : public InterpreterResourceCache
 public:
     InterpreterCache() {}
 
-    void store_buffer(std::shared_ptr<graphics::Buffer>const& buffer, ANativeWindowBuffer* key);
+    void store_buffer(std::shared_ptr<graphics::Buffer>const& buffer,
+        std::shared_ptr<graphics::NativeBuffer> const& key);
     std::shared_ptr<graphics::Buffer> retrieve_buffer(ANativeWindowBuffer* key);
+    void update_native_fence(ANativeWindowBuffer* key, int fence);
 
 private:
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<graphics::Buffer>> buffers_in_driver;
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<graphics::NativeBuffer>> native_buffers;
 };
 }
 }

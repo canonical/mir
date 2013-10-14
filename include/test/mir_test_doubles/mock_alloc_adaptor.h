@@ -35,7 +35,7 @@ class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
     MOCK_METHOD3(alloc_buffer, 
-        std::shared_ptr<ANativeWindowBuffer>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
+        std::shared_ptr<graphics::NativeBuffer>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
 };
 
 }

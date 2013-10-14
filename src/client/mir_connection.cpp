@@ -290,7 +290,6 @@ MirWaitHandle* MirConnection::disconnect()
     catch (std::exception const& x)
     {
         set_error_message(std::string("disconnect: ") + x.what());
-        disconnect_wait_handle.result_received();
     }
 
     return &disconnect_wait_handle;

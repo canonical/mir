@@ -24,6 +24,13 @@
 
 namespace mir
 {
+namespace graphics
+{
+namespace android
+{
+class SyncFileOps;
+}
+} 
 namespace client
 {
 namespace android
@@ -34,8 +41,8 @@ class ClientSurfaceInterpreter : public graphics::android::AndroidDriverInterpre
 public:
     explicit ClientSurfaceInterpreter(ClientSurface& surface);
 
-    MirNativeBuffer* driver_requests_buffer();
-    void driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<graphics::android::SyncObject> const&);
+    graphics::NativeBuffer* driver_requests_buffer();
+    void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd );
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
     void sync_to_display(bool);
@@ -43,6 +50,7 @@ public:
 private:
     ClientSurface& surface;
     int driver_pixel_format;
+    std::shared_ptr<graphics::android::SyncFileOps> const sync_ops;
 };
 
 }

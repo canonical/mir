@@ -226,10 +226,12 @@ MirWaitHandle* MirSurface::release_surface(
     return connection->release_surface(this, callback, context);
 }
 
-std::shared_ptr<MirNativeBuffer> MirSurface::get_current_buffer_package()
+MirNativeBuffer* MirSurface::get_current_buffer_package()
 {
+    auto platform = connection->get_client_platform();
     auto buffer = get_current_buffer();
-    return buffer->native_buffer_handle();
+    auto handle = buffer->native_buffer_handle();
+    return platform->convert_native_buffer(handle.get());
 }
 
 std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()

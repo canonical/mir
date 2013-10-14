@@ -1,3 +1,9 @@
+mir (0.0.15+13.10.20131011-0ubuntu1) UNRELEASED; urgency=low
+
+  * bump version 0.0.15
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Mon, 14 Oct 2013 13:52:10 -0500
+
 mir (0.0.14+13.10.20131011-0ubuntu1) saucy; urgency=low
 
   [ thomas-voss ]

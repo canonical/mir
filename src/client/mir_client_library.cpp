@@ -264,8 +264,7 @@ MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
 
 void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
-    auto package = surface->get_current_buffer_package();
-    *buffer_package_out = package.get();
+    *buffer_package_out = surface->get_current_buffer_package();
 }
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface * surface)
