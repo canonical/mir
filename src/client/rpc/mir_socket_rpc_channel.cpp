@@ -39,6 +39,12 @@
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
+namespace
+{
+std::chrono::milliseconds const timeout(200);
+boost::posix_time::milliseconds const boost_timeout(200);
+}
+
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
@@ -138,6 +144,8 @@ mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
 void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
+    if (!disconnected.load())
+    {
     auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
     if (surface)
     {
@@ -198,7 +206,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
             rpc_report->file_descriptors_received(*response, fds);
         }
     }
-
+    }
 
     complete->Run();
 }
@@ -231,8 +239,14 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
     message->cmsg_level = SOL_SOCKET;
     message->cmsg_type = SCM_RIGHTS;
 
+    using std::chrono::steady_clock;
+    auto time_limit = steady_clock::now() + timeout;
+
     while (recvmsg(socket.native_handle(), &header, 0) < 0)
-        ; // FIXME: Avoid spinning forever
+    {
+        if (steady_clock::now() > time_limit)
+            return;
+    }
 
     // Copy file descriptors back to caller
     n_fds = (message->cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
@@ -294,7 +308,7 @@ void mclr::MirSocketRpcChannel::send_message(
     }
 
     rpc_report->invocation_succeeded(invocation);
-    timer.expires_from_now(boost::posix_time::milliseconds(200));
+    timer.expires_from_now(boost_timeout);
     timer.async_wait([this](const boost::system::error_code& error)
     {
         // Timed out waiting for server response: kill the connection
