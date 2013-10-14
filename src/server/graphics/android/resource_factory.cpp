@@ -38,7 +38,6 @@
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 
 mga::ResourceFactory::ResourceFactory(
     std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)

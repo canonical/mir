@@ -22,21 +22,21 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 #include "buffer_usage.h"
-
-#include <system/window.h>
 #include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+
+class NativeBuffer;
 namespace android
 {
 
 class GraphicAllocAdaptor
 {
 public:
-    virtual std::shared_ptr<ANativeWindowBuffer> alloc_buffer(geometry::Size size,
+    virtual std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size size,
         geometry::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;

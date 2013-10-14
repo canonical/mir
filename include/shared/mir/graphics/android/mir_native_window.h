@@ -29,7 +29,6 @@ namespace graphics
 {
 namespace android
 {
-class SyncObject;
 class AndroidDriverInterpreter;
 
 class MirNativeWindow : public ANativeWindow
@@ -39,8 +38,8 @@ public:
 
     int query(int key, int* value) const;
     int perform(int key, va_list args );
-    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
-    int queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<SyncObject> const& fence);
+    int dequeueBuffer(struct ANativeWindowBuffer** buffer, int* fence);
+    int queueBuffer(struct ANativeWindowBuffer* buffer, int fence);
     int setSwapInterval(int interval);
 private:
 

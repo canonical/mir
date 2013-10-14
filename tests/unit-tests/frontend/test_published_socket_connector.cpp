@@ -49,6 +49,18 @@ namespace
 class MockConnectorReport : public mf::ConnectorReport
 {
 public:
+    MockConnectorReport()
+    {
+        using namespace testing;
+        EXPECT_CALL(*this, thread_start()).Times(AnyNumber());
+        EXPECT_CALL(*this, thread_end()).Times(AnyNumber());
+        EXPECT_CALL(*this, starting_threads(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, stopping_threads(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, creating_session_for(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, creating_socket_pair(_, _)).Times(AnyNumber());
+        EXPECT_CALL(*this, listening_on(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, error(_)).Times(AnyNumber());
+    }
 
     ~MockConnectorReport() noexcept {}
 
@@ -68,8 +80,10 @@ public:
 
 struct PublishedSocketConnector : public ::testing::Test
 {
+    static const char* const test_socket;
     static void SetUpTestCase()
     {
+        remove(test_socket);
     }
 
     void SetUp()
@@ -77,23 +91,20 @@ struct PublishedSocketConnector : public ::testing::Test
         communicator_report = std::make_shared<MockConnectorReport>();
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>(
-            "./test_socket",
+            test_socket,
             stub_server_tool,
             communicator_report);
 
-        using namespace testing;
-        EXPECT_CALL(*communicator_report, error(_)).Times(AnyNumber());
         stub_server->comm->start();
-        client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+        client = std::make_shared<mt::TestProtobufClient>(test_socket, 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
     void TearDown()
     {
-        stub_server->comm->stop();
-        testing::Mock::VerifyAndClearExpectations(communicator_report.get());
         client.reset();
 
+        stub_server->comm->stop();
         stub_server.reset();
         stub_server_tool.reset();
         communicator_report.reset();
@@ -109,6 +120,7 @@ struct PublishedSocketConnector : public ::testing::Test
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
+const char* const PublishedSocketConnector::test_socket = "./test_socket";
 std::shared_ptr<mt::StubServerTool> PublishedSocketConnector::stub_server_tool;
 std::shared_ptr<MockConnectorReport> PublishedSocketConnector::communicator_report;
 std::shared_ptr<mt::TestProtobufServer> PublishedSocketConnector::stub_server;
@@ -196,7 +208,7 @@ MATCHER_P(InvocationMethodEq, name, "")
 
 }
 
-TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
+TEST_F(PublishedSocketConnector, double_disconnection_does_not_break)
 {
     using namespace testing;
 
@@ -220,13 +232,33 @@ TEST_F(PublishedSocketConnector, double_disconnection_attempt_throws_exception)
 
     Mock::VerifyAndClearExpectations(client.get());
 
-    EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
+    // There is a race between the server closing the socket and
+    // the client sending the second "disconnect".
+    // Usually[*] the server wins and the "disconnect" fails resulting
+    // in an invocation_failed() report and an exception.
+    // Occasionally, the client wins and the message is sent to dying socket.
+    // [*] ON my desktop under valgrind "Usually" is ~49 times out of 50
+
+    EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_)).Times(AtMost(1));
     EXPECT_CALL(*client, disconnect_done()).Times(1);
 
-    EXPECT_THROW({
-    client->display_server.disconnect(0, &client->ignored, &client->ignored, google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
+    try
+    {
+        client->display_server.disconnect(
+            0,
+            &client->ignored,
+            &client->ignored,
+            google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
+
+        // the write beat the socket closing
+    }
+    catch (std::runtime_error const& x)
+    {
+        // the socket closing beat the write
+        EXPECT_THAT(x.what(), HasSubstr("Failed to send message to server:"));
+    }
+
     client->wait_for_disconnect_done();
-    }, std::runtime_error);
 }
 
 TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)

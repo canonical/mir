@@ -31,6 +31,7 @@ namespace android
 {
 class HWCLayerList;
 class HWCVsyncCoordinator;
+class SyncFileOps;
 
 class HWC11Device : public HWCCommonDevice
 {
@@ -52,6 +53,7 @@ public:
 private:
     std::shared_ptr<HWCLayerList> const layer_list;
     std::shared_ptr<DisplaySupportProvider> const fb_device;
+    std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
 };
 
