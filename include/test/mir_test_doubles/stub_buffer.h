@@ -19,6 +19,10 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
+#ifdef ANDROID
+#include "mock_android_native_buffer.h"
+#endif
+
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
@@ -52,12 +56,12 @@ public:
 
     virtual geometry::PixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
 #ifndef ANDROID
-        return std::make_shared<MirNativeBuffer>();
+        return std::make_shared<graphics::NativeBuffer>();
 #else
-        return std::shared_ptr<MirNativeBuffer>();
+        return std::make_shared<StubAndroidNativeBuffer>();
 #endif
     }
     virtual void bind_to_texture() {}

@@ -16,41 +16,31 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
 
 namespace mga=mir::graphics::android;
 
 namespace
 {
-void incref_hook(struct android_native_base_t* base)
+static void incref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::MirNativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::RefCountedNativeBuffer*>(base);
     buffer->driver_reference();
 }
 void decref_hook(struct android_native_base_t* base)
 {
-    auto buffer = reinterpret_cast<mga::MirNativeBuffer*>(base);
+    auto buffer = reinterpret_cast<mga::RefCountedNativeBuffer*>(base);
     buffer->driver_dereference();
 }
 }
 
-mga::MirNativeBuffer::MirNativeBuffer(std::shared_ptr<const native_handle_t> const& handle)
-    : handle_resource(handle),
-      mir_reference(true),
-      driver_references(0)
-{
-    common.incRef = incref_hook;
-    common.decRef = decref_hook;
-}
-
-
-void mga::MirNativeBuffer::driver_reference()
+void mga::RefCountedNativeBuffer::driver_reference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references++;
 }
 
-void mga::MirNativeBuffer::driver_dereference()
+void mga::RefCountedNativeBuffer::driver_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     driver_references--;
@@ -61,7 +51,7 @@ void mga::MirNativeBuffer::driver_dereference()
     }
 }
 
-void mga::MirNativeBuffer::mir_dereference()
+void mga::RefCountedNativeBuffer::mir_dereference()
 {
     std::unique_lock<std::mutex> lk(mutex);
     mir_reference = false;
@@ -72,6 +62,12 @@ void mga::MirNativeBuffer::mir_dereference()
     }
 }
 
-mga::MirNativeBuffer::~MirNativeBuffer()
+mga::RefCountedNativeBuffer::RefCountedNativeBuffer(
+    std::shared_ptr<const native_handle_t> const& handle)
+    : handle_resource(handle),
+      mir_reference(true),
+      driver_references(0)
 {
+    common.incRef = incref_hook;
+    common.decRef = decref_hook;
 }

@@ -19,7 +19,9 @@
 #include "src/server/graphics/android/internal_client_window.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
+#include "mir_test_doubles/mock_fence.h"
 #include "mir/graphics/internal_surface.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -48,28 +50,23 @@ struct InternalClientWindow : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         mock_surface = std::make_shared<MockInternalSurface>();
         mock_buffer = std::make_shared<mtd::MockBuffer>();
-        stub_anw = std::make_shared<ANativeWindowBuffer>();
+        stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
 
         ON_CALL(*mock_surface, advance_client_buffer())
             .WillByDefault(Return(mock_buffer));
         ON_CALL(*mock_surface, pixel_format())
             .WillByDefault(Return(mir_pixel_format_abgr_8888));
         ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(stub_anw));
+            .WillByDefault(Return(stub_native_buffer));
     }
 
-    std::shared_ptr<ANativeWindowBuffer> stub_anw;
+    std::shared_ptr<mg::NativeBuffer> stub_native_buffer;
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockInternalSurface> mock_surface;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     geom::Size sz;
 };
 
-struct MockSyncFence : public mga::SyncObject
-{
-    ~MockSyncFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
 }
 
 TEST_F(InternalClientWindow, driver_requests_buffer)
@@ -80,29 +77,30 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);
     std::shared_ptr<mg::Buffer> tmp = mock_buffer;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_native_buffer))
         .Times(1);
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_buffer = interpreter.driver_requests_buffer();
-    EXPECT_EQ(stub_anw.get(), test_buffer); 
+    ASSERT_NE(nullptr, test_buffer);
+    EXPECT_EQ(stub_native_buffer.get(), test_buffer); 
 }
 
 TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
-    auto mock_sync = std::make_shared<MockSyncFence>();
+    int fake_fence = 4848;
 
     Sequence seq;
-    EXPECT_CALL(*mock_sync, wait())
-        .InSequence(seq);
-    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
+    EXPECT_CALL(*mock_cache, update_native_fence(stub_native_buffer->anwb(), fake_fence))
+        .Times(1);
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_native_buffer->anwb()))
         .InSequence(seq)
         .WillOnce(Return(mock_buffer));
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_bufferptr = interpreter.driver_requests_buffer();
-    interpreter.driver_returns_buffer(test_bufferptr, mock_sync);
+    interpreter.driver_returns_buffer(test_bufferptr->anwb(), fake_fence);
 }
 
 TEST_F(InternalClientWindow, size_test)
@@ -144,10 +142,4 @@ TEST_F(InternalClientWindow, driver_sets_format)
     interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBA_8888);
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
-}
-
-TEST_F(InternalClientWindow, window_holds_buffer_resource_for_driver)
-{
-    mga::InternalClientWindow interpreter(mock_surface, mock_cache);
-
 }

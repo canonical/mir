@@ -22,11 +22,14 @@
 #include "mir/options/program_option.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace mo=mir::options;
@@ -36,6 +39,8 @@ class PlatformBufferIPCPackaging : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+
         stub_display_report = std::make_shared<mg::NullDisplayReport>();
         stride = geom::Stride(300*4);
 
@@ -51,21 +56,20 @@ protected:
         {
             native_buffer_handle->data[i] = i;
         }
- 
-        anwb = std::make_shared<ANativeWindowBuffer>();
-        anwb->stride = (int) stride.as_uint32_t();
-        anwb->handle  = native_buffer_handle.get();
 
-
+        native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         mock_buffer = std::make_shared<mtd::MockBuffer>();
+
+        ON_CALL(*native_buffer, handle())
+            .WillByDefault(Return(native_buffer_handle.get()));
         ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(testing::Return(anwb));
+            .WillByDefault(Return(native_buffer));
         ON_CALL(*mock_buffer, stride())
-            .WillByDefault(testing::Return(stride));
+            .WillByDefault(Return(stride));
     }
 
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<ANativeWindowBuffer> anwb;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
     geom::Stride stride;
@@ -75,14 +79,6 @@ protected:
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
-    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
-    geom::Stride dummy_stride(4390);
-
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .WillOnce(testing::Return(anwb));
-    EXPECT_CALL(*mock_buffer, stride())
-        .WillOnce(testing::Return(dummy_stride));
-
     auto platform = mg::create_platform(std::make_shared<mo::ProgramOption>(), stub_display_report);
 
     auto mock_packer = std::make_shared<mtd::MockPacker>();
@@ -97,7 +93,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
         EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
-    EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
+    EXPECT_CALL(*mock_packer, pack_stride(stride))
         .Times(1);
 
     platform->fill_ipc_package(mock_packer, mock_buffer);
