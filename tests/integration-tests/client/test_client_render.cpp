@@ -47,46 +47,19 @@ namespace
 {
 static int test_width  = 300;
 static int test_height = 200;
-}
 
-namespace mir
-{
-namespace test
-{
-/* client code */
-static void connected_callback(MirConnection *connection, void* context)
-{
-    MirConnection** tmp = (MirConnection**) context;
-    *tmp = connection;
-}
-static void create_callback(MirSurface *surface, void*context)
-{
-    MirSurface** surf = (MirSurface**) context;
-    *surf = surface;
-}
-
-static void next_callback(MirSurface *, void*)
-{
-}
 
 static uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
                                    {0x34567890, 0x45678901}};
-
 static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                    {0xFF00FF00, 0xFF0000FF}};
+static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
+static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
+
 struct TestClient
 {
-
-    static void sig_handle(int)
+    static int render_cpu_pattern(int num_frames)
     {
-    }
-
-    static int render_single()
-    {
-        if (signal(SIGCONT, sig_handle) == SIG_ERR)
-            return -1;
-        pause();
-
         MirConnection* connection = NULL;
         MirSurface* surface;
         MirSurfaceParameters surface_parameters;
@@ -94,8 +67,7 @@ struct TestClient
          /* establish connection. wait for server to come up */
         while (connection == NULL)
         {
-            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                         &connected_callback, &connection));
+            connection = mir_connect_sync("./test_socket_surface", "test_renderer");
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         /* make surface */
@@ -103,32 +75,33 @@ struct TestClient
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
-        mir_wait_for(mir_connection_create_surface(connection,
-                                                   &surface_parameters,
-                                                   &create_callback,
-                                                   &surface));
+        surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
-        /* grab a buffer*/
-        mir_surface_get_graphics_region(surface, graphics_region.get());
+        for(int i=0u; i < num_frames; i++)
+        {
+            mir_surface_get_graphics_region(surface, graphics_region.get());
+            switch (i % 2)
+            {
+                case 0:
+                    draw_pattern0.draw(graphics_region);
+                    break;
+                case 1:
+                default:
+                    draw_pattern1.draw(graphics_region);
+                    break; 
+            }
+            mir_surface_swap_buffers_sync(surface);
+        }
 
-        /* render pattern */
-        mtd::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
-        draw_pattern0.draw(graphics_region);
-
-        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-        /* release */
+        mir_surface_release_sync(surface);
         mir_connection_release(connection);
         return 0;
     }
 
-    static int render_double()
+    //performs num_frames renders, in red, green, blue repeating pattern
+    static int render_rgb_with_gl(int num_frames)
     {
-        if (signal(SIGCONT, sig_handle) == SIG_ERR)
-            return -1;
-        pause();
-
         MirConnection* connection = NULL;
         MirSurface* surface;
         MirSurfaceParameters surface_parameters;
@@ -136,67 +109,18 @@ struct TestClient
          /* establish connection. wait for server to come up */
         while (connection == NULL)
         {
-            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                         &connected_callback, &connection));
+            connection = mir_connect_sync("./test_socket_surface", "test_renderer");
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
+
         /* make surface */
         surface_parameters.name = "testsurface";
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
+        surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
-        mir_wait_for(mir_connection_create_surface(connection,
-                                                   &surface_parameters,
-                                                   &create_callback,
-                                                   &surface));
-
-        auto graphics_region = std::make_shared<MirGraphicsRegion>();
-        mir_surface_get_graphics_region( surface, graphics_region.get());
-        mtd::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
-        draw_pattern0.draw(graphics_region);
-
-        mir_wait_for(mir_surface_swap_buffers(surface, &next_callback, (void*) NULL));
-        mir_surface_get_graphics_region( surface, graphics_region.get());
-        mtd::DrawPatternCheckered<2,2> draw_pattern1(mt::pattern1);
-        draw_pattern1.draw(graphics_region);
-
-        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-        /* release */
-        mir_connection_release(connection);
-        return 0;
-    }
-
-    static int render_accelerated()
-    {
-        if (signal(SIGCONT, sig_handle) == SIG_ERR)
-            return -1;
-        pause();
-
-        /* only use C api */
-        MirConnection* connection = NULL;
-        MirSurface* surface;
-        MirSurfaceParameters surface_parameters;
-
-         /* establish connection. wait for server to come up */
-        while (connection == NULL)
-        {
-            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                         &connected_callback, &connection));
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        /* make surface */
-        surface_parameters.name = "testsurface";
-        surface_parameters.width = test_width;
-        surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
-
-        mir_wait_for(mir_connection_create_surface(connection,
-                                                   &surface_parameters,
-                                                   &create_callback,
-                                                   &surface));
-
+        /* set up egl context */
         int major, minor, n;
         EGLDisplay disp;
         EGLContext context;
@@ -220,83 +144,27 @@ struct TestClient
         context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
         eglMakeCurrent(disp, egl_surface, egl_surface, context);
 
-        glClearColor(1.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        eglSwapBuffers(disp, egl_surface);
-        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-        /* release */
-        mir_connection_release(connection);
-        return 0;
-
-    }
-
-    static int render_accelerated_double()
-    {
-        if (signal(SIGCONT, sig_handle) == SIG_ERR)
-            return -1;
-        pause();
-
-        /* only use C api */
-        MirConnection* connection = NULL;
-        MirSurface* surface;
-        MirSurfaceParameters surface_parameters;
-
-         /* establish connection. wait for server to come up */
-        while (connection == NULL)
+        for (auto i=0; i < num_frames; i++)
         {
-            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                         &connected_callback, &connection));
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            switch (i % 3)
+            {
+                case 0: //red
+                    glClearColor(1.0, 0.0, 0.0, 1.0);
+                    break;
+                case 1: //green
+                    glClearColor(0.0, 1.0, 0.0, 1.0);
+                    break;
+                case 2: //blue
+                default:
+                    glClearColor(0.0, 0.0, 1.0, 1.0);
+                    break;
+            }
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            eglSwapBuffers(disp, egl_surface);
         }
-        /* make surface */
-        surface_parameters.name = "testsurface";
-        surface_parameters.width = test_width;
-        surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
-        mir_wait_for(mir_connection_create_surface(connection,
-                                                   &surface_parameters,
-                                                   &create_callback,
-                                                   &surface));
-
-        int major, minor, n;
-        EGLDisplay disp;
-        EGLContext context;
-        EGLSurface egl_surface;
-        EGLConfig egl_config;
-        EGLint attribs[] = {
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_GREEN_SIZE, 8,
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL_NONE };
-        EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-
-        EGLNativeDisplayType native_display = (EGLNativeDisplayType)mir_connection_get_egl_native_display(connection);
-        EGLNativeWindowType native_window = (EGLNativeWindowType)mir_surface_get_egl_native_window(surface);
-
-        disp = eglGetDisplay(native_display);
-        eglInitialize(disp, &major, &minor);
-
-        eglChooseConfig(disp, attribs, &egl_config, 1, &n);
-        egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
-        context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-        eglMakeCurrent(disp, egl_surface, egl_surface, context);
-
-        glClearColor(1.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        eglSwapBuffers(disp, egl_surface);
-
-        glClearColor(0.0, 1.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        eglSwapBuffers(disp, egl_surface);
-
-        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-        /* release */
+        mir_surface_release_sync(surface);
         mir_connection_release(connection);
         return 0;
 
@@ -410,8 +278,6 @@ private:
     int handle_id;
 };
 
-
-}
 }
 
 struct TestClientIPCRender : public testing::Test
@@ -422,27 +288,20 @@ struct TestClientIPCRender : public testing::Test
        Fork all needed processes before touching the blob! */
     static void SetUpTestCase() {
         render_single_client_process = mtf::fork_and_run_in_a_different_process(
-            mt::TestClient::render_single,
-            mt::TestClient::exit_function);
+            std::bind(TestClient::render_cpu_pattern, 1),
+            TestClient::exit_function);
 
         render_double_client_process = mtf::fork_and_run_in_a_different_process(
-            mt::TestClient::render_double,
-            mt::TestClient::exit_function);
+            std::bind(TestClient::render_cpu_pattern, 2),
+            TestClient::exit_function);
 
-        second_render_with_same_buffer_client_process
-             = mtf::fork_and_run_in_a_different_process(
-                            mt::TestClient::render_double,
-                            mt::TestClient::exit_function);
+        render_accelerated_process = mtf::fork_and_run_in_a_different_process(
+            std::bind(TestClient::render_rgb_with_gl, 1),
+            TestClient::exit_function);
 
-        render_accelerated_process
-             = mtf::fork_and_run_in_a_different_process(
-                            mt::TestClient::render_accelerated,
-                            mt::TestClient::exit_function);
-
-        render_accelerated_process_double
-             = mtf::fork_and_run_in_a_different_process(
-                            mt::TestClient::render_accelerated_double,
-                            mt::TestClient::exit_function);
+        render_accelerated_process_double = mtf::fork_and_run_in_a_different_process(
+            std::bind(TestClient::render_rgb_with_gl, 2),
+            TestClient::exit_function);
     }
 
     void SetUp() {
@@ -463,7 +322,7 @@ struct TestClientIPCRender : public testing::Test
         second_handle = second_android_buffer->native_buffer_handle();
 
         /* start a server */
-        mock_server = std::make_shared<mt::StubServerGenerator>(handle, 14);
+        mock_server = std::make_shared<StubServerGenerator>(handle, 14);
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server);
         test_server->comm->start();
     }
@@ -476,7 +335,7 @@ struct TestClientIPCRender : public testing::Test
     mir::protobuf::Connection response;
 
     std::shared_ptr<mt::TestProtobufServer> test_server;
-    std::shared_ptr<mt::StubServerGenerator> mock_server;
+    std::shared_ptr<StubServerGenerator> mock_server;
 
     geom::Size size;
     geom::PixelFormat pf;
@@ -494,19 +353,16 @@ struct TestClientIPCRender : public testing::Test
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
-    static std::shared_ptr<mtf::Process> second_render_with_same_buffer_client_process;
     static std::shared_ptr<mtf::Process> render_accelerated_process;
     static std::shared_ptr<mtf::Process> render_accelerated_process_double;
 };
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_single_client_process;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_double_client_process;
-std::shared_ptr<mtf::Process> TestClientIPCRender::second_render_with_same_buffer_client_process;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process_double;
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
-    mtd::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern0);
     /* activate client */
     render_single_client_process->cont();
 
@@ -515,20 +371,18 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(rendered_pattern.check(region));
+    EXPECT_TRUE(draw_pattern0.check(region));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
 {
-    mtd::DrawPatternCheckered<2,2> rendered_pattern0(mt::pattern0);
-    mtd::DrawPatternCheckered<2,2> rendered_pattern1(mt::pattern1);
     /* activate client */
     render_double_client_process->cont();
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(rendered_pattern0.check(region));
+    EXPECT_TRUE(draw_pattern0.check(region));
 
     mock_server->set_handle(second_handle, 15);
     mock_server->allow_next_continue();
@@ -537,25 +391,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
-    EXPECT_TRUE(rendered_pattern1.check(second_region));
-}
-
-TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
-{
-    mtd::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern1);
-    /* activate client */
-    second_render_with_same_buffer_client_process->cont();
-
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
-
-    /* wait for client to finish */
-    EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
-
-    /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(rendered_pattern.check(region));
+    EXPECT_TRUE(draw_pattern1.check(region));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
@@ -581,6 +417,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     mtd::DrawPatternSolid green_pattern(0xFF00FF00);
+
     /* activate client */
     render_accelerated_process_double->cont();
 
