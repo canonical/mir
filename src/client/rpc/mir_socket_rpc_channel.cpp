@@ -42,7 +42,7 @@ namespace mclr = mir::client::rpc;
 namespace
 {
 std::chrono::milliseconds const timeout(200);
-boost::posix_time::milliseconds const boost_timeout(200);
+boost::posix_time::milliseconds const boost_timeout(2000);
 }
 
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
