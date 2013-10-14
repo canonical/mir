@@ -20,8 +20,10 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "src/server/graphics/android/buffer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
+#include "mir_test_framework/cross_process_sync.h"
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
@@ -48,39 +50,29 @@ namespace
 static int test_width  = 300;
 static int test_height = 200;
 
-
 static uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
                                    {0x34567890, 0x45678901}};
 static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                    {0xFF00FF00, 0xFF0000FF}};
 static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
 static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
+static const char socket_file[] = "./test_client_ipc_render_socket";
 
 struct TestClient
 {
-    static int render_cpu_pattern(int num_frames)
+    static int render_cpu_pattern(mtf::CrossProcessSync& process_sync, int num_frames)
     {
-        MirConnection* connection = NULL;
-        MirSurface* surface;
-        MirSurfaceParameters surface_parameters;
+        process_sync.wait_for_signal_ready_for();
 
-         /* establish connection. wait for server to come up */
-        while (connection == NULL)
-        {
-            connection = mir_connect_sync("./test_socket_surface", "test_renderer");
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        /* make surface */
-        surface_parameters.name = "testsurface";
-        surface_parameters.width = test_width;
-        surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
-        surface = mir_connection_create_surface_sync(connection, &surface_parameters);
-
-        auto graphics_region = std::make_shared<MirGraphicsRegion>();
+        MirSurfaceParameters surface_parameters{
+            "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
+            mir_buffer_usage_software, mir_display_output_id_invalid};
+        auto connection = mir_connect_sync(socket_file, "test_renderer");
+        auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
+        MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
-            mir_surface_get_graphics_region(surface, graphics_region.get());
+            mir_surface_get_graphics_region(surface, &graphics_region);
             switch (i % 2)
             {
                 case 0:
@@ -100,25 +92,15 @@ struct TestClient
     }
 
     //performs num_frames renders, in red, green, blue repeating pattern
-    static int render_rgb_with_gl(int num_frames)
+    static int render_rgb_with_gl(mtf::CrossProcessSync& process_sync, int num_frames)
     {
-        MirConnection* connection = NULL;
-        MirSurface* surface;
-        MirSurfaceParameters surface_parameters;
+        process_sync.wait_for_signal_ready_for();
 
-         /* establish connection. wait for server to come up */
-        while (connection == NULL)
-        {
-            connection = mir_connect_sync("./test_socket_surface", "test_renderer");
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-
-        /* make surface */
-        surface_parameters.name = "testsurface";
-        surface_parameters.width = test_width;
-        surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
-        surface = mir_connection_create_surface_sync(connection, &surface_parameters);
+        MirSurfaceParameters surface_parameters{
+            "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware, mir_display_output_id_invalid};
+        auto connection = mir_connect_sync(socket_file, "test_renderer");
+        auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
         /* set up egl context */
         int major, minor, n;
@@ -179,13 +161,16 @@ struct TestClient
 /* server code */
 struct StubServerGenerator : public mt::StubServerTool
 {
-    StubServerGenerator(std::shared_ptr<MirNativeBuffer> const& handle, int id)
-     : handle(handle),
-       next_received(false),
-       next_allowed(false),
-       handle_id(id)
+    StubServerGenerator()
+     : next_received(false),
+       next_allowed(false)
     {
-
+        auto initializer = std::make_shared<mg::NullBufferInitializer>();
+        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
+        auto size = geom::Size{test_width, test_height};
+        auto pf = geom::PixelFormat::abgr_8888;
+        last_posted = allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_hardware);
+        client_buffer = allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_hardware);
     }
 
     void create_surface(google::protobuf::RpcController* /*controller*/,
@@ -193,15 +178,17 @@ struct StubServerGenerator : public mt::StubServerTool
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        response->mutable_id()->set_value(13); // TODO distinct numbers & tracking
+        response->mutable_id()->set_value(13);
         response->set_width(test_width);
         response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(handle_id);
-        response->mutable_buffer()->set_stride(handle->stride);
+        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
+
+        auto buf = client_buffer->native_buffer_handle();
+        response->mutable_buffer()->set_stride(buf->stride);
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = handle->handle;
+        native_handle_t const* native_handle = buf->handle;
         for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -220,56 +207,43 @@ struct StubServerGenerator : public mt::StubServerTool
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {
-        {
-            std::unique_lock<std::mutex> lk(next_guard);
-            next_received = true;
-            next_cv.notify_all();
+        std::unique_lock<std::mutex> lk(buffer_mutex);
+        std::swap(last_posted, client_buffer);
 
-            while (!next_allowed) {
-                allow_cv.wait(lk);
-            }
-            next_allowed = false;
-        }
+        response->set_buffer_id(client_buffer->id().as_uint32_t());
 
-        response->set_buffer_id(handle_id);
+        auto buf = client_buffer->native_buffer_handle();
+        response->set_stride(buf->stride);
 
         response->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = handle->handle;
-        response->set_stride(handle->stride);
+        native_handle_t const* native_handle = buf->handle;
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
             response->add_data(native_handle->data[native_handle->numFds+i]);
 
+
         done->Run();
     }
 
-    void wait_on_next_buffer()
+    std::shared_ptr<mga::Buffer> second_to_last_posted_buffer()
     {
-        std::unique_lock<std::mutex> lk(next_guard);
-        while (!next_received)
-            next_cv.wait(lk);
-        next_received = false;
+        std::unique_lock<std::mutex> lk(buffer_mutex);
+        return client_buffer;
     }
 
-    void allow_next_continue()
+    std::shared_ptr<mga::Buffer> last_posted_buffer()
     {
-        std::unique_lock<std::mutex> lk(next_guard);
-        next_allowed = true;
-        allow_cv.notify_all();
-        lk.unlock();
-    }
-
-    void set_handle(std::shared_ptr<MirNativeBuffer> const& pack, int id)
-    {
-        handle = pack;
-        handle_id = id;
+        std::unique_lock<std::mutex> lk(buffer_mutex);
+        return last_posted;
     }
 
 private:
-    std::shared_ptr<MirNativeBuffer> handle;
+    std::shared_ptr<mga::AndroidGraphicBufferAllocator> allocator;
+    std::shared_ptr<mga::Buffer> client_buffer;
+    std::shared_ptr<mga::Buffer> last_posted;
 
-    std::mutex next_guard;
+    std::mutex buffer_mutex;
     std::condition_variable next_cv;
     std::condition_variable allow_cv;
     bool next_received;
@@ -282,135 +256,100 @@ private:
 
 struct TestClientIPCRender : public testing::Test
 {
-    /* kdub -- some of the (less thoroughly tested) android blob drivers annoyingly keep
-       static state about what process they are in. Once you fork, this info is invalid,
-       yet the driver uses the info and bad things happen.
-       Fork all needed processes before touching the blob! */
+    /* note: we fork here so that the loaded driver code does not fork */
     static void SetUpTestCase() {
+
         render_single_client_process = mtf::fork_and_run_in_a_different_process(
-            std::bind(TestClient::render_cpu_pattern, 1),
+            std::bind(TestClient::render_cpu_pattern, std::ref(sync1), 1),
             TestClient::exit_function);
-
         render_double_client_process = mtf::fork_and_run_in_a_different_process(
-            std::bind(TestClient::render_cpu_pattern, 2),
+            std::bind(TestClient::render_cpu_pattern, std::ref(sync2), 2),
             TestClient::exit_function);
-
         render_accelerated_process = mtf::fork_and_run_in_a_different_process(
-            std::bind(TestClient::render_rgb_with_gl, 1),
+            std::bind(TestClient::render_rgb_with_gl, std::ref(sync3), 1),
             TestClient::exit_function);
-
         render_accelerated_process_double = mtf::fork_and_run_in_a_different_process(
-            std::bind(TestClient::render_rgb_with_gl, 2),
+            std::bind(TestClient::render_rgb_with_gl, std::ref(sync4), 2),
             TestClient::exit_function);
     }
 
     void SetUp() {
-        ASSERT_FALSE(mtd::is_surface_flinger_running());
-
-        size = geom::Size{test_width, test_height};
-        pf = geom::PixelFormat::abgr_8888;
-
-        auto initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
-        mg::BufferProperties properties(size, pf, mg::BufferUsage::hardware);
-        android_buffer = allocator->alloc_buffer(properties);
-        second_android_buffer = allocator->alloc_buffer(properties);
-
         buffer_converter = std::make_shared<mtd::TestGrallocMapper>();
 
-        handle = android_buffer->native_buffer_handle();
-        second_handle = second_android_buffer->native_buffer_handle();
-
         /* start a server */
-        mock_server = std::make_shared<StubServerGenerator>(handle, 14);
-        test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server);
+        mock_server = std::make_shared<StubServerGenerator>();
+        test_server = std::make_shared<mt::TestProtobufServer>(socket_file, mock_server);
         test_server->comm->start();
     }
 
     void TearDown()
     {
         test_server.reset();
+//        std::remove(socket_file);
     }
-
-    mir::protobuf::Connection response;
 
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<StubServerGenerator> mock_server;
 
-    geom::Size size;
-    geom::PixelFormat pf;
-    mg::BufferID id1;
-    mg::BufferID id2;
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
-    std::shared_ptr<mtf::Process> client_process;
-
-    std::shared_ptr<MirNativeBuffer> handle;
-    std::shared_ptr<MirNativeBuffer> second_handle;
-
-    std::shared_ptr<mg::Buffer> android_buffer;
-    std::shared_ptr<mg::Buffer> second_android_buffer;
-    std::shared_ptr<mga::AndroidGraphicBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
     static std::shared_ptr<mtf::Process> render_accelerated_process;
     static std::shared_ptr<mtf::Process> render_accelerated_process_double;
+    static mtf::CrossProcessSync sync1, sync2, sync3, sync4;
 };
+
+mtf::CrossProcessSync TestClientIPCRender::sync1;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_single_client_process;
+mtf::CrossProcessSync TestClientIPCRender::sync2;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_double_client_process;
+mtf::CrossProcessSync TestClientIPCRender::sync3;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process;
+mtf::CrossProcessSync TestClientIPCRender::sync4;
 std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process_double;
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
-    /* activate client */
-    render_single_client_process->cont();
+    sync1.try_signal_ready_for();
 
     /* wait for client to finish */
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(draw_pattern0.check(region));
+    auto buf = mock_server->last_posted_buffer();
+    auto region = buffer_converter->graphic_region_from_handle(buf->native_buffer_handle());
+    EXPECT_TRUE(draw_pattern0.check(*region));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
 {
-    /* activate client */
-    render_double_client_process->cont();
-
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(draw_pattern0.check(region));
-
-    mock_server->set_handle(second_handle, 15);
-    mock_server->allow_next_continue();
+    sync2.try_signal_ready_for();
 
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
-    EXPECT_TRUE(draw_pattern1.check(region));
+    auto buf0 = mock_server->second_to_last_posted_buffer();
+    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle());
+    EXPECT_TRUE(draw_pattern0.check(*region0));
+
+    auto buf1 = mock_server->last_posted_buffer();
+    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle());
+    EXPECT_TRUE(draw_pattern1.check(*region1));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
 {
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
 
-    /* activate client */
-    render_accelerated_process->cont();
-
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
-
+    sync3.try_signal_ready_for();
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(red_pattern.check(region));
+    auto buf0 = mock_server->last_posted_buffer();
+    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle());
+    EXPECT_TRUE(red_pattern.check(*region0));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
@@ -418,24 +357,15 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 
-    /* activate client */
-    render_accelerated_process_double->cont();
-
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->set_handle(second_handle, 15);
-    mock_server->allow_next_continue();
-
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
-
+    sync4.try_signal_ready_for();
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
-    /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
-    EXPECT_TRUE(red_pattern.check(region));
+    auto buf0 = mock_server->second_to_last_posted_buffer();
+    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle());
+    EXPECT_TRUE(red_pattern.check(*region0));
 
-    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
-    EXPECT_TRUE(green_pattern.check(second_region));
+    auto buf1 = mock_server->last_posted_buffer();
+    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle());
+    EXPECT_TRUE(green_pattern.check(*region1));
 }

@@ -54,8 +54,6 @@ private:
     alloc_device_t* alloc_dev;
 };
 
-bool is_surface_flinger_running();
-
 }
 }
 }
