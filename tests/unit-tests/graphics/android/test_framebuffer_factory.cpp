@@ -20,6 +20,7 @@
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_report.h"
 
 #include "mir_test_doubles/mock_android_hw.h"
 
@@ -50,12 +51,14 @@ public:
 class FBFactory  : public ::testing::Test
 {
 public:
-    FBFactory()
-        : mock_buffer_allocator(std::make_shared<testing::NiceMock<MockAndroidGraphicBufferAllocator>>()),
-          mock_display_info_provider(std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>()),
-          fake_fb_num(2)
+    void SetUp()
     {
         using namespace testing;
+        mock_buffer_allocator = std::make_shared<NiceMock<MockAndroidGraphicBufferAllocator>>();
+        mock_display_info_provider = std::make_shared<NiceMock<mtd::MockDisplaySupportProvider>>();
+        mock_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
+        fake_fb_num = 2;
+
         ON_CALL(*mock_display_info_provider, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
         ON_CALL(*mock_display_info_provider, display_size())
@@ -66,9 +69,10 @@ public:
             .WillByDefault(Return(std::shared_ptr<mga::Buffer>()));
     }
 
+    std::shared_ptr<mtd::MockDisplayReport> mock_report;
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_info_provider;
-    unsigned int const fake_fb_num;
+    unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
 };
 
@@ -83,7 +87,7 @@ TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 }
 
 TEST_F(FBFactory, test_native_window_creation_uses_size)
@@ -102,7 +106,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_size)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(disp_size,_,_))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 } 
 
 TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
@@ -114,7 +118,7 @@ TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,mga::BufferUsage::use_framebuffer_gles))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 } 
 
 //note: @kdub imo, the hwc api has a hole in it that it doesn't allow query for format. surfaceflinger code
@@ -132,7 +136,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,pf,_))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 }
 
 TEST_F(FBFactory, test_device_creation_accesses_gralloc)

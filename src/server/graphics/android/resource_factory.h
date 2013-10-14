@@ -39,7 +39,7 @@ class ResourceFactory : public DisplayResourceFactory
 {
 public:
     explicit ResourceFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator);
-    std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) const;
+
     std::shared_ptr<DisplaySupportProvider> create_fb_device() const;
 
     std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
