@@ -51,9 +51,11 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
                                                                        std::shared_ptr<mga::DisplaySupportProvider> const&));
     MOCK_CONST_METHOD2(create_hwc_1_0, std::shared_ptr<mga::DisplaySupportProvider>(std::shared_ptr<hwc_composer_device_1> const&,
                                                                        std::shared_ptr<mga::DisplaySupportProvider> const&));
-    MOCK_CONST_METHOD0(create_fb_device, std::shared_ptr<mga::DisplaySupportProvider>()); 
-    MOCK_CONST_METHOD1(create_fb_native_window,
-                    std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplaySupportProvider> const&));
+    MOCK_CONST_METHOD0(create_fb_device, std::shared_ptr<mga::DisplaySupportProvider>());
+ 
+    MOCK_CONST_METHOD2(create_display, std::shared_ptr<mg::Display>(
+        std::shared_ptr<mga::DisplaySupportProvider> const&,
+        std::shared_ptr<mg::DisplayReport> const&));
 };
 
 class AndroidDisplayFactoryTest : public ::testing::Test
@@ -66,15 +68,12 @@ public:
     void SetUp()
     {
         using namespace testing;
-        stub_anativewindow = std::make_shared<ANativeWindow>();
-        mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
+        mock_resource_factory = std::make_shared<testing::StrictMock<MockResourceFactory>>();
         mock_fb_device = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
         mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
 
         ON_CALL(*mock_resource_factory, create_fb_device())
             .WillByDefault(Return(mock_fb_device));
-        ON_CALL(*mock_resource_factory, create_fb_native_window(_))
-            .WillByDefault(Return(stub_anativewindow));
     }
 
     void TearDown()
@@ -82,7 +81,6 @@ public:
         EXPECT_TRUE(hw_access_mock.open_count_matches_close());
     }
 
-    std::shared_ptr<ANativeWindow> stub_anativewindow;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fb_device;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
@@ -109,17 +107,11 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
         .Times(1)
         .WillOnce(Return(-1));
 
-    EXPECT_CALL(*mock_resource_factory, create_hwc_1_1(_,_))
-        .Times(0);
-
     EXPECT_CALL(*mock_resource_factory, create_fb_device())
         .Times(1);
-
-    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_window(tmp))
-        .Times(1);
-
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_))
         .Times(1);
 
     mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report); 
@@ -139,9 +131,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
     EXPECT_CALL(*mock_resource_factory, create_fb_device())
-        .Times(1);
-    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_window(tmp))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
@@ -166,9 +155,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
     EXPECT_CALL(*mock_resource_factory, create_fb_device())
         .Times(1);
 
-    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_window(tmp))
-        .Times(1);
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
 
     mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report);

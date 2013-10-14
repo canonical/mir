@@ -50,6 +50,10 @@ public:
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
         std::shared_ptr<DisplaySupportProvider> const& fb_device) const;
 
+    std::shared_ptr<graphics::Display> create_display(
+        std::shared_ptr<DisplaySupportProvider> const& support_provider,
+        std::shared_ptr<graphics::DisplayReport> const& report) const;
+
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
 

@@ -27,6 +27,9 @@ namespace mir
 {
 namespace graphics
 {
+class Display;
+class DisplayReport;
+
 namespace android
 {
 class DisplaySupportProvider;
@@ -36,7 +39,6 @@ class DisplayResourceFactory
 public:
     virtual ~DisplayResourceFactory() = default;
 
-    virtual std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) const = 0;
     virtual std::shared_ptr<DisplaySupportProvider> create_fb_device() const = 0;
 
     virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
@@ -46,6 +48,10 @@ public:
     virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_0(
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
         std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
+
+    virtual std::shared_ptr<graphics::Display> create_display(
+        std::shared_ptr<DisplaySupportProvider> const& support_provider,
+        std::shared_ptr<graphics::DisplayReport> const& report) const = 0;
 
 protected:
     DisplayResourceFactory() = default;
