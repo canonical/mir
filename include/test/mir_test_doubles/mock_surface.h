@@ -51,7 +51,6 @@ struct MockSurface : public shell::Surface
     MOCK_METHOD0(visible, bool());
     MOCK_METHOD1(raise, void(std::shared_ptr<shell::SurfaceController> const&));
 
-    MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
 

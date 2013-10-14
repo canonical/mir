@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,36 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#ifndef MIR_FRONTEND_MESSAGE_SENDER_H_
-#define MIR_FRONTEND_MESSAGE_SENDER_H_
-
-#include "fd_sets.h"
+#ifndef MIR_FRONTEND_FD_SETS_H_
+#define MIR_FRONTEND_FD_SETS_H_
 
 #include <vector>
-#include <boost/asio.hpp>
+#include <initializer_list>
+#include <stdint.h>
 
 namespace mir
 {
 namespace frontend
 {
-namespace detail
-{
-class MessageSender
-{
-public:
-    virtual void send(std::string const& body) = 0;
-    virtual void send(std::string const& body, FdSets const& fds) = 0;
+typedef std::initializer_list<std::vector<int32_t>> FdSets;
+}
+} // namespace mir 
 
-protected:
-    MessageSender() = default;
-    virtual ~MessageSender() = default;
-    MessageSender(MessageSender const&) = delete;
-    MessageSender& operator=(MessageSender const&) = delete;
-};
-
-}
-}
-}
-#endif /* MIR_FRONTEND_MESSAGE_SENDER_H_ */
+#endif // MIR_FRONTEND_FD_SETS_H_
