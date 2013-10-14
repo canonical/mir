@@ -40,7 +40,7 @@ protected:
         /* misaligned stride to tease out stride problems */
         test_region.stride = 102;
         test_region.height = 50;
-        region = std::shared_ptr<char>(::operator new(sizeof(char) * bytes_pp * test_region.height * test_region.stride));
+        region = std::shared_ptr<char>(new char[bytes_pp * test_region.height * test_region.stride]);
         test_region.vaddr = region.get();
 
         uint32_t colors[2][2] = {{0x12345678, 0x23456789},
@@ -52,7 +52,6 @@ protected:
     virtual void TearDown()
     {
         EXPECT_TRUE(check_stride_region_unaltered());
-        free(test_region.vaddr);
     }
 
     MirGraphicsRegion test_region;
