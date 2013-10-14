@@ -154,7 +154,7 @@ TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->can_bypass());
-    setenv("MIR_BYPASS", "1", 1);
+    unsetenv("MIR_BYPASS");
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
