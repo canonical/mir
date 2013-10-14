@@ -73,6 +73,8 @@ int mga::InternalClientWindow::driver_requests_info(int key) const
             return format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0; 
+        case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
+            return 1;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
