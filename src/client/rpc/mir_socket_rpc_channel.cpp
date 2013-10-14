@@ -146,66 +146,66 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 {
     if (!disconnected.load())
     {
-    auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
-    if (surface)
-    {
-        surface->clear_fd();
-
-        if (surface->fds_on_side_channel() > 0)
+        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+        if (surface)
         {
-            std::vector<int32_t> fds(surface->fds_on_side_channel());
-            receive_file_descriptors(fds);
-            for (auto &fd: fds)
-                surface->add_fd(fd);
+            surface->clear_fd();
 
-            rpc_report->file_descriptors_received(*response, fds);
+            if (surface->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(surface->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    surface->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
         }
-    }
 
-    auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
-    if (!buffer)
-    {
-        if (surface && surface->has_buffer())
-            buffer = surface->mutable_buffer();
-    }
-
-    if (buffer)
-    {
-        buffer->clear_fd();
-
-        if (buffer->fds_on_side_channel() > 0)
+        auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
+        if (!buffer)
         {
-            std::vector<int32_t> fds(buffer->fds_on_side_channel());
-            receive_file_descriptors(fds);
-            for (auto &fd: fds)
-                buffer->add_fd(fd);
-
-            rpc_report->file_descriptors_received(*response, fds);
+            if (surface && surface->has_buffer())
+                buffer = surface->mutable_buffer();
         }
-    }
 
-    auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
-    if (!platform)
-    {
-        auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
-        if (connection && connection->has_platform())
-            platform = connection->mutable_platform();
-    }
-
-    if (platform)
-    {
-        platform->clear_fd();
-
-        if (platform->fds_on_side_channel() > 0)
+        if (buffer)
         {
-            std::vector<int32_t> fds(platform->fds_on_side_channel());
-            receive_file_descriptors(fds);
-            for (auto &fd: fds)
-                platform->add_fd(fd);
+            buffer->clear_fd();
 
-            rpc_report->file_descriptors_received(*response, fds);
+            if (buffer->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(buffer->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    buffer->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
         }
-    }
+
+        auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
+        if (!platform)
+        {
+            auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
+            if (connection && connection->has_platform())
+                platform = connection->mutable_platform();
+        }
+
+        if (platform)
+        {
+            platform->clear_fd();
+
+            if (platform->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(platform->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    platform->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
+        }
     }
 
     complete->Run();
@@ -435,7 +435,6 @@ size_t mclr::MirSocketRpcChannel::read_message_header()
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
 }
-
 
 mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const size_t body_size)
 {
