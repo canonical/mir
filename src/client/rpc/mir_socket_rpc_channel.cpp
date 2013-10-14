@@ -49,6 +49,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
+    timer(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
@@ -68,6 +69,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
+    timer(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
@@ -82,6 +84,7 @@ void mclr::MirSocketRpcChannel::notify_disconnected()
     if (!disconnected.exchange(true))
     {
         io_service.stop();
+        socket.close();
         lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
         pending_calls.force_completion();
     }
@@ -89,7 +92,7 @@ void mclr::MirSocketRpcChannel::notify_disconnected()
 
 void mclr::MirSocketRpcChannel::init()
 {
-    io_service_thread = std::thread([&]
+    io_service_thread = std::thread([this]
         {
             // Our IO threads must not receive any signals
             sigset_t all_signals;
@@ -122,6 +125,7 @@ void mclr::MirSocketRpcChannel::init()
 
 mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
+    timer.cancel();
     io_service.stop();
 
     if (io_service_thread.joinable())
@@ -288,12 +292,19 @@ void mclr::MirSocketRpcChannel::send_message(
         notify_disconnected();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server: " + error.message()));
     }
-    else
-        rpc_report->invocation_succeeded(invocation);
+
+    rpc_report->invocation_succeeded(invocation);
+    timer.expires_from_now(boost::posix_time::milliseconds(200));
+    timer.async_wait([this](const boost::system::error_code& error)
+    {
+        // Timed out waiting for server response: kill the connection
+        if (!error) socket.cancel();
+    });
 }
 
 void mclr::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
 {
+    timer.cancel();
     if (error)
     {
         // If we've not got a response to a call pending
@@ -410,6 +421,7 @@ size_t mclr::MirSocketRpcChannel::read_message_header()
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
 }
+
 
 mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const size_t body_size)
 {
