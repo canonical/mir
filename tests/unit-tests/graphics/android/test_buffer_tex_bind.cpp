@@ -215,16 +215,6 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
     buffer.bind_to_texture();
 }
 
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,mock_native_buffer.get(),_))
-        .Times(Exactly(1));
-    mga::Buffer buffer(mock_native_buffer, extensions);
-    buffer.bind_to_texture();
-}
-
 TEST_F(AndroidBufferBinding, buffer_sets_proper_attributes)
 {
     using namespace testing;
