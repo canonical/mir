@@ -21,6 +21,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/buffer.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
@@ -185,10 +186,10 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
 
         auto buf = client_buffer->native_buffer_handle();
-        response->mutable_buffer()->set_stride(buf->stride);
+        response->mutable_buffer()->set_stride(buf->anwb()->stride);
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = buf->handle;
+        native_handle_t const* native_handle = buf->handle();
         for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -213,10 +214,10 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_buffer_id(client_buffer->id().as_uint32_t());
 
         auto buf = client_buffer->native_buffer_handle();
-        response->set_stride(buf->stride);
 
         response->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = buf->handle;
+        native_handle_t const* native_handle = buf->handle();
+        response->set_stride(buf->anwb()->stride);
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -285,7 +286,7 @@ struct TestClientIPCRender : public testing::Test
     void TearDown()
     {
         test_server.reset();
-//        std::remove(socket_file);
+        std::remove(socket_file);
     }
 
     std::shared_ptr<mt::TestProtobufServer> test_server;
@@ -318,7 +319,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto buf = mock_server->last_posted_buffer();
-    auto region = buffer_converter->graphic_region_from_handle(buf->native_buffer_handle());
+    auto region = buffer_converter->graphic_region_from_handle(buf->native_buffer_handle()->anwb());
     EXPECT_TRUE(draw_pattern0.check(*region));
 }
 
@@ -330,11 +331,11 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto buf0 = mock_server->second_to_last_posted_buffer();
-    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle());
+    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle()->anwb());
     EXPECT_TRUE(draw_pattern0.check(*region0));
 
     auto buf1 = mock_server->last_posted_buffer();
-    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle());
+    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle()->anwb());
     EXPECT_TRUE(draw_pattern1.check(*region1));
 }
 
@@ -348,7 +349,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
     /* check content */
     auto buf0 = mock_server->last_posted_buffer();
-    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle());
+    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle()->anwb());
     EXPECT_TRUE(red_pattern.check(*region0));
 }
 
@@ -362,10 +363,10 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     auto buf0 = mock_server->second_to_last_posted_buffer();
-    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle());
+    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle()->anwb());
     EXPECT_TRUE(red_pattern.check(*region0));
 
     auto buf1 = mock_server->last_posted_buffer();
-    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle());
+    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle()->anwb());
     EXPECT_TRUE(green_pattern.check(*region1));
 }

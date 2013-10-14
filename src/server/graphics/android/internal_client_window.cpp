@@ -18,13 +18,16 @@
 
 #include "internal_client_window.h"
 #include "mir/graphics/internal_surface.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/buffer.h"
 #include "interpreter_resource_cache.h"
 #include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-namespace mga=mir::graphics::android;
+
+namespace mg=mir::graphics;
+namespace mga=mg::android;
 namespace geom=mir::geometry;
 
 mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface> const& surface,
@@ -35,19 +38,18 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface>
     format = mga::to_android_format(geometry::PixelFormat(surface->pixel_format()));
 }
 
-ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
+mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
     auto buffer = surface->advance_client_buffer();
-    auto handle = buffer->native_buffer_handle().get();
+    auto handle = buffer->native_buffer_handle();
     resource_cache->store_buffer(buffer, handle);
-    return handle;
+    return handle.get();
 }
 
-void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handle,
-                                                      std::shared_ptr<SyncObject> const& fence)
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
-    fence->wait();
-    resource_cache->retrieve_buffer(handle);
+    resource_cache->update_native_fence(buffer, fence_fd);
+    resource_cache->retrieve_buffer(buffer);
     /* here, the mc::TemporaryBuffer will destruct, triggering buffer advance */
 }
 

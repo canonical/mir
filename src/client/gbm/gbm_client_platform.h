@@ -43,6 +43,7 @@ public:
     std::shared_ptr<ClientBufferFactory> create_buffer_factory();
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface);
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
+    MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const;
 
 private:
     ClientContext* const context;

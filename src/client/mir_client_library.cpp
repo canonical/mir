@@ -78,7 +78,6 @@ MirWaitHandle* mir_default_connect(
     char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
-    printf("drivers...\n");
     try
     {
         std::string sock;
@@ -93,14 +92,10 @@ MirWaitHandle* mir_default_connect(
                 sock = mir::default_server_socket;
         }
 
-printf("az\n");
         mcl::DefaultConnectionConfiguration conf{sock};
 
-printf("bz\n");
         std::unique_ptr<MirConnection> connection{new MirConnection(conf)};
-printf("cz\n");
         auto const result = connection->connect(name, callback, context);
-printf("dz\n");
         connection.release();
         return result;
     }
@@ -269,8 +264,7 @@ MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
 
 void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
-    auto package = surface->get_current_buffer_package();
-    *buffer_package_out = package.get();
+    *buffer_package_out = surface->get_current_buffer_package();
 }
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface * surface)
@@ -347,7 +341,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
-    surface->get_cpu_region(*graphics_region);
+    surface->get_cpu_region( *graphics_region);
 }
 
 MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_callback callback, void * context)

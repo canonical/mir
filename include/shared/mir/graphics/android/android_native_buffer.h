@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_NATIVE_BUFFER_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_NATIVE_BUFFER_H_
 
-#include <system/window.h>
+#include "native_buffer.h"
 #include <memory>
 #include <mutex>
 
@@ -29,18 +29,37 @@ namespace graphics
 {
 namespace android
 {
+class Fence;
 
-struct MirNativeBuffer : public ANativeWindowBuffer
+struct AndroidNativeBuffer : public graphics::NativeBuffer
 {
-    MirNativeBuffer(std::shared_ptr<const native_handle_t> const&);
+    AndroidNativeBuffer(std::shared_ptr<ANativeWindowBuffer> const& handle,
+        std::shared_ptr<Fence> const& fence);
+
+    ANativeWindowBuffer* anwb() const;
+    buffer_handle_t handle() const;
+    NativeFence copy_fence() const;
+
+    void wait_for_content();
+    void update_fence(NativeFence& merge_fd);
+
+private:
+    std::shared_ptr<Fence> fence;
+    std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
+};
+
+struct RefCountedNativeBuffer : public ANativeWindowBuffer
+{
+    RefCountedNativeBuffer(std::shared_ptr<const native_handle_t> const& handle);
+
     void driver_reference();
     void driver_dereference();
     void mir_dereference();
-
 private:
-    ~MirNativeBuffer();
+    ~RefCountedNativeBuffer() = default;
 
     std::shared_ptr<const native_handle_t> const handle_resource;
+
     std::mutex mutex;
     bool mir_reference;
     int driver_references;
@@ -50,4 +69,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_NATIVE_BUFFER_H_ */
