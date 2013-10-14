@@ -103,6 +103,50 @@ TEST(geometry, rectangle_contains_rectangle)
     EXPECT_FALSE(r.contains(Rectangle{{-6,-7}, {3,4}}));
 }
 
+TEST(geometry, empty_rectangle_contains_point_only)
+{
+    using namespace testing;
+    using namespace geom;
+
+    const int left = 3;
+    const int top = 3;
+    const Rectangle r{{left,top}, {0,0}};
+
+    EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,0}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {3,0}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {0,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top+1}, {0,0}}));
+}
+
+TEST(geometry, elongated_empty_rectangle_contains_points_only)
+{
+    using namespace testing;
+    using namespace geom;
+
+    const int left = 3;
+    const int top = 3;
+    const Rectangle r{{left,top}, {0,3}};
+
+    EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+1}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+2}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+3}, {0,0}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top+4}, {0,0}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {3,0}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {0,0}}));
+}
+
 TEST(geometry, rectangle_contains_point)
 {
     using namespace testing;
