@@ -51,6 +51,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
+        unsetenv("MIR_BYPASS");
 
         fake_devices.add_standard_drm_devices();
 
@@ -154,6 +155,7 @@ TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->can_bypass());
+    unsetenv("MIR_BYPASS");
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)

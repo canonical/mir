@@ -40,7 +40,7 @@ public:
     geometry::PixelFormat pixel_format() const;
     mg::BufferID id() const;
     void bind_to_texture();
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const;
     bool can_bypass() const override;
 
 protected:

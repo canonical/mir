@@ -15,10 +15,13 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_INTERPRETER_RESOURCE_CACHE_H_
-#define MIR_TEST_DOUBLES_MOCK_INTERPRETER_RESOURCE_CACHE_H_
 
-#include "src/server/graphics/android/interpreter_resource_cache.h"
+#ifndef MIR_TEST_DOUBLES_MOCK_FENCE_H_
+#define MIR_TEST_DOUBLES_MOCK_FENCE_H_
+
+#include "mir/graphics/android/fence.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -26,14 +29,16 @@ namespace test
 {
 namespace doubles
 {
-struct MockInterpreterResourceCache : public graphics::android::InterpreterResourceCache
+
+struct MockFence : public graphics::android::Fence
 {
-    MOCK_METHOD2(store_buffer, void(std::shared_ptr<graphics::Buffer>const&,
-        std::shared_ptr<graphics::NativeBuffer> const&));
-    MOCK_METHOD1(retrieve_buffer, std::shared_ptr<graphics::Buffer>(ANativeWindowBuffer*));
-    MOCK_METHOD2(update_native_fence, void(ANativeWindowBuffer*, int));
+    MOCK_METHOD0(wait, void());
+    MOCK_METHOD1(merge_with, void(graphics::android::NativeFence&));
+    MOCK_CONST_METHOD0(copy_native_handle, graphics::android::NativeFence());
 };
+
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_INTERPRETER_RESOURCE_CACHE_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_FENCE_H_ */

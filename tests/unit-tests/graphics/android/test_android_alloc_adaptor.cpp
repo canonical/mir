@@ -17,6 +17,7 @@
  */
 
 #include "src/server/graphics/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/native_buffer.h"
 
 #include "mir_test_doubles/mock_android_alloc_device.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
@@ -180,62 +181,63 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
 
 TEST_F(AdaptorICSTest, handle_size_is_correct)
 {
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-
-    EXPECT_EQ(static_cast<int>(size.width.as_uint32_t()), handle->width);
-    EXPECT_EQ(static_cast<int>(size.height.as_uint32_t()), handle->height);
-}
-
-TEST_F(AdaptorICSTest, handle_stride_is_correct)
-{
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-
-    EXPECT_EQ(static_cast<int>(mock_alloc_device->fake_stride), handle->stride);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(static_cast<int>(size.width.as_uint32_t()), anwb->width);
+    EXPECT_EQ(static_cast<int>(size.height.as_uint32_t()), anwb->height);
+    EXPECT_EQ(static_cast<int>(mock_alloc_device->fake_stride), anwb->stride);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
 {
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, handle->format);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, anwb->format);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_xbgr_8888)
 {
-    auto handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::xbgr_8888, usage);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, handle->format);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::xbgr_8888, usage);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, anwb->format);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
 {
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    EXPECT_EQ(hw_usage_flags, handle->usage);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(hw_usage_flags, anwb->usage);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
 {
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
-    EXPECT_EQ(fb_usage_flags, handle->usage);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(fb_usage_flags, anwb->usage);
 }
 
 TEST_F(AdaptorICSTest, handle_has_strong_reference_for_c_drivers)
 {
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    ASSERT_NE(nullptr, handle->common.incRef);
-    ASSERT_NE(nullptr, handle->common.decRef);
-    handle->common.incRef(&handle->common);
-    handle->common.decRef(&handle->common);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
+    auto anwb = native_handle->anwb();
+    ASSERT_NE(nullptr, anwb->common.incRef);
+    ASSERT_NE(nullptr, anwb->common.decRef);
+    anwb->common.incRef(&anwb->common);
+    anwb->common.decRef(&anwb->common);
 }
 
 TEST_F(AdaptorICSTest, handle_has_right_magic)
 {
     int magic = ANDROID_NATIVE_MAKE_CONSTANT('_','b','f','r');  /* magic value shared by JB and ICS */
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    EXPECT_EQ(magic, handle->common.magic);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(magic, anwb->common.magic);
 }
 
 TEST_F(AdaptorICSTest, handle_has_version)
 {
     int version = 96;  /* version value shared by JB and ICS */
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    EXPECT_EQ(version, handle->common.version);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
+    auto anwb = native_handle->anwb();
+    EXPECT_EQ(version, anwb->common.version);
 }

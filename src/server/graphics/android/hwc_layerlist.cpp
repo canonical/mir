@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 #include "buffer.h"
 
@@ -101,13 +103,14 @@ mga::LayerList::LayerList()
 
 void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    auto handle = buffer->native_buffer_handle();
+    auto native_buffer = buffer->native_buffer_handle();
+    native_buffer->wait_for_content();
 
     geom::Point pt{0, 0};
     geom::Rectangle rect{pt, buffer->size()};
     HWCRect display_rect(rect);
 
-    auto fb_layer = std::make_shared<HWCFBLayer>(handle->handle, display_rect);
+    auto fb_layer = std::make_shared<HWCFBLayer>(native_buffer->handle(), display_rect);
     layer_list[fb_position] = fb_layer;
 
     update_list();
