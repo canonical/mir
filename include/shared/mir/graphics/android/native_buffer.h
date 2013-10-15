@@ -16,31 +16,36 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
-#define MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_
+#ifndef MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_
+#define MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_
+
+#include "fence.h"
+#include <system/window.h>
 
 namespace mir
 {
 namespace graphics
 {
-namespace android
-{
 
-class SyncObject
+class NativeBuffer 
 {
 public:
-    virtual ~SyncObject() = default;
-    virtual void wait() = 0;
+    virtual ~NativeBuffer() = default;
+
+    virtual ANativeWindowBuffer* anwb() const = 0;
+    virtual buffer_handle_t handle() const = 0;
+    virtual android::NativeFence copy_fence() const = 0;
+
+    virtual void wait_for_content() = 0;
+    virtual void update_fence(android::NativeFence& fence) = 0; 
 
 protected:
-    SyncObject() = default;
-    SyncObject(SyncObject const&) = delete;
-    SyncObject& operator=(SyncObject const&) = delete;
+    NativeBuffer() = default;
+    NativeBuffer(NativeBuffer const&) = delete;
+    NativeBuffer& operator=(NativeBuffer const&) = delete;
 };
 
-
-}
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_SYNC_OBJECT_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_ */

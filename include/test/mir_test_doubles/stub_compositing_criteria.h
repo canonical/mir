@@ -35,10 +35,14 @@ class StubCompositingCriteria : public compositor::CompositingCriteria
 public:
     StubCompositingCriteria(int x, int y, int width, int height,
                             float opacity=1.0f,
-                            bool rectangular=true)
+                            bool rectangular=true,
+                            bool visible=true,
+                            bool posted=true)
         : rect{{x, y}, {width, height}},
           opacity(opacity),
-          rectangular(rectangular)
+          rectangular(rectangular),
+          visible(visible),
+          posted(posted)
     {
         const glm::mat4 ident;
         glm::vec3 size(width, height, 0.0f);
@@ -58,7 +62,7 @@ public:
 
     bool should_be_rendered_in(const mir::geometry::Rectangle &r) const override
     {
-        return rect.overlaps(r);
+        return visible && posted && rect.overlaps(r);
     }
 
     bool shaped() const override
@@ -71,6 +75,8 @@ private:
     glm::mat4 trans;
     float opacity;
     bool rectangular;
+    bool visible;
+    bool posted;
 };
 
 } // namespace doubles

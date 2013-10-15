@@ -26,6 +26,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
+#include "mir/graphics/native_buffer.h"
 
 #include "drm_close_threadsafe.h"
 

@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
-#include "mir_toolkit/mir_native_buffer.h"
+#include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
@@ -36,6 +36,7 @@ struct MirBufferPackage;
 
 namespace mir
 {
+
 namespace client
 {
 
@@ -60,7 +61,7 @@ public:
     virtual uint32_t age() const = 0;
     virtual void increment_age() = 0;
     virtual void mark_as_submitted() = 0;
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const = 0;
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const = 0;
 };
 
 }

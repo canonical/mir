@@ -221,21 +221,26 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
 
     if (activate)
     {
-        if (getpid() == getpgid(0) && setpgid(0, getpgid(getppid())) < 0)
+        // we should only try to create a new session in order to become the session
+        // and group leader if we are not already the session leader
+        if (getpid() != getsid(0))
         {
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to stop being a process group"))
-                       << boost::errinfo_errno(errno));
-        }
+            if (getpid() == getpgid(0) && setpgid(0, getpgid(getppid())) < 0)
+            {
+                BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error("Failed to stop being a process group"))
+                           << boost::errinfo_errno(errno));
+            }
 
-        /* become process group leader */
-        if (setsid() < 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to become session leader"))
-                       << boost::errinfo_errno(errno));
+            /* become process group leader */
+            if (setsid() < 0)
+            {
+                BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error("Failed to become session leader"))
+                           << boost::errinfo_errno(errno));
+            }
         }
     }
 

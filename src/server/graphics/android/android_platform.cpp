@@ -17,6 +17,7 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
 #include "android_platform.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_hwc_factory.h"
@@ -25,6 +26,7 @@
 #include "default_framebuffer_factory.h"
 #include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_ipc_packer.h"
@@ -84,9 +86,10 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
                                             std::shared_ptr<mg::Buffer> const& buffer) const
 {
     auto native_buffer = buffer->native_buffer_handle();
-    auto buffer_handle = native_buffer->handle;
+    auto buffer_handle = native_buffer->handle();
 
     int offset = 0;
+    
     for(auto i=0; i<buffer_handle->numFds; i++)
     {
         packer->pack_fd(buffer_handle->data[offset++]);
