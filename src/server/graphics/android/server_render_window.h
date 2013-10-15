@@ -23,18 +23,10 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/geometry/pixel_format.h"
 
-#include <hardware/fb.h>
-#include <hardware/hwcomposer.h>
-
 #include <memory>
-#include <unordered_map>
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
 namespace android
@@ -50,8 +42,8 @@ public:
                        std::shared_ptr<DisplaySupportProvider> const& display_poster,
                        std::shared_ptr<InterpreterResourceCache> const&);
 
-    ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
+    graphics::NativeBuffer* driver_requests_buffer();
+    void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd);
     void dispatch_driver_request_format(int format);
     int driver_requests_info(int key) const;
     void sync_to_display(bool sync);

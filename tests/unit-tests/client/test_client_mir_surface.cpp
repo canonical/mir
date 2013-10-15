@@ -50,6 +50,7 @@
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 namespace mir
@@ -179,7 +180,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mg::NativeBuffer>());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
@@ -224,6 +225,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
         return std::shared_ptr<EGLNativeDisplayType>();
+    }
+
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
+    {
+        return nullptr;
     }
 };
 
@@ -607,9 +613,9 @@ struct StubBuffer : public mcl::ClientBuffer
     void increment_age() {}
     void mark_as_submitted() {}
 
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const
     {
-        return std::shared_ptr<MirNativeBuffer>();
+        return std::shared_ptr<mg::NativeBuffer>();
     }
 
     geom::Size size_;
