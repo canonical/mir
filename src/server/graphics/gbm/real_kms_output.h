@@ -23,6 +23,7 @@
 #include "drm_mode_resources.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -45,6 +46,7 @@ public:
     geometry::Size size() const;
 
     bool set_crtc(uint32_t fb_id);
+    void clear_crtc();
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
 
@@ -52,6 +54,8 @@ public:
     void move_cursor(geometry::Point destination);
     void clear_cursor();
     bool has_cursor() const;
+    
+    void set_power_mode(MirPowerMode mode);
 
 private:
     bool ensure_crtc();
@@ -68,6 +72,11 @@ private:
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
     bool has_cursor_;
+
+    MirPowerMode power_mode;
+    int dpms_enum_id;
+    
+    std::mutex power_mutex;
 };
 
 }

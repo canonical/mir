@@ -82,6 +82,8 @@ public:
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
+    void clear_connected_unused_outputs();
+
     std::mutex configuration_mutex;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<VideoDevices> const video_devices;

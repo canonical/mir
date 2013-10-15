@@ -60,13 +60,14 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
     MockDisplayAllocator()
     {
         using namespace testing;
-        ON_CALL(*this, create_gpu_display(_,_))
+        ON_CALL(*this, create_gpu_display(_,_,_))
             .WillByDefault(Return(std::shared_ptr<mga::AndroidDisplay>()));
         ON_CALL(*this, create_hwc_display(_,_,_))
             .WillByDefault(Return(std::shared_ptr<mga::AndroidDisplay>()));
 
     }
-    MOCK_CONST_METHOD2(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>(std::shared_ptr<ANativeWindow> const&,
+    MOCK_CONST_METHOD3(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>(std::shared_ptr<ANativeWindow> const&,
+                                                                                std::shared_ptr<mga::DisplaySupportProvider> const&,
                                                                                 std::shared_ptr<mg::DisplayReport> const&));
     MOCK_CONST_METHOD3(create_hwc_display, std::shared_ptr<mga::AndroidDisplay>(std::shared_ptr<mga::HWCDevice> const&,
                                                                             std::shared_ptr<ANativeWindow> const&,
@@ -151,7 +152,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
         .Times(1);
 
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,tmp2))
+    EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,_,tmp2))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
@@ -180,7 +181,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1);
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,tmp2))
+    EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,_,tmp2))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
@@ -300,7 +301,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_,_))
         .Times(0);
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,tmp2))
+    EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,_,tmp2))
         .Times(1);
 
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 

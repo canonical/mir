@@ -20,7 +20,7 @@
 #include "mir/surfaces/buffer_stream_factory.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
-#include "mir/surfaces/surface_data.h"
+#include "surface_data.h"
 #include "mir/surfaces/surface.h"
 
 namespace geom=mir::geometry;
@@ -46,9 +46,12 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
                                            params.buffer_usage};
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
     auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
+
+    bool nonrectangular = has_alpha(params.pixel_format);
     auto state = std::make_shared<ms::SurfaceData>(params.name,
                                                     actual_size,
-                                                    change_callback);
+                                                    change_callback,
+                                                    nonrectangular);
     auto input_channel = input_factory->make_input_channel();
     return std::make_shared<ms::Surface>(state, buffer_stream, input_channel);
 }

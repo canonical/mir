@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
 #include <mir/geometry/rectangle.h>
+
 #include <memory>
 
 namespace mir

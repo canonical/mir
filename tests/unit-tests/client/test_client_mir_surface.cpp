@@ -30,7 +30,7 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/input_receiver_thread.h"
 
@@ -50,6 +50,7 @@
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 namespace mir
@@ -179,7 +180,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mg::NativeBuffer>());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
@@ -224,6 +225,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
         return std::shared_ptr<EGLNativeDisplayType>();
+    }
+
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
+    {
+        return nullptr;
     }
 };
 
@@ -292,6 +298,9 @@ struct MirClientSurfaceTest : public testing::Test
 {
     void SetUp()
     {
+        // In case an earlier test left a stray file
+        std::remove("./test_socket_surface");
+
         mock_server_tool = std::make_shared<mt::MockServerPackageGenerator>();
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server_tool);
 
@@ -604,9 +613,9 @@ struct StubBuffer : public mcl::ClientBuffer
     void increment_age() {}
     void mark_as_submitted() {}
 
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const
     {
-        return std::shared_ptr<MirNativeBuffer>();
+        return std::shared_ptr<mg::NativeBuffer>();
     }
 
     geom::Size size_;

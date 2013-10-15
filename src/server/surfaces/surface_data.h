@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 #define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 
-#include "mir/surfaces/surface_state.h"
+#include "surface_state.h"
 
 #include <vector>
 #include <functional>
@@ -34,12 +34,14 @@ class SurfaceData : public SurfaceState
 {
 public:
     SurfaceData(std::string const& name, geometry::Rectangle rect,
-                std::function<void()> change_cb);
+                std::function<void()> change_cb,
+                bool nonrectangular);
 
     //mc::CompositingCriteria
     glm::mat4 const& transformation() const;
     float alpha() const;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const;
+    bool shaped() const override;
 
     //mi::Surface
     std::string const& name() const;
@@ -67,6 +69,7 @@ private:
     float surface_alpha;
     bool first_frame_posted;
     bool hidden;
+    const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
 };
 

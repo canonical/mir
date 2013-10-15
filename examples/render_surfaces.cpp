@@ -19,7 +19,7 @@
 #include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangles.h"
@@ -266,15 +266,17 @@ public:
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
     // Stub out server connectivity.
-    std::shared_ptr<mf::Communicator> the_communicator() override
+    std::shared_ptr<mf::Connector> the_connector() override
     {
-        struct NullCommunicator : public mf::Communicator
+        struct NullConnector : public mf::Connector
         {
             void start() {}
             void stop() {}
+            int client_socket_fd() const override { return 0; }
+            void remove_endpoint() const override { }
         };
 
-        return std::make_shared<NullCommunicator>();
+        return std::make_shared<NullConnector>();
     }
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
@@ -286,21 +288,18 @@ public:
         {
         public:
             RenderResourcesBufferInitializer()
-                : img_renderer{mir_image.pixel_data,
-                               geom::Size{mir_image.width, mir_image.height},
-                               mir_image.bytes_per_pixel}
             {
             }
 
             void operator()(mg::Buffer& buffer)
             {
+                mt::ImageRenderer img_renderer{mir_image.pixel_data,
+                               geom::Size{mir_image.width, mir_image.height},
+                               mir_image.bytes_per_pixel};
                 mt::BufferRenderTarget brt{buffer};
                 brt.make_current();
                 img_renderer.render();
             }
-
-        private:
-            mt::ImageRenderer img_renderer;
         };
 
         return std::make_shared<RenderResourcesBufferInitializer>();

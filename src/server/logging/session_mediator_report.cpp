@@ -68,6 +68,11 @@ void ml::SessionMediatorReport::session_configure_surface_called(std::string con
     log->log<Logger::informational>("session_configure_surface_called(\"" + app_name + "\")", component);
 }
 
+void ml::SessionMediatorReport::session_configure_display_called(std::string const& app_name)
+{
+    log->log<Logger::informational>("session_configure_display_called(\"" + app_name + "\")", component);
+}
+
 void ml::SessionMediatorReport::session_error(
         std::string const& app_name,
         char const* method,

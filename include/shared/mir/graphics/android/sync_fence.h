@@ -15,13 +15,11 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
-#define MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
+#ifndef MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
+#define MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
 
-#include "mir/graphics/android/sync_object.h"
-
+#include "mir/graphics/android/fence.h"
 #include <memory>
-#define SYNC_IOC_WAIT 0x40043E00
 
 namespace mir
 {
@@ -30,36 +28,44 @@ namespace graphics
 namespace android
 {
 
-class IoctlWrapper
+class SyncFileOps
 {
 public:
-    virtual ~IoctlWrapper() {}
-    virtual int ioctl(int fd, unsigned long int request, int* timeout) const = 0;
-    virtual int close(int fd) const = 0;
-
-protected:
-    IoctlWrapper() = default;
-    IoctlWrapper(IoctlWrapper const&) = delete;
-    IoctlWrapper& operator=(IoctlWrapper const&) = delete;
+    virtual ~SyncFileOps() = default;
+    virtual int ioctl(int, int, void*) = 0;
+    virtual int dup(int) = 0;
+    virtual int close(int) = 0;
 };
 
-class SyncFence : public SyncObject
+class RealSyncFileOps : public SyncFileOps
 {
 public:
-    SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
+    int ioctl(int fd, int req, void* dat);
+    int dup(int fd);
+    int close(int fd);
+};
+
+class SyncFence : public Fence
+{
+public:
+    SyncFence(std::shared_ptr<SyncFileOps> const&, int fd);
     ~SyncFence() noexcept;
 
     void wait();
+    void merge_with(NativeFence& merge_fd);
+    NativeFence copy_native_handle() const;
 
 private:
     SyncFence(SyncFence const&) = delete;
     SyncFence& operator=(SyncFence const&) = delete;
 
-    std::shared_ptr<IoctlWrapper> const ioctl_wrapper;
-    int const fence_fd;
+    int fence_fd;
+    std::shared_ptr<SyncFileOps> const ops;
+
+    int const infinite_timeout = -1;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_SYNCFENCE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_ */

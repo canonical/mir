@@ -170,6 +170,30 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retain
                                            mir::DisplayChanger::RetainSystemState);
 }
 
+TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
+{
+    using namespace testing;
+
+    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    auto session1 = std::make_shared<mtd::StubShellSession>();
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    session_event_sink.handle_focus_change(session1);
+
+    Mock::VerifyAndClearExpectations(&mock_compositor);
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    InSequence s;
+    EXPECT_CALL(mock_compositor, stop()).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+    EXPECT_CALL(mock_compositor, start()).Times(0);
+
+    changer->configure_for_hardware_change(conf,
+                                           mir::DisplayChanger::PauseResumeSystem);
+}
+
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_change)
 {
     using namespace testing;

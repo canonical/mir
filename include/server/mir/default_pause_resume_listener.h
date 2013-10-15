@@ -13,31 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STATE_H_
-#define MIR_SURFACES_SURFACE_STATE_H_
+#ifndef MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_
+#define MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_
 
-#include "mir/compositor/compositing_criteria.h"
-#include "mir/input/surface.h"
-#include "mir/surfaces/mutable_surface_state.h"
+#include "mir/pause_resume_listener.h"
 
 namespace mir
 {
-namespace surfaces
+class DefaultPauseResumeListener : public virtual PauseResumeListener
 {
+public:
+    virtual void paused()
+    {
+    }
 
-class SurfaceState : public compositor::CompositingCriteria, public input::Surface,
-                     public MutableSurfaceState 
-{
-protected:
-    SurfaceState() = default; 
-    virtual ~SurfaceState() = default;
-    SurfaceState(const SurfaceState&) = delete;
-    SurfaceState& operator=(const SurfaceState& ) = delete;
+    virtual void resumed()
+    {
+    }
 };
+  
+}
 
-}
-}
-#endif /* MIR_SURFACES_SURFACE_STATE_H_ */
+#endif /* MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_ */

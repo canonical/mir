@@ -35,7 +35,7 @@ namespace gbm
 class NativeGBMPlatform : public mg::NativePlatform
 {
 public:
-    void initialize(int data_items, int const* data, int fd_items, int const* fd) override;
+    void initialize(std::function<void(int)> const& auth_magic, int data_items, int const* data, int fd_items, int const* fd) override;
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) override;
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
@@ -44,6 +44,7 @@ public:
 
 private:
     int drm_fd;
+    std::function<void(int)> auth_magic_func;
     helpers::GBMHelper gbm;
 };
 }

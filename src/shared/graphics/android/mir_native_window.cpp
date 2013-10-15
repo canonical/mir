@@ -18,28 +18,14 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "syncfence.h"
+#include "mir/graphics/android/sync_fence.h"
 
-#include <unistd.h>
-#include <sys/ioctl.h>
-
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 namespace
 {
 
-class IoctlControl : public mga::IoctlWrapper
-{
-public:
-    int ioctl(int fd, unsigned long int request, int* timeout) const
-    {
-        return ::ioctl(fd, request, timeout);
-    }
-    int close(int fd) const
-    {
-        return ::close(fd);
-    }
-};
 
 static int query_static(const ANativeWindow* anw, int key, int* value);
 static int perform_static(ANativeWindow* anw, int key, ...);
@@ -83,35 +69,31 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
+    int fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->dequeueBuffer(buffer);
+    //todo: we have to close the fence
+    return self->dequeueBuffer(buffer, &fence_fd);
 }
 
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
-    *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->dequeueBuffer(buffer);
+    return self->dequeueBuffer(buffer, fence_fd);
 }
 
 int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mga::SyncFence>(-1, ioctl_control);
-    return self->queueBuffer(buffer, fence);
+    return self->queueBuffer(buffer, -1);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
-    return self->queueBuffer(buffer, fence);
-
+    return self->queueBuffer(buffer, fence_fd);
 }
 
 int setSwapInterval_static (struct ANativeWindow* window, int interval)
@@ -179,27 +161,29 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
     return 0;
 }
 
-int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
+int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
 {
-    *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+    auto buffer = driver_interpreter->driver_requests_buffer();
+
+    //driver is responsible for closing this native handle
+    *fence_fd = buffer->copy_fence();
+    *buffer_to_driver = buffer->anwb();
     return 0;
 }
 
-int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer,
-                                      std::shared_ptr<mga::SyncObject> const& fence)
-{
-    driver_interpreter->driver_returns_buffer(buffer, fence);
-    return 0;
-}
-
-int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer,
-                                       std::shared_ptr<mga::SyncObject> const& fence)
+int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
 
-int mga::MirNativeWindow::query(int key, int* value ) const
+int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer, int fence)
+{
+    driver_interpreter->driver_returns_buffer(buffer, fence);
+    return 0;
+}
+
+int mga::MirNativeWindow::query(int key, int* value) const
 {
     *value = driver_interpreter->driver_requests_info(key);
     return 0;

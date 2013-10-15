@@ -78,7 +78,7 @@ standalone X, please file a bug with a detailed description of hardware used,
 XMir component versions used and the use case steps. You may check the versions
 of key XMir components by the following
 
-    dpkg -s libmirclient1 | grep Version
+    dpkg -s libmirclient3 | grep Version
     dpkg -s libmirserver0 | grep Version
     dpkg -s lightdm | grep Version
     dpkg -s unity-system-compositor | grep Version

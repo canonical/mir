@@ -57,12 +57,12 @@ public:
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{0, 0},
-                                          conf_output.preferred_mode_index);
+                                          conf_output.preferred_mode_index, mir_power_mode_on);
                 }
                 else
                 {
                     conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index);
+                                          conf_output.current_mode_index, mir_power_mode_on);
                 }
             });
     }
@@ -81,13 +81,13 @@ public:
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
-                                          conf_output.preferred_mode_index);
+                                          conf_output.preferred_mode_index, mir_power_mode_on);
                     max_x += conf_output.modes[conf_output.preferred_mode_index].size.width.as_int();
                 }
                 else
                 {
                     conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index);
+                                          conf_output.current_mode_index, mir_power_mode_on);
                 }
             });
     }
@@ -147,7 +147,7 @@ public:
         return platform->create_display(conf_policy);
     }
 
-    void setup_outputs(int n)
+    void setup_outputs(int connected, int disconnected)
     {
         using fake = mtd::FakeDRMResources;
 
@@ -167,7 +167,7 @@ public:
         uint32_t const encoder_base_id{20};
         uint32_t const connector_base_id{30};
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < connected; i++)
         {
             uint32_t const crtc_id{crtc_base_id + i};
             uint32_t const encoder_id{encoder_base_id + i};
@@ -180,7 +180,7 @@ public:
             resources.add_encoder(encoder_id, crtc_id, all_crtcs_mask);
         }
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < connected; i++)
         {
             uint32_t const connector_id{connector_base_id + i};
 
@@ -188,6 +188,16 @@ public:
             resources.add_connector(connector_id, DRM_MODE_CONNECTOR_VGA,
                                     DRM_MODE_CONNECTED, encoder_ids[i],
                                     modes0, encoder_ids, connector_physical_size_mm);
+        }
+
+        for (int i = 0; i < disconnected; i++)
+        {
+            uint32_t const connector_id{connector_base_id + connected + i};
+
+            connector_ids.push_back(connector_id);
+            resources.add_connector(connector_id, DRM_MODE_CONNECTOR_VGA,
+                                    DRM_MODE_DISCONNECTED, 0,
+                                    modes_empty, encoder_ids, geom::Size{});
         }
 
         resources.prepare();
@@ -214,10 +224,11 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
 {
     using namespace testing;
 
-    int const num_outputs{3};
+    int const num_connected_outputs{3};
+    int const num_disconnected_outputs{2};
     uint32_t const fb_id{66};
 
-    setup_outputs(num_outputs);
+    setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
     EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
@@ -227,7 +238,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     ExpectationSet crtc_setups;
 
     /* All crtcs are set */
-    for (int i = 0; i < num_outputs; i++)
+    for (int i = 0; i < num_connected_outputs; i++)
     {
         crtc_setups += EXPECT_CALL(mock_drm,
                                    drmModeSetCrtc(mock_drm.fake_drm.fd(),
@@ -239,7 +250,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     }
 
     /* All crtcs are restored at teardown */
-    for (int i = 0; i < num_outputs; i++)
+    for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
                                              crtc_ids[i], Ne(fb_id),
@@ -257,10 +268,11 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
 {
     using namespace testing;
 
-    int const num_outputs{3};
+    int const num_connected_outputs{3};
+    int const num_disconnected_outputs{2};
     EGLContext const shared_context{reinterpret_cast<EGLContext>(0x77)};
 
-    setup_outputs(num_outputs);
+    setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Will create only one shared context */
     EXPECT_CALL(mock_egl, eglCreateContext(_, _, EGL_NO_CONTEXT, _))
@@ -303,11 +315,12 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
 {
     using namespace testing;
 
-    int const num_outputs{3};
+    int const num_connected_outputs{3};
+    int const num_disconnected_outputs{2};
     uint32_t const fb_id{66};
-    std::vector<void*> user_data(num_outputs, nullptr);
+    std::vector<void*> user_data(num_connected_outputs, nullptr);
 
-    setup_outputs(num_outputs);
+    setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
     EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
@@ -315,7 +328,7 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
     /* All crtcs are flipped */
-    for (int i = 0; i < num_outputs; i++)
+    for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_ids[i], fb_id,
@@ -329,7 +342,7 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
 
     /* Handle the events properly */
     EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
-        .Times(num_outputs)
+        .Times(num_connected_outputs)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));
@@ -382,22 +395,23 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_sid
 {
     using namespace testing;
 
-    int const num_outputs{3};
+    int const num_connected_outputs{3};
+    int const num_disconnected_outputs{2};
     uint32_t const base_fb_id{66};
     FBIDContainer fb_id_container{base_fb_id};
 
-    setup_outputs(num_outputs);
+    setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
     EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
                                        _, _, _, _, _, _, _))
-        .Times(num_outputs)
+        .Times(num_connected_outputs)
         .WillRepeatedly(Invoke(&fb_id_container, &FBIDContainer::add_fb));
 
     ExpectationSet crtc_setups;
 
     /* All crtcs are set */
-    for (int i = 0; i < num_outputs; i++)
+    for (int i = 0; i < num_connected_outputs; i++)
     {
         crtc_setups += EXPECT_CALL(mock_drm,
                                    drmModeSetCrtc(mock_drm.fake_drm.fd(),
@@ -410,7 +424,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_sid
     }
 
     /* All crtcs are restored at teardown */
-    for (int i = 0; i < num_outputs; i++)
+    for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
                                              crtc_ids[i], 0,
@@ -422,4 +436,108 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_sid
     }
 
     auto display = create_display_side_by_side(create_platform());
+}
+
+TEST_F(GBMDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
+{
+    using namespace testing;
+
+    int const num_connected_outputs{3};
+    int const num_disconnected_outputs{2};
+
+    setup_outputs(num_connected_outputs, num_disconnected_outputs);
+
+    auto display = create_display_cloned(create_platform());
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    /* All unused connected outputs are cleared */
+    for (int i = 0; i < num_connected_outputs; i++)
+    {
+        EXPECT_CALL(mock_drm,
+                    drmModeSetCursor(mock_drm.fake_drm.fd(),
+                                     crtc_ids[i], 0, 0, 0))
+                        .Times(1);
+        EXPECT_CALL(mock_drm,
+                    drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                   crtc_ids[i], 0, 0, 0,
+                                   nullptr, 0, nullptr))
+                        .Times(1);
+    }
+
+    /* Set all outputs to unused */
+    auto conf = display->configuration();
+
+    conf->for_each_output(
+        [&](mg::DisplayConfigurationOutput const& conf_output)
+        {
+            conf->configure_output(conf_output.id, false, conf_output.top_left,
+                                   conf_output.preferred_mode_index, mir_power_mode_on);
+        });
+
+    display->configure(*conf);
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    /* All crtcs are restored at teardown */
+    for (int i = 0; i < num_connected_outputs; i++)
+    {
+        EXPECT_CALL(mock_drm,
+                    drmModeSetCrtc(mock_drm.fake_drm.fd(), crtc_ids[i],
+                                   0, _, _, Pointee(connector_ids[i]),
+                                   _, _))
+                        .Times(1);
+    }
+}
+
+TEST_F(GBMDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
+{
+    using namespace testing;
+
+    int const num_connected_outputs{3};
+    int const num_disconnected_outputs{2};
+
+    setup_outputs(num_connected_outputs, num_disconnected_outputs);
+
+    auto display = create_display_cloned(create_platform());
+
+    /* Set all outputs to unused */
+    auto conf = display->configuration();
+
+    conf->for_each_output(
+        [&](mg::DisplayConfigurationOutput const& conf_output)
+        {
+            conf->configure_output(conf_output.id, false, conf_output.top_left,
+                                   conf_output.preferred_mode_index, mir_power_mode_on);
+        });
+
+    display->configure(*conf);
+
+    display->pause();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    /* All unused connected outputs are cleared */
+    for (int i = 0; i < num_connected_outputs; i++)
+    {
+        EXPECT_CALL(mock_drm,
+                    drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                   crtc_ids[i], 0, 0, 0,
+                                   nullptr, 0, nullptr))
+                        .Times(1);
+    }
+
+    display->resume();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    /* All crtcs are restored at teardown */
+    for (int i = 0; i < num_connected_outputs; i++)
+    {
+        EXPECT_CALL(mock_drm,
+                    drmModeSetCrtc(mock_drm.fake_drm.fd(), crtc_ids[i],
+                                   0, _, _, Pointee(connector_ids[i]),
+                                   _, _))
+                        .Times(1);
+    }
 }

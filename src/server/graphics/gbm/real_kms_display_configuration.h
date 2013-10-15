@@ -40,7 +40,7 @@ public:
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const;
     void configure_output(DisplayConfigurationOutputId id, bool used,
-                          geometry::Point top_left, size_t mode_index);
+                          geometry::Point top_left, size_t mode_index, MirPowerMode power_mode);
 
     uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
     size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const;

@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
 #define MIR_CLIENT_MIR_WAIT_HANDLE_H_
 
+#include <chrono>
 #include <condition_variable>
 #include <mutex>
 
@@ -37,6 +38,7 @@ public:
     void result_received();
     void wait_for_all();
     void wait_for_one();
+    void wait_for_pending(std::chrono::milliseconds limit);
 
 private:
     std::mutex guard;

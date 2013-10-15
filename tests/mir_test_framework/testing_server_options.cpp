@@ -75,10 +75,10 @@ public:
                     std::runtime_error("Failed to open dummy fd")) << boost::errinfo_errno(errno));
     }
 
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
     {
 #ifndef ANDROID
-        auto native_buffer = std::make_shared<MirNativeBuffer>();
+        auto native_buffer = std::make_shared<mg::NativeBuffer>();
         native_buffer->data_items = 1;
         native_buffer->data[0] = 0xDEADBEEF;
         native_buffer->fd_items = 1;
@@ -93,7 +93,7 @@ public:
         }
         return native_buffer;
 #else
-        return std::shared_ptr<MirNativeBuffer>();
+        return std::shared_ptr<mg::NativeBuffer>();
 #endif
     }
 
@@ -135,7 +135,7 @@ public:
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
-            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0};
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
 
         f(dummy_output_config);
     }

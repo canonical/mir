@@ -13,31 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+#ifndef MIR_FRONTEND_FD_SETS_H_
+#define MIR_FRONTEND_FD_SETS_H_
 
-#ifndef MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
-#define MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
-
-#include "src/server/graphics/android/hwc_layerlist.h"
-
-#include <gmock/gmock.h>
+#include <vector>
+#include <initializer_list>
+#include <stdint.h>
 
 namespace mir
 {
-namespace test
+namespace frontend
 {
-namespace doubles
-{
+typedef std::initializer_list<std::vector<int32_t>> FdSets;
+}
+} // namespace mir 
 
-struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
-{
-    ~MockHWCOrganizer() noexcept {}
-    MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
-    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::Buffer> const&));
-};
-
-}
-}
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_ */
+#endif // MIR_FRONTEND_FD_SETS_H_

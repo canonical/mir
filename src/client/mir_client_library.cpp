@@ -35,9 +35,6 @@
 
 namespace mcl = mir::client;
 
-std::mutex MirConnection::connection_guard;
-std::unordered_set<MirConnection*> MirConnection::valid_connections;
-
 namespace
 {
 class ConnectionList
@@ -77,7 +74,8 @@ void assign_result(void *result, void **context)
 
 }
 
-MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+MirWaitHandle* mir_default_connect(
+    char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
@@ -93,12 +91,13 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
             else
                 sock = mir::default_server_socket;
         }
- 
+
         mcl::DefaultConnectionConfiguration conf{sock};
 
-        MirConnection* connection = new MirConnection(conf);
-
-        return connection->connect(name, callback, context);
+        std::unique_ptr<MirConnection> connection{new MirConnection(conf)};
+        auto const result = connection->connect(name, callback, context);
+        connection.release();
+        return result;
     }
     catch (std::exception const& x)
     {
@@ -108,6 +107,42 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         callback(error_connection, context);
         return 0;
     }
+}
+
+
+void mir_default_connection_release(MirConnection * connection)
+{
+    if (!error_connections.contains(connection))
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_all();
+    }
+    else
+    {
+        error_connections.remove(connection);
+    }
+
+    delete connection;
+}
+
+//mir_connect and mir_connection_release can be overridden by test code that sets these function
+//pointers to do things like stub out the graphics drivers or change the connection configuration.
+
+//TODO: we could have a more comprehensive solution that allows us to substitute any of the functions
+//for test purposes, not just the connect functions
+MirWaitHandle* (*mir_connect_impl)(
+    char const *server, char const *app_name,
+    mir_connected_callback callback, void *context) = mir_default_connect;
+void (*mir_connection_release_impl) (MirConnection *connection) = mir_default_connection_release;
+
+MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+{
+    return mir_connect_impl(socket_file, name, callback, context);
+}
+
+void mir_connection_release(MirConnection *connection)
+{
+    return mir_connection_release_impl(connection);
 }
 
 MirConnection *mir_connect_sync(char const *server,
@@ -129,21 +164,6 @@ int mir_connection_is_valid(MirConnection * connection)
 char const * mir_connection_get_error_message(MirConnection * connection)
 {
     return connection->get_error_message();
-}
-
-void mir_connection_release(MirConnection * connection)
-{
-    if (!error_connections.contains(connection))
-    {
-        auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
-    }
-    else
-    {
-        error_connections.remove(connection);
-    }
-
-    delete connection;
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
@@ -244,8 +264,7 @@ MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
 
 void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
-    auto package = surface->get_current_buffer_package();
-    *buffer_package_out = package.get();
+    *buffer_package_out = surface->get_current_buffer_package();
 }
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface * surface)
@@ -274,44 +293,48 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
     auto config = mir_connection_create_display_config(connection);
-    if (config->num_outputs < 1)
-        return;
 
-    MirDisplayOutput* state = nullptr;
-    // We can't handle more than one display, so just populate based on the first
-    // active display we find.
-    for (unsigned int i = 0; i < config->num_outputs; ++i)
+    do
     {
-        if (config->outputs[i].used && config->outputs[i].connected &&
-            config->outputs[i].current_mode < config->outputs[i].num_modes)
+        if (config->num_outputs < 1)
+            break;
+
+        MirDisplayOutput* state = nullptr;
+        // We can't handle more than one display, so just populate based on the first
+        // active display we find.
+        for (unsigned int i = 0; i < config->num_outputs; ++i)
         {
-            state = &config->outputs[i];
+            if (config->outputs[i].used && config->outputs[i].connected &&
+                config->outputs[i].current_mode < config->outputs[i].num_modes)
+            {
+                state = &config->outputs[i];
+                break;
+            }
+        }
+        // Oh, oh! No connected outputs?!
+        if (state == nullptr)
+        {
+            memset(display_info, 0, sizeof(*display_info));
             break;
         }
-    }
-    // Oh, oh! No connected outputs?!
-    if (state == nullptr)
-    {
-        memset(display_info, 0, sizeof(*display_info));
-        return;
-    }
 
-    MirDisplayMode mode = state->modes[state->current_mode];
-   
-    display_info->width = mode.horizontal_resolution;
-    display_info->height = mode.vertical_resolution;
+        MirDisplayMode mode = state->modes[state->current_mode];
 
-    unsigned int format_items;
-    if (state->num_output_formats > mir_supported_pixel_format_max) 
-         format_items = mir_supported_pixel_format_max;
-    else
-         format_items = state->num_output_formats;
+        display_info->width = mode.horizontal_resolution;
+        display_info->height = mode.vertical_resolution;
 
-    display_info->supported_pixel_format_items = format_items; 
-    for(auto i=0u; i < format_items; i++)
-    {
-        display_info->supported_pixel_format[i] = state->output_formats[i];
-    }
+        unsigned int format_items;
+        if (state->num_output_formats > mir_supported_pixel_format_max)
+             format_items = mir_supported_pixel_format_max;
+        else
+             format_items = state->num_output_formats;
+
+        display_info->supported_pixel_format_items = format_items;
+        for(auto i=0u; i < format_items; i++)
+        {
+            display_info->supported_pixel_format[i] = state->output_formats[i];
+        }
+    } while (false);
 
     mir_display_config_destroy(config);
 }
@@ -322,8 +345,13 @@ void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * g
 }
 
 MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_callback callback, void * context)
+try
 {
     return surface->next_buffer(callback, context);
+}
+catch (std::exception const&)
+{
+    return 0;
 }
 
 void mir_surface_swap_buffers_sync(MirSurface *surface)

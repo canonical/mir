@@ -223,7 +223,7 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
     LOG_ALWAYS_FATAL_IF(mEpollFd < 0, "Could not create epoll instance.  errno=%d", errno);
 
     mINotifyFd = inotify_init();
-    int result = inotify_add_watch(mINotifyFd, DEVICE_PATH, IN_DELETE | IN_CREATE);
+    int result = inotify_add_watch(mINotifyFd, DEVICE_PATH, IN_DELETE | IN_CREATE | IN_ATTRIB);
     LOG_ALWAYS_FATAL_IF(result < 0, "Could not register INotify for %s.  errno=%d",
             DEVICE_PATH, errno);
 
@@ -955,6 +955,11 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
     char buffer[80];
 
     ALOGV("Opening device: %s", devicePath);
+    if (hasDeviceByPathLocked(String8(devicePath)))
+    {
+        ALOGV("Not opening device (%s), as it is already opened", devicePath);
+        return -1;
+    }
 
     int fd = open(devicePath, O_RDWR | O_CLOEXEC);
     if(fd < 0) {
@@ -1416,6 +1421,14 @@ status_t EventHub::readNotifyLocked() {
             strcpy(filename, event->name);
             if(event->mask & IN_CREATE) {
                 openDeviceLocked(devname);
+            } else if (event->mask & IN_ATTRIB) {
+                Device* device = getDeviceByPathLocked(devname);
+                if (!device) {
+                    ALOGI("Retry opening device file %s", devname);
+                    // file permissions might have changed, making the device readable now
+                    // let's retry opening it
+                    openDeviceLocked(devname);
+                }
             } else {
                 ALOGI("Removing device '%s' due to inotify event\n", devname);
                 closeDeviceByPathLocked(devname);
@@ -1521,6 +1534,15 @@ void EventHub::flush() {
             readSize = read(device->fd, readBuffer, bufferSize);
         } while (readSize > 0);
     }
+}
+
+bool EventHub::hasDeviceByPathLocked(String8 const& path)
+{
+    for (size_t i = 0; i < mDevices.size(); i++) {
+        auto const& device = mDevices.valueAt(i);
+        if (device->path == path) return true;
+    }
+    return false;
 }
 
 }; // namespace android

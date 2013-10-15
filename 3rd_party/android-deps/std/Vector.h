@@ -62,7 +62,7 @@ public:
 
     /*! copy operator */
 //  const Vector<ValueType>& operator = (const Vector<ValueType>& rhs) const;
-    Vector<ValueType>& operator=(const Vector<ValueType>& rhs) = default;
+    Vector<ValueType>& operator=(const Vector<ValueType>& /* rhs */) = default;
 
 //  const Vector<ValueType>& operator = (const SortedVector<ValueType>& rhs) const;
 //  Vector<ValueType>& operator = (const SortedVector<ValueType>& rhs);

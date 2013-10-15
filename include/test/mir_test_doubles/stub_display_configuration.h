@@ -72,7 +72,8 @@ public:
                 ((i % 2) == 0),
                 ((i % 2) == 1),
                 top_left,
-                mode_index, 1u
+                mode_index, 1u,
+                mir_power_mode_off
             };
 
             outputs.push_back(output);
@@ -99,7 +100,7 @@ public:
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<geometry::PixelFormat>{geometry::PixelFormat::abgr_8888},
                 {{rect.size, 60.0}},
-                0, geometry::Size{}, true, true, rect.top_left, 0, 0
+                0, geometry::Size{}, true, true, rect.top_left, 0, 0, mir_power_mode_on
             };
 
             outputs.push_back(output);
@@ -128,7 +129,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPowerMode)
     {
     }
 

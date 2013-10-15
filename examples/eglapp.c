@@ -26,6 +26,8 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+float mir_eglapp_background_opacity = 1.0f;
+
 static const char appname[] = "egldemo";
 
 static MirConnection *connection;
@@ -168,6 +170,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
+    char *mir_socket = NULL;
 
     if (argc > 1)
     {
@@ -181,6 +184,26 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             {
                 switch (arg[1])
                 {
+                case 'b':
+                    {
+                        float alpha = 1.0f;
+                        arg += 2;
+                        if (!arg[0] && i < argc-1)
+                        {
+                            i++;
+                            arg = argv[i];
+                        }
+                        if (sscanf(arg, "%f", &alpha) == 1)
+                        {
+                            mir_eglapp_background_opacity = alpha;
+                        }
+                        else
+                        {
+                            printf("Invalid opacity value: %s\n", arg);
+                            help = 1;
+                        }
+                    }
+                    break;
                 case 'n':
                     swapinterval = 0;
                     break;
@@ -229,6 +252,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                         }
                     }
                     break;
+                case 'm':
+                    mir_socket = argv[++i];
+                    break;
                 case 'h':
                 default:
                     help = 1;
@@ -243,10 +269,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             if (help)
             {
                 printf("Usage: %s [<options>]\n"
-                       "  -f     Force full screen\n"
-                       "  -h     Show this help text\n"
-                       "  -o ID  Force placement on output monitor ID\n"
-                       "  -n     Don't sync to vblank\n"
+                       "  -b               Background opacity (0.0 - 1.0)\n"
+                       "  -h               Show this help text\n"
+                       "  -f               Force full screen\n"
+                       "  -o ID            Force placement on output monitor ID\n"
+                       "  -n               Don't sync to vblank\n"
+                       "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        , argv[0]);
                 return 0;
@@ -254,7 +282,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         }
     }
 
-    connection = mir_connect_sync(NULL, appname);
+    connection = mir_connect_sync(mir_socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
     /* eglapps are interested in the screen size, so
@@ -272,9 +300,27 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const MirDisplayMode *mode = &output->modes[output->current_mode];
 
-    unsigned int valid_formats;
+    const unsigned int max_formats = 10;
+    unsigned int format[max_formats];
+    unsigned int nformats;
+
     mir_connection_get_available_surface_formats(connection,
-        &surfaceparm.pixel_format, 1, &valid_formats);
+        format, max_formats, &nformats);
+
+    surfaceparm.pixel_format = format[0];
+    for (unsigned int f = 0; f < nformats; f++)
+    {
+        const int opaque = (format[f] == mir_pixel_format_xbgr_8888 ||
+                            format[f] == mir_pixel_format_xrgb_8888 ||
+                            format[f] == mir_pixel_format_bgr_888);
+
+        if ((mir_eglapp_background_opacity == 1.0f && opaque) ||
+            (mir_eglapp_background_opacity < 1.0f && !opaque))
+        {
+            surfaceparm.pixel_format = format[f];
+            break;
+        }
+    }
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), "
            "supports %d pixel formats\n",

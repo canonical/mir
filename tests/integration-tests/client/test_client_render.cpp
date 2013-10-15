@@ -20,6 +20,7 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test/draw/android_graphics.h"
@@ -27,7 +28,7 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include <iostream>
 #include <gmock/gmock.h>
@@ -318,8 +319,8 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_buffer()->set_stride(next_handle->stride);
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = next_handle->handle;
-        for(auto i=0; i < native_handle->numFds; i++)
+        native_handle_t const* native_handle = handle->handle();
+        for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(native_handle->data[i]);
         for(auto i=0; i < native_handle->numInts; i++)
             response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);

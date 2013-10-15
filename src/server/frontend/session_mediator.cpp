@@ -126,15 +126,15 @@ void mf::SessionMediator::create_surface(
     
     report->session_create_surface_called(session->name());
 
-    auto const id = session->create_surface(msh::SurfaceCreationParameters()
+    auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
         .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
         .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
     {
-        auto surface = session->get_surface(id);
-        response->mutable_id()->set_value(id.as_value());
+        auto surface = session->get_surface(surf_id);
+        response->mutable_id()->set_value(surf_id.as_value());
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
@@ -144,17 +144,11 @@ void mf::SessionMediator::create_surface(
             response->add_fd(surface->client_input_fd());
 
         bool need_full_ipc;
-        client_buffer_resource = surface->advance_client_buffer(need_full_ipc);
-        auto const& id = client_buffer_resource->id();
+        auto client_buffer = surface->advance_client_buffer(need_full_ipc);
+        client_buffer_resource[surf_id] = client_buffer;
 
         auto buffer = response->mutable_buffer();
-        buffer->set_buffer_id(id.as_uint32_t());
-
-        if (need_full_ipc)
-        {
-            auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-            graphics_platform->fill_ipc_package(packer, client_buffer_resource);
-        }
+        pack_protobuf_buffer(*buffer, client_buffer, need_full_ipc);
     }
 
     // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
@@ -171,7 +165,10 @@ void mf::SessionMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    bool needs_full_ipc;
+    bool need_full_ipc;
+    SurfaceId const surf_id{request->value()};
+    std::shared_ptr<graphics::Buffer> client_buffer;
+
     {
         std::unique_lock<std::mutex> lock(session_mutex);
         
@@ -181,21 +178,22 @@ void mf::SessionMediator::next_buffer(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         report->session_next_buffer_called(session->name());
+        
+        // We ensure the client has not powered down the outputs, so that
+        // swap_buffer will not block indefinitely, leaving the client
+        // in a position where it can not turn back on the
+        // outputs.
+        display_changer->ensure_display_powered(session);
 
-        auto surface = session->get_surface(SurfaceId(request->value()));
+        auto surface = session->get_surface(surf_id);
 
-        client_buffer_resource.reset();
-        client_buffer_resource = surface->advance_client_buffer(needs_full_ipc);
+        client_buffer_resource[surf_id].reset();
+        client_buffer = surface->advance_client_buffer(need_full_ipc);
+        client_buffer_resource[surf_id] = client_buffer;
     }
 
-    auto const& id = client_buffer_resource->id();
-    response->set_buffer_id(id.as_uint32_t());
+    pack_protobuf_buffer(*response, client_buffer, need_full_ipc);
 
-    if (needs_full_ipc)
-    {
-        auto packer = std::make_shared<mfd::ProtobufBufferPacker>(response);
-        graphics_platform->fill_ipc_package(packer, client_buffer_resource);
-    }
     done->Run();
 }
 
@@ -292,6 +290,8 @@ void mf::SessionMediator::configure_display(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+        report->session_configure_display_called(session->name());
+
         auto config = display_changer->active_configuration();
         for (auto i=0; i < request->display_output_size(); i++)
         {   
@@ -299,7 +299,7 @@ void mf::SessionMediator::configure_display(
             mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
             config->configure_output(output_id, output.used(),
                                      geom::Point{output.position_x(), output.position_y()},
-                                     output.current_mode());
+                                     output.current_mode(), static_cast<MirPowerMode>(output.power_mode()));
         }
 
         display_changer->configure(session, config);
@@ -307,4 +307,18 @@ void mf::SessionMediator::configure_display(
         mfd::pack_protobuf_display_configuration(*response, *display_config);
     }
     done->Run();
+}
+
+void mf::SessionMediator::pack_protobuf_buffer(
+    protobuf::Buffer& protobuf_buffer,
+    std::shared_ptr<graphics::Buffer> const& graphics_buffer,
+    bool need_full_ipc)
+{
+    protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
+
+    if (need_full_ipc)
+    {
+        auto packer = std::make_shared<mfd::ProtobufBufferPacker>(&protobuf_buffer);
+        graphics_platform->fill_ipc_package(packer, graphics_buffer);
+    }
 }

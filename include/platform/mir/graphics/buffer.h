@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_H_
 #define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir_toolkit/mir_native_buffer.h"
+#include "mir/graphics/native_buffer.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 
@@ -36,7 +36,7 @@ class Buffer
 public:
     virtual ~Buffer() {}
 
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const = 0;
+    virtual std::shared_ptr<NativeBuffer> native_buffer_handle() const = 0;
     virtual BufferID id() const = 0;
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;

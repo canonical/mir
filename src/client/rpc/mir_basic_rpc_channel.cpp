@@ -70,6 +70,20 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
     }
 }
 
+void mclrd::PendingCallCache::force_completion()
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    for (auto& call : pending_calls)
+    {
+        auto& completion = call.second;
+        completion.complete->Run();
+    }
+
+    pending_calls.erase(pending_calls.begin(), pending_calls.end());
+}
+
+
+
 bool mclrd::PendingCallCache::empty() const
 {
     std::unique_lock<std::mutex> lock(mutex);

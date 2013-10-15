@@ -18,6 +18,8 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/android/native_buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "android_format_conversion-inl.h"
 #include "buffer.h"
 
@@ -31,7 +33,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
+mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
     : native_buffer(buffer_handle),
       egl_extensions(extensions)
@@ -50,22 +52,33 @@ mga::Buffer::~Buffer()
 
 geom::Size mga::Buffer::size() const
 {
-    return {native_buffer->width, native_buffer->height};
+    ANativeWindowBuffer *anwb = native_buffer->anwb();
+    return {anwb->width, anwb->height};
 }
 
 geom::Stride mga::Buffer::stride() const
 {
-    return geom::Stride{native_buffer->stride *
+    ANativeWindowBuffer *anwb = native_buffer->anwb();
+    return geom::Stride{anwb->stride *
                         geom::bytes_per_pixel(pixel_format())};
 }
 
 geom::PixelFormat mga::Buffer::pixel_format() const
 {
-    return mga::to_mir_format(native_buffer->format);
+    ANativeWindowBuffer *anwb = native_buffer->anwb();
+    return mga::to_mir_format(anwb->format);
+}
+
+bool mga::Buffer::can_bypass() const
+{
+    return false;
 }
 
 void mga::Buffer::bind_to_texture()
 {
+    std::unique_lock<std::mutex> lk(content_lock);
+    native_buffer->wait_for_content();
+
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot bind buffer to texture without EGL context\n"));
@@ -80,7 +93,7 @@ void mga::Buffer::bind_to_texture()
     if (it == egl_image_map.end())
     {
         image = egl_extensions->eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_buffer.get(), image_attrs);
+                                  native_buffer->anwb(), image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
@@ -93,14 +106,24 @@ void mga::Buffer::bind_to_texture()
     }
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+
+    //TODO: we should make use of the android egl fence extension here to update the fence.
+    //      if the extension is not available, we should pass out a token that the user
+    //      will have to keep until the completion of the gl draw
 }
 
-bool mga::Buffer::can_bypass() const
+std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
 {
-    return false;
-}
- 
-std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
-{
-    return native_buffer; 
+    std::unique_lock<std::mutex> lk(content_lock);
+
+    auto native_resource = std::shared_ptr<mg::NativeBuffer>(
+        native_buffer.get(),
+        [this](NativeBuffer*)
+        {
+            content_lock.unlock();
+        });
+
+    //lock remains in effect until the native handle is released 
+    lk.release();
+    return native_resource;
 }

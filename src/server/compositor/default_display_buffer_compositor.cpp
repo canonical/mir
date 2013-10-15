@@ -28,6 +28,7 @@
 #include "bypass.h"
 #include <mutex>
 #include <cstdlib>
+#include <vector>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -64,7 +65,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<mc::Renderer> const& renderer,
     std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
-    : mc::BasicDisplayBufferCompositor{display_buffer},
+    : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
       overlay_renderer{overlay_renderer},
@@ -75,10 +76,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
-    static bool got_bypass_env = false;
-    static bool bypass_env = true;
-    bool bypassed = false;
-
     /*
      * Increment frame counts for each tick of the fastest instance of
      * DefaultDisplayBufferCompositor. This means for the fastest refresh
@@ -93,14 +90,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
             local_frameno = global_frameno;
     }
 
-    if (!got_bypass_env)
-    {
-        const char *env = getenv("MIR_BYPASS");
-        if (env != NULL)
-            bypass_env = env[0] != '0';
-
-        got_bypass_env = true;
-    }
+    static bool const bypass_env{[]{ auto const env = getenv("MIR_BYPASS"); return !env || env[0] != '0'; }()};
+    bool bypassed = false;
 
     if (bypass_env && display_buffer.can_bypass())
     {
@@ -128,18 +119,21 @@ void mc::DefaultDisplayBufferCompositor::composite()
     }
 
     if (!bypassed)
-        mc::BasicDisplayBufferCompositor::composite();
+    {
+        // preserves buffers used in rendering until after post_update()
+        std::vector<std::shared_ptr<void>> saved_resources;
+        auto save_resource = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
+
+        display_buffer.make_current();
+
+        auto const& view_area = display_buffer.view_area();
+        renderer->clear(local_frameno);
+        mc::RenderingOperator applicator(*renderer, save_resource);
+        FilterForVisibleSceneInRegion selector(view_area);
+        scene->for_each_if(selector, applicator);
+        overlay_renderer->render(view_area, save_resource);
+
+        display_buffer.post_update();
+    }
 }
 
-void mc::DefaultDisplayBufferCompositor::compose(
-    mir::geometry::Rectangle const& view_area,
-    std::function<void(std::shared_ptr<void> const&)> save_resource)
-{
-    renderer->clear(local_frameno);
-
-    mc::RenderingOperator applicator(*renderer, save_resource);
-    FilterForVisibleSceneInRegion selector(view_area);
-    scene->for_each_if(selector, applicator);
-
-    overlay_renderer->render(view_area, save_resource);
-}

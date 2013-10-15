@@ -21,6 +21,7 @@
 
 #include "mir/graphics/internal_client.h"
 #include <memory>
+#include <map>
 
 namespace mir
 {
@@ -37,7 +38,7 @@ public:
     EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&);
 
 private:
-    std::shared_ptr<MirNativeWindow> client_window;
+    std::map<std::shared_ptr<InternalSurface>, std::shared_ptr<MirNativeWindow>> client_windows;
 };
 }
 }

@@ -13,39 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_COMMUNICATOR_REPORT_H_
-#define MIR_FRONTEND_COMMUNICATOR_REPORT_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_
 
-#include <stdexcept>
+#include "src/server/graphics/android/hwc_layerlist.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace frontend
+namespace test
+{
+namespace doubles
 {
 
-class CommunicatorReport
+struct MockHWCLayerList : public graphics::android::HWCLayerList
 {
-public:
-
-    virtual void error(std::exception const& error) = 0;
-
-protected:
-    virtual ~CommunicatorReport() = default;
-    CommunicatorReport() = default;
-    CommunicatorReport(const CommunicatorReport&) = delete;
-    CommunicatorReport& operator=(const CommunicatorReport&) = delete;
+    ~MockHWCLayerList() noexcept {}
+    MOCK_CONST_METHOD0(native_list, hwc_display_contents_1_t*());
+    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::Buffer> const&));
 };
 
-class NullCommunicatorReport : public CommunicatorReport
-{
-public:
-
-    void error(std::exception const& error);
-};
 }
 }
-
-#endif // MIR_FRONTEND_COMMUNICATOR_REPORT_H_
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_LAYERLIST_H_ */

@@ -82,7 +82,7 @@ struct MockConfig : public mg::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD4(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t));
+    MOCK_METHOD5(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode));
 };
 
 }
@@ -545,6 +545,44 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
+TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_surfaces)
+{
+    using namespace testing;
+
+    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mp::SurfaceParameters surface_request;
+    mp::Surface surface_response;
+
+    /*
+     * Note that the surface created by the first create_surface() call is
+     * the pre-created stubbed_session->mock_surface. Further create_surface()
+     * invocations create new surfaces in stubbed_session->mock_surfaces[].
+     */
+    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
+        .WillOnce(Return(stub_buffer1));
+
+    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    auto refcount = stub_buffer1.use_count();
+
+    /* Creating a new surface should not affect other surfaces' buffers */
+    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    EXPECT_EQ(refcount, stub_buffer1.use_count());
+
+    mp::SurfaceId buffer_request{surface_response.id()};
+    mp::Buffer buffer_response;
+
+    /* Getting the next buffer of a surface should not affect other surfaces' buffers */
+    mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    EXPECT_EQ(refcount, stub_buffer1.use_count());
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
 TEST_F(SessionMediatorTest, display_config_request)
 {
     using namespace testing;
@@ -567,9 +605,9 @@ TEST_F(SessionMediatorTest, display_config_request)
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config))); 
-    EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0))
+    EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0,  mir_power_mode_on))
         .InSequence(seq);
-    EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1))
+    EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1, mir_power_mode_off))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
@@ -591,6 +629,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp0->set_position_x(pt0.x.as_uint32_t());
     disp0->set_position_y(pt0.y.as_uint32_t());
     disp0->set_current_mode(mode_index0);
+    disp0->set_power_mode(static_cast<uint32_t>(mir_power_mode_on));
 
     auto disp1 = configuration.add_display_output();
     disp1->set_output_id(id1.as_value());
@@ -598,6 +637,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp1->set_position_x(pt1.x.as_uint32_t());
     disp1->set_position_y(pt1.y.as_uint32_t());
     disp1->set_current_mode(mode_index1);
+    disp1->set_power_mode(static_cast<uint32_t>(mir_power_mode_off));
 
     session_mediator.configure_display(nullptr, &configuration,
                                        &configuration_response, null_callback.get());

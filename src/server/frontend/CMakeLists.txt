@@ -9,18 +9,17 @@ set(
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
   global_event_sender.cpp
-
+  published_socket_connector.cpp
+  protobuf_session_creator.cpp
+  socket_session.cpp
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
   surface.cpp
-  ${PROTO_HDRS}
-)
 
-list(APPEND FRONTEND_SOURCES
-  protobuf_socket_communicator.cpp
-  make_protobuf_socket_communicator.cpp
-  socket_session.cpp
+  default_configuration.cpp
+
+  ${PROTO_HDRS}
 )
 
 if (MIR_PLATFORM STREQUAL "android")

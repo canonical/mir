@@ -62,6 +62,8 @@ void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& b
 
 void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
+    auto lg = lock_unblanked();
+
     hwc_display_contents_1 display_contents;
     display_contents.dpy = dpy;
     display_contents.sur = sur;

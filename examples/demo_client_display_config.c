@@ -35,16 +35,45 @@ typedef enum
     configuration_mode_unknown,
     configuration_mode_clone,
     configuration_mode_horizontal,
-    configuration_mode_vertical
+    configuration_mode_vertical,
+    configuration_mode_single
 } ConfigurationMode;
 
 struct ClientContext
 {
     MirConnection *connection;
     ConfigurationMode mode;
+    int mode_data;
     volatile sig_atomic_t running;
     volatile sig_atomic_t reconfigure;
 };
+
+static void print_current_configuration(MirConnection *connection)
+{
+    MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
+
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    {
+        MirDisplayOutput *output = &conf->outputs[i];
+        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d",
+               output->output_id, output->connected,
+               output->used, output->position_x, output->position_y);
+        if (output->current_mode < output->num_modes)
+        {
+            MirDisplayMode *mode = &output->modes[output->current_mode];
+            printf(" mode: %dx%d@%.2f\n",
+                   mode->horizontal_resolution,
+                   mode->vertical_resolution,
+                   mode->refresh_rate);
+        }
+        else
+        {
+            printf("\n");
+        }
+    }
+
+    mir_display_config_destroy(conf);
+}
 
 static int apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
 {
@@ -120,7 +149,36 @@ static void configure_display_vertical(struct MirDisplayConfiguration *conf)
     }
 }
 
-static void configure_display(struct ClientContext *context, ConfigurationMode mode)
+static void configure_display_single(struct MirDisplayConfiguration *conf, int output_num)
+{
+    uint32_t num_connected = 0;
+    uint32_t output_to_enable = output_num;
+
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    {
+        MirDisplayOutput *output = &conf->outputs[i];
+        if (output->connected && output->num_modes > 0)
+            ++num_connected;
+    }
+
+    if (output_to_enable > num_connected)
+        output_to_enable = num_connected;
+
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    {
+        MirDisplayOutput *output = &conf->outputs[i];
+        if (output->connected && output->num_modes > 0)
+        {
+            output->used = (--output_to_enable == 0);
+            output->current_mode = 0;
+            output->position_x = 0;
+            output->position_y = 0;
+        }
+    }
+}
+
+static void configure_display(struct ClientContext *context, ConfigurationMode mode,
+                              int mode_data)
 {
     MirDisplayConfiguration *conf =
         mir_connection_create_display_config(context->connection);
@@ -140,9 +198,18 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
         configure_display_horizontal(conf);
         printf("Applying horizontal configuration: ");
     }
+    else if (mode == configuration_mode_single)
+    {
+        configure_display_single(conf, mode_data);
+        printf("Applying single configuration for output %d: ", mode_data);
+    }
 
     if (apply_configuration(context->connection, conf))
+    {
         context->mode = mode;
+        context->mode_data = mode_data;
+    }
+
     mir_display_config_destroy(conf);
 }
 
@@ -152,17 +219,7 @@ static void display_change_callback(MirConnection *connection, void *context)
 
     printf("=== Display configuration changed === \n");
 
-    MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
-
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
-    {
-        MirDisplayOutput *output = &conf->outputs[i];
-        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d\n",
-               output->output_id, output->connected,
-               output->used, output->position_x, output->position_y);
-    }
-
-    mir_display_config_destroy(conf);
+    print_current_configuration(connection);
 
     struct ClientContext *ctx = (struct ClientContext*) context;
     ctx->reconfigure = 1;
@@ -183,15 +240,25 @@ static void event_callback(
         }
         else if (event->key.key_code == XKB_KEY_c)
         {
-            configure_display(ctx, configuration_mode_clone);
+            configure_display(ctx, configuration_mode_clone, 0);
         }
         else if (event->key.key_code == XKB_KEY_h)
         {
-            configure_display(ctx, configuration_mode_horizontal);
+            configure_display(ctx, configuration_mode_horizontal, 0);
         }
         else if (event->key.key_code == XKB_KEY_v)
         {
-            configure_display(ctx, configuration_mode_vertical);
+            configure_display(ctx, configuration_mode_vertical, 0);
+        }
+        else if (event->key.key_code >= XKB_KEY_1 &&
+                 event->key.key_code <= XKB_KEY_9)
+        {
+            configure_display(ctx, configuration_mode_single,
+                              event->key.key_code - XKB_KEY_0);
+        }
+        else if (event->key.key_code == XKB_KEY_p)
+        {
+            print_current_configuration(ctx->connection);
         }
     }
 }
@@ -203,10 +270,13 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
     {
         printf("A demo client that allows changing the display configuration. While the client\n"
-               "has the focus, use the following keys to change the display configuration:\n"
+               "has the focus, use the following keys to change and get information about the\n"
+               "display configuration:\n"
                " c: clone outputs\n"
                " h: arrange outputs horizontally in the virtual space\n"
-               " v: arrange outputs vertically in the virtual space\n");
+               " v: arrange outputs vertically in the virtual space\n"
+               " 1-9: enable only the Nth connected output (in the order returned by the hardware)\n"
+               " p: print current display configuration\n");
 
         return 1;
     }
@@ -214,7 +284,7 @@ int main(int argc, char *argv[])
     MirConnection *connection = mir_eglapp_native_connection();
     MirSurface *surface = mir_eglapp_native_surface();
 
-    struct ClientContext ctx = {connection, configuration_mode_unknown, 1, 0};
+    struct ClientContext ctx = {connection, configuration_mode_unknown, 0, 1, 0};
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
@@ -236,7 +306,7 @@ int main(int argc, char *argv[])
 
         if (ctx.reconfigure)
         {
-            configure_display(&ctx, ctx.mode);
+            configure_display(&ctx, ctx.mode, ctx.mode_data);
             ctx.reconfigure = 0;
         }
     }

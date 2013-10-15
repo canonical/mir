@@ -30,7 +30,8 @@
 
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
-namespace mfd=mir::frontend::detail;
+namespace mf=mir::frontend;
+namespace mfd=mf::detail;
 namespace geom=mir::geometry;
 
 namespace 
@@ -38,7 +39,7 @@ namespace
 struct MockMsgSender : public mfd::MessageSender
 {
     MOCK_METHOD1(send, void(std::string const&));
-    MOCK_METHOD1(send_fds, void(std::vector<int32_t> const&));
+    MOCK_METHOD2(send, void(std::string const&, mf::FdSets const&));
 };
 }
 

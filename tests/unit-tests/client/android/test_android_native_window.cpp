@@ -18,31 +18,37 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/graphics/android/sync_object.h"
 #include "src/client/mir_client_surface.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/mock_fence.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
+
 namespace mga=mir::graphics::android;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
 
-struct MockSyncFence : public mga::SyncObject
-{
-    ~MockSyncFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
-
 class MockAndroidDriverInterpreter : public mga::AndroidDriverInterpreter
 {
 public:
-    MOCK_METHOD0(driver_requests_buffer, ANativeWindowBuffer*());
-    MOCK_METHOD2(driver_returns_buffer, void(ANativeWindowBuffer*, std::shared_ptr<mga::SyncObject>const& ));
+    MockAndroidDriverInterpreter()
+     : buffer(std::make_shared<mtd::StubAndroidNativeBuffer>())
+    {
+        using namespace testing;
+        ON_CALL(*this, driver_requests_buffer())
+            .WillByDefault(Return(buffer.get()));
+    }
+    MOCK_METHOD0(driver_requests_buffer, mir::graphics::NativeBuffer*());
+    MOCK_METHOD2(driver_returns_buffer, void(ANativeWindowBuffer*, int));
     MOCK_METHOD1(dispatch_driver_request_format, void(int));
     MOCK_CONST_METHOD1(driver_requests_info, int(int));
     MOCK_METHOD1(sync_to_display, void(bool));
+
+    std::shared_ptr<mir::graphics::NativeBuffer> buffer;
 };
 }
 
@@ -137,29 +143,23 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
 {
     using namespace testing;
 
-    ANativeWindowBuffer* returned_buffer;
-    ANativeWindowBuffer fake_buffer;
-    int fence_fd;
-    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
-
+    int fake_fd = 4948;
+    auto mock_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+    EXPECT_CALL(*mock_buffer, copy_fence())
+        .Times(1)
+        .WillOnce(Return(fake_fd));
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .Times(1)
-        .WillOnce(Return(&fake_buffer));
+        .WillOnce(Return(mock_buffer.get()));
 
-    window->dequeueBuffer(window.get(), &returned_buffer, &fence_fd);
-
-    EXPECT_EQ(&fake_buffer, returned_buffer);
-}
-
-
-TEST_F(AndroidNativeWindowTest, native_window_dequeue_indicates_buffer_immediately_usable)
-{
-    ANativeWindowBuffer* returned_buffer;
-    int fence_fd;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
+    int fence_fd;
+    ANativeWindowBuffer* returned_buffer;
     window->dequeueBuffer(window.get(), &returned_buffer, &fence_fd);
-    EXPECT_EQ(-1, fence_fd);
+
+    EXPECT_EQ(mock_buffer->anwb(), returned_buffer);
+    EXPECT_EQ(fake_fd, fence_fd);
 }
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_hook_callable)
@@ -176,15 +176,15 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
     using namespace testing;
 
     ANativeWindowBuffer* returned_buffer;
-    ANativeWindowBuffer fake_buffer;
+    auto fake_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .Times(1)
-        .WillOnce(Return(&fake_buffer));
+        .WillOnce(Return(fake_buffer.get()));
 
     window->dequeueBuffer_DEPRECATED(window.get(), &returned_buffer);
-    EXPECT_EQ(&fake_buffer, returned_buffer);
+    EXPECT_EQ(fake_buffer->anwb(), returned_buffer);
 }
 
 /* queue hook tests */
@@ -204,7 +204,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
     int fence_fd = 33;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
-    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
+    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, fence_fd))
         .Times(1);
 
     window->queueBuffer(window.get(), &buffer, fence_fd);
