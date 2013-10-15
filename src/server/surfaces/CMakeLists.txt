@@ -6,4 +6,5 @@ ADD_LIBRARY(
   surface_data.cpp
   surface_stack.cpp
   surface_controller.cpp
+  surfaces_report.cpp
 )

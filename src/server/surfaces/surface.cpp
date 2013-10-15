@@ -24,6 +24,8 @@
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
 
+#include "surfaces_report.h"
+
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
@@ -43,6 +45,7 @@ ms::Surface::Surface(
       server_input_channel(input_channel),
       surface_in_startup(true)
 {
+    the_surfaces_report()->surface_created(this);
 }
 
 void ms::Surface::force_requests_to_complete()
@@ -52,6 +55,7 @@ void ms::Surface::force_requests_to_complete()
 
 ms::Surface::~Surface()
 {
+    the_surfaces_report()->surface_deleted(this);
 }
 
 std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
