@@ -34,19 +34,16 @@ struct OcclusionFilterTest : public Test
 {
     OcclusionFilterTest()
     {
-        monitor_rect[0].top_left = {0, 0};
-        monitor_rect[0].size = {1920, 1200};
-
-        monitor_rect[1].top_left = {1920, 0};
-        monitor_rect[1].size = {1920, 1200};
+        monitor_rect.top_left = {0, 0};
+        monitor_rect.size = {1920, 1200};
     }
 
-    Rectangle monitor_rect[2];
+    Rectangle monitor_rect;
 };
 
 TEST_F(OcclusionFilterTest, single_window_not_occluded)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria win(12, 34, 56, 78);
 
@@ -55,7 +52,7 @@ TEST_F(OcclusionFilterTest, single_window_not_occluded)
 
 TEST_F(OcclusionFilterTest, smaller_window_occluded)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10);
     EXPECT_FALSE(filter(front));
@@ -66,7 +63,7 @@ TEST_F(OcclusionFilterTest, smaller_window_occluded)
 
 TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10, 0.5f);
     EXPECT_FALSE(filter(front));
@@ -77,7 +74,7 @@ TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 
 TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10, 1.0f, true, false);
     EXPECT_TRUE(filter(front));
@@ -85,7 +82,7 @@ TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
 
 TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10, 1.0f, true, false);
     EXPECT_TRUE(filter(front));
@@ -96,7 +93,7 @@ TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
 
 TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10, 1.0f, false, true);
     EXPECT_FALSE(filter(front));
@@ -107,7 +104,7 @@ TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
 
 TEST_F(OcclusionFilterTest, identical_window_occluded)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10);
     EXPECT_FALSE(filter(front));
@@ -118,7 +115,7 @@ TEST_F(OcclusionFilterTest, identical_window_occluded)
 
 TEST_F(OcclusionFilterTest, larger_window_never_occluded)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 10, 10, 10);
     EXPECT_FALSE(filter(front));
@@ -129,7 +126,7 @@ TEST_F(OcclusionFilterTest, larger_window_never_occluded)
 
 TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     for (int x = 0; x < 10; x++)
     {
@@ -140,7 +137,7 @@ TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
 
 TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
 {
-    OcclusionFilter filter(monitor_rect[0]);
+    OcclusionFilter filter(monitor_rect);
 
     StubCompositingCriteria front(10, 20, 400, 300);
     EXPECT_FALSE(filter(front));
