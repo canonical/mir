@@ -14,8 +14,3 @@ target_link_libraries(
  )
 
 uses_android_input(input-reader-perf)
-
-install(
- TARGETS input-reader-perf
- RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
