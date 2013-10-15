@@ -58,10 +58,15 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
     if (!criteria.should_be_rendered_in(display_buffer.view_area()))
         return true;  // Not on the display, or invisible; definitely occluded.
 
-    // TODO: Replace this with testing of coverage rects.contains(window)
-    //       when Rectangle-contains-Rectangle support lands.
-    //       But for now, let's just say only the top surface is visible...
-    bool occluded = !coverage.empty();
+    bool occluded = false;
+    for (const auto &r : coverage)
+    {
+        if (r.contains(window))
+        {
+            occluded = true;
+            break;
+        }
+    }
 
     if (!occluded && criteria.alpha() == 1.0f && !criteria.shaped())
         coverage.push_back(window);
