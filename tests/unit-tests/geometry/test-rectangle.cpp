@@ -115,10 +115,9 @@ TEST(geometry, empty_rectangle_contains_point_only)
     EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,0}}));
 
     EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {0,1}}));
     EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,1}}));
     EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {3,0}}));
-
-    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
     EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {0,0}}));
     EXPECT_FALSE(r.contains(Rectangle{{left,top+1}, {0,0}}));
 }
@@ -137,13 +136,13 @@ TEST(geometry, elongated_empty_rectangle_contains_points_only)
     EXPECT_TRUE(r.contains(Rectangle{{left,top+2}, {0,0}}));
     EXPECT_TRUE(r.contains(Rectangle{{left,top+3}, {0,0}}));
 
-    EXPECT_FALSE(r.contains(Rectangle{{left,top+4}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,1}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+1}, {0,2}}));
 
+    EXPECT_FALSE(r.contains(Rectangle{{left,top+4}, {0,0}}));
     EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
     EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,1}}));
     EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {3,0}}));
-
-    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
     EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {0,0}}));
 }
 
