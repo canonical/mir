@@ -58,6 +58,10 @@ class MockConnector : public mf::Connector
 public:
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
+    /*
+     * We don't have expectations for these, so use stubs
+     * to silence gmock warnings.
+     */
     int client_socket_fd() const { return 0; }
     void remove_endpoint() const {}
 };
