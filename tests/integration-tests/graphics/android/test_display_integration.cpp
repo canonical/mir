@@ -52,9 +52,6 @@ class AndroidGPUDisplay : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
-        /* this is an important precondition for acquiring the display! */
-        ASSERT_FALSE(mir::test::draw::is_surface_flinger_running());
-
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */

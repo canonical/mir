@@ -119,10 +119,8 @@ int cancelBuffer_deprecated_static(struct ANativeWindow* window,
 int cancelBuffer_static(struct ANativeWindow* window,
                         struct ANativeWindowBuffer* buffer, int fence_fd)
 {
-    auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->cancelBuffer(buffer, fence);
+    return self->cancelBuffer(buffer, fence_fd);
 }
 
 }
