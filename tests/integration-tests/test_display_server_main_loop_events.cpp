@@ -642,6 +642,11 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_server_status_listener, resumed()).Times(1);
+
+        /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_connector, stop()).Times(1);
     }
 
     mir::run_mir(server_config,
