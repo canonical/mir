@@ -74,13 +74,13 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
     return occluded;
 }
 
-void OcclusionMatch::operator()(const CompositingCriteria &,
-                                surfaces::BufferStream &str)
+void OcclusionMatch::operator()(const CompositingCriteria &criteria,
+                                surfaces::BufferStream &)
 {
-    hidden.insert(&str);
+    hidden.insert(&criteria);
 }
 
-bool OcclusionMatch::occluded(const surfaces::BufferStream &stream) const
+bool OcclusionMatch::occluded(const CompositingCriteria &criteria) const
 {
-    return hidden.find(&stream) != hidden.end();
+    return hidden.find(&criteria) != hidden.end();
 }

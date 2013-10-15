@@ -53,11 +53,17 @@ public:
     void operator()(const CompositingCriteria &,
                     surfaces::BufferStream &stream) override;
 
-    bool occluded(const surfaces::BufferStream &stream) const;
+    bool occluded(const CompositingCriteria &criteria) const;
 
 private:
-    typedef std::set<const surfaces::BufferStream*> BufferStreamSet;
-    BufferStreamSet hidden;
+    /*
+     * This is realible, but not ideal -- using the criteria address as a
+     * unique key for renderables. Ideally we should have access to a
+     * Renderable interface that has a unique ID we can use. But this works
+     * for now...
+     */
+    typedef std::set<const CompositingCriteria*> RenderableSet;
+    RenderableSet hidden;
 };
 
 } // namespace compositor
