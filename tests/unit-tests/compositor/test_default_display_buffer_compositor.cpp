@@ -162,6 +162,9 @@ TEST(DefaultDisplayBufferCompositor, render)
     EXPECT_CALL(scene, for_each_if(_,_))
                 .Times(1);
 
+    EXPECT_CALL(scene, reverse_for_each_if(_,_))
+        .Times(1);
+
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
@@ -356,7 +359,7 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     renderable_vec.push_back(&fullscreen);
 
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(small),_))
-        .Times(1);
+        .Times(0);  // zero due to occlusion detection
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(fullscreen),_))
         .Times(1);
 
@@ -405,7 +408,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     renderable_vec.push_back(&fullscreen);
 
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(small),_))
-        .Times(1);
+        .Times(0);  // zero due to occlusion detection
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(fullscreen),_))
         .Times(1);
 
