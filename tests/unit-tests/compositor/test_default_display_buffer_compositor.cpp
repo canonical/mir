@@ -78,7 +78,16 @@ struct FakeScene : mc::Scene
         }
     }
 
-    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&) {}
+    void reverse_for_each_if(mc::FilterForScene &filter,
+                             mc::OperatorForScene &op)
+    {
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        {
+            mc::CompositingCriteria &criteria = **it;
+            if (filter(criteria))
+                op(criteria, stub_stream);
+        }
+    }
 
     void set_change_callback(std::function<void()> const&) {}
 
@@ -504,4 +513,48 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .Times(0);
     comp->composite();
 }
+
+TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
+{
+    using namespace testing;
+
+    StubRendererFactory renderer_factory;
+    NiceMock<MockOverlayRenderer> overlay_renderer;
+
+    geom::Rectangle screen{{0, 0}, {1366, 768}};
+
+    mtd::MockDisplayBuffer display_buffer;
+    EXPECT_CALL(display_buffer, view_area())
+        .WillRepeatedly(Return(screen));
+    EXPECT_CALL(display_buffer, make_current())
+        .Times(1);
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(1);
+    EXPECT_CALL(display_buffer, can_bypass())
+        .WillRepeatedly(Return(false));
+
+    mtd::StubCompositingCriteria large(0, 0, 100, 100);
+    mtd::StubCompositingCriteria small(10, 20, 30, 40);
+
+    std::vector<mc::CompositingCriteria*> renderable_vec;
+    renderable_vec.push_back(&small);
+    renderable_vec.push_back(&large);
+
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(small),_))
+        .Times(0);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(large),_))
+        .Times(1);
+
+    FakeScene scene(renderable_vec);
+
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory),
+        mt::fake_shared(overlay_renderer));
+
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
+}
+
 
