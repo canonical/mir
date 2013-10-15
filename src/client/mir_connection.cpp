@@ -62,6 +62,8 @@ private:
     MirDisplayConfiguration* const config;
 };
 
+std::mutex connection_guard;
+std::unordered_set<MirConnection*> valid_connections;
 }
 
 MirConnection::MirConnection() :
@@ -288,7 +290,6 @@ MirWaitHandle* MirConnection::disconnect()
     catch (std::exception const& x)
     {
         set_error_message(std::string("disconnect: ") + x.what());
-        disconnect_wait_handle.result_received();
     }
 
     return &disconnect_wait_handle;

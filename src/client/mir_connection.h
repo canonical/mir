@@ -156,8 +156,6 @@ private:
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
-    static std::mutex connection_guard;
-    static std::unordered_set<MirConnection*> valid_connections;
 
     struct SurfaceRelease;
 

@@ -19,7 +19,13 @@
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
 
-namespace mfd = mir::frontend::detail;
+#include <errno.h>
+#include <string.h>
+
+#include <stdexcept>
+
+namespace mf = mir::frontend;
+namespace mfd = mf::detail;
 namespace bs = boost::system;
 namespace ba = boost::asio;
 
@@ -43,12 +49,19 @@ pid_t mfd::SocketMessenger::client_pid()
 
 void mfd::SocketMessenger::send(std::string const& body)
 {
+    send(body, mf::FdSets());
+}
+
+void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
+{
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
     {
         static_cast<unsigned char>((size >> 8) & 0xff),
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
+    
+    std::unique_lock<std::mutex> lg(message_lock);
 
     whole_message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
@@ -59,11 +72,13 @@ void mfd::SocketMessenger::send(std::string const& body)
     // function has completed (if it would be executed asynchronously.
     // NOTE: we rely on this synchronous behavior as per the comment in
     // mf::SessionMediator::create_surface
-    boost::system::error_code err;
-    ba::write(*socket, ba::buffer(whole_message), err);
+    ba::write(*socket, ba::buffer(whole_message));
+
+    for (auto const& fds : fd_set)
+        send_fds_locked(lg, fds);
 }
 
-void mfd::SocketMessenger::send_fds(std::vector<int32_t> const& fds)
+void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<int32_t> const& fds)
 {
     auto n_fds = fds.size();
     if (n_fds > 0)
@@ -97,7 +112,9 @@ void mfd::SocketMessenger::send_fds(std::vector<int32_t> const& fds)
         for (auto &fd: fds)
             data[i++] = fd;
 
-        sendmsg(socket->native_handle(), &header, 0);
+        auto sent = sendmsg(socket->native_handle(), &header, 0);
+        if (sent < 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
 }
 

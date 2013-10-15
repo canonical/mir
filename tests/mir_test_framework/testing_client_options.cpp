@@ -65,7 +65,7 @@ class StubClientBuffer : public mcl::ClientBuffer
     void mark_as_submitted()
     {
     }
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const
     {
         return nullptr;
     }
@@ -102,6 +102,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678);
         return std::make_shared<EGLNativeDisplayType>(fake_display);
+    }
+
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
+    {
+        return nullptr;
     }
 };
 

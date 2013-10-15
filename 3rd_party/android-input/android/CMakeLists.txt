@@ -64,7 +64,6 @@ target_link_libraries(
   android-input
 
   ${Boost_LIBRARIES}
-  -lpthread
 )
 
 set_target_properties(
