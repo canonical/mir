@@ -142,24 +142,28 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
         static_cast<int32_t>(stride.as_uint32_t() / geom::bytes_per_pixel(pf));
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
     auto native_handle = buffer.native_buffer_handle();
-
     ASSERT_NE(nullptr, native_handle);
-    EXPECT_EQ(package.get(), native_handle->handle);
-    EXPECT_EQ(width.as_uint32_t(), static_cast<uint32_t>(native_handle->width));
-    EXPECT_EQ(height.as_uint32_t(), static_cast<uint32_t>(native_handle->height));
-    EXPECT_EQ(correct_usage, native_handle->usage);
-    EXPECT_EQ(expected_stride_in_pixels, native_handle->stride);
+
+    auto anwb = native_handle->anwb();
+    ASSERT_NE(nullptr, anwb);
+
+    EXPECT_EQ(package.get(), anwb->handle);
+    EXPECT_EQ(width.as_uint32_t(), static_cast<uint32_t>(anwb->width));
+    EXPECT_EQ(height.as_uint32_t(), static_cast<uint32_t>(anwb->height));
+    EXPECT_EQ(correct_usage, anwb->usage);
+    EXPECT_EQ(expected_stride_in_pixels, anwb->stride);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
 {
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
     auto native_handle = buffer.native_buffer_handle();
+    auto anwb = native_handle->anwb();
 
-    ASSERT_NE(nullptr, native_handle);
-    ASSERT_NE(nullptr, native_handle->common.incRef);
-    ASSERT_NE(nullptr, native_handle->common.decRef);
+    ASSERT_NE(nullptr, anwb);
+    ASSERT_NE(nullptr, anwb->common.incRef);
+    ASSERT_NE(nullptr, anwb->common.decRef);
 
-    native_handle->common.incRef(&native_handle->common);
-    native_handle->common.decRef(&native_handle->common);
+    anwb->common.incRef(&anwb->common);
+    anwb->common.decRef(&anwb->common);
 }

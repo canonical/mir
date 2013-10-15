@@ -20,6 +20,7 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test/draw/android_graphics.h"
@@ -311,7 +312,7 @@ struct TestClient
 /* server code */
 struct StubServerGenerator : public mt::StubServerTool
 {
-    StubServerGenerator(std::shared_ptr<MirNativeBuffer> const& handle, int id)
+    StubServerGenerator(std::shared_ptr<mg::NativeBuffer> const& handle, int id)
      : handle(handle),
        next_received(false),
        next_allowed(false),
@@ -330,10 +331,10 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(handle_id);
-        response->mutable_buffer()->set_stride(handle->stride);
+        response->mutable_buffer()->set_stride(handle->anwb()->stride);
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = handle->handle;
+        native_handle_t const* native_handle = handle->handle();
         for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -366,8 +367,8 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_buffer_id(handle_id);
 
         response->set_fds_on_side_channel(1);
-        native_handle_t const* native_handle = handle->handle;
-        response->set_stride(handle->stride);
+        native_handle_t const* native_handle = handle->handle();
+        response->set_stride(handle->anwb()->stride);
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
@@ -392,14 +393,14 @@ struct StubServerGenerator : public mt::StubServerTool
         lk.unlock();
     }
 
-    void set_handle(std::shared_ptr<MirNativeBuffer> const& pack, int id)
+    void set_handle(std::shared_ptr<mg::NativeBuffer> const& pack, int id)
     {
         handle = pack;
         handle_id = id;
     }
 
 private:
-    std::shared_ptr<MirNativeBuffer> handle;
+    std::shared_ptr<mg::NativeBuffer> handle;
 
     std::mutex next_guard;
     std::condition_variable next_cv;
@@ -485,8 +486,8 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mtf::Process> client_process;
 
-    std::shared_ptr<MirNativeBuffer> handle;
-    std::shared_ptr<MirNativeBuffer> second_handle;
+    std::shared_ptr<mg::NativeBuffer> handle;
+    std::shared_ptr<mg::NativeBuffer> second_handle;
 
     std::shared_ptr<mg::Buffer> android_buffer;
     std::shared_ptr<mg::Buffer> second_android_buffer;
@@ -514,7 +515,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
+    auto region = buffer_converter->graphic_region_from_handle(handle->anwb());
     EXPECT_TRUE(rendered_pattern.check(region));
 }
 
@@ -527,7 +528,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    auto region = buffer_converter->graphic_region_from_handle(handle);
+    auto region = buffer_converter->graphic_region_from_handle(handle->anwb());
     EXPECT_TRUE(rendered_pattern0.check(region));
 
     mock_server->set_handle(second_handle, 15);
@@ -536,7 +537,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
+    auto second_region = buffer_converter->graphic_region_from_handle(second_handle->anwb());
     EXPECT_TRUE(rendered_pattern1.check(second_region));
 }
 
@@ -554,7 +555,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
+    auto region = buffer_converter->graphic_region_from_handle(handle->anwb());
     EXPECT_TRUE(rendered_pattern.check(region));
 }
 
@@ -573,7 +574,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
+    auto region = buffer_converter->graphic_region_from_handle(handle->anwb());
     EXPECT_TRUE(red_pattern.check(region));
 }
 
@@ -596,9 +597,9 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->graphic_region_from_handle(handle);
+    auto region = buffer_converter->graphic_region_from_handle(handle->anwb());
     EXPECT_TRUE(red_pattern.check(region));
 
-    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
+    auto second_region = buffer_converter->graphic_region_from_handle(second_handle->anwb());
     EXPECT_TRUE(green_pattern.check(second_region));
 }

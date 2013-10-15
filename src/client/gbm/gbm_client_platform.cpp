@@ -171,3 +171,9 @@ MirPlatformType mclg::GBMClientPlatform::platform_type() const
 {
     return mir_platform_type_gbm; 
 } 
+
+MirNativeBuffer* mclg::GBMClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
+{
+    //MirNativeBuffer is type-compatible with the MirNativeBuffer
+    return buf;
+}

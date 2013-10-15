@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"
@@ -25,12 +26,11 @@
 #include "android_format_conversion-inl.h"
 #include "interpreter_resource_cache.h"
 
+#include <system/window.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-#include <thread>
-#include <chrono>
-namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -44,21 +44,20 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
 {
 }
 
-ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
+mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
-    auto handle = buffer->native_buffer_handle().get();
+    auto handle = buffer->native_buffer_handle();
     resource_cache->store_buffer(buffer, handle);
-    return handle;
+    return handle.get();
 }
 
-//sync object could be passed to hwc. we don't need to that yet though
-void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<SyncObject> const& fence)
+void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
-    fence->wait();
-    auto buffer = resource_cache->retrieve_buffer(returned_handle); 
-    poster->set_next_frontbuffer(buffer);
-    swapper->compositor_release(buffer);
+    resource_cache->update_native_fence(buffer, fence_fd);
+    auto buffer_resource = resource_cache->retrieve_buffer(buffer);
+    poster->set_next_frontbuffer(buffer_resource);
+    swapper->compositor_release(buffer_resource);
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)
@@ -83,6 +82,8 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             return format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0; 
+        case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
+            return 1;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
