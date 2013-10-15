@@ -17,14 +17,14 @@
  */
 
 #include "mir/compositor/compositing_criteria.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/geometry/rectangle.h"
 #include "occlusion.h"
 
 using namespace mir;
 using namespace mir::compositor;
 
-OcclusionFilter::OcclusionFilter(const graphics::DisplayBuffer &display_buffer)
-        : display_buffer(display_buffer)
+OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
+        : area(area)
 {
 }
 
@@ -55,7 +55,7 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
     int y = trans[3][1] - height / 2;
     geometry::Rectangle window{{x, y}, {width, height}};
 
-    if (!criteria.should_be_rendered_in(display_buffer.view_area()))
+    if (!criteria.should_be_rendered_in(area))
         return true;  // Not on the display, or invisible; definitely occluded.
 
     bool occluded = false;

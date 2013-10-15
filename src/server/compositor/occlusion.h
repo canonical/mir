@@ -26,10 +26,6 @@
 
 namespace mir
 {
-namespace graphics
-{
-class DisplayBuffer;
-}
 namespace compositor
 {
 class CompositingCriteria;
@@ -37,11 +33,11 @@ class CompositingCriteria;
 class OcclusionFilter : public FilterForScene
 {
 public:
-    OcclusionFilter(const graphics::DisplayBuffer &display_buffer);
+    OcclusionFilter(const geometry::Rectangle &area);
     bool operator()(const CompositingCriteria &criteria) override;
 
 private:
-    const graphics::DisplayBuffer &display_buffer;
+    const geometry::Rectangle &area;
 
     typedef std::vector<geometry::Rectangle> RectangleList;
     RectangleList coverage;

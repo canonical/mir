@@ -134,7 +134,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         auto const& view_area = display_buffer.view_area();
 
-        mc::OcclusionFilter occlusion_search(display_buffer);
+        mc::OcclusionFilter occlusion_search(view_area);
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
 
