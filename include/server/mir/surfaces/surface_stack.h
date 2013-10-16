@@ -67,6 +67,8 @@ public:
 
     // From Scene
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
+    virtual void reverse_for_each_if(compositor::FilterForScene& filter,
+                                     compositor::OperatorForScene& op);
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
