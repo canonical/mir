@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_OCCLUSION_H_
 
 #include "mir/compositor/scene.h"
-#include "glm/glm.hpp"
 #include <vector>
 #include <set>
 
@@ -52,12 +51,6 @@ public:
     bool occluded(const CompositingCriteria &criteria) const;
 
 private:
-    /*
-     * This is realible, but not ideal -- using the criteria address as a
-     * unique key for renderables. Ideally we should have access to a
-     * Renderable interface that has a unique ID we can use. But this works
-     * for now...
-     */
     typedef std::set<const CompositingCriteria*> RenderableSet;
     RenderableSet hidden;
 };
