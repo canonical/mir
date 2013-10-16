@@ -21,7 +21,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/egl_resources.h"
-#include "android_framebuffer_window.h"
 #include "android_display_configuration.h"
 
 #include <EGL/egl.h>
@@ -80,9 +79,6 @@ private:
     std::shared_ptr<DisplaySupportProvider> display_provider;
     
     AndroidDisplayConfiguration current_configuration;
-
-    //TODO remov;
-    AndroidFramebufferWindow selector;
 };
 
 }

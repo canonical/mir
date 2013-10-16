@@ -55,8 +55,10 @@ protected:
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
         stub_display_support = std::make_shared<mtd::StubDisplaySupportProvider>();
         native_win = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
+        db_factory = std::make_shared<mga::DisplayBufferFactory>();
     }
 
+    std::shared_ptr<mga::DisplayBufferFactory> db_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<ANativeWindow> native_win;
     std::shared_ptr<mtd::StubDisplaySupportProvider> stub_display_support;
@@ -77,7 +79,6 @@ TEST_F(AndroidTestFramebufferInit, eglChooseConfig_attributes)
                   SetArgPointee<4>(mock_egl.fake_configs_num),
                   Return(EGL_TRUE)));
 
-    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
 
     int i=0;
@@ -101,7 +102,6 @@ TEST_F(AndroidTestFramebufferInit, eglChooseConfig_attributes)
     EXPECT_TRUE(renderable_bit_correct);
 }
 
-#if 0
 TEST_F(AndroidTestFramebufferInit, queries_with_enough_room_for_all_potential_cfg)
 {
     using namespace testing;
@@ -123,8 +123,7 @@ TEST_F(AndroidTestFramebufferInit, queries_with_enough_room_for_all_potential_cf
                   SetArgPointee<4>(mock_egl.fake_configs_num),
                   Return(EGL_TRUE)));
 
-    mga::AndroidFramebufferWindow fb_win;
-    fb_win.android_display_egl_config(mock_egl.fake_egl_display, native_win);
+    mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
 
     /* should be able to ref this spot */
     EGLint test_last_spot = attr[num_cfg-1];
@@ -132,6 +131,7 @@ TEST_F(AndroidTestFramebufferInit, queries_with_enough_room_for_all_potential_cf
 
 }
 
+#if 0
 TEST_F(AndroidTestFramebufferInit, creates_with_proper_visual_id_mixed_valid_invalid)
 {
     using namespace testing;
@@ -153,8 +153,7 @@ TEST_F(AndroidTestFramebufferInit, creates_with_proper_visual_id_mixed_valid_inv
                         SetArgPointee<3>(bad_id),
                         Return(EGL_TRUE)));
 
-    mga::AndroidFramebufferWindow fb_win;
-    chosen_cfg = fb_win.android_display_egl_config(mock_egl.fake_egl_display, native_win);
+    mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
 
     EXPECT_EQ(cfg, chosen_cfg);
 }
@@ -173,13 +172,13 @@ TEST_F(AndroidTestFramebufferInit, without_proper_visual_id_throws)
                         SaveArg<1>(&cfg),
                         Return(EGL_TRUE)));
 
-    mga::AndroidFramebufferWindow fb_win;
     EXPECT_THROW(
     {
-        chosen_cfg = fb_win.android_display_egl_config(mock_egl.fake_egl_display, native_win);
+        mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
     }, std::runtime_error );
 }
 #endif
+
 TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
 {
     using namespace testing;
@@ -187,7 +186,6 @@ TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
     EXPECT_CALL(this->mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
     .Times(Exactly(1));
 
-    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
