@@ -122,7 +122,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-          native_window, display_provider, egl_display, egl_context_shared)},
+          native_window, display_provider, egl_display, egl_config, egl_context_shared)},
       display_provider(display_provider),
       current_configuration{display_buffer->view_area().size}
 {

@@ -44,6 +44,7 @@ public:
         std::shared_ptr<ANativeWindow> const& native_win,
         std::shared_ptr<DisplaySupportProvider> const& hwc_device,
         EGLDisplay egl_display,
+        EGLConfig egl_config,
         EGLContext egl_context_shared) = 0;
 
 protected:

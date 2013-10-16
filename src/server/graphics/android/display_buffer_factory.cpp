@@ -17,7 +17,6 @@
  */
 
 #include "display_buffer_factory.h"
-#include "android_framebuffer_window.h"
 #include "display_support_provider.h"
 
 #include "mir/graphics/display_buffer.h"
@@ -59,12 +58,13 @@ class GPUDisplayBuffer : public mg::DisplayBuffer
 public:
     GPUDisplayBuffer(std::shared_ptr<ANativeWindow> const& native_window,
                      EGLDisplay egl_display,
+                     EGLConfig egl_config,
                      EGLContext egl_context_shared,
                      std::shared_ptr<mga::DisplaySupportProvider> const& support_provider)
         : native_window{native_window},
-          egl_config{selector.android_display_egl_config(egl_display, *native_window)},
           support_provider{support_provider},
           egl_display{egl_display},
+          egl_config{egl_config},
           egl_context{egl_display, create_context(egl_display, egl_config, egl_context_shared)},
           egl_surface{egl_display, create_surface(egl_display, egl_config, native_window.get())},
           blanked(false)
@@ -103,12 +103,10 @@ public:
     
 protected:
     std::shared_ptr<ANativeWindow> const native_window;
-    //confusing
-    EGLConfig egl_config;
-    mga::AndroidFramebufferWindow selector;
 
     std::shared_ptr<mga::DisplaySupportProvider> const support_provider;
     EGLDisplay const egl_display;
+    EGLConfig const egl_config;
     mg::EGLContextStore const egl_context;
     mg::EGLSurfaceStore const egl_surface;
     bool blanked;
@@ -120,9 +118,9 @@ protected:
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
     std::shared_ptr<ANativeWindow> const& native_window,
     std::shared_ptr<DisplaySupportProvider> const& hwc_device,
-    EGLDisplay egl_display,
+    EGLDisplay egl_display, EGLConfig egl_config,
     EGLContext egl_context_shared)
 {
-    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_context_shared, hwc_device);
+    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_config, egl_context_shared, hwc_device);
     return std::unique_ptr<mg::DisplayBuffer>(raw);
 }
