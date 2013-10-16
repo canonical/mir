@@ -1,3 +1,21 @@
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Daniel d'Andrada <daniel.dandrada@canonical.com>
+ */
+
 #ifndef NTRIG_INPUT_EVENTS_H_
 #define NTRIG_INPUT_EVENTS_H_
 
@@ -10,6 +28,11 @@ struct InputEventData {
     int32_t value;
 };
 
+/*
+  Events recorded from an N-Trig touchscreen.
+  Frantically tapping and sliding fingers (up to 5 or 6 at the same time) for half a
+  minute or so.
+*/
 struct InputEventData gInputEvents[] = {
     {INT64_C(1380575033089701000), 0x0003, 0x0035, 384},
     {INT64_C(1380575033089701000), 0x0003, 0x0036, 4392},
