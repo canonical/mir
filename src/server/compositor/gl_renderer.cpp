@@ -247,7 +247,7 @@ void mc::GLRenderer::render(
 {
     glUseProgram(resources.program);
 
-    if (criteria.shaped()) // meaning the surface has an alpha channel
+    if (criteria.shaped() || criteria.alpha() < 1.0f)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
