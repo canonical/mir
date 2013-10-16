@@ -31,6 +31,17 @@ namespace doubles
 class StubDriverInterpreter : public graphics::android::AndroidDriverInterpreter
 {
 public:
+    StubDriverInterpreter(mir::geometry::Size sz, int visual_id)
+     : sz{sz},
+       visual_id{visual_id}
+    {
+    }
+
+    StubDriverInterpreter()
+     : StubDriverInterpreter(mir::geometry::Size{44,22}, 3)
+    {
+    }
+
     mir::graphics::NativeBuffer* driver_requests_buffer()
     {
         return nullptr;
@@ -41,13 +52,22 @@ public:
     void dispatch_driver_request_format(int) 
     {
     }
-    int driver_requests_info(int) const
+    int driver_requests_info(int index) const
     {
+        if (index == NATIVE_WINDOW_WIDTH)
+            return sz.width.as_uint32_t();
+        if (index == NATIVE_WINDOW_HEIGHT)
+            return sz.height.as_uint32_t();
+        if (index == NATIVE_WINDOW_FORMAT)
+            return visual_id;
         return 0;
     }
     void sync_to_display(bool)
     {
-    } 
+    }
+private:
+    mir::geometry::Size sz;
+    int visual_id;
 };
 }
 }

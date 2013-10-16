@@ -44,7 +44,7 @@ struct DummyHWCDisplayType {};
 
 static geom::Size const display_size{433,232};
 
-class AndroidTestFramebufferInit : public ::testing::Test
+class AndroidDisplayTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -53,8 +53,9 @@ protected:
         mock_egl.silence_uninteresting();
 
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
-        stub_display_support = std::make_shared<mtd::StubDisplaySupportProvider>();
-        native_win = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
+        stub_display_support = std::make_shared<mtd::StubDisplaySupportProvider>(display_size);
+        auto stub_driver_interpreter = std::make_shared<mtd::StubDriverInterpreter>(display_size, 5);
+        native_win = std::make_shared<mg::android::MirNativeWindow>(stub_driver_interpreter);
         db_factory = std::make_shared<mga::DisplayBufferFactory>();
     }
 
@@ -65,19 +66,19 @@ protected:
     mtd::MockEGL mock_egl;
 };
 
-TEST_F(AndroidTestFramebufferInit, eglChooseConfig_attributes)
+TEST_F(AndroidDisplayTest, eglChooseConfig_attributes)
 {
     using namespace testing;
 
     const EGLint *attr;
 
     EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, _, _))
-    .Times(AtLeast(0))
-    .WillOnce(DoAll(
-                  SaveArg<1>(&attr),
-                  SetArgPointee<2>(mock_egl.fake_configs),
-                  SetArgPointee<4>(mock_egl.fake_configs_num),
-                  Return(EGL_TRUE)));
+        .Times(AtLeast(0))
+        .WillOnce(DoAll(
+            SaveArg<1>(&attr),
+            SetArgPointee<2>(mock_egl.fake_configs),
+            SetArgPointee<4>(mock_egl.fake_configs_num),
+            Return(EGL_TRUE)));
 
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
 
@@ -102,7 +103,7 @@ TEST_F(AndroidTestFramebufferInit, eglChooseConfig_attributes)
     EXPECT_TRUE(renderable_bit_correct);
 }
 
-TEST_F(AndroidTestFramebufferInit, queries_with_enough_room_for_all_potential_cfg)
+TEST_F(AndroidDisplayTest, queries_with_enough_room_for_all_potential_cfg)
 {
     using namespace testing;
 
@@ -132,7 +133,7 @@ TEST_F(AndroidTestFramebufferInit, queries_with_enough_room_for_all_potential_cf
 }
 
 #if 0
-TEST_F(AndroidTestFramebufferInit, creates_with_proper_visual_id_mixed_valid_invalid)
+TEST_F(AndroidDisplayTest, creates_with_proper_visual_id_mixed_valid_invalid)
 {
     using namespace testing;
 
@@ -158,7 +159,7 @@ TEST_F(AndroidTestFramebufferInit, creates_with_proper_visual_id_mixed_valid_inv
     EXPECT_EQ(cfg, chosen_cfg);
 }
 
-TEST_F(AndroidTestFramebufferInit, without_proper_visual_id_throws)
+TEST_F(AndroidDisplayTest, without_proper_visual_id_throws)
 {
     using namespace testing;
 
@@ -179,7 +180,7 @@ TEST_F(AndroidTestFramebufferInit, without_proper_visual_id_throws)
 }
 #endif
 
-TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
+TEST_F(AndroidDisplayTest, eglGetDisplay)
 {
     using namespace testing;
 
@@ -189,7 +190,7 @@ TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglGetDisplay_failure)
+TEST_F(AndroidDisplayTest, eglGetDisplay_failure)
 {
     using namespace testing;
 
@@ -202,7 +203,7 @@ TEST_F(AndroidTestFramebufferInit, eglGetDisplay_failure)
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize)
+TEST_F(AndroidDisplayTest, eglInitialize)
 {
     using namespace testing;
 
@@ -212,7 +213,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize)
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure)
+TEST_F(AndroidDisplayTest, eglInitialize_failure)
 {
     using namespace testing;
 
@@ -226,7 +227,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure)
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
+TEST_F(AndroidDisplayTest, eglInitialize_failure_bad_major_version)
 {
     using namespace testing;
 
@@ -242,7 +243,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
+TEST_F(AndroidDisplayTest, eglInitialize_failure_bad_minor_version)
 {
     using namespace testing;
 
@@ -259,7 +260,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
 }
 
 #if 0 
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
+TEST_F(AndroidDisplayTest, eglCreateWindowSurface_requests_config)
 {
     using namespace testing;
     EGLConfig fake_config = (EGLConfig) 0x3432;
@@ -273,7 +274,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
 }
 #endif
 
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
+TEST_F(AndroidDisplayTest, eglCreateWindowSurface_nullarg)
 {
     using namespace testing;
 
@@ -284,7 +285,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
 }
 
 #if 0
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_uses_native_window_type)
+TEST_F(AndroidDisplayTest, eglCreateWindowSurface_uses_native_window_type)
 {
     using namespace testing;
     EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
@@ -298,7 +299,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_uses_native_window_typ
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 #endif
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
+TEST_F(AndroidDisplayTest, eglCreateWindowSurface_failure)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_,_,_))
@@ -312,7 +313,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
 }
 
 /* create context stuff */
-TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
+TEST_F(AndroidDisplayTest, CreateContext_window_cfg_matches_context_cfg)
 {
     using namespace testing;
 
@@ -334,7 +335,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
     EXPECT_EQ(chosen_cfg, cfg);
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_contexts_are_shared)
+TEST_F(AndroidDisplayTest, CreateContext_contexts_are_shared)
 {
     using namespace testing;
 
@@ -360,7 +361,7 @@ ACTION_P(AppendContextAttrPtr, vec)
 
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_context_attr_null_terminated)
+TEST_F(AndroidDisplayTest, CreateContext_context_attr_null_terminated)
 {
     using namespace testing;
 
@@ -382,7 +383,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_attr_null_terminated)
     }
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
+TEST_F(AndroidDisplayTest, CreateContext_context_uses_client_version_2)
 {
     using namespace testing;
 
@@ -416,7 +417,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
     };
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_failure)
+TEST_F(AndroidDisplayTest, CreateContext_failure)
 {
     using namespace testing;
 
@@ -430,7 +431,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_failure)
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_pbuffer_surface)
+TEST_F(AndroidDisplayTest, MakeCurrent_uses_correct_pbuffer_surface)
 {
     using namespace testing;
     EGLSurface fake_surface = (EGLSurface) 0x715;
@@ -444,7 +445,7 @@ TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_pbuffer_surface)
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
-TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_dummy_context)
+TEST_F(AndroidDisplayTest, MakeCurrent_uses_correct_dummy_context)
 {
     using namespace testing;
 
@@ -460,7 +461,7 @@ TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_dummy_context)
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
+TEST_F(AndroidDisplayTest, eglMakeCurrent_failure_throws)
 {
     using namespace testing;
 
@@ -475,7 +476,7 @@ TEST_F(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
 
 }
 
-TEST_F(AndroidTestFramebufferInit, make_current_from_interface_calls_egl)
+TEST_F(AndroidDisplayTest, make_current_from_interface_calls_egl)
 {
     using namespace testing;
 
@@ -493,7 +494,7 @@ TEST_F(AndroidTestFramebufferInit, make_current_from_interface_calls_egl)
     Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
-TEST_F(AndroidTestFramebufferInit, make_current_failure_throws)
+TEST_F(AndroidDisplayTest, make_current_failure_throws)
 {
     using namespace testing;
 
@@ -547,7 +548,7 @@ private:
 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglContext_resources_freed)
+TEST_F(AndroidDisplayTest, eglContext_resources_freed)
 {
     using namespace testing;
 
@@ -576,7 +577,7 @@ TEST_F(AndroidTestFramebufferInit, eglContext_resources_freed)
     ASSERT_TRUE(store.empty());
 }
 
-TEST_F(AndroidTestFramebufferInit, eglSurface_resources_freed)
+TEST_F(AndroidDisplayTest, eglSurface_resources_freed)
 {
     using namespace testing;
 
@@ -611,7 +612,7 @@ TEST_F(AndroidTestFramebufferInit, eglSurface_resources_freed)
     ASSERT_TRUE(store.empty());
 }
 
-TEST_F(AndroidTestFramebufferInit, display_termination) 
+TEST_F(AndroidDisplayTest, display_termination) 
 {
     using namespace testing;
 
@@ -624,7 +625,7 @@ TEST_F(AndroidTestFramebufferInit, display_termination)
 }
 
 
-TEST_F(AndroidTestFramebufferInit, startup_logging_ok)
+TEST_F(AndroidDisplayTest, startup_logging_ok)
 {
     using namespace testing;
     EXPECT_CALL(*mock_display_report, report_successful_setup_of_native_resources())
@@ -642,7 +643,7 @@ TEST_F(AndroidTestFramebufferInit, startup_logging_ok)
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
-TEST_F(AndroidTestFramebufferInit, startup_logging_error_because_of_surface_creation_failure)
+TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_failure)
 {
     using namespace testing;
 
@@ -662,7 +663,7 @@ TEST_F(AndroidTestFramebufferInit, startup_logging_error_because_of_surface_crea
     }, std::runtime_error);
 }
 
-TEST_F(AndroidTestFramebufferInit, startup_logging_error_because_of_makecurrent)
+TEST_F(AndroidDisplayTest, startup_logging_error_because_of_makecurrent)
 {
     using namespace testing;
 
@@ -683,7 +684,7 @@ TEST_F(AndroidTestFramebufferInit, startup_logging_error_because_of_makecurrent)
 }
 
 //we only have single display and single mode on android for the time being
-TEST_F(AndroidTestFramebufferInit, android_display_configuration_info)
+TEST_F(AndroidDisplayTest, android_display_configuration_info)
 {
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
     auto config = display.configuration();
