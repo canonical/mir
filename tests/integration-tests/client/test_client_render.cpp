@@ -65,9 +65,11 @@ struct TestClient
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters{
+        MirSurfaceParameters surface_parameters
+        {
             "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_software, mir_display_output_id_invalid};
+            mir_buffer_usage_software, mir_display_output_id_invalid
+        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
         auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
         MirGraphicsRegion graphics_region;
@@ -95,9 +97,11 @@ struct TestClient
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters{
+        MirSurfaceParameters surface_parameters
+        {
             "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware, mir_display_output_id_invalid};
+            mir_buffer_usage_hardware, mir_display_output_id_invalid
+        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
         auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
