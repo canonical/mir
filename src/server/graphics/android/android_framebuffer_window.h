@@ -33,11 +33,11 @@ namespace android
 class AndroidFramebufferWindow : public AndroidFramebufferWindowQuery
 {
 public:
-    AndroidFramebufferWindow(const std::shared_ptr<ANativeWindow>& anw);
+    AndroidFramebufferWindow();
     virtual ~AndroidFramebufferWindow() {}
 
     EGLNativeWindowType android_native_window_type() const;
-    EGLConfig android_display_egl_config(EGLDisplay) const;
+    EGLConfig android_display_egl_config(EGLDisplay, ANativeWindow const& anw) const;
 
 private:
     const std::shared_ptr<ANativeWindow> native_window;

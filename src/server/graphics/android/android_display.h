@@ -44,7 +44,7 @@ class DisplaySupportProvider;
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const&,
+    explicit AndroidDisplay(std::shared_ptr<ANativeWindow> const&,
                             std::shared_ptr<AndroidDisplayBufferFactory> const&,
                             std::shared_ptr<DisplaySupportProvider> const&,
                             std::shared_ptr<DisplayReport> const&);
@@ -71,7 +71,7 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
-    std::shared_ptr<AndroidFramebufferWindowQuery> const native_window;
+    std::shared_ptr<ANativeWindow> const native_window;
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContextStore const egl_context_shared;
@@ -80,6 +80,9 @@ private:
     std::shared_ptr<DisplaySupportProvider> display_provider;
     
     AndroidDisplayConfiguration current_configuration;
+
+    //TODO remov;
+    AndroidFramebufferWindow selector;
 };
 
 }

@@ -35,9 +35,8 @@ static const EGLint default_egl_config_attr [] =
     EGL_NONE
 };
 }
-mga::AndroidFramebufferWindow::AndroidFramebufferWindow(const std::shared_ptr<ANativeWindow>& anw)
-    :
-    native_window(anw)
+
+mga::AndroidFramebufferWindow::AndroidFramebufferWindow()
 {
 }
 
@@ -46,7 +45,8 @@ EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type() 
     return (EGLNativeWindowType) native_window.get();
 }
 
-EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display) const
+EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(
+    EGLDisplay egl_display, ANativeWindow const& native_window) const
 {
     int num_potential_configs, android_native_id;
     EGLint num_match_configs;
@@ -62,7 +62,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
      * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
      * eglChooseConfig */
-    native_window->query(native_window.get(), NATIVE_WINDOW_FORMAT, &android_native_id);
+    native_window.query(&native_window, NATIVE_WINDOW_FORMAT, &android_native_id);
     auto const pegl_config = std::find_if(begin(config_slots), end(config_slots),
         [&](EGLConfig& current) -> bool
         {

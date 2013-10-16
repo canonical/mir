@@ -108,13 +108,13 @@ private:
 
 }
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
+mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native_win,
                                     std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
                                     std::shared_ptr<DisplaySupportProvider> const& display_provider,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
       egl_display{create_and_initialize_display()},
-      egl_config{native_window->android_display_egl_config(egl_display)},
+      egl_config{selector.android_display_egl_config(egl_display, *native_window)},
       egl_context_shared{egl_display,
                          eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
                                           default_egl_context_attr)},

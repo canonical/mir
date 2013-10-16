@@ -110,8 +110,8 @@ std::shared_ptr<mg::Display> mga::ResourceFactory::create_display(
     auto swapper = create_swapper(buffers);
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, support_provider, cache);
-    auto native_win = std::make_shared<mga::MirNativeWindow>(interpreter);
-    auto window = std::make_shared<mga::AndroidFramebufferWindow>(native_win);
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+//    auto window = std::make_shared<mga::AndroidFramebufferWindow>(native_win);
     auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
-    return std::make_shared<AndroidDisplay>(window, db_factory, support_provider, report);
+    return std::make_shared<AndroidDisplay>(native_window, db_factory, support_provider, report);
 }

@@ -17,7 +17,7 @@
  */
 
 #include "display_buffer_factory.h"
-#include "android_framebuffer_window_query.h"
+#include "android_framebuffer_window.h"
 #include "display_support_provider.h"
 
 #include "mir/graphics/display_buffer.h"
@@ -33,8 +33,8 @@ namespace geom = mir::geometry;
 namespace
 {
 
-EGLContext create_context(mga::AndroidFramebufferWindowQuery& native_window,
-                          EGLDisplay egl_display,
+EGLContext create_context(EGLDisplay egl_display,
+                          EGLConfig egl_config,
                           EGLContext egl_context_shared)
 {
     static EGLint const default_egl_context_attr[] =
@@ -43,32 +43,30 @@ EGLContext create_context(mga::AndroidFramebufferWindowQuery& native_window,
         EGL_NONE
     };
 
-    auto egl_config = native_window.android_display_egl_config(egl_display);
     return eglCreateContext(egl_display, egl_config, egl_context_shared,
                             default_egl_context_attr);
 }
 
-EGLSurface create_surface(mga::AndroidFramebufferWindowQuery& native_window,
-                          EGLDisplay egl_display)
+EGLSurface create_surface(EGLDisplay egl_display,
+                          EGLConfig egl_config,
+                          EGLNativeWindowType native_win)
 {
-    auto egl_config = native_window.android_display_egl_config(egl_display);
-    auto native_win_type = native_window.android_native_window_type();
-
-    return eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
+    return eglCreateWindowSurface(egl_display, egl_config, native_win, NULL);
 }
 
 class GPUDisplayBuffer : public mg::DisplayBuffer
 {
 public:
-    GPUDisplayBuffer(std::shared_ptr<mga::AndroidFramebufferWindowQuery> const& native_window,
+    GPUDisplayBuffer(std::shared_ptr<ANativeWindow> const& native_window,
                      EGLDisplay egl_display,
                      EGLContext egl_context_shared,
                      std::shared_ptr<mga::DisplaySupportProvider> const& support_provider)
         : native_window{native_window},
+          egl_config{selector.android_display_egl_config(egl_display, *native_window)},
           support_provider{support_provider},
           egl_display{egl_display},
-          egl_context{egl_display, create_context(*native_window, egl_display, egl_context_shared)},
-          egl_surface{egl_display, create_surface(*native_window, egl_display)},
+          egl_context{egl_display, create_context(egl_display, egl_config, egl_context_shared)},
+          egl_surface{egl_display, create_surface(egl_display, egl_config, native_window.get())},
           blanked(false)
     {
     }
@@ -104,18 +102,23 @@ public:
     }
     
 protected:
-    std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
+    std::shared_ptr<ANativeWindow> const native_window;
+    //confusing
+    EGLConfig egl_config;
+    mga::AndroidFramebufferWindow selector;
+
     std::shared_ptr<mga::DisplaySupportProvider> const support_provider;
     EGLDisplay const egl_display;
     mg::EGLContextStore const egl_context;
     mg::EGLSurfaceStore const egl_surface;
     bool blanked;
+
 };
 
 }
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
-    std::shared_ptr<AndroidFramebufferWindowQuery> const& native_window,
+    std::shared_ptr<ANativeWindow> const& native_window,
     std::shared_ptr<DisplaySupportProvider> const& hwc_device,
     EGLDisplay egl_display,
     EGLContext egl_context_shared)

@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
 
+//TODO REMOVE
 #include <EGL/egl.h>
 
 namespace mir
@@ -32,9 +33,7 @@ class AndroidFramebufferWindowQuery
 {
 public:
     virtual ~AndroidFramebufferWindowQuery() {}
-
-    virtual EGLNativeWindowType android_native_window_type() const = 0;
-    virtual EGLConfig android_display_egl_config(EGLDisplay display) const = 0;
+    virtual EGLConfig android_display_egl_config(EGLDisplay display, ANativeWindow const&) const = 0;
 };
 
 }
