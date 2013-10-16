@@ -16,28 +16,40 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DRIVER_INTERPRETER_H_
+#define MIR_TEST_DOUBLES_STUB_DRIVER_INTERPRETER_H_
 
-//TODO REMOVE
-#include <EGL/egl.h>
+#include "mir/graphics/android/android_driver_interpreter.h"
 
 namespace mir
 {
-namespace graphics
+namespace test
 {
-namespace android
+namespace doubles
 {
 
-class AndroidFramebufferWindowQuery
+class StubDriverInterpreter : public graphics::android::AndroidDriverInterpreter
 {
 public:
-    virtual ~AndroidFramebufferWindowQuery() {}
-    virtual EGLConfig android_display_egl_config(EGLDisplay display, ANativeWindow const&) const = 0;
+    mir::graphics::NativeBuffer* driver_requests_buffer()
+    {
+        return nullptr;
+    }
+    void driver_returns_buffer(ANativeWindowBuffer*, int)
+    {
+    }
+    void dispatch_driver_request_format(int) 
+    {
+    }
+    int driver_requests_info(int) const
+    {
+        return 0;
+    }
+    void sync_to_display(bool)
+    {
+    } 
 };
-
 }
 }
 }
-
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_BUFFER_H_ */

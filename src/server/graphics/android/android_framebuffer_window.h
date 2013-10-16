@@ -19,9 +19,8 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
 
-#include "android_framebuffer_window_query.h"
+#include <EGL/egl.h>
 #include <system/window.h>
-#include <memory>
 
 namespace mir
 {
@@ -30,18 +29,13 @@ namespace graphics
 namespace android
 {
 
-class AndroidFramebufferWindow : public AndroidFramebufferWindowQuery
+class AndroidFramebufferWindow
 {
 public:
     AndroidFramebufferWindow();
     virtual ~AndroidFramebufferWindow() {}
 
-    EGLNativeWindowType android_native_window_type() const;
     EGLConfig android_display_egl_config(EGLDisplay, ANativeWindow const& anw) const;
-
-private:
-    const std::shared_ptr<ANativeWindow> native_window;
-
 };
 
 }

@@ -29,7 +29,6 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #else
-#include "src/server/graphics/android/android_framebuffer_window_query.h"
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/display_buffer_factory.h"
 #include "mir/graphics/android/mir_native_window.h"

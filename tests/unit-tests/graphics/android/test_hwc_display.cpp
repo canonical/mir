@@ -21,7 +21,6 @@
 #include "src/server/graphics/android/display_buffer_factory.h"
 
 #include "mir_test_doubles/mock_display_support_provider.h"
-#include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir/graphics/android/mir_native_window.h"
