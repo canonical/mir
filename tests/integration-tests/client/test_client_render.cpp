@@ -74,15 +74,13 @@ struct TestClient
         for(int i=0u; i < num_frames; i++)
         {
             mir_surface_get_graphics_region(surface, &graphics_region);
-            switch (i % 2)
+            if (i % 2)
             {
-                case 0:
-                    draw_pattern0.draw(graphics_region);
-                    break;
-                case 1:
-                default:
-                    draw_pattern1.draw(graphics_region);
-                    break; 
+                draw_pattern1.draw(graphics_region);
+            }
+            else
+            {
+                draw_pattern0.draw(graphics_region);
             }
             mir_surface_swap_buffers_sync(surface);
         }
