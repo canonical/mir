@@ -303,6 +303,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     InSequence seq;
 
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
+    EXPECT_CALL(criteria, shaped())
+        .WillOnce(Return(true));
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
     EXPECT_CALL(mock_gl, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
