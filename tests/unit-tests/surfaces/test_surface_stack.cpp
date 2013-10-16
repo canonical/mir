@@ -256,6 +256,88 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
     stack.for_each_if(filter, renderable_operator);
 }
 
+TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_))
+        .WillOnce(Return(stub_surface1))
+        .WillOnce(Return(stub_surface2))
+        .WillOnce(Return(stub_surface3));
+
+    ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator),
+                           mt::fake_shared(input_registrar));
+    auto s1 = stack.create_surface(default_params);
+    auto criteria1 = s1.lock()->compositing_criteria();
+    auto stream1 = s1.lock()->buffer_stream();
+    auto s2 = stack.create_surface(default_params);
+    auto criteria2 = s2.lock()->compositing_criteria();
+    auto stream2 = s2.lock()->buffer_stream();
+    auto s3 = stack.create_surface(default_params);
+    auto criteria3 = s3.lock()->compositing_criteria();
+    auto stream3 = s3.lock()->buffer_stream();
+
+    MockFilterForScene filter;
+    MockOperatorForScene renderable_operator;
+
+    Sequence seq1, seq2;
+    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+        .InSequence(seq1)
+        .WillOnce(Return(true));
+    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+        .InSequence(seq1)
+        .WillOnce(Return(false));
+    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+        .InSequence(seq1)
+        .WillOnce(Return(true));
+    EXPECT_CALL(renderable_operator,
+                renderable_operator(Ref(*criteria3), Ref(*stream3)))
+        .InSequence(seq2);
+    EXPECT_CALL(renderable_operator,
+                renderable_operator(Ref(*criteria1), Ref(*stream1)))
+        .InSequence(seq2);
+
+    stack.reverse_for_each_if(filter, renderable_operator);
+}
+
+TEST_F(SurfaceStack, stacking_order_reverse)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_))
+        .WillOnce(Return(stub_surface1))
+        .WillOnce(Return(stub_surface2))
+        .WillOnce(Return(stub_surface3));
+
+    ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator),
+                           mt::fake_shared(input_registrar));
+
+    auto s1 = stack.create_surface(default_params);
+    auto criteria1 = s1.lock()->compositing_criteria();
+    auto stream1 = s1.lock()->buffer_stream();
+    auto s2 = stack.create_surface(default_params);
+    auto criteria2 = s2.lock()->compositing_criteria();
+    auto stream2 = s2.lock()->buffer_stream();
+    auto s3 = stack.create_surface(default_params);
+    auto criteria3 = s3.lock()->compositing_criteria();
+    auto stream3 = s3.lock()->buffer_stream();
+
+    StubFilterForScene filter;
+    MockOperatorForScene renderable_operator;
+    Sequence seq;
+    EXPECT_CALL(renderable_operator,
+                renderable_operator(Ref(*criteria3), Ref(*stream3)))
+        .InSequence(seq);
+    EXPECT_CALL(renderable_operator,
+                renderable_operator(Ref(*criteria2), Ref(*stream2)))
+        .InSequence(seq);
+    EXPECT_CALL(renderable_operator,
+                renderable_operator(Ref(*criteria1), Ref(*stream1)))
+        .InSequence(seq);
+
+    stack.reverse_for_each_if(filter, renderable_operator);
+}
+
 TEST_F(SurfaceStack, stacking_order)
 {
     using namespace ::testing;
