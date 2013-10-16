@@ -34,7 +34,6 @@ namespace android
 {
 
 class DisplaySupportProvider;
-class AndroidFramebufferWindowQuery;
 
 class AndroidDisplayBufferFactory
 {

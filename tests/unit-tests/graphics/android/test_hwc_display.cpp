@@ -24,6 +24,8 @@
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir/graphics/android/mir_native_window.h"
+#include "mir_test_doubles/stub_driver_interpreter.h"
 
 #include <memory>
 
@@ -37,7 +39,6 @@ class AndroidTestHWCFramebuffer : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        native_win = std::make_shared<testing::NiceMock<mtd::MockAndroidFramebufferWindow>>();
         mock_display_support_provider = std::make_shared<mtd::MockDisplaySupportProvider>();
 
         /* silence uninteresting warning messages */
@@ -48,11 +49,11 @@ protected:
     std::shared_ptr<mga::AndroidDisplay> create_display()
     {
         auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
+        auto native_win = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
         return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_support_provider, mock_display_report);
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
     mtd::MockEGL mock_egl;
 };
