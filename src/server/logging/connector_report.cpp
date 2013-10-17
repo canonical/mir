@@ -29,7 +29,7 @@ namespace ml = mir::logging;
 
 namespace
 {
-char const* const component = "frontend::SessionMediator";
+char const* const component = "frontend::Connector";
 }
 
 ml::ConnectorReport::ConnectorReport(std::shared_ptr<Logger> const& log) :

@@ -247,8 +247,15 @@ void mc::GLRenderer::render(
 {
     glUseProgram(resources.program);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (criteria.shaped() || criteria.alpha() < 1.0f)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else
+    {
+        glDisable(GL_BLEND);
+    }
     glActiveTexture(GL_TEXTURE0);
 
     glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE,

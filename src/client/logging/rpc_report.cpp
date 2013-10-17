@@ -104,7 +104,7 @@ void mcll::RpcReport::event_parsing_succeeded(
     /* TODO: Log more information about event */
     ss << "Event parsed";
 
-    logger->log<ml::Logger::error>(ss.str(), component);
+    logger->log<ml::Logger::debug>(ss.str(), component);
 }
 
 void mcll::RpcReport::event_parsing_failed(
