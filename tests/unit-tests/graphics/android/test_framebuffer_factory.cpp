@@ -59,11 +59,11 @@ public:
         mock_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
         fake_fb_num = 2;
 
-        ON_CALL(*mock_display_info_provider, display_format())
+        ON_CALL(*mock_display_info, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*mock_display_info_provider, display_size())
+        ON_CALL(*mock_display_info, display_size())
             .WillByDefault(Return(geom::Size{2, 3}));
-        ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
+        ON_CALL(*mock_display_info, number_of_framebuffers_available())
             .WillByDefault(Return(fake_fb_num));
 
         ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
@@ -72,26 +72,26 @@ public:
 
     std::shared_ptr<mtd::MockDisplayReport> mock_report;
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
-    std::shared_ptr<mtd::MockDisplayInfo> mock_display_info_provider;
+    std::shared_ptr<mtd::MockDisplayInfo> mock_display_info;
     unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
 };
 
+#if 0
 TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
 {
     using namespace testing;
 
     mga::ResourceFactory factory(mock_buffer_allocator);
  
-    EXPECT_CALL(*mock_display_info_provider, number_of_framebuffers_available())
+    EXPECT_CALL(*mock_display_info, number_of_framebuffers_available())
         .Times(1);
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
         .Times(fake_fb_num);
  
-    factory.create_display(mock_display_info_provider, mock_report);
+    factory.create_display(mock_display_info, mock_report);
 }
 
-#if 0
 #include "src/server/graphics/android/display_support_provider.h"
 #include "src/server/graphics/android/android_display_factory.h"
 #include "src/server/graphics/android/resource_factory.h"

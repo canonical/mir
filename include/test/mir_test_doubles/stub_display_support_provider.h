@@ -27,28 +27,38 @@ namespace test
 namespace doubles
 {
 
-struct StubDisplaySupportProvider : public graphics::android::DisplaySupportProvider
+struct StubDisplayInfo : public graphics::android::DisplayInfo
 {
-    StubDisplaySupportProvider(geometry::Size sz)
-     : sz(sz)
+    StubDisplayInfo()
+     : StubDisplayInfo({0,0})
     {
     }
 
-    StubDisplaySupportProvider()
-     : StubDisplaySupportProvider(geometry::Size{0,0})
+    StubDisplayInfo(geometry::Size sz)
+     : sz(sz)
     {
     }
-    ~StubDisplaySupportProvider() noexcept {}
+    ~StubDisplayInfo() noexcept {}
 
     geometry::Size display_size() const { return sz; }
     geometry::PixelFormat display_format() const { return geometry::PixelFormat(); }
     unsigned int number_of_framebuffers_available() const { return 0; }
+
+private:
+    geometry::Size sz;
+};
+
+struct StubDisplayCommand : public graphics::android::DisplayCommander
+{
+    StubDisplayCommand()
+    {
+    }
+    ~StubDisplayCommand() noexcept {}
+
     void set_next_frontbuffer(std::shared_ptr<mir::graphics::Buffer> const&) {}
     void sync_to_display(bool) {}
     void mode(MirPowerMode) {}
     void commit_frame(EGLDisplay, EGLSurface) {}
-private:
-    geometry::Size sz;
 };
 
 }

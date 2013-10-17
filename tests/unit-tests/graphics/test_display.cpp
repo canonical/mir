@@ -78,7 +78,8 @@ public:
         return std::make_shared<mg::android::AndroidDisplay>(
             std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>()),
             std::make_shared<mg::android::DisplayBufferFactory>(),
-            std::make_shared<mtd::StubDisplaySupportProvider>(),
+            std::make_shared<mtd::StubDisplayInfo>(),
+            std::make_shared<mtd::StubDisplayCommand>(),
             std::make_shared<mg::NullDisplayReport>());
 #else
         auto platform = std::make_shared<mg::gbm::GBMPlatform>(

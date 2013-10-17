@@ -83,6 +83,7 @@ TEST_F(FBDevice, set_next_frontbuffer_fail)
     }, std::runtime_error); 
 }
 
+#if 0
 TEST_F(FBDevice, determine_size)
 {
     mga::FBDevice fbdev(fb_hal_mock);
@@ -96,6 +97,20 @@ TEST_F(FBDevice, determine_fbnum)
     mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
 }
+
+//some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
+TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
+{
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, 0); 
+    mga::FBDevice fbdev(slightly_malformed_fb_hal_mock);
+    EXPECT_EQ(2u, fbdev.number_of_framebuffers_available());
+}
+TEST_F(FBDevice, determine_pixformat)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
+}
+#endif
 
 TEST_F(FBDevice, commit_frame)
 {
@@ -116,19 +131,6 @@ TEST_F(FBDevice, commit_frame)
     fbdev.commit_frame(dpy, surf);
 }
 
-//some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
-TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
-{
-    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, 0); 
-    mga::FBDevice fbdev(slightly_malformed_fb_hal_mock);
-    EXPECT_EQ(2u, fbdev.number_of_framebuffers_available());
-}
-
-TEST_F(FBDevice, determine_pixformat)
-{
-    mga::FBDevice fbdev(fb_hal_mock);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
-}
 
 TEST_F(FBDevice, set_swapinterval)
 {

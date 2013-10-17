@@ -39,24 +39,27 @@ protected:
         test_pf = geom::PixelFormat::abgr_8888;
         test_numfb = 558u;
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<mtd::MockDisplaySupportProvider>();
+        mock_fbdev = std::make_shared<mtd::MockDisplayCommander>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
+#if 0
         ON_CALL(*mock_fbdev, display_size())
             .WillByDefault(Return(test_size)); 
         ON_CALL(*mock_fbdev, display_format())
             .WillByDefault(Return(test_pf)); 
         ON_CALL(*mock_fbdev, number_of_framebuffers_available())
-            .WillByDefault(Return(test_numfb)); 
+            .WillByDefault(Return(test_numfb));
+#endif
     }
 
     geom::PixelFormat test_pf;
     geom::Size test_size;
     unsigned int test_numfb;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fbdev;
+    std::shared_ptr<mtd::MockDisplayCommander> mock_fbdev;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
 };
 
+#if 0
 TEST_F(HWC10Device, hwc10_gets_size_from_fb_dev)
 {
     EXPECT_CALL(*mock_fbdev, display_size())
@@ -86,6 +89,7 @@ TEST_F(HWC10Device, hwc10_gets_numfb_from_fb_dev)
     auto numfb = device.number_of_framebuffers_available();
     EXPECT_EQ(test_numfb, numfb);
 }
+#endif
 
 TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
 {
