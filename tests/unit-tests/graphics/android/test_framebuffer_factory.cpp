@@ -331,6 +331,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
     display_factory.create_display();
 }
 #endif
+
 #if 0
 TEST_F(FBFactory, test_native_window_creation_uses_size)
 {
