@@ -19,19 +19,15 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
-
 #include "fb_device.h"
 #include "buffer.h"
-#include "android_format_conversion-inl.h"
 
-#include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
-
 
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     : fb_device(fbdev)
@@ -81,57 +77,4 @@ void mga::FBDevice::mode(MirPowerMode mode)
 {
     // TODO: Implement
     (void) mode;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-mga::FBInfo::FBInfo(std::shared_ptr<framebuffer_device_t> const& fb_device)
- : fb_device(fb_device)
-{
-
-}
-
-geom::Size mga::FBInfo::display_size() const
-{
-    return {fb_device->width, fb_device->height};
-} 
-
-geom::PixelFormat mga::FBInfo::display_format() const
-{
-    return to_mir_format(fb_device->format);
-}
-
-unsigned int mga::FBInfo::number_of_framebuffers_available() const
-{
-    auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
-    return std::max(2u, fb_num);
 }

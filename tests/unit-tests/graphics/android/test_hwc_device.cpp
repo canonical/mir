@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_commander.h"
 
 #include <thread>
 #include <chrono>

@@ -16,10 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_FB_INFO_H_
+#define MIR_GRAPHICS_ANDROID_FB_INFO_H_
 
-#include "display_commander.h"
+#include "display_info.h"
+
+#include <memory>
 #include <hardware/gralloc.h>
 #include <hardware/fb.h>
  
@@ -30,17 +32,14 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplayCommander 
+class FBInfo : public DisplayInfo
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    FBInfo(std::shared_ptr<framebuffer_device_t> const&);
 
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync); 
-    void mode(MirPowerMode mode);
-
-    void commit_frame(EGLDisplay dpy, EGLSurface sur);
-
+    geometry::Size display_size() const; 
+    geometry::PixelFormat display_format() const; 
+    unsigned int number_of_framebuffers_available() const;
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };
@@ -48,4 +47,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_FB_INFO_H_ */

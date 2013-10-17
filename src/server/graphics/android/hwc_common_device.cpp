@@ -24,7 +24,6 @@
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
 
 namespace
 {

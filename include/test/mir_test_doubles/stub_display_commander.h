@@ -15,10 +15,10 @@
  *
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_SUPPORT_PROVIDER_H_
-#define MIR_TEST_DOUBLES_STUB_DISPLAY_SUPPORT_PROVIDER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_COMMANDER_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_COMMANDER_H_
 
-#include "src/server/graphics/android/display_support_provider.h"
+#include "src/server/graphics/android/display_commander.h"
  
 namespace mir
 {
@@ -26,27 +26,6 @@ namespace test
 {
 namespace doubles
 {
-
-struct StubDisplayInfo : public graphics::android::DisplayInfo
-{
-    StubDisplayInfo()
-     : StubDisplayInfo({0,0})
-    {
-    }
-
-    StubDisplayInfo(geometry::Size sz)
-     : sz(sz)
-    {
-    }
-    ~StubDisplayInfo() noexcept {}
-
-    geometry::Size display_size() const { return sz; }
-    geometry::PixelFormat display_format() const { return geometry::PixelFormat::abgr_8888; }
-    unsigned int number_of_framebuffers_available() const { return 0; }
-
-private:
-    geometry::Size sz;
-};
 
 struct StubDisplayCommand : public graphics::android::DisplayCommander
 {
@@ -64,4 +43,4 @@ struct StubDisplayCommand : public graphics::android::DisplayCommander
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_SUPPORT_PROVIDER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_COMMANDER_H_ */

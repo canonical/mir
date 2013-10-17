@@ -17,7 +17,8 @@
  */
 
 #include "display_buffer_factory.h"
-#include "display_support_provider.h"
+#include "display_info.h"
+#include "display_commander.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"

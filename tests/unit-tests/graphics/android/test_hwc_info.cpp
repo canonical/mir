@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc11_device.h"
+#include "src/server/graphics/android/hwc_info.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include <gtest/gtest.h>
 #include <stdexcept>

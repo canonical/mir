@@ -19,7 +19,8 @@
 #include "src/server/graphics/android/server_render_window.h"
 #include "src/server/graphics/android/fb_swapper.h"
 
-#include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_commander.h"
+#include "mir_test_doubles/mock_display_info.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"

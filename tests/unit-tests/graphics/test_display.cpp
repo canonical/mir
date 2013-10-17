@@ -33,7 +33,8 @@
 #include "src/server/graphics/android/display_buffer_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
-#include "mir_test_doubles/stub_display_support_provider.h"
+#include "mir_test_doubles/stub_display_info.h"
+#include "mir_test_doubles/stub_display_commander.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
 

@@ -19,7 +19,7 @@
 #include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_info.h"
 #include "mir_test_doubles/mock_display_report.h"
 
 #include "mir_test_doubles/mock_android_hw.h"

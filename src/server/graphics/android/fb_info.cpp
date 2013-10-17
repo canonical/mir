@@ -16,36 +16,29 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#include "android_format_conversion-inl.h"
+#include "fb_info.h"
 
-#include "display_commander.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
-namespace mir
+namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
+
+mga::FBInfo::FBInfo(std::shared_ptr<framebuffer_device_t> const& fb_device)
+ : fb_device(fb_device)
 {
-namespace graphics
-{
-namespace android
-{
-
-class FBDevice : public DisplayCommander 
-{
-public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
-
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync); 
-    void mode(MirPowerMode mode);
-
-    void commit_frame(EGLDisplay dpy, EGLSurface sur);
-
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
-};
-
 }
+
+geom::Size mga::FBInfo::display_size() const
+{
+    return {fb_device->width, fb_device->height};
+} 
+
+geom::PixelFormat mga::FBInfo::display_format() const
+{
+    return to_mir_format(fb_device->format);
 }
+
+unsigned int mga::FBInfo::number_of_framebuffers_available() const
+{
+    auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
+    return std::max(2u, fb_num);
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */

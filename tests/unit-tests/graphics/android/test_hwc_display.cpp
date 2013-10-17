@@ -20,7 +20,8 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/display_buffer_factory.h"
 
-#include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_info.h"
+#include "mir_test_doubles/mock_display_commander.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir/graphics/android/mir_native_window.h"
@@ -107,7 +108,6 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
     EXPECT_EQ(view_area.top_left, origin_pt);
 }
 
-#if 0
 TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
@@ -155,4 +155,3 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
     display->configure(*suspend_configuration);
     display->configure(*standby_configuration);
 }
-#endif

@@ -31,6 +31,8 @@
 #include "hwc_vsync.h"
 #include "android_display.h"
 #include "display_buffer_factory.h"
+#include "fb_info.h"
+#include "hwc_info.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

@@ -16,13 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_INFO_H_
+#define MIR_GRAPHICS_ANDROID_HWC_INFO_H_
 
-#include "display_commander.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
+#include "display_info.h"
+#include <hardware/hwcomposer.h>
+#include <memory>
+
 namespace mir
 {
 namespace graphics
@@ -30,22 +30,21 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplayCommander 
+class HWCInfo : public DisplayInfo
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    HWCInfo(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
 
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync); 
-    void mode(MirPowerMode mode);
-
-    void commit_frame(EGLDisplay dpy, EGLSurface sur);
-
+    geometry::Size display_size() const;
+    geometry::PixelFormat display_format() const;
+    unsigned int number_of_framebuffers_available() const;
 private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    std::shared_ptr<hwc_composer_device_1> const hwc_device;
+    unsigned int primary_display_config;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_HWC_INFO_H_ */

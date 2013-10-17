@@ -16,36 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_INFO_H_
+#define MIR_TEST_DOUBLES_MOCK_DISPLAY_INFO_H_
 
-#include "display_commander.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
+#include "src/server/graphics/android/display_info.h"
+#include <gmock/gmock.h>
  
 namespace mir
 {
-namespace graphics
+namespace test
 {
-namespace android
+namespace doubles
 {
 
-class FBDevice : public DisplayCommander 
+class MockDisplayInfo : public graphics::android::DisplayInfo
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
-
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync); 
-    void mode(MirPowerMode mode);
-
-    void commit_frame(EGLDisplay dpy, EGLSurface sur);
-
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    MOCK_CONST_METHOD0(display_size, geometry::Size());
+    MOCK_CONST_METHOD0(display_format, geometry::PixelFormat());
+    MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_INFO_H_ */

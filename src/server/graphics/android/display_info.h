@@ -16,22 +16,16 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_INFO_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_INFO_H_
 
-#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
-
-#include <EGL/egl.h>
-#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-class Buffer;
-
 namespace android
 {
 
@@ -50,28 +44,8 @@ protected:
     DisplayInfo(DisplayInfo const&) = delete;
 };
 
-
-//should be DisplayControl, DisplayCommander
-class DisplayCommander
-{
-public:
-    virtual ~DisplayCommander() = default;
-
-    //this function schedules the next frontbuffer to be "buffer" parameter. depending on implementation, it may
-    //post immediately, or be deferred.
-    virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
-    virtual void sync_to_display(bool sync) = 0;
-    virtual void mode(MirPowerMode mode) = 0;
-    virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
-
-protected:
-    DisplayCommander() = default;
-    DisplayCommander& operator=(DisplayCommander const&) = delete;
-    DisplayCommander(DisplayCommander const&) = delete;
-};
-
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_INFO_H_ */

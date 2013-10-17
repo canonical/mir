@@ -74,14 +74,15 @@ public:
 
 private:
     std::shared_ptr<ANativeWindow> const native_window;
+    std::shared_ptr<DisplayInfo> const display_info;
+    std::shared_ptr<DisplayCommander> const display_command;
+
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface_dummy;
     std::unique_ptr<DisplayBuffer> display_buffer;
     
-                            std::shared_ptr<DisplayInfo> const display_info;
-                            std::shared_ptr<DisplayCommander> const display_command;
     AndroidDisplayConfiguration current_configuration;
 };
 

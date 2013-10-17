@@ -25,28 +25,6 @@
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
-
-#if 0
-mga::HWCInfo::HWCInfo(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
-{
-}
-geom::Size mga::HWC10Device::display_size() const
-{
-    return fb_device->display_size();
-}
-
-geom::PixelFormat mga::HWC10Device::display_format() const
-{
-    return fb_device->display_format();
-}
-
-unsigned int mga::HWC10Device::number_of_framebuffers_available() const
-{
-    return fb_device->number_of_framebuffers_available();
-}
-#endif
-
 
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<DisplayCommander> const& fbdev,

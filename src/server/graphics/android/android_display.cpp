@@ -24,7 +24,8 @@
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
-#include "display_support_provider.h"
+#include "display_commander.h"
+#include "display_info.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -154,6 +155,8 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native
                                     std::shared_ptr<mga::DisplayCommander> const& display_command,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
+      display_info(display_info),
+      display_command(display_command),
       egl_display{create_and_initialize_display()},
       egl_config{select_egl_config(egl_display, *native_window)},
       egl_context_shared{egl_display,
@@ -164,7 +167,6 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
           native_window, display_info, display_command, egl_display, egl_config, egl_context_shared)},
-      display_info(display_info),
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
