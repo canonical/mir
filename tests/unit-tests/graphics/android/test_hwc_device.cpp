@@ -86,10 +86,6 @@ protected:
         mock_layer_list = std::make_shared<testing::NiceMock<mtd::MockHWCLayerList>>();
         mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplayCommander>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
-//        ON_CALL(*mock_fbdev, number_of_framebuffers_available())
-//            .WillByDefault(Return(2u));
-//        ON_CALL(*mock_fbdev, display_format())
-//            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     }
 
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
@@ -272,22 +268,6 @@ TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
         .Times(1);
     device.reset();
 }
-
-#if 0
-TYPED_TEST(HWCCommon, hwc_device_reports_2_fbs_available_by_default)
-{
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
-                                             this->mock_fbdev, this->mock_vsync);
-    EXPECT_EQ(2u, device->number_of_framebuffers_available());
-}
-
-TYPED_TEST(HWCCommon, hwc_device_reports_abgr_8888_by_default)
-{
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
-                                             this->mock_fbdev, this->mock_vsync);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, device->display_format());
-}
-#endif
 
 TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
 {
