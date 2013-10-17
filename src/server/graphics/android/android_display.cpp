@@ -149,8 +149,9 @@ private:
 }
 
 mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native_win,
-                                    std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
-                                    std::shared_ptr<DisplayInfo> const& display_info,
+                                    std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
+                                    std::shared_ptr<mga::DisplayInfo> const& display_info,
+                                    std::shared_ptr<mga::DisplayCommander> const& display_command,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
       egl_display{create_and_initialize_display()},
@@ -161,10 +162,9 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native
       egl_surface_dummy{egl_display,
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
-      display_command{db_factory->create_display_command()},
       display_buffer{db_factory->create_display_buffer(
-          native_window, display_info, egl_display, egl_config, egl_context_shared)},
-      display_provider(display_provider),
+          native_window, display_info, display_command, egl_display, egl_config, egl_context_shared)},
+      display_info(display_info),
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
@@ -199,7 +199,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         // TODO: Properly support multiple outputs
-        display_provider->mode(output.power_mode);
+        display_command->mode(output.power_mode);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

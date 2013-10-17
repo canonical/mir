@@ -39,8 +39,7 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::ResourceFactory::ResourceFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
+mga::ResourceFactory::ResourceFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
     : buffer_allocator(buffer_allocator)
 {
 }
@@ -65,7 +64,7 @@ std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_swapper(
     return std::make_shared<mga::FBSimpleSwapper>(buffers);
 }
 
-std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_device() const
+std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_native_device() const
 {
     hw_module_t const* module;
     framebuffer_device_t* fbdev_raw;
@@ -83,7 +82,41 @@ std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_dev
                       });
 
     return std::make_shared<mga::FBDevice>(fb_dev);
-} 
+}
+
+std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_device() const
+{
+    const hw_module_t *module;
+    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr))
+    {
+        //SHOULD THROW
+        // this is nonfatal, we'll just create the backup display
+        return {};
+    }
+
+    if ((!module->methods) || !(module->methods->open))
+    {
+        // TODO: log "display factory cannot create hwc display".
+        // this is nonfatal, we'll just create the backup display
+        return {};
+    }
+
+    hwc_composer_device_1* hwc_device_raw = nullptr;
+    rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
+
+    if ((rc != 0) || (hwc_device_raw == nullptr))
+    {
+        // TODO: log "display hwc module unusable".
+        // this is nonfatal, we'll just create the backup display
+        return {};
+    }
+
+    return std::shared_ptr<hwc_composer_device_1>(
+        hwc_device_raw,
+        [](hwc_composer_device_1* device) { device->common.close((hw_device_t*) device); });
+}
+ 
 //create hwc native
 std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_1(
     std::shared_ptr<hwc_composer_device_1> const& hwc_device,
@@ -102,15 +135,53 @@ std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_
     return std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
 }
 
+
+//really, this function shouldnt be here
 std::shared_ptr<mg::Display> mga::ResourceFactory::create_display(
-    std::shared_ptr<mga::DisplaySupportProvider> const& support_provider,
-    std::shared_ptr<mg::DisplayReport> const& report) const
+    std::shared_ptr<DisplaySupportProvider> fb_dev,
+    std::shared_ptr<hwc_composer_device_1> hwc_dev,
+    std::shared_ptr<DisplayReport> const display_report,
 {
-    auto buffers = create_buffers(support_provider);
+    std::shared_ptr<mga::DisplayInfo> info;
+
+    if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
+    {
+        info = create_hwc_1_1_info(hwc_dev);
+    }
+    else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
+    {
+        info = create_hwc_1_0_info(hwc_dev, fb_dev);
+    }
+    else
+    {
+        info = create_fb_info(fb_dev);
+    }
+
+    auto buffers = create_buffers(info);
     auto swapper = create_swapper(buffers);
+
+    std::shared_ptr<mga::DisplayCommand> command;
+    //TODO: if hwc display creation fails, we could try the gpu display
+    if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
+    {
+        command = create_hwc_1_1(hwc_dev);
+        display_report->report_hwc_composition_in_use(1,1);
+    }
+    else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
+    {
+        command = create_hwc_1_0(hwc_dev, fb_dev);
+        display_report->report_hwc_composition_in_use(1,0);
+    }
+    else
+    {
+        command = create_fb_command();
+        display_report->report_gpu_composition_in_use();
+    }
+
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, support_provider, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
-    return std::make_shared<AndroidDisplay>(native_window, db_factory, support_provider, report);
+    return std::make_shared<AndroidDisplay>(native_window, db_factory, info, command, report);
 }
+

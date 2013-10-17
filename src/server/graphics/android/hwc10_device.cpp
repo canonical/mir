@@ -27,19 +27,10 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<DisplaySupportProvider> const& fbdev,
-                              std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
-    : HWCCommonDevice(hwc_device, coordinator),
-      fb_device(fbdev),
-      wait_for_vsync(true)
+#if 0
+mga::HWCInfo::HWCInfo(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
 {
 }
-
-mga::HWC10Device::~HWC10Device() noexcept
-{
-}
-
 geom::Size mga::HWC10Device::display_size() const
 {
     return fb_device->display_size();
@@ -53,6 +44,21 @@ geom::PixelFormat mga::HWC10Device::display_format() const
 unsigned int mga::HWC10Device::number_of_framebuffers_available() const
 {
     return fb_device->number_of_framebuffers_available();
+}
+#endif
+
+
+mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<DisplayCommander> const& fbdev,
+                              std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
+    : HWCCommonCommand(hwc_device, coordinator),
+      fb_device(fbdev),
+      wait_for_vsync(true)
+{
+}
+
+mga::HWC10Device::~HWC10Device() noexcept
+{
 }
 
 void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)

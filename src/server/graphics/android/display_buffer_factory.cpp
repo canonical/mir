@@ -64,7 +64,7 @@ public:
                      std::shared_ptr<mga::DisplayCommander> const& display_commander)
         : native_window{native_window},
           display_info{display_info},
-          display_commander{display_commander}
+          display_commander{display_commander},
           egl_display{egl_display},
           egl_config{egl_config},
           egl_context{egl_display, create_context(egl_display, egl_config, egl_context_shared)},
@@ -125,6 +125,6 @@ std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buf
     EGLDisplay egl_display, EGLConfig egl_config,
     EGLContext egl_context_shared)
 {
-    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_config, egl_context_shared, display_info, display_commander);
+    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_config, egl_context_shared, display_info, display_command);
     return std::unique_ptr<mg::DisplayBuffer>(raw);
 }

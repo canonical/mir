@@ -36,6 +36,8 @@ class DisplayBuffer;
 
 namespace android
 {
+class DisplayInfo;
+class DisplayCommander;
 
 class AndroidDisplayBufferFactory;
 class DisplaySupportProvider;
@@ -44,8 +46,10 @@ class AndroidDisplay : public Display
 {
 public:
     explicit AndroidDisplay(std::shared_ptr<ANativeWindow> const&,
-                            std::shared_ptr<AndroidDisplayBufferFactory> const&,
-                            std::shared_ptr<DisplayReport> const&);
+                            std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
+                            std::shared_ptr<DisplayInfo> const& display_info,
+                            std::shared_ptr<DisplayCommander> const& display_command,
+                            std::shared_ptr<DisplayReport> const& display_report);
     ~AndroidDisplay();
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
@@ -76,6 +80,8 @@ private:
     EGLSurfaceStore const egl_surface_dummy;
     std::unique_ptr<DisplayBuffer> display_buffer;
     
+                            std::shared_ptr<DisplayInfo> const display_info;
+                            std::shared_ptr<DisplayCommander> const display_command;
     AndroidDisplayConfiguration current_configuration;
 };
 

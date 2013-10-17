@@ -43,7 +43,7 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 }
 }
 
-mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+mga::HWCCommonCommand::HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                       std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
     : hwc_device(hwc_device),
       coordinator(coordinator),
@@ -65,29 +65,30 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
     }
 }
 
-mga::HWCCommonDevice::~HWCCommonDevice() noexcept
+mga::HWCCommonCommand::~HWCCommonCommand() noexcept
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
     if (current_mode == mir_power_mode_on)
         turn_screen_off();
 }
 
-geom::PixelFormat mga::HWCCommonDevice::display_format() const
+#if 0
+geom::PixelFormat mga::HWCCommonCommand::display_format() const
 {
     return geom::PixelFormat::abgr_8888;
 }
 
-unsigned int mga::HWCCommonDevice::number_of_framebuffers_available() const
+unsigned int mga::HWCCommonCommand::number_of_framebuffers_available() const
 {
     return 2u;
 }
-
-void mga::HWCCommonDevice::notify_vsync()
+#endif
+void mga::HWCCommonCommand::notify_vsync()
 {
     coordinator->notify_vsync();
 }
 
-void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
+void mga::HWCCommonCommand::mode(MirPowerMode mode_request)
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
     int err = 0;
@@ -125,7 +126,7 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
     blanked_cond.notify_all();
 }
 
-std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
+std::unique_lock<std::mutex> mga::HWCCommonCommand::lock_unblanked()
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
     while(current_mode == mir_power_mode_off)
@@ -133,14 +134,14 @@ std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
     return std::move(lg);
 }
 
-int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
+int mga::HWCCommonCommand::turn_screen_on() const noexcept(true)
 {
     if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
         return err;
     return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
 }
 
-int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
+int mga::HWCCommonCommand::turn_screen_off() const noexcept(true)
 {
     if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
         return err;

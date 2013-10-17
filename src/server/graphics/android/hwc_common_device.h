@@ -33,31 +33,35 @@ namespace android
 {
 
 class HWCVsyncCoordinator;
-class HWCCommonDevice;
+class HWCCommonCommand;
 struct HWCCallbacks
 {
     hwc_procs_t hooks;
-    HWCCommonDevice* self;
+    HWCCommonCommand* self;
 };
 
-class HWCCommonDevice : public DisplaySupportProvider
+class HWCInfo : public DisplayInfo
 {
-public:
-    virtual ~HWCCommonDevice() noexcept;
+    HWCInfo(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
 
-    /* from HWCDevice */
     geometry::PixelFormat display_format() const;
     unsigned int number_of_framebuffers_available() const; 
-    virtual void mode(MirPowerMode mode);
+};
+
+class HWCCommonCommand : public DisplayCommander
+{
+public:
+    virtual ~HWCCommonCommand() noexcept;
 
     void notify_vsync();
+    void mode(MirPowerMode mode);
+
 protected:
-    HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
-protected:
     std::unique_lock<std::mutex> lock_unblanked();
 
 private:

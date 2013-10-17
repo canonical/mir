@@ -30,9 +30,9 @@ namespace geom=mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerList> const& layer_list,
-                              std::shared_ptr<DisplaySupportProvider> const& fbdev,
+                              std::shared_ptr<DisplayCommander> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
-    : HWCCommonDevice(hwc_device, coordinator),
+    : HWCCommonCommand(hwc_device, coordinator),
       layer_list(layer_list),
       fb_device(fbdev), 
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
@@ -49,6 +49,7 @@ mga::HWC11Device::~HWC11Device() noexcept
 {
 }
 
+#if 0
 geom::Size mga::HWC11Device::display_size() const
 {
     static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
@@ -73,7 +74,7 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     //us a hint to triple buffer. Taking this hint is currently not supported.
     return 2u;
 }
-
+#endif
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     layer_list->set_fb_target(buffer);
