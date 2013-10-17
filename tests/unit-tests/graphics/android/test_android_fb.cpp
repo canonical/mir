@@ -52,13 +52,15 @@ protected:
         using namespace testing;
         mock_egl.silence_uninteresting();
 
+        visual_id = 5;
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
         stub_display_support = std::make_shared<mtd::StubDisplaySupportProvider>(display_size);
-        auto stub_driver_interpreter = std::make_shared<mtd::StubDriverInterpreter>(display_size, 5);
+        auto stub_driver_interpreter = std::make_shared<mtd::StubDriverInterpreter>(display_size, visual_id);
         native_win = std::make_shared<mg::android::MirNativeWindow>(stub_driver_interpreter);
         db_factory = std::make_shared<mga::DisplayBufferFactory>();
     }
 
+    int visual_id;
     std::shared_ptr<mga::DisplayBufferFactory> db_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<ANativeWindow> native_win;
@@ -132,53 +134,52 @@ TEST_F(AndroidDisplayTest, queries_with_enough_room_for_all_potential_cfg)
 
 }
 
-#if 0
 TEST_F(AndroidDisplayTest, creates_with_proper_visual_id_mixed_valid_invalid)
 {
     using namespace testing;
 
     EGLConfig cfg, chosen_cfg;
 
-    int bad_id = native_win->fake_visual_id + 1;
+    int bad_id = visual_id + 1;
 
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
-    .Times(AtLeast(1))
-    .WillOnce(DoAll(
-                  SetArgPointee<3>(bad_id),
-                  Return(EGL_TRUE)))
-    .WillOnce(DoAll(
-                  SetArgPointee<3>(native_win->fake_visual_id),
-                  SaveArg<1>(&cfg),
-                  Return(EGL_TRUE)))
-    .WillRepeatedly(DoAll(
-                        SetArgPointee<3>(bad_id),
-                        Return(EGL_TRUE)));
+        .Times(AtLeast(1))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(bad_id),
+            Return(EGL_TRUE)))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(visual_id),
+            SaveArg<1>(&cfg),
+            Return(EGL_TRUE)))
+        .WillRepeatedly(DoAll(
+            SetArgPointee<3>(bad_id),
+            Return(EGL_TRUE)));
+
+    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .WillRepeatedly(DoAll(
+            SaveArg<1>(&chosen_cfg),
+            Return(mock_egl.fake_egl_context)));
 
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
 
+    Mock::VerifyAndClearExpectations(&mock_egl);
     EXPECT_EQ(cfg, chosen_cfg);
 }
 
 TEST_F(AndroidDisplayTest, without_proper_visual_id_throws)
 {
     using namespace testing;
-
-    EGLConfig cfg;
-
-    int bad_id = native_win->fake_visual_id + 1;
+    int bad_id = visual_id + 1;
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
-    .Times(AtLeast(1))
-    .WillRepeatedly(DoAll(
-                        SetArgPointee<3>(bad_id),
-                        SaveArg<1>(&cfg),
-                        Return(EGL_TRUE)));
+        .WillRepeatedly(DoAll(
+            SetArgPointee<3>(bad_id),
+            Return(EGL_TRUE)));
 
     EXPECT_THROW(
     {
         mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report);
     }, std::runtime_error );
 }
-#endif
 
 TEST_F(AndroidDisplayTest, eglGetDisplay)
 {
@@ -259,21 +260,6 @@ TEST_F(AndroidDisplayTest, eglInitialize_failure_bad_minor_version)
     }, std::runtime_error   );
 }
 
-#if 0 
-TEST_F(AndroidDisplayTest, eglCreateWindowSurface_requests_config)
-{
-    using namespace testing;
-    EGLConfig fake_config = (EGLConfig) 0x3432;
-    EXPECT_CALL(*native_win, android_display_egl_config(_))
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(fake_config));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, fake_config, _, _))
-        .Times(1);
-
-    mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
-}
-#endif
-
 TEST_F(AndroidDisplayTest, eglCreateWindowSurface_nullarg)
 {
     using namespace testing;
@@ -284,21 +270,15 @@ TEST_F(AndroidDisplayTest, eglCreateWindowSurface_nullarg)
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
 
-#if 0
 TEST_F(AndroidDisplayTest, eglCreateWindowSurface_uses_native_window_type)
 {
     using namespace testing;
-    EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
-
-    EXPECT_CALL(*native_win, android_native_window_type())
-        .Times(1)
-        .WillOnce(Return(egl_window));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, egl_window,_))
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, native_win.get(),_))
         .Times(1);
 
     mga::AndroidDisplay display(native_win, db_factory, stub_display_support, mock_display_report );
 }
-#endif
+
 TEST_F(AndroidDisplayTest, eglCreateWindowSurface_failure)
 {
     using namespace testing;
