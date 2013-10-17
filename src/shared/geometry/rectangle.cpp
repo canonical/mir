@@ -28,6 +28,16 @@ geom::Point geom::Rectangle::bottom_right() const
             top_left.y.as_int() + size.height.as_int()};
 }
 
+bool geom::Rectangle::contains(Rectangle const& r) const
+{
+    return r.top_left.x >= top_left.x &&
+           r.top_left.x.as_int() + r.size.width.as_int() <=
+               top_left.x.as_int() + size.width.as_int() &&
+           r.top_left.y >= top_left.y &&
+           r.top_left.y.as_int() + r.size.height.as_int() <=
+               top_left.y.as_int() + size.height.as_int();
+}
+
 bool geom::Rectangle::contains(Point const& p) const
 {
     if (size.width == geom::Width{0} || size.height == geom::Height{0})

@@ -66,7 +66,12 @@ class Scene
 public:
     virtual ~Scene() {}
 
+    // Back to front; normal rendering order
     virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
+
+    // Front to back; as used when scanning for occlusions
+    virtual void reverse_for_each_if(FilterForScene& filter,
+                                     OperatorForScene& op) = 0;
 
     /**
      * Sets a callback to be called whenever the state of the

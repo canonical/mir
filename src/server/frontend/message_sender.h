@@ -18,6 +18,8 @@
 #ifndef MIR_FRONTEND_MESSAGE_SENDER_H_
 #define MIR_FRONTEND_MESSAGE_SENDER_H_
 
+#include "fd_sets.h"
+
 #include <vector>
 #include <boost/asio.hpp>
 
@@ -31,7 +33,7 @@ class MessageSender
 {
 public:
     virtual void send(std::string const& body) = 0;
-    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
+    virtual void send(std::string const& body, FdSets const& fds) = 0;
 
 protected:
     MessageSender() = default;

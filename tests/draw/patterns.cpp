@@ -25,34 +25,34 @@ mtd::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
 {
 }
 
-void mtd::DrawPatternSolid::draw(std::shared_ptr<MirGraphicsRegion>& region) const
+void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
 {
-    if (region->pixel_format != mir_pixel_format_abgr_8888 )
+    if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot draw region, incorrect format"));
 
-    uint32_t *pixel = (uint32_t*) region->vaddr;
+    uint32_t *pixel = (uint32_t*) region.vaddr;
     int i,j;
-    for(i=0; i<region->height; i++)
+    for(i=0; i<region.height; i++)
     {
-        for(j=0; j< region->width; j++)
+        for(j=0; j< region.width; j++)
         {
-            pixel[i*region->stride + j] = color_value;
+            pixel[i*region.stride + j] = color_value;
         }
     }
 }
 
-bool mtd::DrawPatternSolid::check(const std::shared_ptr<MirGraphicsRegion>& region) const
+bool mtd::DrawPatternSolid::check(MirGraphicsRegion const& region) const
 {
-    if (region->pixel_format != mir_pixel_format_abgr_8888 )
+    if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot check region, incorrect format"));
 
-    uint32_t *pixel = (uint32_t*) region->vaddr;
+    uint32_t *pixel = (uint32_t*) region.vaddr;
     int i,j;
-    for(i=0; i< region->width; i++)
+    for(i=0; i< region.width; i++)
     {
-        for(j=0; j<region->height; j++)
+        for(j=0; j<region.height; j++)
         {
-            if (pixel[j*region->stride + i] != color_value)
+            if (pixel[j*region.stride + i] != color_value)
             {
                 return false;
             }

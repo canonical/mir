@@ -37,8 +37,8 @@ class DrawPattern
 {
 public:
     virtual ~DrawPattern() {};
-    virtual void draw(std::shared_ptr<MirGraphicsRegion>& region) const = 0;
-    virtual bool check(const std::shared_ptr<MirGraphicsRegion>& region) const = 0;
+    virtual void draw(MirGraphicsRegion const& region) const = 0;
+    virtual bool check(MirGraphicsRegion const& region) const = 0;
 
 protected:
     DrawPattern() = default;
@@ -52,8 +52,8 @@ public:
     /* todo: should construct with a color value type, not an uint32 */
     DrawPatternSolid(uint32_t color_value);
 
-    void draw(std::shared_ptr<MirGraphicsRegion>& region) const;
-    bool check(const std::shared_ptr<MirGraphicsRegion>& region) const;
+    void draw(MirGraphicsRegion const& region) const;
+    bool check(MirGraphicsRegion const& region) const;
 
 private:
     const uint32_t color_value;
@@ -66,8 +66,8 @@ public:
     /* todo: should construct with a color value type, not an uint32 */
     DrawPatternCheckered(uint32_t (&pattern) [Rows][Cols]);
 
-    void draw(std::shared_ptr<MirGraphicsRegion>& region) const;
-    bool check(const std::shared_ptr<MirGraphicsRegion>& region) const;
+    void draw(MirGraphicsRegion const& region) const;
+    bool check(MirGraphicsRegion const& region) const;
 
 private:
     uint32_t color_pattern [Rows][Cols];

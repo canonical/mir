@@ -13,28 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Ancell <robert.ancell@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_
-#define MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_FENCE_H_
+#define MIR_TEST_DOUBLES_MOCK_FENCE_H_
 
-#include "mir/pause_resume_listener.h"
+#include "mir/graphics/android/fence.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-class DefaultPauseResumeListener : public virtual PauseResumeListener
+namespace test
 {
-public:
-    virtual void paused()
-    {
-    }
+namespace doubles
+{
 
-    virtual void resumed()
-    {
-    }
+struct MockFence : public graphics::android::Fence
+{
+    MOCK_METHOD0(wait, void());
+    MOCK_METHOD1(merge_with, void(graphics::android::NativeFence&));
+    MOCK_CONST_METHOD0(copy_native_handle, graphics::android::NativeFence());
 };
-  
+
+}
+}
 }
 
-#endif /* MIR_DEFAULT_PAUSE_RESUME_LISTENER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_FENCE_H_ */
