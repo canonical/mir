@@ -150,7 +150,7 @@ private:
 
 mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native_win,
                                     std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
-                                    std::shared_ptr<DisplaySupportProvider> const& display_provider,
+                                    std::shared_ptr<DisplayInfo> const& display_info,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
       egl_display{create_and_initialize_display()},
@@ -161,8 +161,9 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native
       egl_surface_dummy{egl_display,
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
+      display_command{db_factory->create_display_command()},
       display_buffer{db_factory->create_display_buffer(
-          native_window, display_provider, egl_display, egl_config, egl_context_shared)},
+          native_window, display_info, egl_display, egl_config, egl_context_shared)},
       display_provider(display_provider),
       current_configuration{display_buffer->view_area().size}
 {

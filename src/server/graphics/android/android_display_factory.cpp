@@ -74,6 +74,12 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 {
+#if 0
+    resource_factory->create_hwc_dev()
+    if (version)
+        commander = create_version()
+
+#endif
     std::shared_ptr<mga::DisplaySupportProvider> support_provider;
     //TODO: if hwc display creation fails, we could try the gpu display
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))

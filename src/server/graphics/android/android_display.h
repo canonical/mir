@@ -45,7 +45,6 @@ class AndroidDisplay : public Display
 public:
     explicit AndroidDisplay(std::shared_ptr<ANativeWindow> const&,
                             std::shared_ptr<AndroidDisplayBufferFactory> const&,
-                            std::shared_ptr<DisplaySupportProvider> const&,
                             std::shared_ptr<DisplayReport> const&);
     ~AndroidDisplay();
 
@@ -76,7 +75,6 @@ private:
     EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface_dummy;
     std::unique_ptr<DisplayBuffer> display_buffer;
-    std::shared_ptr<DisplaySupportProvider> display_provider;
     
     AndroidDisplayConfiguration current_configuration;
 };

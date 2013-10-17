@@ -50,14 +50,13 @@ protected:
     DisplayInfo(DisplayInfo const&) = delete;
 };
 
-class DisplaySupportProvider
+
+//should be DisplayControl, DisplayCommander
+class DisplayCommander
 {
 public:
-    virtual ~DisplaySupportProvider() = default;
+    virtual ~DisplayCommander() = default;
 
-    virtual geometry::Size display_size() const = 0; 
-    virtual geometry::PixelFormat display_format() const = 0; 
-    virtual unsigned int number_of_framebuffers_available() const = 0;
     //this function schedules the next frontbuffer to be "buffer" parameter. depending on implementation, it may
     //post immediately, or be deferred.
     virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
@@ -66,9 +65,9 @@ public:
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 
 protected:
-    DisplaySupportProvider() = default;
-    DisplaySupportProvider& operator=(DisplaySupportProvider const&) = delete;
-    DisplaySupportProvider(DisplaySupportProvider const&) = delete;
+    DisplayCommander() = default;
+    DisplayCommander& operator=(DisplayCommander const&) = delete;
+    DisplayCommander(DisplayCommander const&) = delete;
 };
 
 }

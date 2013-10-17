@@ -84,7 +84,7 @@ std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_dev
 
     return std::make_shared<mga::FBDevice>(fb_dev);
 } 
-
+//create hwc native
 std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_1(
     std::shared_ptr<hwc_composer_device_1> const& hwc_device,
     std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
