@@ -181,6 +181,7 @@ char const* const connector_report_opt        = "connector-report";
 char const* const input_report_opt            = "input-report";
 char const* const host_socket_opt             = "host-socket";
 char const* const standalone_opt              = "standalone";
+char const* const name_opt                    = "name";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -254,6 +255,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     add_options()
         (standalone_opt, po::value<bool>(),
             "Run mir in standalone mode. [bool:default=false]")
+        (name_opt, po::value<std::string>(),
+            "The name Mir uses when registering with its host, if nested.")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
         ("file,f", po::value<std::string>(),
@@ -997,7 +1000,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
                 return std::make_shared<graphics::nested::HostConnection>(
                     host_socket,
-                    server_socket);
+                    options->get(name_opt, server_socket));
             }
             else
             {
