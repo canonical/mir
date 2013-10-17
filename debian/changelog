@@ -1,8 +1,12 @@
-mir (0.0.15+13.10.20131011-0ubuntu1) UNRELEASED; urgency=low
+mir (0.0.15+13.10.20131014-0ubuntu1) saucy; urgency=low
 
+  [ Kevin Gunn ]
   * bump version 0.0.15
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Mon, 14 Oct 2013 13:52:10 -0500
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1100
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Oct 2013 23:55:33 +0000
 
 mir (0.0.14+13.10.20131011-0ubuntu1) saucy; urgency=low
 

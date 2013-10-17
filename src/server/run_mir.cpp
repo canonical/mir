@@ -78,4 +78,7 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     init(server);
     server.run();
+
+    for (auto sig : { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS })
+        signal(sig, old_handler[sig]);
 }
