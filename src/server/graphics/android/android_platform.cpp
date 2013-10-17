@@ -20,7 +20,6 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "android_platform.h"
 #include "android_graphic_buffer_allocator.h"
-#include "android_display_factory.h"
 #include "resource_factory.h"
 #include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -59,11 +58,54 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_bu
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
 {
+#if 0
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
     auto resource_factory = std::make_shared<mga::ResourceFactory>(buffer_allocator);
-    mga::AndroidDisplayFactory display_factory(resource_factory, display_report);
-    return display_factory.create_display();
+
+    bool needs_fb_device = false;
+    bool hwc_available = true;
+
+    std::shared_ptr<hwc_composer_device_1> hwc_native;
+    try
+    {
+        auto hwc_dev = resource_factory->create_hwc_native_device();
+    } catch (...)
+    {
+        hwc_available = false;
+    }
+
+    if (!hwc_available || (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
+    {
+        auto fb_native = resource_factory->create_hwc_native_device();
+    }
+
+    if (hwc_available)
+    {
+        if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1)
+        {
+
+        }
+        else if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0)
+        {
+
+        }
+
+        //throw
+    }
+    else
+    {
+        //make fb
+        display_info = resource_factory->create_fb_info(fb_native);
+        display_commander = resource_factory->create_hwc_1_0(hwc_dev, fb_native);
+    }
+
+    auto buffers = create_buffers(info);
+    auto swapper = create_swapper(buffers);
+
+    return resource_factory->create_display(swapper, info, commander, report);
+#endif
+    return nullptr;
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

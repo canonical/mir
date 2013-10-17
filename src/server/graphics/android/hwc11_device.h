@@ -54,7 +54,6 @@ private:
     std::shared_ptr<HWCLayerList> const layer_list;
     std::shared_ptr<DisplayCommander> const fb_device;
     std::shared_ptr<SyncFileOps> const sync_ops;
-    unsigned int primary_display_config;
 };
 
 }

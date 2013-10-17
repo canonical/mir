@@ -32,25 +32,43 @@ class DisplayReport;
 
 namespace android
 {
-class DisplaySupportProvider;
+class DisplayInfo;
+class DisplayCommander;
+class FBSwapper;
 
 class DisplayResourceFactory
 {
 public:
     virtual ~DisplayResourceFactory() = default;
 
-    virtual std::shared_ptr<DisplaySupportProvider> create_fb_device() const = 0;
+    //native allocations
+    virtual std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const = 0;
+    virtual std::shared_ptr<framebuffer_device_t> create_fb_native_device() const = 0;
 
-    virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
+    //infos
+    virtual std::shared_ptr<DisplayInfo> create_hwc_info(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device) const = 0;
+    virtual std::shared_ptr<DisplayInfo> create_fb_info(
+        std::shared_ptr<framebuffer_device_t> const& fb_device) const = 0;
+    
+    //fb buffer alloc
+    virtual std::shared_ptr<FBSwapper> create_fb_buffers(
+        std::shared_ptr<DisplayInfo> const& info) const = 0;
+
+    //commanders
+    virtual std::shared_ptr<DisplayCommander> create_fb_commander(
+        std::shared_ptr<framebuffer_device_t> const& fb_device) const = 0;
+    virtual std::shared_ptr<DisplayCommander> create_hwc11_commander(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device) const = 0;
+    virtual std::shared_ptr<DisplayCommander> create_hwc10_commander(
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
+        std::shared_ptr<framebuffer_device_t> const& fb_device) const = 0;
 
-    virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_0(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
-
+    //display alloc
     virtual std::shared_ptr<graphics::Display> create_display(
-        std::shared_ptr<DisplaySupportProvider> const& support_provider,
+        std::shared_ptr<FBSwapper> const& swapper,
+        std::shared_ptr<DisplayInfo> const& info,
+        std::shared_ptr<DisplayCommander> const& support_provider,
         std::shared_ptr<graphics::DisplayReport> const& report) const = 0;
 
 protected:

@@ -30,14 +30,22 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplaySupportProvider 
+class FBInfo : public DisplayInfo
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    FBInfo(std::shared_ptr<framebuffer_device_t> const&);
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const; 
     unsigned int number_of_framebuffers_available() const;
+private:
+    std::shared_ptr<framebuffer_device_t> const fb_device;
+};
+
+class FBDevice : public DisplayCommander 
+{
+public:
+    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
 
     void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
     void sync_to_display(bool sync); 

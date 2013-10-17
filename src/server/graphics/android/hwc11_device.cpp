@@ -37,44 +37,12 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
       fb_device(fbdev), 
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
-    size_t num_configs = 1;
-    auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
-    if (rc != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config")); 
-    }
 }
 
 mga::HWC11Device::~HWC11Device() noexcept
 {
 }
 
-#if 0
-geom::Size mga::HWC11Device::display_size() const
-{
-    static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
-                                        HWC_DISPLAY_HEIGHT,
-                                        HWC_DISPLAY_NO_ATTRIBUTE};
-
-    int size_values[2];
-    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
-                                     size_request, size_values);
-
-    return {size_values[0], size_values[1]};
-}
-
-geom::PixelFormat mga::HWC11Device::display_format() const
-{
-    return geom::PixelFormat::abgr_8888;
-}
-
-unsigned int mga::HWC11Device::number_of_framebuffers_available() const
-{
-    //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
-    //us a hint to triple buffer. Taking this hint is currently not supported.
-    return 2u;
-}
-#endif
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     layer_list->set_fb_target(buffer);
@@ -113,3 +81,60 @@ void mga::HWC11Device::sync_to_display(bool)
 {
     //TODO return error code, running not synced to vsync is not supported
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mga::HWCInfo::HWCInfo(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
+ : hwc_device(hwc_device)
+{
+    size_t num_configs = 1;
+    auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
+    if (rc != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config")); 
+    }
+}
+geom::Size mga::HWCInfo::display_size() const
+{
+    static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
+                                        HWC_DISPLAY_HEIGHT,
+                                        HWC_DISPLAY_NO_ATTRIBUTE};
+
+    int size_values[2];
+    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
+                                     size_request, size_values);
+
+    return {size_values[0], size_values[1]};
+}
+
+geom::PixelFormat mga::HWCInfo::display_format() const
+{
+    return geom::PixelFormat::abgr_8888;
+}
+
+unsigned int mga::HWCInfo::number_of_framebuffers_available() const
+{
+    //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
+    //us a hint to triple buffer. Taking this hint is currently not supported.
+    return 2u;
+}
+

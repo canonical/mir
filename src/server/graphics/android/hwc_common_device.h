@@ -42,10 +42,15 @@ struct HWCCallbacks
 
 class HWCInfo : public DisplayInfo
 {
+public:
     HWCInfo(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
 
+    geometry::Size display_size() const;
     geometry::PixelFormat display_format() const;
-    unsigned int number_of_framebuffers_available() const; 
+    unsigned int number_of_framebuffers_available() const;
+private:
+    std::shared_ptr<hwc_composer_device_1> const hwc_device;
+    unsigned int primary_display_config;
 };
 
 class HWCCommonCommand : public DisplayCommander

@@ -72,17 +72,6 @@ mga::HWCCommonCommand::~HWCCommonCommand() noexcept
         turn_screen_off();
 }
 
-#if 0
-geom::PixelFormat mga::HWCCommonCommand::display_format() const
-{
-    return geom::PixelFormat::abgr_8888;
-}
-
-unsigned int mga::HWCCommonCommand::number_of_framebuffers_available() const
-{
-    return 2u;
-}
-#endif
 void mga::HWCCommonCommand::notify_vsync()
 {
     coordinator->notify_vsync();
