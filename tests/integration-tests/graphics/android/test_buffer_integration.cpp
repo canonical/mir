@@ -68,8 +68,8 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 
     auto region = sw_renderer.graphic_region_from_handle(test_buffer->native_buffer_handle()->anwb());
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
-    red_pattern.draw(region);
-    EXPECT_TRUE(red_pattern.check(region));
+    red_pattern.draw(*region);
+    EXPECT_TRUE(red_pattern.check(*region));
 }
 
 TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)
