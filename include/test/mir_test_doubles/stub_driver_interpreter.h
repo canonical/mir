@@ -38,7 +38,7 @@ public:
     }
 
     StubDriverInterpreter()
-     : StubDriverInterpreter(mir::geometry::Size{44,22}, 3)
+     : StubDriverInterpreter(mir::geometry::Size{44,22}, 5)
     {
     }
 

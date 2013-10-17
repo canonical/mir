@@ -107,6 +107,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
     EXPECT_EQ(view_area.top_left, origin_pt);
 }
 
+#if 0
 TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
@@ -154,3 +155,4 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
     display->configure(*suspend_configuration);
     display->configure(*standby_configuration);
 }
+#endif

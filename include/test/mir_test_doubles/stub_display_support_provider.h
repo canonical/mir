@@ -41,7 +41,7 @@ struct StubDisplayInfo : public graphics::android::DisplayInfo
     ~StubDisplayInfo() noexcept {}
 
     geometry::Size display_size() const { return sz; }
-    geometry::PixelFormat display_format() const { return geometry::PixelFormat(); }
+    geometry::PixelFormat display_format() const { return geometry::PixelFormat::abgr_8888; }
     unsigned int number_of_framebuffers_available() const { return 0; }
 
 private:

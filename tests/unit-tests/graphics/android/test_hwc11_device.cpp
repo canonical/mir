@@ -138,6 +138,7 @@ TEST_F(HWC11Device, test_hwc_commit_order_with_vsync)
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
 }
 
+#if 0
 TEST_F(HWC11Device, test_hwc_device_display_config)
 {
     using namespace testing;
@@ -164,7 +165,6 @@ TEST_F(HWC11Device, test_hwc_device_display_config_failure_throws)
     }, std::runtime_error);
 }
 
-#if 0
 namespace
 {
 static int const display_width = 180;
