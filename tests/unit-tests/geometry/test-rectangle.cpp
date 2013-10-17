@@ -56,7 +56,97 @@ TEST(geometry, rectangle_bottom_right)
     EXPECT_EQ(Point(2,2), rect_empty.bottom_right());
 }
 
-TEST(geometry, rectangle_contains)
+TEST(geometry, rectangle_contains_rectangle)
+{
+    using namespace testing;
+    using namespace geom;
+
+    const int left = 3;
+    const int top = 3;
+    const int width = 3;
+    const int height = 3;
+    const Rectangle r{{left,top}, {width,height}};
+
+    const int right = left + width;
+    const int bottom = top + height;
+
+    // Test for _every_ rectangle contained in r
+    for (int y = top; y <= bottom; y++)
+    {
+        for (int x = left; x <= right; x++)
+        {
+            const int max_height = bottom - y;
+            const int max_width = right - x;
+            for (int h = 0; h <= max_height; h++)
+            {
+                for (int w = 0; w <= max_width; w++)
+                {
+                    EXPECT_TRUE(r.contains(Rectangle{{x,y}, {w,h}}));
+                }
+            }
+
+            EXPECT_FALSE(r.contains(Rectangle{{x,y}, {max_width+1,max_height}}));
+            EXPECT_FALSE(r.contains(Rectangle{{x,y}, {max_width,max_height+1}}));
+        }
+    }
+
+    EXPECT_FALSE(r.contains(Rectangle{{2,2}, {5,5}}));
+    EXPECT_FALSE(r.contains(Rectangle{{2,2}, {1,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{-4,-3}, {10,10}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{1,3}, {3,3}}));
+    EXPECT_FALSE(r.contains(Rectangle{{3,1}, {3,3}}));
+    EXPECT_FALSE(r.contains(Rectangle{{5,3}, {3,3}}));
+    EXPECT_FALSE(r.contains(Rectangle{{3,5}, {3,3}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{9,9}, {1,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{-6,-7}, {3,4}}));
+}
+
+TEST(geometry, empty_rectangle_contains_point_only)
+{
+    using namespace testing;
+    using namespace geom;
+
+    const int left = 3;
+    const int top = 3;
+    const Rectangle r{{left,top}, {0,0}};
+
+    EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,0}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {0,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {3,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {0,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top+1}, {0,0}}));
+}
+
+TEST(geometry, elongated_empty_rectangle_contains_points_only)
+{
+    using namespace testing;
+    using namespace geom;
+
+    const int left = 3;
+    const int top = 3;
+    const Rectangle r{{left,top}, {0,3}};
+
+    EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+1}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+2}, {0,0}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+3}, {0,0}}));
+
+    EXPECT_TRUE(r.contains(Rectangle{{left,top}, {0,1}}));
+    EXPECT_TRUE(r.contains(Rectangle{{left,top+1}, {0,2}}));
+
+    EXPECT_FALSE(r.contains(Rectangle{{left,top+4}, {0,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left,top}, {1,1}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {3,0}}));
+    EXPECT_FALSE(r.contains(Rectangle{{left-1,top}, {0,0}}));
+}
+
+TEST(geometry, rectangle_contains_point)
 {
     using namespace testing;
     using namespace geom;

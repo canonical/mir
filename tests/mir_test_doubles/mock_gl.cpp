@@ -82,6 +82,12 @@ void glEnable(GLenum func)
     global_mock_gl->glEnable (func);
 }
 
+void glDisable(GLenum func)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glDisable(func);
+}
+
 void glBlendFunc(GLenum src, GLenum dst)
 {
     CHECK_GLOBAL_VOID_MOCK();

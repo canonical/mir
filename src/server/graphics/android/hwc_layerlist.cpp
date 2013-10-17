@@ -72,7 +72,7 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
 {
     if (self.visibleRegionScreen.rects)
     {
-        delete self.visibleRegionScreen.rects;
+        delete[] self.visibleRegionScreen.rects;
     }
 }
 
