@@ -105,32 +105,16 @@ TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
     factory.create_fb_buffers(mock_display_info);
 }
 
-#if 0
-
-TEST_F(ResourceFactoryTest, test_native_window_creation_uses_rgba8888)
-{
-    using namespace testing;
-
-    mga::ResourceFactory factory(mock_buffer_allocator);
-    geom::PixelFormat pf = geom::PixelFormat::abgr_8888; 
- 
-    EXPECT_CALL(*mock_display_info_provider, display_format())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(pf));
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,pf,_))
-        .Times(fake_fb_num);
- 
-    factory.create_display(mock_display_info_provider, mock_report);
-}
-
-TEST_F(ResourceFactoryTest, test_device_creation_accesses_gralloc)
+TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 {
     using namespace testing;
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
     mga::ResourceFactory factory(mock_buffer_allocator);
-    factory.create_fb_device();
+    factory.create_fb_native_device();
+
+    EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
 
 TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
@@ -144,7 +128,7 @@ TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        factory.create_fb_device();
+        factory.create_fb_native_device();
     }, std::runtime_error);
 
     /* failure because of nullptr returned */
@@ -153,23 +137,11 @@ TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
         .WillOnce(DoAll(SetArgPointee<1>(nullptr),Return(-1)));
 
     EXPECT_THROW({
-        factory.create_fb_device();
+        factory.create_fb_native_device();
     }, std::runtime_error);
 
 }
 
-TEST_F(ResourceFactoryTest, test_device_creation_resource_has_fb_close_on_destruct)
-{
-    using namespace testing;
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
-        .Times(1);
-
-    mga::ResourceFactory factory(mock_buffer_allocator);
-    factory.create_fb_device();
-
-    EXPECT_TRUE(hw_access_mock.open_count_matches_close());
-}
-#endif
 #if 0
 
 #include "src/server/graphics/android/display_support_provider.h"
