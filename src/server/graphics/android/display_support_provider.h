@@ -35,6 +35,21 @@ class Buffer;
 namespace android
 {
 
+class DisplayInfo
+{
+public:
+    virtual ~DisplayInfo() = default;
+
+    virtual geometry::Size display_size() const = 0; 
+    virtual geometry::PixelFormat display_format() const = 0; 
+    virtual unsigned int number_of_framebuffers_available() const = 0;
+
+protected:
+    DisplayInfo() = default;
+    DisplayInfo& operator=(DisplayInfo const&) = delete;
+    DisplayInfo(DisplayInfo const&) = delete;
+};
+
 class DisplaySupportProvider
 {
 public:

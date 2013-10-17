@@ -28,13 +28,18 @@ namespace test
 {
 namespace doubles
 {
+
+class MockDisplayInfo : public graphics::android::DisplayInfo
+{
+    MOCK_CONST_METHOD0(display_size, geometry::Size());
+    MOCK_CONST_METHOD0(display_format, geometry::PixelFormat());
+    MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
+};
+
 class MockDisplaySupportProvider : public graphics::android::DisplaySupportProvider
 {
 public:
     ~MockDisplaySupportProvider() noexcept {}
-    MOCK_CONST_METHOD0(display_size, geometry::Size());
-    MOCK_CONST_METHOD0(display_format, geometry::PixelFormat());
-    MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
     MOCK_METHOD1(set_next_frontbuffer, void(std::shared_ptr<mir::graphics::Buffer> const&));
     MOCK_METHOD1(sync_to_display, void(bool));
     MOCK_METHOD1(mode, void(MirPowerMode));
