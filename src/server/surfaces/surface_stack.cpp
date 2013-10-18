@@ -66,6 +66,24 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
     }
 }
 
+void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
+                                           mc::OperatorForScene& op)
+{
+    std::lock_guard<std::recursive_mutex> lg(guard);
+    for (auto layer = layers_by_depth.rbegin();
+         layer != layers_by_depth.rend();
+         ++layer)
+    {
+        auto surfaces = layer->second;
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        {
+            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
+            ms::BufferStream& stream = *((*it)->buffer_stream());
+            if (filter(info)) op(info, stream);
+        }
+    }
+}
+
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
     std::lock_guard<std::mutex> lg{notify_change_mutex};

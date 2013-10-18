@@ -26,6 +26,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "bypass.h"
+#include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
 #include <vector>
@@ -38,16 +39,21 @@ namespace
 
 struct FilterForVisibleSceneInRegion : public mc::FilterForScene
 {
-    FilterForVisibleSceneInRegion(mir::geometry::Rectangle const& enclosing_region)
-        : enclosing_region(enclosing_region)
+    FilterForVisibleSceneInRegion(
+        mir::geometry::Rectangle const& enclosing_region,
+        mc::OcclusionMatch const& occlusions)
+        : enclosing_region(enclosing_region),
+          occlusions(occlusions)
     {
     }
     bool operator()(mc::CompositingCriteria const& info)
     {
-        return info.should_be_rendered_in(enclosing_region);
+        return info.should_be_rendered_in(enclosing_region) &&
+               !occlusions.occluded(info);
     }
 
     mir::geometry::Rectangle const& enclosing_region;
+    mc::OcclusionMatch const& occlusions;
 };
 
 std::mutex global_frameno_lock;
@@ -127,9 +133,14 @@ void mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         auto const& view_area = display_buffer.view_area();
+
+        mc::OcclusionFilter occlusion_search(view_area);
+        mc::OcclusionMatch occlusion_match;
+        scene->reverse_for_each_if(occlusion_search, occlusion_match);
+
         renderer->clear(local_frameno);
         mc::RenderingOperator applicator(*renderer, save_resource);
-        FilterForVisibleSceneInRegion selector(view_area);
+        FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
         overlay_renderer->render(view_area, save_resource);
 

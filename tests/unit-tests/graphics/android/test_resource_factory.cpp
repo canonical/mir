@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -75,6 +76,7 @@ public:
     std::shared_ptr<mtd::MockDisplayInfo> mock_display_info;
     unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 //note: @kdub imo, the hwc api has a hole in it that it doesn't allow query for format. surfaceflinger code
