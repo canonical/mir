@@ -41,11 +41,6 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::ResourceFactory::ResourceFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
-    : buffer_allocator(buffer_allocator)
-{
-}
-
 std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_device() const
 {
     hw_module_t const* module;
@@ -83,7 +78,8 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
 }
  
 std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_fb_buffers(
-    std::shared_ptr<DisplayInfo> const& info) const
+    std::shared_ptr<mga::DisplayInfo> const& info,
+    std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator) const
 {
     auto size = info->display_size();
     auto pf = info->display_format();

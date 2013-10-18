@@ -35,6 +35,7 @@ namespace android
 class DisplayInfo;
 class DisplayCommander;
 class FBSwapper;
+class GraphicBufferAllocator;
 
 class DisplayResourceFactory
 {
@@ -53,7 +54,8 @@ public:
     
     //fb buffer alloc
     virtual std::shared_ptr<FBSwapper> create_fb_buffers(
-        std::shared_ptr<DisplayInfo> const& info) const = 0;
+        std::shared_ptr<DisplayInfo> const& info,
+        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) const = 0;
 
     //commanders
     virtual std::shared_ptr<DisplayCommander> create_fb_commander(
