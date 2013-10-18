@@ -17,11 +17,14 @@
  */
 
 #include "mir/graphics/null_display_report.h"
-#include "src/server/graphics/android/android_platform.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
+#include "src/server/graphics/android/android_platform.h"
+#include "src/server/graphics/android/resource_factory.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
@@ -97,5 +100,203 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
         .Times(1);
 
     platform->fill_ipc_package(mock_packer, mock_buffer);
-
 }
+
+
+namespace
+{
+struct MockResourceFactory: public mga::DisplayResourceFactory
+{
+    ~MockResourceFactory() noexcept {}
+    MockResourceFactory() {}
+
+    MOCK_CONST_METHOD0(create_hwc_native_device, std::shared_ptr<hwc_composer_device_1>());
+    MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
+
+    MOCK_CONST_METHOD1(create_hwc_info,
+        std::shared_ptr<mga::DisplayInfo>(std::shared_ptr<hwc_composer_device_1> const&));
+    MOCK_CONST_METHOD1(create_fb_info,
+        std::shared_ptr<mga::DisplayInfo>(std::shared_ptr<framebuffer_device_t> const&));
+   
+    MOCK_CONST_METHOD1(create_fb_buffers, 
+        std::shared_ptr<mga::FBSwapper>(std::shared_ptr<mga::DisplayInfo> const&)); 
+
+    MOCK_CONST_METHOD1(create_fb_commander,
+        std::shared_ptr<mga::DisplayCommander>(std::shared_ptr<framebuffer_device_t> const&));
+    MOCK_CONST_METHOD1(create_hwc11_commander,
+        std::shared_ptr<mga::DisplayCommander>(std::shared_ptr<hwc_composer_device_1> const&));
+    MOCK_CONST_METHOD2(create_hwc10_commander,
+        std::shared_ptr<mga::DisplayCommander>(
+            std::shared_ptr<hwc_composer_device_1> const&, std::shared_ptr<framebuffer_device_t> const&));
+
+    MOCK_CONST_METHOD4(create_display,
+        std::shared_ptr<mg::Display>(
+            std::shared_ptr<mga::FBSwapper> const&, std::shared_ptr<mga::DisplayInfo> const&,
+            std::shared_ptr<mga::DisplayCommander> const&, std::shared_ptr<mg::DisplayReport> const& ));
+};
+
+class PlatformDisplayCreationTest : public ::testing::Test
+{
+public:
+    PlatformDisplayCreationTest()
+    {
+    }
+
+    void SetUp()
+    {
+        using namespace testing;
+        mock_resource_factory = std::make_shared<testing::StrictMock<MockResourceFactory>>();
+        ON_CALL(*mock_resource_factory, create_hwc_native_device())
+            .WillByDefault(Return(mt::fake_shared(hw_access_mock)));
+
+
+        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+    }
+
+    void TearDown()
+    {
+    }
+
+    mtd::HardwareAccessMock hw_access_mock;
+    std::shared_ptr<MockResourceFactory> mock_resource_factory;
+    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
+};
+}
+
+TEST_F(PlatformDisplayCreationTest, hwc_with_hwc_device_version_10_success)
+{
+    using namespace testing;
+
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
+
+    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
+        .Times(1)
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
+        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_fb_info(_))
+        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_))
+        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_hwc10_commander(_,_))
+        .Times(1);
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
+        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_,_))
+        .Times(1); 
+
+    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
+    display_factory.create_display();
+}
+
+
+#if 0
+
+#include "src/server/graphics/android/display_support_provider.h"
+#include "src/server/graphics/android/android_display_factory.h"
+#include "src/server/graphics/android/fb_device.h"
+
+#include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_report.h"
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <stdexcept>
+
+namespace mtd=mir::test::doubles;
+namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
+
+#endif 
+
+#if 0
+
+TEST_F(PlatformDisplayCreationTest, hwc_with_hwc_device_version_11_success)
+{
+    using namespace testing;
+
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
+
+    std::shared_ptr<mga::HWCDevice> mock_hwc_device;
+  
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
+        .Times(1);
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
+        .Times(1)
+        .WillOnce(Return(mock_hwc_device));
+    EXPECT_CALL(*mock_fnw_factory, create_fb_device())
+        .Times(1);
+
+    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
+    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
+        .Times(1);
+    std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
+    EXPECT_CALL(*mock_display_allocator, create_display(mock_hwc_device, stub_anativewindow, tmp2))
+        .Times(1);
+
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
+                                               mock_fnw_factory, mock_display_report); 
+    display_factory.create_display();
+}
+
+TEST_F(PlatformDisplayCreationTest, gpu_logging)
+{
+    using namespace testing;
+    mtd::FailingHardwareModuleStub failing_hwc_module_stub;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
+
+    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+        .Times(1);
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
+                                               mock_fnw_factory, mock_display_report); 
+    display_factory.create_display();
+}
+
+TEST_F(PlatformDisplayCreationTest, hwc10_logging)
+{
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
+
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
+        .Times(1);
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
+                                               mock_fnw_factory, mock_display_report); 
+    display_factory.create_display();
+}
+
+TEST_F(PlatformDisplayCreationTest, hwc11_logging)
+{
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
+
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
+        .Times(1);
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
+                                               mock_fnw_factory, mock_display_report); 
+    display_factory.create_display();
+}
+
+// TODO: kdub support v1.2. for the time being, alloc a fallback gpu display
+TEST_F(PlatformDisplayCreationTest, hwc_with_hwc_device_failure_because_hwc_version12_not_supported)
+{
+    using namespace testing;
+
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
+
+    EXPECT_CALL(*mock_fnw_factory, create_fb_device())
+        .Times(1);
+    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
+    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
+        .Times(1);
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
+        .Times(0);
+    EXPECT_CALL(*mock_display_allocator, create_display(_,_,_))
+        .Times(0);
+    std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
+    EXPECT_CALL(*mock_display_allocator, create_display(_,_,tmp2))
+        .Times(1);
+
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
+    display_factory.create_display();
+}
+#endif
+

@@ -38,8 +38,11 @@ namespace mga=mir::graphics::android;
 namespace mf=mir::frontend;
 namespace mo = mir::options;
 
-mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& display_report)
-    : display_report(display_report)
+mga::AndroidPlatform::AndroidPlatform(
+    std::shared_ptr<mga::DisplayResourceFactory> const& display_resource_factory,
+    std::shared_ptr<mg::DisplayReport> const& display_report)
+    : display_resource_factory(display_resource_factory),
+      display_report(display_report)
 {
 }
 
@@ -145,10 +148,12 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
 
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<DisplayReport> const& display_report)
 {
-    return std::make_shared<mga::AndroidPlatform>(display_report);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
+    return std::make_shared<mga::AndroidPlatform>(display_resource_factory, display_report);
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
 {
-    return std::make_shared<mga::AndroidPlatform>(display_report);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
+    return std::make_shared<mga::AndroidPlatform>(display_resource_factory, display_report);
 }
