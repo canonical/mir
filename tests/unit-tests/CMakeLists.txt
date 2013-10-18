@@ -7,6 +7,7 @@ set(
   test_gmock_fixes.cpp
   test_asio_main_loop.cpp
   shared_library_test.cpp
+  test_raii.cpp
 )
 
 add_subdirectory(options/)

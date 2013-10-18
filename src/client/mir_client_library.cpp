@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_configuration.h"
+#include "mir/raii/paired_calls.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_debug.h"
@@ -289,19 +290,10 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
     mcl::delete_config_storage(configuration);
 }
 
-namespace
-{
-template <typename Owned>
-inline std::unique_ptr<Owned, void(*)(Owned*)> unique_with_deleter(Owned* owned, void(*deleter)(Owned*))
-{
-    return {owned, deleter};
-}
-}
-
 //TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    auto const config = unique_with_deleter(
+    auto const config = mir::raii::paired_calls(
         mir_connection_create_display_config(connection),
         &mir_display_config_destroy);
 
