@@ -78,19 +78,16 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     //TODO: if hwc display creation fails, we could try the gpu display
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
-    printf("1.1\n");
         support_provider = resource_factory->create_hwc_1_1(hwc_dev, fb_dev);
         display_report->report_hwc_composition_in_use(1,1);
     }
     else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
     {
-    printf("1.0\n");
         support_provider = resource_factory->create_hwc_1_0(hwc_dev, fb_dev);
         display_report->report_hwc_composition_in_use(1,0);
     }
     else
     {
-    printf("aaa\n");
         support_provider = fb_dev;
         display_report->report_gpu_composition_in_use();
     }
