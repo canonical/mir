@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -60,7 +61,7 @@ public:
         fake_fb_num = 2;
 
         ON_CALL(*mock_display_info_provider, display_format())
-            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
+            .WillByDefault(Return(geom::PixelFormat::argb_8888));
         ON_CALL(*mock_display_info_provider, display_size())
             .WillByDefault(Return(geom::Size{2, 3}));
         ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
@@ -74,6 +75,7 @@ public:
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_info_provider;
     unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
@@ -101,8 +103,8 @@ TEST_F(FBFactory, test_native_window_creation_uses_size)
     geom::Size disp_size{disp_width, disp_height};   
  
     EXPECT_CALL(*mock_display_info_provider, display_size())
-        .Times(1)
-        .WillOnce(Return(disp_size));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(disp_size));
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(disp_size,_,_))
         .Times(fake_fb_num);
  
@@ -121,14 +123,12 @@ TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
     factory.create_display(mock_display_info_provider, mock_report);
 } 
 
-//note: @kdub imo, the hwc api has a hole in it that it doesn't allow query for format. surfaceflinger code
-//            makes note of this api hole in its comments too. It always uses rgba8888, which we will do too.
-TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
+TEST_F(FBFactory, test_native_window_creation_uses_argb_8888)
 {
     using namespace testing;
 
     mga::ResourceFactory factory(mock_buffer_allocator);
-    geom::PixelFormat pf = geom::PixelFormat::abgr_8888; 
+    geom::PixelFormat pf = geom::PixelFormat::argb_8888; 
  
     EXPECT_CALL(*mock_display_info_provider, display_format())
         .Times(AtLeast(1))

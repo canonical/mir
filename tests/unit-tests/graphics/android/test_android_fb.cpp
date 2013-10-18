@@ -61,7 +61,7 @@ protected:
         .Times(AtLeast(0));
 
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
-        stub_display_support = std::make_shared<mtd::StubDisplaySupportProvider>();
+        stub_display_support = std::make_shared<mtd::StubDisplaySupportProvider>(display_size);
         db_factory = std::make_shared<mga::DisplayBufferFactory>();
     }
 
