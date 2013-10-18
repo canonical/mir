@@ -24,6 +24,7 @@
 
 #include <atomic>
 #include <thread>
+#include <mutex>
 #include <chrono>
 
 namespace geom=mir::geometry;
@@ -711,14 +712,17 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
         bundle.allow_framedropping(false);
 
         std::atomic<bool> done(false);
+        std::mutex sync;
 
         std::thread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
-                auto buf = bundle.compositor_acquire(frame);
                 std::this_thread::sleep_for(frame_time);
+                sync.lock();
+                auto buf = bundle.compositor_acquire(frame);
                 bundle.compositor_release(buf);
+                sync.unlock();
 
                 if (frame == compose_frames)
                 {
@@ -734,6 +738,8 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
 
         while (!done.load())
         {
+            sync.lock();
+            sync.unlock();
             auto buf = bundle.client_acquire();
             std::this_thread::sleep_for(frame_time);
             bundle.client_release(buf);
