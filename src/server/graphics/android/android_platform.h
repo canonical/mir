@@ -51,6 +51,8 @@ public:
                           std::shared_ptr<graphics::Buffer> const& buffer) const;
 
 private:
+    std::shared_ptr<Display> create_fb_backup_display();
+
     void initialize(std::function<void(int)> const& auth_magic, int data_items, int const* data, int fd_items, int const* fd) override;
 
     // TODO a design that has this and create_buffer_allocator is missing simplicity

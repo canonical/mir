@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
@@ -108,7 +109,19 @@ namespace
 struct MockResourceFactory: public mga::DisplayResourceFactory
 {
     ~MockResourceFactory() noexcept {}
-    MockResourceFactory() {}
+    MockResourceFactory()
+    {
+        using namespace testing;
+        ON_CALL(*this, create_hwc_native_device()).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_fb_native_device()).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_hwc_info(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_fb_info(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_fb_buffers(_,_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_fb_commander(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_hwc11_commander(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_hwc10_commander(_,_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_display(_,_,_,_)).WillByDefault(Return(nullptr));
+    }
 
     MOCK_CONST_METHOD0(create_hwc_native_device, std::shared_ptr<hwc_composer_device_1>());
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
@@ -153,11 +166,9 @@ public:
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     }
 
-    void TearDown()
-    {
-    }
-
-    mtd::HardwareAccessMock hw_access_mock;
+    //TODO: this test shouldnt need mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     mg::DefaultDisplayConfigurationPolicy stub_display_policy;

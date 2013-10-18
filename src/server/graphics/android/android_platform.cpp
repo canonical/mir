@@ -53,62 +53,64 @@ std::shared_ptr<mg::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 }
 
 std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_buffer_allocator(
-    const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
+    std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
     return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+}
+
+std::shared_ptr<mg::Display> mga::AndroidPlatform::create_fb_backup_display()
+{
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
+    auto fb_native = display_resource_factory->create_fb_native_device();
+    auto info = display_resource_factory->create_fb_info(fb_native);
+    auto fb_swapper = display_resource_factory->create_fb_buffers(info, buffer_allocator);
+    auto commander = display_resource_factory->create_fb_commander(fb_native);
+    display_report->report_gpu_composition_in_use();
+    return display_resource_factory->create_display(fb_swapper, info, commander, display_report);
 }
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
 {
-#if 0
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
-    auto resource_factory = std::make_shared<mga::ResourceFactory>(buffer_allocator);
-
-    bool needs_fb_device = false;
-    bool hwc_available = true;
-
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     try
     {
-        auto hwc_dev = resource_factory->create_hwc_native_device();
+        hwc_native = display_resource_factory->create_hwc_native_device();
     } catch (...)
     {
-        hwc_available = false;
+        return create_fb_backup_display();
     }
 
-    if (!hwc_available || (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
+    //HWC 1.2 not supported yet. make an attempt to use backup display
+    if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
     {
-        auto fb_native = resource_factory->create_hwc_native_device();
+        return create_fb_backup_display();
     }
 
-    if (hwc_available)
+    //we have a supported hwc, create it
+    std::shared_ptr<mga::DisplayInfo> info;
+    std::shared_ptr<mga::DisplayCommander> commander; 
+    if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
-        if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1)
-        {
-
-        }
-        else if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0)
-        {
-
-        }
-
-        //throw
+        auto fb_native = display_resource_factory->create_fb_native_device();
+        info = display_resource_factory->create_fb_info(fb_native);
+        commander = display_resource_factory->create_hwc10_commander(hwc_native, fb_native);
+        display_report->report_hwc_composition_in_use(1,0);
     }
-    else
+
+    if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
     {
-        //make fb
-        display_info = resource_factory->create_fb_info(fb_native);
-        display_commander = resource_factory->create_hwc_1_0(hwc_dev, fb_native);
+        info = display_resource_factory->create_hwc_info(hwc_native);
+        commander = display_resource_factory->create_hwc11_commander(hwc_native);
+        display_report->report_hwc_composition_in_use(1,1);
     }
 
-    auto buffers = create_buffers(info);
-    auto swapper = create_swapper(buffers);
-
-    return resource_factory->create_display(swapper, info, commander, report);
-#endif
-    return nullptr;
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
+    auto fb_swapper = display_resource_factory->create_fb_buffers(info, buffer_allocator);
+    auto z = display_resource_factory->create_display(fb_swapper, info, commander, display_report);
+    return z;
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
