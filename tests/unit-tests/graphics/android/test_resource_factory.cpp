@@ -113,7 +113,6 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 
     mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_native_device();
-
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
 
@@ -140,6 +139,41 @@ TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
         factory.create_fb_native_device();
     }, std::runtime_error);
 
+}
+
+TEST_F(ResourceFactoryTest, hwc_allocation)
+{
+    using namespace testing;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(1);
+
+    mga::ResourceFactory factory(mock_buffer_allocator);
+    factory.create_hwc_native_device();
+
+    EXPECT_TRUE(hw_access_mock.open_count_matches_close());
+}
+
+TEST_F(ResourceFactoryTest, hwc_allocation_failures)
+{
+    using namespace testing;
+
+    mtd::FailingHardwareModuleStub failing_hwc_module_stub;
+
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(2)
+        .WillOnce(Return(-1))
+        .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
+
+    mga::ResourceFactory factory(mock_buffer_allocator);
+
+    EXPECT_THROW({ 
+        factory.create_hwc_native_device();
+    }, std::runtime_error);
+    EXPECT_THROW({ 
+        factory.create_hwc_native_device();
+    }, std::runtime_error);
+
+    EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
 
 #if 0
@@ -216,57 +250,10 @@ public:
 };
 }
 
-TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
-{
-    using namespace testing;
 
-    EXPECT_CALL(*mock_resource_factory, create_fb_device())
-        .Times(1);
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
-        .Times(1);
-    mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report); 
-}
+#endif 
 
-/* this case occurs when the system cannot find the hwc library. it is a nonfatal error because we have a backup to try */
-TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
-{
-    using namespace testing;
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_CALL(*mock_resource_factory, create_fb_device())
-        .Times(1);
-    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_))
-        .Times(1);
-
-    mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report); 
-    display_factory.create_display();
-}
-
-/* this case occurs when the hwc library doesn't work (error) */
-TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_resource_factory, create_hwc_1_1(_,_))
-        .Times(0);
-    
-    mtd::FailingHardwareModuleStub failing_hwc_module_stub;
-
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
-    EXPECT_CALL(*mock_resource_factory, create_fb_device())
-        .Times(1);
-    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
-        .Times(1);
-
-    mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report); 
-    display_factory.create_display();
-}
-
+#if 0
 TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
 {
     using namespace testing;
@@ -289,11 +276,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
     display_factory.create_display();
 }
 
-#endif 
-
-
-
-#if 0
 TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
 {
     using namespace testing;
