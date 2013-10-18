@@ -66,30 +66,15 @@ std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_dev
 
 std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_device() const
 {
-    const hw_module_t *module;
-    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
-    if ((rc != 0) || (module == nullptr))
-    {
-        //SHOULD THROW
-        // this is nonfatal, we'll just create the backup display
-        return {};
-    }
-
-    if ((!module->methods) || !(module->methods->open))
-    {
-        // TODO: log "display factory cannot create hwc display".
-        // this is nonfatal, we'll just create the backup display
-        return {};
-    }
-
     hwc_composer_device_1* hwc_device_raw = nullptr;
-    rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
-
-    if ((rc != 0) || (hwc_device_raw == nullptr))
+    hw_module_t const *module;
+    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr) ||
+       (!module->methods) || !(module->methods->open) ||
+       module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw)) ||
+       (hwc_device_raw == nullptr))
     {
-        // TODO: log "display hwc module unusable".
-        // this is nonfatal, we'll just create the backup display
-        return {};
+        BOOST_THROW_EXCEPTION(std::runtime_error("error opening hwc hal")); 
     }
 
     return std::shared_ptr<hwc_composer_device_1>(
