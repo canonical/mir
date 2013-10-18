@@ -68,12 +68,18 @@ public:
     void SetUp()
     {
         using namespace testing;
-        mock_resource_factory = std::make_shared<testing::StrictMock<MockResourceFactory>>();
+        mock_resource_factory = std::make_shared<MockResourceFactory>();
         mock_fb_device = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
         mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
 
         ON_CALL(*mock_resource_factory, create_fb_device())
             .WillByDefault(Return(mock_fb_device));
+        ON_CALL(*mock_resource_factory, create_hwc_1_0(_,_))
+            .WillByDefault(Return(nullptr));
+        ON_CALL(*mock_resource_factory, create_hwc_1_1(_,_))
+            .WillByDefault(Return(nullptr));
+        ON_CALL(*mock_resource_factory, create_display(_,_))
+            .WillByDefault(Return(nullptr));
     }
 
     void TearDown()
@@ -154,6 +160,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
         .WillOnce(Return(mock_hwc_device));
     EXPECT_CALL(*mock_resource_factory, create_fb_device())
         .Times(1);
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
+        .Times(1);
 
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
 
@@ -161,69 +169,25 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
     display_factory.create_display();
 }
 
-#if 0
 TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
 {
     using namespace testing;
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
 
-    std::shared_ptr<mga::HWCDevice> mock_hwc_device;
+    std::shared_ptr<mga::DisplaySupportProvider> mock_hwc_device;
   
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
         .Times(1);
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
+    EXPECT_CALL(*mock_resource_factory, create_hwc_1_1(_,_))
         .Times(1)
         .WillOnce(Return(mock_hwc_device));
-    EXPECT_CALL(*mock_fnw_factory, create_fb_device())
+    EXPECT_CALL(*mock_resource_factory, create_fb_device())
         .Times(1);
-
-    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
-    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
-        .Times(1);
-    std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_display(mock_hwc_device, stub_anativewindow, tmp2))
-        .Times(1);
-
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
-                                               mock_fnw_factory, mock_display_report); 
-    display_factory.create_display();
-}
-
-TEST_F(AndroidDisplayFactoryTest, gpu_logging)
-{
-    using namespace testing;
-    mtd::FailingHardwareModuleStub failing_hwc_module_stub;
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
-
-    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
-        .Times(1);
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
-                                               mock_fnw_factory, mock_display_report); 
-    display_factory.create_display();
-}
-
-TEST_F(AndroidDisplayFactoryTest, hwc10_logging)
-{
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
-
-    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
-        .Times(1);
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
-                                               mock_fnw_factory, mock_display_report); 
-    display_factory.create_display();
-}
-
-TEST_F(AndroidDisplayFactoryTest, hwc11_logging)
-{
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
-
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
-                                               mock_fnw_factory, mock_display_report); 
+
+    mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report);
     display_factory.create_display();
 }
 
@@ -234,20 +198,13 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
 
-    EXPECT_CALL(*mock_fnw_factory, create_fb_device())
+    EXPECT_CALL(*mock_resource_factory, create_fb_device())
         .Times(1);
-    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
-    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
+    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
-        .Times(0);
-    EXPECT_CALL(*mock_display_allocator, create_display(_,_,_))
-        .Times(0);
-    std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
-    EXPECT_CALL(*mock_display_allocator, create_display(_,_,tmp2))
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_))
         .Times(1);
 
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
+    mga::AndroidDisplayFactory display_factory(mock_resource_factory, mock_display_report); 
     display_factory.create_display();
 }
-#endif
