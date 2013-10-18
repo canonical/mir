@@ -105,7 +105,7 @@ MirWaitHandle* mir_default_connect(
         error_connections.insert(error_connection);
         error_connection->set_error_message(x.what());
         callback(error_connection, context);
-        return 0;
+        return nullptr;
     }
 }
 
@@ -137,12 +137,25 @@ void (*mir_connection_release_impl) (MirConnection *connection) = mir_default_co
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
-    return mir_connect_impl(socket_file, name, callback, context);
+    try
+    {
+        return mir_connect_impl(socket_file, name, callback, context);
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }
 
 void mir_connection_release(MirConnection *connection)
 {
-    return mir_connection_release_impl(connection);
+    try
+    {
+        return mir_connection_release_impl(connection);
+    }
+    catch (std::exception const&)
+    {
+    }
 }
 
 MirConnection *mir_connect_sync(char const *server,
@@ -194,7 +207,7 @@ MirWaitHandle* mir_connection_create_surface(
     catch (std::exception const&)
     {
         // TODO callback with an error surface
-        return 0; // TODO
+        return nullptr;
     }
 
 }
@@ -222,7 +235,14 @@ MirWaitHandle* mir_surface_release(
     MirSurface * surface,
     mir_surface_callback callback, void * context)
 {
-    return surface->release_surface(callback, context);
+    try
+    {
+        return surface->release_surface(callback, context);
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }
 
 void mir_surface_release_sync(MirSurface *surface)
@@ -351,7 +371,7 @@ try
 }
 catch (std::exception const&)
 {
-    return 0;
+    return nullptr;
 }
 
 void mir_surface_swap_buffers_sync(MirSurface *surface)
@@ -387,9 +407,16 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,
-                                                           MirSurfaceType type)
+                                    MirSurfaceType type)
 {
-    return surf ? surf->configure(mir_surface_attrib_type, type) : NULL;
+    try
+    {
+        return surf ? surf->configure(mir_surface_attrib_type, type) : nullptr;
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }
 
 MirSurfaceType mir_surface_get_type(MirSurface *surf)
@@ -410,25 +437,38 @@ MirSurfaceType mir_surface_get_type(MirSurface *surf)
 
 MirWaitHandle* mir_surface_set_state(MirSurface *surf, MirSurfaceState state)
 {
-    return surf ? surf->configure(mir_surface_attrib_state, state) : NULL;
+    try
+    {
+        return surf ? surf->configure(mir_surface_attrib_state, state) : nullptr;
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }
 
 MirSurfaceState mir_surface_get_state(MirSurface *surf)
 {
     MirSurfaceState state = mir_surface_state_unknown;
 
-    if (surf)
+    try
     {
-        int s = surf->attrib(mir_surface_attrib_state);
-
-        if (s == mir_surface_state_unknown)
+        if (surf)
         {
-            surf->configure(mir_surface_attrib_state,
-                            mir_surface_state_unknown)->wait_for_all();
-            s = surf->attrib(mir_surface_attrib_state);
-        }
+            int s = surf->attrib(mir_surface_attrib_state);
 
-        state = static_cast<MirSurfaceState>(s);
+            if (s == mir_surface_state_unknown)
+            {
+                surf->configure(mir_surface_attrib_state,
+                                mir_surface_state_unknown)->wait_for_all();
+                s = surf->attrib(mir_surface_attrib_state);
+            }
+
+            state = static_cast<MirSurfaceState>(s);
+        }
+    }
+    catch (std::exception const&)
+    {
     }
 
     return state;
@@ -437,8 +477,16 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
     if ((interval < 0) || (interval > 1))
-        return NULL;
-    return surf ? surf->configure(mir_surface_attrib_swapinterval, interval) : NULL;
+        return nullptr;
+
+    try
+    {
+        return surf ? surf->configure(mir_surface_attrib_swapinterval, interval) : nullptr;
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }
 
 int mir_surface_get_swapinterval(MirSurface* surf)
@@ -462,8 +510,12 @@ void mir_connection_set_display_config_change_callback(MirConnection* connection
 
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
 {
-    if (!connection)
-        return NULL;
- 
-    return connection->configure_display(display_configuration);
+    try
+    {
+        return connection ? connection->configure_display(display_configuration) : nullptr;
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }
