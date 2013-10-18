@@ -185,21 +185,17 @@ MirWaitHandle* MirConnection::release_surface(
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
-    try
+    mir::protobuf::SurfaceId message;
+    message.set_value(surface->id());
+
     {
-        mir::protobuf::SurfaceId message;
-        message.set_value(surface->id());
-        server.release_surface(0, &message, &void_response,
-                        gp::NewCallback(this, &MirConnection::released, surf_release));
-    }
-    catch (std::exception const& x)
-    {
-        set_error_message(std::string("release_surface: ") + x.what());
-        released(surf_release);
+        std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
+        release_wait_handles.push_back(new_wait_handle);
     }
 
-    std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
-    release_wait_handles.push_back(new_wait_handle);
+    server.release_surface(0, &message, &void_response,
+                           gp::NewCallback(this, &MirConnection::released, surf_release));
+
 
     return new_wait_handle;
 }
@@ -282,15 +278,8 @@ MirWaitHandle* MirConnection::disconnect()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    try 
-    {
-        server.disconnect(0, &ignored, &ignored,
-                          google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
-    }
-    catch (std::exception const& x)
-    {
-        set_error_message(std::string("disconnect: ") + x.what());
-    }
+    server.disconnect(0, &ignored, &ignored,
+                      google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
     return &disconnect_wait_handle;
 }

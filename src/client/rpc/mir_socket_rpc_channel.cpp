@@ -92,8 +92,8 @@ void mclr::MirSocketRpcChannel::notify_disconnected()
         io_service.stop();
         socket.close();
         lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
-        pending_calls.force_completion();
     }
+    pending_calls.force_completion();
 }
 
 void mclr::MirSocketRpcChannel::init()
