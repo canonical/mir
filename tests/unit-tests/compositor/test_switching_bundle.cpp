@@ -699,3 +699,52 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
     }
 }
 
+TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
+{  // Regression test LP: #1241369 / LP: #1241371
+    for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long client_frames = 0;
+        const unsigned long compose_frames = 100;
+        const auto frame_time = std::chrono::milliseconds(16);
+
+        bundle.allow_framedropping(false);
+
+        std::atomic<bool> done(false);
+
+        std::thread monitor1([&]
+        {
+            for (unsigned long frame = 0; frame != compose_frames+3; frame++)
+            {
+                auto buf = bundle.compositor_acquire(frame);
+                std::this_thread::sleep_for(frame_time);
+                bundle.compositor_release(buf);
+
+                if (frame == compose_frames)
+                {
+                    // Tell the "client" to stop after compose_frames, but
+                    // don't stop rendering immediately to avoid blocking
+                    // if we rendered any twice
+                    done.store(true);
+                }
+            }
+        });
+
+        bundle.client_release(bundle.client_acquire());
+
+        while (!done.load())
+        {
+            auto buf = bundle.client_acquire();
+            std::this_thread::sleep_for(frame_time);
+            bundle.client_release(buf);
+            client_frames++;
+        }
+
+        monitor1.join();
+
+        // Roughly compose_frames == client_frames within 20%
+        ASSERT_GT(client_frames, compose_frames * 0.8f);
+        ASSERT_LT(client_frames, compose_frames * 1.2f);
+    }
+}
+
