@@ -34,6 +34,8 @@ struct PairedCalls
     PairedCalls(PairedCalls&& that) : deleter(that.deleter), owner(that.owner) { that.owner = false; }
     ~PairedCalls()  { if (owner) deleter(); }
 private:
+    PairedCalls(PairedCalls const& that) = delete;
+    PairedCalls& operator=(PairedCalls const& that) = delete;
     Deleter const& deleter;
     bool owner;
 };
