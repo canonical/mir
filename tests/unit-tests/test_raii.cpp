@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/raii/paired_calls.h"
+#include "mir/raii.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

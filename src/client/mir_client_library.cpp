@@ -17,7 +17,7 @@
  */
 
 #include "mir/default_configuration.h"
-#include "mir/raii/paired_calls.h"
+#include "mir/raii.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_debug.h"

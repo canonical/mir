@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_RAII_PAIRED_CALLS_H_
-#define MIR_RAII_PAIRED_CALLS_H_
+#ifndef MIR_RAII_H_
+#define MIR_RAII_H_
 
 #include <memory>
 #include <type_traits>
@@ -80,4 +80,4 @@ inline auto deleter_for(Owned* owned, Deleter&& deleter)
 }
 }
 
-#endif /* MIR_RAII_PAIRED_CALLS_H_ */
+#endif /* MIR_RAII_H_ */
