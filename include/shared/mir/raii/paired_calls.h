@@ -40,11 +40,11 @@ private:
 
 /**
  * Creates an RAII object from a creator and deleter.
- * If creator returns a pointer type (or is a pointer) then the returned object
+ * If creator returns a pointer type then the returned object
  * is a std::unique_ptr initialized with the pointer and deleter.
  * Otherwise, the returned object calls creator on construction and deleter on destruction
  *
- * \param creator called to initialize the returned object (or a pointer)
+ * \param creator called to initialize the returned object
  * \param deleter called to finalize the returned object
  */
 template <typename Creator, typename Deleter>
@@ -64,12 +64,18 @@ inline auto paired_calls(Creator&& creator, Deleter&& deleter)
     return {creator, deleter};
 }
 
-///\overload
-template <typename Owned, typename... Args>
-inline auto paired_calls(Owned* owned, Args... args...)
--> std::unique_ptr<Owned, Args...>
+/**
+ * Creates an RAII object from an owning pointer and deleter.
+ * The returned object is a std::unique_ptr initialized with the pointer and deleter.
+ *
+ * \param owned   the object to take ownership of
+ * \param deleter called to finalize the owned object
+ */
+template <typename Owned, typename Deleter>
+inline auto deleter_for(Owned* owned, Deleter&& deleter)
+-> std::unique_ptr<Owned, Deleter>
 {
-    return {owned, args...};
+    return {owned, deleter};
 }
 }
 }

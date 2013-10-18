@@ -293,7 +293,7 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 //TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    auto const config = mir::raii::paired_calls(
+    auto const config = mir::raii::deleter_for(
         mir_connection_create_display_config(connection),
         &mir_display_config_destroy);
 
