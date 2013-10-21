@@ -137,7 +137,7 @@ TEST_F(RaiiTest, lambda_create_free_destroy_void)
         ::destroy_void);
 }
 
-TEST_F(RaiiTest, another_name_for_free_create_lambda_destroy_void)
+TEST_F(RaiiTest, DISABLED_free_create_lambda_destroy_void)
 {
     InSequence seq;
     EXPECT_CALL(*this, create_void()).Times(1);
