@@ -256,7 +256,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (standalone_opt, po::value<bool>(),
             "Run mir in standalone mode. [bool:default=false]")
         (name_opt, po::value<std::string>(),
-            "The name Mir uses when registering with its host, if nested.")
+            "When nested, the name Mir uses when registering with the host.")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
         ("file,f", po::value<std::string>(),
