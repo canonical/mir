@@ -760,9 +760,9 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             {
                 return std::make_shared<ml::GlogLogger>(
                     "mir",
-                    the_options()->get(glog_stderrthreshold, 2),
-                    the_options()->get(glog_minloglevel, 0),
-                    the_options()->get(glog_log_dir, ""));
+                    the_options()->get(glog_stderrthreshold, glog_stderrthreshold_default),
+                    the_options()->get(glog_minloglevel, glog_minloglevel_default),
+                    the_options()->get(glog_log_dir, glog_log_dir_default));
             }
             else
             {

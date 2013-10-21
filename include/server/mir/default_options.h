@@ -31,14 +31,6 @@ public:
     DefaultOptions(int argc, char const* argv[]);
     virtual ~DefaultOptions() = default;
 
-protected:
-    // add_options() allows configuration specializations to add their
-    // own options. This MUST be called before the first invocation of
-    // the_options() - typically during construction.
-    boost::program_options::options_description_easy_init add_options();
-    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
-    virtual std::shared_ptr<options::Option> the_options() const;
-
     static char const* const server_socket_opt;
     static char const* const no_server_socket_opt;
     static char const* const session_mediator_report_opt;
@@ -54,6 +46,9 @@ protected:
     static char const* const glog_stderrthreshold;
     static char const* const glog_minloglevel;
     static char const* const glog_log_dir;
+    static char const* const glog_log_dir_default;
+    static const int glog_stderrthreshold_default;
+    static const int glog_minloglevel_default;
 
     static bool const enable_input_default;
 
@@ -63,6 +58,14 @@ protected:
 
     static char const* const platform_graphics_lib;
     static char const* const default_platform_graphics_lib;
+
+protected:
+    // add_options() allows configuration specializations to add their
+    // own options. This MUST be called before the first invocation of
+    // the_options() - typically during construction.
+    boost::program_options::options_description_easy_init add_options();
+    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
+    virtual std::shared_ptr<options::Option> the_options() const;
 
 private:
     int const argc;
