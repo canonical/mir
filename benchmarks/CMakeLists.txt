@@ -2,6 +2,7 @@ add_custom_target(
   benchmarks
 )
 
+add_subdirectory(android-input)
 add_subdirectory(cpu)
 add_subdirectory(memory)
 
