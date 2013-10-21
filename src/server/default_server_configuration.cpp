@@ -241,13 +241,12 @@ void parse_environment(
 }
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
+mir::DefaultOptions::DefaultOptions(int argc, char const* argv[]) :
     argc(argc),
     argv(argv),
     program_options(std::make_shared<boost::program_options::options_description>(
     "Command-line options.\n"
-    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"")),
-    default_filter(std::make_shared<mi::VTFilter>())
+    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
 {
     namespace po = boost::program_options;
 
@@ -298,7 +297,14 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "VT to run on or 0 to use current. [int:default=0]");
 }
 
-boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
+mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
+    DefaultOptions(argc, argv),
+    default_filter(std::make_shared<mi::VTFilter>())
+{
+}
+
+
+boost::program_options::options_description_easy_init mir::DefaultOptions::add_options()
 {
     if (options)
         BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
@@ -318,13 +324,13 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return socket_file;
 }
 
-void mir::DefaultServerConfiguration::parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const
+void mir::DefaultOptions::parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const
 {
     parse_arguments(options_description, options, argc, argv);
     parse_environment(options_description, options); 
 }
 
-std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
+std::shared_ptr<mir::options::Option> mir::DefaultOptions::the_options() const
 {
     if (!options)
     {
