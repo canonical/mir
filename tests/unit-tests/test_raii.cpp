@@ -113,19 +113,6 @@ TEST_F(RaiiTest, lambda_create_lambda_destroy_ptr)
     EXPECT_EQ(this, raii.get());
 }
 
-TEST_F(RaiiTest, free_create_free_destroy_void)
-{
-    InSequence seq;
-    EXPECT_CALL(*this, create_void()).Times(1);
-
-    auto const raii = mir::raii::paired_calls(
-        ::create_void,
-        ::destroy_void);
-
-    Mock::VerifyAndClearExpectations(this);
-    EXPECT_CALL(*this, destroy_void()).Times(1);
-}
-
 TEST_F(RaiiTest, lambda_create_free_destroy_void)
 {
     InSequence seq;
@@ -137,7 +124,7 @@ TEST_F(RaiiTest, lambda_create_free_destroy_void)
         ::destroy_void);
 }
 
-TEST_F(RaiiTest, DISABLED_free_create_lambda_destroy_void)
+TEST_F(RaiiTest, free_create_lambda_destroy_void)
 {
     InSequence seq;
     EXPECT_CALL(*this, create_void()).Times(1);
@@ -179,4 +166,17 @@ TEST_F(RaiiTest, deleter_for_lambda_destroy_ptr)
         [this] (RaiiTest*p){ destroy_ptr(p); });
 
     EXPECT_EQ(this, raii.get());
+}
+
+TEST_F(RaiiTest, free_create_free_destroy_void)
+{
+    InSequence seq;
+    EXPECT_CALL(*this, create_void()).Times(1);
+
+    auto const raii = mir::raii::paired_calls(
+        ::create_void,
+        ::destroy_void);
+
+    Mock::VerifyAndClearExpectations(this);
+    EXPECT_CALL(*this, destroy_void()).Times(1);
 }
