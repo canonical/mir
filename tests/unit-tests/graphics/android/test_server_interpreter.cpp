@@ -21,26 +21,24 @@
 
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
+#include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
 
+
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 
 namespace
 {
-
-struct StubFence : public mga::SyncObject
-{
-    virtual ~StubFence() noexcept {}
-    MOCK_METHOD0(wait, void());
-};
 
 struct MockFBSwapper : public mga::FBSwapper
 {
@@ -62,7 +60,6 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         ON_CALL(*mock_display_poster, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        stub_sync = std::make_shared<StubFence>();
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
@@ -71,39 +68,39 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_poster;
-    std::shared_ptr<StubFence> stub_sync;
 };
 }
 
 TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 {
     using namespace testing;
+
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
-    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
+    auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
-        .WillOnce(Return(stub_anw));
+        .WillOnce(Return(stub_buffer));
 
     std::shared_ptr<mg::Buffer> tmp = mock_buffer1;
-    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
+    std::shared_ptr<mg::NativeBuffer> tmp2 = stub_buffer;
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, tmp2))
         .Times(1);
 
     auto rc_buffer = render_window.driver_requests_buffer();
-    EXPECT_EQ(stub_anw.get(), rc_buffer);
+    EXPECT_EQ(stub_buffer.get(), rc_buffer);
 }
 
 TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 {
     using namespace testing;
-    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
-    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
-        .Times(1)
-        .WillOnce(Return(mock_buffer1));
+    int fake_fence = 488;
+    auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+ 
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
@@ -111,45 +108,24 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
-        .WillOnce(Return(stub_anw));
+        .WillOnce(Return(stub_buffer));
 
     render_window.driver_requests_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
     std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
+    EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer->anwb(), fake_fence))
+        .Times(1);
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer->anwb()))
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
-        .Times(1);
-    EXPECT_CALL(*stub_sync, wait())
-        .Times(1);
-
-    render_window.driver_returns_buffer(stub_anw.get(), stub_sync);
-    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
-}
-
-TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
-{
-    using namespace testing;
-    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
-    EXPECT_CALL(*mock_cache, retrieve_buffer(_))
-        .Times(1)
-        .WillOnce(Return(mock_buffer1));
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
-
-    mg::BufferID id{442}, returned_id;
-    EXPECT_CALL(*mock_swapper, compositor_acquire())
-        .Times(1)
-        .WillOnce(Return(mock_buffer1));
-    EXPECT_CALL(*mock_swapper, compositor_release(_))
-        .Times(1);
-    std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
-    EXPECT_CALL(*mock_buffer1, native_buffer_handle())
-        .Times(1)
-        .WillOnce(Return(stub_anw));
+        .Times(1); 
     EXPECT_CALL(*mock_display_poster, set_next_frontbuffer(buf1))
         .Times(1);
 
-    auto handle1 = render_window.driver_requests_buffer();
-    render_window.driver_returns_buffer(handle1, stub_sync);
+    render_window.driver_returns_buffer(stub_buffer->anwb(), fake_fence);
+    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)

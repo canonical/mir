@@ -35,9 +35,6 @@
 
 namespace mcl = mir::client;
 
-std::mutex MirConnection::connection_guard;
-std::unordered_set<MirConnection*> MirConnection::valid_connections;
-
 namespace
 {
 class ConnectionList
@@ -267,8 +264,7 @@ MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
 
 void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
-    auto package = surface->get_current_buffer_package();
-    *buffer_package_out = package.get();
+    *buffer_package_out = surface->get_current_buffer_package();
 }
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface * surface)
@@ -297,44 +293,48 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
     auto config = mir_connection_create_display_config(connection);
-    if (config->num_outputs < 1)
-        return;
 
-    MirDisplayOutput* state = nullptr;
-    // We can't handle more than one display, so just populate based on the first
-    // active display we find.
-    for (unsigned int i = 0; i < config->num_outputs; ++i)
+    do
     {
-        if (config->outputs[i].used && config->outputs[i].connected &&
-            config->outputs[i].current_mode < config->outputs[i].num_modes)
+        if (config->num_outputs < 1)
+            break;
+
+        MirDisplayOutput* state = nullptr;
+        // We can't handle more than one display, so just populate based on the first
+        // active display we find.
+        for (unsigned int i = 0; i < config->num_outputs; ++i)
         {
-            state = &config->outputs[i];
+            if (config->outputs[i].used && config->outputs[i].connected &&
+                config->outputs[i].current_mode < config->outputs[i].num_modes)
+            {
+                state = &config->outputs[i];
+                break;
+            }
+        }
+        // Oh, oh! No connected outputs?!
+        if (state == nullptr)
+        {
+            memset(display_info, 0, sizeof(*display_info));
             break;
         }
-    }
-    // Oh, oh! No connected outputs?!
-    if (state == nullptr)
-    {
-        memset(display_info, 0, sizeof(*display_info));
-        return;
-    }
 
-    MirDisplayMode mode = state->modes[state->current_mode];
-   
-    display_info->width = mode.horizontal_resolution;
-    display_info->height = mode.vertical_resolution;
+        MirDisplayMode mode = state->modes[state->current_mode];
 
-    unsigned int format_items;
-    if (state->num_output_formats > mir_supported_pixel_format_max) 
-         format_items = mir_supported_pixel_format_max;
-    else
-         format_items = state->num_output_formats;
+        display_info->width = mode.horizontal_resolution;
+        display_info->height = mode.vertical_resolution;
 
-    display_info->supported_pixel_format_items = format_items; 
-    for(auto i=0u; i < format_items; i++)
-    {
-        display_info->supported_pixel_format[i] = state->output_formats[i];
-    }
+        unsigned int format_items;
+        if (state->num_output_formats > mir_supported_pixel_format_max)
+             format_items = mir_supported_pixel_format_max;
+        else
+             format_items = state->num_output_formats;
+
+        display_info->supported_pixel_format_items = format_items;
+        for(auto i=0u; i < format_items; i++)
+        {
+            display_info->supported_pixel_format[i] = state->output_formats[i];
+        }
+    } while (false);
 
     mir_display_config_destroy(config);
 }

@@ -20,6 +20,7 @@
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test/draw/android_graphics.h"
@@ -65,10 +66,10 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
     mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto test_buffer = allocator->alloc_buffer(sw_properties);
 
-    auto region = sw_renderer.graphic_region_from_handle(test_buffer->native_buffer_handle());
+    auto region = sw_renderer.graphic_region_from_handle(test_buffer->native_buffer_handle()->anwb());
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
-    red_pattern.draw(region);
-    EXPECT_TRUE(red_pattern.check(region));
+    red_pattern.draw(*region);
+    EXPECT_TRUE(red_pattern.check(*region));
 }
 
 TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)

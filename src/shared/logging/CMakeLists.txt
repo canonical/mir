@@ -18,6 +18,7 @@ set(
   MIR_SHARED_LOGGING_SOURCES
 
   dumb_console_logger.cpp
+  default_configuration.cpp
 )
 
 add_library(

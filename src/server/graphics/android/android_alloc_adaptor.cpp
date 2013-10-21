@@ -17,7 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_buffer.h"
+#include "mir/graphics/android/android_native_buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
 
@@ -50,7 +51,7 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
-std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
+std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
@@ -70,20 +71,24 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     AndroidBufferHandleDeleter del1(alloc_dev);
     std::shared_ptr<native_handle_t> handle(buf_handle, del1);
 
-    auto tmp = new mga::MirNativeBuffer(handle);
-    std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](MirNativeBuffer* buffer)
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
+
+    auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
+        new mga::RefCountedNativeBuffer(handle),
+        [](mga::RefCountedNativeBuffer* buffer)
         {
             buffer->mir_dereference();
         });
 
-    buffer->width = width;
-    buffer->height = height;
-    buffer->stride = stride;
-    buffer->handle = buf_handle;
-    buffer->format = format;
-    buffer->usage = usage_flag;
+    anwb->width = width;
+    anwb->height = height;
+    anwb->stride = stride;
+    anwb->handle = buf_handle;
+    anwb->format = format;
+    anwb->usage = usage_flag;
 
-    return buffer;
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence);
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)

@@ -34,7 +34,7 @@ Build-Depends: cmake,
                umockdev,
                libudev-dev,
                google-mock (>= 1.6.0+svn437),
-               valgrind,
+               valgrind [!arm64],
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -69,7 +69,7 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver6
+Package: libmirserver9
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -115,7 +115,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver6 (= ${binary:Version}),
+Depends: libmirserver9 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,

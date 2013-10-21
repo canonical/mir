@@ -112,7 +112,7 @@ mcl::DisplayConfiguration::~DisplayConfiguration()
 
 void mcl::DisplayConfiguration::set_configuration(mp::DisplayConfiguration const& msg)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<std::mutex> lk(guard);
 
     cards.clear();
     for (auto i = 0; i < msg.display_card_size(); i++)
@@ -143,7 +143,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration co
 //user is responsible for freeing the returned value
 MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<std::mutex> lk(guard);
     auto new_config = new MirDisplayConfiguration;
 
     /* Cards */
@@ -177,6 +177,6 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 
 void mcl::DisplayConfiguration::set_display_change_handler(std::function<void()> const& fn)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<std::mutex> lk(guard);
     notify_change = fn;
 }
