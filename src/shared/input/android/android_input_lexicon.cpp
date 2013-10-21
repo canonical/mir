@@ -59,8 +59,6 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.y_offset = mev->getYOffset();
             mir_event.motion.x_precision = mev->getXPrecision();
             mir_event.motion.y_precision = mev->getYPrecision();
-            mir_event.motion.vscroll = mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0);
-            mir_event.motion.hscroll = mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0);
             mir_event.motion.down_time = mev->getDownTime();
             mir_event.motion.event_time = mev->getEventTime();
             mir_event.motion.pointer_count = mev->getPointerCount();
@@ -77,6 +75,12 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
                     mir_event.motion.pointer_coordinates[i].size = mev->getSize(i);
                     mir_event.motion.pointer_coordinates[i].pressure = mev->getPressure(i);
                     mir_event.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
+
+                    mir_event.motion.pointer_coordinates[i].vscroll =
+                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0);
+
+                    mir_event.motion.pointer_coordinates[i].hscroll =
+                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0);
             }
             break;
         }
