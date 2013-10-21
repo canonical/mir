@@ -1,8 +1,9 @@
-mir (0.0.16+13.10.20131016-0ubuntu1) UNRELEASED; urgency=low
+mir (0.1.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * bump version 0.0.16
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1150
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Wed, 16 Oct 2013 23:35:28 -0500
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 21 Oct 2013 15:42:19 +0800
 
 mir (0.0.15+13.10.20131014-0ubuntu1) saucy; urgency=low
 
