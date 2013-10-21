@@ -1,17 +1,10 @@
-mir (0.1.0-0ubuntu1) UNRELEASED; urgency=low
-
-  [ Ubuntu daily release ]
-  * Automatic snapshot from revision 1150
-
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 21 Oct 2013 15:42:19 +0800
-
 mir (0.0.15+13.10.20131014-0ubuntu1) saucy; urgency=low
 
   [ Kevin Gunn ]
   * bump version 0.0.15
 
   [ Ubuntu daily release ]
-  * Automatic snapshot from revision 1100
+  * Automatic snapshot from revision 1133
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Oct 2013 23:55:33 +0000
 
