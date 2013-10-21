@@ -26,6 +26,7 @@ namespace
 struct RaiiTest : public ::testing::Test
 {
     RaiiTest();
+    ~RaiiTest();
     MOCK_METHOD0(create_void, void());
     MOCK_METHOD0(destroy_void, void());
 
@@ -38,6 +39,7 @@ struct RaiiTest : public ::testing::Test
 RaiiTest* self = nullptr;
 
 RaiiTest::RaiiTest() { self = this; }
+RaiiTest::~RaiiTest() { self = nullptr; }
 void create_void()   { return self->create_void(); }
 void destroy_void()  { self->destroy_void(); }
 RaiiTest* create_ptr()          { return self->create_ptr(); }
@@ -135,7 +137,7 @@ TEST_F(RaiiTest, lambda_create_free_destroy_void)
         ::destroy_void);
 }
 
-TEST_F(RaiiTest, free_create_lambda_destroy_void)
+TEST_F(RaiiTest, another_name_for_free_create_lambda_destroy_void)
 {
     InSequence seq;
     EXPECT_CALL(*this, create_void()).Times(1);
