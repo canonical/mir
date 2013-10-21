@@ -20,7 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
-#include "mir/options/program_option.h"
+#include "mir/default_options.h"
 
 #include <memory>
 #include <string>
@@ -111,27 +111,6 @@ namespace logging
 {
 class Logger;
 }
-
-class DefaultOptions
-{
-public:
-    DefaultOptions(int argc, char const* argv[]);
-    virtual ~DefaultOptions() = default;
-
-protected:
-    // add_options() allows configuration specializations to add their
-    // own options. This MUST be called before the first invocation of
-    // the_options() - typically during construction.
-    boost::program_options::options_description_easy_init add_options();
-    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
-    virtual std::shared_ptr<options::Option> the_options() const;
-
-private:
-    int const argc;
-    char const** const argv;
-    std::shared_ptr<boost::program_options::options_description> const program_options;
-    std::shared_ptr<options::Option> mutable options;
-};
 
 class DefaultServerConfiguration : public virtual ServerConfiguration, DefaultOptions
 {
