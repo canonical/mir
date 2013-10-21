@@ -66,6 +66,32 @@ void parse_environment(
 }
 }
 
+char const* const mir::DefaultOptions::server_socket_opt           = "file";
+char const* const mir::DefaultOptions::no_server_socket_opt        = "no-file";
+char const* const mir::DefaultOptions::session_mediator_report_opt = "session-mediator-report";
+char const* const mir::DefaultOptions::msg_processor_report_opt    = "msg-processor-report";
+char const* const mir::DefaultOptions::display_report_opt          = "display-report";
+char const* const mir::DefaultOptions::legacy_input_report_opt     = "legacy-input-report";
+char const* const mir::DefaultOptions::connector_report_opt        = "connector-report";
+char const* const mir::DefaultOptions::input_report_opt            = "input-report";
+char const* const mir::DefaultOptions::host_socket_opt             = "host-socket";
+char const* const mir::DefaultOptions::standalone_opt              = "standalone";
+
+char const* const mir::DefaultOptions::glog                 = "glog";
+char const* const mir::DefaultOptions::glog_stderrthreshold = "glog-stderrthreshold";
+char const* const mir::DefaultOptions::glog_minloglevel     = "glog-minloglevel";
+char const* const mir::DefaultOptions::glog_log_dir         = "glog-log-dir";
+
+bool const mir::DefaultOptions::enable_input_default = true;
+
+char const* const mir::DefaultOptions::off_opt_value = "off";
+char const* const mir::DefaultOptions::log_opt_value = "log";
+char const* const mir::DefaultOptions::lttng_opt_value = "lttng";
+
+char const* const mir::DefaultOptions::platform_graphics_lib = "platform-graphics-lib";
+char const* const mir::DefaultOptions::default_platform_graphics_lib = "libmirplatformgraphics.so";
+
+
 mir::DefaultOptions::DefaultOptions(int argc, char const* argv[]) :
     argc(argc),
     argv(argv),

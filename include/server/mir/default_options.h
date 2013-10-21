@@ -39,30 +39,30 @@ protected:
     virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
     virtual std::shared_ptr<options::Option> the_options() const;
 
-    char const* const server_socket_opt           = "file";
-    char const* const no_server_socket_opt        = "no-file";
-    char const* const session_mediator_report_opt = "session-mediator-report";
-    char const* const msg_processor_report_opt    = "msg-processor-report";
-    char const* const display_report_opt          = "display-report";
-    char const* const legacy_input_report_opt     = "legacy-input-report";
-    char const* const connector_report_opt        = "connector-report";
-    char const* const input_report_opt            = "input-report";
-    char const* const host_socket_opt             = "host-socket";
-    char const* const standalone_opt              = "standalone";
+    static char const* const server_socket_opt;
+    static char const* const no_server_socket_opt;
+    static char const* const session_mediator_report_opt;
+    static char const* const msg_processor_report_opt;
+    static char const* const display_report_opt;
+    static char const* const legacy_input_report_opt;
+    static char const* const connector_report_opt;
+    static char const* const input_report_opt;
+    static char const* const host_socket_opt;
+    static char const* const standalone_opt;
 
-    char const* const glog                 = "glog";
-    char const* const glog_stderrthreshold = "glog-stderrthreshold";
-    char const* const glog_minloglevel     = "glog-minloglevel";
-    char const* const glog_log_dir         = "glog-log-dir";
+    static char const* const glog;
+    static char const* const glog_stderrthreshold;
+    static char const* const glog_minloglevel;
+    static char const* const glog_log_dir;
 
-    bool const enable_input_default = true;
+    static bool const enable_input_default;
 
-    char const* const off_opt_value = "off";
-    char const* const log_opt_value = "log";
-    char const* const lttng_opt_value = "lttng";
+    static char const* const off_opt_value;
+    static char const* const log_opt_value;
+    static char const* const lttng_opt_value;
 
-    char const* const platform_graphics_lib = "platform-graphics-lib";
-    char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+    static char const* const platform_graphics_lib;
+    static char const* const default_platform_graphics_lib;
 
 private:
     int const argc;
