@@ -62,7 +62,6 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.down_time = mev->getDownTime();
             mir_event.motion.event_time = mev->getEventTime();
             mir_event.motion.pointer_count = mev->getPointerCount();
-
             for(unsigned int i = 0; i < mev->getPointerCount(); i++)
             {
                     mir_event.motion.pointer_coordinates[i].id = mev->getPointerId(i);
