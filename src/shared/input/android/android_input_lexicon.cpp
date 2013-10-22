@@ -76,10 +76,10 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
                     mir_event.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
 
                     mir_event.motion.pointer_coordinates[i].vscroll =
-                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0);
+                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, i);
 
                     mir_event.motion.pointer_coordinates[i].hscroll =
-                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0);
+                           mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, i);
             }
             break;
         }
