@@ -16,10 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gpu_android_display_buffer_factory.h"
-#include "hwc_android_display_buffer_factory.h"
+#include "display_buffer_factory.h"
 #include "android_framebuffer_window_query.h"
-#include "hwc_device.h"
+#include "display_support_provider.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -63,24 +62,20 @@ class GPUDisplayBuffer : public mg::DisplayBuffer
 public:
     GPUDisplayBuffer(std::shared_ptr<mga::AndroidFramebufferWindowQuery> const& native_window,
                      EGLDisplay egl_display,
-                     EGLContext egl_context_shared)
+                     EGLContext egl_context_shared,
+                     std::shared_ptr<mga::DisplaySupportProvider> const& support_provider)
         : native_window{native_window},
+          support_provider{support_provider},
           egl_display{egl_display},
           egl_context{egl_display, create_context(*native_window, egl_display, egl_context_shared)},
-          egl_surface{egl_display, create_surface(*native_window, egl_display)}
+          egl_surface{egl_display, create_surface(*native_window, egl_display)},
+          blanked(false)
     {
-
     }
 
     geom::Rectangle view_area() const
     {
-        int display_width, display_height;
-        eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &display_width);
-        eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &display_height);
-        geom::Width w{display_width};
-        geom::Height h{display_height};
-
-        return {geom::Point{}, geom::Size{w,h}};
+        return {geom::Point{}, support_provider->display_size()};
     }
 
     void make_current()
@@ -100,10 +95,7 @@ public:
 
     void post_update()
     {
-        if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
-        }
+        support_provider->commit_frame(egl_display, egl_surface);
     }
 
     bool can_bypass() const override
@@ -113,64 +105,21 @@ public:
     
 protected:
     std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
+    std::shared_ptr<mga::DisplaySupportProvider> const support_provider;
     EGLDisplay const egl_display;
     mg::EGLContextStore const egl_context;
     mg::EGLSurfaceStore const egl_surface;
-};
-
-class HWCDisplayBuffer : public GPUDisplayBuffer
-{
-public:
-    HWCDisplayBuffer(std::shared_ptr<mga::AndroidFramebufferWindowQuery> const& native_win,
-                     EGLDisplay egl_display,
-                     EGLContext egl_context_shared,
-                     std::shared_ptr<mga::HWCDevice> const& hwc_device)
-        : GPUDisplayBuffer{native_win, egl_display, egl_context_shared},
-          hwc_device{hwc_device},
-          blanked(false)
-    {
-    }
-
-    geom::Rectangle view_area() const override
-    {
-        geom::Point origin_pt{0, 0};
-        auto size = hwc_device->display_size();
-        return geom::Rectangle{origin_pt, size};
-    }
-
-    void post_update() override
-    {
-        hwc_device->commit_frame(egl_display, egl_surface);
-    }
-
-private:
-    std::shared_ptr<mga::HWCDevice> const hwc_device;
-    
     bool blanked;
 };
 
 }
 
-std::unique_ptr<mg::DisplayBuffer> mga::GPUAndroidDisplayBufferFactory::create_display_buffer(
+std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
     std::shared_ptr<AndroidFramebufferWindowQuery> const& native_window,
+    std::shared_ptr<DisplaySupportProvider> const& hwc_device,
     EGLDisplay egl_display,
     EGLContext egl_context_shared)
 {
-    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_context_shared);
-    return std::unique_ptr<mg::DisplayBuffer>(raw);
-}
-
-mga::HWCAndroidDisplayBufferFactory::HWCAndroidDisplayBufferFactory(
-    std::shared_ptr<mga::HWCDevice> const& hwc_device)
-    : hwc_device{hwc_device}
-{
-}
-
-std::unique_ptr<mg::DisplayBuffer> mga::HWCAndroidDisplayBufferFactory::create_display_buffer(
-    std::shared_ptr<AndroidFramebufferWindowQuery> const& native_window,
-    EGLDisplay egl_display,
-    EGLContext egl_context_shared)
-{
-    auto raw = new HWCDisplayBuffer(native_window, egl_display, egl_context_shared, hwc_device);
+    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_context_shared, hwc_device);
     return std::unique_ptr<mg::DisplayBuffer>(raw);
 }

@@ -40,9 +40,11 @@ public:
     unsigned int number_of_framebuffers_available() const;
 
     void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync);
-    
-    virtual void mode(MirPowerMode mode);
+    void sync_to_display(bool sync); 
+    void mode(MirPowerMode mode);
+
+    void commit_frame(EGLDisplay dpy, EGLSurface sur);
+
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };
