@@ -36,7 +36,7 @@ struct PairedCalls
 private:
     PairedCalls(PairedCalls const& that) = delete;
     PairedCalls& operator=(PairedCalls const& that) = delete;
-    Deleter const& deleter;
+    Deleter const deleter;
     bool owner;
 };
 
