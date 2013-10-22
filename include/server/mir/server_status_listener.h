@@ -13,32 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_
-
-#include "android_display_buffer_factory.h"
+#ifndef MIR_SERVER_STATUS_LISTENER_H_
+#define MIR_SERVER_STATUS_LISTENER_H_
 
 namespace mir
 {
-namespace graphics
-{
-namespace android
-{
 
-class GPUAndroidDisplayBufferFactory : public AndroidDisplayBufferFactory
+class ServerStatusListener
 {
 public:
-    std::unique_ptr<DisplayBuffer> create_display_buffer(
-        std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
-        EGLDisplay egl_display,
-        EGLContext egl_context_shared);
+    virtual void paused() = 0;
+    virtual void resumed() = 0;
+    virtual void started() = 0;
+
+protected:
+    ServerStatusListener() = default;
+    virtual ~ServerStatusListener() = default;
+    ServerStatusListener(ServerStatusListener const&) = delete;
+    ServerStatusListener& operator=(ServerStatusListener const&) = delete;
 };
 
 }
-}
-}
 
-#endif /* MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_SERVER_STATUS_LISTENER_H_ */

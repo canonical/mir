@@ -39,6 +39,12 @@
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
+namespace
+{
+std::chrono::milliseconds const timeout(200);
+boost::posix_time::milliseconds const boost_timeout(2000);
+}
+
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
@@ -49,6 +55,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
+    timer(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
@@ -68,6 +75,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
+    timer(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
@@ -82,14 +90,15 @@ void mclr::MirSocketRpcChannel::notify_disconnected()
     if (!disconnected.exchange(true))
     {
         io_service.stop();
+        socket.close();
         lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
-        pending_calls.force_completion();
     }
+    pending_calls.force_completion();
 }
 
 void mclr::MirSocketRpcChannel::init()
 {
-    io_service_thread = std::thread([&]
+    io_service_thread = std::thread([this]
         {
             // Our IO threads must not receive any signals
             sigset_t all_signals;
@@ -122,6 +131,7 @@ void mclr::MirSocketRpcChannel::init()
 
 mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
+    timer.cancel();
     io_service.stop();
 
     if (io_service_thread.joinable())
@@ -134,67 +144,69 @@ mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
 void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
-    if (surface)
+    if (!disconnected.load())
     {
-        surface->clear_fd();
-
-        if (surface->fds_on_side_channel() > 0)
+        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+        if (surface)
         {
-            std::vector<int32_t> fds(surface->fds_on_side_channel());
-            receive_file_descriptors(fds);
-            for (auto &fd: fds)
-                surface->add_fd(fd);
+            surface->clear_fd();
 
-            rpc_report->file_descriptors_received(*response, fds);
+            if (surface->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(surface->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    surface->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
+        }
+
+        auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
+        if (!buffer)
+        {
+            if (surface && surface->has_buffer())
+                buffer = surface->mutable_buffer();
+        }
+
+        if (buffer)
+        {
+            buffer->clear_fd();
+
+            if (buffer->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(buffer->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    buffer->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
+        }
+
+        auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
+        if (!platform)
+        {
+            auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
+            if (connection && connection->has_platform())
+                platform = connection->mutable_platform();
+        }
+
+        if (platform)
+        {
+            platform->clear_fd();
+
+            if (platform->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(platform->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    platform->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
         }
     }
-
-    auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
-    if (!buffer)
-    {
-        if (surface && surface->has_buffer())
-            buffer = surface->mutable_buffer();
-    }
-
-    if (buffer)
-    {
-        buffer->clear_fd();
-
-        if (buffer->fds_on_side_channel() > 0)
-        {
-            std::vector<int32_t> fds(buffer->fds_on_side_channel());
-            receive_file_descriptors(fds);
-            for (auto &fd: fds)
-                buffer->add_fd(fd);
-
-            rpc_report->file_descriptors_received(*response, fds);
-        }
-    }
-
-    auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
-    if (!platform)
-    {
-        auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
-        if (connection && connection->has_platform())
-            platform = connection->mutable_platform();
-    }
-
-    if (platform)
-    {
-        platform->clear_fd();
-
-        if (platform->fds_on_side_channel() > 0)
-        {
-            std::vector<int32_t> fds(platform->fds_on_side_channel());
-            receive_file_descriptors(fds);
-            for (auto &fd: fds)
-                platform->add_fd(fd);
-
-            rpc_report->file_descriptors_received(*response, fds);
-        }
-    }
-
 
     complete->Run();
 }
@@ -227,8 +239,14 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
     message->cmsg_level = SOL_SOCKET;
     message->cmsg_type = SCM_RIGHTS;
 
+    using std::chrono::steady_clock;
+    auto time_limit = steady_clock::now() + timeout;
+
     while (recvmsg(socket.native_handle(), &header, 0) < 0)
-        ; // FIXME: Avoid spinning forever
+    {
+        if (steady_clock::now() > time_limit)
+            return;
+    }
 
     // Copy file descriptors back to caller
     n_fds = (message->cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
@@ -288,12 +306,19 @@ void mclr::MirSocketRpcChannel::send_message(
         notify_disconnected();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server: " + error.message()));
     }
-    else
-        rpc_report->invocation_succeeded(invocation);
+
+    rpc_report->invocation_succeeded(invocation);
+    timer.expires_from_now(boost_timeout);
+    timer.async_wait([this](const boost::system::error_code& error)
+    {
+        // Timed out waiting for server response: kill the connection
+        if (!error) socket.cancel();
+    });
 }
 
 void mclr::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
 {
+    timer.cancel();
     if (error)
     {
         // If we've not got a response to a call pending

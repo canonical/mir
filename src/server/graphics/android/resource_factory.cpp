@@ -19,12 +19,18 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "buffer.h"
-#include "default_framebuffer_factory.h"
+#include "resource_factory.h"
 #include "fb_device.h"
 #include "fb_simple_swapper.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "interpreter_cache.h"
+#include "hwc11_device.h"
+#include "hwc10_device.h"
+#include "hwc_layerlist.h"
+#include "hwc_vsync.h"
+#include "android_display.h"
+#include "display_buffer_factory.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -33,13 +39,13 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
+mga::ResourceFactory::ResourceFactory(
     std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
     : buffer_allocator(buffer_allocator)
 {
 }
 
-std::vector<std::shared_ptr<mg::Buffer>> mga::DefaultFramebufferFactory::create_buffers(
+std::vector<std::shared_ptr<mg::Buffer>> mga::ResourceFactory::create_buffers(
     std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
     auto size = info_provider->display_size();
@@ -53,23 +59,13 @@ std::vector<std::shared_ptr<mg::Buffer>> mga::DefaultFramebufferFactory::create_
     return buffers;
 }
 
-std::shared_ptr<mga::FBSwapper> mga::DefaultFramebufferFactory::create_swapper(
+std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_swapper(
     std::vector<std::shared_ptr<mg::Buffer>> const& buffers) const
 {
     return std::make_shared<mga::FBSimpleSwapper>(buffers);
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
-    std::shared_ptr<DisplaySupportProvider> const& info_provider) const
-{
-    auto buffers = create_buffers(info_provider);
-    auto swapper = create_swapper(buffers);
-    auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider, cache);
-    return std::make_shared<mga::MirNativeWindow>(interpreter); 
-}
-
-std::shared_ptr<mga::DisplaySupportProvider> mga::DefaultFramebufferFactory::create_fb_device() const
+std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_device() const
 {
     hw_module_t const* module;
     framebuffer_device_t* fbdev_raw;
@@ -88,3 +84,34 @@ std::shared_ptr<mga::DisplaySupportProvider> mga::DefaultFramebufferFactory::cre
 
     return std::make_shared<mga::FBDevice>(fb_dev);
 } 
+
+std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_1(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
+{
+    auto layer_list = std::make_shared<mga::LayerList>();
+    auto syncer = std::make_shared<mga::HWCVsync>();
+    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb_device, syncer);
+}
+
+std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_0(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
+{
+    auto syncer = std::make_shared<mga::HWCVsync>();
+    return std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
+}
+
+std::shared_ptr<mg::Display> mga::ResourceFactory::create_display(
+    std::shared_ptr<mga::DisplaySupportProvider> const& support_provider,
+    std::shared_ptr<mg::DisplayReport> const& report) const
+{
+    auto buffers = create_buffers(support_provider);
+    auto swapper = create_swapper(buffers);
+    auto cache = std::make_shared<mga::InterpreterCache>();
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, support_provider, cache);
+    auto native_win = std::make_shared<mga::MirNativeWindow>(interpreter);
+    auto window = std::make_shared<mga::AndroidFramebufferWindow>(native_win);
+    auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
+    return std::make_shared<AndroidDisplay>(window, db_factory, support_provider, report);
+}

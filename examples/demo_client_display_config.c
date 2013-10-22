@@ -29,6 +29,7 @@
 #include <signal.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 typedef enum
 {
@@ -47,6 +48,52 @@ struct ClientContext
     volatile sig_atomic_t running;
     volatile sig_atomic_t reconfigure;
 };
+
+struct Card
+{
+    uint32_t card_id;
+    uint32_t available_outputs;
+};
+
+struct Cards
+{
+    size_t num_cards;
+    struct Card *cards;
+};
+
+static struct Cards *cards_create(struct MirDisplayConfiguration *conf)
+{
+    struct Cards *cards = (struct Cards*) calloc(1, sizeof(struct Cards));
+    cards->num_cards = conf->num_cards;
+    cards->cards = (struct Card*) calloc(cards->num_cards, sizeof(struct Card));
+
+    for (size_t i = 0; i < cards->num_cards; i++)
+    {
+        cards->cards[i].card_id = conf->cards[i].card_id;
+        cards->cards[i].available_outputs =
+            conf->cards[i].max_simultaneous_outputs;
+    }
+
+    return cards;
+}
+
+static void cards_free(struct Cards *cards)
+{
+    free(cards->cards);
+    free(cards);
+}
+
+static struct Card *cards_find_card(struct Cards *cards, uint32_t card_id)
+{
+    for (size_t i = 0; i < cards->num_cards; i++)
+    {
+        if (cards->cards[i].card_id == card_id)
+            return &cards->cards[i];
+    }
+
+    fprintf(stderr, "Error: Couldn't find card with id: %u\n", card_id);
+    abort();
+}
 
 static void print_current_configuration(MirConnection *connection)
 {
@@ -101,52 +148,75 @@ static int apply_configuration(MirConnection *connection, MirDisplayConfiguratio
 
 static void configure_display_clone(struct MirDisplayConfiguration *conf)
 {
+    struct Cards *cards = cards_create(conf);
+
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        if (output->connected && output->num_modes > 0)
+        struct Card *card = cards_find_card(cards, output->card_id);
+
+        if (output->connected && output->num_modes > 0 &&
+            card->available_outputs > 0)
         {
             output->used = 1;
             output->current_mode = 0;
             output->position_x = 0;
             output->position_y = 0;
+            --card->available_outputs;
         }
     }
+
+    cards_free(cards);
 }
 
 static void configure_display_horizontal(struct MirDisplayConfiguration *conf)
 {
+    struct Cards *cards = cards_create(conf);
+
     uint32_t max_x = 0;
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        if (output->connected && output->num_modes > 0)
+        struct Card *card = cards_find_card(cards, output->card_id);
+
+        if (output->connected && output->num_modes > 0 &&
+            card->available_outputs > 0)
         {
             output->used = 1;
             output->current_mode = 0;
             output->position_x = max_x;
             output->position_y = 0;
             max_x += output->modes[0].horizontal_resolution;
+            --card->available_outputs;
         }
     }
 
+    cards_free(cards);
 }
 
 static void configure_display_vertical(struct MirDisplayConfiguration *conf)
 {
+    struct Cards *cards = cards_create(conf);
+
     uint32_t max_y = 0;
     for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
         MirDisplayOutput *output = &conf->outputs[i];
-        if (output->connected && output->num_modes > 0)
+        struct Card *card = cards_find_card(cards, output->card_id);
+
+        if (output->connected && output->num_modes > 0 &&
+            card->available_outputs > 0)
         {
             output->used = 1;
             output->current_mode = 0;
             output->position_x = 0;
             output->position_y = max_y;
             max_y += output->modes[0].vertical_resolution;
+            --card->available_outputs;
         }
     }
+
+    cards_free(cards);
 }
 
 static void configure_display_single(struct MirDisplayConfiguration *conf, int output_num)

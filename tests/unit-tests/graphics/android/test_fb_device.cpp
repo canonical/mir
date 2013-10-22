@@ -20,6 +20,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
@@ -54,6 +55,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(FBDevice, set_next_frontbuffer_ok)
@@ -93,6 +95,25 @@ TEST_F(FBDevice, determine_fbnum)
 {
     mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
+}
+
+TEST_F(FBDevice, commit_frame)
+{
+    using namespace testing;
+    int bad = 0xdfefefe; 
+    EGLDisplay dpy = static_cast<EGLDisplay>(&bad);
+    EGLSurface surf = static_cast<EGLSurface>(&bad);
+    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
+        .Times(2)
+        .WillOnce(Return(EGL_FALSE))
+        .WillOnce(Return(EGL_TRUE));
+
+    mga::FBDevice fbdev(fb_hal_mock);
+
+    EXPECT_THROW({
+        fbdev.commit_frame(dpy, surf);
+    }, std::runtime_error);
+    fbdev.commit_frame(dpy, surf);
 }
 
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement

@@ -113,9 +113,3 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_h
 
     return std::shared_ptr<MirGraphicsRegion>(region, del);
 }
-
-bool mtd::is_surface_flinger_running()
-{
-    struct dirent **namelist;
-    return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);
-}

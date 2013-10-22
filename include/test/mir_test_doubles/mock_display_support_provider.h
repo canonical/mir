@@ -38,6 +38,7 @@ public:
     MOCK_METHOD1(set_next_frontbuffer, void(std::shared_ptr<mir::graphics::Buffer> const&));
     MOCK_METHOD1(sync_to_display, void(bool));
     MOCK_METHOD1(mode, void(MirPowerMode));
+    MOCK_METHOD2(commit_frame, void(EGLDisplay, EGLSurface));
 };
 }
 }

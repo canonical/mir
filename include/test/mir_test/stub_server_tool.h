@@ -80,10 +80,11 @@ struct StubServerTool : mir::protobuf::DisplayServer
     virtual void connect(
         ::google::protobuf::RpcController*,
                          const ::mir::protobuf::ConnectParameters* request,
-                         ::mir::protobuf::Connection*,
+                         ::mir::protobuf::Connection* connect_msg,
                          ::google::protobuf::Closure* done) override
     {
         app_name = request->application_name();
+        connect_msg->set_error("");
         done->Run();
     }
 

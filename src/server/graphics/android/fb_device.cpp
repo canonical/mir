@@ -83,6 +83,14 @@ void mga::FBDevice::sync_to_display(bool sync)
     }
 }
 
+void mga::FBDevice::commit_frame(EGLDisplay dpy, EGLSurface sur)
+{
+    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
+    }
+}
+
 void mga::FBDevice::mode(MirPowerMode mode)
 {
     // TODO: Implement

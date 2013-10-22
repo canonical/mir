@@ -23,10 +23,9 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "src/server/graphics/android/hwc_vsync.h"
-#include "src/server/graphics/android/default_framebuffer_factory.h"
+#include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
-#include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
+#include "src/server/graphics/android/display_buffer_factory.h"
 #include "src/server/graphics/android/fb_device.h"
 
 #include "examples/graphics.h"
@@ -52,16 +51,13 @@ class AndroidGPUDisplay : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
-        /* this is an important precondition for acquiring the display! */
-        ASSERT_FALSE(mir::test::draw::is_surface_flinger_running());
-
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer); 
-        fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(allocator);
-        fb_device = fb_factory->create_fb_device();
+        resource_factory = std::make_shared<mga::ResourceFactory>(allocator);
+        fb_device = resource_factory->create_fb_device();
 
         /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
         hw_module_t const* gr_module;
@@ -92,13 +88,13 @@ protected:
 
     static bool run_hwc11_tests;
     static bool run_hwc10_tests;
-    static std::shared_ptr<mga::FramebufferFactory> fb_factory;
+    static std::shared_ptr<mga::ResourceFactory> resource_factory;
     static std::shared_ptr<mga::DisplaySupportProvider> fb_device;
     static std::shared_ptr<hwc_composer_device_1> hwc_device;
 };
 
 std::shared_ptr<mga::DisplaySupportProvider> AndroidGPUDisplay::fb_device;
-std::shared_ptr<mga::FramebufferFactory> AndroidGPUDisplay::fb_factory;
+std::shared_ptr<mga::ResourceFactory> AndroidGPUDisplay::resource_factory;
 std::shared_ptr<hwc_composer_device_1> AndroidGPUDisplay::hwc_device;
 bool AndroidGPUDisplay::run_hwc11_tests;
 bool AndroidGPUDisplay::run_hwc10_tests;
@@ -108,10 +104,7 @@ bool AndroidGPUDisplay::run_hwc10_tests;
 TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto fb_window = fb_factory->create_fb_native_window(fb_device);
-    auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-    auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, fb_device, mock_display_report);
+    auto display = resource_factory->create_display(fb_device, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
@@ -138,15 +131,11 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
     SUCCEED_IF_NO_HWC10_SUPPORT();
 
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto fb_window = fb_factory->create_fb_native_window(fb_device);
-    auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::LayerList>();
-
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(hwc);
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, hwc,
-                                                         mock_display_report);
+    auto display = resource_factory->create_display(hwc, mock_display_report);
+
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
@@ -166,14 +155,11 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     SUCCEED_IF_NO_HWC11_SUPPORT();
 
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto fb_window = fb_factory->create_fb_native_window(fb_device);
-    auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::LayerList>();
 
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device, syncer);
-    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(hwc);
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory, hwc, mock_display_report);
+    auto display = resource_factory->create_display(hwc, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
