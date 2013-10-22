@@ -44,8 +44,15 @@ protected:
     SurfacesReport& operator=(SurfacesReport const&) = delete;
 };
 
-// For the moment this is a debugging frig - it should probably grow into a real PfA report
-std::shared_ptr<SurfacesReport> the_surfaces_report();
+class NullSurfacesReport : public SurfacesReport
+{
+public:
+    virtual void surface_created(Surface* const /*surface*/) override;
+    virtual void surface_added(Surface* const /*surface*/) override;
+
+    virtual void surface_removed(Surface* const /*surface*/) override;
+    virtual void surface_deleted(Surface* const /*surface*/) override;
+};
 }
 }
 

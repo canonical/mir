@@ -29,7 +29,7 @@
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 
-#include "surfaces_report.h"
+#include "mir/surfaces/surfaces_report.h"
 
 #include <boost/throw_exception.hpp>
 

@@ -26,7 +26,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
-#include "src/server/surfaces/surfaces_report.h"
+#include "mir/surfaces/surfaces_report.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/surface.h"
@@ -175,9 +175,9 @@ struct SurfaceStack : public ::testing::Test
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
         //TODO: this should be a real Stub from mtd, once ms::Surface is an interface
-        stub_surface1 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>());
-        stub_surface2 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>());
-        stub_surface3 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>());
+        stub_surface1 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface2 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface3 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
             .WillByDefault(Return(stub_surface1));
@@ -189,6 +189,8 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::Surface> stub_surface1;
     std::shared_ptr<ms::Surface> stub_surface2;
     std::shared_ptr<ms::Surface> stub_surface3;
+
+    std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
 };
 
 }
@@ -204,7 +206,7 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto use_count = stub_surface1.use_count();
 
@@ -231,7 +233,7 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -276,7 +278,7 @@ TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -323,7 +325,7 @@ TEST_F(SurfaceStack, stacking_order_reverse)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -363,7 +365,7 @@ TEST_F(SurfaceStack, stacking_order)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -398,7 +400,7 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
     auto surface = stack.create_surface(default_params);
@@ -417,7 +419,7 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -457,7 +459,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s = stack.create_surface(msh::a_surface());
     stack.destroy_surface(s);
@@ -478,7 +480,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_surfaces)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s = stack.create_surface(msh::a_surface().with_input_mode(mi::InputReceptionMode::receives_all_input));
     stack.destroy_surface(s);
@@ -496,7 +498,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -543,7 +545,7 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -585,7 +587,7 @@ TEST_F(SurfaceStack, raise_throw_behavior)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     std::shared_ptr<ms::Surface> null_surface{nullptr};
     EXPECT_THROW({
@@ -639,7 +641,7 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
@@ -698,7 +700,7 @@ TEST_F(SurfaceStack, is_recursively_lockable)
     ms::SurfaceStack stack(
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar),
-        ms::the_surfaces_report());
+        report);
 
     StubFilterForScene filter;
     StubOperatorForScene op;

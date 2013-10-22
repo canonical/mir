@@ -48,6 +48,7 @@ namespace surfaces
 {
 class SurfaceState;
 class BufferStream;
+class SurfacesReport;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
@@ -56,7 +57,8 @@ class Surface
 public:
     Surface(std::shared_ptr<surfaces::SurfaceState> const& surface_state,
             std::shared_ptr<BufferStream> const& buffer_stream,
-            std::shared_ptr<input::InputChannel> const& input_channel);
+            std::shared_ptr<input::InputChannel> const& input_channel,
+            std::shared_ptr<SurfacesReport> const& report);
 
     ~Surface();
 
@@ -93,6 +95,7 @@ private:
     std::shared_ptr<surfaces::SurfaceState> surface_state;
     std::shared_ptr<BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
+    std::shared_ptr<SurfacesReport> const report;
     bool surface_in_startup;
 };
 
