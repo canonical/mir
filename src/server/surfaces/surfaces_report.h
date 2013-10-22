@@ -30,9 +30,9 @@ class SurfacesReport
 {
 public:
     virtual void surface_created(Surface* const surface) = 0;
-    virtual void create_surface_call(Surface* const surface) = 0;
+    virtual void surface_added(Surface* const surface) = 0;
 
-    virtual void delete_surface_call(Surface* const surface) = 0;
+    virtual void surface_removed(Surface* const surface) = 0;
     virtual void surface_deleted(Surface* const surface) = 0;
 
 protected:

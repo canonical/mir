@@ -36,9 +36,9 @@ class NullSurfacesReport : public ms::SurfacesReport
 {
 public:
     virtual void surface_created(ms::Surface* const /*surface*/) {}
-    virtual void create_surface_call(ms::Surface* const /*surface*/) {}
+    virtual void surface_added(ms::Surface* const /*surface*/) {}
 
-    virtual void delete_surface_call(ms::Surface* const /*surface*/) {}
+    virtual void surface_removed(ms::Surface* const /*surface*/) {}
     virtual void surface_deleted(ms::Surface* const /*surface*/) {}
 };
 
@@ -46,9 +46,9 @@ class DebugSurfacesReport : public ms::SurfacesReport
 {
 public:
     virtual void surface_created(ms::Surface* const /*surface*/);
-    virtual void create_surface_call(ms::Surface* const /*surface*/);
+    virtual void surface_added(ms::Surface* const /*surface*/);
 
-    virtual void delete_surface_call(ms::Surface* const /*surface*/);
+    virtual void surface_removed(ms::Surface* const /*surface*/);
     virtual void surface_deleted(ms::Surface* const /*surface*/);
 
 private:
@@ -74,13 +74,13 @@ void DebugSurfacesReport::surface_created(ms::Surface* const surface)
         surface << " [\"" << surface->name() << "\"])" << std::endl;
 }
 
-void DebugSurfacesReport::create_surface_call(ms::Surface* const surface)
+void DebugSurfacesReport::surface_added(ms::Surface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
     auto const i = surfaces.find(surface);
 
-    std::cout << "DebugSurfacesReport::create_surface_call(" <<
+    std::cout << "DebugSurfacesReport::surface_added(" <<
         surface << " [\"" << surface->name() << "\"])";
 
     if (i == surfaces.end())
@@ -95,13 +95,13 @@ void DebugSurfacesReport::create_surface_call(ms::Surface* const surface)
     std::cout << " - INFO surface count=" << surfaces.size() << std::endl;
 }
 
-void DebugSurfacesReport::delete_surface_call(ms::Surface* const surface)
+void DebugSurfacesReport::surface_removed(ms::Surface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
     auto const i = surfaces.find(surface);
 
-    std::cout << "DebugSurfacesReport::delete_surface_call(" <<
+    std::cout << "DebugSurfacesReport::surface_removed(" <<
         surface << " [\"" << surface->name() << "\"])";
 
     if (i == surfaces.end())
