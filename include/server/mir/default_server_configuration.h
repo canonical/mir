@@ -20,7 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
-#include "mir/default_options.h"
+#include "mir/default_configuration_options.h"
 
 #include <memory>
 #include <string>
@@ -112,7 +112,7 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public virtual ServerConfiguration, DefaultOptions
+class DefaultServerConfiguration : public virtual ServerConfiguration, DefaultConfigurationOptions
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
@@ -240,8 +240,8 @@ public:
     virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
 protected:
-    using DefaultOptions::the_options;
-    using DefaultOptions::add_options;
+    using DefaultConfigurationOptions::the_options;
+    using DefaultConfigurationOptions::add_options;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();

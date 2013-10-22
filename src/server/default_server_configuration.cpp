@@ -173,7 +173,7 @@ private:
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-    DefaultOptions(argc, argv),
+    DefaultConfigurationOptions(argc, argv),
     default_filter(std::make_shared<mi::VTFilter>())
 {
 }
