@@ -29,12 +29,15 @@
  */
 
 #include <androidfw/Input.h>
+#include <androidfw/IntSet.h>
 #include <std/Errors.h>
 #include <std/Timers.h>
 #include <std/RefBase.h>
 #include <std/String8.h>
 #include <std/Vector.h>
-#include <std/BitSet.h>
+
+// C++ std lib
+#include <unordered_map>
 
 namespace android {
 
@@ -352,23 +355,23 @@ private:
     // Touch state per device and source, only for sources of class pointer.
     struct History {
         nsecs_t eventTime;
-        BitSet32 idBits;
-        int32_t idToIndex[MAX_POINTER_ID + 1];
+        IntSet ids;
+        std::unordered_map<int32_t, size_t> idToIndex;
         PointerCoords pointers[MAX_POINTERS];
 
         void initializeFrom(const InputMessage* msg) {
             eventTime = msg->body.motion.eventTime;
-            idBits.clear();
+            ids.clear();
             for (size_t i = 0; i < msg->body.motion.pointerCount; i++) {
                 uint32_t id = msg->body.motion.pointers[i].properties.id;
-                idBits.markBit(id);
+                ids.insert(id);
                 idToIndex[id] = i;
                 pointers[i].copyFrom(msg->body.motion.pointers[i].coords);
             }
         }
 
         const PointerCoords& getPointerById(uint32_t id) const {
-            return pointers[idToIndex[id]];
+            return pointers[idToIndex.at(id)];
         }
     };
     struct TouchState {
@@ -385,7 +388,7 @@ private:
             historyCurrent = 0;
             historySize = 0;
             lastResample.eventTime = 0;
-            lastResample.idBits.clear();
+            lastResample.ids.clear();
         }
 
         void addHistory(const InputMessage* msg) {

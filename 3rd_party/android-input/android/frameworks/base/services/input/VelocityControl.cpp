@@ -24,7 +24,6 @@
 #include <limits.h>
 
 #include <androidfw/VelocityControl.h>
-#include <std/BitSet.h>
 #include <std/Timers.h>
 
 namespace android {
@@ -35,6 +34,7 @@ const nsecs_t VelocityControl::STOP_TIME;
 
 VelocityControl::VelocityControl() {
     reset();
+    mIds.insert(1);
 }
 
 void VelocityControl::setParameters(const VelocityControlParameters& parameters) {
@@ -66,7 +66,7 @@ void VelocityControl::move(nsecs_t eventTime, float* deltaX, float* deltaY) {
         if (deltaY) {
             mRawPosition.y += *deltaY;
         }
-        mVelocityTracker.addMovement(eventTime, BitSet32(BitSet32::valueForBit(0)), &mRawPosition);
+        mVelocityTracker.addMovement(eventTime, mIds, &mRawPosition);
 
         float vx, vy;
         float scale = mParameters.scale;
