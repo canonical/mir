@@ -91,7 +91,13 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
     //we have a supported hwc, create it
     std::shared_ptr<mga::DisplayInfo> info;
     std::shared_ptr<mga::DisplayCommander> commander; 
-    if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+    if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
+    {
+        info = display_resource_factory->create_hwc_info(hwc_native);
+        commander = display_resource_factory->create_hwc11_commander(hwc_native);
+        display_report->report_hwc_composition_in_use(1,1);
+    }
+    else if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
         auto fb_native = display_resource_factory->create_fb_native_device();
         info = display_resource_factory->create_fb_info(fb_native);
@@ -99,18 +105,10 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
         display_report->report_hwc_composition_in_use(1,0);
     }
 
-    if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
-    {
-        info = display_resource_factory->create_hwc_info(hwc_native);
-        commander = display_resource_factory->create_hwc11_commander(hwc_native);
-        display_report->report_hwc_composition_in_use(1,1);
-    }
-
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
     auto fb_swapper = display_resource_factory->create_fb_buffers(info, buffer_allocator);
-    auto z = display_resource_factory->create_display(fb_swapper, info, commander, display_report);
-    return z;
+    return display_resource_factory->create_display(fb_swapper, info, commander, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
