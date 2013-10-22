@@ -22,6 +22,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/input/input_configuration.h"
+#include "surfaces_report.h"
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
@@ -35,8 +36,14 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
         {
             auto factory = std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(), the_input_channel_factory());
-            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
+
+            auto ss = std::make_shared<ms::SurfaceStack>(
+                factory,
+                the_input_registrar(),
+                ms::the_surfaces_report());
+
             the_input_configuration()->set_input_targets(ss);
+
             return ss;
         });
 }
@@ -49,8 +56,14 @@ mir::DefaultServerConfiguration::the_scene()
         {
             auto factory = std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(), the_input_channel_factory());
-            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
+
+            auto ss = std::make_shared<ms::SurfaceStack>(
+                factory,
+                the_input_registrar(),
+                ms::the_surfaces_report());
+
             the_input_configuration()->set_input_targets(ss);
+
             return ss;
         });
 }

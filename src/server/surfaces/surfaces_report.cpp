@@ -140,14 +140,14 @@ void DebugSurfacesReport::surface_deleted(ms::Surface* const surface)
     std::cout << " - INFO surface count=" << surfaces.size() << std::endl;
 }
 
-ms::SurfacesReport* ms::the_surfaces_report()
+std::shared_ptr<ms::SurfacesReport> ms::the_surfaces_report()
 {
     static auto const result =
         is_debug() ?
             std::shared_ptr<ms::SurfacesReport>(std::make_shared<DebugSurfacesReport>()) :
             std::shared_ptr<ms::SurfacesReport>(std::make_shared<NullSurfacesReport>());
 
-    return result.get();
+    return result;
 }
 
 

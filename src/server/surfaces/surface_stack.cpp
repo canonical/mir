@@ -45,11 +45,14 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                               std::shared_ptr<ms::InputRegistrar> const& input_registrar)
-    : surface_factory{surface_factory},
-      input_registrar{input_registrar},
-      notify_change{[]{}}
+ms::SurfaceStack::SurfaceStack(
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<ms::InputRegistrar> const& input_registrar,
+    std::shared_ptr<SurfacesReport> const& report) :
+    surface_factory{surface_factory},
+    input_registrar{input_registrar},
+    report{report},
+    notify_change{[]{}}
 {
 }
 
@@ -104,7 +107,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
 
     input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.input_mode);
 
-    the_surfaces_report()->surface_added(surface.get());
+    report->surface_added(surface.get());
     emit_change_notification();
 
     return surface;
@@ -135,7 +138,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     if (found_surface)
         input_registrar->input_channel_closed(keep_alive->input_channel());
 
-    the_surfaces_report()->surface_removed(keep_alive.get());
+    report->surface_removed(keep_alive.get());
 
     emit_change_notification();
     // TODO: error logging when surface not found

@@ -20,6 +20,8 @@
 #ifndef MIR_SURFACES_SURFACES_REPORT_H_
 #define MIR_SURFACES_SURFACES_REPORT_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace surfaces
@@ -43,7 +45,7 @@ protected:
 };
 
 // For the moment this is a debugging frig - it should probably grow into a real PfA report
-SurfacesReport* the_surfaces_report();
+std::shared_ptr<SurfacesReport> the_surfaces_report();
 }
 }
 
