@@ -195,6 +195,7 @@ public:
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
     virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
     virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
+    virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
 
     /** @name shell configuration - dependencies
