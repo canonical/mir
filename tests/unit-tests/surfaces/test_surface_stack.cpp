@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface_stack.h"
+#include "src/server/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_factory.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/surfaces/buffer_stream_factory.h"
@@ -25,7 +25,6 @@
 #include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surfaces_report.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/compositing_criteria.h"

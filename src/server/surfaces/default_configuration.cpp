@@ -19,7 +19,7 @@
 #include "mir/default_server_configuration.h"
 
 #include "mir/surfaces/surface_allocator.h"
-#include "mir/surfaces/surface_stack.h"
+#include "surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/input/input_configuration.h"
 #include "mir/surfaces/surfaces_report.h"

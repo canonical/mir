@@ -20,7 +20,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/surfaces/surface_stack_model.h"
+#include "src/server/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"

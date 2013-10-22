@@ -26,7 +26,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/internal_client.h"
 #include "mir/graphics/internal_surface.h"
-#include "mir/surfaces/surface_stack.h"
+#include "src/server/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_allocator.h"
 #include "mir/shell/surface_source.h"

@@ -23,7 +23,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "surface_state.h"
-#include "mir/surfaces/surface_stack.h"
+#include "surface_stack.h"
 #include "mir/surfaces/surface_factory.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
