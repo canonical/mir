@@ -300,8 +300,6 @@ protected:
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
-    int default_ipc_threads = 10;
-
 private:
     std::shared_ptr<input::EventFilter> const default_filter;
 
