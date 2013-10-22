@@ -25,6 +25,7 @@
 #include <string>
 
 #include <linux/input.h>
+#include <unordered_map>
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
@@ -45,15 +46,24 @@ public:
     {
         size_t const preferred_mode_index{0};
         int max_x = 0;
+        std::unordered_map<mg::DisplayConfigurationCardId, size_t> available_outputs_for_card;
+
+        conf.for_each_card(
+            [&](mg::DisplayConfigurationCard const& card)
+            {
+                available_outputs_for_card[card.id] = card.max_simultaneous_outputs;
+            });
 
         conf.for_each_output(
             [&](mg::DisplayConfigurationOutput const& conf_output)
             {
-                if (conf_output.connected && conf_output.modes.size() > 0)
+                if (conf_output.connected && conf_output.modes.size() > 0 &&
+                    available_outputs_for_card[conf_output.card_id] > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
                                           preferred_mode_index, mir_power_mode_on);
                     max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
+                    --available_outputs_for_card[conf_output.card_id];
                 }
                 else
                 {
