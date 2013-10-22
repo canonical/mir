@@ -30,7 +30,7 @@ namespace raii
 template <typename Creator, typename Deleter>
 struct PairedCalls
 {
-    PairedCalls(Creator const& creator, Deleter const& deleter) : deleter(deleter), owner(true) { creator(); }
+    PairedCalls(Creator&& creator, Deleter&& deleter) : deleter(std::move(deleter)), owner(true) { creator(); }
     PairedCalls(PairedCalls&& that) : deleter(that.deleter), owner(that.owner) { that.owner = false; }
     ~PairedCalls()  { if (owner) deleter(); }
 private:
@@ -63,7 +63,7 @@ inline auto paired_calls(Creator&& creator, Deleter&& deleter)
     std::is_void<decltype(creator())>::value,
     PairedCalls<Creator, Deleter>>::type
 {
-    return {creator, deleter};
+    return {std::move(creator), std::move(deleter)};
 }
 
 /**
