@@ -28,12 +28,6 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 
-
-namespace
-{
-std::shared_ptr<ms::SurfacesReport> the_surfaces_report();
-}
-
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
@@ -215,15 +209,14 @@ void DebugSurfacesReport::surface_deleted(ms::Surface* const surface)
     std::cout << " - INFO surface count=" << surfaces.size() << std::endl;
 }
 
-namespace
+std::shared_ptr<ms::SurfacesReport>
+mir::DefaultServerConfiguration::the_surfaces_report()
 {
-std::shared_ptr<ms::SurfacesReport> the_surfaces_report()
-{
-    static auto const result =
-        is_debug() ?
-            std::shared_ptr<ms::SurfacesReport>(std::make_shared<DebugSurfacesReport>()) :
-            std::shared_ptr<ms::SurfacesReport>(std::make_shared<ms::NullSurfacesReport>());
-
-    return result;
-}
+    return surfaces_report([]() -> std::shared_ptr<ms::SurfacesReport>
+    {
+        if (is_debug())
+            return std::make_shared<DebugSurfacesReport>();
+        else
+            return std::make_shared<ms::NullSurfacesReport>();
+    });
 }
