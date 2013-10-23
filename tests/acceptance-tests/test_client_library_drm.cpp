@@ -48,7 +48,7 @@ TEST_F(MirClientLibraryDrmTest, sets_gbm_device_in_platform_data)
 
             MirPlatformPackage pkg;
             mir_connection_get_platform(connection, &pkg);
-            EXPECT_EQ(sizeof(dev) / sizeof(int), pkg.data_items);
+            EXPECT_EQ(sizeof(dev) / sizeof(int), static_cast<size_t>(pkg.data_items));
             EXPECT_EQ(dev, *reinterpret_cast<struct gbm_device**>(&pkg.data[0]));
 
             mir_connection_release(connection);
