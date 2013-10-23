@@ -106,6 +106,8 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const float size = 500.0;
     const float pressure = 600.0;
     const float orientation = 700.0;
+    const float vscroll = 800.0;
+    const float hscroll = 900.0;
 
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_X, x_axis);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_Y, y_axis);
@@ -114,6 +116,8 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_SIZE, size);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, pressure);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, vscroll);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, hscroll);
 
     android_motion_ev->initialize(device_id, source_id, action, flags, edge_flags,
                                   meta_state, button_state, x_offset, y_offset,
@@ -159,6 +163,8 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(mir_pointer_coords->size, size);
     EXPECT_EQ(mir_pointer_coords->pressure, pressure);
     EXPECT_EQ(mir_pointer_coords->orientation, orientation);
+    EXPECT_EQ(mir_pointer_coords->vscroll, vscroll);
+    EXPECT_EQ(mir_pointer_coords->hscroll, hscroll);
 
 
     delete android_motion_ev;
