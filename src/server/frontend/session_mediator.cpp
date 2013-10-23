@@ -27,7 +27,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"

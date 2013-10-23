@@ -18,7 +18,6 @@
 
 #include "mir/compositor/rendering_operator.h"
 
-namespace ms=mir::surfaces;
 namespace mc=mir::compositor;
 
 mc::RenderingOperator::RenderingOperator(
@@ -33,7 +32,7 @@ mc::RenderingOperator::~RenderingOperator()
 {
 }
 
-void mc::RenderingOperator::operator()(CompositingCriteria const& info, ms::BufferStream& stream)
+void mc::RenderingOperator::operator()(CompositingCriteria const& info, BufferStream& stream)
 {
     renderer.render(save_resource, info, stream);
 }

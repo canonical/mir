@@ -26,7 +26,7 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/frontend/connector.h"
@@ -99,7 +99,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         {
             void clear(unsigned long) override {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mc::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
+                        mc::CompositingCriteria const&, mc::BufferStream& stream)
             {
                 stream.lock_compositor_buffer(0);
             }

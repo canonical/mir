@@ -102,8 +102,8 @@ struct StubFilterForScene : public mc::FilterForScene
 
 struct MockOperatorForScene : public mc::OperatorForScene
 {
-    MOCK_METHOD2(renderable_operator, void(mc::CompositingCriteria const&, ms::BufferStream&));
-    void operator()(mc::CompositingCriteria const& state, ms::BufferStream& stream)
+    MOCK_METHOD2(renderable_operator, void(mc::CompositingCriteria const&, mc::BufferStream&));
+    void operator()(mc::CompositingCriteria const& state, mc::BufferStream& stream)
     {
         renderable_operator(state, stream);
     }
@@ -111,7 +111,7 @@ struct MockOperatorForScene : public mc::OperatorForScene
 
 struct StubOperatorForScene : public mc::OperatorForScene
 {
-    void operator()(mc::CompositingCriteria const&, ms::BufferStream&)
+    void operator()(mc::CompositingCriteria const&, mc::BufferStream&)
     {
     }
 };
@@ -153,7 +153,7 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
 
 struct StubBufferStreamFactory : public ms::BufferStreamFactory
 {
-    std::shared_ptr<ms::BufferStream> create_buffer_stream(mg::BufferProperties const&)
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&)
     {
         return std::make_shared<mc::BufferStreamSurfaces>(
             std::make_shared<NullBufferBundle>());
@@ -604,7 +604,7 @@ struct UniqueOperatorForScene : public mc::OperatorForScene
     {
     }
 
-    void operator()(const mc::CompositingCriteria &, ms::BufferStream&)
+    void operator()(const mc::CompositingCriteria &, mc::BufferStream&)
     {
         ASSERT_STREQ("", owner);
         owner = "UniqueOperatorForScene";

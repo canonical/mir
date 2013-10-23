@@ -59,7 +59,7 @@ public:
     {
     }
 private:
-    std::shared_ptr<surfaces::BufferStream> const buffer_stream;
+    std::shared_ptr<compositor::BufferStream> const buffer_stream;
     std::shared_ptr<surfaces::Surface>  dummy_surface;
     std::shared_ptr<surfaces::SurfacesReport> report = std::make_shared<surfaces::NullSurfacesReport>();
 

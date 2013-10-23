@@ -18,7 +18,7 @@
 
 #include "surface_allocator.h"
 #include "mir/surfaces/buffer_stream_factory.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
 #include "surface_data.h"
 #include "mir/surfaces/surface.h"

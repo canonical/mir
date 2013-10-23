@@ -25,7 +25,7 @@
 #include "surface_state.h"
 #include "surface_stack.h"
 #include "surface_factory.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 
@@ -65,7 +65,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             mc::CompositingCriteria& info = *((*it)->compositing_criteria());
-            ms::BufferStream& stream = *((*it)->buffer_stream());
+            mc::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }
     }
@@ -83,7 +83,7 @@ void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
             mc::CompositingCriteria& info = *((*it)->compositing_criteria());
-            ms::BufferStream& stream = *((*it)->buffer_stream());
+            mc::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }
     }
