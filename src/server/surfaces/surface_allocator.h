@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_ALLOCATOR_H_
 #define MIR_SURFACES_SURFACE_ALLOCATOR_H_
 
-#include "mir/surfaces/surface_factory.h"
+#include "surface_factory.h"
 
 namespace mir
 {

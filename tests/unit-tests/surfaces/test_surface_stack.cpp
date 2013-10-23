@@ -17,7 +17,7 @@
  */
 
 #include "src/server/surfaces/surface_stack.h"
-#include "mir/surfaces/surface_factory.h"
+#include "src/server/surfaces/surface_factory.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 #include "src/server/compositor/buffer_bundle.h"
