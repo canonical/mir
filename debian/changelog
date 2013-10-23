@@ -4,6 +4,12 @@ mir (0.1.0-0ubuntu1) UNRELEASED; urgency=low
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 21 Oct 2013 17:07:18 +0800
 
+mir (0.0.15+13.10.20131014-0ubuntu2) trusty; urgency=low
+
+  * No change rebuild for Boost 1.54 transition.
+
+ -- Dmitrijs Ledkovs <xnox@ubuntu.com>  Mon, 21 Oct 2013 15:06:19 +0100
+
 mir (0.0.15+13.10.20131014-0ubuntu1) saucy; urgency=low
 
   [ Kevin Gunn ]
