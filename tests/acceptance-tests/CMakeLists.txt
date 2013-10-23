@@ -17,6 +17,7 @@ set(
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
+  test_client_library_drm.cpp
 )
 
 list(APPEND SOURCES

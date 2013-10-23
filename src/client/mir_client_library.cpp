@@ -396,14 +396,6 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
     return surface->generate_native_window();
 }
 
-MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
-                                             unsigned int magic,
-                                             mir_drm_auth_magic_callback callback,
-                                             void* context)
-{
-    return connection->drm_auth_magic(magic, callback, context);
-}
-
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,
                                     MirSurfaceType type)
 {
@@ -516,4 +508,33 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
     {
         return nullptr;
     }
+}
+
+/**************************
+ * DRM specific functions *
+ **************************/
+
+MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
+                                             unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    return connection->drm_auth_magic(magic, callback, context);
+}
+
+int mir_connection_drm_set_gbm_device(MirConnection* connection,
+                                      struct gbm_device* gbm_dev)
+{
+    size_t const pointer_size_in_ints = sizeof(gbm_dev) / sizeof(int);
+    std::vector<int> extra_data(pointer_size_in_ints);
+
+    /*
+     * Be paranoid; copy the value of the gbm_device pointer into the vector
+     * byte by byte, because sizeof(ptr) may not be a multiple of sizeof(int).
+     */
+    uint8_t* gbm_dev_ptr_byte = reinterpret_cast<uint8_t*>(&gbm_dev);
+    std::copy(gbm_dev_ptr_byte, gbm_dev_ptr_byte + sizeof(gbm_dev),
+              reinterpret_cast<uint8_t*>(extra_data.data()));
+
+    return connection->set_extra_platform_data(extra_data);
 }
