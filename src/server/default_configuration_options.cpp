@@ -82,8 +82,8 @@ char const* const mir::ConfigurationOptions::glog                 = "glog";
 char const* const mir::ConfigurationOptions::glog_stderrthreshold = "glog-stderrthreshold";
 char const* const mir::ConfigurationOptions::glog_minloglevel     = "glog-minloglevel";
 char const* const mir::ConfigurationOptions::glog_log_dir         = "glog-log-dir";
-const int mir::ConfigurationOptions::glog_stderrthreshold_default = 2;
-const int mir::ConfigurationOptions::glog_minloglevel_default     = 0;
+int const mir::ConfigurationOptions::glog_stderrthreshold_default = 2;
+int const mir::ConfigurationOptions::glog_minloglevel_default     = 0;
 char const* const mir::ConfigurationOptions::glog_log_dir_default = "";
 
 bool const mir::ConfigurationOptions::enable_input_default = true;

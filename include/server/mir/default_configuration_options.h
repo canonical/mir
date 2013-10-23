@@ -45,8 +45,8 @@ public:
     static char const* const glog_minloglevel;
     static char const* const glog_log_dir;
     static char const* const glog_log_dir_default;
-    static const int glog_stderrthreshold_default;
-    static const int glog_minloglevel_default;
+    static int const glog_stderrthreshold_default;
+    static int const glog_minloglevel_default;
 
     static bool const enable_input_default;
 
