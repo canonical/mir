@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_configuration.h"
+#include "mir/raii.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_debug.h"
@@ -312,51 +313,48 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 //TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    auto config = mir_connection_create_display_config(connection);
+    auto const config = mir::raii::deleter_for(
+        mir_connection_create_display_config(connection),
+        &mir_display_config_destroy);
 
-    do
+    if (config->num_outputs < 1)
+        return;
+
+    MirDisplayOutput* state = nullptr;
+    // We can't handle more than one display, so just populate based on the first
+    // active display we find.
+    for (unsigned int i = 0; i < config->num_outputs; ++i)
     {
-        if (config->num_outputs < 1)
-            break;
-
-        MirDisplayOutput* state = nullptr;
-        // We can't handle more than one display, so just populate based on the first
-        // active display we find.
-        for (unsigned int i = 0; i < config->num_outputs; ++i)
+        if (config->outputs[i].used && config->outputs[i].connected &&
+            config->outputs[i].current_mode < config->outputs[i].num_modes)
         {
-            if (config->outputs[i].used && config->outputs[i].connected &&
-                config->outputs[i].current_mode < config->outputs[i].num_modes)
-            {
-                state = &config->outputs[i];
-                break;
-            }
-        }
-        // Oh, oh! No connected outputs?!
-        if (state == nullptr)
-        {
-            memset(display_info, 0, sizeof(*display_info));
+            state = &config->outputs[i];
             break;
         }
+    }
+    // Oh, oh! No connected outputs?!
+    if (state == nullptr)
+    {
+        memset(display_info, 0, sizeof(*display_info));
+        return;
+    }
 
-        MirDisplayMode mode = state->modes[state->current_mode];
+    MirDisplayMode mode = state->modes[state->current_mode];
 
-        display_info->width = mode.horizontal_resolution;
-        display_info->height = mode.vertical_resolution;
+    display_info->width = mode.horizontal_resolution;
+    display_info->height = mode.vertical_resolution;
 
-        unsigned int format_items;
-        if (state->num_output_formats > mir_supported_pixel_format_max)
-             format_items = mir_supported_pixel_format_max;
-        else
-             format_items = state->num_output_formats;
+    unsigned int format_items;
+    if (state->num_output_formats > mir_supported_pixel_format_max)
+         format_items = mir_supported_pixel_format_max;
+    else
+         format_items = state->num_output_formats;
 
-        display_info->supported_pixel_format_items = format_items;
-        for(auto i=0u; i < format_items; i++)
-        {
-            display_info->supported_pixel_format[i] = state->output_formats[i];
-        }
-    } while (false);
-
-    mir_display_config_destroy(config);
+    display_info->supported_pixel_format_items = format_items;
+    for(auto i=0u; i < format_items; i++)
+    {
+        display_info->supported_pixel_format[i] = state->output_formats[i];
+    }
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

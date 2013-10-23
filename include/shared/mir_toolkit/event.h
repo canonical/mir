@@ -162,7 +162,19 @@ typedef struct
         float size;
         float pressure;
         float orientation;
+        float vscroll;
+        float hscroll;
+
+        int unused0;
+        int unused1;
+        int unused2;
+        int unused3;
     } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+
+    int unused0;
+    int unused1;
+    int unused2;
+    int unused3;
 } MirMotionEvent;
 
 typedef struct

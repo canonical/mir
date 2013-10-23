@@ -29,6 +29,7 @@ set(
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
+  default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
   shared_library.cpp
@@ -88,7 +89,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 8)
+set(MIRSERVER_ABI 9)
 
 set_target_properties(
   mirserver
