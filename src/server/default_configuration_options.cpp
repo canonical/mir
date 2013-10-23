@@ -73,6 +73,7 @@ char const* const mir::ConfigurationOptions::msg_processor_report_opt    = "msg-
 char const* const mir::ConfigurationOptions::display_report_opt          = "display-report";
 char const* const mir::ConfigurationOptions::legacy_input_report_opt     = "legacy-input-report";
 char const* const mir::ConfigurationOptions::connector_report_opt        = "connector-report";
+char const* const mir::ConfigurationOptions::surfaces_report_opt         = "surfaces-report";
 char const* const mir::ConfigurationOptions::input_report_opt            = "input-report";
 char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
@@ -129,6 +130,8 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "How to handle the SessionMediator report. [{log,off}:default=off]")
         (msg_processor_report_opt, po::value<std::string>(),
             "How to handle the MessageProcessor report. [{log,lttng,off}:default=off]")
+        (surfaces_report_opt, po::value<std::string>(),
+            "How to handle the surfaces report. [{log,off}:default=off]")
         (glog,
             "Use google::GLog for logging")
         (glog_stderrthreshold, po::value<int>(),
