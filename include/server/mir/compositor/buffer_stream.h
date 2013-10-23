@@ -39,7 +39,7 @@ namespace compositor
 class BufferStream
 {
 public:
-    virtual ~BufferStream() {/* TODO: make nothrow */}
+    virtual ~BufferStream() = default;
 
     virtual std::shared_ptr<graphics::Buffer> secure_client_buffer() = 0;
     virtual std::shared_ptr<graphics::Buffer>
