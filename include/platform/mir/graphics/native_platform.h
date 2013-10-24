@@ -36,13 +36,14 @@ class InternalClient;
 class BufferIPCPacker;
 class Buffer;
 class DisplayReport;
+class NestedContext;
 
 class NativePlatform
 {
 public:
     NativePlatform() {}
 
-    virtual void initialize(std::function<void(int)> const& auth_magic, int data_items, int const* data, int fd_items, int const* fd) = 0;
+    virtual void initialize(std::shared_ptr<NestedContext> const& nested_context) = 0;
 
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;

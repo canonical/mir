@@ -48,7 +48,7 @@ public:
                           std::shared_ptr<graphics::Buffer> const& buffer) const;
 
 private:
-    void initialize(std::function<void(int)> const& auth_magic, int data_items, int const* data, int fd_items, int const* fd) override;
+    void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
     // TODO a design that has this and create_buffer_allocator is missing simplicity
     virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
