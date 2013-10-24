@@ -25,16 +25,12 @@
 #include "published_socket_connector.h"
 #include "session_mediator.h"
 
-#include "mir/frontend/shell.h"
-
 #include "mir/options/option.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 
 // TODO this looks like a missing factory function
 #include "mir/shell/unauthorized_display_changer.h"
-
-#include "mir/frontend/session_authorizer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -180,27 +176,5 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_message_processor_report(),
                 the_graphics_platform(),
                 the_frontend_display_changer(), allocator);
-        });
-}
-
-std::shared_ptr<mf::SessionAuthorizer>
-mir::DefaultServerConfiguration::the_session_authorizer()
-{
-    struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
-    {
-        bool connection_is_allowed(pid_t /* pid */)
-        {
-            return true;
-        }
-
-        bool configure_display_is_allowed(pid_t /* pid */)
-        {
-            return true;
-        }
-    };
-    return session_authorizer(
-        [&]()
-        {
-            return std::make_shared<DefaultSessionAuthorizer>();
         });
 }

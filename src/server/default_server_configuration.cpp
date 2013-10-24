@@ -28,6 +28,7 @@
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/null_message_processor_report.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_focus_mechanism.h"
@@ -586,6 +587,28 @@ mir::DefaultServerConfiguration::the_compositor()
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
                                                                  the_scene(),
                                                                  the_display_buffer_compositor_factory());
+        });
+}
+
+std::shared_ptr<mf::SessionAuthorizer>
+mir::DefaultServerConfiguration::the_session_authorizer()
+{
+    struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
+    {
+        bool connection_is_allowed(pid_t /* pid */)
+        {
+            return true;
+        }
+
+        bool configure_display_is_allowed(pid_t /* pid */)
+        {
+            return true;
+        }
+    };
+    return session_authorizer(
+        [&]()
+        {
+            return std::make_shared<DefaultSessionAuthorizer>();
         });
 }
 
