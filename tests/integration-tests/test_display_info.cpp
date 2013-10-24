@@ -23,7 +23,7 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/session_mediator.h"
-#include "mir/frontend/global_event_sender.h"
+#include "src/server/frontend/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"

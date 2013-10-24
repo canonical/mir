@@ -17,21 +17,23 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "protobuf_session_creator.h"
 
-#include "mir/options/option.h"
-#include "mir/frontend/global_event_sender.h"
+#include "resource_cache.h"
+#include "protobuf_session_creator.h"
+#include "published_socket_connector.h"
+
+#include "global_event_sender.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/shell.h"
+
+#include "mir/options/option.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
-#include "published_socket_connector.h"
 
 // TODO this looks like a missing factory function
 #include "mir/shell/unauthorized_display_changer.h"
 
-#include "resource_cache.h"
 #include "mir/frontend/session_authorizer.h"
 
 namespace mf = mir::frontend;
