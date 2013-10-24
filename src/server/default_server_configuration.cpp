@@ -23,10 +23,6 @@
 #include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
-#include "mir/compositor/buffer_stream_factory.h"
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
-#include "mir/compositor/multi_threaded_compositor.h"
-#include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
@@ -51,8 +47,6 @@
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/compositor/gl_renderer_factory.h"
-#include "mir/compositor/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -239,15 +233,6 @@ mir::DefaultServerConfiguration::the_buffer_initializer()
         []()
         {
              return std::make_shared<mg::NullBufferInitializer>();
-        });
-}
-
-std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
-{
-    return renderer_factory(
-        []()
-        {
-            return std::make_shared<mc::GLRendererFactory>();
         });
 }
 
@@ -620,55 +605,6 @@ mir::DefaultServerConfiguration::the_surface_controller()
         [this]()
         {
             return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
-        });
-}
-
-std::shared_ptr<mc::OverlayRenderer>
-mir::DefaultServerConfiguration::the_overlay_renderer()
-{
-    struct NullOverlayRenderer : public mc::OverlayRenderer
-    {
-        virtual void render(
-            geom::Rectangle const&,
-            std::function<void(std::shared_ptr<void> const&)>) {}
-    };
-    return overlay_renderer(
-        [this]()
-        {
-            return std::make_shared<NullOverlayRenderer>();
-        });
-}
-
-std::shared_ptr<mc::DisplayBufferCompositorFactory>
-mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
-{
-    return display_buffer_compositor_factory(
-        [this]()
-        {
-            return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_scene(), the_renderer_factory(), the_overlay_renderer());
-        });
-}
-
-std::shared_ptr<ms::BufferStreamFactory>
-mir::DefaultServerConfiguration::the_buffer_stream_factory()
-{
-    return buffer_stream_factory(
-        [this]()
-        {
-            return std::make_shared<mc::BufferStreamFactory>(the_buffer_allocator());
-        });
-}
-
-std::shared_ptr<mc::Compositor>
-mir::DefaultServerConfiguration::the_compositor()
-{
-    return compositor(
-        [this]()
-        {
-            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_scene(),
-                                                                 the_display_buffer_compositor_factory());
         });
 }
 
