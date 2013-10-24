@@ -39,6 +39,17 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     }
 }
 
+void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
+{
+    auto native_buffer = buffer->native_buffer_handle();
+    native_buffer->wait_for_content();
+
+    if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
+    }
+}
+
 geom::Size mga::FBDevice::display_size() const
 {
     return {fb_device->width, fb_device->height};
@@ -53,17 +64,6 @@ unsigned int mga::FBDevice::number_of_framebuffers_available() const
 {
     auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
     return std::max(2u, fb_num);
-}
-
-void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    auto native_buffer = buffer->native_buffer_handle();
-    native_buffer->wait_for_content();
-
-    if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
-    }
 }
 
 void mga::FBDevice::sync_to_display(bool sync)

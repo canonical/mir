@@ -93,4 +93,3 @@ void mga::HWC10Device::sync_to_display(bool sync)
     wait_for_vsync = sync;
     fb_device->sync_to_display(sync);
 }
-

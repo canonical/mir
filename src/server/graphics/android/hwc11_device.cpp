@@ -43,7 +43,6 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config")); 
     }
-
 }
 
 mga::HWC11Device::~HWC11Device() noexcept
@@ -74,7 +73,6 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     //us a hint to triple buffer. Taking this hint is currently not supported.
     return 2u;
 }
-
 
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
