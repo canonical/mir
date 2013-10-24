@@ -19,7 +19,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
 
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/compositor/renderer.h"
+#include "src/server/compositor/renderer.h"
 #include <gmock/gmock.h>
 
 namespace mir

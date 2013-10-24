@@ -26,7 +26,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/compositor/renderer.h"
+#include "src/server/compositor/renderer.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel_factory.h"
