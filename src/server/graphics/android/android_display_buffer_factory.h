@@ -32,7 +32,6 @@ class DisplayBuffer;
 
 namespace android
 {
-class DisplayInfo;
 class DisplayCommander;
 
 class AndroidDisplayBufferFactory
@@ -42,7 +41,6 @@ public:
 
     virtual std::unique_ptr<DisplayBuffer> create_display_buffer(
         std::shared_ptr<ANativeWindow> const& native_win,
-        std::shared_ptr<DisplayInfo> const& info,
         std::shared_ptr<DisplayCommander> const& command,
         EGLDisplay egl_display,
         EGLConfig egl_config,

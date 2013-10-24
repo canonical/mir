@@ -19,6 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
+#include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "buffer.h"
 
@@ -38,6 +39,22 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     }
 }
 
+geom::Size mga::FBDevice::display_size() const
+{
+    return {fb_device->width, fb_device->height};
+} 
+
+geom::PixelFormat mga::FBDevice::display_format() const
+{
+    return to_mir_format(fb_device->format);
+}
+
+unsigned int mga::FBDevice::number_of_framebuffers_available() const
+{
+    auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
+    return std::max(2u, fb_num);
+}
+
 void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     auto native_buffer = buffer->native_buffer_handle();
@@ -48,7 +65,6 @@ void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buff
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
 }
-
 
 void mga::FBDevice::sync_to_display(bool sync)
 {

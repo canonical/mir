@@ -20,7 +20,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "server_render_window.h"
-#include "display_info.h"
 #include "display_commander.h"
 #include "fb_swapper.h"
 #include "buffer.h"
@@ -37,13 +36,11 @@ namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
                                             std::shared_ptr<mga::DisplayCommander> const& display_poster,
-                                            std::shared_ptr<DisplayInfo> const& display_info,
                                             std::shared_ptr<InterpreterResourceCache> const& cache)
     : swapper(swapper),
       poster(display_poster),
-      info(display_info),
       resource_cache(cache),
-      format(mga::to_android_format(info->display_format()))
+      format(mga::to_android_format(poster->display_format()))
 {
 }
 
@@ -75,11 +72,11 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
         case NATIVE_WINDOW_WIDTH:
-            size = info->display_size();
+            size = poster->display_size();
             return size.width.as_uint32_t();
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
         case NATIVE_WINDOW_HEIGHT:
-            size = info->display_size();
+            size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
             return format;

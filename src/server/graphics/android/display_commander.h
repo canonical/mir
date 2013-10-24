@@ -40,6 +40,10 @@ class DisplayCommander
 public:
     virtual ~DisplayCommander() = default;
 
+    virtual geometry::Size display_size() const = 0; 
+    virtual geometry::PixelFormat display_format() const = 0; 
+    virtual unsigned int number_of_framebuffers_available() const = 0;
+
     virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual void sync_to_display(bool sync) = 0;
     virtual void mode(MirPowerMode mode) = 0;

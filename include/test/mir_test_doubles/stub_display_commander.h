@@ -30,13 +30,27 @@ namespace doubles
 struct StubDisplayCommand : public graphics::android::DisplayCommander
 {
     StubDisplayCommand()
+     : StubDisplayCommand({0,0})
     {
     }
+
+    StubDisplayCommand(geometry::Size sz)
+     : sz(sz)
+    {
+    }
+
     ~StubDisplayCommand() noexcept {}
+
     void set_next_frontbuffer(std::shared_ptr<mir::graphics::Buffer> const&) {}
     void sync_to_display(bool) {}
     void mode(MirPowerMode) {}
     void commit_frame(EGLDisplay, EGLSurface) {}
+    geometry::Size display_size() const { return sz; }
+    geometry::PixelFormat display_format() const { return geometry::PixelFormat::abgr_8888; }
+    unsigned int number_of_framebuffers_available() const { return 0; }
+
+private:
+    geometry::Size sz;
 };
 
 }

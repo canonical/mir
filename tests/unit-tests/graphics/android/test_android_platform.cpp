@@ -114,26 +114,19 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
         using namespace testing;
         ON_CALL(*this, create_hwc_native_device()).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_native_device()).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_hwc_info(_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_fb_info(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_buffers(_,_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_commander(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_hwc11_commander(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_hwc10_commander(_,_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_display(_,_,_,_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_display(_,_,_)).WillByDefault(Return(nullptr));
     }
 
     MOCK_CONST_METHOD0(create_hwc_native_device, std::shared_ptr<hwc_composer_device_1>());
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
 
-    MOCK_CONST_METHOD1(create_hwc_info,
-        std::shared_ptr<mga::DisplayInfo>(std::shared_ptr<hwc_composer_device_1> const&));
-    MOCK_CONST_METHOD1(create_fb_info,
-        std::shared_ptr<mga::DisplayInfo>(std::shared_ptr<framebuffer_device_t> const&));
-   
     MOCK_CONST_METHOD2(create_fb_buffers, 
         std::shared_ptr<mga::FBSwapper>(
-            std::shared_ptr<mga::DisplayInfo> const&, std::shared_ptr<mga::GraphicBufferAllocator> const&)); 
+            std::shared_ptr<mga::DisplayCommander> const&, std::shared_ptr<mga::GraphicBufferAllocator> const&)); 
 
     MOCK_CONST_METHOD1(create_fb_commander,
         std::shared_ptr<mga::DisplayCommander>(std::shared_ptr<framebuffer_device_t> const&));
@@ -143,10 +136,11 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
         std::shared_ptr<mga::DisplayCommander>(
             std::shared_ptr<hwc_composer_device_1> const&, std::shared_ptr<framebuffer_device_t> const&));
 
-    MOCK_CONST_METHOD4(create_display,
+    MOCK_CONST_METHOD3(create_display,
         std::shared_ptr<mg::Display>(
-            std::shared_ptr<mga::FBSwapper> const&, std::shared_ptr<mga::DisplayInfo> const&,
-            std::shared_ptr<mga::DisplayCommander> const&, std::shared_ptr<mg::DisplayReport> const& ));
+            std::shared_ptr<mga::FBSwapper> const&,
+            std::shared_ptr<mga::DisplayCommander> const&,
+            std::shared_ptr<mg::DisplayReport> const&));
 };
 
 class PlatformDisplayCreationTest : public ::testing::Test
@@ -185,15 +179,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_10_success)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_info(_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc10_commander(_,_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
         .Times(1);
 
     mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
@@ -211,15 +203,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_10_failure_uses_gpu)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_info(_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_commander(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
         .Times(1);
 
     mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
@@ -234,15 +224,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_11_success)
 
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_info(_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc11_commander(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
         .Times(1);
 
     mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
@@ -260,15 +248,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_11_hwc_failure)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_info(_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_commander(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
         .Times(1);
 
     mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
@@ -305,15 +291,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_12_attempts_fb_backup)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_info(_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_commander(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
         .Times(1);
 
     mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);

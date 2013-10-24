@@ -14,7 +14,6 @@ add_library(
   android_display_configuration.cpp
   display_buffer_factory.cpp
   hwc_layerlist.cpp
-  hwc_info.cpp
   hwc10_device.cpp
   hwc11_device.cpp
   hwc_common_device.cpp
@@ -22,7 +21,6 @@ add_library(
   android_alloc_adaptor.cpp
   server_render_window.cpp
   resource_factory.cpp
-  fb_info.cpp
   fb_simple_swapper.cpp
   fb_device.cpp
   internal_client_window.cpp

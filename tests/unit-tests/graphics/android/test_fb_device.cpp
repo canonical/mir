@@ -19,7 +19,6 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
-#include "src/server/graphics/android/fb_info.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
@@ -126,28 +125,28 @@ TEST_F(FBDevice, set_swapinterval_with_nullhook)
 
 TEST_F(FBDevice, determine_size)
 {
-    mga::FBInfo fbinfo(fb_hal_mock);
-    auto size = fbinfo.display_size();
+    mga::FBDevice fbdev(fb_hal_mock);
+    auto size = fbdev.display_size();
     EXPECT_EQ(width, size.width.as_uint32_t());
     EXPECT_EQ(height, size.height.as_uint32_t());
 }
 
 TEST_F(FBDevice, determine_fbnum)
 {
-    mga::FBInfo fbinfo(fb_hal_mock);
-    EXPECT_EQ(fbnum, fbinfo.number_of_framebuffers_available());
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
 }
 
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
 TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
 {
     auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, 0); 
-    mga::FBInfo fbinfo(slightly_malformed_fb_hal_mock);
-    EXPECT_EQ(2u, fbinfo.number_of_framebuffers_available());
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(2u, fbdev.number_of_framebuffers_available());
 }
 
 TEST_F(FBDevice, determine_pixformat)
 {
-    mga::FBInfo fbinfo(fb_hal_mock);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbinfo.display_format());
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
 }

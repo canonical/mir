@@ -48,6 +48,10 @@ public:
     void notify_vsync();
     void mode(MirPowerMode mode);
 
+    geometry::Size display_size() const; 
+    geometry::PixelFormat display_format() const; 
+    unsigned int number_of_framebuffers_available() const;
+
 protected:
     HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
@@ -61,6 +65,7 @@ private:
     int turn_screen_off() const noexcept(true);
 
     HWCCallbacks callbacks;
+    unsigned int primary_display_config;
 
     std::mutex blanked_mutex;
     std::condition_variable blanked_cond;

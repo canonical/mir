@@ -20,7 +20,6 @@
 #include "src/server/graphics/android/fb_swapper.h"
 
 #include "mir_test_doubles/mock_display_commander.h"
-#include "mir_test_doubles/mock_display_info.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
@@ -58,9 +57,8 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_swapper = std::make_shared<NiceMock<MockFBSwapper>>();
         mock_display_commander = std::make_shared<NiceMock<mtd::MockDisplayCommander>>();
-        mock_display_info = std::make_shared<NiceMock<mtd::MockDisplayInfo>>();
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
-        ON_CALL(*mock_display_info, display_format())
+        ON_CALL(*mock_display_commander, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     }
 
@@ -70,7 +68,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplayCommander> mock_display_commander;
-    std::shared_ptr<mtd::MockDisplayInfo> mock_display_info;
+    std::shared_ptr<mtd::MockDisplayCommander> mock_display_info;
 };
 }
 
@@ -78,7 +76,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 {
     using namespace testing;
 
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
@@ -104,7 +102,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     int fake_fence = 488;
     auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
  
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
@@ -135,11 +133,11 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
     using namespace testing; 
 
-    EXPECT_CALL(*mock_display_info, display_format())
+    EXPECT_CALL(*mock_display_commander, display_format())
         .Times(1)
         .WillOnce(Return(geom::PixelFormat::abgr_8888));
 
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT));
 }
@@ -148,9 +146,9 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 {
     using namespace testing;
 
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
-    EXPECT_CALL(*mock_display_info, display_format())
+    EXPECT_CALL(*mock_display_commander, display_format())
         .Times(0);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     render_window.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
     auto rc_format = render_window.driver_requests_info(NATIVE_WINDOW_FORMAT);
@@ -161,11 +159,11 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_se
 {
     using namespace testing;
     geom::Size test_size{4, 5};
-    EXPECT_CALL(*mock_display_info, display_size())
+    EXPECT_CALL(*mock_display_commander, display_size())
         .Times(4)
         .WillRepeatedly(Return(test_size));
 
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     unsigned int rc_width = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
     unsigned int rc_height = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
@@ -182,7 +180,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
 {
     using namespace testing;
 
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     EXPECT_EQ(0, render_window.driver_requests_info(NATIVE_WINDOW_TRANSFORM_HINT));
 }
@@ -190,7 +188,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
 TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
 {
     using namespace testing;
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     EXPECT_THROW({
         render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_RUNNING_BEHIND);
@@ -199,7 +197,7 @@ TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
 
 TEST_F(ServerRenderWindowTest, driver_swapinterval_request)
 {
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_display_info, mock_cache);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     EXPECT_CALL(*mock_display_commander, sync_to_display(false))
         .Times(1);

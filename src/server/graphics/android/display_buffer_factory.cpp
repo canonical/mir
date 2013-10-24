@@ -17,7 +17,6 @@
  */
 
 #include "display_buffer_factory.h"
-#include "display_info.h"
 #include "display_commander.h"
 
 #include "mir/graphics/display_buffer.h"
@@ -61,10 +60,8 @@ public:
                      EGLDisplay egl_display,
                      EGLConfig egl_config,
                      EGLContext egl_context_shared,
-                     std::shared_ptr<mga::DisplayInfo> const& display_info,
                      std::shared_ptr<mga::DisplayCommander> const& display_commander)
         : native_window{native_window},
-          display_info{display_info},
           display_commander{display_commander},
           egl_display{egl_display},
           egl_config{egl_config},
@@ -76,7 +73,7 @@ public:
 
     geom::Rectangle view_area() const
     {
-        return {geom::Point{}, display_info->display_size()};
+        return {geom::Point{}, display_commander->display_size()};
     }
 
     void make_current()
@@ -107,7 +104,6 @@ public:
 protected:
     std::shared_ptr<ANativeWindow> const native_window;
 
-    std::shared_ptr<mga::DisplayInfo> const display_info;
     std::shared_ptr<mga::DisplayCommander> const display_commander;
     EGLDisplay const egl_display;
     EGLConfig const egl_config;
@@ -121,11 +117,10 @@ protected:
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
     std::shared_ptr<ANativeWindow> const& native_window,
-    std::shared_ptr<DisplayInfo> const& display_info,
     std::shared_ptr<DisplayCommander> const& display_command,
     EGLDisplay egl_display, EGLConfig egl_config,
     EGLContext egl_context_shared)
 {
-    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_config, egl_context_shared, display_info, display_command);
+    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_config, egl_context_shared, display_command);
     return std::unique_ptr<mg::DisplayBuffer>(raw);
 }

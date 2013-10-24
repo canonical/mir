@@ -31,8 +31,6 @@
 #include "hwc_vsync.h"
 #include "android_display.h"
 #include "display_buffer_factory.h"
-#include "fb_info.h"
-#include "hwc_info.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -78,7 +76,7 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
 }
  
 std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_fb_buffers(
-    std::shared_ptr<mga::DisplayInfo> const& info,
+    std::shared_ptr<mga::DisplayCommander> const& info,
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator) const
 {
     auto size = info->display_size();
@@ -117,26 +115,13 @@ std::shared_ptr<mga::DisplayCommander> mga::ResourceFactory::create_hwc10_comman
 
 std::shared_ptr<mg::Display> mga::ResourceFactory::create_display(
     std::shared_ptr<FBSwapper> const& swapper,
-    std::shared_ptr<DisplayInfo> const& info,
     std::shared_ptr<DisplayCommander> const& commander,
     std::shared_ptr<graphics::DisplayReport> const& report) const
 {
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
 
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, commander, info, cache);
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, commander, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
-    return std::make_shared<AndroidDisplay>(native_window, db_factory, info, commander, report);
-}
-
-std::shared_ptr<mga::DisplayInfo> mga::ResourceFactory::create_hwc_info(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
-{
-    return std::make_shared<mga::HWCInfo>(hwc_device);
-}
-
-std::shared_ptr<mga::DisplayInfo> mga::ResourceFactory::create_fb_info(
-    std::shared_ptr<framebuffer_device_t> const& fb_device) const
-{
-    return std::make_shared<mga::FBInfo>(fb_device);
+    return std::make_shared<AndroidDisplay>(native_window, db_factory, commander, report);
 }

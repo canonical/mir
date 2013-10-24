@@ -20,7 +20,6 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/display_buffer_factory.h"
 
-#include "mir_test_doubles/mock_display_info.h"
 #include "mir_test_doubles/mock_display_commander.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -40,7 +39,6 @@ protected:
     virtual void SetUp()
     {
         mock_display_commander = std::make_shared<mtd::MockDisplayCommander>();
-        mock_display_info = std::make_shared<mtd::MockDisplayInfo>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
@@ -52,12 +50,11 @@ protected:
         auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
         auto native_win = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
         return std::make_shared<mga::AndroidDisplay>(
-            native_win, db_factory, mock_display_info, mock_display_commander, mock_display_report);
+            native_win, db_factory, mock_display_commander, mock_display_report);
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<mtd::MockDisplayCommander> mock_display_commander;
-    std::shared_ptr<mtd::MockDisplayInfo> mock_display_info;
     mtd::MockEGL mock_egl;
 };
 
@@ -66,7 +63,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_info, display_size())
+    EXPECT_CALL(*mock_display_commander, display_size())
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size)); 
 
@@ -87,7 +84,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_info, display_size())
+    EXPECT_CALL(*mock_display_commander, display_size())
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size)); 
     auto display = create_display();
@@ -113,7 +110,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_info, display_size())
+    EXPECT_CALL(*mock_display_commander, display_size())
         .Times(1)
         .WillOnce(Return(fake_display_size)); 
     auto display = create_display();

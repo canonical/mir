@@ -94,10 +94,9 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto info = resource_factory->create_fb_info(fb_device);
-    auto fb_swapper = resource_factory->create_fb_buffers(info, buffer_allocator);
     auto commander = resource_factory->create_fb_commander(fb_device);
-    auto display = resource_factory->create_display(fb_swapper, info, commander, mock_display_report);
+    auto fb_swapper = resource_factory->create_fb_buffers(commander, buffer_allocator);
+    auto display = resource_factory->create_display(fb_swapper, commander, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
@@ -124,10 +123,9 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
     SUCCEED_IF_NO_HWC10_SUPPORT();
 
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto info = resource_factory->create_fb_info(fb_device);
     auto commander = resource_factory->create_hwc10_commander(hwc_device, fb_device);
-    auto fb_swapper = resource_factory->create_fb_buffers(info, buffer_allocator);
-    auto display = resource_factory->create_display(fb_swapper, info, commander, mock_display_report);
+    auto fb_swapper = resource_factory->create_fb_buffers(commander, buffer_allocator);
+    auto display = resource_factory->create_display(fb_swapper, commander, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
@@ -147,10 +145,9 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     SUCCEED_IF_NO_HWC11_SUPPORT();
 
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto info = resource_factory->create_hwc_info(hwc_device);
     auto commander = resource_factory->create_hwc11_commander(hwc_device);
-    auto fb_swapper = resource_factory->create_fb_buffers(info, buffer_allocator);
-    auto display = resource_factory->create_display(fb_swapper, info, commander, mock_display_report);
+    auto fb_swapper = resource_factory->create_fb_buffers(commander, buffer_allocator);
+    auto display = resource_factory->create_display(fb_swapper, commander, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
