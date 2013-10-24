@@ -52,10 +52,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/compositor/gl_renderer_factory.h"
 #include "mir/compositor/renderer.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/graphics/display_buffer.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -84,7 +81,6 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
-#include "mir/graphics/native_platform.h"
 
 #include <map>
 
@@ -196,16 +192,6 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
             {
                 return std::make_shared<mg::NullDisplayReport>();
             }
-        });
-}
-
-std::shared_ptr<mg::BufferInitializer>
-mir::DefaultServerConfiguration::the_buffer_initializer()
-{
-    return buffer_initializer(
-        []()
-        {
-             return std::make_shared<mg::NullBufferInitializer>();
         });
 }
 
@@ -470,27 +456,6 @@ mir::DefaultServerConfiguration::the_input_manager()
             if (the_options()->get(legacy_input_report_opt, off_opt_value) == log_opt_value)
                     ml::legacy_input_report::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
-        });
-}
-
-std::shared_ptr<mg::GraphicBufferAllocator>
-mir::DefaultServerConfiguration::the_buffer_allocator()
-{
-    return buffer_allocator(
-        [&]()
-        {
-            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
-        });
-}
-
-std::shared_ptr<mg::Display>
-mir::DefaultServerConfiguration::the_display()
-{
-    return display(
-        [this]()
-        {
-            return the_graphics_platform()->create_display(
-                the_display_configuration_policy());
         });
 }
 

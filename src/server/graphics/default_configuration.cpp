@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 
 #include "default_display_configuration_policy.h"
+#include "mir/graphics/buffer_initializer.h"
 
 #include "mir/input/nested_input_relay.h"
 #include "mir/graphics/nested/nested_platform.h"
@@ -26,9 +27,34 @@
 
 namespace mg = mir::graphics;
 
+
 namespace
 {
-mir::SharedLibrary const* load_library(std::string const& libname);
+mir::SharedLibrary const* load_library(std::string const& libname)
+{
+    // There's no point in loading twice, and it isn't safe to unload...
+    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
+
+    if (auto& ptr = libraries_cache[libname])
+    {
+        return ptr.get();
+    }
+    else
+    {
+        ptr = std::make_shared<mir::SharedLibrary>(libname);
+        return ptr.get();
+    }
+}
+}
+
+std::shared_ptr<mg::BufferInitializer>
+mir::DefaultServerConfiguration::the_buffer_initializer()
+{
+    return buffer_initializer(
+        []()
+        {
+             return std::make_shared<mg::NullBufferInitializer>();
+        });
 }
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
@@ -65,21 +91,23 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         });
 }
 
-namespace
+std::shared_ptr<mg::GraphicBufferAllocator>
+mir::DefaultServerConfiguration::the_buffer_allocator()
 {
-mir::SharedLibrary const* load_library(std::string const& libname)
-{
-    // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
-
-    if (auto& ptr = libraries_cache[libname])
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
+    return buffer_allocator(
+        [&]()
+        {
+            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
+        });
 }
+
+std::shared_ptr<mg::Display>
+mir::DefaultServerConfiguration::the_display()
+{
+    return display(
+        [this]()
+        {
+            return the_graphics_platform()->create_display(
+                the_display_configuration_policy());
+        });
 }
