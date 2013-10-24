@@ -20,7 +20,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"

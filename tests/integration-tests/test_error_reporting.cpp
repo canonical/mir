@@ -20,7 +20,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/connector.h"
 
 #include "mir_protobuf.pb.h"

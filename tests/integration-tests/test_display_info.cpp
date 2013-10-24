@@ -21,7 +21,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/global_event_sender.h"
 

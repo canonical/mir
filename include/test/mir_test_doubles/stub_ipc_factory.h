@@ -22,7 +22,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/null_message_processor_report.h"
 
 namespace mir

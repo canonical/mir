@@ -23,7 +23,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
-#include "mir/frontend/resource_cache.h"
+#include "resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"

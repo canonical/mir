@@ -31,7 +31,7 @@
 // TODO this looks like a missing factory function
 #include "mir/shell/unauthorized_display_changer.h"
 
-#include "mir/frontend/resource_cache.h"
+#include "resource_cache.h"
 #include "mir/frontend/session_authorizer.h"
 
 namespace mf = mir::frontend;
