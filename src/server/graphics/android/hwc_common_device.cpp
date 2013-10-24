@@ -49,13 +49,6 @@ mga::HWCCommonCommand::HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> c
       coordinator(coordinator),
       current_mode(mir_power_mode_on)
 {
-    size_t num_configs = 1;
-    auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
-    if (rc != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config")); 
-    }
-
     callbacks.hooks.invalidate = invalidate_hook;
     callbacks.hooks.vsync = vsync_hook;
     callbacks.hooks.hotplug = hotplug_hook;
@@ -77,31 +70,6 @@ mga::HWCCommonCommand::~HWCCommonCommand() noexcept
     std::unique_lock<std::mutex> lg(blanked_mutex);
     if (current_mode == mir_power_mode_on)
         turn_screen_off();
-}
-
-geom::Size mga::HWCCommonCommand::display_size() const
-{
-    static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
-                                        HWC_DISPLAY_HEIGHT,
-                                        HWC_DISPLAY_NO_ATTRIBUTE};
-
-    int size_values[2];
-    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
-                                     size_request, size_values);
-
-    return {size_values[0], size_values[1]};
-}
-
-geom::PixelFormat mga::HWCCommonCommand::display_format() const
-{
-    return geom::PixelFormat::abgr_8888;
-}
-
-unsigned int mga::HWCCommonCommand::number_of_framebuffers_available() const
-{
-    //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
-    //us a hint to triple buffer. Taking this hint is currently not supported.
-    return 2u;
 }
 
 void mga::HWCCommonCommand::notify_vsync()
