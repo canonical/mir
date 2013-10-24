@@ -18,7 +18,7 @@
 
 #include "default_display_buffer_compositor.h"
 
-#include "mir/compositor/rendering_operator.h"
+#include "rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"

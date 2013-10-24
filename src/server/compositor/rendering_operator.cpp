@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/rendering_operator.h"
+#include "rendering_operator.h"
 
 namespace ms=mir::surfaces;
 namespace mc=mir::compositor;
