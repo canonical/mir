@@ -24,6 +24,7 @@
 
 #include <atomic>
 #include <thread>
+#include <mutex>
 #include <chrono>
 
 namespace geom=mir::geometry;
@@ -57,7 +58,7 @@ TEST_F(SwitchingBundleTest, sync_swapper_by_default)
                                     geom::PixelFormat::argb_8888,
                                     mg::BufferUsage::software};
 
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, properties);
 
@@ -91,7 +92,7 @@ TEST_F(SwitchingBundleTest, invalid_nbuffers)
 
 TEST_F(SwitchingBundleTest, client_acquire_basic)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -115,7 +116,7 @@ namespace
 
 TEST_F(SwitchingBundleTest, is_really_synchronous)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         mg::BufferID prev_id, prev_prev_id;
@@ -204,7 +205,7 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
 
 TEST_F(SwitchingBundleTest, out_of_order_client_release)
 {
-    for (int nbuffers = 3; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -225,7 +226,7 @@ TEST_F(SwitchingBundleTest, out_of_order_client_release)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -246,7 +247,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -265,7 +266,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 1;
@@ -354,7 +355,7 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 
 TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -368,7 +369,7 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
 
 TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         const int N = 100;
@@ -511,7 +512,7 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
      * unique ones while it makes sense to do so. Buffers are big things and
      * should be allocated sparingly...
      */
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -581,7 +582,7 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
     }
 }
 
-TEST_F(SwitchingBundleTest, framedropping_clients_get_all_but_one_buffers)
+TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 {
     const int max_nbuffers = 5;
     for (int nbuffers = 2; nbuffers <= max_nbuffers; nbuffers++)
@@ -594,7 +595,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_but_one_buffers)
         mg::BufferID expect[max_nbuffers];
         std::shared_ptr<mg::Buffer> buf[max_nbuffers];
 
-        for (int b = 0; b < nbuffers - 1; b++)
+        for (int b = 0; b < nbuffers; b++)
         {
             buf[b] = bundle.client_acquire();
             expect[b] = buf[b]->id();
@@ -603,13 +604,13 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_but_one_buffers)
                 ASSERT_NE(expect[p], expect[b]);
         }
 
-        for (int b = 0; b < nbuffers - 1; b++)
+        for (int b = 0; b < nbuffers; b++)
             bundle.client_release(buf[b]);
 
         for (int frame = 0; frame < nframes; frame++)
         {
             auto client = bundle.client_acquire();
-            ASSERT_EQ(expect[frame % (nbuffers - 1)], client->id());
+            ASSERT_EQ(expect[frame % nbuffers], client->id());
             bundle.client_release(client);
         }
     }
@@ -696,6 +697,60 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         // Roughly compose_frames == client_frames within 50%
         ASSERT_GT(client_frames, compose_frames / 2);
         ASSERT_LT(client_frames, compose_frames * 3 / 2);
+    }
+}
+
+TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
+{  // Regression test LP: #1241369 / LP: #1241371
+    for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long client_frames = 0;
+        const unsigned long compose_frames = 100;
+        const auto frame_time = std::chrono::milliseconds(16);
+
+        bundle.allow_framedropping(false);
+
+        std::atomic<bool> done(false);
+        std::mutex sync;
+
+        std::thread monitor1([&]
+        {
+            for (unsigned long frame = 0; frame != compose_frames+3; frame++)
+            {
+                std::this_thread::sleep_for(frame_time);
+                sync.lock();
+                auto buf = bundle.compositor_acquire(frame);
+                bundle.compositor_release(buf);
+                sync.unlock();
+
+                if (frame == compose_frames)
+                {
+                    // Tell the "client" to stop after compose_frames, but
+                    // don't stop rendering immediately to avoid blocking
+                    // if we rendered any twice
+                    done.store(true);
+                }
+            }
+        });
+
+        bundle.client_release(bundle.client_acquire());
+
+        while (!done.load())
+        {
+            sync.lock();
+            sync.unlock();
+            auto buf = bundle.client_acquire();
+            std::this_thread::sleep_for(frame_time);
+            bundle.client_release(buf);
+            client_frames++;
+        }
+
+        monitor1.join();
+
+        // Roughly compose_frames == client_frames within 20%
+        ASSERT_GT(client_frames, compose_frames * 0.8f);
+        ASSERT_LT(client_frames, compose_frames * 1.2f);
     }
 }
 

@@ -170,141 +170,14 @@ private:
         return mp_report;
     }
 };
-
-char const* const server_socket_opt           = "file";
-char const* const no_server_socket_opt        = "no-file";
-char const* const session_mediator_report_opt = "session-mediator-report";
-char const* const msg_processor_report_opt    = "msg-processor-report";
-char const* const display_report_opt          = "display-report";
-char const* const legacy_input_report_opt     = "legacy-input-report";
-char const* const connector_report_opt        = "connector-report";
-char const* const input_report_opt            = "input-report";
-char const* const host_socket_opt             = "host-socket";
-char const* const standalone_opt              = "standalone";
-
-char const* const glog                 = "glog";
-char const* const glog_stderrthreshold = "glog-stderrthreshold";
-char const* const glog_minloglevel     = "glog-minloglevel";
-char const* const glog_log_dir         = "glog-log-dir";
-
-bool const enable_input_default = true;
-
-char const* const off_opt_value = "off";
-char const* const log_opt_value = "log";
-char const* const lttng_opt_value = "lttng";
-
-char const* const platform_graphics_lib = "platform-graphics-lib";
-char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
-
-void parse_arguments(
-    boost::program_options::options_description desc,
-    mir::options::ProgramOption& options,
-    int argc,
-    char const* argv[])
-{
-    namespace po = boost::program_options;
-
-    try
-    {
-        desc.add_options()
-            ("help,h", "this help text");
-
-        options.parse_arguments(desc, argc, argv);
-
-        if (options.is_set("help"))
-        {
-            std::ostringstream help_text;
-            help_text << desc;
-            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
-        }
-    }
-    catch (po::error const& error)
-    {
-        std::ostringstream help_text;
-        help_text << "Failed to parse command line options: " << error.what() << "." << std::endl << desc;
-        BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
-    }
-}
-
-void parse_environment(
-    boost::program_options::options_description& desc,
-    mir::options::ProgramOption& options)
-{
-    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
-    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
-    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
-    auto mir_socket = getenv("MIR_SOCKET");
-    if (!host_socket && mir_socket)
-        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
-
-    options.parse_environment(desc, "MIR_SERVER_");
-}
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-    argc(argc),
-    argv(argv),
-    program_options(std::make_shared<boost::program_options::options_description>(
-    "Command-line options.\n"
-    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"")),
+    DefaultConfigurationOptions(argc, argv),
     default_filter(std::make_shared<mi::VTFilter>())
 {
-    namespace po = boost::program_options;
-
-    add_options()
-        (standalone_opt, po::value<bool>(),
-            "Run mir in standalone mode. [bool:default=false]")
-        (host_socket_opt, po::value<std::string>(),
-            "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
-        ("file,f", po::value<std::string>(),
-            "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket]")
-        (no_server_socket_opt, "Do not provide a socket filename for client connections")
-        (platform_graphics_lib, po::value<std::string>(),
-            "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
-        ("enable-input,i", po::value<bool>(),
-            "Enable input. [bool:default=true]")
-        (connector_report_opt, po::value<std::string>(),
-            "How to handle the Connector report. [{log,off}:default=off]")
-        (display_report_opt, po::value<std::string>(),
-            "How to handle the Display report. [{log,off}:default=off]")
-        (input_report_opt, po::value<std::string>(),
-            "How to handle to Input report. [{log,lttng,off}:default=off]")
-        (legacy_input_report_opt, po::value<std::string>(),
-            "How to handle the Legacy Input report. [{log,off}:default=off]")
-        (session_mediator_report_opt, po::value<std::string>(),
-            "How to handle the SessionMediator report. [{log,off}:default=off]")
-        (msg_processor_report_opt, po::value<std::string>(),
-            "How to handle the MessageProcessor report. [{log,lttng,off}:default=off]")
-        (glog,
-            "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),
-            "Copy log messages at or above this level "
-            "to stderr in addition to logfiles. The numbers "
-            "of severity levels INFO, WARNING, ERROR, and "
-            "FATAL are 0, 1, 2, and 3, respectively."
-            " [int:default=2]")
-        (glog_minloglevel, po::value<int>(),
-            "Log messages at or above this level. The numbers "
-            "of severity levels INFO, WARNING, ERROR, and "
-            "FATAL are 0, 1, 2, and 3, respectively."
-            " [int:default=0]")
-        (glog_log_dir, po::value<std::string>(),
-            "If specified, logfiles are written into this "
-            "directory instead of the default logging directory."
-            " [string:default=\"\"]")
-        ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool.")
-        ("vt", po::value<int>(),
-            "VT to run on or 0 to use current. [int:default=0]");
 }
 
-boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
-{
-    if (options)
-        BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
-
-    return program_options->add_options();
-}
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
@@ -316,23 +189,6 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     setenv("MIR_SOCKET", socket_file.c_str(), 1);
 
     return socket_file;
-}
-
-void mir::DefaultServerConfiguration::parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const
-{
-    parse_arguments(options_description, options, argc, argv);
-    parse_environment(options_description, options); 
-}
-
-std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
-{
-    if (!options)
-    {
-        auto options = std::make_shared<mir::options::ProgramOption>();
-        parse_options(*program_options, *options);
-        this->options = options;
-    }
-    return options;
 }
 
 std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_report()
@@ -904,9 +760,9 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             {
                 return std::make_shared<ml::GlogLogger>(
                     "mir",
-                    the_options()->get(glog_stderrthreshold, 2),
-                    the_options()->get(glog_minloglevel, 0),
-                    the_options()->get(glog_log_dir, ""));
+                    the_options()->get(glog_stderrthreshold, glog_stderrthreshold_default),
+                    the_options()->get(glog_minloglevel, glog_minloglevel_default),
+                    the_options()->get(glog_log_dir, glog_log_dir_default));
             }
             else
             {

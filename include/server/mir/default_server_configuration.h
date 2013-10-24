@@ -20,7 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
-#include "mir/options/program_option.h"
+#include "mir/default_configuration_options.h"
 
 #include <memory>
 #include <string>
@@ -112,7 +112,7 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public virtual ServerConfiguration
+class DefaultServerConfiguration : public virtual ServerConfiguration, DefaultConfigurationOptions
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
@@ -240,12 +240,8 @@ public:
     virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
 protected:
-    // add_options() allows configuration specializations to add their
-    // own options. This MUST be called before the first invocation of
-    // the_options() - typically during construction.
-    boost::program_options::options_description_easy_init add_options();
-    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
-    virtual std::shared_ptr<options::Option> the_options() const;
+    using DefaultConfigurationOptions::the_options;
+    using DefaultConfigurationOptions::add_options;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
@@ -304,14 +300,8 @@ protected:
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
-    int default_ipc_threads = 10;
-
 private:
-    int const argc;
-    char const** const argv;
-    std::shared_ptr<boost::program_options::options_description> const program_options;
     std::shared_ptr<input::EventFilter> const default_filter;
-    std::shared_ptr<options::Option> mutable options;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
