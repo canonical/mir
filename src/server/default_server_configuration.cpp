@@ -20,7 +20,6 @@
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
-#include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_stream_factory.h"
@@ -57,7 +56,6 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -87,7 +85,6 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 #include "mir/graphics/native_platform.h"
-#include "mir/graphics/nested/nested_platform.h"
 
 #include <map>
 
@@ -100,11 +97,6 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mia = mi::android;
-
-namespace
-{
-mir::SharedLibrary const* load_library(std::string const& libname);
-}
 
 namespace
 {
@@ -204,31 +196,6 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
             {
                 return std::make_shared<mg::NullDisplayReport>();
             }
-        });
-}
-
-
-std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
-{
-    return graphics_platform(
-        [this]()->std::shared_ptr<mg::Platform>
-        {
-            auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
-
-            // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-            if (the_options()->is_set(standalone_opt) || !the_options()->is_set(host_socket_opt))
-            {
-                auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-                return create_platform(the_options(), the_display_report());
-            }
-
-            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(
-                the_host_connection(),
-                the_nested_input_relay(),
-                the_display_report(),
-                create_native_platform(the_display_report()));
         });
 }
 
@@ -822,16 +789,6 @@ std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_
         });
 }
 
-std::shared_ptr<mg::DisplayConfigurationPolicy>
-mir::DefaultServerConfiguration::the_display_configuration_policy()
-{
-    return display_configuration_policy(
-        []
-        {
-            return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_host_connection()
 -> std::shared_ptr<graphics::nested::HostConnection>
 {
@@ -901,23 +858,4 @@ auto mir::DefaultServerConfiguration::the_connector_report()
                     " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
             }
         });
-}
-
-namespace
-{
-mir::SharedLibrary const* load_library(std::string const& libname)
-{
-    // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
-
-    if (auto& ptr = libraries_cache[libname])
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
-}
 }
