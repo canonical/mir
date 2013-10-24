@@ -20,7 +20,7 @@
 #include "mir/compositor/buffer_stream_factory.h"
 #include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/multi_threaded_compositor.h"
-#include "mir/compositor/overlay_renderer.h"
+#include "overlay_renderer.h"
 #include "gl_renderer_factory.h"
 
 namespace mc = mir::compositor;
