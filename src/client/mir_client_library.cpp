@@ -33,6 +33,7 @@
 #include <set>
 #include <unordered_set>
 #include <cstddef>
+#include <cstring>
 
 namespace mcl = mir::client;
 
@@ -71,6 +72,11 @@ void assign_result(void *result, void **context)
 {
     if (context)
         *context = result;
+}
+
+size_t division_ceiling(size_t a, size_t b)
+{
+    return ((a - 1) / b) + 1;
 }
 
 }
@@ -525,16 +531,10 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
 int mir_connection_drm_set_gbm_device(MirConnection* connection,
                                       struct gbm_device* gbm_dev)
 {
-    size_t const pointer_size_in_ints = sizeof(gbm_dev) / sizeof(int);
+    size_t const pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
     std::vector<int> extra_data(pointer_size_in_ints);
 
-    /*
-     * Be paranoid; copy the value of the gbm_device pointer into the vector
-     * byte by byte, because sizeof(ptr) may not be a multiple of sizeof(int).
-     */
-    uint8_t* gbm_dev_ptr_byte = reinterpret_cast<uint8_t*>(&gbm_dev);
-    std::copy(gbm_dev_ptr_byte, gbm_dev_ptr_byte + sizeof(gbm_dev),
-              reinterpret_cast<uint8_t*>(extra_data.data()));
+    memcpy(extra_data.data(), &gbm_dev, sizeof(gbm_dev));
 
     return connection->set_extra_platform_data(extra_data);
 }
