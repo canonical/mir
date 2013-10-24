@@ -146,8 +146,6 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_display_commander, display_format())
-        .Times(0);
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_commander, mock_cache);
 
     render_window.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
