@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/gl_renderer_factory.h"
+#include "gl_renderer_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "gl_renderer.h"
 
