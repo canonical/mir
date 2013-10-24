@@ -28,7 +28,7 @@
 #include "mir/shell/null_session_listener.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "src/server/compositor/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer.h"

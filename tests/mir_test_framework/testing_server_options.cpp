@@ -20,7 +20,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "src/server/compositor/renderer_factory.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_ipc_packer.h"
