@@ -19,14 +19,18 @@
 #include "mir/default_server_configuration.h"
 
 #include "default_display_configuration_policy.h"
+#include "nested/host_connection.h"
 #include "nested/nested_platform.h"
+
 #include "mir/graphics/buffer_initializer.h"
 
 #include "mir/input/nested_input_relay.h"
 #include "mir/shared_library.h"
+#include "mir/abnormal_exit.h"
+
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
-
 
 namespace
 {
@@ -109,5 +113,35 @@ mir::DefaultServerConfiguration::the_display()
         {
             return the_graphics_platform()->create_display(
                 the_display_configuration_policy());
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_host_connection()
+-> std::shared_ptr<graphics::nested::HostConnection>
+{
+    return host_connection(
+        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
+        {
+            auto const options = the_options();
+
+            if (!options->is_set(standalone_opt))
+            {
+                if (!options->is_set(host_socket_opt))
+                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
+
+                auto host_socket = options->get(host_socket_opt, "");
+                auto server_socket = the_socket_file();
+
+                if (server_socket == host_socket)
+                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+
+                return std::make_shared<graphics::nested::HostConnection>(
+                    host_socket,
+                    server_socket);
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
+            }
         });
 }

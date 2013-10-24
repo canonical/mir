@@ -45,7 +45,6 @@
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
-#include "mir/graphics/nested/host_connection.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
@@ -751,36 +750,6 @@ std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_
         []()
         {
             return std::make_shared<mir::DefaultServerStatusListener>();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_host_connection()
--> std::shared_ptr<graphics::nested::HostConnection>
-{
-    return host_connection(
-        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
-        {
-            auto const options = the_options();
-
-            if (!options->is_set(standalone_opt))
-            {
-                if (!options->is_set(host_socket_opt))
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
-
-                auto host_socket = options->get(host_socket_opt, "");
-                auto server_socket = the_socket_file();
-
-                if (server_socket == host_socket)
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
-
-                return std::make_shared<graphics::nested::HostConnection>(
-                    host_socket,
-                    server_socket);
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
-            }
         });
 }
 
