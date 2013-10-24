@@ -19,10 +19,10 @@
 #include "mir/default_server_configuration.h"
 
 #include "default_display_configuration_policy.h"
+#include "nested/nested_platform.h"
 #include "mir/graphics/buffer_initializer.h"
 
 #include "mir/input/nested_input_relay.h"
-#include "mir/graphics/nested/nested_platform.h"
 #include "mir/shared_library.h"
 
 namespace mg = mir::graphics;
