@@ -23,8 +23,8 @@
 #include "protobuf_ipc_factory.h"
 #include "protobuf_session_creator.h"
 #include "published_socket_connector.h"
+#include "session_mediator.h"
 
-#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/shell.h"
 
 #include "mir/options/option.h"

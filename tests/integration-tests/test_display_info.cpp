@@ -22,7 +22,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
-#include "mir/frontend/session_mediator.h"
+#include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
