@@ -19,7 +19,7 @@
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/graphics/android/internal_client_window.h"
 #include "src/server/graphics/android/interpreter_cache.h"
-#include "mir/compositor/buffer_stream_factory.h"
+#include "src/server/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/android/mir_native_window.h"
