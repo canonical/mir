@@ -76,12 +76,12 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
 }
  
 std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_fb_buffers(
-    std::shared_ptr<mga::DisplayCommander> const& info,
+    std::shared_ptr<mga::DisplayCommander> const& commander,
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator) const
 {
-    auto size = info->display_size();
-    auto pf = info->display_format();
-    auto num_framebuffers = info->number_of_framebuffers_available();
+    auto size = commander->display_size();
+    auto pf = commander->display_format();
+    auto num_framebuffers = commander->number_of_framebuffers_available();
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     for (auto i = 0u; i < num_framebuffers; ++i)
     {

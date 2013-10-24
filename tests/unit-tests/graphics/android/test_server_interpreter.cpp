@@ -68,7 +68,6 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplayCommander> mock_display_commander;
-    std::shared_ptr<mtd::MockDisplayCommander> mock_display_info;
 };
 }
 

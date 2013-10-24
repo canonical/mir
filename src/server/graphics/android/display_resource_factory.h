@@ -47,7 +47,7 @@ public:
 
     //fb buffer alloc
     virtual std::shared_ptr<FBSwapper> create_fb_buffers(
-        std::shared_ptr<DisplayCommander> const& info,
+        std::shared_ptr<DisplayCommander> const& commander,
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) const = 0;
 
     //commanders
@@ -62,7 +62,7 @@ public:
     //display alloc
     virtual std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<FBSwapper> const& swapper,
-        std::shared_ptr<DisplayCommander> const& support_provider,
+        std::shared_ptr<DisplayCommander> const& commander,
         std::shared_ptr<graphics::DisplayReport> const& report) const = 0;
 
 protected:
