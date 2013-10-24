@@ -20,7 +20,7 @@
 #include "multithread_harness.h"
 
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
