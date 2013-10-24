@@ -21,7 +21,7 @@
 #define MIR_TEST_DOUBLES_STUB_IPC_FACTORY_H_
 
 #include "mir_test/fake_shared.h"
-#include "mir/frontend/protobuf_ipc_factory.h"
+#include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/null_message_processor_report.h"
 

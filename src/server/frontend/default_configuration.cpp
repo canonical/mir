@@ -19,11 +19,11 @@
 #include "mir/default_server_configuration.h"
 
 #include "resource_cache.h"
+#include "global_event_sender.h"
+#include "protobuf_ipc_factory.h"
 #include "protobuf_session_creator.h"
 #include "published_socket_connector.h"
 
-#include "global_event_sender.h"
-#include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/shell.h"
 
