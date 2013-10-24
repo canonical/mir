@@ -588,7 +588,7 @@ TEST_F(MirConnectionTest, sets_extra_platform_data)
     /* Check initial data */
     connection->populate(pkg);
 
-    EXPECT_EQ(initial_data.size(), pkg.data_items);
+    EXPECT_EQ(initial_data.size(), static_cast<size_t>(pkg.data_items));
     for (size_t i = 0; i < initial_data.size(); i++)
         EXPECT_EQ(initial_data[i], pkg.data[i]) << " i=" << i;
 
@@ -596,7 +596,9 @@ TEST_F(MirConnectionTest, sets_extra_platform_data)
     connection->set_extra_platform_data(extra_data);
     connection->populate(pkg);
 
-    EXPECT_EQ(initial_data.size() + extra_data.size(), pkg.data_items);
+    EXPECT_EQ(initial_data.size() + extra_data.size(),
+              static_cast<size_t>(pkg.data_items));
+
     for (size_t i = 0; i < initial_data.size(); i++)
         EXPECT_EQ(initial_data[i], pkg.data[i]) << " i=" << i;
 
