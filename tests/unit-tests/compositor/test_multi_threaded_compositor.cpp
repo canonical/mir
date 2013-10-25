@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/multi_threaded_compositor.h"
+#include "src/server/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
