@@ -51,7 +51,6 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/compositor/gl_renderer_factory.h"
 #include "mir/compositor/renderer.h"
-#include "mir/graphics/null_display_report.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -62,14 +61,11 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/input_manager.h"
-#include "mir/logging/connector_report.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
-#include "mir/logging/session_mediator_report.h"
 #include "mir/logging/message_processor_report.h"
-#include "mir/logging/display_report.h"
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
@@ -173,22 +169,6 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     setenv("MIR_SOCKET", socket_file.c_str(), 1);
 
     return socket_file;
-}
-
-std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_report()
-{
-    return display_report(
-        [this]() -> std::shared_ptr<graphics::DisplayReport>
-        {
-            if (the_options()->get(display_report_opt, off_opt_value) == log_opt_value)
-            {
-                return std::make_shared<ml::DisplayReport>(the_logger());
-            }
-            else
-            {
-                return std::make_shared<mg::NullDisplayReport>();
-            }
-        });
 }
 
 std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
@@ -597,23 +577,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
-std::shared_ptr<mf::SessionMediatorReport>
-mir::DefaultServerConfiguration::the_session_mediator_report()
-{
-    return session_mediator_report(
-        [this]() -> std::shared_ptr<mf::SessionMediatorReport>
-        {
-            if (the_options()->get(session_mediator_report_opt, off_opt_value) == log_opt_value)
-            {
-                return std::make_shared<ml::SessionMediatorReport>(the_logger());
-            }
-            else
-            {
-                return std::make_shared<mf::NullSessionMediatorReport>();
-            }
-        });
-}
-
 std::shared_ptr<mf::MessageProcessorReport>
 mir::DefaultServerConfiguration::the_message_processor_report()
 {
@@ -722,29 +685,5 @@ mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
         []
         {
             return std::make_shared<msh::BroadcastingSessionEventSink>();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_connector_report()
-    -> std::shared_ptr<mf::ConnectorReport>
-{
-    return connector_report([this]
-        () -> std::shared_ptr<mf::ConnectorReport>
-        {
-            auto opt = the_options()->get(connector_report_opt, off_opt_value);
-
-            if (opt == log_opt_value)
-            {
-                return std::make_shared<ml::ConnectorReport>(the_logger());
-            }
-            else if (opt == off_opt_value)
-            {
-                return std::make_shared<mf::NullConnectorReport>();
-            }
-            else
-            {
-                throw AbnormalExit(std::string("Invalid ") + connector_report_opt + " option: " + opt +
-                    " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
-            }
         });
 }
