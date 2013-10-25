@@ -43,7 +43,7 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 }
 }
 
-mga::HWCCommonCommand::HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                       std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
     : hwc_device(hwc_device),
       coordinator(coordinator),
@@ -65,19 +65,19 @@ mga::HWCCommonCommand::HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> c
     }
 }
 
-mga::HWCCommonCommand::~HWCCommonCommand() noexcept
+mga::HWCCommonDevice::~HWCCommonDevice() noexcept
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
     if (current_mode == mir_power_mode_on)
         turn_screen_off();
 }
 
-void mga::HWCCommonCommand::notify_vsync()
+void mga::HWCCommonDevice::notify_vsync()
 {
     coordinator->notify_vsync();
 }
 
-void mga::HWCCommonCommand::mode(MirPowerMode mode_request)
+void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
     int err = 0;
@@ -115,7 +115,7 @@ void mga::HWCCommonCommand::mode(MirPowerMode mode_request)
     blanked_cond.notify_all();
 }
 
-std::unique_lock<std::mutex> mga::HWCCommonCommand::lock_unblanked()
+std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
 {
     std::unique_lock<std::mutex> lg(blanked_mutex);
     while(current_mode == mir_power_mode_off)
@@ -123,14 +123,14 @@ std::unique_lock<std::mutex> mga::HWCCommonCommand::lock_unblanked()
     return std::move(lg);
 }
 
-int mga::HWCCommonCommand::turn_screen_on() const noexcept(true)
+int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
 {
     if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
         return err;
     return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
 }
 
-int mga::HWCCommonCommand::turn_screen_off() const noexcept(true)
+int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
 {
     if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
         return err;

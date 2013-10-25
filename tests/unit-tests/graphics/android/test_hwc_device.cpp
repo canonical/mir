@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_display_commander.h"
+#include "mir_test_doubles/mock_display_device.h"
 
 #include <thread>
 #include <chrono>
@@ -37,26 +37,26 @@ namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
 template<class T>
-std::shared_ptr<mga::HWCCommonCommand> make_hwc_device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const& layer_list,
-                                                std::shared_ptr<mga::DisplayCommander> const& fbdev,
+                                                std::shared_ptr<mga::DisplayDevice> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator);
 
 template <>
-std::shared_ptr<mga::HWCCommonCommand> make_hwc_device<mga::HWC10Device>(
+std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const&, 
-                                                std::shared_ptr<mga::DisplayCommander> const& fbdev,
+                                                std::shared_ptr<mga::DisplayDevice> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
     return std::make_shared<mga::HWC10Device>(hwc_device, fbdev, coordinator);
 }
 
 template <>
-std::shared_ptr<mga::HWCCommonCommand> make_hwc_device<mga::HWC11Device>(
+std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const& layer_list,
-                                                std::shared_ptr<mga::DisplayCommander> const& fbdev,
+                                                std::shared_ptr<mga::DisplayDevice> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
     return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fbdev, coordinator);
@@ -84,14 +84,14 @@ protected:
 
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_layer_list = std::make_shared<testing::NiceMock<mtd::MockHWCLayerList>>();
-        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplayCommander>>();
+        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }
 
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCLayerList> mock_layer_list;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockDisplayCommander> mock_fbdev;
+    std::shared_ptr<mtd::MockDisplayDevice> mock_fbdev;
 };
 
 typedef ::testing::Types<mga::HWC10Device, mga::HWC11Device> HWCDeviceTestTypes;

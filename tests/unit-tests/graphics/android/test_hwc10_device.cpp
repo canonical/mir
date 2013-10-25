@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/hwc10_device.h"
-#include "mir_test_doubles/mock_display_commander.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
@@ -39,7 +39,7 @@ protected:
         test_pf = geom::PixelFormat::abgr_8888;
         test_numfb = 558u;
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<mtd::MockDisplayCommander>();
+        mock_fbdev = std::make_shared<mtd::MockDisplayDevice>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }
 
@@ -47,7 +47,7 @@ protected:
     geom::Size test_size;
     unsigned int test_numfb;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockDisplayCommander> mock_fbdev;
+    std::shared_ptr<mtd::MockDisplayDevice> mock_fbdev;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
 };
 

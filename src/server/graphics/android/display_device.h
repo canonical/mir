@@ -35,10 +35,10 @@ class Buffer;
 namespace android
 {
 
-class DisplayCommander
+class DisplayDevice
 {
 public:
-    virtual ~DisplayCommander() = default;
+    virtual ~DisplayDevice() = default;
 
     virtual geometry::Size display_size() const = 0; 
     virtual geometry::PixelFormat display_format() const = 0; 
@@ -50,9 +50,9 @@ public:
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 
 protected:
-    DisplayCommander() = default;
-    DisplayCommander& operator=(DisplayCommander const&) = delete;
-    DisplayCommander(DisplayCommander const&) = delete;
+    DisplayDevice() = default;
+    DisplayDevice& operator=(DisplayDevice const&) = delete;
+    DisplayDevice(DisplayDevice const&) = delete;
 };
 
 }

@@ -130,7 +130,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
             return stub_stream_factory;
         }
 
-        int num_of_swapinterval_commands()
+        int num_of_swapinterval_devices()
         {
             char c;
             int ops{0};
@@ -220,7 +220,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
     {
         client_config.wait_for(swapinterval_set);
 
-        EXPECT_EQ(2, server_config.num_of_swapinterval_commands());
+        EXPECT_EQ(2, server_config.num_of_swapinterval_devices());
 
         client_config.set_flag(do_client_finish);
     });

@@ -33,7 +33,7 @@
 #include "src/server/graphics/android/display_buffer_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
-#include "mir_test_doubles/stub_display_commander.h"
+#include "mir_test_doubles/stub_display_device.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
 
@@ -78,7 +78,7 @@ public:
         return std::make_shared<mg::android::AndroidDisplay>(
             std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>()),
             std::make_shared<mg::android::DisplayBufferFactory>(),
-            std::make_shared<mtd::StubDisplayCommand>(),
+            std::make_shared<mtd::StubDisplayDevice>(),
             std::make_shared<mg::NullDisplayReport>());
 #else
         auto platform = std::make_shared<mg::gbm::GBMPlatform>(

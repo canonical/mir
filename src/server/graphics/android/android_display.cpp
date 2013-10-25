@@ -24,7 +24,7 @@
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
-#include "display_commander.h"
+#include "display_device.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -150,10 +150,10 @@ private:
 
 mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native_win,
                                     std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
-                                    std::shared_ptr<mga::DisplayCommander> const& display_command,
+                                    std::shared_ptr<mga::DisplayDevice> const& display_device,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
-      display_command(display_command),
+      display_device(display_device),
       egl_display{create_and_initialize_display()},
       egl_config{select_egl_config(egl_display, *native_window)},
       egl_context_shared{egl_display,
@@ -163,7 +163,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-          native_window, display_command, egl_display, egl_config, egl_context_shared)},
+          native_window, display_device, egl_display, egl_config, egl_context_shared)},
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
@@ -198,7 +198,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         // TODO: Properly support multiple outputs
-        display_command->mode(output.power_mode);
+        display_device->mode(output.power_mode);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

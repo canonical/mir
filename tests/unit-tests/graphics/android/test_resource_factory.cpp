@@ -19,7 +19,7 @@
 #include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir_test_doubles/mock_display_commander.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_display_report.h"
 
 #include "mir_test_doubles/mock_android_hw.h"
@@ -56,15 +56,15 @@ public:
     {
         using namespace testing;
         mock_buffer_allocator = std::make_shared<NiceMock<MockAndroidGraphicBufferAllocator>>();
-        mock_display_commander = std::make_shared<NiceMock<mtd::MockDisplayCommander>>();
+        mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
         mock_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
         fake_fb_num = 2;
 
-        ON_CALL(*mock_display_commander, display_format())
+        ON_CALL(*mock_display_device, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*mock_display_commander, display_size())
+        ON_CALL(*mock_display_device, display_size())
             .WillByDefault(Return(geom::Size{2, 3}));
-        ON_CALL(*mock_display_commander, number_of_framebuffers_available())
+        ON_CALL(*mock_display_device, number_of_framebuffers_available())
             .WillByDefault(Return(fake_fb_num));
 
         ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
@@ -73,7 +73,7 @@ public:
 
     std::shared_ptr<mtd::MockDisplayReport> mock_report;
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
-    std::shared_ptr<mtd::MockDisplayCommander> mock_display_commander;
+    std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
     unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -89,13 +89,13 @@ TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
     geom::Size disp_size{disp_width, disp_height};
     geom::PixelFormat pf = geom::PixelFormat::abgr_8888;  
  
-    EXPECT_CALL(*mock_display_commander, number_of_framebuffers_available())
+    EXPECT_CALL(*mock_display_device, number_of_framebuffers_available())
         .Times(1)
         .WillOnce(Return(fake_fb_num));
-    EXPECT_CALL(*mock_display_commander, display_size())
+    EXPECT_CALL(*mock_display_device, display_size())
         .Times(1)
         .WillOnce(Return(disp_size));
-    EXPECT_CALL(*mock_display_commander, display_format())
+    EXPECT_CALL(*mock_display_device, display_format())
         .Times(1)
         .WillOnce(Return(pf));
 
@@ -104,7 +104,7 @@ TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
         .Times(fake_fb_num);
 
     mga::ResourceFactory factory;
-    factory.create_fb_buffers(mock_display_commander, mock_buffer_allocator);
+    factory.create_fb_buffers(mock_display_device, mock_buffer_allocator);
 }
 
 TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)

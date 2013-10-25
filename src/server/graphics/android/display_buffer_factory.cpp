@@ -17,7 +17,7 @@
  */
 
 #include "display_buffer_factory.h"
-#include "display_commander.h"
+#include "display_device.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -60,9 +60,9 @@ public:
                      EGLDisplay egl_display,
                      EGLConfig egl_config,
                      EGLContext egl_context_shared,
-                     std::shared_ptr<mga::DisplayCommander> const& display_commander)
+                     std::shared_ptr<mga::DisplayDevice> const& display_device)
         : native_window{native_window},
-          display_commander{display_commander},
+          display_device{display_device},
           egl_display{egl_display},
           egl_config{egl_config},
           egl_context{egl_display, create_context(egl_display, egl_config, egl_context_shared)},
@@ -73,7 +73,7 @@ public:
 
     geom::Rectangle view_area() const
     {
-        return {geom::Point{}, display_commander->display_size()};
+        return {geom::Point{}, display_device->display_size()};
     }
 
     void make_current()
@@ -93,7 +93,7 @@ public:
 
     void post_update()
     {
-        display_commander->commit_frame(egl_display, egl_surface);
+        display_device->commit_frame(egl_display, egl_surface);
     }
 
     bool can_bypass() const override
@@ -104,7 +104,7 @@ public:
 protected:
     std::shared_ptr<ANativeWindow> const native_window;
 
-    std::shared_ptr<mga::DisplayCommander> const display_commander;
+    std::shared_ptr<mga::DisplayDevice> const display_device;
     EGLDisplay const egl_display;
     EGLConfig const egl_config;
     mg::EGLContextStore const egl_context;
@@ -117,10 +117,11 @@ protected:
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
     std::shared_ptr<ANativeWindow> const& native_window,
-    std::shared_ptr<DisplayCommander> const& display_command,
+    std::shared_ptr<DisplayDevice> const& display_device,
     EGLDisplay egl_display, EGLConfig egl_config,
     EGLContext egl_context_shared)
 {
-    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_config, egl_context_shared, display_command);
+    auto raw = new GPUDisplayBuffer(
+        native_window, egl_display, egl_config, egl_context_shared, display_device);
     return std::unique_ptr<mg::DisplayBuffer>(raw);
 }

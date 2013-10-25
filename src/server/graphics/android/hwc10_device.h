@@ -26,13 +26,13 @@ namespace graphics
 {
 namespace android
 {
-class DisplayCommander;
+class DisplayDevice;
 
-class HWC10Device : public HWCCommonCommand
+class HWC10Device : public HWCCommonDevice
 {
 public:
     HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<DisplayCommander> const& fbdev,
+                std::shared_ptr<DisplayDevice> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
     ~HWC10Device() noexcept;
 
@@ -44,7 +44,7 @@ public:
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
-    std::shared_ptr<DisplayCommander> const fb_device;
+    std::shared_ptr<DisplayDevice> const fb_device;
     bool wait_for_vsync;
 };
 

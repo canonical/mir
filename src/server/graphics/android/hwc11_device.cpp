@@ -30,9 +30,9 @@ namespace geom = mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerList> const& layer_list,
-                              std::shared_ptr<DisplayCommander> const& fbdev,
+                              std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
-    : HWCCommonCommand(hwc_device, coordinator),
+    : HWCCommonDevice(hwc_device, coordinator),
       layer_list(layer_list),
       fb_device(fbdev), 
       sync_ops(std::make_shared<mga::RealSyncFileOps>())

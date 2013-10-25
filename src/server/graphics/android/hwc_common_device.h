@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 
-#include "display_commander.h"
+#include "display_device.h"
 #include <hardware/hwcomposer.h>
 
 #include <mutex>
@@ -33,23 +33,23 @@ namespace android
 {
 
 class HWCVsyncCoordinator;
-class HWCCommonCommand;
+class HWCCommonDevice;
 struct HWCCallbacks
 {
     hwc_procs_t hooks;
-    HWCCommonCommand* self;
+    HWCCommonDevice* self;
 };
 
-class HWCCommonCommand : public DisplayCommander
+class HWCCommonDevice : public DisplayDevice
 {
 public:
-    virtual ~HWCCommonCommand() noexcept;
+    virtual ~HWCCommonDevice() noexcept;
 
     void notify_vsync();
     void mode(MirPowerMode mode);
 
 protected:
-    HWCCommonCommand(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
