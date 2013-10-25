@@ -22,15 +22,9 @@
 #include "mir/default_server_status_listener.h"
 
 #include "mir/options/program_option.h"
-#include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
-#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/frontend/global_event_sender.h"
-#include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
-#include "mir/shell/unauthorized_display_changer.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
@@ -86,72 +80,6 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mia = mi::android;
-
-namespace
-{
-class DefaultIpcFactory : public mf::ProtobufIpcFactory
-{
-public:
-    explicit DefaultIpcFactory(
-        std::shared_ptr<mf::Shell> const& shell,
-        std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
-        std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
-        std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mf::DisplayChanger> const& display_changer,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
-        shell(shell),
-        sm_report(sm_report),
-        mp_report(mr_report),
-        cache(std::make_shared<mf::ResourceCache>()),
-        graphics_platform(graphics_platform),
-        display_changer(display_changer),
-        buffer_allocator(buffer_allocator)
-    {
-    }
-
-private:
-    std::shared_ptr<mf::Shell> shell;
-    std::shared_ptr<mf::SessionMediatorReport> const sm_report;
-    std::shared_ptr<mf::MessageProcessorReport> const mp_report;
-    std::shared_ptr<mf::ResourceCache> const cache;
-    std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
-
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
-    {
-        std::shared_ptr<mf::DisplayChanger> changer;
-        if(authorized_to_resize_display)
-        {
-            changer = display_changer; 
-        }
-        else
-        {
-            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(display_changer); 
-        }
-
-        return std::make_shared<mf::SessionMediator>(
-            shell,
-            graphics_platform,
-            changer,
-            buffer_allocator,
-            sm_report,
-            sink,
-            resource_cache());
-    }
-
-    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
-    {
-        return cache;
-    }
-
-    virtual std::shared_ptr<mf::MessageProcessorReport> report()
-    {
-        return mp_report;
-    }
-};
-}
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     DefaultConfigurationOptions(argc, argv),
@@ -325,16 +253,6 @@ mir::DefaultServerConfiguration::the_frontend_shell()
     return the_session_manager();
 }
 
-std::shared_ptr<mf::EventSink>
-mir::DefaultServerConfiguration::the_global_event_sink()
-{
-    return global_event_sink(
-        [this]()
-        {
-            return std::make_shared<mf::GlobalEventSender>(the_shell_session_container());
-        }); 
-}
-
 std::shared_ptr<msh::FocusController>
 mir::DefaultServerConfiguration::the_focus_controller()
 {
@@ -498,23 +416,6 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         });
 }
 
-
-std::shared_ptr<mir::frontend::ProtobufIpcFactory>
-mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-{
-    return ipc_factory(
-        [&]()
-        {
-            return std::make_shared<DefaultIpcFactory>(
-                shell,
-                the_session_mediator_report(),
-                the_message_processor_report(),
-                the_graphics_platform(),
-                the_frontend_display_changer(), allocator);
-        });
-}
 
 std::shared_ptr<mf::SessionAuthorizer>
 mir::DefaultServerConfiguration::the_session_authorizer()
