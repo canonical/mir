@@ -80,9 +80,6 @@
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/shell/mediating_display_changer.h"
-#include "mir/surfaces/surface_allocator.h"
-#include "mir/surfaces/surface_stack.h"
-#include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
@@ -292,7 +289,9 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
     return shell_focus_setter(
         [this]
         {
-            return std::make_shared<msh::DefaultFocusMechanism>(the_input_targeter(), the_surface_controller());
+            return std::make_shared<msh::DefaultFocusMechanism>(
+                the_input_targeter(),
+                the_shell_surface_controller());
         });
 }
 
@@ -564,34 +563,6 @@ std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_s
         });
 }
 
-std::shared_ptr<ms::SurfaceStackModel>
-mir::DefaultServerConfiguration::the_surface_stack_model()
-{
-    return surface_stack(
-        [this]() -> std::shared_ptr<ms::SurfaceStack>
-        {
-            auto factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(), the_input_channel_factory());
-            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
-            the_input_configuration()->set_input_targets(ss);
-            return ss;
-        });
-}
-
-std::shared_ptr<mc::Scene>
-mir::DefaultServerConfiguration::the_scene()
-{
-    return surface_stack(
-        [this]() -> std::shared_ptr<ms::SurfaceStack>
-        {
-            auto factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(), the_input_channel_factory());
-            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
-            the_input_configuration()->set_input_targets(ss);
-            return ss;
-        });
-}
-
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_shell_surface_factory()
 {
@@ -604,22 +575,6 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
             return std::make_shared<msh::OrganisingSurfaceFactory>(
                 surface_source,
                 the_shell_placement_strategy());
-        });
-}
-
-std::shared_ptr<msh::SurfaceBuilder>
-mir::DefaultServerConfiguration::the_surface_builder()
-{
-    return the_surface_controller();
-}
-
-std::shared_ptr<ms::SurfaceController>
-mir::DefaultServerConfiguration::the_surface_controller()
-{
-    return surface_controller(
-        [this]()
-        {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
         });
 }
 

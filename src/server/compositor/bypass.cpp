@@ -101,12 +101,12 @@ bool BypassFilter::fullscreen_on_top() const
 }
 
 void BypassMatch::operator()(const CompositingCriteria &,
-                             surfaces::BufferStream &stream)
+                             compositor::BufferStream &stream)
 {
     latest = &stream;
 }
 
-surfaces::BufferStream *BypassMatch::topmost_fullscreen() const
+compositor::BufferStream *BypassMatch::topmost_fullscreen() const
 {
     return latest;
 }

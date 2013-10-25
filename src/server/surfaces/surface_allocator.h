@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_ALLOCATOR_H_
 #define MIR_SURFACES_SURFACE_ALLOCATOR_H_
 
-#include "mir/surfaces/surface_factory.h"
+#include "surface_factory.h"
 
 namespace mir
 {
@@ -30,18 +30,21 @@ class InputChannelFactory;
 namespace surfaces
 {
 class BufferStreamFactory;
+class SurfacesReport;
 
 class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
-                     std::shared_ptr<input::InputChannelFactory> const& input_factory);
+                     std::shared_ptr<input::InputChannelFactory> const& input_factory,
+                     std::shared_ptr<SurfacesReport> const& report);
 
     std::shared_ptr<Surface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
+    std::shared_ptr<SurfacesReport> const report;
 };
 
 }

@@ -167,7 +167,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
                     struct NullOperator : public mc::OperatorForScene
                     {
                         void operator()(mc::CompositingCriteria const&,
-                                        mir::surfaces::BufferStream&) {}
+                                        mc::BufferStream&) {}
                     } null_operator;
 
                     scene->for_each_if(filter, null_operator);

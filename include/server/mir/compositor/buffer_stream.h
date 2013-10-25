@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BUFFER_STREAM_H_
-#define MIR_SURFACES_BUFFER_STREAM_H_
+#ifndef MIR_COMPOSITOR_BUFFER_STREAM_H_
+#define MIR_COMPOSITOR_BUFFER_STREAM_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
@@ -33,13 +33,13 @@ namespace graphics
 class Buffer;
 }
 
-namespace surfaces
+namespace compositor
 {
 
 class BufferStream
 {
 public:
-    virtual ~BufferStream() {/* TODO: make nothrow */}
+    virtual ~BufferStream() = default;
 
     virtual std::shared_ptr<graphics::Buffer> secure_client_buffer() = 0;
     virtual std::shared_ptr<graphics::Buffer>
@@ -54,4 +54,4 @@ public:
 }
 }
 
-#endif /* MIR_SURFACES_BUFFER_STREAM_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_STREAM_H_ */

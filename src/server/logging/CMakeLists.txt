@@ -2,11 +2,13 @@ set(
   LOGGING_SOURCES
 
   connector_report.cpp
+  default_configuration.cpp
   glog_logger.cpp
   session_mediator_report.cpp
   message_processor_report.cpp
   display_report.cpp
   input_report.cpp
+  surfaces_report.cpp
 )
 
 add_library(

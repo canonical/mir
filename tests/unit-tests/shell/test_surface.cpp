@@ -18,8 +18,9 @@
 
 #include "mir/shell/surface.h"
 #include "mir/surfaces/surface.h"
+#include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/surfaces/surface_stack_model.h"
+#include "src/server/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -76,7 +77,11 @@ public:
     std::weak_ptr<ms::Surface> create_surface(msh::Session*, msh::SurfaceCreationParameters const& )
     {
         auto state = std::make_shared<mtd::MockSurfaceState>();
-        dummy_surface = std::make_shared<ms::Surface>(state, stub_buffer_stream_, std::shared_ptr<mi::InputChannel>());
+        dummy_surface = std::make_shared<ms::Surface>(
+            state, 
+            stub_buffer_stream_,
+            std::shared_ptr<mi::InputChannel>(),
+            report);
         return dummy_surface;
     }
 
@@ -98,6 +103,7 @@ public:
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
     std::shared_ptr<ms::Surface> dummy_surface;
+    std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
 };
 
 class MockSurfaceBuilder : public msh::SurfaceBuilder

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,26 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/rendering_operator.h"
+#include "mir/surfaces/surfaces_report.h"
 
-namespace mc=mir::compositor;
+namespace ms = mir::surfaces;
 
-mc::RenderingOperator::RenderingOperator(
-    Renderer& renderer,
-    std::function<void(std::shared_ptr<void> const&)> save_resource) :
-    renderer(renderer),
-    save_resource(save_resource)
-{
-}
+void ms::NullSurfacesReport::surface_created(Surface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_added(Surface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_removed(Surface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_deleted(Surface* const /*surface*/) {}
 
-mc::RenderingOperator::~RenderingOperator()
-{
-}
-
-void mc::RenderingOperator::operator()(CompositingCriteria const& info, BufferStream& stream)
-{
-    renderer.render(save_resource, info, stream);
-}
