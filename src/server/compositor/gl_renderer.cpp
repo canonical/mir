@@ -17,7 +17,7 @@
 
 #include "gl_renderer.h"
 #include "mir/compositor/compositing_criteria.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/buffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -243,7 +243,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 void mc::GLRenderer::render(
     std::function<void(std::shared_ptr<void> const&)> save_resource,
     CompositingCriteria const& criteria,
-    mir::surfaces::BufferStream& stream)
+    BufferStream& stream)
 {
     glUseProgram(resources.program);
 

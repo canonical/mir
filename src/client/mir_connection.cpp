@@ -338,6 +338,9 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
         platform_package.fd_items = platform.fd_size();
         for (int i = 0; i != platform.fd_size(); ++i)
             platform_package.fd[i] = platform.fd(i);
+
+        for (auto d : extra_platform_data)
+            platform_package.data[platform_package.data_items++] = d;
     }
     else
     {
@@ -469,4 +472,17 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
+}
+
+bool MirConnection::set_extra_platform_data(
+    std::vector<int> const& extra_platform_data_arg)
+{
+    auto const total_data_size =
+        connect_result.platform().data_size() + extra_platform_data_arg.size();
+
+    if (total_data_size > mir_platform_package_max)
+        return false;
+
+    extra_platform_data = extra_platform_data_arg;
+    return true;
 }

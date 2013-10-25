@@ -22,7 +22,7 @@
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/default_display_configuration_policy.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/asio_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"

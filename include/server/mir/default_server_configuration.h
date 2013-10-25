@@ -85,6 +85,7 @@ class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
 class InputRegistrar;
+class SurfacesReport;
 }
 namespace graphics
 {
@@ -195,6 +196,7 @@ public:
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
     virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
     virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
+    virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -210,6 +212,7 @@ public:
      * configurable interfaces for modifying surfaces
      *  @{ */
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+    virtual std::shared_ptr<surfaces::SurfacesReport>    the_surfaces_report();
     /** @} */
 
     /** @name surfaces configuration - dependencies
@@ -275,6 +278,8 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
+    CachedPtr<surfaces::SurfacesReport> surfaces_report;
+
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;

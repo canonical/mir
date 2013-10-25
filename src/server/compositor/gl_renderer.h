@@ -35,7 +35,7 @@ public:
 
     /* From renderer */
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                                   CompositingCriteria const& info, surfaces::BufferStream& stream);
+                                   CompositingCriteria const& info, BufferStream& stream);
     void clear(unsigned long frameno) override;
 
     ~GLRenderer() noexcept {}

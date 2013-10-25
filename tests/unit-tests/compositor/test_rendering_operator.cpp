@@ -30,7 +30,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 
 namespace
@@ -49,7 +48,7 @@ public:
     void clear(unsigned long) override {}
 
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                mc::CompositingCriteria const&, ms::BufferStream&)
+                mc::CompositingCriteria const&, mc::BufferStream&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)

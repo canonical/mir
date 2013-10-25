@@ -48,7 +48,7 @@ class NullRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mc::CompositingCriteria const&, ms::BufferStream&)
+                                   mc::CompositingCriteria const&, mc::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed
