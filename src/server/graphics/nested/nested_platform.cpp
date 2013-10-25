@@ -16,8 +16,8 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/graphics/nested/nested_platform.h"
-#include "mir/graphics/nested/host_connection.h"
+#include "nested_platform.h"
+#include "host_connection.h"
 #include "mir/graphics/nested_context.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"

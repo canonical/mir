@@ -21,8 +21,6 @@
 #include "mir/default_server_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/default_display_configuration_policy.h"
-#include "mir/graphics/platform.h"
 #include "mir/report_exception.h"
 
 #include <csignal>
@@ -56,8 +54,7 @@ try
 
     mir::DefaultServerConfiguration conf{argc, argv};
 
-    auto platform = conf.the_graphics_platform();
-    auto display = platform->create_display(std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
+    auto display = conf.the_display();
 
     mir::draw::glAnimationBasic gl_animation;
 

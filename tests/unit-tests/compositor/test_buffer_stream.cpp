@@ -29,7 +29,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
 
 class BufferStreamTest : public ::testing::Test
 {

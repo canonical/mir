@@ -13,20 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "host_connection.h"
-#include "mir_toolkit/mir_client_library.h"
+#include "mir/surfaces/surfaces_report.h"
 
-namespace mgn = mir::graphics::nested;
+namespace ms = mir::surfaces;
 
-mgn::HostConnection::HostConnection(std::string const& host_socket, std::string const& nested_socket)
-    : connection{mir_connect_sync(host_socket.c_str(), ("nested-mir@:"+nested_socket).c_str())}
-{
-}
+void ms::NullSurfacesReport::surface_created(Surface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_added(Surface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_removed(Surface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_deleted(Surface* const /*surface*/) {}
 
-mgn::HostConnection::~HostConnection()
-{
-    mir_connection_release(connection);
-}

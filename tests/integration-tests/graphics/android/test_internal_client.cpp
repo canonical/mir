@@ -26,9 +26,10 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/internal_client.h"
 #include "mir/graphics/internal_surface.h"
-#include "mir/surfaces/surface_stack.h"
+#include "src/server/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface_allocator.h"
+#include "mir/surfaces/surfaces_report.h"
+#include "src/server/surfaces/surface_allocator.h"
 #include "mir/shell/surface_source.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -91,8 +92,9 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
-    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory);
-    auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar);
+    auto surfaces_report = std::make_shared<ms::NullSurfacesReport>();
+    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surfaces_report);
+    auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar, surfaces_report);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, std::make_shared<mtd::NullSurfaceConfigurator>());
     auto mir_surface = as_internal_surface(

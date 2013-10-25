@@ -23,7 +23,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -48,7 +48,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class CountingBufferStream : public ms::BufferStream
+class CountingBufferStream : public mc::BufferStream
 {
 public:
     CountingBufferStream(int render_operations_fd)
@@ -79,7 +79,7 @@ public:
     {
     }
 
-    std::shared_ptr<ms::BufferStream> create_buffer_stream(mg::BufferProperties const&)
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&)
     {
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }

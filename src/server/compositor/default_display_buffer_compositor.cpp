@@ -24,7 +24,7 @@
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "bypass.h"
 #include "occlusion.h"
 #include <mutex>

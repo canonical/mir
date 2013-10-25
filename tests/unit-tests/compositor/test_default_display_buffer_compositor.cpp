@@ -112,7 +112,7 @@ struct WrappingRenderer : mc::Renderer
 
     void clear(unsigned long f) override { renderer->clear(f); }
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                mc::CompositingCriteria const& info, mir::surfaces::BufferStream& stream)
+                mc::CompositingCriteria const& info, mc::BufferStream& stream)
     {
         renderer->render(save_resource, info, stream);
     }

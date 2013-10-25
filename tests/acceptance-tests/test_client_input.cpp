@@ -24,7 +24,7 @@
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 #include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface_stack_model.h"
+#include "src/server/surfaces/surface_stack_model.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"

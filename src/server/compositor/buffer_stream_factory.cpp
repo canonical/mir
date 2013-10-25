@@ -42,7 +42,7 @@ mc::BufferStreamFactory::BufferStreamFactory(
 }
 
 
-std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
+std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     mg::BufferProperties const& buffer_properties)
 {
     // Note: Framedropping and bypass both require a minimum 3 buffers

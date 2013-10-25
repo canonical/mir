@@ -208,7 +208,7 @@ class StubRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mc::CompositingCriteria const&, ms::BufferStream& stream)
+                        mc::CompositingCriteria const&, mc::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
         stream.lock_compositor_buffer(0);
