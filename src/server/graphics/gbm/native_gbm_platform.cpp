@@ -23,6 +23,7 @@
 #include "gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/nested_context.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -32,11 +33,11 @@ namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 
 void mgg::NativeGBMPlatform::initialize(
-    std::function<void(int)> const& auth_magic,
-    int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* fd)
+    std::shared_ptr<NestedContext> const& nested_context_arg)
 {
-    auth_magic_func = auth_magic;
-    drm_fd = fd[0];
+    nested_context = nested_context_arg;
+    auto fds = nested_context->platform_fd_items();
+    drm_fd = fds.at(0);
     gbm.setup(drm_fd);
 }
 
@@ -73,7 +74,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package(
                 std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
-    auth_magic_func(magic);
+    nested_context->drm_auth_magic(magic);
 
     return std::make_shared<NativeGBMPlatformIPCPackage>(auth_fd);
 }

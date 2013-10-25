@@ -31,8 +31,8 @@ namespace
 class MockDisplayConfiguration : public mg::DisplayConfiguration
 {
 public:
-    MockDisplayConfiguration()
-        : card_id{1}
+    MockDisplayConfiguration(size_t max_simultaneous_outputs)
+        : card_id{1}, max_simultaneous_outputs{max_simultaneous_outputs}
     {
         /* Connected with modes */
         outputs.push_back(
@@ -114,11 +114,19 @@ public:
                 0,
                 mir_power_mode_on
             });
+
+        if (max_simultaneous_outputs == max_simultaneous_outputs_all)
+            max_simultaneous_outputs = outputs.size();
+    }
+
+    MockDisplayConfiguration()
+        : MockDisplayConfiguration{max_simultaneous_outputs_all}
+    {
     }
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
     {
-        f({card_id, outputs.size()});
+        f({card_id, max_simultaneous_outputs});
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
@@ -131,7 +139,9 @@ public:
                                         geom::Point, size_t, MirPowerMode));
 
 private:
+    static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
     mg::DisplayConfigurationCardId const card_id;
+    size_t max_simultaneous_outputs;
     std::vector<mg::DisplayConfigurationOutput> outputs;
 };
 
@@ -176,3 +186,25 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     policy.apply_to(conf);
 }
 
+TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
+{
+    using namespace ::testing;
+
+    size_t const max_simultaneous_outputs{1};
+    mg::DefaultDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{max_simultaneous_outputs};
+
+    size_t output_count{0};
+    conf.for_each_output([&output_count](mg::DisplayConfigurationOutput const&)
+    {
+        ++output_count;
+    });
+
+    EXPECT_CALL(conf, configure_output(_, true, _, _, _))
+        .Times(AtMost(max_simultaneous_outputs));
+
+    EXPECT_CALL(conf, configure_output(_, false, _, _, _))
+        .Times(AtLeast(output_count - max_simultaneous_outputs));
+
+    policy.apply_to(conf);
+}

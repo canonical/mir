@@ -64,7 +64,6 @@ EGLDisplay create_and_initialize_display()
 
     if ((major != 1) || (minor != 4))
         BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
-
     return egl_display;
 }
 
@@ -123,7 +122,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-          native_window, egl_display, egl_context_shared)},
+          native_window, display_provider, egl_display, egl_context_shared)},
       display_provider(display_provider),
       current_configuration{display_buffer->view_area().size}
 {

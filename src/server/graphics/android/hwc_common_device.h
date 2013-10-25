@@ -18,8 +18,8 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
-#include "hwc_device.h"
 
+#include "display_support_provider.h"
 #include <hardware/hwcomposer.h>
 
 #include <mutex>
@@ -40,7 +40,7 @@ struct HWCCallbacks
     HWCCommonDevice* self;
 };
 
-class HWCCommonDevice : public HWCDevice
+class HWCCommonDevice : public DisplaySupportProvider
 {
 public:
     virtual ~HWCCommonDevice() noexcept;
@@ -48,11 +48,6 @@ public:
     /* from HWCDevice */
     geometry::PixelFormat display_format() const;
     unsigned int number_of_framebuffers_available() const; 
-
-    virtual geometry::Size display_size() const = 0;
-    virtual void set_next_frontbuffer(std::shared_ptr<Buffer> const& buffer) = 0;
-    virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
-    
     virtual void mode(MirPowerMode mode);
 
     void notify_vsync();

@@ -32,25 +32,19 @@ class DisplayReport;
 namespace android
 {
 
-class HWCFactory;
-class HWCDevice;
-class DisplayAllocator;
+class DisplayResourceFactory;
 class DisplaySupportProvider;
 class FramebufferFactory;
 class AndroidDisplayFactory
 {
 public:
-    AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
-                          std::shared_ptr<HWCFactory> const& hwc_factory,
-                          std::shared_ptr<FramebufferFactory> const& fb_factory,
+    AndroidDisplayFactory(std::shared_ptr<DisplayResourceFactory> const& resource_factory,
                           std::shared_ptr<DisplayReport> const& display_report);
 
     std::shared_ptr<Display> create_display() const;
 
 private:
-    std::shared_ptr<DisplayAllocator> const display_factory;
-    std::shared_ptr<HWCFactory> const hwc_factory;
-    std::shared_ptr<FramebufferFactory> const fb_factory;
+    std::shared_ptr<DisplayResourceFactory> const resource_factory;
     std::shared_ptr<DisplaySupportProvider> fb_dev;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<hwc_composer_device_1> hwc_dev;

@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DEFAULT_FRAMEBUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_DEFAULT_FRAMEBUFFER_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_RESOURCE_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_RESOURCE_FACTORY_H_
 
-#include "framebuffer_factory.h"
+#include "display_resource_factory.h"
 
 #include <vector>
 
@@ -35,12 +35,25 @@ namespace android
 class GraphicBufferAllocator;
 class FBSwapper;
 
-class DefaultFramebufferFactory : public FramebufferFactory
+class ResourceFactory : public DisplayResourceFactory
 {
 public:
-    explicit DefaultFramebufferFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator);
-    std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) const;
-    std::shared_ptr<DisplaySupportProvider> create_fb_device() const; 
+    explicit ResourceFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator);
+
+    std::shared_ptr<DisplaySupportProvider> create_fb_device() const;
+
+    std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+        std::shared_ptr<DisplaySupportProvider> const& fb_device) const;
+
+    std::shared_ptr<DisplaySupportProvider> create_hwc_1_0(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+        std::shared_ptr<DisplaySupportProvider> const& fb_device) const;
+
+    std::shared_ptr<graphics::Display> create_display(
+        std::shared_ptr<DisplaySupportProvider> const& support_provider,
+        std::shared_ptr<graphics::DisplayReport> const& report) const;
+
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
 
