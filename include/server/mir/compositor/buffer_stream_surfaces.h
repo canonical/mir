@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
 #define MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
 
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 
 #include <mutex>
 
@@ -33,7 +33,7 @@ class BufferIDUniqueGenerator;
 class BufferBundle;
 class BackBufferStrategy;
 
-class BufferStreamSurfaces : public surfaces::BufferStream
+class BufferStreamSurfaces : public BufferStream
 {
 public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);

@@ -33,6 +33,7 @@
 #include <set>
 #include <unordered_set>
 #include <cstddef>
+#include <cstring>
 
 namespace mcl = mir::client;
 
@@ -71,6 +72,11 @@ void assign_result(void *result, void **context)
 {
     if (context)
         *context = result;
+}
+
+size_t division_ceiling(size_t a, size_t b)
+{
+    return ((a - 1) / b) + 1;
 }
 
 }
@@ -396,14 +402,6 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
     return surface->generate_native_window();
 }
 
-MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
-                                             unsigned int magic,
-                                             mir_drm_auth_magic_callback callback,
-                                             void* context)
-{
-    return connection->drm_auth_magic(magic, callback, context);
-}
-
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,
                                     MirSurfaceType type)
 {
@@ -516,4 +514,27 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
     {
         return nullptr;
     }
+}
+
+/**************************
+ * DRM specific functions *
+ **************************/
+
+MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
+                                             unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    return connection->drm_auth_magic(magic, callback, context);
+}
+
+int mir_connection_drm_set_gbm_device(MirConnection* connection,
+                                      struct gbm_device* gbm_dev)
+{
+    size_t const pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
+    std::vector<int> extra_data(pointer_size_in_ints);
+
+    memcpy(extra_data.data(), &gbm_dev, sizeof(gbm_dev));
+
+    return connection->set_extra_platform_data(extra_data);
 }

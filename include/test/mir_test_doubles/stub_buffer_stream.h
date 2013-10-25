@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 
-#include <mir/surfaces/buffer_stream.h>
+#include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/stub_buffer.h>
 
 namespace mir
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class StubBufferStream : public surfaces::BufferStream
+class StubBufferStream : public compositor::BufferStream
 {
 public:
     StubBufferStream()

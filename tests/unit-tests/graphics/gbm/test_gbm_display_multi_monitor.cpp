@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mir_test_framework/udev_environment.h"

@@ -20,7 +20,6 @@
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
-#include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_stream_factory.h"
@@ -46,18 +45,13 @@
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
-#include "mir/graphics/nested/host_connection.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/compositor/gl_renderer_factory.h"
 #include "mir/compositor/renderer.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/graphics/display_buffer.h"
-#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -80,14 +74,9 @@
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/shell/mediating_display_changer.h"
-#include "mir/surfaces/surface_allocator.h"
-#include "mir/surfaces/surface_stack.h"
-#include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
-#include "mir/graphics/native_platform.h"
-#include "mir/graphics/nested/nested_platform.h"
 
 #include <map>
 
@@ -100,11 +89,6 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mia = mi::android;
-
-namespace
-{
-mir::SharedLibrary const* load_library(std::string const& libname);
-}
 
 namespace
 {
@@ -207,41 +191,6 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
-
-std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
-{
-    return graphics_platform(
-        [this]()->std::shared_ptr<mg::Platform>
-        {
-            auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
-
-            // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-            if (the_options()->is_set(standalone_opt) || !the_options()->is_set(host_socket_opt))
-            {
-                auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-                return create_platform(the_options(), the_display_report());
-            }
-
-            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(
-                the_host_connection(),
-                the_nested_input_relay(),
-                the_display_report(),
-                create_native_platform(the_display_report()));
-        });
-}
-
-std::shared_ptr<mg::BufferInitializer>
-mir::DefaultServerConfiguration::the_buffer_initializer()
-{
-    return buffer_initializer(
-        []()
-        {
-             return std::make_shared<mg::NullBufferInitializer>();
-        });
-}
-
 std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
 {
     return renderer_factory(
@@ -292,7 +241,9 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
     return shell_focus_setter(
         [this]
         {
-            return std::make_shared<msh::DefaultFocusMechanism>(the_input_targeter(), the_surface_controller());
+            return std::make_shared<msh::DefaultFocusMechanism>(
+                the_input_targeter(),
+                the_shell_surface_controller());
         });
 }
 
@@ -506,27 +457,6 @@ mir::DefaultServerConfiguration::the_input_manager()
         });
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator>
-mir::DefaultServerConfiguration::the_buffer_allocator()
-{
-    return buffer_allocator(
-        [&]()
-        {
-            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
-        });
-}
-
-std::shared_ptr<mg::Display>
-mir::DefaultServerConfiguration::the_display()
-{
-    return display(
-        [this]()
-        {
-            return the_graphics_platform()->create_display(
-                the_display_configuration_policy());
-        });
-}
-
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
     return input_region(
@@ -564,34 +494,6 @@ std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_s
         });
 }
 
-std::shared_ptr<ms::SurfaceStackModel>
-mir::DefaultServerConfiguration::the_surface_stack_model()
-{
-    return surface_stack(
-        [this]() -> std::shared_ptr<ms::SurfaceStack>
-        {
-            auto factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(), the_input_channel_factory());
-            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
-            the_input_configuration()->set_input_targets(ss);
-            return ss;
-        });
-}
-
-std::shared_ptr<mc::Scene>
-mir::DefaultServerConfiguration::the_scene()
-{
-    return surface_stack(
-        [this]() -> std::shared_ptr<ms::SurfaceStack>
-        {
-            auto factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(), the_input_channel_factory());
-            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
-            the_input_configuration()->set_input_targets(ss);
-            return ss;
-        });
-}
-
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_shell_surface_factory()
 {
@@ -604,22 +506,6 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
             return std::make_shared<msh::OrganisingSurfaceFactory>(
                 surface_source,
                 the_shell_placement_strategy());
-        });
-}
-
-std::shared_ptr<msh::SurfaceBuilder>
-mir::DefaultServerConfiguration::the_surface_builder()
-{
-    return the_surface_controller();
-}
-
-std::shared_ptr<ms::SurfaceController>
-mir::DefaultServerConfiguration::the_surface_controller()
-{
-    return surface_controller(
-        [this]()
-        {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
         });
 }
 
@@ -822,46 +708,6 @@ std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_
         });
 }
 
-std::shared_ptr<mg::DisplayConfigurationPolicy>
-mir::DefaultServerConfiguration::the_display_configuration_policy()
-{
-    return display_configuration_policy(
-        []
-        {
-            return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_host_connection()
--> std::shared_ptr<graphics::nested::HostConnection>
-{
-    return host_connection(
-        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
-        {
-            auto const options = the_options();
-
-            if (!options->is_set(standalone_opt))
-            {
-                if (!options->is_set(host_socket_opt))
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
-
-                auto host_socket = options->get(host_socket_opt, "");
-                auto server_socket = the_socket_file();
-
-                if (server_socket == host_socket)
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
-
-                return std::make_shared<graphics::nested::HostConnection>(
-                    host_socket,
-                    server_socket);
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
-            }
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_nested_input_relay()
 -> std::shared_ptr<mi::NestedInputRelay>
 {
@@ -901,23 +747,4 @@ auto mir::DefaultServerConfiguration::the_connector_report()
                     " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
             }
         });
-}
-
-namespace
-{
-mir::SharedLibrary const* load_library(std::string const& libname)
-{
-    // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
-
-    if (auto& ptr = libraries_cache[libname])
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
-}
 }
