@@ -1,22 +1,20 @@
 /*
- * Copyright (C) 2013 Canonical LTD
+ * Copyright © 2013 Canonical Ltd.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
-
-// TODO: ~dandrader. What license should this file be under?
 
 #ifndef ANDROID_INTSET_H
 #define ANDROID_INTSET_H
@@ -27,6 +25,10 @@
 #include <algorithm>
 #include <sstream>
 #include <set>
+
+#ifdef ANDROID_INPUT_INTSET_TEST
+namespace test {
+#endif
 
 namespace android {
 
@@ -45,44 +47,13 @@ public:
     static int destructionCount;
 #endif
 
-    IntSet() : std::set<int32_t>() {
-#ifdef ANDROID_INPUT_INTSET_TEST
-        ++constructionCount;
-#endif
-    }
+    IntSet();
+    IntSet(std::initializer_list<int32_t> list);
+    virtual ~IntSet();
 
-    IntSet(std::initializer_list<int32_t> list)
-        : std::set<int32_t>(list) {
-#ifdef ANDROID_INPUT_INTSET_TEST
-        ++constructionCount;
-#endif
-    }
+    IntSet operator -(const IntSet &other) const;
 
-    virtual ~IntSet() {
-#ifdef ANDROID_INPUT_INTSET_TEST
-        ++destructionCount;
-#endif
-    }
-
-    IntSet operator -(const IntSet &other) const {
-        IntSet result;
-
-        std::set_difference(cbegin(), cend(),
-                other.cbegin(), other.cend(),
-                std::inserter(result, result.begin()));
-
-        return result;
-    }
-
-    IntSet operator &(const IntSet &other) const {
-        IntSet result;
-
-        std::set_intersection(cbegin(), cend(),
-                         other.cbegin(), other.cend(),
-                         std::inserter(result, result.begin()));
-
-        return result;
-    }
+    IntSet operator &(const IntSet &other) const;
 
     template<typename Func>
     void forEach(Func func) { std::for_each(begin(), end(), func); }
@@ -91,68 +62,30 @@ public:
     void forEach(Func func) const { std::for_each(begin(), end(), func); }
 
     void remove(int32_t value) { erase(value); }
-
-    void remove(const IntSet &values) {
-        remove(begin(), values.begin(), values.end());
-    }
+    void remove(const IntSet &values);
 
     size_t count() const { return size(); }
 
     bool isEmpty() const { return empty(); }
 
-    bool contains(int32_t value) const { return find(value) != end(); }
+    bool contains(int32_t value) const;
 
     int32_t first() const { return *cbegin(); }
 
     // It's assumed that the given value does exist in the set
-    size_t indexOf(int32_t value) const {
-        auto it = begin();
-        size_t index = 0;
-        while (it != end() && *it != value) {
-            it++;
-            ++index;
-        }
-        assert(it != end());
-        return index;
-    }
+    size_t indexOf(int32_t value) const;
 
-    std::string toString() const {
-        std::ostringstream stream;
-
-        bool isFirst = true;
-        forEach([&](int32_t value) {
-            if (isFirst) {
-                isFirst = false;
-            } else {
-                stream << ", ";
-            }
-            stream << value;
-        });
-
-        return stream.str();
-    }
+    std::string toString() const;
 
 private:
     void remove(IntSet::iterator selfIterator, IntSet::const_iterator otherIterator,
-                IntSet::const_iterator otherEnd) {
-
-        if (selfIterator == end() || otherIterator == otherEnd)
-            return;
-
-        if (*selfIterator < *otherIterator) {
-            selfIterator++;
-            remove(selfIterator, otherIterator, otherEnd);
-        } else if (*selfIterator == *otherIterator) {
-            selfIterator = erase(selfIterator);
-            otherIterator++;
-            remove(selfIterator, otherIterator, otherEnd);
-        } else /* *selfIterator > *otherIterator */ {
-            otherIterator++;
-            remove(selfIterator, otherIterator, otherEnd);
-        }
-    }
+                IntSet::const_iterator otherEnd);
 };
 
 } // namespace android
+
+#ifdef ANDROID_INPUT_INTSET_TEST
+} // namespace test
+#endif
 
 #endif

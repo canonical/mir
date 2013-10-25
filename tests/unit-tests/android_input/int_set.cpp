@@ -16,22 +16,23 @@
  * Authored by: Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
+// Need a different implementation of IntSet with ANDROID_INPUT_INTSET_TEST
+// defined. It will fall under test::android namespace instead of in android
+// to avoid clashing with the production IntSet from libmirserver
 #define ANDROID_INPUT_INTSET_TEST
-
 #include <androidfw/IntSet.h>
+#include <IntSet.cpp>
+
+int test::android::IntSet::constructionCount;
+int test::android::IntSet::destructionCount;
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <string>
 #include <vector>
 
-using namespace android;
 using std::vector;
 using std::string;
-
-int android::IntSet::constructionCount;
-int android::IntSet::destructionCount;
 
 namespace
 {

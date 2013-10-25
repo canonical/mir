@@ -33,6 +33,7 @@ add_library(
   frameworks/base/services/input/InputReader.cpp
   frameworks/base/services/input/InputTransport.cpp
   frameworks/base/services/input/InputWindow.cpp
+  frameworks/base/services/input/IntSet.cpp
   frameworks/base/services/input/PointerController.cpp
   # Keyboard/keymap handling
   frameworks/base/services/input/GenericKeyMap.cpp
