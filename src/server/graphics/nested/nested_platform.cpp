@@ -66,8 +66,7 @@ public:
 
     void drm_set_gbm_device(struct gbm_device* dev)
     {
-        int succeeded = mir_connection_drm_set_gbm_device(*connection, dev);
-        if (!succeeded)
+        if (!mir_connection_drm_set_gbm_device(*connection, dev))
         {
             std::string const msg("Nested Mir failed to set the gbm device");
             BOOST_THROW_EXCEPTION(std::runtime_error(msg));
