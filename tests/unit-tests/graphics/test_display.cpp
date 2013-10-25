@@ -27,7 +27,7 @@
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "mir_test_framework/udev_environment.h"
-#include "mir/graphics/default_display_configuration_policy.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
 #else
 #include "src/server/graphics/android/android_framebuffer_window_query.h"
 #include "src/server/graphics/android/android_display.h"

@@ -16,7 +16,7 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/graphics/nested/host_connection.h"
+#include "host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
 
 namespace mgn = mir::graphics::nested;

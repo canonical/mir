@@ -21,7 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
-#include "mir/graphics/nested/host_connection.h"
+#include "host_connection.h"
 
 namespace mir
 {
