@@ -245,6 +245,7 @@ public:
 protected:
     using DefaultConfigurationOptions::the_options;
     using DefaultConfigurationOptions::add_options;
+    using DefaultConfigurationOptions::parse_options;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
