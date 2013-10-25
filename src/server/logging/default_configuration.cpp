@@ -20,8 +20,8 @@
 #include "mir/abnormal_exit.h"
 
 #include "connector_report.h"
-#include "mir/logging/display_report.h"
-#include "mir/logging/session_mediator_report.h"
+#include "display_report.h"
+#include "session_mediator_report.h"
 #include "surfaces_report.h"
 
 #include "mir/graphics/null_display_report.h"

@@ -19,7 +19,7 @@
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/gbm_display.h"
 #include "src/server/graphics/gbm/virtual_terminal.h"
-#include "mir/logging/display_report.h"
+#include "src/server/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
