@@ -17,8 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "src/server/compositor/renderer.h"
+#include "src/server/compositor/renderer_factory.h"
 #include "mir/input/composite_event_filter.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -48,7 +48,7 @@ class NullRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mc::CompositingCriteria const&, ms::BufferStream&)
+                                   mc::CompositingCriteria const&, mc::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed

@@ -26,12 +26,9 @@
 
 namespace mir
 {
-namespace surfaces
-{
-class BufferStream;
-}
 namespace compositor
 {
+class BufferStream;
 class CompositingCriteria;
 
 class FilterForScene
@@ -52,7 +49,7 @@ class OperatorForScene
 public:
     virtual ~OperatorForScene() {}
 
-    virtual void operator()(CompositingCriteria const&, surfaces::BufferStream&) = 0;
+    virtual void operator()(CompositingCriteria const&, BufferStream&) = 0;
 
 protected:
     OperatorForScene() = default;
@@ -66,7 +63,12 @@ class Scene
 public:
     virtual ~Scene() {}
 
+    // Back to front; normal rendering order
     virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
+
+    // Front to back; as used when scanning for occlusions
+    virtual void reverse_for_each_if(FilterForScene& filter,
+                                     OperatorForScene& op) = 0;
 
     /**
      * Sets a callback to be called whenever the state of the

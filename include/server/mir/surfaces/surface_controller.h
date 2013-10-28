@@ -45,7 +45,7 @@ public:
 
     virtual void raise(std::weak_ptr<Surface> const& surface);
 
-protected:
+private:
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 

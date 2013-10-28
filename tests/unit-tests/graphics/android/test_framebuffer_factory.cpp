@@ -16,12 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/default_framebuffer_factory.h"
+#include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_report.h"
 
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -50,14 +52,16 @@ public:
 class FBFactory  : public ::testing::Test
 {
 public:
-    FBFactory()
-        : mock_buffer_allocator(std::make_shared<testing::NiceMock<MockAndroidGraphicBufferAllocator>>()),
-          mock_display_info_provider(std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>()),
-          fake_fb_num(2)
+    void SetUp()
     {
         using namespace testing;
+        mock_buffer_allocator = std::make_shared<NiceMock<MockAndroidGraphicBufferAllocator>>();
+        mock_display_info_provider = std::make_shared<NiceMock<mtd::MockDisplaySupportProvider>>();
+        mock_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
+        fake_fb_num = 2;
+
         ON_CALL(*mock_display_info_provider, display_format())
-            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
+            .WillByDefault(Return(geom::PixelFormat::argb_8888));
         ON_CALL(*mock_display_info_provider, display_size())
             .WillByDefault(Return(geom::Size{2, 3}));
         ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
@@ -66,65 +70,65 @@ public:
             .WillByDefault(Return(std::shared_ptr<mga::Buffer>()));
     }
 
+    std::shared_ptr<mtd::MockDisplayReport> mock_report;
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_info_provider;
-    unsigned int const fake_fb_num;
+    unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
  
     EXPECT_CALL(*mock_display_info_provider, number_of_framebuffers_available())
         .Times(1);
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 }
 
 TEST_F(FBFactory, test_native_window_creation_uses_size)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     geom::Width disp_width{44};
     geom::Height disp_height{4567654};
     geom::Size disp_size{disp_width, disp_height};   
  
     EXPECT_CALL(*mock_display_info_provider, display_size())
-        .Times(1)
-        .WillOnce(Return(disp_size));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(disp_size));
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(disp_size,_,_))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 } 
 
 TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,mga::BufferUsage::use_framebuffer_gles))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 } 
 
-//note: @kdub imo, the hwc api has a hole in it that it doesn't allow query for format. surfaceflinger code
-//            makes note of this api hole in its comments too. It always uses rgba8888, which we will do too.
-TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
+TEST_F(FBFactory, test_native_window_creation_uses_argb_8888)
 {
     using namespace testing;
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
-    geom::PixelFormat pf = geom::PixelFormat::abgr_8888; 
+    mga::ResourceFactory factory(mock_buffer_allocator);
+    geom::PixelFormat pf = geom::PixelFormat::argb_8888; 
  
     EXPECT_CALL(*mock_display_info_provider, display_format())
         .Times(AtLeast(1))
@@ -132,7 +136,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,pf,_))
         .Times(fake_fb_num);
  
-    factory.create_fb_native_window(mock_display_info_provider);
+    factory.create_display(mock_display_info_provider, mock_report);
 }
 
 TEST_F(FBFactory, test_device_creation_accesses_gralloc)
@@ -141,14 +145,14 @@ TEST_F(FBFactory, test_device_creation_accesses_gralloc)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_device();
 }
 
 TEST_F(FBFactory, test_device_creation_throws_on_failure)
 {
     using namespace testing;
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -176,7 +180,7 @@ TEST_F(FBFactory, test_device_creation_resource_has_fb_close_on_destruct)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_device();
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());

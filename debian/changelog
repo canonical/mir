@@ -1,8 +1,24 @@
-mir (0.0.15+13.10.20131011-0ubuntu1) UNRELEASED; urgency=low
+mir (0.1.0-0ubuntu1) UNRELEASED; urgency=low
 
+  * Bump version 0.1.0
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 21 Oct 2013 17:07:18 +0800
+
+mir (0.0.15+13.10.20131014-0ubuntu2) trusty; urgency=low
+
+  * No change rebuild for Boost 1.54 transition.
+
+ -- Dmitrijs Ledkovs <xnox@ubuntu.com>  Mon, 21 Oct 2013 15:06:19 +0100
+
+mir (0.0.15+13.10.20131014-0ubuntu1) saucy; urgency=low
+
+  [ Kevin Gunn ]
   * bump version 0.0.15
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Mon, 14 Oct 2013 13:52:10 -0500
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1133
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Oct 2013 23:55:33 +0000
 
 mir (0.0.14+13.10.20131011-0ubuntu1) saucy; urgency=low
 
@@ -29,15 +45,6 @@ mir (0.0.14+13.10.20131010-0ubuntu1) saucy; urgency=low
 
 mir (0.0.14+13.10.20131009.4-0ubuntu1) saucy; urgency=low
 
-  [ kg ]
-  * bump version for ABI break (LP: #1229212)
-
-  [ Robert Ancell ]
-  * Bump version to 0.0.12
-
-  [ Kevin Gunn ]
-  * bump version to 0.0.13
-
   [Kevin Gunn]
   * bump version to 0.0.14
 
@@ -58,12 +65,6 @@ mir (0.0.14+13.10.20131009.4-0ubuntu1) saucy; urgency=low
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 09 Oct 2013 21:57:59 +0000
 
 mir (0.0.13+13.10.20131003-0ubuntu1) saucy; urgency=low
-
-  [ kg ]
-  * bump version for ABI break (LP: #1229212)
-
-  [ Robert Ancell ]
-  * Bump version to 0.0.12
 
   [ Kevin Gunn ]
   * bump version to 0.0.13
@@ -108,9 +109,6 @@ mir (0.0.12+13.10.20131001.1-0ubuntu1) saucy; urgency=low
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Oct 2013 10:04:25 +0000
 
 mir (0.0.12+13.10.20130926.1-0ubuntu1) saucy; urgency=low
-
-  [ kg ]
-  * bump version for ABI break (LP: #1229212)
 
   [ Robert Ancell ]
   * Bump version to 0.0.12

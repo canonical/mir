@@ -26,7 +26,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/graphics/default_display_configuration_policy.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 

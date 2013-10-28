@@ -50,7 +50,7 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            auto const threads = the_options()->get("ipc-thread-pool",
+            auto const threads = the_options()->get(frontend_threads,
                                                     default_ipc_threads);
             auto shell_sessions = the_shell_session_container();
             auto const& force_requests_to_complete = [shell_sessions]

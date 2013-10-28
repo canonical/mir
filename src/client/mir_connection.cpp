@@ -185,21 +185,17 @@ MirWaitHandle* MirConnection::release_surface(
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
-    try
+    mir::protobuf::SurfaceId message;
+    message.set_value(surface->id());
+
     {
-        mir::protobuf::SurfaceId message;
-        message.set_value(surface->id());
-        server.release_surface(0, &message, &void_response,
-                        gp::NewCallback(this, &MirConnection::released, surf_release));
-    }
-    catch (std::exception const& x)
-    {
-        set_error_message(std::string("release_surface: ") + x.what());
-        released(surf_release);
+        std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
+        release_wait_handles.push_back(new_wait_handle);
     }
 
-    std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
-    release_wait_handles.push_back(new_wait_handle);
+    server.release_surface(0, &message, &void_response,
+                           gp::NewCallback(this, &MirConnection::released, surf_release));
+
 
     return new_wait_handle;
 }
@@ -282,15 +278,8 @@ MirWaitHandle* MirConnection::disconnect()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    try 
-    {
-        server.disconnect(0, &ignored, &ignored,
-                          google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
-    }
-    catch (std::exception const& x)
-    {
-        set_error_message(std::string("disconnect: ") + x.what());
-    }
+    server.disconnect(0, &ignored, &ignored,
+                      google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
     return &disconnect_wait_handle;
 }
@@ -349,6 +338,9 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
         platform_package.fd_items = platform.fd_size();
         for (int i = 0; i != platform.fd_size(); ++i)
             platform_package.fd[i] = platform.fd(i);
+
+        for (auto d : extra_platform_data)
+            platform_package.data[platform_package.data_items++] = d;
     }
     else
     {
@@ -480,4 +472,17 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
+}
+
+bool MirConnection::set_extra_platform_data(
+    std::vector<int> const& extra_platform_data_arg)
+{
+    auto const total_data_size =
+        connect_result.platform().data_size() + extra_platform_data_arg.size();
+
+    if (total_data_size > mir_platform_package_max)
+        return false;
+
+    extra_platform_data = extra_platform_data_arg;
+    return true;
 }

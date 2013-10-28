@@ -40,7 +40,9 @@ protected:
         /* misaligned stride to tease out stride problems */
         test_region.stride = 102;
         test_region.height = 50;
-        region = std::shared_ptr<char>(new char[bytes_pp * test_region.height * test_region.stride]);
+        auto region_size =
+            sizeof(char) * bytes_pp * test_region.height * test_region.stride;
+        region = std::shared_ptr<char>(static_cast<char*>(::operator new(region_size)));
         test_region.vaddr = region.get();
 
         uint32_t colors[2][2] = {{0x12345678, 0x23456789},

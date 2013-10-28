@@ -89,24 +89,24 @@ struct TestClient
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters{
+        MirSurfaceParameters surface_parameters
+        {
             "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_software, mir_display_output_id_invalid};
+            mir_buffer_usage_software, mir_display_output_id_invalid
+        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
         auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
             mir_surface_get_graphics_region(surface, &graphics_region);
-            switch (i % 2)
+            if (i % 2)
             {
-                case 0:
-                    draw_pattern0.draw(graphics_region);
-                    break;
-                case 1:
-                default:
-                    draw_pattern1.draw(graphics_region);
-                    break; 
+                draw_pattern1.draw(graphics_region);
+            }
+            else
+            {
+                draw_pattern0.draw(graphics_region);
             }
             mir_surface_swap_buffers_sync(surface);
         }
@@ -121,13 +121,15 @@ struct TestClient
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters{
+        MirSurfaceParameters surface_parameters
+        {
             "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware, mir_display_output_id_invalid};
+            mir_buffer_usage_hardware, mir_display_output_id_invalid
+        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
         auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
-
+        /* set up egl context */
         int major, minor, n;
         EGLContext context;
         EGLSurface egl_surface;
@@ -176,7 +178,6 @@ struct TestClient
         mir_connection_release(connection);
         return 0;
     }
-
 
     static int exit_function()
     {
@@ -248,7 +249,6 @@ struct StubServerGenerator : public mt::StubServerTool
         done->Run();
     }
 
-
     uint32_t red_value_for_surface()
     {
         if ((surface_pf == geom::PixelFormat::abgr_8888) || (surface_pf == geom::PixelFormat::xbgr_8888))
@@ -278,11 +278,11 @@ struct StubServerGenerator : public mt::StubServerTool
     }
 
 private:
-    std::mutex buffer_mutex;
-    geom::PixelFormat surface_pf;
     std::shared_ptr<mga::AndroidGraphicBufferAllocator> allocator;
     std::shared_ptr<mga::Buffer> client_buffer;
     std::shared_ptr<mga::Buffer> last_posted;
+    std::mutex buffer_mutex;
+    geom::PixelFormat surface_pf;
 };
 
 }
@@ -400,4 +400,5 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
 
     auto buf1 = mock_server->last_posted_buffer();
     auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle()->anwb());
+    EXPECT_TRUE(green_pattern.check(*region1));
 }

@@ -17,7 +17,7 @@
 
 #include "gl_renderer.h"
 #include "mir/compositor/compositing_criteria.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/buffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -243,12 +243,19 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 void mc::GLRenderer::render(
     std::function<void(std::shared_ptr<void> const&)> save_resource,
     CompositingCriteria const& criteria,
-    mir::surfaces::BufferStream& stream)
+    BufferStream& stream)
 {
     glUseProgram(resources.program);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (criteria.shaped() || criteria.alpha() < 1.0f)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else
+    {
+        glDisable(GL_BLEND);
+    }
     glActiveTexture(GL_TEXTURE0);
 
     glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE,

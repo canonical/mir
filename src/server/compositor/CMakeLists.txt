@@ -12,6 +12,8 @@ set(
   multi_threaded_compositor.cpp
   switching_bundle.cpp
   bypass.cpp
+  occlusion.cpp
+  default_configuration.cpp
 )
 
 ADD_LIBRARY(

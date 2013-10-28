@@ -16,24 +16,64 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/graphics/nested/nested_platform.h"
-#include "mir/graphics/nested/host_connection.h"
+#include "nested_platform.h"
+#include "host_connection.h"
+#include "mir/graphics/nested_context.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 
 #include "nested_display.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
 
-void auth_magic_callback(int status, void * /*context*/)
+namespace
 {
-    if (status)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir auth magic error: "));
+
+class MirConnectionNestedContext : public mg::NestedContext
+{
+public:
+    MirConnectionNestedContext(std::shared_ptr<mgn::HostConnection> const& connection)
+        : connection{connection}
+    {
+    }
+
+    std::vector<int> platform_fd_items()
+    {
+        MirPlatformPackage pkg;
+        mir_connection_get_platform(*connection, &pkg);
+        return std::vector<int>(pkg.fd, pkg.fd + pkg.fd_items);
+    }
+
+    void drm_auth_magic(int magic)
+    {
+        int status;
+        mir_wait_for(mir_connection_drm_auth_magic(*connection, magic,
+                                                   drm_auth_magic_callback, &status));
+        if (status)
+        {
+            std::string const msg("Nested Mir failed to authenticate magic");
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error(msg)) << boost::errinfo_errno(status));
+        }
+    }
+
+    static void drm_auth_magic_callback(int status, void* context)
+    {
+        int* status_ret = static_cast<int*>(context);
+        *status_ret = status;
+    }
+
+private:
+    std::shared_ptr<mgn::HostConnection> const connection;
+};
+
 }
 
 mgn::NestedPlatform::NestedPlatform(
@@ -51,18 +91,7 @@ connection{connection}
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(*connection))));
     }
 
-    MirPlatformPackage pkg;
-    mir_connection_get_platform(*connection, &pkg);
-    MirConnection* c = *connection;
-    auto auth_magic = [c] (int magic)
-        {
-            if (!mir_connection_is_valid(c))
-            {
-                BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir callback Platform Connection Error: "));
-            }
-            mir_wait_for(mir_connection_drm_auth_magic(c, magic, auth_magic_callback, NULL));
-        };
-    native_platform->initialize(auth_magic, pkg.data_items, pkg.data, pkg.fd_items, pkg.fd);
+    native_platform->initialize(std::make_shared<MirConnectionNestedContext>(connection));
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept

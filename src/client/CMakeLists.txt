@@ -68,7 +68,7 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
-set(MIRCLIENT_ABI 3)
+set(MIRCLIENT_ABI 4)
 
 set_target_properties(
   mirclient
@@ -77,20 +77,6 @@ set_target_properties(
   SOVERSION ${MIRCLIENT_ABI}
 )
 
-#
-# The version of libEGL.so.N installed on the build machine will often link
-# to an older version of libmirclient.so.N than we're trying to build. But if
-# we allow EGL clients to link to both then they will depend on TWO different
-# sonames of mirclient and get linkage errors. This hack ensures that all EGL
-# mir clients in our source tree will only ever link to one version of
-# mirclient; that is the new one here.
-# It might sound nasty, but it's much nicer than having to maintain mirclient
-# and mirserver in different source packages.
-#
-add_custom_target(mirclient_compat_links
-  COMMAND ln -fs libmirclient.so.1 libmirclient.so.0
-  WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-)
 # Ensure mirclient_compat_links exist before any dependents of mirclient
 add_dependencies(mirclient mirclient_compat_links)
 

@@ -21,6 +21,7 @@
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
 #include "mir/frontend/connector.h"
+#include "mir/raii.h"
 
 #include <csignal>
 #include <cstdlib>
@@ -28,6 +29,8 @@
 
 namespace
 {
+auto const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
+
 std::weak_ptr<mir::frontend::Connector> weak_connector;
 
 extern "C" void delete_endpoint()
@@ -71,10 +74,17 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     weak_connector = config.the_connector();
 
-    for (auto sig : { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS })
-        old_handler[sig] = signal(sig, fatal_signal_cleanup);
+    auto const raii = raii::paired_calls(
+        [&]{ for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
+        [&]{ for (auto sig : intercepted) signal(sig, old_handler[sig]); });
 
-    std::atexit(&delete_endpoint);
+    static bool atexit_called{false};
+
+    if (!atexit_called)
+    {
+        std::atexit(&delete_endpoint);
+        atexit_called = true;
+    }
 
     init(server);
     server.run();
