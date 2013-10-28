@@ -78,6 +78,7 @@ char const* const mir::ConfigurationOptions::input_report_opt            = "inpu
 char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
 char const* const mir::ConfigurationOptions::frontend_threads            = "ipc-thread-pool";
+char const* const mir::ConfigurationOptions::name_opt                    = "name";
 
 char const* const mir::ConfigurationOptions::glog                 = "glog";
 char const* const mir::ConfigurationOptions::glog_stderrthreshold = "glog-stderrthreshold";
@@ -151,6 +152,8 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
             "threads in frontend thread pool.")
+        (name_opt, po::value<std::string>(),
+            "When nested, the name Mir uses when registering with the host.")
         ("vt", po::value<int>(),
             "VT to run on or 0 to use current. [int:default=0]");
 }

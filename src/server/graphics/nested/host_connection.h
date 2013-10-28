@@ -33,7 +33,7 @@ namespace nested
 class HostConnection
 {
 public:
-    HostConnection(std::string const& host_socket, std::string const& nested_socket);
+    HostConnection(std::string const& host_socket, std::string const& name);
     ~HostConnection();
 
     HostConnection(HostConnection const&) = delete;
