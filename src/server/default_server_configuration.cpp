@@ -22,10 +22,6 @@
 #include "mir/default_server_status_listener.h"
 
 #include "mir/options/program_option.h"
-#include "mir/compositor/buffer_stream_factory.h"
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
-#include "mir/compositor/multi_threaded_compositor.h"
-#include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/shell/session_manager.h"
@@ -43,9 +39,10 @@
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/compositor/gl_renderer_factory.h"
-#include "mir/compositor/renderer.h"
+
+
 #include "mir/graphics/null_display_report.h"
+
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -119,14 +116,6 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
-std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
-{
-    return renderer_factory(
-        []()
-        {
-            return std::make_shared<mc::GLRendererFactory>();
-        });
-}
 
 std::shared_ptr<msh::MediatingDisplayChanger>
 mir::DefaultServerConfiguration::the_mediating_display_changer()
@@ -427,54 +416,6 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         });
 }
 
-std::shared_ptr<mc::OverlayRenderer>
-mir::DefaultServerConfiguration::the_overlay_renderer()
-{
-    struct NullOverlayRenderer : public mc::OverlayRenderer
-    {
-        virtual void render(
-            geom::Rectangle const&,
-            std::function<void(std::shared_ptr<void> const&)>) {}
-    };
-    return overlay_renderer(
-        [this]()
-        {
-            return std::make_shared<NullOverlayRenderer>();
-        });
-}
-
-std::shared_ptr<mc::DisplayBufferCompositorFactory>
-mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
-{
-    return display_buffer_compositor_factory(
-        [this]()
-        {
-            return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_scene(), the_renderer_factory(), the_overlay_renderer());
-        });
-}
-
-std::shared_ptr<ms::BufferStreamFactory>
-mir::DefaultServerConfiguration::the_buffer_stream_factory()
-{
-    return buffer_stream_factory(
-        [this]()
-        {
-            return std::make_shared<mc::BufferStreamFactory>(the_buffer_allocator());
-        });
-}
-
-std::shared_ptr<mc::Compositor>
-mir::DefaultServerConfiguration::the_compositor()
-{
-    return compositor(
-        [this]()
-        {
-            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_scene(),
-                                                                 the_display_buffer_compositor_factory());
-        });
-}
 
 std::shared_ptr<mf::SessionAuthorizer>
 mir::DefaultServerConfiguration::the_session_authorizer()

@@ -349,6 +349,8 @@ public:
             uint32_t frames;
         };
 
+        // TODO Inheritance from DefaultDisplayBufferCompositorFactory is definitely the wrong relationship here
+        // TODO We should probably take a DisplayBufferCompositorFactory in the constructor and use delegation
         class RenderSurfacesDisplayBufferCompositorFactory : public mc::DefaultDisplayBufferCompositorFactory
         {
         public:

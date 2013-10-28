@@ -18,8 +18,8 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_stream_factory.h"
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "buffer_stream_factory.h"
+#include "buffer_stream_surfaces.h"
 #include "mir/graphics/buffer_properties.h"
 #include "switching_bundle.h"
 #include "mir/graphics/buffer.h"
