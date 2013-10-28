@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
