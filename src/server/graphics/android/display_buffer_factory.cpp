@@ -17,13 +17,18 @@
  */
 
 #include "display_buffer_factory.h"
+#include "display_resource_factory.h"
+#include "display_buffer.h"
 #include "display_device.h"
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <vector>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -32,96 +37,158 @@ namespace geom = mir::geometry;
 namespace
 {
 
-EGLContext create_context(EGLDisplay egl_display,
-                          EGLConfig egl_config,
-                          EGLContext egl_context_shared)
+static EGLint const dummy_pbuffer_attribs[] =
 {
-    static EGLint const default_egl_context_attr[] =
-    {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
+    EGL_WIDTH, 1,
+    EGL_HEIGHT, 1,
+    EGL_NONE
+};
 
-    return eglCreateContext(egl_display, egl_config, egl_context_shared,
-                            default_egl_context_attr);
+static EGLint const default_egl_context_attr[] =
+{
+    EGL_CONTEXT_CLIENT_VERSION, 2,
+    EGL_NONE
+};
+
+static EGLint const default_egl_config_attr [] =
+{
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
+
+static EGLConfig select_egl_config(EGLDisplay)
+{
+    return reinterpret_cast<EGLConfig>(0x2);
 }
 
-EGLSurface create_surface(EGLDisplay egl_display,
-                          EGLConfig egl_config,
-                          EGLNativeWindowType native_win)
+static EGLConfig select_egl_config_with_visual_id(EGLDisplay egl_display, int required_visual_id)
 {
-    return eglCreateWindowSurface(egl_display, egl_config, native_win, NULL);
-}
+    int num_potential_configs;
+    EGLint num_match_configs;
 
-class GPUDisplayBuffer : public mg::DisplayBuffer
-{
-public:
-    GPUDisplayBuffer(std::shared_ptr<ANativeWindow> const& native_window,
-                     EGLDisplay egl_display,
-                     EGLConfig egl_config,
-                     EGLContext egl_context_shared,
-                     std::shared_ptr<mga::DisplayDevice> const& display_device)
-        : native_window{native_window},
-          display_device{display_device},
-          egl_display{egl_display},
-          egl_config{egl_config},
-          egl_context{egl_display, create_context(egl_display, egl_config, egl_context_shared)},
-          egl_surface{egl_display, create_surface(egl_display, egl_config, native_window.get())},
-          blanked(false)
-    {
-    }
+    eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
+    std::vector<EGLConfig> config_slots(num_potential_configs);
 
-    geom::Rectangle view_area() const
-    {
-        return {geom::Point{}, display_device->display_size()};
-    }
+    /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
+    eglChooseConfig(egl_display, default_egl_config_attr,
+                    config_slots.data(), num_potential_configs, &num_match_configs);
+    config_slots.resize(num_match_configs);
 
-    void make_current()
-    {
-        if (eglMakeCurrent(egl_display, egl_surface,
-                           egl_surface, egl_context) == EGL_FALSE)
+    /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
+     * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
+     * eglChooseConfig */
+    auto const pegl_config = std::find_if(begin(config_slots), end(config_slots),
+        [&](EGLConfig& current) -> bool
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+            int visual_id;
+            eglGetConfigAttrib(egl_display, current, EGL_NATIVE_VISUAL_ID, &visual_id);
+            return (visual_id == required_visual_id);
+        });
+
+    if (pegl_config == end(config_slots))
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config for use with framebuffer"));
+
+    return *pegl_config;
+}
+
+EGLDisplay create_and_initialize_display()
+{
+    EGLint major, minor;
+
+    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglGetDisplay failed\n"));
+
+    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglInitialize failure\n"));
+
+    if ((major != 1) || (minor != 4))
+        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
+    return egl_display;
+}
+
+}
+
+mga::DisplayBufferFactory::DisplayBufferFactory(
+    std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
+    std::shared_ptr<mg::DisplayReport> const& display_report)
+    : res_factory(res_factory),
+      display_report(display_report),
+      display(create_and_initialize_display()),
+      force_backup_display(false)
+{
+    std::shared_ptr<hwc_composer_device_1> hwc_native;
+
+    try
+    {
+        hwc_native = res_factory->create_hwc_native_device();
+    } catch (...)
+    {
+        force_backup_display = true;
+    }
+
+    //HWC 1.2 not supported yet. make an attempt to use backup display
+    if (hwc_native && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
+    {
+        force_backup_display = true;
+    }
+
+    if (!force_backup_display && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
+    {
+        config = select_egl_config(display); 
+    }
+    else
+    {
+        fb_native = res_factory->create_fb_native_device();
+        config = select_egl_config_with_visual_id(display, fb_native->format);
+    }
+}
+
+EGLConfig mga::DisplayBufferFactory::egl_config()
+{
+    return config;
+}
+
+EGLDisplay mga::DisplayBufferFactory::egl_display()
+{
+    return display;
+}
+
+EGLDisplay mga::DisplayBufferFactory::shared_egl_context()
+{
+    return shared_context;
+}
+
+std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_device()
+{
+    std::shared_ptr<mga::DisplayDevice> device; 
+    if (force_backup_display)
+    {
+        device = res_factory->create_fb_device(fb_native);
+        display_report->report_gpu_composition_in_use();
+    }
+    else
+    {
+        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
+        {
+            device = res_factory->create_hwc11_device(hwc_native);
+            display_report->report_hwc_composition_in_use(1,1);
+        }
+        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+        {
+            device = res_factory->create_hwc10_device(hwc_native, fb_native);
+            display_report->report_hwc_composition_in_use(1,0);
         }
     }
 
-    void release_current()
-    {
-        eglMakeCurrent(egl_display, EGL_NO_SURFACE,
-                       EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    }
-
-    void post_update()
-    {
-        display_device->commit_frame(egl_display, egl_surface);
-    }
-
-    bool can_bypass() const override
-    {
-        return false;
-    }
-    
-protected:
-    std::shared_ptr<ANativeWindow> const native_window;
-
-    std::shared_ptr<mga::DisplayDevice> const display_device;
-    EGLDisplay const egl_display;
-    EGLConfig const egl_config;
-    mg::EGLContextStore const egl_context;
-    mg::EGLSurfaceStore const egl_surface;
-    bool blanked;
-
-};
-
+    return device;
 }
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
-    std::shared_ptr<ANativeWindow> const& native_window,
-    std::shared_ptr<DisplayDevice> const& display_device,
-    EGLDisplay egl_display, EGLConfig egl_config,
-    EGLContext egl_context_shared)
+    std::shared_ptr<DisplayDevice> const& display_device)
 {
-    auto raw = new GPUDisplayBuffer(
-        native_window, egl_display, egl_config, egl_context_shared, display_device);
-    return std::unique_ptr<mg::DisplayBuffer>(raw);
+    auto native_window = res_factory->create_native_window(display_device);
+    return std::unique_ptr<mg::DisplayBuffer>(
+        new DisplayBuffer(display_device, native_window, display, config, shared_context)); 
 }

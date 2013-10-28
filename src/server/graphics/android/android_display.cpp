@@ -40,10 +40,10 @@ namespace geom=mir::geometry;
 namespace
 {
 
-static EGLint const default_egl_config_attr [] =
+static EGLint const dummy_pbuffer_attribs[] =
 {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_WIDTH, 1,
+    EGL_HEIGHT, 1,
     EGL_NONE
 };
 
@@ -53,10 +53,11 @@ static EGLint const default_egl_context_attr[] =
     EGL_NONE
 };
 
-static EGLint const dummy_pbuffer_attribs[] =
+#if 0
+static EGLint const default_egl_config_attr [] =
 {
-    EGL_WIDTH, 1,
-    EGL_HEIGHT, 1,
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_NONE
 };
 
@@ -106,6 +107,7 @@ EGLDisplay create_and_initialize_display()
         BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
     return egl_display;
 }
+#endif
 
 class AndroidGLContext : public mg::GLContext
 {
@@ -148,39 +150,35 @@ private:
 
 }
 
-mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native_win,
-                                    std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
-                                    std::shared_ptr<mga::DisplayDevice> const& display_device,
+mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
                                     std::shared_ptr<DisplayReport> const& display_report)
-    : native_window{native_win},
-      display_device(display_device),
-      egl_display{create_and_initialize_display()},
-      egl_config{select_egl_config(egl_display, *native_window)},
-      egl_context_shared{egl_display,
-                         eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
-                                          default_egl_context_attr)},
-      egl_surface_dummy{egl_display,
-                        eglCreatePbufferSurface(egl_display, egl_config,
+    : db_factory{db_factory},
+      egl_surface_dummy{db_factory->egl_display(),
+                        eglCreatePbufferSurface(db_factory->egl_display(),
+                                                db_factory->egl_config(),
                                                 dummy_pbuffer_attribs)},
-      display_buffer{db_factory->create_display_buffer(
-          native_window, display_device, egl_display, egl_config, egl_context_shared)},
+      display_device(db_factory->create_display_device()),
+      display_buffer{db_factory->create_display_buffer(display_device)},
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
 
     /* Make the shared context current */
-    if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
+    if (eglMakeCurrent(db_factory->egl_display(),
+                       egl_surface_dummy,
+                       egl_surface_dummy,
+                       db_factory->shared_egl_context()) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
-    display_report->report_egl_configuration(egl_display, egl_config);
+    display_report->report_egl_configuration(db_factory->egl_display(), db_factory->egl_config());
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
 {
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglTerminate(egl_display);
+    eglMakeCurrent(db_factory->egl_display(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+//    eglTerminate(egl_display);
 }
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -232,5 +230,5 @@ auto mga::AndroidDisplay::the_cursor() -> std::weak_ptr<Cursor>
 std::unique_ptr<mg::GLContext> mga::AndroidDisplay::create_gl_context()
 {
     return std::unique_ptr<AndroidGLContext>{
-        new AndroidGLContext{egl_display, egl_config, egl_context_shared}};
+        new AndroidGLContext{db_factory->egl_display(), db_factory->egl_config(), db_factory->shared_egl_context()}};
 }

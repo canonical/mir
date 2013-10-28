@@ -16,16 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/display_buffer.h"
+#include "src/server/graphics/android/display_buffer.h"
 #include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/display_buffer_factory.h"
-
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
-
+#include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_display_device.h"
 #include <memory>
 
 namespace geom=mir::geometry;
@@ -33,32 +32,31 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
-class AndroidTestHWCFramebuffer : public ::testing::Test
+class AndroidDisplayBufferTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
         mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+        native_window = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
 
-        /* silence uninteresting warning messages */
-        mock_egl.silence_uninteresting();
-        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+        visual_id = 5;
+        dummy_display = reinterpret_cast<EGLDisplay>(0x34);
+        dummy_config = reinterpret_cast<EGLConfig>(0x44);
+        dummy_context = reinterpret_cast<EGLContext>(0x58);
     }
 
-    std::shared_ptr<mga::AndroidDisplay> create_display()
-    {
-        auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
-        auto native_win = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
-        return std::make_shared<mga::AndroidDisplay>(
-            native_win, db_factory, mock_display_device, mock_display_report);
-    }
+    int visual_id;
+    EGLConfig dummy_config;
+    EGLDisplay dummy_display;
+    EGLContext dummy_context;
 
-    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
+    std::shared_ptr<ANativeWindow> native_window;
     std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
+TEST_F(AndroidDisplayBufferTest, test_post_submits_right_egl_parameters)
 {
     using namespace testing;
 
@@ -67,44 +65,123 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size)); 
 
-    auto display = create_display();
+    mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
 
-    testing::InSequence sequence_enforcer;
-    EXPECT_CALL(*mock_display_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
+    EXPECT_CALL(*mock_display_device, commit_frame(dummy_display, mock_egl.fake_egl_surface))
         .Times(1);
 
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
-    {
-        buffer.post_update();
-    });
+    db.post_update();
 }
 
-TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
+#if 0
+TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
 {
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
     EXPECT_CALL(*mock_display_device, display_size())
         .Times(AnyNumber())
-        .WillRepeatedly(Return(fake_display_size)); 
-    auto display = create_display();
+        .WillRepeatedly(Return(fake_display_size));
+ 
+    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
     
-    std::vector<geom::Rectangle> areas;
-
-    display->for_each_display_buffer([&areas](mg::DisplayBuffer& buffer)
-    {
-        areas.push_back(buffer.view_area());
-    });
-
-    ASSERT_EQ(1u, areas.size());
-
-    auto view_area = areas[0];
+    auto view_area = db.view_area();
 
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};
     EXPECT_EQ(view_area.size, fake_display_size);
     EXPECT_EQ(view_area.top_left, origin_pt);
 }
 
+TEST_F(AndroidDisplayBufferTest, db_egl_resources)
+{
+    using namespace testing;
+
+    EGLint const expected_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+    InSequence seq;
+    EXPECT_CALL(mock_egl, eglCreateContext(
+        stub_egl_config->display, stub_egl_config->config, stub_egl_config->context, mtd::AttrMatches(expected_attr)))
+        .Times(1)
+        .WillOnce(Return(mock_egl.fake_egl_context));
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(
+        stub_egl_config->display, stub_egl_config->config, native_window.get(), NULL))
+        .Times(1)
+        .WillOnce(Return(mock_egl.fake_egl_surface));
+    EXPECT_CALL(mock_egl, eglDestroySurface(stub_egl_config->display, mock_egl.fake_egl_surface))
+        .Times(1);
+    EXPECT_CALL(mock_egl, eglDestroyContext(stub_egl_config->display, mock_egl.fake_egl_context))
+        .Times(1);
+
+    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+}
+
+TEST_F(AndroidDisplayBufferTest, egl_resource_creation_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .Times(2)
+        .WillOnce(Return(EGL_NO_CONTEXT))
+        .WillOnce(Return(mock_egl.fake_egl_context));
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
+        .Times(1)
+        .WillOnce(Return(EGL_NO_SURFACE));
+
+    EXPECT_THROW(
+    {
+        mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    }, std::runtime_error);
+
+    EXPECT_THROW(
+    {
+        mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    }, std::runtime_error);
+}
+
+TEST_F(AndroidDisplayBufferTest, make_current)
+{
+    using namespace testing;
+    EGLContext fake_ctxt = reinterpret_cast<EGLContext>(0x4422);
+    EGLSurface fake_surf = reinterpret_cast<EGLSurface>(0x33984);
+
+    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .Times(1)
+        .WillOnce(Return(fake_ctxt));
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
+        .Times(1)
+        .WillOnce(Return(fake_surf));
+
+    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, fake_surf, fake_surf, fake_ctxt))
+        .Times(2)
+        .WillOnce(Return(EGL_TRUE))
+        .WillOnce(Return(EGL_FALSE));
+
+    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    db.make_current();
+    EXPECT_THROW(
+    {
+        db.make_current();
+    }, std::runtime_error);
+}
+
+TEST_F(AndroidDisplayBufferTest, release_current)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
+        .Times(2)
+        .WillOnce(Return(EGL_TRUE))
+        .WillOnce(Return(EGL_FALSE));
+
+    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    db.release_current();
+    EXPECT_THROW(
+    {
+        db.release_current();
+    }, std::runtime_error);
+a}
+#endif
+#if 0
+=======
 TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
@@ -151,4 +228,5 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
     display->configure(*off_configuration);
     display->configure(*suspend_configuration);
     display->configure(*standby_configuration);
-}
+>>>>>>> MERGE-SOURCE
+#endif

@@ -19,7 +19,7 @@ add_subdirectory(process/)
 add_subdirectory(input/)
 
 if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
+#  add_subdirectory(graphics/android)
 endif()
 
 if(MIR_PLATFORM STREQUAL "gbm")
