@@ -73,7 +73,6 @@ TEST_F(AndroidDisplayBufferTest, test_post_submits_right_egl_parameters)
     db.post_update();
 }
 
-#if 0
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
 {
     using namespace testing;
@@ -83,7 +82,7 @@ TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size));
  
-    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
     
     auto view_area = db.view_area();
 
@@ -92,7 +91,7 @@ TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
     EXPECT_EQ(view_area.top_left, origin_pt);
 }
 
-TEST_F(AndroidDisplayBufferTest, db_egl_resources)
+TEST_F(AndroidDisplayBufferTest, db_egl_context_from_shared)
 {
     using namespace testing;
 
@@ -100,19 +99,19 @@ TEST_F(AndroidDisplayBufferTest, db_egl_resources)
 
     InSequence seq;
     EXPECT_CALL(mock_egl, eglCreateContext(
-        stub_egl_config->display, stub_egl_config->config, stub_egl_config->context, mtd::AttrMatches(expected_attr)))
+        dummy_display, dummy_config, dummy_context, mtd::AttrMatches(expected_attr)))
         .Times(1)
         .WillOnce(Return(mock_egl.fake_egl_context));
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(
-        stub_egl_config->display, stub_egl_config->config, native_window.get(), NULL))
+        dummy_display, dummy_config, native_window.get(), NULL))
         .Times(1)
         .WillOnce(Return(mock_egl.fake_egl_surface));
-    EXPECT_CALL(mock_egl, eglDestroySurface(stub_egl_config->display, mock_egl.fake_egl_surface))
+    EXPECT_CALL(mock_egl, eglDestroySurface(dummy_display, mock_egl.fake_egl_surface))
         .Times(1);
-    EXPECT_CALL(mock_egl, eglDestroyContext(stub_egl_config->display, mock_egl.fake_egl_context))
+    EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, mock_egl.fake_egl_context))
         .Times(1);
 
-    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
 }
 
 TEST_F(AndroidDisplayBufferTest, egl_resource_creation_failure)
@@ -128,12 +127,12 @@ TEST_F(AndroidDisplayBufferTest, egl_resource_creation_failure)
 
     EXPECT_THROW(
     {
-        mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+        mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
     }, std::runtime_error);
 
     EXPECT_THROW(
     {
-        mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+        mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
     }, std::runtime_error);
 }
 
@@ -155,7 +154,7 @@ TEST_F(AndroidDisplayBufferTest, make_current)
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));
 
-    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
     db.make_current();
     EXPECT_THROW(
     {
@@ -172,14 +171,13 @@ TEST_F(AndroidDisplayBufferTest, release_current)
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));
 
-    mga::DisplayBuffer db(native_window, stub_egl_config, mock_display_device);
+    mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
     db.release_current();
     EXPECT_THROW(
     {
         db.release_current();
     }, std::runtime_error);
-a}
-#endif
+}
 #if 0
 =======
 TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)

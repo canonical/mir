@@ -106,7 +106,7 @@ TEST_F(AndroidDisplayTest, display_creation)
 
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 }
-#if 0
+
 TEST_F(AndroidDisplayTest, display_logging)
 {
     using namespace testing;
@@ -122,7 +122,7 @@ TEST_F(AndroidDisplayTest, display_logging)
     EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,_))
         .Times(AtLeast(1));
 
-    mga::AndroidDisplay display(stub_egl_config, std::move(stub_db), mock_display_report);
+    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 }
 
 TEST_F(AndroidDisplayTest, eglMakeCurrent_failure)
@@ -140,7 +140,7 @@ TEST_F(AndroidDisplayTest, eglMakeCurrent_failure)
         .Times(0);
 
     EXPECT_THROW({
-        mga::AndroidDisplay display(stub_egl_config, std::move(stub_db), mock_display_report);
+        mga::AndroidDisplay display(stub_db_factory, mock_display_report);
     }, std::runtime_error);
 }
 
@@ -160,15 +160,14 @@ TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_fai
         .WillOnce(Return(EGL_NO_SURFACE));
 
     EXPECT_THROW({
-        mga::AndroidDisplay display(
-            stub_egl_config, std::move(stub_db), mock_display_report);
+        mga::AndroidDisplay display(stub_db_factory, mock_display_report);
     }, std::runtime_error);
 }
 
 //we only have single display and single mode on android for the time being
 TEST_F(AndroidDisplayTest, android_display_configuration_info)
 {
-    mga::AndroidDisplay display(stub_egl_config, std::move(stub_db), mock_display_report);
+    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
     auto config = display.configuration();
 
     std::vector<mg::DisplayConfigurationOutput> configurations;
@@ -194,6 +193,7 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
     //TODO fill physical_size_mm fields accordingly;
 }
 
+#if 0
 //TODO: this test ties the display buffer to the display.
 TEST_F(AndroidDisplayBufferTest, test_dpms_configuration_changes_reach_device)
 {
