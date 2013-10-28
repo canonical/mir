@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/surfaces/surface_allocator.h"
+#include "surface_allocator.h"
 #include "mir/surfaces/buffer_stream_factory.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
 #include "surface_data.h"
 #include "mir/surfaces/surface.h"
@@ -32,9 +32,11 @@ namespace mi=mir::input;
 
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<BufferStreamFactory> const& stream_factory,
-    std::shared_ptr<input::InputChannelFactory> const& input_factory)
-    : buffer_stream_factory(stream_factory),
-      input_factory(input_factory) 
+    std::shared_ptr<input::InputChannelFactory> const& input_factory,
+    std::shared_ptr<SurfacesReport> const& report) :
+    buffer_stream_factory(stream_factory),
+    input_factory(input_factory),
+    report(report)
 {
 }
 
@@ -53,5 +55,5 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
                                                     change_callback,
                                                     nonrectangular);
     auto input_channel = input_factory->make_input_channel();
-    return std::make_shared<ms::Surface>(state, buffer_stream, input_channel);
+    return std::make_shared<ms::Surface>(state, buffer_stream, input_channel, report);
 }

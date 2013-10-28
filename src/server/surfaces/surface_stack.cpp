@@ -19,15 +19,16 @@
  */
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/compositor/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "surface_state.h"
-#include "mir/surfaces/surface_stack.h"
-#include "mir/surfaces/surface_factory.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "surface_stack.h"
+#include "surface_factory.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
+
+#include "mir/surfaces/surfaces_report.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -43,11 +44,14 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                               std::shared_ptr<ms::InputRegistrar> const& input_registrar)
-    : surface_factory{surface_factory},
-      input_registrar{input_registrar},
-      notify_change{[]{}}
+ms::SurfaceStack::SurfaceStack(
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<ms::InputRegistrar> const& input_registrar,
+    std::shared_ptr<SurfacesReport> const& report) :
+    surface_factory{surface_factory},
+    input_registrar{input_registrar},
+    report{report},
+    notify_change{[]{}}
 {
 }
 
@@ -60,7 +64,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             mc::CompositingCriteria& info = *((*it)->compositing_criteria());
-            ms::BufferStream& stream = *((*it)->buffer_stream());
+            mc::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }
     }
@@ -78,7 +82,7 @@ void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
             mc::CompositingCriteria& info = *((*it)->compositing_criteria());
-            ms::BufferStream& stream = *((*it)->buffer_stream());
+            mc::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }
     }
@@ -102,6 +106,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
 
     input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.input_mode);
 
+    report->surface_added(surface.get());
     emit_change_notification();
 
     return surface;
@@ -110,6 +115,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
 void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     auto keep_alive = surface.lock();
+
     bool found_surface = false;
     {
         std::lock_guard<std::recursive_mutex> lg(guard);
@@ -127,8 +133,12 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
             }
         }
     }
+
     if (found_surface)
         input_registrar->input_channel_closed(keep_alive->input_channel());
+
+    report->surface_removed(keep_alive.get());
+
     emit_change_notification();
     // TODO: error logging when surface not found
 }

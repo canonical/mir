@@ -45,6 +45,7 @@ list(APPEND MIRSERVER_ARCHIVES
   miroptions
   mircompositor
   mirfrontend
+  mirgraphics
   mirplatform
   mirinput
   mirsharedinput

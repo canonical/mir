@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/default_session_container.h"

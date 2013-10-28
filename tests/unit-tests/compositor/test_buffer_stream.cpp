@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -29,7 +29,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
 
 class BufferStreamTest : public ::testing::Test
 {

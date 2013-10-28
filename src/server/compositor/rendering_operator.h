@@ -18,7 +18,7 @@
 #ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 #define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
-#include "mir/compositor/renderer.h"
+#include "renderer.h"
 #include "mir/compositor/scene.h"
 
 #include <functional>
@@ -35,7 +35,7 @@ public:
     explicit RenderingOperator(Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
     ~RenderingOperator();
 
-    void operator()(CompositingCriteria const& info, surfaces::BufferStream&);
+    void operator()(CompositingCriteria const& info, BufferStream&);
 
 private:
     Renderer& renderer;

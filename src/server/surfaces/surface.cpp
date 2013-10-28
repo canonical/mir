@@ -20,9 +20,11 @@
 
 #include "mir/surfaces/surface.h"
 #include "surface_state.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
+
+#include "mir/surfaces/surfaces_report.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -36,13 +38,16 @@ namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     std::shared_ptr<ms::SurfaceState> const& state,
-    std::shared_ptr<ms::BufferStream> const& buffer_stream,
-    std::shared_ptr<input::InputChannel> const& input_channel)
-    : surface_state(state),
-      surface_buffer_stream(buffer_stream),
-      server_input_channel(input_channel),
-      surface_in_startup(true)
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<input::InputChannel> const& input_channel,
+    std::shared_ptr<SurfacesReport> const& report) :
+    surface_state(state),
+    surface_buffer_stream(buffer_stream),
+    server_input_channel(input_channel),
+    report(report),
+    surface_in_startup(true)
 {
+    report->surface_created(this);
 }
 
 void ms::Surface::force_requests_to_complete()
@@ -52,9 +57,10 @@ void ms::Surface::force_requests_to_complete()
 
 ms::Surface::~Surface()
 {
+    report->surface_deleted(this);
 }
 
-std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
+std::shared_ptr<mc::BufferStream> ms::Surface::buffer_stream() const
 {
     return surface_buffer_stream;
 }
