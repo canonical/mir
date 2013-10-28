@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com> 
  */
 
-#include "mir/logging/display_report.h"
+#include "src/server/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir_test_doubles/mock_egl.h"
 
