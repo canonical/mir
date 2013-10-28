@@ -20,8 +20,8 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
 #include "src/server/graphics/android/android_platform.h"
+#include "src/server/graphics/android/display_buffer_factory.h"
 #include "src/server/graphics/android/resource_factory.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
@@ -114,19 +114,17 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
         using namespace testing;
         ON_CALL(*this, create_hwc_native_device()).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_native_device()).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_fb_buffers(_,_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_native_window(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_device(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_hwc11_device(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_hwc10_device(_,_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_display(_,_,_)).WillByDefault(Return(nullptr));
     }
 
     MOCK_CONST_METHOD0(create_hwc_native_device, std::shared_ptr<hwc_composer_device_1>());
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
 
-    MOCK_CONST_METHOD2(create_fb_buffers, 
-        std::shared_ptr<mga::FBSwapper>(
-            std::shared_ptr<mga::DisplayDevice> const&, std::shared_ptr<mga::GraphicBufferAllocator> const&)); 
+    MOCK_CONST_METHOD1(create_native_window,
+        std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplayDevice> const&));
 
     MOCK_CONST_METHOD1(create_fb_device,
         std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<framebuffer_device_t> const&));
@@ -135,21 +133,11 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
     MOCK_CONST_METHOD2(create_hwc10_device,
         std::shared_ptr<mga::DisplayDevice>(
             std::shared_ptr<hwc_composer_device_1> const&, std::shared_ptr<framebuffer_device_t> const&));
-
-    MOCK_CONST_METHOD3(create_display,
-        std::shared_ptr<mg::Display>(
-            std::shared_ptr<mga::FBSwapper> const&,
-            std::shared_ptr<mga::DisplayDevice> const&,
-            std::shared_ptr<mg::DisplayReport> const&));
 };
 
-class PlatformDisplayCreationTest : public ::testing::Test
+class DisplayBufferCreation : public ::testing::Test
 {
 public:
-    PlatformDisplayCreationTest()
-    {
-    }
-
     void SetUp()
     {
         using namespace testing;
@@ -165,11 +153,10 @@ public:
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    mg::DefaultDisplayConfigurationPolicy stub_display_policy;
 };
 }
 
-TEST_F(PlatformDisplayCreationTest, hwc_version_10_success)
+TEST_F(DisplayBufferCreation, hwc_version_10_success)
 {
     using namespace testing;
 
@@ -178,21 +165,19 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_10_success)
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc10_device(_,_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
-    platform.create_display(mt::fake_shared(stub_display_policy));
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    factory.create_display_device();
 }
 
-TEST_F(PlatformDisplayCreationTest, hwc_version_10_failure_uses_gpu)
+TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
 {
     using namespace testing;
 
@@ -203,41 +188,37 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_10_failure_uses_gpu)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
-    platform.create_display(mt::fake_shared(stub_display_policy));
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    factory.create_display_device();
 }
 
-TEST_F(PlatformDisplayCreationTest, hwc_version_11_success)
+TEST_F(DisplayBufferCreation, hwc_version_11_success)
 {
     using namespace testing;
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
 
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc11_device(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
-    platform.create_display(mt::fake_shared(stub_display_policy));
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    factory.create_display_device();
 }
 
-TEST_F(PlatformDisplayCreationTest, hwc_version_11_hwc_failure)
+TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
 {
     using namespace testing;
 
@@ -247,21 +228,19 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_11_hwc_failure)
         .Times(1)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
-    platform.create_display(mt::fake_shared(stub_display_policy));
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    factory.create_display_device();
 }
 
-TEST_F(PlatformDisplayCreationTest, hwc_version_11_hwc_and_fb_failure_fatal)
+TEST_F(DisplayBufferCreation, hwc_version_11_hwc_and_fb_failure_fatal)
 {
     using namespace testing;
 
@@ -274,14 +253,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_11_hwc_and_fb_failure_fatal)
         .Times(1)
         .WillOnce(Throw(std::runtime_error("")));
 
-    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
     EXPECT_THROW({
-        platform.create_display(mt::fake_shared(stub_display_policy));
+        mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
     }, std::runtime_error);
 }
 
 //we don't support hwc 1.2 quite yet. for the time being, at least try the fb backup
-TEST_F(PlatformDisplayCreationTest, hwc_version_12_attempts_fb_backup)
+TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
 {
     using namespace testing;
 
@@ -291,15 +269,13 @@ TEST_F(PlatformDisplayCreationTest, hwc_version_12_attempts_fb_backup)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_buffers(_,_))
-        .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_display(_,_,_))
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::AndroidPlatform platform(mock_resource_factory, mock_display_report);
-    platform.create_display(mt::fake_shared(stub_display_policy));
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    factory.create_display_device();
 }
