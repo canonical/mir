@@ -1,8 +1,105 @@
-mir (0.1.0-0ubuntu1) UNRELEASED; urgency=low
+mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
 
+  [ Daniel van Vugt ]
   * Bump version 0.1.0
+  * Add method for testing if Rectangle::contains(Rectangle), which is
+    the basis of any occlusion detection. (LP: #1227739)
+  * Add support for traversing the Scene from front surface to back.
+    This is required for occlusion detection at least (coming soon). .
+    (LP: #1227739)
+  * Optimization: Turn off blending for surfaces that are not blendable.
+    On some systems this can have a noticeable performance benefit.
+  * Avoid rendering surfaces that are fully hidden by other surfaces.
+    This is particularly important for mobile device performance. (LP:
+    #1227739) . (LP: #1227739)
+  * Remove orphaned tags, which appear to have come from the Compiz
+    project (!?) Add tags for the most recent releases up to 0.0.16. No
+    files changed, only tags.
+  * Fix significant performance issues LP: #1241369 / LP: #1241371, and
+    probably more(!) Added regression test to catch such regressions and
+    revert the offending commit r1049. (LP: #1241369, #1241371)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 21 Oct 2013 17:07:18 +0800
+  [ Brandon Schaefer ]
+  * When Scroll events come in we don't keep around the android vscroll
+    hscroll data. Store it now. (LP: #1233089)
+
+  [ Albert Astals ]
+  * Fix mismatched free() / delete / delete [] reported by valgrind
+
+  [ Alexandros Frantzis ]
+  * server: Extend server status (formerly pause/resume) listener to
+    report "started" events This change is needed by users of
+    libmirserver, so they can properly synchronize external interactions
+    with the server. (LP: #1239876)
+  * graphics,examples: Don't enable more outputs than supported when
+    changing the display configuration. (LP: #1217877)
+  * client: Allow clients to call API functions after a connection break
+    has been detected When a client tries to call an API function after
+    a connection break has been detected in a previous API call, the
+    client blocks in the new call. This happens because in
+    MirSocketRpcChannel::notify_disconnected() the pending RPC calls are
+    not forced to complete, since the channel has already been marked as
+    'disconnected' by the failure in the previous call. Note that if the
+    break is first detected while calling an API function, then that
+    call doesn't block, since this is the first time we call
+    MirSocketRpcChannel::notify_disconnected() and the pending RPC calls
+    are forced to complete. This commit solves this problem by always
+    forcing requests to complete when a communication failure occurs,
+    even if a disconnection has already been handled. This is preferred
+    over the alternative of manually calling the completion callback in
+    a try-catch block when calling an RPC method because of: 1.
+    Correctness: In case the communication problem first occurs in that
+    call, the callback will be called twice, once by
+    notify_disconnected() and once manually. 2. Consistency: The
+    callback is called from one place regardless of whether the
+    communication problem is first detected during that call or not.
+    (LP: #1201436)
+  * graphics: Improve signature of native platform initialization method
+    Use an interface to provide the functionality needed by native
+    platforms.
+
+  [ Eleni Maria Stea ]
+  * Test GBMBufferAllocatorTest.bypass_disables_via_environment
+    overrides the MIR_BYPASS env variable, causing other tests that use
+    the MIR_BYPASS to fail when we run the unit-tests with --
+    gtest_repeat=N, N>1. Set back the MIR_BYPASS env. var. (LP:
+    #1238000)
+
+  [ Kevin DuBois ]
+  * fix: lp 1239577 TestClientIPCRender (an android-only gfx driver
+    test) was hanging due to changes in signal handling. refactor the
+    test, changing the cross-process sync mechanism so it doesn't use
+    sigcont. (LP: #1239577)
+  * graphics: android: eliminate one of the two DisplayBuffers. both
+    hwc/gpu displays use the same displaybuffer now. .
+
+  [ Daniel d'Andrada ]
+  * Add InputReader performance test.
+
+  [ Alan Griffiths ]
+  * logging: correct component tag in connector report.
+  * client: fix hang(s) in client API when server dies. (LP: #1227743)
+  * Fix failing acceptance-test:
+    ServerShutdown/OnSignal.removes_endpoint_on_signal (LP: #1237710)
+    Avoid fatal_signal_cleanup getting caught in a loop restoring itself
+    and then re-entering itself. This could happen in some permutations
+    of acceptance-tests where run_mir is entered with
+    fatal_signal_cleanup already set up from previous tests' server
+    instances. (LP: #1237710)
+  * CMake: remove creation of link to non-existent file.
+  * shared: some utility functions to provide some consistent ways to
+    use RAII and application of these functions to some code that has
+    had RAII related discussions recently.
+  * config: separate out the configuration options from the
+    configuration builder.
+  * config: ensure USC can access
+    DefaultConfigurationOptions::parse_options (LP: #1244192) (LP:
+    #1244192)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1161
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Oct 2013 02:04:31 +0000
 
 mir (0.0.15+13.10.20131014-0ubuntu2) trusty; urgency=low
 
