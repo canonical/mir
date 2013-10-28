@@ -37,6 +37,7 @@ public:
 
     virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;
     virtual std::shared_ptr<Surface> default_surface() const = 0;
+    virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 };
 
 }
