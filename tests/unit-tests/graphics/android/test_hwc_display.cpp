@@ -149,7 +149,7 @@ TEST_F(AndroidDisplayBufferTest, make_current)
         .Times(1)
         .WillOnce(Return(fake_surf));
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, fake_surf, fake_surf, fake_ctxt))
+    EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surf, fake_surf, fake_ctxt))
         .Times(2)
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));
@@ -166,65 +166,9 @@ TEST_F(AndroidDisplayBufferTest, release_current)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
-        .Times(2)
-        .WillOnce(Return(EGL_TRUE))
-        .WillOnce(Return(EGL_FALSE));
+    EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
+        .Times(1);
 
     mga::DisplayBuffer db(mock_display_device, native_window, dummy_display, dummy_config, dummy_context);
     db.release_current();
-    EXPECT_THROW(
-    {
-        db.release_current();
-    }, std::runtime_error);
 }
-#if 0
-=======
-TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
-{
-    using namespace testing;
-
-    geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_device, display_size())
-        .Times(1)
-        .WillOnce(Return(fake_display_size)); 
-    auto display = create_display();
-    
-    auto on_configuration = display->configuration();
-    on_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        on_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_on);
-    });
-    auto off_configuration = display->configuration();
-    off_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        off_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_off);
-    });
-    auto standby_configuration = display->configuration();
-    standby_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        standby_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_standby);
-    });
-    auto suspend_configuration = display->configuration();
-    suspend_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        suspend_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_suspend);
-    });
-
-    {
-        InSequence seq;
-        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on));
-        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off));
-        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend));
-        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby));
-    }
-    display->configure(*on_configuration);
-    display->configure(*off_configuration);
-    display->configure(*suspend_configuration);
-    display->configure(*standby_configuration);
->>>>>>> MERGE-SOURCE
-#endif
