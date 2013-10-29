@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_
 
 #include "src/server/graphics/android/android_display_buffer_factory.h"
 #include "stub_display_buffer.h"
@@ -29,19 +29,19 @@ namespace test
 {
 namespace doubles
 {
-struct MockDisplayBufferFactory : public graphics::android::AndroidDisplayBufferFactory
+struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBufferFactory
 {
-    MockDisplayBufferFactory()
+    StubDisplayBufferFactory()
     {
     }
 
-    MockDisplayBufferFactory(EGLDisplay disp, EGLConfig conf, EGLContext cont)
-        : display(disp), config(conf), context(cont), sz({0,0})
+    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
+        : stub_dev(stub_dev)
     {
     }
 
-    MockDisplayBufferFactory(geometry::Size sz, EGLDisplay disp, EGLConfig conf, EGLContext cont)
-        : display(disp), config(conf), context(cont), sz(sz)
+    StubDisplayBufferFactory(geometry::Size sz)
+        : sz(sz)
     {
     }
 
@@ -55,31 +55,14 @@ struct MockDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
     
     std::shared_ptr<graphics::android::DisplayDevice> create_display_device()
     {
-        return nullptr;
+        return stub_dev;
     }
 
-    EGLDisplay egl_display()
-    {
-        return display;
-    }
-
-    EGLConfig egl_config()
-    {
-        return config;
-    }
-
-    EGLContext shared_egl_context()
-    {
-        return context;
-    }
-
-    EGLDisplay display;
-    EGLConfig config;
-    EGLContext context;
+    std::shared_ptr<graphics::android::DisplayDevice> const stub_dev;
     geometry::Size sz;
 };
 }
 }
 } // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_ */

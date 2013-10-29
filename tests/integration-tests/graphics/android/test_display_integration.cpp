@@ -19,14 +19,9 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/hwc10_device.h"
-#include "src/server/graphics/android/hwc11_device.h"
-#include "src/server/graphics/android/hwc_layerlist.h"
-#include "src/server/graphics/android/hwc_vsync.h"
 #include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/graphics/android/display_buffer_factory.h"
-#include "src/server/graphics/android/fb_device.h"
 
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
@@ -34,8 +29,6 @@
 
 #include <gtest/gtest.h>
 #include <stdexcept>
-
-#include <hardware/hwcomposer.h>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
@@ -65,7 +58,6 @@ protected:
 std::shared_ptr<mga::ResourceFactory> AndroidGPUDisplay::display_resource_factory;
 }
 
-/* gpu display tests. These are our back-up display modes, and should be run on every device. */
 TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     auto should_use_fb_fallback = true;

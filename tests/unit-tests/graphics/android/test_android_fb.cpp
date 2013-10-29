@@ -21,9 +21,10 @@
 #include "mir/logging/logger.h"
 #include "src/server/graphics/android/android_display.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/mock_display_buffer_factory.h"
+#include "mir_test_doubles/stub_display_buffer_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 
@@ -59,7 +60,7 @@ protected:
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
         auto stub_driver_interpreter = std::make_shared<mtd::StubDriverInterpreter>(display_size, visual_id);
         native_win = std::make_shared<mg::android::MirNativeWindow>(stub_driver_interpreter);
-        stub_db_factory = std::make_shared<mtd::MockDisplayBufferFactory>(display_size, dummy_display, dummy_config, dummy_context);
+        stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>(display_size);
     }
 
     int visual_id;
@@ -69,7 +70,7 @@ protected:
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<ANativeWindow> native_win;
-    std::shared_ptr<mtd::MockDisplayBufferFactory> stub_db_factory;
+    std::shared_ptr<mtd::StubDisplayBufferFactory> stub_db_factory;
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
@@ -181,53 +182,51 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
     //TODO fill physical_size_mm fields accordingly;
 }
 
-#if 0
-//TODO: this test ties the display buffer to the display.
-TEST_F(AndroidDisplayBufferTest, test_dpms_configuration_changes_reach_device)
+TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
 
-    geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_info, display_size())
-        .Times(1)
-        .WillOnce(Return(fake_display_size)); 
-    auto display = create_display();
+    auto mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+    Sequence seq;
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby))
+        .InSequence(seq);
+
+    auto stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>(mock_display_device);
+    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
     
-    auto on_configuration = display->configuration();
+    auto on_configuration = display.configuration();
     on_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
         on_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
                                            mir_power_mode_on);
     });
-    auto off_configuration = display->configuration();
+    auto off_configuration = display.configuration();
     off_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
         off_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
                                            mir_power_mode_off);
     });
-    auto standby_configuration = display->configuration();
+    auto standby_configuration = display.configuration();
     standby_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
         standby_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
                                            mir_power_mode_standby);
     });
-    auto suspend_configuration = display->configuration();
+    auto suspend_configuration = display.configuration();
     suspend_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
     {
         suspend_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
                                            mir_power_mode_suspend);
     });
 
-    {
-        InSequence seq;
-        EXPECT_CALL(*mock_display_commander, mode(mir_power_mode_on));
-        EXPECT_CALL(*mock_display_commander, mode(mir_power_mode_off));
-        EXPECT_CALL(*mock_display_commander, mode(mir_power_mode_suspend));
-        EXPECT_CALL(*mock_display_commander, mode(mir_power_mode_standby));
-    }
-    display->configure(*on_configuration);
-    display->configure(*off_configuration);
-    display->configure(*suspend_configuration);
-    display->configure(*standby_configuration);
+    display.configure(*on_configuration);
+    display.configure(*off_configuration);
+    display.configure(*suspend_configuration);
+    display.configure(*standby_configuration);
 }
-#endif
