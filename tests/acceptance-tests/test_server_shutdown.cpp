@@ -372,7 +372,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_normal_exit)
 
 TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 {
-    struct ServerConfig: TestingServerConfiguration
+    struct ServerConfig : TestingServerConfiguration
     {
         void exec() override
         {
@@ -403,7 +403,7 @@ struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
 
 TEST_P(OnSignal, removes_endpoint_on_signal)
 {
-    struct ServerConfig: TestingServerConfiguration
+    struct ServerConfig : TestingServerConfiguration
     {
         void exec() override
         {
@@ -411,10 +411,8 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
             raise(sig);
         }
 
-        ServerConfig(int sig)
-            : sig(sig)
-        {
-        }
+        ServerConfig(int sig) : sig(sig) {}
+
         int const sig;
         mtf::CrossProcessSync sync;
     };
