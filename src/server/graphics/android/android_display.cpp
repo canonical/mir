@@ -156,10 +156,11 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFac
       egl_display(create_and_initialize_display()),
       egl_config(select_egl_config_with_format(egl_display, display_device->display_format())),
       egl_context_shared{egl_display,
-                         eglCreateContext(
-                            egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr)},
+                         eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
+                                          default_egl_context_attr)},
       egl_surface_dummy{egl_display,
-                        eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)},
+                        eglCreatePbufferSurface(egl_display, egl_config,
+                                                dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
           display_device, egl_display, egl_config, egl_context_shared)},
       current_configuration{display_buffer->view_area().size}

@@ -96,7 +96,7 @@ TEST_F(DisplayBufferCreation, hwc_version_10_success)
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
@@ -116,7 +116,7 @@ TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
@@ -133,7 +133,7 @@ TEST_F(DisplayBufferCreation, hwc_version_11_success)
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
@@ -153,7 +153,7 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
@@ -171,7 +171,7 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_and_fb_failure_fatal)
         .WillOnce(Throw(std::runtime_error("")));
 
     EXPECT_THROW({
-        mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+        mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     }, std::runtime_error);
 }
 
@@ -191,7 +191,7 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
@@ -205,6 +205,6 @@ TEST_F(DisplayBufferCreation, db_creation)
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_buffer(mt::fake_shared(stub_device), disp, conf, cont);
 }

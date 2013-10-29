@@ -37,23 +37,27 @@ namespace geom = mir::geometry;
 
 mga::DisplayBufferFactory::DisplayBufferFactory(
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
-    std::shared_ptr<mg::DisplayReport> const& display_report)
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    bool should_use_fb_fallback)
     : res_factory(res_factory),
       display_report(display_report),
-      force_backup_display(false)
+      force_backup_display(should_use_fb_fallback)
 {
-    try
+    if (!force_backup_display)
     {
-        hwc_native = res_factory->create_hwc_native_device();
-    } catch (...)
-    {
-        force_backup_display = true;
-    }
+        try
+        {
+            hwc_native = res_factory->create_hwc_native_device();
+        } catch (...)
+        {
+            force_backup_display = true;
+        }
 
-    //HWC 1.2 not supported yet. make an attempt to use backup display
-    if (hwc_native && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
-    {
-        force_backup_display = true;
+        //HWC 1.2 not supported yet. make an attempt to use backup display
+        if (hwc_native && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
+        {
+            force_backup_display = true;
+        }
     }
 
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
