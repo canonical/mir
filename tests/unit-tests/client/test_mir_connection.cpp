@@ -26,7 +26,7 @@
 #include "src/client/mir_surface.h"
 #include "src/client/client_buffer_factory.h"
 
-#include "mir/frontend/resource_cache.h" /* needed by test_server.h */
+#include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 

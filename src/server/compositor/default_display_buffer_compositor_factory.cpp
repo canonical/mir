@@ -17,8 +17,8 @@
  */
 
 #include "mir/compositor/default_display_buffer_compositor_factory.h"
-#include "mir/compositor/renderer_factory.h"
-#include "mir/compositor/renderer.h"
+#include "renderer_factory.h"
+#include "renderer.h"
 #include "mir/graphics/display_buffer.h"
 
 #include "default_display_buffer_compositor.h"

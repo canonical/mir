@@ -22,19 +22,9 @@
 #include "mir/default_server_status_listener.h"
 
 #include "mir/options/program_option.h"
-#include "mir/compositor/buffer_stream_factory.h"
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
-#include "mir/compositor/multi_threaded_compositor.h"
-#include "mir/compositor/overlay_renderer.h"
-#include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
-#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/frontend/global_event_sender.h"
-#include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
-#include "mir/shell/unauthorized_display_changer.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
@@ -49,9 +39,6 @@
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/compositor/gl_renderer_factory.h"
-#include "mir/compositor/renderer.h"
-#include "mir/graphics/null_display_report.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -62,14 +49,11 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/input_manager.h"
-#include "mir/logging/connector_report.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
-#include "mir/logging/session_mediator_report.h"
 #include "mir/logging/message_processor_report.h"
-#include "mir/logging/display_report.h"
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
@@ -90,72 +74,6 @@ namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-namespace
-{
-class DefaultIpcFactory : public mf::ProtobufIpcFactory
-{
-public:
-    explicit DefaultIpcFactory(
-        std::shared_ptr<mf::Shell> const& shell,
-        std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
-        std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
-        std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mf::DisplayChanger> const& display_changer,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
-        shell(shell),
-        sm_report(sm_report),
-        mp_report(mr_report),
-        cache(std::make_shared<mf::ResourceCache>()),
-        graphics_platform(graphics_platform),
-        display_changer(display_changer),
-        buffer_allocator(buffer_allocator)
-    {
-    }
-
-private:
-    std::shared_ptr<mf::Shell> shell;
-    std::shared_ptr<mf::SessionMediatorReport> const sm_report;
-    std::shared_ptr<mf::MessageProcessorReport> const mp_report;
-    std::shared_ptr<mf::ResourceCache> const cache;
-    std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
-
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
-    {
-        std::shared_ptr<mf::DisplayChanger> changer;
-        if(authorized_to_resize_display)
-        {
-            changer = display_changer; 
-        }
-        else
-        {
-            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(display_changer); 
-        }
-
-        return std::make_shared<mf::SessionMediator>(
-            shell,
-            graphics_platform,
-            changer,
-            buffer_allocator,
-            sm_report,
-            sink,
-            resource_cache());
-    }
-
-    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
-    {
-        return cache;
-    }
-
-    virtual std::shared_ptr<mf::MessageProcessorReport> report()
-    {
-        return mp_report;
-    }
-};
-}
-
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     DefaultConfigurationOptions(argc, argv),
     default_filter(std::make_shared<mi::VTFilter>())
@@ -173,31 +91,6 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     setenv("MIR_SOCKET", socket_file.c_str(), 1);
 
     return socket_file;
-}
-
-std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_report()
-{
-    return display_report(
-        [this]() -> std::shared_ptr<graphics::DisplayReport>
-        {
-            if (the_options()->get(display_report_opt, off_opt_value) == log_opt_value)
-            {
-                return std::make_shared<ml::DisplayReport>(the_logger());
-            }
-            else
-            {
-                return std::make_shared<mg::NullDisplayReport>();
-            }
-        });
-}
-
-std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
-{
-    return renderer_factory(
-        []()
-        {
-            return std::make_shared<mc::GLRendererFactory>();
-        });
 }
 
 std::shared_ptr<msh::MediatingDisplayChanger>
@@ -334,16 +227,6 @@ std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return the_session_manager();
-}
-
-std::shared_ptr<mf::EventSink>
-mir::DefaultServerConfiguration::the_global_event_sink()
-{
-    return global_event_sink(
-        [this]()
-        {
-            return std::make_shared<mf::GlobalEventSender>(the_shell_session_container());
-        }); 
 }
 
 std::shared_ptr<msh::FocusController>
@@ -509,71 +392,6 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         });
 }
 
-std::shared_ptr<mc::OverlayRenderer>
-mir::DefaultServerConfiguration::the_overlay_renderer()
-{
-    struct NullOverlayRenderer : public mc::OverlayRenderer
-    {
-        virtual void render(
-            geom::Rectangle const&,
-            std::function<void(std::shared_ptr<void> const&)>) {}
-    };
-    return overlay_renderer(
-        [this]()
-        {
-            return std::make_shared<NullOverlayRenderer>();
-        });
-}
-
-std::shared_ptr<mc::DisplayBufferCompositorFactory>
-mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
-{
-    return display_buffer_compositor_factory(
-        [this]()
-        {
-            return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_scene(), the_renderer_factory(), the_overlay_renderer());
-        });
-}
-
-std::shared_ptr<ms::BufferStreamFactory>
-mir::DefaultServerConfiguration::the_buffer_stream_factory()
-{
-    return buffer_stream_factory(
-        [this]()
-        {
-            return std::make_shared<mc::BufferStreamFactory>(the_buffer_allocator());
-        });
-}
-
-std::shared_ptr<mc::Compositor>
-mir::DefaultServerConfiguration::the_compositor()
-{
-    return compositor(
-        [this]()
-        {
-            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_scene(),
-                                                                 the_display_buffer_compositor_factory());
-        });
-}
-
-std::shared_ptr<mir::frontend::ProtobufIpcFactory>
-mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-{
-    return ipc_factory(
-        [&]()
-        {
-            return std::make_shared<DefaultIpcFactory>(
-                shell,
-                the_session_mediator_report(),
-                the_message_processor_report(),
-                the_graphics_platform(),
-                the_frontend_display_changer(), allocator);
-        });
-}
 
 std::shared_ptr<mf::SessionAuthorizer>
 mir::DefaultServerConfiguration::the_session_authorizer()
@@ -594,23 +412,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         [&]()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
-        });
-}
-
-std::shared_ptr<mf::SessionMediatorReport>
-mir::DefaultServerConfiguration::the_session_mediator_report()
-{
-    return session_mediator_report(
-        [this]() -> std::shared_ptr<mf::SessionMediatorReport>
-        {
-            if (the_options()->get(session_mediator_report_opt, off_opt_value) == log_opt_value)
-            {
-                return std::make_shared<ml::SessionMediatorReport>(the_logger());
-            }
-            else
-            {
-                return std::make_shared<mf::NullSessionMediatorReport>();
-            }
         });
 }
 
@@ -722,29 +523,5 @@ mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
         []
         {
             return std::make_shared<msh::BroadcastingSessionEventSink>();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_connector_report()
-    -> std::shared_ptr<mf::ConnectorReport>
-{
-    return connector_report([this]
-        () -> std::shared_ptr<mf::ConnectorReport>
-        {
-            auto opt = the_options()->get(connector_report_opt, off_opt_value);
-
-            if (opt == log_opt_value)
-            {
-                return std::make_shared<ml::ConnectorReport>(the_logger());
-            }
-            else if (opt == off_opt_value)
-            {
-                return std::make_shared<mf::NullConnectorReport>();
-            }
-            else
-            {
-                throw AbnormalExit(std::string("Invalid ") + connector_report_opt + " option: " + opt +
-                    " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
-            }
         });
 }

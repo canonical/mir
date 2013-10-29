@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_GL_RENDERER_H_
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
-#include "mir/compositor/renderer.h"
+#include "renderer.h"
 #include "mir/geometry/rectangle.h"
 #include <GLES2/gl2.h>
 

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/global_event_sender.h"
+#include "global_event_sender.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 
