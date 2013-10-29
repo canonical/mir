@@ -137,7 +137,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
                 return std::make_shared<graphics::nested::HostConnection>(
                     host_socket,
-                    server_socket);
+                    options->get(name_opt, ("nested-mir@:" + server_socket).c_str()));
             }
             else
             {
