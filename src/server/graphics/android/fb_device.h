@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
 
-#include "display_support_provider.h"
+#include "display_device.h"
 #include <hardware/gralloc.h>
 #include <hardware/fb.h>
  
@@ -30,7 +30,7 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplaySupportProvider 
+class FBDevice : public DisplayDevice 
 {
 public:
     FBDevice(std::shared_ptr<framebuffer_device_t> const&);

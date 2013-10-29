@@ -23,7 +23,7 @@
 
 
 /// A simple state machine that knows how to connect to a mir server,
-/// issue some commands, and exit cleanly.
+/// issue some devices, and exit cleanly.
 class ClientStateMachine
 {
 public:

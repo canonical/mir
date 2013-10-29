@@ -39,33 +39,7 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::ResourceFactory::ResourceFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
-    : buffer_allocator(buffer_allocator)
-{
-}
-
-std::vector<std::shared_ptr<mg::Buffer>> mga::ResourceFactory::create_buffers(
-    std::shared_ptr<DisplaySupportProvider> const& info_provider) const
-{
-    auto size = info_provider->display_size();
-    auto pf = info_provider->display_format();
-    auto num_framebuffers = info_provider->number_of_framebuffers_available();
-    std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    for (auto i = 0u; i < num_framebuffers; ++i)
-    {
-        buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
-    }
-    return buffers;
-}
-
-std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_swapper(
-    std::vector<std::shared_ptr<mg::Buffer>> const& buffers) const
-{
-    return std::make_shared<mga::FBSimpleSwapper>(buffers);
-}
-
-std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_device() const
+std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_device() const
 {
     hw_module_t const* module;
     framebuffer_device_t* fbdev_raw;
@@ -76,42 +50,78 @@ std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_fb_dev
         BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
     }
 
-    auto fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
+    return std::shared_ptr<framebuffer_device_t>(fbdev_raw,
                       [](struct framebuffer_device_t* fbdevice)
                       {
                          fbdevice->common.close((hw_device_t*) fbdevice);
                       });
+}
 
-    return std::make_shared<mga::FBDevice>(fb_dev);
-} 
+std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_device() const
+{
+    hwc_composer_device_1* hwc_device_raw = nullptr;
+    hw_module_t const *module;
+    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr) ||
+       (!module->methods) || !(module->methods->open) ||
+       module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw)) ||
+       (hwc_device_raw == nullptr))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error opening hwc hal")); 
+    }
 
-std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_1(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-    std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
+    return std::shared_ptr<hwc_composer_device_1>(
+        hwc_device_raw,
+        [](hwc_composer_device_1* device) { device->common.close((hw_device_t*) device); });
+}
+ 
+std::shared_ptr<mga::FBSwapper> mga::ResourceFactory::create_fb_buffers(
+    std::shared_ptr<mga::DisplayDevice> const& device,
+    std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator) const
+{
+    auto size = device->display_size();
+    auto pf = device->display_format();
+    auto num_framebuffers = device->number_of_framebuffers_available();
+    std::vector<std::shared_ptr<mg::Buffer>> buffers;
+    for (auto i = 0u; i < num_framebuffers; ++i)
+    {
+        buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
+    }
+    return std::make_shared<mga::FBSimpleSwapper>(buffers);
+}
+
+std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
+    std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
+{
+    return std::make_shared<mga::FBDevice>(fb_native_device);
+}
+
+std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc11_device(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
     auto layer_list = std::make_shared<mga::LayerList>();
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb_device, syncer);
+    return std::make_shared<mga::HWC11Device>(hwc_native_device, layer_list, nullptr, syncer);
 }
 
-std::shared_ptr<mga::DisplaySupportProvider> mga::ResourceFactory::create_hwc_1_0(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-    std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
+std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_native_device,
+    std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
+    auto fb_device = create_fb_device(fb_native_device);
+    return std::make_shared<mga::HWC10Device>(hwc_native_device, fb_device, syncer);
 }
 
 std::shared_ptr<mg::Display> mga::ResourceFactory::create_display(
-    std::shared_ptr<mga::DisplaySupportProvider> const& support_provider,
-    std::shared_ptr<mg::DisplayReport> const& report) const
+    std::shared_ptr<FBSwapper> const& swapper,
+    std::shared_ptr<DisplayDevice> const& device,
+    std::shared_ptr<graphics::DisplayReport> const& report) const
 {
-    auto buffers = create_buffers(support_provider);
-    auto swapper = create_swapper(buffers);
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, support_provider, cache);
-    auto native_win = std::make_shared<mga::MirNativeWindow>(interpreter);
-    auto window = std::make_shared<mga::AndroidFramebufferWindow>(native_win);
     auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
-    return std::make_shared<AndroidDisplay>(window, db_factory, support_provider, report);
+
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, device, cache);
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+    return std::make_shared<AndroidDisplay>(native_window, db_factory, device, report);
 }

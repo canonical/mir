@@ -48,7 +48,7 @@ struct ProgramOption : testing::Test
 };
 }
 
-TEST_F(ProgramOption, parse_command_line_long)
+TEST_F(ProgramOption, parse_device_line_long)
 {
     mir::options::ProgramOption po;
 
@@ -66,7 +66,7 @@ TEST_F(ProgramOption, parse_command_line_long)
     EXPECT_FALSE(po.is_set("garbage"));
 }
 
-TEST_F(ProgramOption, parse_command_line_short)
+TEST_F(ProgramOption, parse_device_line_short)
 {
     mir::options::ProgramOption po;
 
@@ -84,7 +84,7 @@ TEST_F(ProgramOption, parse_command_line_short)
     EXPECT_FALSE(po.is_set("garbage"));
 }
 
-TEST_F(ProgramOption, parse_command_yes_no)
+TEST_F(ProgramOption, parse_device_yes_no)
 {
     mir::options::ProgramOption po;
 
@@ -108,7 +108,7 @@ TEST_F(ProgramOption, parse_command_yes_no)
     EXPECT_TRUE(po.get("flag-default", true));
 }
 
-TEST_F(ProgramOption, parse_command_line_help)
+TEST_F(ProgramOption, parse_device_line_help)
 {
     mir::options::ProgramOption po;
 
