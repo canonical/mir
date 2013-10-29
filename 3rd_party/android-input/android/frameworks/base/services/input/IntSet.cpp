@@ -24,14 +24,14 @@ using namespace test::android;
 using namespace android;
 #endif
 
-IntSet::IntSet() : std::set<int32_t>() {
+IntSet::IntSet() {
 #ifdef ANDROID_INPUT_INTSET_TEST
         ++constructionCount;
 #endif
 }
 
 IntSet::IntSet(std::initializer_list<int32_t> list)
-    : std::set<int32_t>(list) {
+    : stdSet(list) {
 #ifdef ANDROID_INPUT_INTSET_TEST
     ++constructionCount;
 #endif
@@ -46,9 +46,9 @@ IntSet::~IntSet() {
 IntSet IntSet::operator -(const IntSet &other) const {
     IntSet result;
 
-    std::set_difference(cbegin(), cend(),
-            other.cbegin(), other.cend(),
-            std::inserter(result, result.begin()));
+    std::set_difference(stdSet.cbegin(), stdSet.cend(),
+            other.stdSet.cbegin(), other.stdSet.cend(),
+            std::inserter(result.stdSet, result.stdSet.begin()));
 
     return result;
 }
@@ -56,29 +56,33 @@ IntSet IntSet::operator -(const IntSet &other) const {
 IntSet IntSet::operator &(const IntSet &other) const {
     IntSet result;
 
-    std::set_intersection(cbegin(), cend(),
-            other.cbegin(), other.cend(),
-            std::inserter(result, result.begin()));
+    std::set_intersection(stdSet.cbegin(), stdSet.cend(),
+            other.stdSet.cbegin(), other.stdSet.cend(),
+            std::inserter(result.stdSet, result.stdSet.begin()));
 
     return result;
 }
 
+bool IntSet::operator ==(const IntSet &other) const {
+    return stdSet == other.stdSet;
+}
+
 void IntSet::remove(const IntSet &values) {
-    remove(begin(), values.begin(), values.end());
+    remove(stdSet.begin(), values.stdSet.begin(), values.stdSet.end());
 }
 
 bool IntSet::contains(int32_t value) const {
-    return find(value) != end();
+    return stdSet.find(value) != stdSet.end();
 }
 
 size_t IntSet::indexOf(int32_t value) const {
-    auto it = begin();
+    auto it = stdSet.begin();
     size_t index = 0;
-    while (it != end() && *it != value) {
+    while (it != stdSet.end() && *it != value) {
         it++;
         ++index;
     }
-    assert(it != end());
+    assert(it != stdSet.end());
     return index;
 }
 
@@ -98,17 +102,18 @@ std::string IntSet::toString() const {
     return stream.str();
 }
 
-void IntSet::remove(IntSet::iterator selfIterator, IntSet::const_iterator otherIterator,
-        IntSet::const_iterator otherEnd) {
+void IntSet::remove(std::set<int32_t>::iterator selfIterator,
+                    std::set<int32_t>::const_iterator otherIterator,
+                    std::set<int32_t>::const_iterator otherEnd) {
 
-    if (selfIterator == end() || otherIterator == otherEnd)
+    if (selfIterator == stdSet.end() || otherIterator == otherEnd)
         return;
 
     if (*selfIterator < *otherIterator) {
         selfIterator++;
         remove(selfIterator, otherIterator, otherEnd);
     } else if (*selfIterator == *otherIterator) {
-        selfIterator = erase(selfIterator);
+        selfIterator = stdSet.erase(selfIterator);
         otherIterator++;
         remove(selfIterator, otherIterator, otherEnd);
     } else /* *selfIterator > *otherIterator */ {

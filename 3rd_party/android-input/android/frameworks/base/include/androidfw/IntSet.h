@@ -39,7 +39,7 @@ namespace android {
    - Provide a convenience wrapper for std::set<int32_t>. Because the std API is cumbersome.
    - Provide an API similar to the BitSet32 class that it's replacing.
  */
-class IntSet : public std::set<int32_t> {
+class IntSet {
 public:
 
 #ifdef ANDROID_INPUT_INTSET_TEST
@@ -52,25 +52,36 @@ public:
     virtual ~IntSet();
 
     IntSet operator -(const IntSet &other) const;
-
     IntSet operator &(const IntSet &other) const;
+    bool operator ==(const IntSet &other) const;
+
+    std::set<int32_t>::iterator begin() { return stdSet.begin(); }
+    std::set<int32_t>::const_iterator begin() const { return stdSet.begin(); }
+    std::set<int32_t>::iterator end() { return stdSet.end(); }
+    std::set<int32_t>::const_iterator end() const { return stdSet.end(); }
+    std::set<int32_t>::const_iterator cbegin() const { return stdSet.cbegin(); }
+    std::set<int32_t>::const_iterator cend() const { return stdSet.cend(); }
+
+    void clear() { stdSet.clear(); }
+    void insert(int32_t value) { stdSet.insert(value); }
 
     template<typename Func>
-    void forEach(Func func) { std::for_each(begin(), end(), func); }
+    void forEach(Func func) { std::for_each(stdSet.begin(), stdSet.end(), func); }
 
     template<typename Func>
-    void forEach(Func func) const { std::for_each(begin(), end(), func); }
+    void forEach(Func func) const { std::for_each(stdSet.begin(), stdSet.end(), func); }
 
-    void remove(int32_t value) { erase(value); }
+    void remove(int32_t value) { stdSet.erase(value); }
     void remove(const IntSet &values);
 
-    size_t count() const { return size(); }
+    size_t size() const { return stdSet.size(); }
+    size_t count() const { return stdSet.size(); }
 
-    bool isEmpty() const { return empty(); }
+    bool isEmpty() const { return stdSet.empty(); }
 
     bool contains(int32_t value) const;
 
-    int32_t first() const { return *cbegin(); }
+    int32_t first() const { return *stdSet.cbegin(); }
 
     // It's assumed that the given value does exist in the set
     size_t indexOf(int32_t value) const;
@@ -78,8 +89,10 @@ public:
     std::string toString() const;
 
 private:
-    void remove(IntSet::iterator selfIterator, IntSet::const_iterator otherIterator,
-                IntSet::const_iterator otherEnd);
+    void remove(std::set<int32_t>::iterator selfIterator,
+                std::set<int32_t>::const_iterator otherIterator,
+                std::set<int32_t>::const_iterator otherEnd);
+    std::set<int32_t> stdSet;
 };
 
 } // namespace android

@@ -3647,7 +3647,7 @@ void TouchInputMapper::sync(nsecs_t when) {
 
             // Stylus takes precedence over all tools, then mouse, then finger.
             PointerUsage pointerUsage = mPointerUsage;
-            if (!mCurrentStylusIds.empty()) {
+            if (!mCurrentStylusIds.isEmpty()) {
                 mCurrentMouseIds.clear();
                 mCurrentFingerIds.clear();
                 pointerUsage = POINTER_USAGE_STYLUS;
@@ -4268,7 +4268,7 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
 
     // Send motion events for all pointers that went up or were canceled.
     IntSet dispatchedGestureIds = mPointerGesture.lastGestureIds;
-    if (!dispatchedGestureIds.empty()) {
+    if (!dispatchedGestureIds.isEmpty()) {
         if (cancelPreviousGesture) {
             dispatchMotion(when, policyFlags, mSource,
                     AMOTION_EVENT_ACTION_CANCEL, 0, metaState, buttonState,
@@ -4341,7 +4341,7 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
                 mPointerGesture.currentGestureCoords,
                 mPointerGesture.currentGestureIds.count(), -1,
                 0, 0, mPointerGesture.downTime);
-    } else if (dispatchedGestureIds.empty()
+    } else if (dispatchedGestureIds.isEmpty()
             && !mPointerGesture.lastGestureIds.isEmpty()) {
         // Synthesize a hover move event after all pointers go up to indicate that
         // the pointer is hovering again even if the user is not currently touching
@@ -5160,7 +5160,7 @@ void TouchInputMapper::dispatchPointerStylus(nsecs_t when, uint32_t policyFlags)
     mPointerSimple.currentProperties.clear();
 
     bool down, hovering;
-    if (!mCurrentStylusIds.empty()) {
+    if (!mCurrentStylusIds.isEmpty()) {
         int32_t id = mCurrentStylusIds.first();
         uint32_t index = mCurrentCookedPointerData.idToIndex(id);
         float x = mCurrentCookedPointerData.pointerCoords[index].getX();
