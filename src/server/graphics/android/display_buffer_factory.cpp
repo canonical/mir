@@ -118,8 +118,6 @@ mga::DisplayBufferFactory::DisplayBufferFactory(
       display(create_and_initialize_display()),
       force_backup_display(false)
 {
-    std::shared_ptr<hwc_composer_device_1> hwc_native;
-
     try
     {
         hwc_native = res_factory->create_hwc_native_device();

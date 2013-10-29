@@ -26,9 +26,11 @@
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_display_device.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -141,21 +143,31 @@ public:
     void SetUp()
     {
         using namespace testing;
+        int fb_format = HAL_PIXEL_FORMAT_RGBA_8888;
         mock_resource_factory = std::make_shared<testing::StrictMock<MockResourceFactory>>();
-        ON_CALL(*mock_resource_factory, create_hwc_native_device())
-            .WillByDefault(Return(hw_access_mock.mock_hwc_device));
 
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+        fb_access_mock = std::make_shared<testing::NiceMock<mtd::MockFBHalDevice>>(
+            1, 1, fb_format, 2);
+
+        ON_CALL(*mock_resource_factory, create_hwc_native_device())
+            .WillByDefault(Return(hw_access_mock.mock_hwc_device));
+        ON_CALL(*mock_resource_factory, create_fb_native_device())
+            .WillByDefault(Return(fb_access_mock));
+        ON_CALL(mock_egl, eglGetConfigAttrib(_,_,_,_))
+            .WillByDefault(DoAll(SetArgPointee<3>(fb_format), Return(EGL_TRUE)));
     }
 
-    //TODO: this test shouldnt need mock_egl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    std::shared_ptr<mtd::MockFBHalDevice> fb_access_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
 };
 }
 
+
+//HWC 1.0
 TEST_F(DisplayBufferCreation, hwc_version_10_success)
 {
     using namespace testing;
@@ -169,8 +181,6 @@ TEST_F(DisplayBufferCreation, hwc_version_10_success)
     EXPECT_CALL(*mock_resource_factory, create_hwc10_device(_,_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
@@ -192,11 +202,42 @@ TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
-        .Times(1);
 
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
     factory.create_display_device();
+}
+
+//HWC 1.0
+TEST_F(DisplayBufferCreation, hwc_version_11_egl_selection)
+{
+    using namespace testing;
+    EGLint const default_egl_config_attr [] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
+        EGL_NONE
+    };
+
+    EGLint const backup_egl_config_attr [] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    EGLConfig fake_egl_config = reinterpret_cast<EGLConfig>(0x44);
+
+    Sequence seq;
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,mtd::AttrMatches(default_egl_config_attr),_,_,_))
+        .InSequence(seq)
+        .WillOnce(DoAll(SetArgPointee<4>(0), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,mtd::AttrMatches(backup_egl_config_attr),_,_,_))
+        .InSequence(seq)
+        .WillOnce(DoAll(SetArgPointee<2>(fake_egl_config), SetArgPointee<4>(1), Return(EGL_TRUE)));
+
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    EXPECT_EQ(fake_egl_config, factory.egl_config());
 }
 
 TEST_F(DisplayBufferCreation, hwc_version_11_success)
@@ -210,8 +251,6 @@ TEST_F(DisplayBufferCreation, hwc_version_11_success)
     EXPECT_CALL(*mock_resource_factory, create_hwc11_device(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
@@ -232,8 +271,6 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
@@ -273,9 +310,17 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
-        .Times(1);
 
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
     factory.create_display_device();
+}
+
+TEST_F(DisplayBufferCreation, db_creation)
+{
+    using namespace testing;
+    mtd::StubDisplayDevice stub_device;
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
+        .Times(1);
+    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
+    factory.create_display_buffer(mt::fake_shared(stub_device));
 }
