@@ -75,7 +75,7 @@ private:
 
     EGLDisplay const egl_display;
     EGLConfig const egl_config;
-    EGLContextStore const egl_shared_context;
+    EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface_dummy;
 
     //we only have a primary display at the moment

@@ -27,45 +27,6 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
-#if 0
-namespace
-{
-static EGLConfig select_egl_config(EGLDisplay egl_display)
-{
-    static EGLint const default_egl_config_attr [] =
-    {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
-        EGL_NONE
-    };
-
-    EGLint major, minor;
-    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(egl_display, &major, &minor);
-
-    int num_potential_configs;
-    EGLint num_match_configs;
-
-    eglGetConfigs(display, NULL, 0, &num_potential_configs);
-    std::vector<EGLConfig> matching_configs(num_potential_configs);
-
-    /* upon return, this will fill matching_configs[0:num_match_configs] with the matching */
-    eglChooseConfig(display, attrs, matching_configs.data(), num_potential_configs, &num_match_configs);
-    matching_configs.resize(num_match_configs);
-    if (matching_configs.empty())
-    {
-        //HWC1.1 and later doesnt have a way to query fb format other than EGL_FRAMEBUFFER_TARGET_ANDROID.
-        //We do what surfaceflinger does as backup, find a config with rgba8888 and hope for the best
-        eglTerminate(egl_display);
-        return select_egl_config_with_visual_id(egl_display, HAL_PIXEL_FORMAT_RGBA_8888);
-    }
-
-    eglTerminate(egl_display);
-    return matching_configs[0];
-}
-}
-#endif
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerList> const& layer_list,
@@ -83,6 +44,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
         BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config")); 
     }
 }
+
 mga::HWC11Device::~HWC11Device() noexcept
 {
 }
