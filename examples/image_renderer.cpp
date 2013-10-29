@@ -87,11 +87,68 @@ void throw_with_object_log(MirGLGetObjectInfoLog getObjectInfoLog,
     BOOST_THROW_EXCEPTION(std::runtime_error(object_info_err));
 }
 
+class GLState
+{
+public:
+    GLState(GLint attrib_loc)
+        : attrib_loc{attrib_loc}
+    {
+        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &buffer);
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture_unit);
+        if (attrib_loc >= 0)
+        {
+            glGetVertexAttribiv(attrib_loc, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &attrib_enabled);
+            glGetVertexAttribiv(attrib_loc, GL_VERTEX_ATTRIB_ARRAY_SIZE, &attrib_size);
+            glGetVertexAttribiv(attrib_loc, GL_VERTEX_ATTRIB_ARRAY_TYPE, &attrib_type);
+            glGetVertexAttribiv(attrib_loc, GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &attrib_normalized);
+            glGetVertexAttribiv(attrib_loc, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &attrib_stride);
+            glGetVertexAttribPointerv(attrib_loc, GL_VERTEX_ATTRIB_ARRAY_POINTER, &attrib_pointer);
+        }
+    }
+
+    GLState() : GLState{invalid_attrib_loc} {}
+
+    ~GLState()
+    {
+        glUseProgram(program);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glActiveTexture(active_texture_unit);
+        if (attrib_loc >= 0)
+        {
+            glVertexAttribPointer(attrib_loc, attrib_size, attrib_type,
+                                  attrib_normalized, attrib_stride, attrib_pointer);
+            if (attrib_enabled)
+                glEnableVertexAttribArray(attrib_loc);
+            else
+                glDisableVertexAttribArray(attrib_loc);
+        }
+    }
+
+private:
+    static GLint const invalid_attrib_loc = -1;
+    GLint program = 0;
+    GLint texture = 0;
+    GLint buffer = 0;
+    GLint active_texture_unit = 0;
+    GLint attrib_loc = invalid_attrib_loc;
+    GLint attrib_enabled = 0;
+    GLint attrib_size = 0;
+    GLint attrib_type = 0;
+    GLint attrib_normalized = 0;
+    GLint attrib_stride = 0;
+    GLvoid* attrib_pointer = nullptr;
+};
+
 }
 
 mt::ImageRenderer::ImageRenderer(const uint8_t* pixel_data, mir::geometry::Size size,
                                  uint32_t bytes_per_pixel)
 {
+    GLState gl_state;
+
     resources.setup();
 
     /* Upload the texture */
@@ -173,7 +230,6 @@ void mt::ImageRenderer::Resources::setup()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glUniform1i(tex_loc, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Create VBO */
     glGenBuffers(1, &vertex_attribs_vbo);
@@ -181,14 +237,13 @@ void mt::ImageRenderer::Resources::setup()
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
                  glm::value_ptr(vertex_attribs[0]), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glUseProgram(0);
 }
 
 
 void mt::ImageRenderer::render()
 {
+    GLState gl_state(resources.position_attr_loc);
+
     glUseProgram(resources.program);
 
     glActiveTexture(GL_TEXTURE0);
@@ -202,5 +257,4 @@ void mt::ImageRenderer::render()
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glDisableVertexAttribArray(resources.position_attr_loc);
 }

@@ -15,10 +15,10 @@
  *
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_SUPPORT_PROVIDER_H_
-#define MIR_TEST_DOUBLES_STUB_DISPLAY_SUPPORT_PROVIDER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
 
-#include "src/server/graphics/android/display_support_provider.h"
+#include "src/server/graphics/android/display_device.h"
  
 namespace mir
 {
@@ -27,26 +27,28 @@ namespace test
 namespace doubles
 {
 
-struct StubDisplaySupportProvider : public graphics::android::DisplaySupportProvider
+struct StubDisplayDevice : public graphics::android::DisplayDevice
 {
-    StubDisplaySupportProvider(geometry::Size sz)
+    StubDisplayDevice(geometry::Size sz)
      : sz(sz)
     {
     }
-    StubDisplaySupportProvider()
-     : StubDisplaySupportProvider({0,0})
+
+    StubDisplayDevice()
+     : StubDisplayDevice({0,0})
     {
     }
 
-    ~StubDisplaySupportProvider() noexcept {}
+    ~StubDisplayDevice() noexcept {}
 
     geometry::Size display_size() const { return sz; }
-    geometry::PixelFormat display_format() const { return geometry::PixelFormat(); }
+    geometry::PixelFormat display_format() const { return geometry::PixelFormat::abgr_8888; }
     unsigned int number_of_framebuffers_available() const { return 0; }
     void set_next_frontbuffer(std::shared_ptr<mir::graphics::Buffer> const&) {}
     void sync_to_display(bool) {}
     void mode(MirPowerMode) {}
     void commit_frame(EGLDisplay, EGLSurface) {}
+
 private:
     geometry::Size sz;
 };
@@ -54,4 +56,4 @@ private:
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_SUPPORT_PROVIDER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_ */

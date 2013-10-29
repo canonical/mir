@@ -20,10 +20,11 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/display_buffer_factory.h"
 
-#include "mir_test_doubles/mock_display_support_provider.h"
-#include "mir_test_doubles/mock_android_framebuffer_window.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir/graphics/android/mir_native_window.h"
+#include "mir_test_doubles/stub_driver_interpreter.h"
 
 #include <memory>
 
@@ -37,8 +38,7 @@ class AndroidTestHWCFramebuffer : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        native_win = std::make_shared<testing::NiceMock<mtd::MockAndroidFramebufferWindow>>();
-        mock_display_support_provider = std::make_shared<mtd::MockDisplaySupportProvider>();
+        mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
@@ -48,12 +48,13 @@ protected:
     std::shared_ptr<mga::AndroidDisplay> create_display()
     {
         auto db_factory = std::make_shared<mga::DisplayBufferFactory>();
-        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_support_provider, mock_display_report);
+        auto native_win = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
+        return std::make_shared<mga::AndroidDisplay>(
+            native_win, db_factory, mock_display_device, mock_display_report);
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
-    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
+    std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
     mtd::MockEGL mock_egl;
 };
 
@@ -62,14 +63,14 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_support_provider, display_size())
+    EXPECT_CALL(*mock_display_device, display_size())
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size)); 
 
     auto display = create_display();
 
     testing::InSequence sequence_enforcer;
-    EXPECT_CALL(*mock_display_support_provider, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
+    EXPECT_CALL(*mock_display_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
         .Times(1);
 
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
@@ -83,7 +84,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_support_provider, display_size())
+    EXPECT_CALL(*mock_display_device, display_size())
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size)); 
     auto display = create_display();
@@ -109,7 +110,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
     using namespace testing;
 
     geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_display_support_provider, display_size())
+    EXPECT_CALL(*mock_display_device, display_size())
         .Times(1)
         .WillOnce(Return(fake_display_size)); 
     auto display = create_display();
@@ -141,10 +142,10 @@ TEST_F(AndroidTestHWCFramebuffer, test_dpms_configuration_changes_reach_device)
 
     {
         InSequence seq;
-        EXPECT_CALL(*mock_display_support_provider, mode(mir_power_mode_on));
-        EXPECT_CALL(*mock_display_support_provider, mode(mir_power_mode_off));
-        EXPECT_CALL(*mock_display_support_provider, mode(mir_power_mode_suspend));
-        EXPECT_CALL(*mock_display_support_provider, mode(mir_power_mode_standby));
+        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on));
+        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off));
+        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend));
+        EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby));
     }
     display->configure(*on_configuration);
     display->configure(*off_configuration);
