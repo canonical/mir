@@ -161,14 +161,23 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFac
       display_buffer{db_factory->create_display_buffer(display_device)},
       current_configuration{display_buffer->view_area().size}
 {
+        printf("DB SIZE %i\n", display_buffer->view_area().size.width.as_uint32_t());
+    if (egl_surface_dummy == EGL_NO_SURFACE)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("could not create pbuffer surface for AndroidDisplay\n"));
+    }
+
     display_report->report_successful_setup_of_native_resources();
 
     /* Make the shared context current */
     if (eglMakeCurrent(db_factory->egl_display(),
-                       egl_surface_dummy,
-                       egl_surface_dummy,
+                       egl_surface_dummy, egl_surface_dummy,
                        db_factory->shared_egl_context()) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+    }
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();

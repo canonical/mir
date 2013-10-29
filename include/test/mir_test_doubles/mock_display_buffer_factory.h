@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_FACTORY_H_
 
 #include "src/server/graphics/android/android_display_buffer_factory.h"
-#include "null_display_buffer.h"
+#include "stub_display_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -36,14 +36,20 @@ struct MockDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
     }
 
     MockDisplayBufferFactory(EGLDisplay disp, EGLConfig conf, EGLContext cont)
-        : display(disp), config(conf), context(cont)
+        : display(disp), config(conf), context(cont), sz({0,0})
+    {
+    }
+
+    MockDisplayBufferFactory(geometry::Size sz, EGLDisplay disp, EGLConfig conf, EGLContext cont)
+        : display(disp), config(conf), context(cont), sz(sz)
     {
     }
 
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
         std::shared_ptr<graphics::android::DisplayDevice> const&)
     {
-        return std::unique_ptr<graphics::DisplayBuffer>(new NullDisplayBuffer());
+        return std::unique_ptr<graphics::DisplayBuffer>(
+                new StubDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
     
     std::shared_ptr<graphics::android::DisplayDevice> create_display_device()
@@ -69,6 +75,7 @@ struct MockDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
     EGLDisplay display;
     EGLConfig config;
     EGLContext context;
+    geometry::Size sz;
 };
 }
 }

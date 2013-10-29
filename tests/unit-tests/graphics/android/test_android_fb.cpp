@@ -50,7 +50,6 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_egl.silence_uninteresting();
 
         visual_id = 5;
         dummy_display = reinterpret_cast<EGLDisplay>(0x34);
@@ -60,9 +59,7 @@ protected:
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
         auto stub_driver_interpreter = std::make_shared<mtd::StubDriverInterpreter>(display_size, visual_id);
         native_win = std::make_shared<mg::android::MirNativeWindow>(stub_driver_interpreter);
-        stub_db_factory = std::make_shared<mtd::MockDisplayBufferFactory>(dummy_display, dummy_config, dummy_context);
-        stub_db = std::unique_ptr<mtd::StubDisplayBuffer>(
-                new mtd::StubDisplayBuffer(mir::geometry::Rectangle{{0,0},{0,0}}));
+        stub_db_factory = std::make_shared<mtd::MockDisplayBufferFactory>(display_size, dummy_display, dummy_config, dummy_context);
     }
 
     int visual_id;
@@ -73,31 +70,21 @@ protected:
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<ANativeWindow> native_win;
     std::shared_ptr<mtd::MockDisplayBufferFactory> stub_db_factory;
-    mtd::MockEGL mock_egl;
-
-    std::unique_ptr<mtd::StubDisplayBuffer> stub_db;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 TEST_F(AndroidDisplayTest, display_creation)
 {
     using namespace testing;
-    EGLint const expected_ctxt_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
     EGLint const expected_pbuffer_attr[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
 
     EGLSurface fake_surface = (EGLSurface) 0x715;
-    EGLContext const dummy_ctx{reinterpret_cast<EGLContext>(0x17)};
-
-    EXPECT_CALL(mock_egl, eglCreateContext(
-        dummy_display, dummy_config, EGL_NO_CONTEXT, mtd::AttrMatches(expected_ctxt_attr)))
-        .Times(1)
-        .WillOnce(Return(dummy_ctx));
-
     EXPECT_CALL(mock_egl, eglCreatePbufferSurface(
         dummy_display, dummy_config, mtd::AttrMatches(expected_pbuffer_attr)))
         .Times(1)
         .WillOnce(Return(fake_surface));
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display,fake_surface,fake_surface,dummy_ctx))
+    EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surface, fake_surface, dummy_context))
         .Times(1);
 
     //on destruction
@@ -155,7 +142,7 @@ TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_fai
     EXPECT_CALL(*mock_display_report, report_successful_display_construction())
         .Times(0);
 
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
+    EXPECT_CALL(mock_egl, eglCreatePbufferSurface(_,_,_))
         .Times(1)
         .WillOnce(Return(EGL_NO_SURFACE));
 
