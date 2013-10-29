@@ -23,6 +23,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
+#include "mir_test_framework/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 
@@ -371,12 +372,15 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_normal_exit)
 
 TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 {
-    struct ServerConfig : TestingServerConfiguration
+    struct ServerConfig: TestingServerConfiguration
     {
         void exec() override
         {
+            sync.wait_for_signal_ready_for();
             abort();
         }
+
+        mtf::CrossProcessSync sync;
     };
 
     ServerConfig server_config;
@@ -384,10 +388,9 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 
     run_in_test_process([&]
     {
-        using std::chrono::steady_clock;
-        std::chrono::seconds const limit(2);
-
         ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        server_config.sync.signal_ready();
 
         // shutdown should fail as the server aborted
         ASSERT_FALSE(shutdown_server_process());
@@ -400,15 +403,20 @@ struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
 
 TEST_P(OnSignal, removes_endpoint_on_signal)
 {
-    struct ServerConfig : TestingServerConfiguration
+    struct ServerConfig: TestingServerConfiguration
     {
         void exec() override
         {
+            sync.wait_for_signal_ready_for();
             raise(sig);
         }
 
-        ServerConfig(int sig) : sig(sig) {}
+        ServerConfig(int sig)
+            : sig(sig)
+        {
+        }
         int const sig;
+        mtf::CrossProcessSync sync;
     };
 
     ServerConfig server_config(GetParam());
@@ -416,10 +424,9 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 
     run_in_test_process([&]
     {
-        using std::chrono::steady_clock;
-        std::chrono::seconds const limit(2);
-
         ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        server_config.sync.signal_ready();
 
         // shutdown should fail as the server faulted
         ASSERT_FALSE(shutdown_server_process());
