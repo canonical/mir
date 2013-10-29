@@ -144,7 +144,7 @@ public:
     {
         using namespace testing;
         int fb_format = HAL_PIXEL_FORMAT_RGBA_8888;
-        mock_resource_factory = std::make_shared<testing::StrictMock<MockResourceFactory>>();
+        mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
 
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
         fb_access_mock = std::make_shared<testing::NiceMock<mtd::MockFBHalDevice>>(
@@ -321,6 +321,7 @@ TEST_F(DisplayBufferCreation, db_creation)
     mtd::StubDisplayDevice stub_device;
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
+
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report);
     factory.create_display_buffer(mt::fake_shared(stub_device));
 }

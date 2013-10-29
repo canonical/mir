@@ -25,6 +25,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 
+#include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <vector>
@@ -54,31 +55,42 @@ static EGLint const default_egl_config_attr [] =
 {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
     EGL_NONE
 };
 
-static EGLConfig select_egl_config(EGLDisplay)
+static EGLint const backup_egl_config_attr [] =
 {
-    return reinterpret_cast<EGLConfig>(0x2);
-}
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
 
-static EGLConfig select_egl_config_with_visual_id(EGLDisplay egl_display, int required_visual_id)
+
+
+
+std::vector<EGLConfig> match_configs(EGLDisplay display, EGLint const* attrs)
 {
     int num_potential_configs;
     EGLint num_match_configs;
 
-    eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
+    eglGetConfigs(display, NULL, 0, &num_potential_configs);
     std::vector<EGLConfig> config_slots(num_potential_configs);
 
     /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
-    eglChooseConfig(egl_display, default_egl_config_attr,
-                    config_slots.data(), num_potential_configs, &num_match_configs);
+    eglChooseConfig(display, attrs, config_slots.data(), num_potential_configs, &num_match_configs);
     config_slots.resize(num_match_configs);
+    return config_slots;
+}
+
+static EGLConfig select_egl_config_with_visual_id(EGLDisplay egl_display, int required_visual_id)
+{
+    auto matching_configs = match_configs(egl_display, backup_egl_config_attr);
 
     /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
      * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
      * eglChooseConfig */
-    auto const pegl_config = std::find_if(begin(config_slots), end(config_slots),
+    auto const pegl_config = std::find_if(begin(matching_configs), end(matching_configs),
         [&](EGLConfig& current) -> bool
         {
             int visual_id;
@@ -86,11 +98,25 @@ static EGLConfig select_egl_config_with_visual_id(EGLDisplay egl_display, int re
             return (visual_id == required_visual_id);
         });
 
-    if (pegl_config == end(config_slots))
+    if (pegl_config == end(matching_configs))
         BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config for use with framebuffer"));
 
     return *pegl_config;
 }
+
+static EGLConfig select_egl_config(EGLDisplay egl_display)
+{
+    auto matching_configs = match_configs(egl_display, default_egl_config_attr);
+    if (matching_configs.empty())
+    {
+        //HWC1.1 and later doesnt have a way to query fb format other than EGL_FRAMEBUFFER_TARGET_ANDROID.
+        //We do what surfaceflinger does as backup, find a config with rgba8888 and hope for the best
+        return select_egl_config_with_visual_id(egl_display, HAL_PIXEL_FORMAT_RGBA_8888);
+    }
+
+    return matching_configs[0];
+}
+
 
 EGLDisplay create_and_initialize_display()
 {
