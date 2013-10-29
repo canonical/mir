@@ -36,12 +36,10 @@ class AndroidDisplayBufferFactory
 public:
     virtual ~AndroidDisplayBufferFactory() = default;
 
-    virtual std::unique_ptr<DisplayBuffer> create_display_buffer(
-        std::shared_ptr<DisplayDevice> const& display_device) = 0;
     virtual std::shared_ptr<DisplayDevice> create_display_device() = 0;
-    virtual EGLDisplay egl_display() = 0;
-    virtual EGLConfig egl_config() = 0;
-    virtual EGLContext shared_egl_context() = 0;
+    virtual std::unique_ptr<DisplayBuffer> create_display_buffer(
+        std::shared_ptr<DisplayDevice> const& display_device,
+        EGLDisplay, EGLConfig, EGLContext) = 0;
 
 protected:
     AndroidDisplayBufferFactory() = default;

@@ -35,113 +35,11 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-namespace
-{
-
-static EGLint const dummy_pbuffer_attribs[] =
-{
-    EGL_WIDTH, 1,
-    EGL_HEIGHT, 1,
-    EGL_NONE
-};
-
-static EGLint const default_egl_context_attr[] =
-{
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-
-static EGLint const default_egl_config_attr [] =
-{
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
-    EGL_NONE
-};
-
-static EGLint const backup_egl_config_attr [] =
-{
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-
-
-
-std::vector<EGLConfig> match_configs(EGLDisplay display, EGLint const* attrs)
-{
-    int num_potential_configs;
-    EGLint num_match_configs;
-
-    eglGetConfigs(display, NULL, 0, &num_potential_configs);
-    std::vector<EGLConfig> config_slots(num_potential_configs);
-
-    /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
-    eglChooseConfig(display, attrs, config_slots.data(), num_potential_configs, &num_match_configs);
-    config_slots.resize(num_match_configs);
-    return config_slots;
-}
-
-static EGLConfig select_egl_config_with_visual_id(EGLDisplay egl_display, int required_visual_id)
-{
-    auto matching_configs = match_configs(egl_display, backup_egl_config_attr);
-
-    /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
-     * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
-     * eglChooseConfig */
-    auto const pegl_config = std::find_if(begin(matching_configs), end(matching_configs),
-        [&](EGLConfig& current) -> bool
-        {
-            int visual_id;
-            eglGetConfigAttrib(egl_display, current, EGL_NATIVE_VISUAL_ID, &visual_id);
-            return (visual_id == required_visual_id);
-        });
-
-    if (pegl_config == end(matching_configs))
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config for use with framebuffer"));
-
-    return *pegl_config;
-}
-
-static EGLConfig select_egl_config(EGLDisplay egl_display)
-{
-    auto matching_configs = match_configs(egl_display, default_egl_config_attr);
-    if (matching_configs.empty())
-    {
-        //HWC1.1 and later doesnt have a way to query fb format other than EGL_FRAMEBUFFER_TARGET_ANDROID.
-        //We do what surfaceflinger does as backup, find a config with rgba8888 and hope for the best
-        return select_egl_config_with_visual_id(egl_display, HAL_PIXEL_FORMAT_RGBA_8888);
-    }
-
-    return matching_configs[0];
-}
-
-
-EGLDisplay create_and_initialize_display()
-{
-    EGLint major, minor;
-
-    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglGetDisplay failed\n"));
-
-    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglInitialize failure\n"));
-
-    if ((major != 1) || (minor != 4))
-        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
-    return egl_display;
-}
-
-}
-
 mga::DisplayBufferFactory::DisplayBufferFactory(
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
     std::shared_ptr<mg::DisplayReport> const& display_report)
     : res_factory(res_factory),
       display_report(display_report),
-      display(create_and_initialize_display()),
       force_backup_display(false)
 {
     try
@@ -158,30 +56,10 @@ mga::DisplayBufferFactory::DisplayBufferFactory(
         force_backup_display = true;
     }
 
-    if (!force_backup_display && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
-    {
-        config = select_egl_config(display); 
-    }
-    else
+    if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
         fb_native = res_factory->create_fb_native_device();
-        config = select_egl_config_with_visual_id(display, fb_native->format);
     }
-}
-
-EGLConfig mga::DisplayBufferFactory::egl_config()
-{
-    return config;
-}
-
-EGLDisplay mga::DisplayBufferFactory::egl_display()
-{
-    return display;
-}
-
-EGLDisplay mga::DisplayBufferFactory::shared_egl_context()
-{
-    return shared_context;
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_device()
@@ -210,9 +88,10 @@ std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_de
 }
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
-    std::shared_ptr<DisplayDevice> const& display_device)
+    std::shared_ptr<DisplayDevice> const& display_device,
+    EGLDisplay display, EGLConfig config, EGLContext context)
 {
     auto native_window = res_factory->create_native_window(display_device);
     return std::unique_ptr<mg::DisplayBuffer>(
-        new DisplayBuffer(display_device, native_window, display, config, shared_context)); 
+        new DisplayBuffer(display_device, native_window, display, config, context)); 
 }

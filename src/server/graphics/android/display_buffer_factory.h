@@ -39,24 +39,21 @@ public:
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
         std::shared_ptr<DisplayReport> const& display_report);
 
-    std::unique_ptr<DisplayBuffer> create_display_buffer(
-        std::shared_ptr<DisplayDevice> const& display_device);
     std::shared_ptr<DisplayDevice> create_display_device();
+    std::unique_ptr<DisplayBuffer> create_display_buffer(
+        std::shared_ptr<DisplayDevice> const& display_device,
+        EGLDisplay, EGLConfig, EGLContext);
 
-    EGLDisplay egl_display();
-    EGLConfig egl_config();
-    EGLContext shared_egl_context();
 private:
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<DisplayReport> const display_report;
-    EGLDisplay display;
-    EGLConfig config;
 
     bool force_backup_display;
 
+    int display_format;
+
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
-    EGLContext shared_context;
 };
 
 }

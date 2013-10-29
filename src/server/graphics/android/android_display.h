@@ -71,11 +71,14 @@ public:
 private:
     //to allocate new displays on hotplug
     std::shared_ptr<AndroidDisplayBufferFactory> const db_factory;
+    std::shared_ptr<DisplayDevice> const display_device;
 
+    EGLDisplay const egl_display;
+    EGLConfig const egl_config;
+    EGLContextStore const egl_shared_context;
     EGLSurfaceStore const egl_surface_dummy;
 
     //we only have a primary display at the moment
-    std::shared_ptr<DisplayDevice> const display_device;
     std::unique_ptr<DisplayBuffer> const display_buffer;
 
     

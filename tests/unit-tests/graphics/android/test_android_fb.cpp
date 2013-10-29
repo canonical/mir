@@ -168,7 +168,6 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
     ASSERT_EQ(1u, disp_conf.modes.size());
     auto& disp_mode = disp_conf.modes[0];
     EXPECT_EQ(display_size, disp_mode.size);
-    //TODO fill refresh rate accordingly
 
     EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id); 
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id); 
@@ -177,6 +176,8 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
     auto origin = geom::Point{0,0}; 
     EXPECT_EQ(origin, disp_conf.top_left);
     EXPECT_EQ(0, disp_conf.current_mode_index);
+
+    //TODO fill refresh rate accordingly
     //TODO fill physical_size_mm fields accordingly;
 }
 
