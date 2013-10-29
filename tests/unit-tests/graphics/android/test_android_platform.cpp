@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/mock_display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -48,6 +49,7 @@ protected:
     {
         using namespace testing;
 
+        mock_db_factory = std::make_shared<mtd::MockDisplayBufferFactory>();
         stub_display_report = std::make_shared<mg::NullDisplayReport>();
         stride = geom::Stride(300*4);
 
@@ -76,6 +78,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
+    std::shared_ptr<mtd::MockDisplayBufferFactory> mock_db_factory;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
@@ -86,7 +89,7 @@ protected:
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
-    auto platform = mg::create_platform(std::make_shared<mo::ProgramOption>(), stub_display_report);
+    mga::AndroidPlatform platform(mock_db_factory, stub_display_report);
 
     auto mock_packer = std::make_shared<mtd::MockPacker>();
     int offset = 0;
@@ -103,7 +106,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     EXPECT_CALL(*mock_packer, pack_stride(stride))
         .Times(1);
 
-    platform->fill_ipc_package(mock_packer, mock_buffer);
+    platform.fill_ipc_package(mock_packer, mock_buffer);
 }
 
 namespace
