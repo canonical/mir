@@ -64,6 +64,15 @@ public:
         }
     }
 
+    void drm_set_gbm_device(struct gbm_device* dev)
+    {
+        if (!mir_connection_drm_set_gbm_device(*connection, dev))
+        {
+            std::string const msg("Nested Mir failed to set the gbm device");
+            BOOST_THROW_EXCEPTION(std::runtime_error(msg));
+        }
+    }
+
     static void drm_auth_magic_callback(int status, void* context)
     {
         int* status_ret = static_cast<int*>(context);
