@@ -90,13 +90,13 @@ TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
     geom::PixelFormat pf = geom::PixelFormat::abgr_8888;  
  
     EXPECT_CALL(*mock_display_device, number_of_framebuffers_available())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(fake_fb_num));
     EXPECT_CALL(*mock_display_device, display_size())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(disp_size));
     EXPECT_CALL(*mock_display_device, display_format())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(pf));
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(
