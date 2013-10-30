@@ -55,6 +55,8 @@ public:
     void allow_framedropping(bool dropping_allowed);
     bool framedropping_allowed() const;
 
+    void resize(const geometry::Size &newsize);
+
 private:
     graphics::BufferProperties bundle_properties;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;

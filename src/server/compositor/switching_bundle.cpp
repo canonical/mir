@@ -172,6 +172,11 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
         }
     }
 
+    if (ring[slot].buf->size() != bundle_properties.size)
+    {   // A resize has occurred...
+        ring[slot].buf = gralloc->alloc_buffer(bundle_properties);
+    }
+
     return ring[slot].buf;
 }
 
@@ -402,4 +407,9 @@ bool mc::SwitchingBundle::framedropping_allowed() const
 mg::BufferProperties mc::SwitchingBundle::properties() const
 {
     return bundle_properties;
+}
+
+void mc::SwitchingBundle::resize(const geometry::Size &newsize)
+{
+    bundle_properties.size = newsize;
 }
