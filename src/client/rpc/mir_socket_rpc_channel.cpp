@@ -42,7 +42,6 @@ namespace mclr = mir::client::rpc;
 namespace
 {
 std::chrono::milliseconds const timeout(200);
-boost::posix_time::milliseconds const boost_timeout(2000);
 }
 
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
@@ -55,7 +54,6 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
-    timer(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
@@ -75,7 +73,6 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     pending_calls(rpc_report),
     work(io_service),
     socket(io_service),
-    timer(io_service),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
@@ -131,7 +128,6 @@ void mclr::MirSocketRpcChannel::init()
 
 mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
-    timer.cancel();
     io_service.stop();
 
     if (io_service_thread.joinable())
@@ -308,17 +304,10 @@ void mclr::MirSocketRpcChannel::send_message(
     }
 
     rpc_report->invocation_succeeded(invocation);
-    timer.expires_from_now(boost_timeout);
-    timer.async_wait([this](const boost::system::error_code& error)
-    {
-        // Timed out waiting for server response: kill the connection
-        if (!error) socket.cancel();
-    });
 }
 
 void mclr::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
 {
-    timer.cancel();
     if (error)
     {
         // If we've not got a response to a call pending
