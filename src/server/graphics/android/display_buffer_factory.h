@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_ANDROID_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_HWC_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_
 
 #include "android_display_buffer_factory.h"
 #include "hardware/hwcomposer.h"
@@ -48,10 +48,7 @@ public:
 private:
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<DisplayReport> const display_report;
-
     bool force_backup_display;
-
-    int display_format;
 
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
@@ -61,4 +58,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
