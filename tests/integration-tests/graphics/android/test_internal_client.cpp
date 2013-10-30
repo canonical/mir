@@ -19,6 +19,7 @@
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/graphics/android/internal_client_window.h"
 #include "src/server/graphics/android/interpreter_cache.h"
+#include "src/server/graphics/android/internal_client.h"
 #include "src/server/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -102,8 +103,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 
     auto options = std::shared_ptr<mo::ProgramOption>(); 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 
-    auto platform = mg::create_platform(options, report);
-    auto internal_client = platform->create_internal_client();
+    auto internal_client = std::make_shared<mga::InternalClient>();
 
     int major, minor, n;
     EGLContext egl_context;
@@ -139,4 +139,9 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     glClear(GL_COLOR_BUFFER_BIT);
     rc = eglSwapBuffers(egl_display, egl_surface);
     EXPECT_EQ(EGL_TRUE, rc);
+
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroySurface(egl_display, egl_surface);
+    eglDestroyContext(egl_display, egl_context);
+    eglTerminate(egl_display);
 }

@@ -50,6 +50,11 @@ protected:
         display_resource_factory = std::make_shared<mga::ResourceFactory>(fb_allocator);
     }
 
+    static void TearDownTestCase()
+    {
+        display_resource_factory.reset();
+    }
+
     md::glAnimationBasic gl_animation;
 
     static std::shared_ptr<mga::ResourceFactory> display_resource_factory;

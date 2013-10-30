@@ -60,12 +60,10 @@ mga::DisplayBufferFactory::DisplayBufferFactory(
         }
     }
 
-printf("here.\n");
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
         fb_native = res_factory->create_fb_native_device();
     }
-printf("here.\n");
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_device()
