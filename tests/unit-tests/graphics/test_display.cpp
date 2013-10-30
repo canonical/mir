@@ -74,13 +74,13 @@ public:
     std::shared_ptr<mg::Display> create_display()
     {
         auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-#ifdef ANDROID
         auto report = std::make_shared<mg::NullDisplayReport>();
+#ifdef ANDROID
         auto platform = mg::create_platform(
             std::make_shared<mir::options::ProgramOption>(),
             report); 
 #else
-        auto platform = std::make_shared<mg::gbm::GBMPlatform>(
+        auto platform = std::make_shared<mg::gbm::GBMPlatform>(report,
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
         return platform->create_display(conf_policy);
