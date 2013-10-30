@@ -21,6 +21,7 @@
 
 #include "src/server/graphics/android/android_display_buffer_factory.h"
 #include "stub_display_buffer.h"
+#include "stub_display_device.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -31,17 +32,23 @@ namespace doubles
 {
 struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBufferFactory
 {
-    StubDisplayBufferFactory()
+    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
+        : stub_dev(stub_dev), sz(sz)
     {
     }
 
-    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
-        : stub_dev(stub_dev)
+    StubDisplayBufferFactory()
+        : StubDisplayBufferFactory(std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
     {
     }
 
     StubDisplayBufferFactory(geometry::Size sz)
-        : sz(sz)
+        : StubDisplayBufferFactory(std::make_shared<StubDisplayDevice>(), sz)
+    {
+    }
+
+    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
+        : stub_dev(stub_dev), sz(geometry::Size{0,0})
     {
     }
 

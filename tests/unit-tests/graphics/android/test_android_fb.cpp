@@ -51,25 +51,20 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-
-        visual_id = 5;
-        dummy_display = reinterpret_cast<EGLDisplay>(0x34);
-        dummy_config = reinterpret_cast<EGLConfig>(0x44);
-        dummy_context = reinterpret_cast<EGLContext>(0x58);
+  
+        dummy_display = mock_egl.fake_egl_display;
+        dummy_context = mock_egl.fake_egl_context;
+        dummy_config = mock_egl.fake_configs[0];
 
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
-        auto stub_driver_interpreter = std::make_shared<mtd::StubDriverInterpreter>(display_size, visual_id);
-        native_win = std::make_shared<mg::android::MirNativeWindow>(stub_driver_interpreter);
         stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>(display_size);
     }
 
-    int visual_id;
     EGLConfig dummy_config;
     EGLDisplay dummy_display;
     EGLContext dummy_context;
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    std::shared_ptr<ANativeWindow> native_win;
     std::shared_ptr<mtd::StubDisplayBufferFactory> stub_db_factory;
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
@@ -77,22 +72,80 @@ protected:
 TEST_F(AndroidDisplayTest, display_creation)
 {
     using namespace testing;
-    EGLint const expected_pbuffer_attr[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
-
     EGLSurface fake_surface = (EGLSurface) 0x715;
+    EGLint const expected_pbuffer_attr[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+    EGLint const expected_context_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+    //on constrution
+    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+        .Times(1)
+        .WillOnce(Return(dummy_display));
+    EXPECT_CALL(mock_egl, eglInitialize(dummy_display, _, _))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<1>(1), SetArgPointee<2>(4), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglCreateContext(
+        dummy_display, _, EGL_NO_CONTEXT, mtd::AttrMatches(expected_context_attr)))
+        .Times(1)
+        .WillOnce(Return(dummy_context));
     EXPECT_CALL(mock_egl, eglCreatePbufferSurface(
-        dummy_display, dummy_config, mtd::AttrMatches(expected_pbuffer_attr)))
+        dummy_display, _, mtd::AttrMatches(expected_pbuffer_attr)))
         .Times(1)
         .WillOnce(Return(fake_surface));
-
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surface, fake_surface, dummy_context))
         .Times(1);
 
     //on destruction
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
         .Times(1);
+    EXPECT_CALL(mock_egl, eglDestroySurface(dummy_display, fake_surface))
+        .Times(1);
+    EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, dummy_context))
+        .Times(1);
+    EXPECT_CALL(mock_egl, eglTerminate(dummy_display))
+        .Times(1);
 
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
+}
+
+TEST_F(AndroidDisplayTest, display_egl_config_selection)
+{
+    using namespace testing;
+    int const incorrect_visual_id = 2;
+    int const correct_visual_id = 1; 
+    EGLint const num_cfgs = 45;
+    EGLint const expected_cfg_attr [] = 
+        { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL_NONE };
+    EGLConfig selected_config;
+    EGLConfig cfgs[45];
+    for(auto i = 0; i < num_cfgs; i++)
+        cfgs[i] = reinterpret_cast<EGLConfig>(i);
+    int config_to_select_index = 37;
+    EGLConfig correct_config = cfgs[config_to_select_index];
+
+    ON_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
+        .WillByDefault(DoAll(SetArgPointee<3>(incorrect_visual_id), Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglGetConfigAttrib(dummy_display, correct_config, EGL_NATIVE_VISUAL_ID,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(correct_visual_id), Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .WillByDefault(DoAll(SaveArg<1>(&selected_config),Return(dummy_context)));
+
+    auto config_filler = [&]
+    (EGLDisplay, EGLint const*, EGLConfig* out_cfgs, EGLint, EGLint* out_num_cfgs) -> EGLBoolean
+    {
+        memcpy(out_cfgs, cfgs, sizeof(EGLConfig) * num_cfgs);
+        *out_num_cfgs = num_cfgs; 
+        return EGL_TRUE;
+    };
+
+    EXPECT_CALL(mock_egl, eglGetConfigs(dummy_display, NULL, 0, _))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>(num_cfgs), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglChooseConfig(dummy_display, mtd::AttrMatches(expected_cfg_attr),_,num_cfgs,_))
+        .Times(1)
+        .WillOnce(Invoke(config_filler));
+
+    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
+    EXPECT_EQ(correct_config, selected_config);
 }
 
 TEST_F(AndroidDisplayTest, display_logging)
@@ -106,9 +159,6 @@ TEST_F(AndroidDisplayTest, display_logging)
         .Times(1);
     EXPECT_CALL(*mock_display_report, report_successful_display_construction())
         .Times(1);
-
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,_))
-        .Times(AtLeast(1));
 
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 }
@@ -185,48 +235,48 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
 TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
-
     auto mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+    ON_CALL(*mock_display_device, display_format())
+        .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     Sequence seq;
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend))
         .InSequence(seq);
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby))
-        .InSequence(seq);
 
     auto stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>(mock_display_device);
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
-    
-    auto on_configuration = display.configuration();
-    on_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+   
+    auto configuration = display.configuration();
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        on_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_on);
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_on);
     });
-    auto off_configuration = display.configuration();
-    off_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        off_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_off);
-    });
-    auto standby_configuration = display.configuration();
-    standby_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        standby_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_standby);
-    });
-    auto suspend_configuration = display.configuration();
-    suspend_configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
-    {
-        suspend_configuration->configure_output(output.id, output.used, output.top_left, output.current_mode_index,
-                                           mir_power_mode_suspend);
-    });
+    display.configure(*configuration);
 
-    display.configure(*on_configuration);
-    display.configure(*off_configuration);
-    display.configure(*suspend_configuration);
-    display.configure(*standby_configuration);
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_standby);
+    });
+    display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_off);
+    });
+    display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_suspend);
+    });
+    display.configure(*configuration);
 }

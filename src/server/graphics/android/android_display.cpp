@@ -61,6 +61,8 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_NONE
 };
 
+/* the minimum requirement is to have EGL_WINDOW_BIT and EGL_OPENGL_ES2_BIT, and to select a config
+   whose pixel format matches that of the framebuffer. */
 static EGLConfig select_egl_config_with_format(EGLDisplay egl_display, geom::PixelFormat display_format)
 {
     int required_visual_id = mga::to_android_format(display_format);
@@ -70,13 +72,9 @@ static EGLConfig select_egl_config_with_format(EGLDisplay egl_display, geom::Pix
     eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
     std::vector<EGLConfig> config_slots(num_potential_configs);
 
-    /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
     eglChooseConfig(egl_display, required_egl_config_attr, config_slots.data(), num_potential_configs, &num_match_configs);
     config_slots.resize(num_match_configs);
 
-    /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
-     * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
-     * eglChooseConfig */
     auto const pegl_config = std::find_if(begin(config_slots), end(config_slots),
         [&](EGLConfig& current) -> bool
         {
