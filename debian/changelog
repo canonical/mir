@@ -1,3 +1,9 @@
+mir (0.1.1-0ubuntu1) UNRELEASED; urgency=low
+
+  * Bump version to 0.1.1
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 30 Oct 2013 11:46:13 +0800
+
 mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
 
   [ Daniel van Vugt ]
