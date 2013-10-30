@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
+#include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "src/server/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
