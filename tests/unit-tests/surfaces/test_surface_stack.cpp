@@ -78,6 +78,7 @@ public:
     void force_requests_to_complete() {}
     virtual void allow_framedropping(bool) {}
     virtual mg::BufferProperties properties() const { return mg::BufferProperties{}; };
+    void resize(const geom::Size &) override {}
 };
 
 

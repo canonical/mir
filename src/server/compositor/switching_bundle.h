@@ -55,7 +55,7 @@ public:
     void allow_framedropping(bool dropping_allowed);
     bool framedropping_allowed() const;
 
-    void resize(const geometry::Size &newsize);
+    void resize(const geometry::Size &newsize) override;
 
 private:
     graphics::BufferProperties bundle_properties;
