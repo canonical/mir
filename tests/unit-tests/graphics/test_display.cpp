@@ -18,6 +18,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/options/program_option.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -74,9 +75,10 @@ public:
     {
         auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
 #ifdef ANDROID
-        auto platform = std::make_shared<mg::android::AndroidPlatform>(
-            std::make_shared<testing::NiceMock<mtd::StubDisplayBufferFactory>>(),
-            std::make_shared<mg::NullDisplayReport>());
+        auto report = std::make_shared<mg::NullDisplayReport>();
+        auto platform = mg::create_platform(
+            std::make_shared<mir::options::ProgramOption>(),
+            report); 
 #else
         auto platform = std::make_shared<mg::gbm::GBMPlatform>(
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
