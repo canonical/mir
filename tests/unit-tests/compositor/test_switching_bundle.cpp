@@ -754,3 +754,29 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
     }
 }
 
+TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
+{
+    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 1;
+
+        for (int width = 1; width < 100; ++width)
+        {
+            const geom::Size expect_size{width, width * 2};
+
+            for (int subframe = 0; subframe < 3; ++subframe)
+            {
+                bundle.resize(expect_size);
+                auto client = bundle.client_acquire();
+                ASSERT_EQ(expect_size, client->size());
+                bundle.client_release(client);
+    
+                auto compositor = bundle.compositor_acquire(frameno++);
+                ASSERT_EQ(expect_size, compositor->size());
+                bundle.compositor_release(compositor);
+            }
+        }
+    }
+}
+
