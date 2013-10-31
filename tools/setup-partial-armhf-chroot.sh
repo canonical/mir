@@ -89,7 +89,7 @@ pushd ${1} > /dev/null
         libxkbcommon0
         libxkbcommon-dev
         libumockdev-dev
-        liblttng-ust0
+        liblttng-ust2
         liburcu1
         libuuid1
         liblttng-ust-dev
