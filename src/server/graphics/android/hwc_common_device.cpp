@@ -56,6 +56,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
+    turn_screen_on();
     if (auto err = turn_screen_on())
     {
         BOOST_THROW_EXCEPTION(

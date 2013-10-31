@@ -172,7 +172,7 @@ TYPED_TEST(HWCCommon, test_hwc_ensures_unblank_during_initialization)
     }, std::runtime_error);
 }
 
-TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
+TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_request_error)
 {
     using namespace testing;
 
@@ -181,10 +181,8 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
         .Times(1)
         .WillOnce(Return(0));
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(1)
+        .Times(2)
         .WillOnce(Return(-1));
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(1)
         .WillOnce(Return(0));
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,
