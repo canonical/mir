@@ -21,7 +21,7 @@
 #include "display_input_region.h"
 #include "mir/input/android/default_android_input_configuration.h"
 #include "event_filter_chain.h"
-#include "mir/input/nested_input_configuration.h"
+#include "nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
 
 #include "mir/logging/input_report.h"
