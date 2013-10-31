@@ -79,7 +79,7 @@ private:
         }
         else
         {
-            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(display_changer);
+            changer = std::make_shared<mf::UnauthorizedDisplayChanger>(display_changer);
         }
 
         return std::make_shared<mf::SessionMediator>(

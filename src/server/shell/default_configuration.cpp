@@ -23,9 +23,13 @@
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/gl_pixel_buffer.h"
+#include "mir/shell/graphics_display_layout.h"
+#include "mir/shell/mediating_display_changer.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface_source.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/threaded_snapshot_strategy.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
@@ -137,5 +141,65 @@ mir::DefaultServerConfiguration::the_shell_pixel_buffer()
         {
             return std::make_shared<msh::GLPixelBuffer>(
                 the_display()->create_gl_context());
+        });
+}
+
+std::shared_ptr<msh::DisplayLayout>
+mir::DefaultServerConfiguration::the_shell_display_layout()
+{
+    return shell_display_layout(
+        [this]()
+        {
+            return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
+        });
+}
+
+std::shared_ptr<msh::MediatingDisplayChanger>
+mir::DefaultServerConfiguration::the_mediating_display_changer()
+{
+    return mediating_display_changer(
+        [this]()
+        {
+            return std::make_shared<msh::MediatingDisplayChanger>(
+                the_display(),
+                the_compositor(),
+                the_display_configuration_policy(),
+                the_shell_session_container(),
+                the_shell_session_event_handler_register());
+        });
+
+}
+
+std::shared_ptr<mf::DisplayChanger>
+mir::DefaultServerConfiguration::the_frontend_display_changer()
+{
+    return the_mediating_display_changer();
+}
+
+std::shared_ptr<mir::DisplayChanger>
+mir::DefaultServerConfiguration::the_display_changer()
+{
+    return the_mediating_display_changer();
+}
+
+std::shared_ptr<msh::FocusSequence>
+mir::DefaultServerConfiguration::the_shell_focus_sequence()
+{
+    return shell_focus_sequence(
+        [this]
+        {
+            return std::make_shared<msh::RegistrationOrderFocusSequence>(
+                the_shell_session_container());
+        });
+}
+
+std::shared_ptr<msh::SnapshotStrategy>
+mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
+{
+    return shell_snapshot_strategy(
+        [this]()
+        {
+            return std::make_shared<msh::ThreadedSnapshotStrategy>(
+                the_shell_pixel_buffer());
         });
 }

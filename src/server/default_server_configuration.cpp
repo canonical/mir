@@ -24,9 +24,6 @@
 #include "mir/options/program_option.h"
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/threaded_snapshot_strategy.h"
-#include "mir/shell/graphics_display_layout.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
@@ -48,7 +45,6 @@
 #include "mir/logging/message_processor_report.h"
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
-#include "mir/shell/mediating_display_changer.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
@@ -84,45 +80,6 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return socket_file;
 }
 
-std::shared_ptr<msh::MediatingDisplayChanger>
-mir::DefaultServerConfiguration::the_mediating_display_changer()
-{
-    return mediating_display_changer(
-        [this]()
-        {
-            return std::make_shared<msh::MediatingDisplayChanger>(
-                the_display(),
-                the_compositor(),
-                the_display_configuration_policy(),
-                the_shell_session_container(),
-                the_shell_session_event_handler_register());
-        });
-
-}
-
-std::shared_ptr<mf::DisplayChanger>
-mir::DefaultServerConfiguration::the_frontend_display_changer()
-{
-    return the_mediating_display_changer();
-}
-
-std::shared_ptr<mir::DisplayChanger>
-mir::DefaultServerConfiguration::the_display_changer()
-{
-    return the_mediating_display_changer();
-}
-
-std::shared_ptr<msh::FocusSequence>
-mir::DefaultServerConfiguration::the_shell_focus_sequence()
-{
-    return shell_focus_sequence(
-        [this]
-        {
-            return std::make_shared<msh::RegistrationOrderFocusSequence>(
-                the_shell_session_container());
-        });
-}
-
 std::shared_ptr<msh::SessionListener>
 mir::DefaultServerConfiguration::the_shell_session_listener()
 {
@@ -130,17 +87,6 @@ mir::DefaultServerConfiguration::the_shell_session_listener()
         [this]
         {
             return std::make_shared<msh::NullSessionListener>();
-        });
-}
-
-std::shared_ptr<msh::SnapshotStrategy>
-mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
-{
-    return shell_snapshot_strategy(
-        [this]()
-        {
-            return std::make_shared<msh::ThreadedSnapshotStrategy>(
-                the_shell_pixel_buffer());
         });
 }
 
@@ -255,15 +201,6 @@ std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_regi
         [this]()
         {
             return std::make_shared<mi::DisplayInputRegion>(the_display());
-        });
-}
-
-std::shared_ptr<msh::DisplayLayout> mir::DefaultServerConfiguration::the_shell_display_layout()
-{
-    return shell_display_layout(
-        [this]()
-        {
-            return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
         });
 }
 
