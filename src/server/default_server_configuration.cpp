@@ -24,7 +24,6 @@
 #include "mir/options/program_option.h"
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
@@ -172,23 +171,6 @@ mir::DefaultServerConfiguration::the_shell_session_listener()
         });
 }
 
-std::shared_ptr<msh::SessionManager>
-mir::DefaultServerConfiguration::the_session_manager()
-{
-    return session_manager(
-        [this]() -> std::shared_ptr<msh::SessionManager>
-        {
-            return std::make_shared<msh::SessionManager>(
-                the_shell_surface_factory(),
-                the_shell_session_container(),
-                the_shell_focus_sequence(),
-                the_shell_focus_setter(),
-                the_shell_snapshot_strategy(),
-                the_shell_session_event_sink(),
-                the_shell_session_listener());
-        });
-}
-
 std::shared_ptr<msh::PixelBuffer>
 mir::DefaultServerConfiguration::the_shell_pixel_buffer()
 {
@@ -221,18 +203,6 @@ std::shared_ptr<msh::SessionEventHandlerRegister>
 mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
 {
     return the_broadcasting_session_event_sink();
-}
-
-std::shared_ptr<mf::Shell>
-mir::DefaultServerConfiguration::the_frontend_shell()
-{
-    return the_session_manager();
-}
-
-std::shared_ptr<msh::FocusController>
-mir::DefaultServerConfiguration::the_focus_controller()
-{
-    return the_session_manager();
 }
 
 std::shared_ptr<mi::CompositeEventFilter>
