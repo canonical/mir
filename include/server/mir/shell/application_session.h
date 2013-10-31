@@ -36,6 +36,9 @@ class Surface;
 class SnapshotStrategy;
 class SessionListener;
 
+// TODO make private to shell
+// This first needs unity-mir and unit-system_compositor to be updated to use Session
+// and that first needs -c 1167 of development-branch to land on lp:mir
 class ApplicationSession : public Session
 {
 public:
