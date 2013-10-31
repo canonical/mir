@@ -22,6 +22,7 @@
 #include "mir/input/android/default_android_input_configuration.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
+#include "nested_input_relay.h"
 #include "mir/input/null_input_configuration.h"
 
 #include "mir/logging/input_report.h"
@@ -112,4 +113,16 @@ std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_r
         {
             return the_input_configuration()->the_input_registrar();
         });
+}
+
+auto mir::DefaultServerConfiguration::the_nested_input_relay()
+-> std::shared_ptr<mi::NestedInputRelay>
+{
+    return nested_input_relay([]{ return std::make_shared<mi::NestedInputRelay>(); });
+}
+
+auto mir::DefaultServerConfiguration::the_event_filter()
+-> std::shared_ptr<mi::EventFilter>
+{
+    return the_nested_input_relay();
 }

@@ -41,7 +41,6 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_report.h"
-#include "mir/input/nested_input_relay.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
@@ -420,13 +419,6 @@ std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_
             return std::make_shared<mir::DefaultServerStatusListener>();
         });
 }
-
-auto mir::DefaultServerConfiguration::the_nested_input_relay()
--> std::shared_ptr<mi::NestedInputRelay>
-{
-    return nested_input_relay([]{ return std::make_shared<mi::NestedInputRelay>(); });
-}
-
 
 std::shared_ptr<msh::BroadcastingSessionEventSink>
 mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
