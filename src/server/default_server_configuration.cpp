@@ -43,7 +43,6 @@
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
-#include "mir/input/display_input_region.h"
 #include "mir/input/event_filter_chain.h"
 #include "mir/input/nested_input_relay.h"
 #include "mir/input/vt_filter.h"
@@ -337,15 +336,6 @@ mir::DefaultServerConfiguration::the_input_manager()
             if (the_options()->get(legacy_input_report_opt, off_opt_value) == log_opt_value)
                     ml::legacy_input_report::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
-        });
-}
-
-std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
-{
-    return input_region(
-        [this]()
-        {
-            return std::make_shared<mi::DisplayInputRegion>(the_display());
         });
 }
 
