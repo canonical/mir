@@ -15,7 +15,6 @@ set(
   gl_pixel_buffer.cpp
   graphics_display_layout.cpp
   mediating_display_changer.cpp
-  unauthorized_display_changer.cpp
   broadcasting_session_event_sink.cpp
   default_configuration.cpp
 )
