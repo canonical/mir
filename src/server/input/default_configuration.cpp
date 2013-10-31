@@ -23,7 +23,7 @@
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
-#include "mir/input/null_input_configuration.h"
+#include "null_input_configuration.h"
 
 #include "mir/logging/input_report.h"
 
