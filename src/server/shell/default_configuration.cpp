@@ -19,9 +19,16 @@
 #include "mir/default_server_configuration.h"
 
 #include "mir/shell/broadcasting_session_event_sink.h"
+#include "mir/shell/consuming_placement_strategy.h"
+#include "mir/shell/default_focus_mechanism.h"
+#include "mir/shell/default_session_container.h"
+#include "mir/shell/gl_pixel_buffer.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface_source.h"
+
+#include "mir/graphics/display.h"
+#include "mir/graphics/gl_context.h"
 
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -90,4 +97,45 @@ std::shared_ptr<msh::SessionEventHandlerRegister>
 mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
 {
     return the_broadcasting_session_event_sink();
+}
+
+std::shared_ptr<msh::PlacementStrategy>
+mir::DefaultServerConfiguration::the_shell_placement_strategy()
+{
+    return shell_placement_strategy(
+        [this]
+        {
+            return std::make_shared<msh::ConsumingPlacementStrategy>(
+                the_shell_display_layout());
+        });
+}
+
+std::shared_ptr<msh::FocusSetter>
+mir::DefaultServerConfiguration::the_shell_focus_setter()
+{
+    return shell_focus_setter(
+        [this]
+        {
+            return std::make_shared<msh::DefaultFocusMechanism>(
+                the_input_targeter(),
+                the_shell_surface_controller());
+        });
+}
+
+std::shared_ptr<msh::SessionContainer>
+mir::DefaultServerConfiguration::the_shell_session_container()
+{
+    return shell_session_container(
+        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
+}
+
+std::shared_ptr<msh::PixelBuffer>
+mir::DefaultServerConfiguration::the_shell_pixel_buffer()
+{
+    return shell_pixel_buffer(
+        [this]()
+        {
+            return std::make_shared<msh::GLPixelBuffer>(
+                the_display()->create_gl_context());
+        });
 }

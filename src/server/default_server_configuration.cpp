@@ -25,17 +25,12 @@
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/default_focus_mechanism.h"
-#include "mir/shell/default_session_container.h"
-#include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/shell/graphics_display_layout.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
-#include "mir/shell/gl_pixel_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
@@ -117,25 +112,6 @@ mir::DefaultServerConfiguration::the_display_changer()
     return the_mediating_display_changer();
 }
 
-std::shared_ptr<msh::SessionContainer>
-mir::DefaultServerConfiguration::the_shell_session_container()
-{
-    return shell_session_container(
-        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
-}
-
-std::shared_ptr<msh::FocusSetter>
-mir::DefaultServerConfiguration::the_shell_focus_setter()
-{
-    return shell_focus_setter(
-        [this]
-        {
-            return std::make_shared<msh::DefaultFocusMechanism>(
-                the_input_targeter(),
-                the_shell_surface_controller());
-        });
-}
-
 std::shared_ptr<msh::FocusSequence>
 mir::DefaultServerConfiguration::the_shell_focus_sequence()
 {
@@ -147,17 +123,6 @@ mir::DefaultServerConfiguration::the_shell_focus_sequence()
         });
 }
 
-std::shared_ptr<msh::PlacementStrategy>
-mir::DefaultServerConfiguration::the_shell_placement_strategy()
-{
-    return shell_placement_strategy(
-        [this]
-        {
-            return std::make_shared<msh::ConsumingPlacementStrategy>(
-                the_shell_display_layout());
-        });
-}
-
 std::shared_ptr<msh::SessionListener>
 mir::DefaultServerConfiguration::the_shell_session_listener()
 {
@@ -165,17 +130,6 @@ mir::DefaultServerConfiguration::the_shell_session_listener()
         [this]
         {
             return std::make_shared<msh::NullSessionListener>();
-        });
-}
-
-std::shared_ptr<msh::PixelBuffer>
-mir::DefaultServerConfiguration::the_shell_pixel_buffer()
-{
-    return shell_pixel_buffer(
-        [this]()
-        {
-            return std::make_shared<msh::GLPixelBuffer>(
-                the_display()->create_gl_context());
         });
 }
 
