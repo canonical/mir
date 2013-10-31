@@ -239,6 +239,12 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         }
     }
 
+    if (ret->size() != bundle_properties.size)
+    {
+        ret = gralloc->alloc_buffer(bundle_properties);
+        ring[client].buf = ret;
+    }
+
     return ret;
 }
 
@@ -391,15 +397,24 @@ void mc::SwitchingBundle::force_requests_to_complete()
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 {
+    std::unique_lock<std::mutex> lock(guard);
     framedropping = allow_dropping;
 }
 
 bool mc::SwitchingBundle::framedropping_allowed() const
 {
+    std::unique_lock<std::mutex> lock(guard);
     return framedropping;
 }
 
 mg::BufferProperties mc::SwitchingBundle::properties() const
 {
+    std::unique_lock<std::mutex> lock(guard);
     return bundle_properties;
+}
+
+void mc::SwitchingBundle::resize(const geometry::Size &newsize)
+{
+    std::unique_lock<std::mutex> lock(guard);
+    bundle_properties.size = newsize;
 }

@@ -754,3 +754,89 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
     }
 }
 
+TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
+{
+    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 1;
+
+        for (int width = 1; width < 100; ++width)
+        {
+            const geom::Size expect_size{width, width * 2};
+
+            for (int subframe = 0; subframe < 3; ++subframe)
+            {
+                bundle.resize(expect_size);
+                auto client = bundle.client_acquire();
+                ASSERT_EQ(expect_size, client->size());
+                bundle.client_release(client);
+    
+                auto compositor = bundle.compositor_acquire(frameno++);
+                ASSERT_EQ(expect_size, compositor->size());
+                bundle.compositor_release(compositor);
+            }
+        }
+    }
+}
+
+TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
+{
+    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        mg::BufferID history[5];
+        unsigned long frameno = 1;
+
+        const int width0 = 123;
+        const int height0 = 456;
+        const int dx = 2;
+        const int dy = -3;
+        int width = width0;
+        int height = height0;
+
+        for (int produce = 0; produce < nbuffers; ++produce)
+        {
+            geom::Size new_size{width, height};
+            width += dx;
+            height += dy;
+
+            bundle.resize(new_size);
+            auto client = bundle.client_acquire();
+            history[produce] = client->id();
+            ASSERT_EQ(new_size, client->size());
+            bundle.client_release(client);
+        }
+
+        width = width0;
+        height = height0;
+    
+        for (int consume = 0; consume < nbuffers; ++consume)
+        {
+            geom::Size expect_size{width, height};
+            width += dx;
+            height += dy;
+
+            auto compositor = bundle.compositor_acquire(frameno++);
+
+            // Verify the compositor gets resized buffers, eventually
+            ASSERT_EQ(expect_size, compositor->size());
+
+            // Verify the compositor gets buffers with *contents*, ie. that
+            // they have not been resized prematurely and are empty.
+            ASSERT_EQ(history[consume], compositor->id());
+
+            bundle.compositor_release(compositor);
+        }
+
+        // Verify the final buffer size sticks
+        const geom::Size final_size{width - dx, height - dy};
+        for (int unchanging = 0; unchanging < 100; ++unchanging)
+        {
+            auto compositor = bundle.compositor_acquire(frameno++);
+            ASSERT_EQ(final_size, compositor->size());
+            bundle.compositor_release(compositor);
+        }
+    }
+}
+

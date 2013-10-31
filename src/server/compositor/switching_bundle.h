@@ -55,6 +55,14 @@ public:
     void allow_framedropping(bool dropping_allowed);
     bool framedropping_allowed() const;
 
+    /**
+     * Change the dimensions of the buffers contained in the bundle. For
+     * client_acquire, the change is guaranteed to be immediate. For
+     * compositors and snapshotters however, the change may be delayed by
+     * nbuffers frames while old frames of the old size are consumed.
+     */
+    void resize(const geometry::Size &newsize) override;
+
 private:
     graphics::BufferProperties bundle_properties;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
@@ -86,7 +94,7 @@ private:
     int snapshot;
     int nsnapshotters;
 
-    std::mutex guard;
+    mutable std::mutex guard;
     std::condition_variable cond;
 
     unsigned long last_consumed;
