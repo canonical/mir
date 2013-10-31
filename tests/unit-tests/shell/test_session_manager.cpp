@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_stream.h"
-#include "mir/shell/focus_sequence.h"
+#include "src/server/shell/focus_sequence.h"
 #include "mir/shell/session_manager.h"
 #include "src/server/shell/default_session_container.h"
 #include "mir/shell/session.h"
