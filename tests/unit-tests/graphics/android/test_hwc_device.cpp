@@ -182,7 +182,7 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_request_error)
         .WillOnce(Return(0));
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .Times(2)
-        .WillOnce(Return(-1));
+        .WillOnce(Return(-1))
         .WillOnce(Return(0));
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_layer_list,

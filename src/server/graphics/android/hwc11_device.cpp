@@ -55,13 +55,12 @@ geom::PixelFormat determine_fb_format()
     {
         int visual_id;
         eglGetConfigAttrib(egl_display, fb_egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
-    printf("VISUAL ID %i\n", visual_id);
         fb_format = mga::to_mir_format(visual_id); 
     }
     else
     {
         //we couldn't figure out the fb format via egl. In this case, we
-        //assume abgr_8888. HWC really should provide this information.
+        //assume abgr_8888. HWC api really should provide this information directly.
         fb_format = geom::PixelFormat::abgr_8888;
     }
 
