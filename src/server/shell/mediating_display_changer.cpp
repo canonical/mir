@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/shell/mediating_display_changer.h"
+#include "mediating_display_changer.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 #include "mir/shell/session_event_handler_register.h"
