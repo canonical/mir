@@ -94,7 +94,7 @@ private:
     int snapshot;
     int nsnapshotters;
 
-    std::mutex guard;
+    mutable std::mutex guard;
     std::condition_variable cond;
 
     unsigned long last_consumed;
