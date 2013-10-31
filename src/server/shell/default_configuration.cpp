@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface_source.h"
@@ -67,4 +68,26 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
                 surface_source,
                 the_shell_placement_strategy());
         });
+}
+
+std::shared_ptr<msh::BroadcastingSessionEventSink>
+mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
+{
+    return broadcasting_session_event_sink(
+        []
+        {
+            return std::make_shared<msh::BroadcastingSessionEventSink>();
+        });
+}
+
+std::shared_ptr<msh::SessionEventSink>
+mir::DefaultServerConfiguration::the_shell_session_event_sink()
+{
+    return the_broadcasting_session_event_sink();
+}
+
+std::shared_ptr<msh::SessionEventHandlerRegister>
+mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
+{
+    return the_broadcasting_session_event_sink();
 }
