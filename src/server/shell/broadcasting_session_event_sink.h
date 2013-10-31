@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_BROADCASTING_SESSION_EVENT_SINK_H_
 #define MIR_SHELL_BROADCASTING_SESSION_EVENT_SINK_H_
 
-#include "mir/shell/session_event_sink.h"
+#include "session_event_sink.h"
 #include "session_event_handler_register.h"
 
 #include <vector>
