@@ -28,7 +28,6 @@
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
-#include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/shell/graphics_display_layout.h"
 #include "mir/shell/surface_configurator.h"
@@ -55,7 +54,6 @@
 #include "mir/logging/message_processor_report.h"
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
-#include "mir/shell/surface_source.h"
 #include "mir/shell/mediating_display_changer.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
@@ -346,22 +344,6 @@ std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_s
             return std::make_shared<DefaultSurfaceConfigurator>();
         });
 }
-
-std::shared_ptr<msh::SurfaceFactory>
-mir::DefaultServerConfiguration::the_shell_surface_factory()
-{
-    return shell_surface_factory(
-        [this]()
-        {
-            auto surface_source = std::make_shared<msh::SurfaceSource>(
-                the_surface_builder(), the_shell_surface_configurator());
-
-            return std::make_shared<msh::OrganisingSurfaceFactory>(
-                surface_source,
-                the_shell_placement_strategy());
-        });
-}
-
 
 std::shared_ptr<mf::SessionAuthorizer>
 mir::DefaultServerConfiguration::the_session_authorizer()

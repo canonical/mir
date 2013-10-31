@@ -18,7 +18,9 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
+#include "mir/shell/surface_source.h"
 
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -50,4 +52,19 @@ std::shared_ptr<msh::FocusController>
 mir::DefaultServerConfiguration::the_focus_controller()
 {
     return the_session_manager();
+}
+
+std::shared_ptr<msh::SurfaceFactory>
+mir::DefaultServerConfiguration::the_shell_surface_factory()
+{
+    return shell_surface_factory(
+        [this]()
+        {
+            auto surface_source = std::make_shared<msh::SurfaceSource>(
+                the_surface_builder(), the_shell_surface_configurator());
+
+            return std::make_shared<msh::OrganisingSurfaceFactory>(
+                surface_source,
+                the_shell_placement_strategy());
+        });
 }
