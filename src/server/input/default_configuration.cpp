@@ -121,7 +121,7 @@ auto mir::DefaultServerConfiguration::the_nested_input_relay()
     return nested_input_relay([]{ return std::make_shared<mi::NestedInputRelay>(); });
 }
 
-auto mir::DefaultServerConfiguration::the_event_filter()
+auto mir::DefaultServerConfiguration::the_nested_event_filter()
 -> std::shared_ptr<mi::EventFilter>
 {
     return the_nested_input_relay();

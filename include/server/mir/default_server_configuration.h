@@ -140,7 +140,7 @@ public:
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
-    virtual std::shared_ptr<input::EventFilter> the_event_filter();
+    virtual std::shared_ptr<input::EventFilter> the_nested_event_filter();
     /** @} */
 
     /** @name graphics configuration - dependencies
