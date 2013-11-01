@@ -39,7 +39,7 @@ public:
     geometry::PixelFormat display_format() const; 
     unsigned int number_of_framebuffers_available() const;
 
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
+    std::shared_ptr<graphics::Buffer> buffer_for_render();
     void sync_to_display(bool sync); 
     void mode(MirPowerMode mode);
 

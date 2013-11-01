@@ -107,6 +107,9 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer->anwb()))
         .Times(1)
         .WillOnce(Return(mock_buffer1));
+    EXPECT_CALL(*mock_display_device, set_next_frontbuffer(mock_buffer1))
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
 
     render_window.driver_returns_buffer(stub_buffer->anwb(), fake_fence);
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());

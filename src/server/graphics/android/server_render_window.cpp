@@ -34,11 +34,10 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
-                                            std::shared_ptr<mga::DisplayDevice> const& display_poster,
-                                            std::shared_ptr<InterpreterResourceCache> const& cache)
-    : swapper(swapper),
-      poster(display_poster),
+mga::ServerRenderWindow::ServerRenderWindow(
+    std::shared_ptr<mga::DisplayDevice> const& display_poster,
+    std::shared_ptr<InterpreterResourceCache> const& cache)
+    : poster(display_poster),
       resource_cache(cache),
       format(mga::to_android_format(poster->display_format()))
 {
@@ -46,7 +45,7 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
 
 mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
-    auto buffer = swapper->compositor_acquire();
+    auto buffer = poster->buffer_for_render();
     auto handle = buffer->native_buffer_handle();
     resource_cache->store_buffer(buffer, handle);
     return handle.get();
@@ -55,9 +54,7 @@ mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
     resource_cache->update_native_fence(buffer, fence_fd);
-    auto buffer_resource = resource_cache->retrieve_buffer(buffer);
-    poster->set_next_frontbuffer(buffer_resource);
-    swapper->compositor_release(buffer_resource);
+    resource_cache->retrieve_buffer(buffer);
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)
