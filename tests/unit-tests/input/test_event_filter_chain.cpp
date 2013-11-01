@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/event_filter_chain.h"
+#include "src/server/input/event_filter_chain.h"
 #include "mir_test_doubles/mock_event_filter.h"
 
 #include <androidfw/Input.h>
