@@ -57,12 +57,15 @@ namespace surfaces
 class SurfaceFactory;
 class InputRegistrar;
 class Surface;
+class SurfacesReport;
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
 public:
-    explicit SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                          std::shared_ptr<InputRegistrar> const& input_registrar);
+    explicit SurfaceStack(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<InputRegistrar> const& input_registrar,
+        std::shared_ptr<SurfacesReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
@@ -93,6 +96,7 @@ private:
     std::recursive_mutex guard;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
+    std::shared_ptr<SurfacesReport> const report;
 
     typedef std::vector<std::shared_ptr<Surface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;

@@ -16,18 +16,18 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/session_mediator.h"
+#include "session_mediator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
-#include "mir/frontend/resource_cache.h"
+#include "resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"

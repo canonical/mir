@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/display_report.h"
+#include "display_report.h"
 #include "mir/logging/logger.h"
 
 #include <sstream>

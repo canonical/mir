@@ -19,7 +19,7 @@
 #include "mir_toolkit/event.h"
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
-#include "mir/frontend/resource_cache.h"
+#include "resource_cache.h"
 #include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>

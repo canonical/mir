@@ -32,9 +32,10 @@ class DisplayBufferFactory : public AndroidDisplayBufferFactory
 {
 public:
     std::unique_ptr<DisplayBuffer> create_display_buffer(
-        std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
-        std::shared_ptr<DisplaySupportProvider> const& hwc_device,
+        std::shared_ptr<ANativeWindow> const& native_win,
+        std::shared_ptr<DisplayDevice> const& display_device,
         EGLDisplay egl_display,
+        EGLDisplay egl_config,
         EGLContext egl_context_shared);
 };
 

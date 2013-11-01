@@ -46,7 +46,7 @@ class OcclusionMatch : public OperatorForScene
 {
 public:
     void operator()(const CompositingCriteria &,
-                    surfaces::BufferStream &stream) override;
+                    BufferStream &stream) override;
 
     bool occluded(const CompositingCriteria &criteria) const;
 

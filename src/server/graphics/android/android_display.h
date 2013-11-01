@@ -21,7 +21,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/egl_resources.h"
-#include "android_framebuffer_window.h"
 #include "android_display_configuration.h"
 
 #include <EGL/egl.h>
@@ -37,6 +36,7 @@ class DisplayBuffer;
 
 namespace android
 {
+class DisplayDevice;
 
 class AndroidDisplayBufferFactory;
 class DisplaySupportProvider;
@@ -44,10 +44,10 @@ class DisplaySupportProvider;
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const&,
-                            std::shared_ptr<AndroidDisplayBufferFactory> const&,
-                            std::shared_ptr<DisplaySupportProvider> const&,
-                            std::shared_ptr<DisplayReport> const&);
+    explicit AndroidDisplay(std::shared_ptr<ANativeWindow> const&,
+                            std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
+                            std::shared_ptr<DisplayDevice> const& display_device,
+                            std::shared_ptr<DisplayReport> const& display_report);
     ~AndroidDisplay();
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
@@ -71,13 +71,14 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
-    std::shared_ptr<AndroidFramebufferWindowQuery> const native_window;
+    std::shared_ptr<ANativeWindow> const native_window;
+    std::shared_ptr<DisplayDevice> const display_device;
+
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface_dummy;
     std::unique_ptr<DisplayBuffer> display_buffer;
-    std::shared_ptr<DisplaySupportProvider> display_provider;
     
     AndroidDisplayConfiguration current_configuration;
 };

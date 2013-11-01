@@ -38,6 +38,7 @@ struct MockNestedContext : public mg::NestedContext
 {
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
     MOCK_METHOD1(drm_auth_magic, void(int));
+    MOCK_METHOD1(drm_set_gbm_device, void(struct gbm_device*));
 };
 
 class NativeGBMPlatformTest : public ::testing::Test
@@ -69,4 +70,15 @@ TEST_F(NativeGBMPlatformTest, auth_magic_is_delegated_to_nested_context)
 
     native.initialize(mt::fake_shared(mock_nested_context));
     native.get_ipc_package();
+}
+
+TEST_F(NativeGBMPlatformTest, sets_gbm_device_during_initialization)
+{
+    using namespace testing;
+
+    mgg::NativeGBMPlatform native;
+
+    EXPECT_CALL(mock_nested_context, drm_set_gbm_device(mock_gbm.fake_gbm.device));
+
+    native.initialize(mt::fake_shared(mock_nested_context));
 }

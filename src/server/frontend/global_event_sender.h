@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -15,33 +15,34 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
-#define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/scene.h"
+#ifndef MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
+#define MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
 
-#include <functional>
+#include "mir/frontend/event_sink.h"
 #include <memory>
 
 namespace mir
 {
-namespace compositor
+namespace shell
 {
-
-class RenderingOperator : public OperatorForScene
+class SessionContainer;
+}
+namespace frontend
+{
+class GlobalEventSender : public EventSink
 {
 public:
-    explicit RenderingOperator(Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
-    ~RenderingOperator();
+    GlobalEventSender(std::shared_ptr<shell::SessionContainer> const&);
 
-    void operator()(CompositingCriteria const& info, surfaces::BufferStream&);
+    void handle_event(MirEvent const& e);
+    void handle_lifecycle_event(MirLifecycleState state);
+    void handle_display_config_change(graphics::DisplayConfiguration const& config);
 
 private:
-    Renderer& renderer;
-    std::function<void(std::shared_ptr<void> const&)> save_resource;
+    std::shared_ptr<shell::SessionContainer> const sessions;
 };
+}
+}
 
-}
-}
-#endif /* MIR_COMPOSITOR_RENDERING_OPERATOR_H_ */
+#endif /* MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_ */

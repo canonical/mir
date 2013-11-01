@@ -19,12 +19,10 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
-
+#include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "buffer.h"
-#include "android_format_conversion-inl.h"
 
-#include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 

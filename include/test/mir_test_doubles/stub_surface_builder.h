@@ -22,6 +22,7 @@
 
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
+#include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
@@ -47,7 +48,10 @@ public:
     {
         auto state = std::make_shared<MockSurfaceState>();
         dummy_surface = std::make_shared<surfaces::Surface>(
-            state, buffer_stream, std::shared_ptr<input::InputChannel>());
+            state, buffer_stream,
+            std::shared_ptr<input::InputChannel>(),
+            report);
+
         return dummy_surface;
     }
 
@@ -55,8 +59,10 @@ public:
     {
     }
 private:
-    std::shared_ptr<surfaces::BufferStream> const buffer_stream;
+    std::shared_ptr<compositor::BufferStream> const buffer_stream;
     std::shared_ptr<surfaces::Surface>  dummy_surface;
+    std::shared_ptr<surfaces::SurfacesReport> report = std::make_shared<surfaces::NullSurfacesReport>();
+
 };
 }
 }

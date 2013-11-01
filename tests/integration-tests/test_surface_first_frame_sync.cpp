@@ -18,8 +18,8 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "src/server/compositor/renderer.h"
+#include "src/server/compositor/renderer_factory.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
@@ -98,7 +98,7 @@ public:
 
     void clear(unsigned long) override {}
 
-    void render(std::function<void(std::shared_ptr<void> const&)>, mc::CompositingCriteria const&, ms::BufferStream&)
+    void render(std::function<void(std::shared_ptr<void> const&)>, mc::CompositingCriteria const&, mc::BufferStream&)
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }

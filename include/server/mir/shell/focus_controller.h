@@ -19,18 +19,22 @@
 #ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
 #define MIR_SHELL_FOCUS_CONTROLLER_H_
 
+#include <memory>
+
 namespace mir
 {
-
 namespace shell
 {
+class Session;
 
 class FocusController
 {
 public:
-    virtual ~FocusController() {}
+    virtual ~FocusController() = default;
 
     virtual void focus_next() = 0;
+    virtual std::weak_ptr<Session> focussed_application() const = 0;
+    virtual void set_focus_to(std::shared_ptr<Session> const& focus) = 0;
 
 protected:
     FocusController() = default;

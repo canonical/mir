@@ -21,6 +21,8 @@
 
 #include <vector>
 
+struct gbm_device;
+
 namespace mir
 {
 namespace graphics
@@ -33,6 +35,7 @@ public:
 
     virtual std::vector<int> platform_fd_items() = 0;
     virtual void drm_auth_magic(int magic) = 0;
+    virtual void drm_set_gbm_device(struct gbm_device* dev) = 0;
 
 protected:
     NestedContext() = default;

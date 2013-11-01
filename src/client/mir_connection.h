@@ -122,6 +122,8 @@ public:
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 
+    bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
+
 private:
     std::recursive_mutex mutex; // Protects all members of *this
 
@@ -156,6 +158,8 @@ private:
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
+
+    std::vector<int> extra_platform_data;
 
     struct SurfaceRelease;
 

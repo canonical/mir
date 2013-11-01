@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/default_display_configuration_policy.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 
 #include <gtest/gtest.h>
