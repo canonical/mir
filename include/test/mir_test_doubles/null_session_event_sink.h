@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_SESSION_EVENT_SINK_H_
 #define MIR_TEST_DOUBLES_NULL_SESSION_EVENT_SINK_H_
 
-#include "mir/shell/session_event_sink.h"
+#include "src/server/shell/session_event_sink.h"
 
 namespace mir
 {
