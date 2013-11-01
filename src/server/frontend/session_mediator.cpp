@@ -94,7 +94,7 @@ void mf::SessionMediator::connect(
         std::unique_lock<std::mutex> lock(session_mutex);
         weak_session = shell->open_session(request->application_name(), event_sink);
     }
-    
+
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
 
@@ -119,22 +119,27 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    std::unique_lock<std::mutex> lock(session_mutex);
+    bool need_full_ipc;
+    std::shared_ptr<graphics::Buffer> client_buffer;
+    std::shared_ptr<Session> session;
 
-    auto session = weak_session.lock();
-    
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-    
-    report->session_create_surface_called(session->name());
-
-    auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
-        .of_name(request->surface_name())
-        .of_size(request->width(), request->height())
-        .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
-        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
     {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_create_surface_called(session->name());
+
+        auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
+            .of_name(request->surface_name())
+            .of_size(request->width(), request->height())
+            .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
+            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
+
         auto surface = session->get_surface(surf_id);
         response->mutable_id()->set_value(surf_id.as_value());
         response->set_width(surface->size().width.as_uint32_t());
@@ -148,19 +153,19 @@ void mf::SessionMediator::create_surface(
         auto& tracker = client_buffer_tracker[surf_id];
         if (!tracker) tracker = std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size);
 
-        auto client_buffer = surface->advance_client_buffer();
+        client_buffer = surface->advance_client_buffer();
         auto id = client_buffer->id();
-        bool need_full_ipc = !tracker->client_has(id);
+        need_full_ipc = !tracker->client_has(id);
         tracker->add(id);
 
         client_buffer_resource[surf_id] = client_buffer;
-
-        auto buffer = response->mutable_buffer();
-        pack_protobuf_buffer(*buffer, client_buffer, need_full_ipc);
     }
 
+    auto buffer = response->mutable_buffer();
+    pack_protobuf_buffer(*buffer, client_buffer, need_full_ipc);
+
     // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
-    // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client. 
+    // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
     // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
     // this will require additional synchronization if mfd::SocketMessenger::send changes.
     done->Run();
@@ -179,14 +184,14 @@ void mf::SessionMediator::next_buffer(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        
+
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         report->session_next_buffer_called(session->name());
-        
+
         // We ensure the client has not powered down the outputs, so that
         // swap_buffer will not block indefinitely, leaving the client
         // in a position where it can not turn back on the
@@ -230,6 +235,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         session->destroy_surface(id);
+        client_buffer_tracker.erase(id);
     }
 
     // TODO: We rely on this sending responses synchronously.
@@ -308,7 +314,7 @@ void mf::SessionMediator::configure_display(
 
         auto config = display_changer->active_configuration();
         for (auto i=0; i < request->display_output_size(); i++)
-        {   
+        {
             auto& output = request->display_output(i);
             mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
             config->configure_output(output_id, output.used(),
