@@ -45,6 +45,7 @@ namespace frontend
 class ClientBufferTracker;
 class Shell;
 class Session;
+class Surface;
 class ResourceCache;
 class SessionMediatorReport;
 class EventSink;
@@ -113,6 +114,7 @@ private:
                               std::shared_ptr<graphics::Buffer> const& graphics_buffer,
                               bool need_full_ipc);
 
+    void advance_buffer(bool& need_full_ipc, SurfaceId surf_id, Surface& surface, std::shared_ptr<graphics::Buffer>& client_buffer);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 

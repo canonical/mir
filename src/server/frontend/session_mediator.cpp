@@ -113,6 +113,20 @@ void mf::SessionMediator::connect(
     done->Run();
 }
 
+void mf::SessionMediator::advance_buffer(bool& need_full_ipc, SurfaceId surf_id, Surface& surface, std::shared_ptr<graphics::Buffer>& client_buffer)
+{
+    auto& tracker = client_buffer_tracker[surf_id];
+    if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
+
+    client_buffer = surface.advance_client_buffer();
+    auto id = client_buffer->id();
+    need_full_ipc = !tracker->client_has(id);
+    tracker->add(id);
+
+    client_buffer_resource[surf_id] = client_buffer;
+}
+
+
 void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
@@ -150,15 +164,7 @@ void mf::SessionMediator::create_surface(
         if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
 
-        auto& tracker = client_buffer_tracker[surf_id];
-        if (!tracker) tracker = std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size);
-
-        client_buffer = surface->advance_client_buffer();
-        auto id = client_buffer->id();
-        need_full_ipc = !tracker->client_has(id);
-        tracker->add(id);
-
-        client_buffer_resource[surf_id] = client_buffer;
+        advance_buffer(need_full_ipc, surf_id, *surface, client_buffer);
     }
 
     auto buffer = response->mutable_buffer();
@@ -200,15 +206,7 @@ void mf::SessionMediator::next_buffer(
 
         auto surface = session->get_surface(surf_id);
 
-        auto& tracker = client_buffer_tracker[surf_id];
-        if (!tracker) tracker = std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size);
-
-        client_buffer = surface->advance_client_buffer();
-        auto id = client_buffer->id();
-        need_full_ipc = !tracker->client_has(id);
-        tracker->add(id);
-
-        client_buffer_resource[surf_id] = client_buffer;
+        advance_buffer(need_full_ipc, surf_id, *surface, client_buffer);
     }
 
     pack_protobuf_buffer(*response, client_buffer, need_full_ipc);
