@@ -47,6 +47,7 @@ public:
     unsigned int number_of_framebuffers_available() const;
 
     std::shared_ptr<graphics::Buffer> buffer_for_render();
+    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
     void sync_to_display(bool sync);
  
     void commit_frame(EGLDisplay dpy, EGLSurface sur);

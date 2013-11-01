@@ -83,17 +83,8 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
 std::shared_ptr<ANativeWindow> mga::ResourceFactory::create_native_window(
     std::shared_ptr<mga::DisplayDevice> const& device) const
 {
-    auto size = device->display_size();
-    auto pf = device->display_format();
-    auto num_framebuffers = device->number_of_framebuffers_available();
-    std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    for (auto i = 0u; i < num_framebuffers; ++i)
-    {
-        buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
-    }
-    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<ServerRenderWindow>(swapper, device, cache);
+    auto interpreter = std::make_shared<ServerRenderWindow>(device, cache);
     return std::make_shared<MirNativeWindow>(interpreter); 
 }
 

@@ -45,6 +45,8 @@ public:
     virtual unsigned int number_of_framebuffers_available() const = 0;
 
     virtual std::shared_ptr<graphics::Buffer> buffer_for_render() = 0;
+    virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
+
     virtual void sync_to_display(bool sync) = 0;
     virtual void mode(MirPowerMode mode) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
