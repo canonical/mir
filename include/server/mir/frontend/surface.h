@@ -81,15 +81,13 @@ class ClientTrackingSurface : public Surface
 public:
     ClientTrackingSurface();
     virtual ~ClientTrackingSurface() = default;
-    
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer(bool& need_full_ipc) override;
 
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
 private:
+    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer(bool& need_full_ipc) final;
+    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
     std::shared_ptr<ClientBufferTracker> client_tracker;
 };
-
-}   
+}
 }
 
 

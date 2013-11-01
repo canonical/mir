@@ -46,7 +46,6 @@ class Shell;
 class Session;
 class ResourceCache;
 class SessionMediatorReport;
-class ClientBufferTracker;
 class EventSink;
 class DisplayChanger;
 
