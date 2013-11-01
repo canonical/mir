@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/input/nested_input_relay.h"
+#include "nested_input_relay.h"
 
 #include <InputDispatcher.h>
 
