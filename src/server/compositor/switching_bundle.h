@@ -38,6 +38,8 @@ namespace compositor
 class SwitchingBundle : public BufferBundle 
 {
 public:
+    enum {min_buffers = 1, max_buffers = 5};
+
     SwitchingBundle(int nbuffers,
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
                     const graphics::BufferProperties &);
@@ -76,13 +78,12 @@ private:
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
 
-    enum {MAX_NBUFFERS = 5};
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
         int users = 0; // presently just a count of compositors sharing the buf
     };
-    SharedBuffer ring[MAX_NBUFFERS];
+    SharedBuffer ring[max_buffers];
 
     const int nbuffers;
     int first_compositor;
