@@ -114,7 +114,7 @@ private:
                               std::shared_ptr<graphics::Buffer> const& graphics_buffer,
                               bool need_full_ipc);
 
-    std::shared_ptr<graphics::Buffer> advance_buffer(bool& need_full_ipc, SurfaceId surf_id, Surface& surface);
+    std::tuple<std::shared_ptr<graphics::Buffer>, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 

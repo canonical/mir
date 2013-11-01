@@ -113,19 +113,20 @@ void mf::SessionMediator::connect(
     done->Run();
 }
 
-std::shared_ptr<mg::Buffer> mf::SessionMediator::advance_buffer(bool& need_full_ipc, SurfaceId surf_id, Surface& surface)
+std::tuple<std::shared_ptr<mg::Buffer>, bool>
+mf::SessionMediator::advance_buffer(SurfaceId surf_id, Surface& surface)
 {
     auto& tracker = client_buffer_tracker[surf_id];
     if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
 
     auto client_buffer = surface.advance_client_buffer();
     auto id = client_buffer->id();
-    need_full_ipc = !tracker->client_has(id);
+    auto need_full_ipc = !tracker->client_has(id);
     tracker->add(id);
 
     client_buffer_resource[surf_id] = client_buffer;
 
-    return client_buffer;
+    return std::tie(client_buffer, need_full_ipc);
 }
 
 
@@ -166,7 +167,7 @@ void mf::SessionMediator::create_surface(
         if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
 
-        client_buffer = advance_buffer(need_full_ipc, surf_id, *surface);
+        std::tie(client_buffer, need_full_ipc) = advance_buffer(surf_id, *surface);
     }
 
     auto buffer = response->mutable_buffer();
@@ -208,7 +209,7 @@ void mf::SessionMediator::next_buffer(
 
         auto surface = session->get_surface(surf_id);
 
-        client_buffer = advance_buffer(need_full_ipc, surf_id, *surface);
+        std::tie(client_buffer, need_full_ipc) = advance_buffer(surf_id, *surface);
     }
 
     pack_protobuf_buffer(*response, client_buffer, need_full_ipc);
