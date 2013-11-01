@@ -10,6 +10,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_socket_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_sender.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_global_event_sender.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_unauthorized_display_changer.cpp
 )
 
 # TODO this test is a mess - something better is needed.
