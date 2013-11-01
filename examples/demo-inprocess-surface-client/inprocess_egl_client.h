@@ -35,14 +35,9 @@ namespace receiver
 class InputReceiverThread;
 }
 }
-namespace graphics
-{
-class Platform;
-}
-namespace shell
-{
-class SessionManager;
-}
+namespace graphics  { class Platform; }
+namespace shell     { class FocusController; }
+namespace frontend  { class Shell; }
 
 namespace examples
 {
@@ -51,8 +46,10 @@ namespace examples
 class InprocessEGLClient
 {
 public:
-    InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
-                       std::shared_ptr<shell::SessionManager> const& session_manager);
+    InprocessEGLClient(
+        std::shared_ptr<graphics::Platform> const& graphics_platform,
+        std::shared_ptr<frontend::Shell> const& shell,
+        std::shared_ptr<shell::FocusController> const& focus_controller);
 
     ~InprocessEGLClient();
 
@@ -62,7 +59,8 @@ protected:
 
 private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
-    std::shared_ptr<shell::SessionManager> const session_manager;
+    std::shared_ptr<frontend::Shell> const shell;
+    std::shared_ptr<shell::FocusController> const focus_controller;
 
     std::thread client_thread;
     

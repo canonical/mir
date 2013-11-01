@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
 #define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
 
-#include "mir/shell/focus_setter.h"
+#include "src/server/shell/focus_setter.h"
 
 #include <gmock/gmock.h>
 

@@ -16,14 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
-#define MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
+#ifndef MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_
+#define MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_
 
 #include "mir/frontend/display_changer.h"
 
 namespace mir
 {
-namespace shell
+namespace frontend
 {
 
 class UnauthorizedDisplayChanger : public frontend::DisplayChanger
@@ -43,4 +43,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_ */
+#endif /* MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_ */

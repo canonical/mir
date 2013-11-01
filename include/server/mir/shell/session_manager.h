@@ -48,6 +48,9 @@ class SessionEventSink;
 class SessionListener;
 struct SurfaceCreationParameters;
 
+// TODO make private to shell
+// This first needs unity-mir to be updated to use FocusController
+// and that first needs -c 1175 of development-branch to land on lp:mir
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:

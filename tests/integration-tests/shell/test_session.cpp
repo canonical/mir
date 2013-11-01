@@ -21,7 +21,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/compositor.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/pixel_buffer.h"
+#include "src/server/shell/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"

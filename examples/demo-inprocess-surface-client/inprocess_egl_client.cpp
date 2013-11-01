@@ -20,11 +20,12 @@
 #include "example_egl_helper.h"
 
 #include "mir/main_loop.h"
-#include "mir/shell/session_manager.h"
+#include "mir/shell/focus_controller.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/session.h"
 #include "mir/frontend/session.h"
+#include "mir/frontend/shell.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform.h"
@@ -53,11 +54,13 @@ namespace me = mir::examples;
 namespace mircv = mir::input::receiver;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
-                                           std::shared_ptr<msh::SessionManager> const& session_manager)
+me::InprocessEGLClient::InprocessEGLClient(
+    std::shared_ptr<mg::Platform> const& graphics_platform,
+    std::shared_ptr<frontend::Shell> const& shell,
+    std::shared_ptr<shell::FocusController> const& focus_controller)
   : graphics_platform(graphics_platform),
-
-    session_manager(session_manager),
+    shell(shell),
+    focus_controller(focus_controller),
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
     terminate(false)
 {
@@ -66,7 +69,7 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& 
 me::InprocessEGLClient::~InprocessEGLClient()
 {
     terminate = true;
-    auto session = session_manager->focussed_application().lock();
+    auto session = focus_controller->focussed_application().lock();
     if (session)
         session->force_requests_to_complete();
     client_thread.join();
@@ -91,10 +94,9 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto session = session_manager->open_session("Inprocess client",
-                                                 std::make_shared<NullEventSink>());
+    auto session = shell->open_session("Inprocess client", std::make_shared<NullEventSink>());
     // TODO: Why do we get an ID? ~racarr
-    auto surface = session->get_surface(session_manager->create_surface_for(session, params));
+    auto surface = session->get_surface(shell->create_surface_for(session, params));
 
     auto input_platform = mircv::InputPlatform::create();
     input_thread = input_platform->create_input_thread(
