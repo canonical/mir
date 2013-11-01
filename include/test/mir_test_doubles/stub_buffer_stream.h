@@ -62,6 +62,10 @@ public:
         return geometry::Size();
     }
 
+    void resize(const geometry::Size &) override
+    {
+    }
+
     void force_requests_to_complete()
     {
     }
