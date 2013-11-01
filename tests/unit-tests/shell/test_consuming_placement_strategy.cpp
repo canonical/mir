@@ -19,7 +19,7 @@
 #include "mir_test_doubles/mock_display_layout.h"
 #include "mir_test_doubles/stub_shell_session.h"
 
-#include "mir/shell/consuming_placement_strategy.h"
+#include "src/server/shell/consuming_placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir/geometry/rectangle.h"

@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/shell/mediating_display_changer.h"
+#include "src/server/shell/mediating_display_changer.h"
 #include "mir/shell/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/shell/broadcasting_session_event_sink.h"
+#include "src/server/shell/broadcasting_session_event_sink.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_compositor.h"

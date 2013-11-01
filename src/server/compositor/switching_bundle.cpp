@@ -80,11 +80,13 @@ mc::SwitchingBundle::SwitchingBundle(
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
-    if (nbuffers < 1 || nbuffers > MAX_NBUFFERS)
+    if (nbuffers < min_buffers || nbuffers > max_buffers)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle only supports "
-                                               "nbuffers between 1 and " +
-                                               std::to_string(MAX_NBUFFERS)));
+                                               "nbuffers between " +
+                                               std::to_string(min_buffers) +
+                                               " and " +
+                                               std::to_string(max_buffers)));
     }
 }
 
