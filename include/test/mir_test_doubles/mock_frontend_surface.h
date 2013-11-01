@@ -29,7 +29,7 @@ namespace test
 {
 namespace doubles
 {
-struct MockFrontendSurface : public frontend::ClientTrackingSurface
+struct MockFrontendSurface : public frontend::Surface
 {
     MockFrontendSurface()
     {

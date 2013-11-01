@@ -17,6 +17,8 @@
  */
 
 #include "session_mediator.h"
+#include "client_buffer_tracker.h"
+
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
@@ -143,8 +145,14 @@ void mf::SessionMediator::create_surface(
         if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
 
-        bool need_full_ipc;
-        auto client_buffer = surface->advance_client_buffer(need_full_ipc);
+        auto& tracker = client_buffer_tracker[surf_id];
+        if (!tracker) tracker = std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size);
+
+        auto client_buffer = surface->advance_client_buffer();
+        auto id = client_buffer->id();
+        bool need_full_ipc = !tracker->client_has(id);
+        tracker->add(id);
+
         client_buffer_resource[surf_id] = client_buffer;
 
         auto buffer = response->mutable_buffer();
@@ -187,8 +195,14 @@ void mf::SessionMediator::next_buffer(
 
         auto surface = session->get_surface(surf_id);
 
-        client_buffer_resource[surf_id].reset();
-        client_buffer = surface->advance_client_buffer(need_full_ipc);
+        auto& tracker = client_buffer_tracker[surf_id];
+        if (!tracker) tracker = std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size);
+
+        client_buffer = surface->advance_client_buffer();
+        auto id = client_buffer->id();
+        need_full_ipc = !tracker->client_has(id);
+        tracker->add(id);
+
         client_buffer_resource[surf_id] = client_buffer;
     }
 
