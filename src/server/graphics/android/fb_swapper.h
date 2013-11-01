@@ -31,16 +31,19 @@ class Buffer;
 namespace android
 {
 
-class FBSwapper{
+class FramebufferBundle{
 public:
-    virtual ~FBSwapper() = default;
+    virtual ~FramebufferBundle() = default;
 
-    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
-    virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
+    virtual geometry::PixelFormat fb_format() = 0;
+    virtual geometry::Size fb_size() = 0;
+    virtual std::shared_ptr<Buffer> buffer_for_render() = 0;
+    virtual std::shared_ptr<Buffer> last_rendered_buffer() = 0;
+
 protected:
-    FBSwapper() = default;
-    FBSwapper(FBSwapper const&) = delete;
-    FBSwapper& operator=(FBSwapper const&) = delete;
+    FramebufferBundle() = default;
+    FramebufferBundle(FramebufferBundle const&) = delete;
+    FramebufferBundle& operator=(FramebufferBundle const&) = delete;
 };
 
 }

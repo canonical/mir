@@ -29,7 +29,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
-class FBSimpleSwapperTest : public ::testing::Test
+class PostingFBBundleTest : public ::testing::Test
 {
 public:
     virtual void SetUp()
@@ -39,25 +39,24 @@ public:
         buffer3 = std::make_shared<mtd::MockBuffer>();
     }
 
+    std::shared_ptr<mga::MockGraphicBufferAllocator> mock_allocator;
     std::shared_ptr<mg::Buffer> buffer1;
     std::shared_ptr<mg::Buffer> buffer2;
     std::shared_ptr<mg::Buffer> buffer3;
 };
 
-TEST_F(FBSimpleSwapperTest, simple_swaps_returns_valid)
+TEST_F(PostingFBBundleTest, simple_swaps_returns_valid)
 {
-    std::initializer_list<std::shared_ptr<mg::Buffer>> double_list{buffer1, buffer2};
-    mga::FBSimpleSwapper fb_swapper(double_list);
+    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
 
     auto test_buffer = fb_swapper.compositor_acquire();
 
     EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
 } 
 
-TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
+TEST_F(PostingFBBundleTest, simple_swaps_return_aba_pattern)
 {
-    std::initializer_list<std::shared_ptr<mg::Buffer>> double_list{buffer1, buffer2};
-    mga::FBSimpleSwapper fb_swapper(double_list);
+    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
     fb_swapper.compositor_release(test_buffer_1);
@@ -72,10 +71,9 @@ TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
     EXPECT_NE(test_buffer_1, test_buffer_2);
 } 
 
-TEST_F(FBSimpleSwapperTest, triple_swaps_return_abcab_pattern)
+TEST_F(PostingFBBundleTest, triple_swaps_return_abcab_pattern)
 {
-    std::initializer_list<std::shared_ptr<mg::Buffer>> triple_list{buffer1, buffer2, buffer3};
-    mga::FBSimpleSwapper fb_swapper(triple_list);
+    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
     fb_swapper.compositor_release(test_buffer_1);
@@ -101,10 +99,9 @@ TEST_F(FBSimpleSwapperTest, triple_swaps_return_abcab_pattern)
     EXPECT_NE(test_buffer_2, test_buffer_3);
 }
 
-TEST_F(FBSimpleSwapperTest, synctest)
+TEST_F(PostingFBBundleTest, synctest)
 {
-    std::vector<std::shared_ptr<mg::Buffer>> test_buffers{buffer1, buffer2};
-    mga::FBSimpleSwapper fb_swapper(test_buffers);
+    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
 
     std::vector<std::shared_ptr<mg::Buffer>> blist;
     std::mutex mut;
