@@ -58,7 +58,9 @@ TEST_F(SwitchingBundleTest, sync_swapper_by_default)
                                     geom::PixelFormat::argb_8888,
                                     mg::BufferUsage::software};
 
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, properties);
 
@@ -92,7 +94,9 @@ TEST_F(SwitchingBundleTest, invalid_nbuffers)
 
 TEST_F(SwitchingBundleTest, client_acquire_basic)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -116,7 +120,9 @@ namespace
 
 TEST_F(SwitchingBundleTest, is_really_synchronous)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         mg::BufferID prev_id, prev_prev_id;
@@ -153,7 +159,9 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
 
 TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned int frameno = 0;
@@ -205,7 +213,9 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
 
 TEST_F(SwitchingBundleTest, out_of_order_client_release)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -226,7 +236,9 @@ TEST_F(SwitchingBundleTest, out_of_order_client_release)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -247,7 +259,9 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -266,7 +280,9 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 1;
@@ -296,7 +312,9 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 
 TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -321,7 +339,9 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 1;
@@ -355,7 +375,9 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 
 TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -369,7 +391,9 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
 
 TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
 {
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         const int N = 100;
@@ -385,7 +409,9 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
 
 TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -468,7 +494,9 @@ namespace
 
 TEST_F(SwitchingBundleTest, stress)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -512,7 +540,9 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
      * unique ones while it makes sense to do so. Buffers are big things and
      * should be allocated sparingly...
      */
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
@@ -545,7 +575,9 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
 
 TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 {
-    for (int nbuffers = 3; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 3;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 1;
@@ -584,16 +616,17 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 
 TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 {
-    const int max_nbuffers = 5;
-    for (int nbuffers = 2; nbuffers <= max_nbuffers; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
         bundle.allow_framedropping(true);
 
         const int nframes = 100;
-        mg::BufferID expect[max_nbuffers];
-        std::shared_ptr<mg::Buffer> buf[max_nbuffers];
+        mg::BufferID expect[mc::SwitchingBundle::max_buffers];
+        std::shared_ptr<mg::Buffer> buf[mc::SwitchingBundle::max_buffers];
 
         for (int b = 0; b < nbuffers; b++)
         {
@@ -618,7 +651,9 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 
 TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
 {
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -639,7 +674,9 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
 
 TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_vt_switch_not_permanent)
 {   // Regression test for LP: #1207226
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -756,7 +793,9 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
 
 TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 1;
@@ -782,7 +821,9 @@ TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
 
 TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         mg::BufferID history[5];
