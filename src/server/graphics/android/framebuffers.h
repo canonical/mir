@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_FB_SIMPLE_SWAPPER_H_
 #define MIR_GRAPHICS_ANDROID_FB_SIMPLE_SWAPPER_H_
 
-#include "fb_swapper.h"
+#include "framebuffer_bundle.h"
 
 #include <condition_variable>
 #include <queue>
@@ -34,20 +34,13 @@ namespace graphics
 namespace android
 {
 
-class FBSimpleSwapper : public FBSwapper
+class Framebuffers : public FramebufferBundle
 {
 public:
-    template<typename BufferPtrContainer>
-    explicit FBSimpleSwapper(BufferPtrContainer const& buffer_list)
-    {
-        for (auto& buffer : buffer_list)
-        {
-            queue.push(buffer);
-        }
-    }
-
-    std::shared_ptr<Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
+    geometry::PixelFormat fb_format();
+    geometry::Size fb_size();
+    std::shared_ptr<Buffer> buffer_for_render();
+    std::shared_ptr<Buffer> last_rendered_buffer();
 
 private:
     std::mutex queue_lock;

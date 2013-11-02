@@ -32,24 +32,24 @@ namespace android
 class HWCLayerList;
 class HWCVsyncCoordinator;
 class SyncFileOps;
+class FramebufferBundle;
 
 class HWC11Device : public HWCCommonDevice
 {
 public:
+    //TODO, (kdub) might make more sense for fb bundle to be owned and managed by LayerList, once
+    //      we start doing overlays
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                std::shared_ptr<FramebufferBundle> const& fb_bundle,
                 std::shared_ptr<HWCLayerList> const& layer_list,
-                std::shared_ptr<DisplayDevice> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
     ~HWC11Device() noexcept;
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
 
     std::shared_ptr<graphics::Buffer> buffer_for_render();
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync);
- 
+    void sync_to_display(bool sync); 
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:

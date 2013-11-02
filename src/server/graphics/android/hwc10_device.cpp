@@ -49,15 +49,16 @@ geom::PixelFormat mga::HWC10Device::display_format() const
     return fb_device->display_format();
 }
 
+#if 0
 unsigned int mga::HWC10Device::number_of_framebuffers_available() const
 {
     return fb_device->number_of_framebuffers_available();
 }
-
 void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     fb_device->set_next_frontbuffer(buffer);
 }
+#endif
 
 void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
@@ -92,4 +93,9 @@ void mga::HWC10Device::sync_to_display(bool sync)
 {
     wait_for_vsync = sync;
     fb_device->sync_to_display(sync);
+}
+
+std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
+{
+    return nullptr;
 }

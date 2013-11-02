@@ -21,7 +21,7 @@
 #include "buffer.h"
 #include "resource_factory.h"
 #include "fb_device.h"
-#include "fb_simple_swapper.h"
+#include "framebuffers.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "interpreter_cache.h"
@@ -99,7 +99,7 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc11_device(
 {
     auto layer_list = std::make_shared<mga::LayerList>();
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HWC11Device>(hwc_native_device, layer_list, nullptr, syncer);
+    return std::make_shared<mga::HWC11Device>(hwc_native_device, nullptr, layer_list, syncer);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(

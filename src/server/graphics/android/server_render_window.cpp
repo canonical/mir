@@ -21,7 +21,6 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "server_render_window.h"
 #include "display_device.h"
-#include "fb_swapper.h"
 #include "buffer.h"
 #include "android_format_conversion-inl.h"
 #include "interpreter_resource_cache.h"

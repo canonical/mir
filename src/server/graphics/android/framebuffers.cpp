@@ -17,7 +17,7 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "fb_simple_swapper.h"
+#include "framebuffers.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -25,7 +25,8 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
-std::shared_ptr<mg::Buffer> mga::FBSimpleSwapper::compositor_acquire()
+#if 0
+std::shared_ptr<mg::Buffer> mga::Framebuffers::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
     while (queue.empty())
@@ -38,10 +39,11 @@ std::shared_ptr<mg::Buffer> mga::FBSimpleSwapper::compositor_acquire()
     return buffer;
 }
 
-void mga::FBSimpleSwapper::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
+void mga::Framebuffers::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(queue_lock);
 
     queue.push(released_buffer);
     cv.notify_all();
 }
+#endif

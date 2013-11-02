@@ -17,9 +17,11 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_
-#define MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_
+#ifndef MIR_GRAPHICS_ANDROID_FRAMEBUFFER_BUNDLE_H_
+#define MIR_GRAPHICS_ANDROID_FRAMEBUFFER_BUNDLE_H_
 
+#include "mir/geometry/pixel_format.h"
+#include "mir/geometry/size.h"
 #include <memory>
 
 namespace mir
@@ -50,4 +52,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_FRAMEBUFFER_BUNDLE_H_ */

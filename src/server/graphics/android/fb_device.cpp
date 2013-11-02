@@ -94,3 +94,8 @@ void mga::FBDevice::mode(MirPowerMode mode)
     // TODO: Implement
     (void) mode;
 }
+
+std::shared_ptr<mg::Buffer> mga::FBDevice::buffer_for_render()
+{
+    return nullptr;
+}

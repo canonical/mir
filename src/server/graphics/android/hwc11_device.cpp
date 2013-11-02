@@ -70,15 +70,15 @@ geom::PixelFormat determine_fb_format()
 }
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<FramebufferBundle> const& fb_bundle,
                               std::shared_ptr<HWCLayerList> const& layer_list,
-                              std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_list(layer_list),
-      fb_device(fbdev), 
       sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       fb_format(determine_fb_format())
 {
+    (void) fb_bundle;
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
     if (rc != 0)
@@ -109,6 +109,11 @@ geom::PixelFormat mga::HWC11Device::display_format() const
     return fb_format;
 }
 
+std::shared_ptr<mg::Buffer> mga::HWC11Device::buffer_for_render()
+{
+    return nullptr;
+}
+#if 0
 unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 {
     //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
@@ -120,6 +125,7 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& b
 {
     layer_list->set_fb_target(buffer);
 }
+#endif
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
