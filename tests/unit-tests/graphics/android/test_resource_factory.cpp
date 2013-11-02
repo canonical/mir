@@ -64,8 +64,6 @@ public:
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
         ON_CALL(*mock_display_device, display_size())
             .WillByDefault(Return(geom::Size{2, 3}));
-        ON_CALL(*mock_display_device, number_of_framebuffers_available())
-            .WillByDefault(Return(fake_fb_num));
 
         ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
             .WillByDefault(Return(std::shared_ptr<mga::Buffer>()));
@@ -89,9 +87,6 @@ TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
     geom::Size disp_size{disp_width, disp_height};
     geom::PixelFormat pf = geom::PixelFormat::abgr_8888;  
  
-    EXPECT_CALL(*mock_display_device, number_of_framebuffers_available())
-        .Times(AtLeast(1))
-        .WillOnce(Return(fake_fb_num));
     EXPECT_CALL(*mock_display_device, display_size())
         .Times(AtLeast(1))
         .WillOnce(Return(disp_size));

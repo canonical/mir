@@ -91,7 +91,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
  
     mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
 
-    EXPECT_CALL(*mock_display_device, compositor_acquire())
+    EXPECT_CALL(*mock_display_device, buffer_for_render())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
@@ -99,7 +99,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
         .WillOnce(Return(stub_buffer));
 
     render_window.driver_requests_buffer();
-    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
+    testing::Mock::VerifyAndClearExpectations(mock_display_device.get());
 
     std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
     EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer->anwb(), fake_fence))
@@ -107,12 +107,9 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer->anwb()))
         .Times(1)
         .WillOnce(Return(mock_buffer1));
-    EXPECT_CALL(*mock_display_device, set_next_frontbuffer(mock_buffer1))
-        .Times(1)
-        .WillOnce(Return(mock_buffer1));
 
     render_window.driver_returns_buffer(stub_buffer->anwb(), fake_fence);
-    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
+    testing::Mock::VerifyAndClearExpectations(mock_display_device.get());
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)

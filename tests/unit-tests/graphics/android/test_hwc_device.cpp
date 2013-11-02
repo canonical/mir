@@ -60,7 +60,8 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
                                                 std::shared_ptr<mga::DisplayDevice> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
-    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fbdev, coordinator);
+    (void) fbdev;
+    return std::make_shared<mga::HWC11Device>(hwc_device, nullptr, layer_list, coordinator);
 }
 
 namespace

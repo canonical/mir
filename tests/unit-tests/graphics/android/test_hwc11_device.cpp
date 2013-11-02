@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/framebuffer_bundle.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
@@ -23,6 +24,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -31,10 +33,21 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace mir
+{
+namespace test
+{
+namespace doubles
+{
 struct MockFBBundle : public mga::FramebufferBundle
 {
-    MOCK_METHOD0(buffer_for_render, std::shared_ptr<mga::Buffer>());
-    MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<mga::Buffer>());
+    MOCK_METHOD0(fb_format, geom::PixelFormat());
+    MOCK_METHOD0(fb_size, geom::Size());
+    MOCK_METHOD0(buffer_for_render, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<mg::Buffer>());
+};
+}
+}
 }
 
 class HWC11Device : public ::testing::Test
@@ -42,7 +55,7 @@ class HWC11Device : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_fb_bundle = std::make_shared<testing::NiceMock<MockFBBundle>();
+        mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_hwc_layers = std::make_shared<testing::NiceMock<mtd::MockHWCLayerList>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
@@ -103,9 +116,7 @@ TEST_F(HWC11Device, test_hwc_commit_order)
         .Times(1);
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(1);
-    EXPECT_CALL(mock_swapper, last_produced_buffer())
-        .Times(1);
-    EXPECT_CALL(mock_hwc_layers, set_fb_target(_))
+    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
