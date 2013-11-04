@@ -52,7 +52,7 @@ public:
                                    mc::CompositingCriteria const&, mc::BufferStream&)
     {
         /* 
-         * Do nothing, so that the Renderable's buffers are not consumed
+         * Do nothing, so that the surface's buffers are not consumed
          * by the server, thus causing the client to block when asking for
          * the second buffer (assuming double-buffering).
          */
