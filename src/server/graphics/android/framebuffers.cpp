@@ -128,35 +128,26 @@ geom::Size mga::Framebuffers::fb_size()
 
 std::shared_ptr<mg::Buffer> mga::Framebuffers::buffer_for_render()
 {
-    return nullptr;
-}
-
-std::shared_ptr<mg::Buffer> mga::Framebuffers::last_rendered_buffer()
-{
-    return nullptr;
-}
-
-#if 0
-    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
-                 std::shared_ptr<framebuffer_device_t> const& fb);
-std::shared_ptr<mg::Buffer> mga::Framebuffers::compositor_acquire()
-{
     std::unique_lock<std::mutex> lk(queue_lock);
-    while (queue.empty())
+    while (buffer_being_rendered)
     {
         cv.wait(lk);
     }
 
-    auto buffer = queue.front();
+    buffer_being_rendered = queue.front();
     queue.pop();
-    return buffer;
+    return std::shared_ptr<mg::Buffer>(buffer_being_rendered.get(),
+        [this](mg::Buffer*)
+        {
+            std::unique_lock<std::mutex> lk(queue_lock);
+            queue.push(buffer_being_rendered);
+            buffer_being_rendered.reset();
+            cv.notify_all();
+        });
 }
 
-void mga::Framebuffers::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
+std::shared_ptr<mg::Buffer> mga::Framebuffers::last_rendered_buffer()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
-
-    queue.push(released_buffer);
-    cv.notify_all();
+    return queue.back();
 }
-#endif

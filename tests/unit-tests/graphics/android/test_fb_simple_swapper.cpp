@@ -105,7 +105,8 @@ TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
    
     auto display_size = mir::geometry::Size{display_width, display_height};
     EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, _, mga::BufferUsage::use_framebuffer_gles))
-        .Times(2);
+        .Times(2)
+        .WillRepeatedly(Return(nullptr));
 
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
     EXPECT_EQ(display_size, framebuffers.fb_size());
@@ -189,7 +190,8 @@ TEST_F(PostingFBBundleTest, bundle_from_fb)
     using namespace testing;
     auto display_size = geom::Size{display_width, display_height};
     EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, geom::PixelFormat::abgr_8888, mga::BufferUsage::use_framebuffer_gles))
-        .Times(fbnum);
+        .Times(fbnum)
+        .WillRepeatedly(Return(nullptr));
 
     mga::Framebuffers framebuffers(mock_allocator, mock_fb_hal);
     EXPECT_EQ(display_size, framebuffers.fb_size());
@@ -203,110 +205,23 @@ TEST_F(PostingFBBundleTest, determine_fbnum_always_reports_2_minimum)
     using namespace testing;
     auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, 0); 
     EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
-        .Times(2);
+        .Times(2)
+        .WillRepeatedly(Return(nullptr));
 
     mga::Framebuffers framebuffers(mock_allocator, slightly_malformed_fb_hal_mock);
 }
 
-#if 0
-TEST_F(PostingFBBundleTest, simple_swaps_returns_valid)
+TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
 {
-    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
+    mga::Framebuffers framebuffers(mock_allocator, mock_fb_hal);
 
-    auto test_buffer = fb_swapper.compositor_acquire();
-
+    auto test_buffer = framebuffers.last_rendered_buffer();
     EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
+
+    std::shared_ptr<mg::Buffer> first_buffer;
+    first_buffer = framebuffers.buffer_for_render();
+    {
+        EXPECT_NE(first_buffer, framebuffers.last_rendered_buffer());
+    }
+    EXPECT_EQ(first_buffer, framebuffers.last_rendered_buffer());
 } 
-
-TEST_F(PostingFBBundleTest, simple_swaps_return_aba_pattern)
-{
-    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
-
-    auto test_buffer_1 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_1);
-
-    auto test_buffer_2 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_2);
-
-    auto test_buffer_3 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_3);
-
-    EXPECT_EQ(test_buffer_1, test_buffer_3);
-    EXPECT_NE(test_buffer_1, test_buffer_2);
-} 
-
-TEST_F(PostingFBBundleTest, triple_swaps_return_abcab_pattern)
-{
-    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
-
-    auto test_buffer_1 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_1);
-
-    auto test_buffer_2 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_2);
-
-    auto test_buffer_3 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_3);
-
-    auto test_buffer_4 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_4);
-
-    auto test_buffer_5 = fb_swapper.compositor_acquire();
-    fb_swapper.compositor_release(test_buffer_5);
-
-    EXPECT_EQ(test_buffer_1, test_buffer_4);
-    EXPECT_NE(test_buffer_1, test_buffer_2);
-    EXPECT_NE(test_buffer_1, test_buffer_3);
-
-    EXPECT_EQ(test_buffer_2, test_buffer_5);
-    EXPECT_NE(test_buffer_2, test_buffer_1);
-    EXPECT_NE(test_buffer_2, test_buffer_3);
-}
-
-TEST_F(PostingFBBundleTest, synctest)
-{
-    mga::PostingFBBundle fb_swapper(mock_allocator, mock_fb_dev);
-
-    std::vector<std::shared_ptr<mg::Buffer>> blist;
-    std::mutex mut;
-    for(auto i=0u; i < 150; ++i)
-    {
-        auto buf1 = fb_swapper.compositor_acquire();
-        auto buf2 = fb_swapper.compositor_acquire();
-
-        auto f = std::async(std::launch::async,
-                            [&]()
-                            {
-                                /* driver will release in order */
-                                fb_swapper.compositor_release(buf1);
-                                fb_swapper.compositor_release(buf2);
-                            });
-
-        //this line will wait if f has not run
-        auto buf3 = fb_swapper.compositor_acquire();
-        f.wait(); //make sure buf3 is released after buf2 to maintain order
-        fb_swapper.compositor_release(buf3);
-
-        blist.push_back(buf1);
-        blist.push_back(buf2);
-        blist.push_back(buf3);
-    }
-
-    //This chunk of code makes sure "ABABA..." or "BABAB..." pattern was produced 
-    auto modcounter = 0u;
-    for(auto i : test_buffers)
-    {
-        if (blist[0] == i)
-        {
-            break;
-        }
-        modcounter++;
-    }
-
-    for(auto i : blist)
-    {
-        EXPECT_EQ(test_buffers[(modcounter % test_buffers.size())], i);
-        modcounter++;
-    }
-}
-#endif

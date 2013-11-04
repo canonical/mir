@@ -56,6 +56,7 @@ private:
     geometry::Size const size;
 
     std::mutex queue_lock;
+    std::shared_ptr<Buffer> buffer_being_rendered;
     std::condition_variable cv;
     std::queue<std::shared_ptr<graphics::Buffer>> queue;
 };
