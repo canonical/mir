@@ -52,9 +52,11 @@ public:
     std::shared_ptr<Buffer> last_rendered_buffer();
 
 private:
+    geometry::PixelFormat const format;
+    geometry::Size const size;
+
     std::mutex queue_lock;
     std::condition_variable cv;
-
     std::queue<std::shared_ptr<graphics::Buffer>> queue;
 };
 

@@ -229,13 +229,13 @@ struct StubServerGenerator : public mt::StubServerTool
         done->Run();
     }
 
-    std::shared_ptr<mga::Buffer> second_to_last_posted_buffer()
+    std::shared_ptr<mg::Buffer> second_to_last_posted_buffer()
     {
         std::unique_lock<std::mutex> lk(buffer_mutex);
         return client_buffer;
     }
 
-    std::shared_ptr<mga::Buffer> last_posted_buffer()
+    std::shared_ptr<mg::Buffer> last_posted_buffer()
     {
         std::unique_lock<std::mutex> lk(buffer_mutex);
         return last_posted;
@@ -243,8 +243,8 @@ struct StubServerGenerator : public mt::StubServerTool
 
 private:
     std::shared_ptr<mga::AndroidGraphicBufferAllocator> allocator;
-    std::shared_ptr<mga::Buffer> client_buffer;
-    std::shared_ptr<mga::Buffer> last_posted;
+    std::shared_ptr<mg::Buffer> client_buffer;
+    std::shared_ptr<mg::Buffer> last_posted;
 
     std::mutex buffer_mutex;
     std::condition_variable next_cv;

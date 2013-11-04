@@ -21,6 +21,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_fb_hal_device.h"
 
 #include <future>
 #include <initializer_list>
@@ -41,17 +42,24 @@ struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
     MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(
         geom::Size, geom::PixelFormat, mga::BufferUsage use));
 };
+
+static int const display_width = 180;
+static int const display_height = 1010101;
+
 class PostingFBBundleTest : public ::testing::Test
 {
 public:
     virtual void SetUp()
     {
         using namespace testing;
+        fbnum = 2;
+        format = HAL_PIXEL_FORMAT_RGBA_8888;
         buffer1 = std::make_shared<mtd::MockBuffer>();
         buffer2 = std::make_shared<mtd::MockBuffer>();
         buffer3 = std::make_shared<mtd::MockBuffer>();
         mock_allocator = std::make_shared<MockGraphicBufferAllocator>();
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
+        mock_fb_hal = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, fbnum); 
         EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
             .Times(AtLeast(0))
             .WillOnce(Return(buffer1))
@@ -59,6 +67,9 @@ public:
             .WillRepeatedly(Return(buffer3));
     }
 
+    int format;
+    int fbnum;
+    std::shared_ptr<mtd::MockFBHalDevice> mock_fb_hal;
     std::shared_ptr<MockGraphicBufferAllocator> mock_allocator;
     std::shared_ptr<mg::Buffer> buffer1;
     std::shared_ptr<mg::Buffer> buffer2;
@@ -66,9 +77,6 @@ public:
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
-
-static int const display_width = 180;
-static int const display_height = 1010101;
 
 static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
                                      const uint32_t* attribute_list, int32_t* values)
@@ -176,39 +184,30 @@ TEST_F(PostingFBBundleTest, hwc_version_11_format_selection_failure)
 
 
 
-#if 0
-TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
-TEST_F(FBDevice, determine_size)
+TEST_F(PostingFBBundleTest, bundle_from_fb)
 {
-    mga::FBDevice fbdev(fb_hal_mock);
-    auto size = fbdev.display_size();
-    EXPECT_EQ(width, size.width.as_uint32_t());
-    EXPECT_EQ(height, size.height.as_uint32_t());
+    using namespace testing;
+    auto display_size = geom::Size{display_width, display_height};
+    EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, geom::PixelFormat::abgr_8888, mga::BufferUsage::use_framebuffer_gles))
+        .Times(fbnum);
+
+    mga::Framebuffers framebuffers(mock_allocator, mock_fb_hal);
+    EXPECT_EQ(display_size, framebuffers.fb_size());
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
 }
 
-TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
-TEST_F(FBDevice, determine_fbnum)
-{
-    mga::FBDevice fbdev(fb_hal_mock);
-    EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
-}
 
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
-TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
-TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
+TEST_F(PostingFBBundleTest, determine_fbnum_always_reports_2_minimum)
 {
-    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, 0); 
-    mga::FBDevice fbdev(slightly_malformed_fb_hal_mock);
-    EXPECT_EQ(2u, fbdev.number_of_framebuffers_available());
+    using namespace testing;
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, 0); 
+    EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
+        .Times(2);
+
+    mga::Framebuffers framebuffers(mock_allocator, slightly_malformed_fb_hal_mock);
 }
 
-TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
-TEST_F(FBDevice, determine_pixformat)
-{
-    mga::FBDevice fbdev(fb_hal_mock);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
-}
-#endif
 #if 0
 TEST_F(PostingFBBundleTest, simple_swaps_returns_valid)
 {
