@@ -29,11 +29,13 @@ namespace graphics
 {
 namespace android
 {
+class FramebufferBundle;
 
 class FBDevice : public DisplayDevice 
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev,
+             std::shared_ptr<FramebufferBundle> const& bundle);
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const; 
@@ -48,6 +50,8 @@ public:
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
+    std::shared_ptr<FramebufferBundle> const fb_bundle;
+
 };
 
 }

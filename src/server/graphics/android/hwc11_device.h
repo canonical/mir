@@ -43,7 +43,6 @@ public:
                 std::shared_ptr<FramebufferBundle> const& fb_bundle,
                 std::shared_ptr<HWCLayerList> const& layer_list,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
-    ~HWC11Device() noexcept;
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const; 

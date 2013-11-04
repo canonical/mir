@@ -40,14 +40,14 @@ namespace geom=mir::geometry;
 template<class T>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const& layer_list,
-                                                std::shared_ptr<mga::DisplayDevice> const& fbdev,
+                                                std::shared_ptr<mga::FramebufferBundle> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator);
 
 template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const&, 
-                                                std::shared_ptr<mga::DisplayDevice> const& fbdev,
+                                                std::shared_ptr<mga::FramebufferBundle> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
     return std::make_shared<mga::HWC10Device>(hwc_device, fbdev, coordinator);
@@ -57,7 +57,7 @@ template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerList> const& layer_list,
-                                                std::shared_ptr<mga::DisplayDevice> const& fbdev,
+                                                std::shared_ptr<mga::FramebufferBundle> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
     (void) fbdev;
@@ -86,7 +86,7 @@ protected:
 
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_layer_list = std::make_shared<testing::NiceMock<mtd::MockHWCLayerList>>();
-        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>();
+        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockFramebufferBundle>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }
 
@@ -94,7 +94,7 @@ protected:
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCLayerList> mock_layer_list;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockDisplayDevice> mock_fbdev;
+    std::shared_ptr<mtd::MockFramebufferBundle> mock_fbdev;
 };
 
 typedef ::testing::Types<mga::HWC10Device, mga::HWC11Device> HWCDeviceTestTypes;

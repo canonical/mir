@@ -42,23 +42,19 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-mga::HWC11Device::~HWC11Device() noexcept
-{
-}
-
 geom::Size mga::HWC11Device::display_size() const
 {
-    return geom::Size{};
+    return fb_bundle->fb_size();
 }
 
 geom::PixelFormat mga::HWC11Device::display_format() const
 {
-    return fb_format;
+    return fb_bundle->fb_format();
 }
 
 std::shared_ptr<mg::Buffer> mga::HWC11Device::buffer_for_render()
 {
-    return nullptr;
+    return fb_bundle->buffer_for_render();
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
