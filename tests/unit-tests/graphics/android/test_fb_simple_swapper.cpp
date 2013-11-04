@@ -20,6 +20,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <future>
 #include <initializer_list>
@@ -30,6 +31,7 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 
 namespace
 {
@@ -56,6 +58,7 @@ public:
     std::shared_ptr<mg::Buffer> buffer2;
     std::shared_ptr<mg::Buffer> buffer3;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 static int const display_width = 180;
@@ -91,10 +94,10 @@ TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
         .Times(2);
 
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    EXPECT_EQ(display_size, framebuffers.fb_size);
 }
 
-#if 0 
-TEST_F(HWC11Device, hwc_version_11_format_selection)
+TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
 {
     using namespace testing;
     EGLint const expected_egl_config_attr [] =
@@ -124,12 +127,46 @@ TEST_F(HWC11Device, hwc_version_11_format_selection)
     EXPECT_CALL(mock_egl, eglTerminate(fake_display))
         .InSequence(seq);
  
-    mga::HWC11Device device(mock_device, mock_hwc_layers, mock_display_device, mock_vsync);
-    EXPECT_EQ(geom::PixelFormat::argb_8888, device.display_format());
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    EXPECT_EQ(geom::PixelFormat::argb_8888, framebuffers.fb_format());
 }
-#endif
+
+//apparently this can happen if the display is in the 'unplugged state'
+TEST_F(HWC11Device, test_hwc_device_display_config_failure_throws)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    }, std::runtime_error);
+}
 
 
+//not all hwc11 implementations give a hint about their framebuffer formats in their configuration.
+//prefer abgr_8888 if we can't figure things out
+TEST_F(HWC11Device, hwc_version_11_format_selection_failure)
+{
+    using namespace testing;
+    EGLDisplay fake_display = reinterpret_cast<EGLDisplay>(0x11235813);
+
+    Sequence seq;
+    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+        .InSequence(seq)
+        .WillOnce(Return(fake_display));
+    EXPECT_CALL(mock_egl, eglInitialize(fake_display,_,_))
+        .InSequence(seq);
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,_,_,_,_))
+        .InSequence(seq)
+        .WillOnce(DoAll(SetArgPointee<4>(0), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglTerminate(fake_display))
+        .InSequence(seq);
+    
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, device.display_format());
+}
 #if 0
 TEST_F(PostingFBBundleTest, simple_swaps_returns_valid)
 {
