@@ -19,7 +19,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/buffer.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/session_mediator.h"

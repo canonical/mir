@@ -17,7 +17,6 @@
  */
 
 #include "mir/compositor/buffer_stream.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
