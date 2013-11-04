@@ -77,9 +77,12 @@ enum {
 /*
  * Maximum pointer id value supported in a motion event.
  * Smallest pointer id is 0.
- * (This is limited by our use of BitSet32 to track pointer assignments.)
+ * Any reasonably large value that fits in a int32_t is fine.
+ * A "reasonably large" number is one that guarantees uniqueness of a touch id for some 30 seconds
+ * after its corresponding touch point has physically ended, under very heavy usage (many
+ * simultaneous taps ongoing).
  */
-#define MAX_POINTER_ID 31
+#define MAX_POINTER_ID 100000000
 
 /*
  * Declare a concrete type for the NDK's input event forward declaration.
