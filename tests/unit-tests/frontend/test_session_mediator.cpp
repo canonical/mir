@@ -39,6 +39,7 @@
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/event_sink.h"
@@ -146,7 +147,7 @@ public:
 
 int const StubbedSession::testing_client_input_fd{11};
 
-class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
 public:
     MockGraphicBufferAllocator()
@@ -155,13 +156,7 @@ public:
             .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>();
-    }
-
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
-    ~MockGraphicBufferAllocator() noexcept {}
 };
 
 class MockPlatform : public mg::Platform
