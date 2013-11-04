@@ -16,6 +16,9 @@
 
 #define LOG_TAG "InputDevice"
 
+#include <cutils/log.h>
+#define DEBUG_PROBE 0
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -97,7 +100,7 @@ String8 getInputDeviceConfigurationFilePathByName(
     path.append("/usr/");
     appendInputDeviceConfigurationFileRelativePath(path, name, type);
 #if DEBUG_PROBE
-    ALOGD("Probing for system provided input device configuration file: path='%s'", path.string());
+    ALOGD("Probing for system provided input device configuration file: path='%s'", path.c_str());
 #endif
     if (!access(c_str(path), R_OK)) {
 #if DEBUG_PROBE
@@ -119,7 +122,7 @@ String8 getInputDeviceConfigurationFilePathByName(
     path.append("/system/devices/");
     appendInputDeviceConfigurationFileRelativePath(path, name, type);
 #if DEBUG_PROBE
-    ALOGD("Probing for system user input device configuration file: path='%s'", path.string());
+    ALOGD("Probing for system user input device configuration file: path='%s'", path.c_str());
 #endif
     if (!access(c_str(path), R_OK)) {
 #if DEBUG_PROBE
@@ -131,7 +134,7 @@ String8 getInputDeviceConfigurationFilePathByName(
     // Not found.
 #if DEBUG_PROBE
     ALOGD("Probe failed to find input device configuration file: name='%s', type=%d",
-            name.string(), type);
+            name.c_str(), type);
 #endif
     return String8();
 }

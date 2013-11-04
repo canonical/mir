@@ -30,7 +30,7 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surfaces_report.h"
 #include "src/server/surfaces/surface_allocator.h"
-#include "mir/shell/surface_source.h"
+#include "src/server/shell/surface_source.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/surface_id.h"

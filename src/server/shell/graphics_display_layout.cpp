@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/graphics_display_layout.h"
+#include "graphics_display_layout.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 

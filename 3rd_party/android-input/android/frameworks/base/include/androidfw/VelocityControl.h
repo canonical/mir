@@ -19,6 +19,7 @@
 
 
 #include <androidfw/Input.h>
+#include <androidfw/IntSet.h>
 #include <androidfw/VelocityTracker.h>
 #include <std/Timers.h>
 
@@ -101,6 +102,7 @@ private:
     nsecs_t mLastMovementTime;
     VelocityTracker::Position mRawPosition;
     VelocityTracker mVelocityTracker;
+    IntSet mIds;
 };
 
 } // namespace android
