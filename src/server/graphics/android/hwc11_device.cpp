@@ -20,6 +20,7 @@
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
+#include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
 #include "mir/graphics/android/sync_fence.h"
 
@@ -74,11 +75,11 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCLayerList> const& layer_list,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
+      fb_bundle(fb_bundle),
       layer_list(layer_list),
       sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       fb_format(determine_fb_format())
 {
-    (void) fb_bundle;
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
     if (rc != 0)
@@ -113,19 +114,6 @@ std::shared_ptr<mg::Buffer> mga::HWC11Device::buffer_for_render()
 {
     return nullptr;
 }
-#if 0
-unsigned int mga::HWC11Device::number_of_framebuffers_available() const
-{
-    //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
-    //us a hint to triple buffer. Taking this hint is currently not supported.
-    return 2u;
-}
-
-void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    layer_list->set_fb_target(buffer);
-}
-#endif
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
@@ -140,12 +128,14 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
 
-    /* note, swapbuffers will go around through the driver and call
-       set_next_frontbuffer, updating the fb target before committing */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
     }
+
+    /* update gles rendered surface */
+    auto buffer = fb_bundle->last_rendered_buffer();
+    layer_list->set_fb_target(buffer);
 
     if (hwc_device->set(hwc_device.get(), 1, displays))
     {

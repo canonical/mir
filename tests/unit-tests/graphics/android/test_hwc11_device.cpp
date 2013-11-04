@@ -41,6 +41,12 @@ namespace doubles
 {
 struct MockFBBundle : public mga::FramebufferBundle
 {
+    MockFBBundle()
+    {
+        using namespace testing;
+        ON_CALL(*this, last_rendered_buffer())
+            .WillByDefault(Return(nullptr));
+    }
     MOCK_METHOD0(fb_format, geom::PixelFormat());
     MOCK_METHOD0(fb_size, geom::Size());
     MOCK_METHOD0(buffer_for_render, std::shared_ptr<mg::Buffer>());
@@ -117,6 +123,8 @@ TEST_F(HWC11Device, test_hwc_commit_order)
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
+        .Times(1);
+    EXPECT_CALL(*mock_hwc_layers, set_fb_target(_))
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
