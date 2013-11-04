@@ -68,7 +68,6 @@ public:
     void set_alpha(float alpha);
     void set_hidden(bool is_hidden);
 
-    /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
 
