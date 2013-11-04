@@ -19,9 +19,6 @@ mir (0.1.0+14.04.20131030-0ubuntu1) trusty; urgency=low
     server crashes without the timeout, rendering it needless anyway.
     (LP: #1245958)
 
-  [ Ubuntu daily release ]
-  * Automatic snapshot from revision 1163
-
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 30 Oct 2013 18:37:21 +0000
 
 mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
@@ -123,7 +120,7 @@ mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
     #1244192)
 
   [ Ubuntu daily release ]
-  * Automatic snapshot from revision 1161
+  * Automatic snapshot from revision 1160
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Oct 2013 02:04:31 +0000
 
