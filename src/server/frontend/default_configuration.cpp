@@ -24,13 +24,11 @@
 #include "protobuf_session_creator.h"
 #include "published_socket_connector.h"
 #include "session_mediator.h"
+#include "unauthorized_display_changer.h"
 
 #include "mir/options/option.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
-
-// TODO this looks like a missing factory function
-#include "mir/shell/unauthorized_display_changer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -79,7 +77,7 @@ private:
         }
         else
         {
-            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(display_changer);
+            changer = std::make_shared<mf::UnauthorizedDisplayChanger>(display_changer);
         }
 
         return std::make_shared<mf::SessionMediator>(

@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/event_filter_chain.h"
+#include "event_filter_chain.h"
 
 namespace mi = mir::input;
 

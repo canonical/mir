@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/registration_order_focus_sequence.h"
+#include "registration_order_focus_sequence.h"
 #include "mir/frontend/session.h"
 #include "mir/shell/session_container.h"
 

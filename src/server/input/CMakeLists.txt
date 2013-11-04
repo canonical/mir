@@ -9,6 +9,7 @@ set(
   nested_input_relay.cpp
   display_input_region.cpp
   vt_filter.cpp
+  default_configuration.cpp
 )
 
 add_subdirectory(android)
