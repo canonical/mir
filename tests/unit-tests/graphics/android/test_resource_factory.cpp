@@ -42,7 +42,7 @@ class MockAndroidGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
 public:
     MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mga::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
+    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 
     ~MockAndroidGraphicBufferAllocator() noexcept {}
@@ -66,7 +66,7 @@ public:
             .WillByDefault(Return(geom::Size{2, 3}));
 
         ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
-            .WillByDefault(Return(std::shared_ptr<mga::Buffer>()));
+            .WillByDefault(Return(std::shared_ptr<mg::Buffer>()));
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_report;

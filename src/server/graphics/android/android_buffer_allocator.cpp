@@ -77,7 +77,7 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
     return alloc_buffer_platform(buffer_properties.size, buffer_properties.format, usage);
 }
 
-std::shared_ptr<mga::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
+std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
     geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
 {
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);

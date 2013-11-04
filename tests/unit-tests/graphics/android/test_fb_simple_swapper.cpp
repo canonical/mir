@@ -17,8 +17,8 @@
  */
 
 #include "src/server/graphics/android/framebuffers.h"
+#include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_egl.h"
 
@@ -35,6 +35,12 @@ namespace geom=mir::geometry;
 
 namespace
 {
+
+struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
+{
+    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(
+        geom::Size, geom::PixelFormat, mga::BufferUsage use));
+};
 class PostingFBBundleTest : public ::testing::Test
 {
 public:
@@ -44,16 +50,16 @@ public:
         buffer1 = std::make_shared<mtd::MockBuffer>();
         buffer2 = std::make_shared<mtd::MockBuffer>();
         buffer3 = std::make_shared<mtd::MockBuffer>();
-        mock_allocator = std::make_shared<mtd::MockAllocAdaptor>();
+        mock_allocator = std::make_shared<MockGraphicBufferAllocator>();
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        EXPECT_CALL(*mock_allocator, alloc_buffer(_,_,_))
+        EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
             .Times(AtLeast(0))
             .WillOnce(Return(buffer1))
             .WillOnce(Return(buffer2))
             .WillRepeatedly(Return(buffer3));
     }
 
-    std::shared_ptr<mtd::MockAllocAdaptor> mock_allocator;
+    std::shared_ptr<MockGraphicBufferAllocator> mock_allocator;
     std::shared_ptr<mg::Buffer> buffer1;
     std::shared_ptr<mg::Buffer> buffer2;
     std::shared_ptr<mg::Buffer> buffer3;
@@ -90,11 +96,11 @@ TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
         .WillOnce(Invoke(display_attribute_handler));
    
     auto display_size = mir::geometry::Size{display_width, display_height};
-    EXPECT_CALL(*mock_allocator, alloc_buffer(display_size, _, mga::BufferUsage::use_framebuffer_gles))
+    EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, _, mga::BufferUsage::use_framebuffer_gles))
         .Times(2);
 
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
-    EXPECT_EQ(display_size, framebuffers.fb_size);
+    EXPECT_EQ(display_size, framebuffers.fb_size());
 }
 
 TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
@@ -132,10 +138,10 @@ TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
 }
 
 //apparently this can happen if the display is in the 'unplugged state'
-TEST_F(HWC11Device, test_hwc_device_display_config_failure_throws)
+TEST_F(PostingFBBundleTest, test_hwc_device_display_config_failure_throws)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
+    EXPECT_CALL(*mock_hwc_device, getDisplayConfigs_interface(mock_hwc_device.get(),HWC_DISPLAY_PRIMARY,_,_))
         .Times(1)
         .WillOnce(Return(-1));
 
@@ -147,7 +153,7 @@ TEST_F(HWC11Device, test_hwc_device_display_config_failure_throws)
 
 //not all hwc11 implementations give a hint about their framebuffer formats in their configuration.
 //prefer abgr_8888 if we can't figure things out
-TEST_F(HWC11Device, hwc_version_11_format_selection_failure)
+TEST_F(PostingFBBundleTest, hwc_version_11_format_selection_failure)
 {
     using namespace testing;
     EGLDisplay fake_display = reinterpret_cast<EGLDisplay>(0x11235813);
@@ -165,8 +171,44 @@ TEST_F(HWC11Device, hwc_version_11_format_selection_failure)
         .InSequence(seq);
     
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, device.display_format());
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
 }
+
+
+
+#if 0
+TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
+TEST_F(FBDevice, determine_size)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    auto size = fbdev.display_size();
+    EXPECT_EQ(width, size.width.as_uint32_t());
+    EXPECT_EQ(height, size.height.as_uint32_t());
+}
+
+TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
+TEST_F(FBDevice, determine_fbnum)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
+}
+
+//some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
+TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
+TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
+{
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, 0); 
+    mga::FBDevice fbdev(slightly_malformed_fb_hal_mock);
+    EXPECT_EQ(2u, fbdev.number_of_framebuffers_available());
+}
+
+TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
+TEST_F(FBDevice, determine_pixformat)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
+}
+#endif
 #if 0
 TEST_F(PostingFBBundleTest, simple_swaps_returns_valid)
 {

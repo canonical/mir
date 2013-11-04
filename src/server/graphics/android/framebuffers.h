@@ -22,6 +22,9 @@
 
 #include "framebuffer_bundle.h"
 
+#include <hardware/gralloc.h>
+#include <hardware/fb.h>
+#include <hardware/hwcomposer.h>
 #include <condition_variable>
 #include <queue>
 #include <vector>
@@ -33,10 +36,16 @@ namespace graphics
 {
 namespace android
 {
+class GraphicBufferAllocator;
 
 class Framebuffers : public FramebufferBundle
 {
 public:
+    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
+                 std::shared_ptr<hwc_composer_device_1> const& hwc);
+    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
+                 std::shared_ptr<framebuffer_device_t> const& fb);
+
     geometry::PixelFormat fb_format();
     geometry::Size fb_size();
     std::shared_ptr<Buffer> buffer_for_render();

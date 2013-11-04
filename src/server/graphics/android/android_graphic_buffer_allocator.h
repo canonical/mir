@@ -48,7 +48,7 @@ public:
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
 
-    std::shared_ptr<Buffer> alloc_buffer_platform(
+    std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
         geometry::Size sz, geometry::PixelFormat pf, BufferUsage use);
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
