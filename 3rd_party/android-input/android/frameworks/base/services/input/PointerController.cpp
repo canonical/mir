@@ -167,15 +167,12 @@ void PointerController::setPresentation(Presentation presentation) {
     }
 }
 
-void PointerController::setSpots(const PointerCoords* spotCoords,
-        const uint32_t* spotIdToIndex, BitSet32 spotIdBits) {
+void PointerController::setSpots(const PointerCoords* spotCoords, uint32_t spotCount) {
 #if DEBUG_POINTER_UPDATES
-    ALOGD("setSpots: idBits=%08x", spotIdBits.value);
-    for (BitSet32 idBits(spotIdBits); !idBits.isEmpty(); ) {
-        uint32_t id = idBits.firstMarkedBit();
-        idBits.clearBit(id);
-        const PointerCoords& c = spotCoords[spotIdToIndex[id]];
-        ALOGD(" spot %d: position=(%0.3f, %0.3f), pressure=%0.3f", id,
+    ALOGD("setSpots: spotCount=%d", spotCount);
+    for (size_t i = 0; i < spotCount; ++i) {
+        const PointerCoords& c = spotCoords[i];
+        ALOGD(" spot %d: position=(%0.3f, %0.3f), pressure=%0.3f", i,
                 c.getAxisValue(AMOTION_EVENT_AXIS_X),
                 c.getAxisValue(AMOTION_EVENT_AXIS_Y),
                 c.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));

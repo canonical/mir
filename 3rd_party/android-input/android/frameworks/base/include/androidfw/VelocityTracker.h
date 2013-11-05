@@ -17,10 +17,12 @@
 #ifndef _ANDROIDFW_VELOCITY_TRACKER_H
 #define _ANDROIDFW_VELOCITY_TRACKER_H
 
-
 #include <androidfw/Input.h>
+#include <androidfw/IntSet.h>
 #include <std/Timers.h>
-#include <std/BitSet.h>
+
+// C++ std lib
+#include <unordered_map>
 
 namespace android {
 
@@ -74,14 +76,14 @@ public:
     // Resets the velocity tracker state for specific pointers.
     // Call this method when some pointers have changed and may be reusing
     // an id that was assigned to a different pointer earlier.
-    void clearPointers(BitSet32 idBits);
+    void clearPointers(const IntSet &ids);
 
     // Adds movement information for a set of pointers.
-    // The idBits bitfield specifies the pointer ids of the pointers whose positions
+    // The ids set specifies the pointer ids of the pointers whose positions
     // are included in the movement.
     // The positions array contains position information for each pointer in order by
-    // increasing id.  Its size should be equal to the number of one bits in idBits.
-    void addMovement(nsecs_t eventTime, BitSet32 idBits, const Position* positions);
+    // increasing id.  Its size should be equal to the size of ids.
+    void addMovement(nsecs_t eventTime, const IntSet &ids, const Position* positions);
 
     // Adds movement information for all pointers in a MotionEvent, including historical samples.
     void addMovement(const MotionEvent* event);
@@ -100,13 +102,13 @@ public:
     inline int32_t getActivePointerId() const { return mActivePointerId; }
 
     // Gets a bitset containing all pointer ids from the most recent movement.
-    inline BitSet32 getCurrentPointerIdBits() const { return mCurrentPointerIdBits; }
+    inline const IntSet &getCurrentPointerIds() const { return mCurrentPointerIds; }
 
 private:
     static const char* DEFAULT_STRATEGY;
 
     nsecs_t mLastEventTime;
-    BitSet32 mCurrentPointerIdBits;
+    IntSet mCurrentPointerIds;
     int32_t mActivePointerId;
     VelocityTrackerStrategy* mStrategy;
 
@@ -127,8 +129,8 @@ public:
     virtual ~VelocityTrackerStrategy() { }
 
     virtual void clear() = 0;
-    virtual void clearPointers(BitSet32 idBits) = 0;
-    virtual void addMovement(nsecs_t eventTime, BitSet32 idBits,
+    virtual void clearPointers(const IntSet &ids) = 0;
+    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions) = 0;
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const = 0;
 };
@@ -159,8 +161,8 @@ public:
     virtual ~LeastSquaresVelocityTrackerStrategy();
 
     virtual void clear();
-    virtual void clearPointers(BitSet32 idBits);
-    virtual void addMovement(nsecs_t eventTime, BitSet32 idBits,
+    virtual void clearPointers(const IntSet &ids);
+    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions);
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
 
@@ -175,11 +177,11 @@ private:
 
     struct Movement {
         nsecs_t eventTime;
-        BitSet32 idBits;
+        IntSet ids;
         VelocityTracker::Position positions[MAX_POINTERS];
 
         inline const VelocityTracker::Position& getPosition(uint32_t id) const {
-            return positions[idBits.getIndexOfBit(id)];
+            return positions[ids.indexOf(id)];
         }
     };
 
@@ -202,8 +204,8 @@ public:
     ~IntegratingVelocityTrackerStrategy();
 
     virtual void clear();
-    virtual void clearPointers(BitSet32 idBits);
-    virtual void addMovement(nsecs_t eventTime, BitSet32 idBits,
+    virtual void clearPointers(const IntSet &ids);
+    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions);
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
 
@@ -218,8 +220,8 @@ private:
     };
 
     const uint32_t mDegree;
-    BitSet32 mPointerIdBits;
-    State mPointerState[MAX_POINTER_ID + 1];
+    IntSet mPointerIds;
+    std::unordered_map<int32_t, State> mPointerState; // maps the id of a pointer to its state
 
     void initState(State& state, nsecs_t eventTime, float xpos, float ypos) const;
     void updateState(State& state, nsecs_t eventTime, float xpos, float ypos) const;
@@ -236,8 +238,8 @@ public:
     virtual ~LegacyVelocityTrackerStrategy();
 
     virtual void clear();
-    virtual void clearPointers(BitSet32 idBits);
-    virtual void addMovement(nsecs_t eventTime, BitSet32 idBits,
+    virtual void clearPointers(const IntSet &ids);
+    virtual void addMovement(nsecs_t eventTime, const IntSet &ids,
             const VelocityTracker::Position* positions);
     virtual bool getEstimator(uint32_t id, VelocityTracker::Estimator* outEstimator) const;
 
@@ -253,11 +255,11 @@ private:
 
     struct Movement {
         nsecs_t eventTime;
-        BitSet32 idBits;
+        IntSet ids;
         VelocityTracker::Position positions[MAX_POINTERS];
 
         inline const VelocityTracker::Position& getPosition(uint32_t id) const {
-            return positions[idBits.getIndexOfBit(id)];
+            return positions[ids.indexOf(id)];
         }
     };
 

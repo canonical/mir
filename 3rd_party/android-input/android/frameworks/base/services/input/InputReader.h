@@ -22,6 +22,7 @@
 #include "InputListener.h"
 
 #include <androidfw/Input.h>
+#include <androidfw/IntSet.h>
 #include <androidfw/VelocityControl.h>
 #include <androidfw/VelocityTracker.h>
 #include <std/KeyedVector.h>
@@ -30,11 +31,13 @@
 #include <std/Timers.h>
 #include <std/RefBase.h>
 #include <std/String8.h>
-#include <std/BitSet.h>
 
 #include <limits.h>
 #include <stddef.h>
 #include <unistd.h>
+
+// C++ std lib
+#include <unordered_map>
 
 // Maximum supported size of a vibration pattern.
 // Must be at least 2.
@@ -678,7 +681,7 @@ struct RawPointerAxes {
 /* Raw data for a collection of pointers including a pointer id mapping table. */
 struct RawPointerData {
     struct Pointer {
-        uint32_t id;
+        int32_t id;
         int32_t x;
         int32_t y;
         int32_t pressure;
@@ -696,29 +699,40 @@ struct RawPointerData {
 
     uint32_t pointerCount;
     Pointer pointers[MAX_POINTERS];
-    BitSet32 hoveringIdBits, touchingIdBits;
-    uint32_t idToIndex[MAX_POINTER_ID + 1];
+    IntSet hoveringIds, touchingIds;
+
+    uint32_t idToIndex(int32_t id) const {
+        uint32_t i = 0;
+
+        while (pointers[i].id != id && i < pointerCount) {
+            ++i;
+        }
+
+        assert(pointers[i].id == id);
+        return i;
+    }
+
 
     RawPointerData();
     void clear();
     void copyFrom(const RawPointerData& other);
     void getCentroidOfTouchingPointers(float* outX, float* outY) const;
 
-    inline void markIdBit(uint32_t id, bool isHovering) {
+    inline void insertId(int32_t id, bool isHovering) {
         if (isHovering) {
-            hoveringIdBits.markBit(id);
+            hoveringIds.insert(id);
         } else {
-            touchingIdBits.markBit(id);
+            touchingIds.insert(id);
         }
     }
 
-    inline void clearIdBits() {
-        hoveringIdBits.clear();
-        touchingIdBits.clear();
+    inline void clearIds() {
+        hoveringIds.clear();
+        touchingIds.clear();
     }
 
-    inline const Pointer& pointerForId(uint32_t id) const {
-        return pointers[idToIndex[id]];
+    inline const Pointer& pointerForId(int32_t id) const {
+        return pointers[idToIndex(id)];
     }
 
     inline bool isHovering(uint32_t pointerIndex) {
@@ -732,15 +746,22 @@ struct CookedPointerData {
     uint32_t pointerCount;
     PointerProperties pointerProperties[MAX_POINTERS];
     PointerCoords pointerCoords[MAX_POINTERS];
-    BitSet32 hoveringIdBits, touchingIdBits;
-    uint32_t idToIndex[MAX_POINTER_ID + 1];
+    IntSet hoveringIds, touchingIds;
+    uint32_t idToIndex(int32_t id) const {
+        uint32_t i = 0;
+
+        while (pointerProperties[i].id != id && i < pointerCount) { ++i; }
+
+        assert(pointerProperties[i].id == id);
+        return i;
+    }
 
     CookedPointerData();
     void clear();
     void copyFrom(const CookedPointerData& other);
 
     inline bool isHovering(uint32_t pointerIndex) {
-        return hoveringIdBits.hasBit(pointerProperties[pointerIndex].id);
+        return hoveringIds.contains(pointerProperties[pointerIndex].id);
     }
 };
 
@@ -1233,13 +1254,13 @@ protected:
     int32_t mCurrentRawVScroll;
     int32_t mCurrentRawHScroll;
 
-    // Id bits used to differentiate fingers, stylus and mouse tools.
-    BitSet32 mCurrentFingerIdBits; // finger or unknown
-    BitSet32 mLastFingerIdBits;
-    BitSet32 mCurrentStylusIdBits; // stylus or eraser
-    BitSet32 mLastStylusIdBits;
-    BitSet32 mCurrentMouseIdBits; // mouse or lens
-    BitSet32 mLastMouseIdBits;
+    // Id sets used to differentiate fingers, stylus and mouse tools.
+    IntSet mCurrentFingerIds; // finger or unknown
+    IntSet mLastFingerIds;
+    IntSet mCurrentStylusIds; // stylus or eraser
+    IntSet mLastStylusIds;
+    IntSet mCurrentMouseIds; // mouse or lens
+    IntSet mLastMouseIds;
 
     // True if we sent a HOVER_ENTER event.
     bool mSentHoverEnter;
@@ -1266,6 +1287,7 @@ protected:
     virtual bool hasStylus() const = 0;
 
     virtual void syncTouch(nsecs_t when, bool* outHavePointerIds) = 0;
+    int32_t fetchNewPointerId();
 
 private:
     // The surface orientation and width and height set by configureSurface().
@@ -1445,14 +1467,14 @@ private:
 
         // Pointer coords and ids for the current and previous pointer gesture.
         Mode currentGestureMode;
-        BitSet32 currentGestureIdBits;
-        uint32_t currentGestureIdToIndex[MAX_POINTER_ID + 1];
+        IntSet currentGestureIds;
+        std::unordered_map<int32_t, uint32_t> currentGestureIdToIndex;
         PointerProperties currentGestureProperties[MAX_POINTERS];
         PointerCoords currentGestureCoords[MAX_POINTERS];
 
         Mode lastGestureMode;
-        BitSet32 lastGestureIdBits;
-        uint32_t lastGestureIdToIndex[MAX_POINTER_ID + 1];
+        IntSet lastGestureIds;
+        std::unordered_map<int32_t, uint32_t> lastGestureIdToIndex;
         PointerProperties lastGestureProperties[MAX_POINTERS];
         PointerCoords lastGestureCoords[MAX_POINTERS];
 
@@ -1479,14 +1501,14 @@ private:
 
         // Distance that each pointer has traveled which has not yet been
         // subsumed into the reference gesture position.
-        BitSet32 referenceIdBits;
+        IntSet referenceIds;
         struct Delta {
             float dx, dy;
         };
-        Delta referenceDeltas[MAX_POINTER_ID + 1];
+        std::unordered_map<int32_t, Delta> referenceDeltas;
 
         // Describes how touch ids are mapped to gesture ids for freeform gestures.
-        uint32_t freeformTouchToGestureIdMap[MAX_POINTER_ID + 1];
+        std::unordered_map<int32_t, int32_t> freeformTouchToGestureIdMap;
 
         // A velocity tracker for determining whether to switch active pointers during drags.
         VelocityTracker velocityTracker;
@@ -1496,9 +1518,9 @@ private:
             activeTouchId = -1;
             activeGestureId = -1;
             currentGestureMode = NEUTRAL;
-            currentGestureIdBits.clear();
+            currentGestureIds.clear();
             lastGestureMode = NEUTRAL;
-            lastGestureIdBits.clear();
+            lastGestureIds.clear();
             downTime = 0;
             velocityTracker.clear();
             resetTap();
@@ -1584,20 +1606,26 @@ private:
             int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
             int32_t edgeFlags,
             const PointerProperties* properties, const PointerCoords* coords,
-            const uint32_t* idToIndex, BitSet32 idBits,
+            uint32_t inPointerCount,
+            int32_t changedId, float xPrecision, float yPrecision, nsecs_t downTime);
+    void dispatchMotion(nsecs_t when, uint32_t policyFlags, uint32_t source,
+            int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
+            int32_t edgeFlags,
+            const PointerProperties* properties, const PointerCoords* coords,
+            uint32_t inPointerCount, const IntSet &idsToDispatch,
             int32_t changedId, float xPrecision, float yPrecision, nsecs_t downTime);
 
-    // Updates pointer coords and properties for pointers with specified ids that have moved.
+    // Updates pointer coords and properties for pointers that have moved.
     // Returns true if any of them changed.
-    bool updateMovedPointers(const PointerProperties* inProperties,
-            const PointerCoords* inCoords, const uint32_t* inIdToIndex,
-            PointerProperties* outProperties, PointerCoords* outCoords,
-            const uint32_t* outIdToIndex, BitSet32 idBits) const;
+    bool updateMovedPointers(const PointerProperties* inProperties, const PointerCoords* inCoords,
+            uint32_t inPointerCount,  PointerProperties* outProperties, PointerCoords* outCoords,
+            uint32_t outPointerCount, const IntSet &commonTouchingIds) const;
 
     bool isPointInsideSurface(int32_t x, int32_t y);
     const VirtualKey* findVirtualKeyHit(int32_t x, int32_t y);
 
     void assignPointerIds();
+    int32_t mNextNewPointerId;
 };
 
 
@@ -1635,9 +1663,9 @@ protected:
 private:
     MultiTouchMotionAccumulator mMultiTouchMotionAccumulator;
 
-    // Specifies the pointer id bits that are in use, and their associated tracking id.
-    BitSet32 mPointerIdBits;
-    int32_t mPointerTrackingIdMap[MAX_POINTER_ID + 1];
+    // Specifies the pointer ids that are in use, and their associated tracking id.
+    IntSet mPointerIds;
+    std::unordered_map<int32_t, int32_t> mPointerTrackingIdMap;
 };
 
 
