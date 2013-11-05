@@ -283,6 +283,24 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     surf.move_to(p);
 }
 
+TEST_F(SurfaceCreation, resize)
+{
+    using namespace testing;
+    geom::Size const new_size{123, 456};
+
+    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
+        .Times(1);
+    EXPECT_CALL(*mock_basic_state, resize(new_size))
+        .Times(1);
+
+    ms::Surface surf(
+        mock_basic_state,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+    surf.resize(new_size);
+}
+
 TEST_F(SurfaceCreation, test_surface_set_rotation)
 {
     using namespace testing;
