@@ -168,3 +168,9 @@ void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rec
 {
     surface_state->set_input_region(input_rectangles);
 }
+
+void ms::Surface::resize(geom::Size const& size)
+{
+    surface_buffer_stream->resize(size);
+    surface_state->resize(size);
+}

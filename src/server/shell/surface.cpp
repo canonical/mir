@@ -240,3 +240,8 @@ void msh::Surface::raise(std::shared_ptr<msh::SurfaceController> const& controll
 {
     controller->raise(surface);
 }
+
+void msh::Surface::resize(geom::Size const& size)
+{
+    surface->resize(size);
+}
