@@ -15,19 +15,21 @@ or
     lsmod | grep drm
 
 Before you can use Mir you need to ensure you have the proper custom Mesa
-build installed. If you are running Ubuntu saucy
+build installed. If you are running Ubuntu 13.10 or later
 (see \ref installing_prebuilt_on_pc), you should be good to go.
 
 If you built Mir from source code (see \ref building_source_for_pc), you
 need to ensure you are using the proper Mesa at runtime. You can do that by
-installing the Mesa packages from saucy or by building the custom Mesa yourself
-and ensuring it can be found by Mir, e.g., by using LD_LIBRARY_PATH.
+installing the Mesa packages from Ubuntu 13.10 (or later) or by building the
+custom Mesa yourself and ensuring it can be found by Mir, e.g., by using
+LD_LIBRARY_PATH.
 
 Using Mir as system compositor with X
 -------------------------------------
 
 Note: for this to work you need to have Mir and all its dependencies (which
-include lightdm, Mesa and the Xorg drivers). The easiest way is to run saucy.
+include lightdm, Mesa and the Xorg drivers). The easiest way is to run Ubuntu
+13.10 or later.
 
 If you have installed unity-system-compositor it will have created a file in
 /etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf to run XMir. If you

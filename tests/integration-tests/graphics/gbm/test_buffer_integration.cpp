@@ -24,6 +24,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/null_display_report.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
@@ -69,17 +70,12 @@ private:
     std::thread::id creation_thread_id;
 };
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
  public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&) override
     {
-        return std::shared_ptr<mg::Buffer>(new StubBufferThread());
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
+        return std::make_shared<StubBufferThread>();
     }
 };
 

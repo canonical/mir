@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_REGISTRATION_FOCUS_SEQUENCE_H_
 #define MIR_SHELL_REGISTRATION_FOCUS_SEQUENCE_H_
 
-#include "mir/shell/focus_sequence.h"
+#include "focus_sequence.h"
 
 namespace mir
 {

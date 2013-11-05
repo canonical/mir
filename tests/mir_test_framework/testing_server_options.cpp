@@ -24,16 +24,16 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_ipc_packer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/null_input_configuration.h"
+#include "src/server/input/null_input_configuration.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -106,17 +106,12 @@ private:
     const mg::BufferProperties properties;
 };
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
  public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        return std::unique_ptr<mg::Buffer>(new StubFDBuffer(properties));
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
+        return std::make_shared<StubFDBuffer>(properties);
     }
 };
 

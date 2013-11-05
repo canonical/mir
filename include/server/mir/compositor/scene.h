@@ -75,7 +75,7 @@ public:
      * Scene changes.
      *
      * The supplied callback should not directly or indirectly (e.g.,
-     * by changing a property of a Renderable) change the state of
+     * by changing a property of a surface) change the state of
      * the Scene, otherwise a deadlock may occur.
      */
     virtual void set_change_callback(std::function<void()> const& f) = 0;

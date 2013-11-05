@@ -16,6 +16,7 @@ set(
   socket_messenger.cpp
   event_sender.cpp
   surface.cpp
+  unauthorized_display_changer.cpp
 
   default_configuration.cpp
 

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/connector_report.h"
+#include "connector_report.h"
 
 #include "mir/logging/logger.h"
 

@@ -17,8 +17,8 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "mir/shell/default_session_container.h"
-#include "mir/shell/registration_order_focus_sequence.h"
+#include "src/server/shell/default_session_container.h"
+#include "src/server/shell/registration_order_focus_sequence.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/surfaces/surface.h"

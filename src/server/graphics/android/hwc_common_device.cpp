@@ -72,16 +72,6 @@ mga::HWCCommonDevice::~HWCCommonDevice() noexcept
         turn_screen_off();
 }
 
-geom::PixelFormat mga::HWCCommonDevice::display_format() const
-{
-    return geom::PixelFormat::abgr_8888;
-}
-
-unsigned int mga::HWCCommonDevice::number_of_framebuffers_available() const
-{
-    return 2u;
-}
-
 void mga::HWCCommonDevice::notify_vsync()
 {
     coordinator->notify_vsync();

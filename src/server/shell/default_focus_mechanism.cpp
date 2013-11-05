@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "default_focus_mechanism.h"
 #include "mir/frontend/session.h"
-#include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"

@@ -18,8 +18,6 @@ add_library(
   hwc11_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp
-  android_framebuffer_window.cpp
-  android_display_factory.cpp
   android_alloc_adaptor.cpp
   server_render_window.cpp
   resource_factory.cpp

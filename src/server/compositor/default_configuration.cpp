@@ -18,7 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "buffer_stream_factory.h"
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
+#include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "overlay_renderer.h"
 #include "gl_renderer_factory.h"

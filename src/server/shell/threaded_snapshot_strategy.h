@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_THREADED_SNAPSHOT_STRATEGY_H_
 #define MIR_SHELL_THREADED_SNAPSHOT_STRATEGY_H_
 
-#include "mir/shell/snapshot_strategy.h"
+#include "snapshot_strategy.h"
 
 #include <memory>
 #include <thread>

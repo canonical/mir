@@ -24,7 +24,6 @@
 
 #include "mir/graphics/buffer_initializer.h"
 
-#include "mir/input/nested_input_relay.h"
 #include "mir/shared_library.h"
 #include "mir/abnormal_exit.h"
 
@@ -89,7 +88,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
 
             return std::make_shared<mir::graphics::nested::NestedPlatform>(
                 the_host_connection(),
-                the_nested_input_relay(),
+                the_nested_event_filter(),
                 the_display_report(),
                 create_native_platform(the_display_report()));
         });
@@ -137,7 +136,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
                 return std::make_shared<graphics::nested::HostConnection>(
                     host_socket,
-                    server_socket);
+                    options->get(name_opt, ("nested-mir@:" + server_socket).c_str()));
             }
             else
             {

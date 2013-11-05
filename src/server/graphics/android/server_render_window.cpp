@@ -20,7 +20,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "server_render_window.h"
-#include "display_support_provider.h"
+#include "display_device.h"
 #include "fb_swapper.h"
 #include "buffer.h"
 #include "android_format_conversion-inl.h"
@@ -35,7 +35,7 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
-                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster,
+                                            std::shared_ptr<mga::DisplayDevice> const& display_poster,
                                             std::shared_ptr<InterpreterResourceCache> const& cache)
     : swapper(swapper),
       poster(display_poster),

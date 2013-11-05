@@ -134,7 +134,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
     buffer_stream.secure_client_buffer();
 }
 
-TEST_F(BufferStreamTest, allow_framedropping_command)
+TEST_F(BufferStreamTest, allow_framedropping_device)
 {
     EXPECT_CALL(*mock_bundle, allow_framedropping(true))
         .Times(1);

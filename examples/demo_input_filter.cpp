@@ -32,6 +32,21 @@ namespace
 
 struct PrintingEventFilter : public mi::EventFilter
 {
+    void print_motion_event(MirMotionEvent const& ev)
+    {
+        std::cout << "Motion Event time=" << ev.event_time
+            << " pointer_count=" << ev.pointer_count << std::endl;
+
+        for (size_t i = 0; i < ev.pointer_count; ++i)
+        {
+            std::cout << "  "
+                << " id=" << ev.pointer_coordinates[i].id
+                << " pos=(" << ev.pointer_coordinates[i].x << ", " << ev.pointer_coordinates[i].y << ")"
+                << std::endl;
+        }
+        std::cout << "----------------" << std::endl << std::endl;
+    }
+
     bool handle(MirEvent const& ev) override
     {
         // TODO: Enhance printing
@@ -42,8 +57,7 @@ struct PrintingEventFilter : public mi::EventFilter
         }
         else if (ev.type == mir_event_type_motion)
         {
-            std::cout << "Handling motion event (time, pointer0_x, pointer0_y): " << ev.motion.event_time << " "
-                << ev.motion.pointer_coordinates[0].x << " " << ev.motion.pointer_coordinates[0].y << std::endl;
+            print_motion_event(ev.motion);
         }
         return false;
     }
@@ -56,7 +70,7 @@ struct DemoServerConfiguration : public mir::examples::ServerConfiguration
         event_filter(std::make_shared<PrintingEventFilter>())
     {
     }
-    
+
     std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
         auto composite_filter = ServerConfiguration::the_composite_event_filter();
@@ -69,10 +83,18 @@ struct DemoServerConfiguration : public mir::examples::ServerConfiguration
 
 }
 
+
+#include <std/MirLog.h>
+void my_write_to_log(int /*prio*/, char const* buffer)
+{
+    printf("%s\n", buffer);
+}
+
 int main(int argc, char const* argv[])
 try
 {
     DemoServerConfiguration config(argc, argv);
+    mir::write_to_log = my_write_to_log;
 
     mir::run_mir(config, [](mir::DisplayServer&) {/* empty init */});
     return 0;

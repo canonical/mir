@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
 #define MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
 
-#include "event_sink.h"
+#include "mir/frontend/event_sink.h"
 #include <memory>
 
 namespace mir
