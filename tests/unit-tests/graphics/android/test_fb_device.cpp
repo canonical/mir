@@ -22,6 +22,7 @@
 #include "src/server/graphics/android/framebuffer_bundle.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
@@ -41,12 +42,6 @@ namespace doubles
 {
 struct MockFBBundle : public mga::FramebufferBundle
 {
-    MockFBBundle()
-    {
-        using namespace testing;
-        ON_CALL(*this, last_rendered_buffer())
-            .WillByDefault(Return(nullptr));
-    }
     MOCK_METHOD0(fb_format, geom::PixelFormat());
     MOCK_METHOD0(fb_size, geom::Size());
     MOCK_METHOD0(buffer_for_render, std::shared_ptr<mg::Buffer>());
@@ -70,10 +65,11 @@ struct FBDevice : public ::testing::Test
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
-
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
+        ON_CALL(*mock_fb_bundle, last_rendered_buffer())
+            .WillByDefault(Return(mock_buffer)); 
     }
 
     unsigned int width, height, format, fbnum;
@@ -94,6 +90,7 @@ TEST_F(FBDevice, commit_frame)
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(3)
         .WillOnce(Return(EGL_FALSE))
+        .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_TRUE));
 
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
