@@ -32,7 +32,6 @@
 
 #include "mir/frontend/connector.h"
 
-#include <iostream>
 #include <gmock/gmock.h>
 #include <thread>
 #include <hardware/gralloc.h>

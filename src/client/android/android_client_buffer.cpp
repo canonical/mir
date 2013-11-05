@@ -45,7 +45,8 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
 
     anwb->height = static_cast<int32_t>(buffer_size.height.as_uint32_t());
     anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
-    anwb->stride = stride.as_uint32_t();
+    anwb->stride = stride.as_uint32_t();// /
+//                                   geom::bytes_per_pixel(buffer_pf);
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = native_handle.get();
 
