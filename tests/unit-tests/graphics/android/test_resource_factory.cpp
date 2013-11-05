@@ -77,31 +77,6 @@ public:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-//note: @kdub imo, the hwc api has a hole in it that it doesn't allow query for format. surfaceflinger code
-//      makes note of this api hole in its comments too. It always uses rgba8888, which we try to do too.
-TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
-{
-    using namespace testing; 
-    geom::Width disp_width{44};
-    geom::Height disp_height{4567654};
-    geom::Size disp_size{disp_width, disp_height};
-    geom::PixelFormat pf = geom::PixelFormat::abgr_8888;  
- 
-    EXPECT_CALL(*mock_display_device, display_size())
-        .Times(AtLeast(1))
-        .WillOnce(Return(disp_size));
-    EXPECT_CALL(*mock_display_device, display_format())
-        .Times(AtLeast(1))
-        .WillOnce(Return(pf));
-
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(
-        disp_size,pf,mga::BufferUsage::use_framebuffer_gles))
-        .Times(fake_fb_num);
-
-    mga::ResourceFactory factory(mock_buffer_allocator);
-    factory.create_native_window(mock_display_device);
-}
-
 TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 {
     using namespace testing;
