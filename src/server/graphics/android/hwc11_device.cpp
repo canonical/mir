@@ -40,6 +40,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
       layer_list(layer_list),
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
+    printf("con con 11\n");
 }
 
 geom::Size mga::HWC11Device::display_size() const
@@ -61,6 +62,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
     auto lg = lock_unblanked();
 
+printf("zog.\n");
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
     hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
@@ -84,6 +86,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
+printf("commit and go\n");
     mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }

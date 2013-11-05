@@ -34,7 +34,6 @@ public:
     HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<DisplayDevice> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
-    ~HWC10Device() noexcept;
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const;

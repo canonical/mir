@@ -110,7 +110,6 @@ TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
     EXPECT_THROW({
         factory.create_fb_native_device();
     }, std::runtime_error);
-
 }
 
 TEST_F(ResourceFactoryTest, hwc_allocation)
