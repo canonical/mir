@@ -171,6 +171,18 @@ void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rec
 
 void ms::Surface::resize(geom::Size const& size)
 {
+    if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
+    }
+    /*
+     * Other combinations may still be invalid (like dimensions too big or
+     * insufficient resources), but those are runtime and platform-specific, so
+     * not predictable here. Such critical exceptions would arise from
+     * the platform buffer allocator as a runtime_error via:
+     */
     surface_buffer_stream->resize(size);
+
+    // Now the buffer stream has successfully resized, update the state second;
     surface_state->resize(size);
 }

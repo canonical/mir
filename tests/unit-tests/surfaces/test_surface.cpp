@@ -283,15 +283,16 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     surf.move_to(p);
 }
 
-TEST_F(SurfaceCreation, resize)
+TEST_F(SurfaceCreation, resize_updates_stream_then_state)
 {
     using namespace testing;
     geom::Size const new_size{123, 456};
 
+    Sequence seq;
     EXPECT_CALL(*mock_buffer_stream, resize(new_size))
-        .Times(1);
+        .InSequence(seq);
     EXPECT_CALL(*mock_basic_state, resize(new_size))
-        .Times(1);
+        .InSequence(seq);
 
     ms::Surface surf(
         mock_basic_state,
@@ -299,6 +300,36 @@ TEST_F(SurfaceCreation, resize)
         std::shared_ptr<mi::InputChannel>(),
         report);
     surf.resize(new_size);
+}
+
+TEST_F(SurfaceCreation, impossible_resize_throws)
+{
+    using namespace testing;
+
+    geom::Size const bad_sizes[] =
+    {
+        {0, 123},
+        {456, 0},
+        {-1, -1},
+        {78, -10},
+        {0, 0}
+    };
+
+    ms::Surface surf(
+        mock_basic_state,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
+    EXPECT_CALL(*mock_buffer_stream, resize(size))
+        .Times(0);
+    EXPECT_CALL(*mock_basic_state, resize(size))
+        .Times(0);
+
+    for (auto &size : bad_sizes)
+    {
+        EXPECT_THROW(surf.resize(size), std::logic_error);
+    }
 }
 
 TEST_F(SurfaceCreation, test_surface_set_rotation)
