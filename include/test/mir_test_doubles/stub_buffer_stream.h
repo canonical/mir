@@ -62,7 +62,7 @@ public:
         return geometry::Size();
     }
 
-    void resize(const geometry::Size &) override
+    void resize(geometry::Size const&) override
     {
     }
 

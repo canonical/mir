@@ -133,7 +133,7 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
     EXPECT_EQ(old_size, client1->size());
     client1.reset();
 
-    const geom::Size new_size
+    geom::Size const new_size
     {
         old_size.width.as_int() * 2,
         old_size.height.as_int() * 3
@@ -159,7 +159,7 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 
     buffer_stream.secure_client_buffer().reset();
 
-    const geom::Size new_size
+    geom::Size const new_size
     {
         old_size.width.as_int() * 2,
         old_size.height.as_int() * 3

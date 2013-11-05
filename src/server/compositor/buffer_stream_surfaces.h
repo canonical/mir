@@ -47,7 +47,7 @@ public:
 
     geometry::PixelFormat get_stream_pixel_format();
     geometry::Size stream_size();
-    void resize(const geometry::Size &size) override;
+    void resize(geometry::Size const& size) override;
     void allow_framedropping(bool);
     void force_requests_to_complete();
 

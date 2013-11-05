@@ -145,7 +145,7 @@ TEST_F(BufferStreamTest, allow_framedropping_device)
 
 TEST_F(BufferStreamTest, resizes_bundle)
 {
-    const geom::Size new_size{66, 77};
+    geom::Size const new_size{66, 77};
 
     EXPECT_CALL(*mock_bundle, resize(new_size))
         .Times(1);
