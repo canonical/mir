@@ -26,6 +26,7 @@
 #include "mir/input/input_platform.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "logging/rpc_report.h"
+#include "logging/input_receiver_report.h"
 #include "lttng/rpc_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
@@ -125,7 +126,13 @@ mcl::DefaultConnectionConfiguration::the_input_receiver_report()
     return input_receiver_report(
         [this] () -> std::shared_ptr<mir::input::receiver::InputReceiverReport>
         {
-            return std::make_shared<mir::input::receiver::NullInputReceiverReport>();
+            auto val_raw = getenv("MIR_CLIENT_INPUT_RECEIVER_REPORT");
+            std::string const val{val_raw ? val_raw : off_opt_val};
+            
+            if (val == log_opt_val)
+                return std::make_shared<mcl::logging::InputReceiverReport>(the_logger());
+            else
+                return std::make_shared<mir::input::receiver::NullInputReceiverReport>();
         });
 }
 
