@@ -16,7 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
@@ -35,6 +34,7 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -49,27 +49,13 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
-{
-public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>();
-    }
-
-    virtual std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
-    }
-};
-
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
-        return std::shared_ptr<StubGraphicBufferAllocator>();
+        return std::shared_ptr<mtd::StubBufferAllocator>();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
@@ -81,7 +67,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
+          buffer_allocator{std::make_shared<mtd::StubBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, display_changer,
