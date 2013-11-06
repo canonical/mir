@@ -20,15 +20,20 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/basic_surface.h"
 #include "surface_state.h"
 #include "surface_stack.h"
 #include "surface_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
-
 #include "mir/surfaces/surfaces_report.h"
+
+// TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
+// It is needed by the following member functions:
+//  for_each(), for_each_if(), reverse_for_each_if(), create_surface() and destroy_surface()
+// to access:
+//  compositing_criteria(), buffer_stream() and input_channel()
+#include "mir/shell/basic_surface.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -99,7 +104,7 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 std::weak_ptr<msh::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
     auto change_cb = [this]() { emit_change_notification(); };
-    auto surface = surface_factory->create_surface(params, change_cb); 
+    auto surface = surface_factory->create_surface(params, change_cb);
     {
         std::lock_guard<std::recursive_mutex> lg(guard);
         layers_by_depth[params.depth].push_back(surface);
@@ -170,12 +175,12 @@ void ms::SurfaceStack::raise(std::weak_ptr<msh::BasicSurface> const& s)
         {
             auto &surfaces = layer.second;
             auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
-    
+
             if (p != surfaces.end())
             {
                 surfaces.erase(p);
                 surfaces.push_back(surface);
-            
+
                 ul.unlock();
                 emit_change_notification();
 

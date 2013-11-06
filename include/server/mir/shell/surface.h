@@ -21,13 +21,14 @@
 #define MIR_SHELL_SURFACE_H_
 
 #include "mir/shell/surface_buffer_access.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/shell/basic_surface.h"
 
 #include "mir_toolkit/common.h"
 
 #include <string>
+#include <vector>
 
 namespace mir
 {
@@ -39,6 +40,7 @@ namespace shell
 {
 class InputTargeter;
 class Session;
+class BasicSurface;
 class SurfaceBuilder;
 class SurfaceConfigurator;
 class SurfaceController;

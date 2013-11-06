@@ -17,6 +17,7 @@
  */
 
 #include "mir/shell/surface.h"
+#include "mir/shell/basic_surface.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/surface_controller.h"
