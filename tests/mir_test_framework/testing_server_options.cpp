@@ -83,6 +83,8 @@ public:
         native_buffer->data[0] = 0xDEADBEEF;
         native_buffer->fd_items = 1;
         native_buffer->fd[0] = fd;
+        native_buffer->width = properties.size.width.as_int();
+        native_buffer->height = properties.size.height.as_int();
 
         native_buffer->flags = 0;
         if (properties.size.width.as_int() >= 800 &&
@@ -91,6 +93,7 @@ public:
         {
             native_buffer->flags |= mir_buffer_flag_can_scanout;
         }
+
         return native_buffer;
 #else
         return std::shared_ptr<mg::NativeBuffer>();
@@ -186,6 +189,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
 
         packer->pack_stride(buffer->stride());
         packer->pack_flags(native_handle->flags);
+        packer->pack_size(buffer->size());
 #else
         (void)packer;
         (void)buffer;

@@ -533,6 +533,65 @@ TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
 }
 #endif
 
+TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            MirSurfaceParameters parm =
+            {
+                __PRETTY_FUNCTION__,
+                0, 0,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            struct {int width, height;} const sizes[] =
+            {
+                {12, 34},
+                {56, 78},
+                {90, 21},
+            };
+
+            for (auto const& size : sizes)
+            {
+                parm.width = size.width;
+                parm.height = size.height;
+    
+                surface = mir_connection_create_surface_sync(connection, &parm);
+                ASSERT_TRUE(mir_surface_is_valid(surface));
+
+                MirNativeBuffer *native;
+                mir_surface_get_current_buffer(surface, &native);
+                EXPECT_EQ(parm.width, native->width);
+                EXPECT_EQ(parm.height, native->height);
+
+                mir_surface_swap_buffers_sync(surface);
+                EXPECT_EQ(parm.width, native->width);
+                EXPECT_EQ(parm.height, native->height);
+
+                mir_surface_release_sync(surface);
+            }
+
+            mir_connection_release(connection);
+        }
+
+        // this test relies on gbm drivers, use real graphics always
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
