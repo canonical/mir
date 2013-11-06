@@ -37,16 +37,16 @@ class SurfacesReport : public surfaces::SurfacesReport
 public:
     SurfacesReport(std::shared_ptr<Logger> const& log);
 
-    void surface_created(surfaces::BasicSurface* const surface);
-    void surface_added(surfaces::BasicSurface* const surface);
-    void surface_removed(surfaces::BasicSurface* const surface);
-    void surface_deleted(surfaces::BasicSurface* const surface);
+    void surface_created(shell::BasicSurface* const surface);
+    void surface_added(shell::BasicSurface* const surface);
+    void surface_removed(shell::BasicSurface* const surface);
+    void surface_deleted(shell::BasicSurface* const surface);
 
 private:
     std::shared_ptr<Logger> const logger;
 
     std::mutex mutex;
-    std::map<surfaces::BasicSurface*, std::string> surfaces;
+    std::map<shell::BasicSurface*, std::string> surfaces;
 };
 }
 }

@@ -39,7 +39,7 @@ public:
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
                      std::shared_ptr<SurfacesReport> const& report);
 
-    std::shared_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
+    std::shared_ptr<shell::BasicSurface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;

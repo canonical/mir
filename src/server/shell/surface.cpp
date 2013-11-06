@@ -35,7 +35,6 @@ namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 

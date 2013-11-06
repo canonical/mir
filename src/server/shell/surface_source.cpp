@@ -24,7 +24,6 @@
 
 #include <cassert>
 
-namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;

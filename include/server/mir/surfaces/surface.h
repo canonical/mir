@@ -45,7 +45,7 @@ namespace input
 class InputChannel;
 class Surface;
 }
-namespace surfaces
+namespace shell
 {
 class BasicSurface
 {

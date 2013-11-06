@@ -24,18 +24,18 @@
 
 namespace mir
 {
+namespace shell { class BasicSurface; }
+
 namespace surfaces
 {
-class BasicSurface;
-
 class SurfacesReport
 {
 public:
-    virtual void surface_created(BasicSurface* const surface) = 0;
-    virtual void surface_added(BasicSurface* const surface) = 0;
+    virtual void surface_created(shell::BasicSurface* const surface) = 0;
+    virtual void surface_added(shell::BasicSurface* const surface) = 0;
 
-    virtual void surface_removed(BasicSurface* const surface) = 0;
-    virtual void surface_deleted(BasicSurface* const surface) = 0;
+    virtual void surface_removed(shell::BasicSurface* const surface) = 0;
+    virtual void surface_deleted(shell::BasicSurface* const surface) = 0;
 
 protected:
     SurfacesReport() = default;
@@ -47,11 +47,11 @@ protected:
 class NullSurfacesReport : public SurfacesReport
 {
 public:
-    virtual void surface_created(BasicSurface* const /*surface*/) override;
-    virtual void surface_added(BasicSurface* const /*surface*/) override;
+    virtual void surface_created(shell::BasicSurface* const /*surface*/) override;
+    virtual void surface_added(shell::BasicSurface* const /*surface*/) override;
 
-    virtual void surface_removed(BasicSurface* const /*surface*/) override;
-    virtual void surface_deleted(BasicSurface* const /*surface*/) override;
+    virtual void surface_removed(shell::BasicSurface* const /*surface*/) override;
+    virtual void surface_deleted(shell::BasicSurface* const /*surface*/) override;
 };
 }
 }

@@ -24,18 +24,14 @@
 
 namespace mir
 {
-namespace surfaces 
-{
-class BasicSurface;
-}
-
 namespace shell
 {
+class BasicSurface;
 
 class SurfaceController
 {
 public:
-    virtual void raise(std::weak_ptr<surfaces::BasicSurface> const& surface) = 0;
+    virtual void raise(std::weak_ptr<BasicSurface> const& surface) = 0;
 
 protected:
     SurfaceController() = default;
