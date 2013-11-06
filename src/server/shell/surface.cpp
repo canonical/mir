@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/surface.h"
-#include "mir/shell/basic_surface.h"
+#include "mir/surfaces/basic_surface.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/surface_controller.h"
@@ -36,6 +36,7 @@ namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 

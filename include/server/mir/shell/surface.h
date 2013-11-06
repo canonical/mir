@@ -32,15 +32,12 @@
 
 namespace mir
 {
-namespace frontend
-{
-class EventSink;
-}
+namespace frontend { class EventSink; }
+namespace surfaces { class BasicSurface; }
 namespace shell
 {
 class InputTargeter;
 class Session;
-class BasicSurface;
 class SurfaceBuilder;
 class SurfaceConfigurator;
 class SurfaceController;
@@ -100,7 +97,7 @@ private:
 
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<SurfaceConfigurator> const configurator;
-    std::shared_ptr<BasicSurface> const surface;
+    std::shared_ptr<mir::surfaces::BasicSurface> const surface;
 
     frontend::SurfaceId const id;
     std::shared_ptr<frontend::EventSink> const event_sink;

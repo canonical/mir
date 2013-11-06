@@ -40,7 +40,7 @@ ms::SurfaceAllocator::SurfaceAllocator(
 {
 }
 
-std::shared_ptr<msh::BasicSurface> ms::SurfaceAllocator::create_surface(
+std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     msh::SurfaceCreationParameters const& params, std::function<void()> const& change_callback)
 {
     mg::BufferProperties buffer_properties{params.size,

@@ -20,8 +20,8 @@
 
 namespace ms = mir::surfaces;
 
-void ms::NullSurfacesReport::surface_created(shell::BasicSurface* const /*surface*/) {}
-void ms::NullSurfacesReport::surface_added(shell::BasicSurface* const /*surface*/) {}
-void ms::NullSurfacesReport::surface_removed(shell::BasicSurface* const /*surface*/) {}
-void ms::NullSurfacesReport::surface_deleted(shell::BasicSurface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_created(BasicSurface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_added(BasicSurface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_removed(BasicSurface* const /*surface*/) {}
+void ms::NullSurfacesReport::surface_deleted(BasicSurface* const /*surface*/) {}
 

@@ -44,7 +44,7 @@ public:
     {
     }
 
-    std::weak_ptr<shell::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
+    std::weak_ptr<surfaces::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
     {
         auto state = std::make_shared<MockSurfaceState>();
         dummy_surface = std::make_shared<surfaces::Surface>(
@@ -55,12 +55,12 @@ public:
         return dummy_surface;
     }
 
-    void destroy_surface(std::weak_ptr<shell::BasicSurface> const& )
+    void destroy_surface(std::weak_ptr<surfaces::BasicSurface> const& )
     {
     }
 private:
     std::shared_ptr<compositor::BufferStream> const buffer_stream;
-    std::shared_ptr<shell::BasicSurface>  dummy_surface;
+    std::shared_ptr<surfaces::BasicSurface>  dummy_surface;
     std::shared_ptr<surfaces::SurfacesReport> report = std::make_shared<surfaces::NullSurfacesReport>();
 
 };

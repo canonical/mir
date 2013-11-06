@@ -33,7 +33,7 @@
 //  for_each(), for_each_if(), reverse_for_each_if(), create_surface() and destroy_surface()
 // to access:
 //  compositing_criteria(), buffer_stream() and input_channel()
-#include "mir/shell/basic_surface.h"
+#include "mir/surfaces/basic_surface.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -44,7 +44,6 @@
 #include <stdexcept>
 
 namespace ms = mir::surfaces;
-namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -101,7 +100,7 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<msh::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
     auto change_cb = [this]() { emit_change_notification(); };
     auto surface = surface_factory->create_surface(params, change_cb);
@@ -118,7 +117,7 @@ std::weak_ptr<msh::BasicSurface> ms::SurfaceStack::create_surface(shell::Surface
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<msh::BasicSurface> const& surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::BasicSurface> const& surface)
 {
     auto keep_alive = surface.lock();
 
@@ -165,7 +164,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<msh::BasicSurface> const& s)
+void ms::SurfaceStack::raise(std::weak_ptr<ms::BasicSurface> const& s)
 {
     auto surface = s.lock();
 

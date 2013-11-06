@@ -25,17 +25,17 @@
 
 namespace mir
 {
-namespace shell { class BasicSurface; }
-
 namespace surfaces
 {
+
+class BasicSurface;
 class SurfaceFactory
 {
 public:
     SurfaceFactory() {};
     virtual ~SurfaceFactory() = default;
 
-    virtual std::shared_ptr<shell::BasicSurface> create_surface(
+    virtual std::shared_ptr<BasicSurface> create_surface(
         shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
 private:
     SurfaceFactory(const SurfaceFactory&) = delete;
