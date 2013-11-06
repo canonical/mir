@@ -42,11 +42,12 @@ class GraphicBufferAllocator;
 /// processes and the core of the mir system.
 namespace frontend
 {
+class ClientBufferTracker;
 class Shell;
 class Session;
+class Surface;
 class ResourceCache;
 class SessionMediatorReport;
-class ClientBufferTracker;
 class EventSink;
 class DisplayChanger;
 
@@ -113,6 +114,7 @@ private:
                               std::shared_ptr<graphics::Buffer> const& graphics_buffer,
                               bool need_full_ipc);
 
+    std::tuple<std::shared_ptr<graphics::Buffer>, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
@@ -125,6 +127,7 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
 
     std::unordered_map<SurfaceId,std::shared_ptr<graphics::Buffer>> client_buffer_resource;
+    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

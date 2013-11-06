@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/default_session_container.h"
+#include "default_session_container.h"
 #include "mir/shell/session.h"
 
 #include <boost/throw_exception.hpp>

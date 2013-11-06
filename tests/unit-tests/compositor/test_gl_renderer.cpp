@@ -284,7 +284,7 @@ public:
 
 }
 
-TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
+TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 

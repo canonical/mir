@@ -18,10 +18,9 @@
 
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session.h"
-#include "mir/shell/focus_sequence.h"
-#include "mir/shell/focus_setter.h"
-#include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/default_session_container.h"
+#include "src/server/shell/focus_setter.h"
+#include "src/server/shell/registration_order_focus_sequence.h"
+#include "src/server/shell/default_session_container.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/surface.h"

@@ -1,3 +1,26 @@
+mir (0.1.1-0ubuntu1) UNRELEASED; urgency=low
+
+  * Bump version to 0.1.1
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 30 Oct 2013 11:46:13 +0800
+
+mir (0.1.0+14.04.20131030-0ubuntu1) trusty; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Alan Griffiths ]
+  * client: Remove the timeout for detecting server crashes There are
+    valid cases when the server blocks for an indeterminate amount of
+    time during a client request, like when a next_buffer request blocks
+    because a surface is not visible or the server is paused. In such
+    cases, the timeout mechanism we used to detect server crashes caused
+    the clients to fail. Furthermore, the clients seem able to detect
+    server crashes without the timeout, rendering it needless anyway.
+    (LP: #1245958)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 30 Oct 2013 18:37:21 +0000
+
 mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
 
   [ Daniel van Vugt ]
@@ -97,7 +120,7 @@ mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
     #1244192)
 
   [ Ubuntu daily release ]
-  * Automatic snapshot from revision 1161
+  * Automatic snapshot from revision 1160
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Oct 2013 02:04:31 +0000
 

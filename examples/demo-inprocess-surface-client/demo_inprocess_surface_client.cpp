@@ -49,7 +49,8 @@ try
     {
         client = std::make_shared<me::InprocessEGLClient>(
               config.the_graphics_platform(),
-              config.the_session_manager());
+              config.the_frontend_shell(),
+              config.the_focus_controller());
     });
     ///\internal [main_tag]
 

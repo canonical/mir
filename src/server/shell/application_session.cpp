@@ -19,7 +19,7 @@
 #include "mir/shell/application_session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
-#include "mir/shell/snapshot_strategy.h"
+#include "snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
 #include "mir/frontend/event_sink.h"
 

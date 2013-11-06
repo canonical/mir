@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/gl_pixel_buffer.h"
+#include "src/server/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 
 #include "mir_test_doubles/mock_buffer.h"

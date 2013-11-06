@@ -142,3 +142,15 @@ TEST_F(BufferStreamTest, allow_framedropping_device)
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     buffer_stream.allow_framedropping(true);
 }
+
+TEST_F(BufferStreamTest, resizes_bundle)
+{
+    geom::Size const new_size{66, 77};
+
+    EXPECT_CALL(*mock_bundle, resize(new_size))
+        .Times(1);
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.resize(new_size);
+}
+

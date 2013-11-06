@@ -16,7 +16,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/broadcasting_session_event_sink.h"
+#include "src/server/shell/broadcasting_session_event_sink.h"
 #include "mir_test_doubles/stub_shell_session.h"
 #include "mir_test/fake_shared.h"
 

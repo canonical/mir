@@ -34,7 +34,6 @@ namespace mir
 {
 namespace compositor
 {
-class RenderableCollection;
 class FilterForScene;
 class OperatorForScene;
 }
