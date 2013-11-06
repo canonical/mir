@@ -34,12 +34,12 @@ typedef struct MirBufferPackage
 
     int data[mir_buffer_package_max];
 
-    int width;
+    int width;  /* These must come after data[] to keep ABI compatibility */
     int height;
 
     int fd[mir_buffer_package_max];
 
-    int unused1;  /* Retain ABI compatibility (avoid rebuilding Mesa) */
+    int unused0;  /* Retain ABI compatibility (avoid rebuilding Mesa) */
 
     unsigned int flags;  /* MirBufferFlag's */
     int stride;
