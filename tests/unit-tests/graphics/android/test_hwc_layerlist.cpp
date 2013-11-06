@@ -57,10 +57,10 @@ public:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-TEST(HWCFBTargetLayer, fb_target_layer)
+TEST_F(HWCLayerListTest, fb_target_layer)
 {
-    mga::FBTargetLayer target_layer(mock_buffer);
-    EXPECT_EQ(mga::HWCFramebuffer, target_layer.type());
+    mga::FramebufferLayer target_layer(*native_handle_1);
+    EXPECT_EQ(mga::HWCLayerType::framebuffer, target_layer.type());
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -77,14 +77,14 @@ TEST(HWCFBTargetLayer, fb_target_layer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(native_target, MatchesLayer(expected_layer));
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
-TEST(HWCFBTargetLayer, gl_target_layer_with_force_gl)
+TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
 {
     bool force_gl = true;
-    mga::CompositionLayer target_layer(mock_buffer, force_gl);
-    EXPECT_EQ(mga::HWCFramebuffer, target_layer.type());
+    mga::CompositionLayer target_layer(*native_handle_1, force_gl);
+    EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -104,11 +104,11 @@ TEST(HWCFBTargetLayer, gl_target_layer_with_force_gl)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
-TEST(HWCFBTargetLayer, gl_target_layer_without_force_gl)
+TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
 {
     bool force_gl = true;
-    mga::CompositionLayer target_layer(mock_buffer, force_gl);
-    EXPECT_EQ(mga::HWCFramebuffer, target_layer.type());
+    mga::CompositionLayer target_layer(*native_handle_1, force_gl);
+    EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -127,19 +127,20 @@ TEST(HWCFBTargetLayer, gl_target_layer_without_force_gl)
 
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
-#if 0
-//prepare() from hwcomposer.h can mutate the HWC_FRAMEBUFFER type like this
-TEST(HWCFBTargetLayer, gl_target_layer_mutation_to_overlay)
-{
-    mga::CompositionLayer target_layer(mock_buffer, force_gl);
-    EXPECT_EQ(mga::GpuRendered, target_layer.type());
- 
-    hwc_layer_1 native_target = target_layer;
-    native_target.compositionType = HWC_OVERLAY;
 
-    EXPECT_EQ(mga::Overlay, target_layer.type());
+//prepare() from hwcomposer.h is allowed to mutate the HWC_FRAMEBUFFER type like this
+TEST_F(HWCLayerListTest, gl_target_layer_mutation_to_overlay)
+{
+    bool force_gl = true;
+    mga::CompositionLayer target_layer(*native_handle_1, force_gl);
+    EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
+ 
+    target_layer.compositionType = HWC_OVERLAY;
+
+    EXPECT_EQ(mga::HWCLayerType::overlay, target_layer.type());
 }
 
+#if 0
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;

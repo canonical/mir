@@ -54,6 +54,11 @@ mga::HWCLayer::HWCLayer(HWCLayerType type, mg::NativeBuffer const& buffer, bool 
     visibleRegionScreen.rects= &visible_rect;
 }
 
+mga::HWCLayerType mga::HWCLayer::type() const
+{
+    return mga::HWCLayerType::framebuffer;
+}
+
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
     : HWCLayer(mga::HWCLayerType::framebuffer, buffer, false)
 {
