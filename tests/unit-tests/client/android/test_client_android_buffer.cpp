@@ -138,8 +138,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_correct_buffer_d
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
 {
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    int32_t const expected_stride_in_pixels =
-        static_cast<int32_t>(stride.as_uint32_t() / geom::bytes_per_pixel(pf));
+    int32_t const expected_stride = static_cast<int32_t>(stride.as_uint32_t());
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
     auto native_handle = buffer.native_buffer_handle();
     ASSERT_NE(nullptr, native_handle);
@@ -151,7 +150,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
     EXPECT_EQ(width.as_uint32_t(), static_cast<uint32_t>(anwb->width));
     EXPECT_EQ(height.as_uint32_t(), static_cast<uint32_t>(anwb->height));
     EXPECT_EQ(correct_usage, anwb->usage);
-    EXPECT_EQ(expected_stride_in_pixels, anwb->stride);
+    EXPECT_EQ(expected_stride, anwb->stride);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
