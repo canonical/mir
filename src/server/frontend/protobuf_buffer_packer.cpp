@@ -113,3 +113,9 @@ void mfd::ProtobufBufferPacker::pack_flags(unsigned int flags)
     buffer_response->set_flags(flags);
 }
 
+void mfd::ProtobufBufferPacker::pack_size(geometry::Size const& size)
+{
+    buffer_response->set_width(size.width.as_int());
+    buffer_response->set_height(size.height.as_int());
+}
+

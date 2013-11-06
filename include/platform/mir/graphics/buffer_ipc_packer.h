@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 
 #include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 
 namespace mir
 {
@@ -34,6 +35,7 @@ public:
     virtual void pack_data(int) = 0;
     virtual void pack_stride(geometry::Stride) = 0;
     virtual void pack_flags(unsigned int) = 0;
+    virtual void pack_size(geometry::Size const& size) = 0;
 
 protected:
     BufferIPCPacker() {}
