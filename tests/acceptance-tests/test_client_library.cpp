@@ -582,7 +582,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
             mir_connection_release(connection);
         }
 
-        // this test relies on gbm drivers, use real graphics always
+        // This is misleading. It should say "use_real_connection"...
         bool use_real_graphics(mir::options::Option const&) override
         {
             return true;
