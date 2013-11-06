@@ -34,6 +34,9 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#ifdef ANDROID
+#include "mir_test_doubles/mock_android_native_buffer.h"
+#endif
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -93,11 +96,13 @@ public:
         {
             native_buffer->flags |= mir_buffer_flag_can_scanout;
         }
-
-        return native_buffer;
 #else
-        return std::shared_ptr<mg::NativeBuffer>();
+        auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        auto anwb = native_buffer->anwb();
+        anwb->width = properties.size.width.as_int();
+        anwb->height = properties.size.width.as_int();
 #endif
+        return native_buffer;
     }
 
     ~StubFDBuffer() noexcept
@@ -187,13 +192,10 @@ class StubGraphicPlatform : public mtd::NullPlatform
             packer->pack_fd(native_handle->fd[i]);
         }
 
-        packer->pack_stride(buffer->stride());
         packer->pack_flags(native_handle->flags);
-        packer->pack_size(buffer->size());
-#else
-        (void)packer;
-        (void)buffer;
 #endif
+        packer->pack_stride(buffer->stride());
+        packer->pack_size(buffer->size());
     }
 
     std::shared_ptr<mg::Display> create_display(

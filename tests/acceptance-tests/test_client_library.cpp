@@ -26,6 +26,10 @@
 
 #include "mir_protobuf.pb.h"
 
+#ifdef ANDROID
+#include <system/window.h>  // for ANativeWindowBuffer AKA MirNativeBuffer
+#endif
+
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
@@ -565,14 +569,18 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
                 parm.height = size.height;
     
                 surface = mir_connection_create_surface_sync(connection, &parm);
+                ASSERT_NE(nullptr, surface);
                 ASSERT_TRUE(mir_surface_is_valid(surface));
 
-                MirNativeBuffer *native;
+                MirNativeBuffer *native = nullptr;
                 mir_surface_get_current_buffer(surface, &native);
+                ASSERT_NE(nullptr, native);
                 EXPECT_EQ(parm.width, native->width);
                 EXPECT_EQ(parm.height, native->height);
 
                 mir_surface_swap_buffers_sync(surface);
+                mir_surface_get_current_buffer(surface, &native);
+                ASSERT_NE(nullptr, native);
                 EXPECT_EQ(parm.width, native->width);
                 EXPECT_EQ(parm.height, native->height);
 
