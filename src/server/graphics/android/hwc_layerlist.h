@@ -24,46 +24,47 @@
 #include <memory>
 #include <vector>
 #include <initializer_list>
+
 namespace mir
 {
 namespace graphics
 {
+
+class NativeBuffer;
 class Buffer;
 
 namespace android
 {
+
+enum HWCLayerType : unsigned int
+{
+    framebuffer = HWC_FRAMEBUFFER_TARGET, //a framebuffer layer
+    gles        = HWC_FRAMEBUFFER,        //a layer to be composited using OpenGL
+    overlay     = HWC_OVERLAY             //a layer to be composited as an overlay
+};
  
-struct HWCRect
+struct HWCLayer : public hwc_layer_1
 {
-    HWCRect(); 
-    HWCRect(geometry::Rectangle& rect);
+    virtual ~HWCLayer() = default;
+    HWCLayer& operator=(HWCLayer const&) = delete;
+    HWCLayer(HWCLayer const&) = delete;
 
-    operator hwc_rect_t const& () const { return self; }
-    operator hwc_rect_t& () { return self; }
-private:
-    hwc_rect_t self;
-};
-
-struct HWCDefaultLayer
-{
-    HWCDefaultLayer(std::initializer_list<HWCRect> list);
-    ~HWCDefaultLayer();
-
-    operator hwc_layer_1 const& () const { return self; }
-    operator hwc_layer_1& () { return self; }
-
+    HWCLayerType type() const;
 protected:
-    HWCDefaultLayer& operator=(HWCDefaultLayer const&) = delete;
-    HWCDefaultLayer(HWCDefaultLayer const&) = delete;
+    HWCLayer(HWCLayerType type, NativeBuffer const& buffer, bool must_use_gl);
 
-    hwc_layer_1 self;
+    hwc_rect_t visible_rect;
+    bool must_use_gl;
 };
 
-struct HWCFBLayer : public HWCDefaultLayer
+struct CompositionLayer : public HWCLayer
 {
-    HWCFBLayer();
-    HWCFBLayer(buffer_handle_t native_buf,
-               HWCRect display_frame_rect);
+    CompositionLayer(NativeBuffer const&, bool must_use_gl);
+};
+
+struct FramebufferLayer : public HWCLayer
+{
+    FramebufferLayer(NativeBuffer const&);
 };
 
 class HWCLayerList
@@ -90,13 +91,12 @@ public:
     hwc_display_contents_1_t* native_list() const;
 
 private:
-    std::vector<std::shared_ptr<HWCDefaultLayer>> layer_list;
+    std::vector<std::shared_ptr<HWCLayer>> layer_list;
     void update_list();
 
     static size_t const fb_position = 0u;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 };
-
 }
 }
 }
