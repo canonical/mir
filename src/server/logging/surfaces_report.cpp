@@ -35,7 +35,7 @@ ml::SurfacesReport::SurfacesReport(std::shared_ptr<Logger> const& logger) :
 {
 }
 
-void ml::SurfacesReport::surface_created(ms::Surface* const surface)
+void ml::SurfacesReport::surface_created(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
     surfaces[surface] = surface->name();
@@ -46,7 +46,7 @@ void ml::SurfacesReport::surface_created(ms::Surface* const surface)
     logger->log<Logger::informational>(ss.str(), component);
 }
 
-void ml::SurfacesReport::surface_added(ms::Surface* const surface)
+void ml::SurfacesReport::surface_added(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -69,7 +69,7 @@ void ml::SurfacesReport::surface_added(ms::Surface* const surface)
     logger->log<Logger::informational>(ss.str(), component);
 }
 
-void ml::SurfacesReport::surface_removed(ms::Surface* const surface)
+void ml::SurfacesReport::surface_removed(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -92,7 +92,7 @@ void ml::SurfacesReport::surface_removed(ms::Surface* const surface)
     logger->log<Logger::informational>(ss.str(), component);
 }
 
-void ml::SurfacesReport::surface_deleted(ms::Surface* const surface)
+void ml::SurfacesReport::surface_deleted(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 

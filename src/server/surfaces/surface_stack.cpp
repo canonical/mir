@@ -95,7 +95,7 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
     auto change_cb = [this]() { emit_change_notification(); };
     auto surface = surface_factory->create_surface(params, change_cb); 
@@ -112,7 +112,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::BasicSurface> const& surface)
 {
     auto keep_alive = surface.lock();
 
@@ -159,7 +159,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
+void ms::SurfaceStack::raise(std::weak_ptr<ms::BasicSurface> const& s)
 {
     auto surface = s.lock();
 

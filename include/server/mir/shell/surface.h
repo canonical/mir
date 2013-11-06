@@ -98,7 +98,7 @@ private:
 
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<SurfaceConfigurator> const configurator;
-    std::shared_ptr<mir::surfaces::Surface> const surface;
+    std::shared_ptr<mir::surfaces::BasicSurface> const surface;
 
     frontend::SurfaceId const id;
     std::shared_ptr<frontend::EventSink> const event_sink;

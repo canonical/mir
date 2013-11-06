@@ -52,7 +52,48 @@ class SurfacesReport;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
-class Surface
+class BasicSurface
+{
+public:
+    BasicSurface() = default;
+    virtual ~BasicSurface() = default;
+
+    virtual std::string const& name() const = 0;
+    virtual void move_to(geometry::Point const& top_left) = 0;
+    virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
+    virtual void set_alpha(float alpha) = 0;
+    virtual void set_hidden(bool is_hidden) = 0;
+
+    virtual geometry::Point top_left() const = 0;
+    virtual geometry::Size size() const = 0;
+
+    virtual geometry::PixelFormat pixel_format() const = 0;
+
+    virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const = 0;
+    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
+    virtual void force_requests_to_complete() = 0;
+    virtual void flag_for_render() = 0;
+
+    virtual bool supports_input() const = 0;
+    virtual int client_input_fd() const = 0;
+    virtual void allow_framedropping(bool) = 0;
+    virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
+
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) = 0;
+
+    virtual std::shared_ptr<compositor::CompositingCriteria> compositing_criteria() = 0;
+
+    virtual std::shared_ptr<compositor::BufferStream> buffer_stream() const = 0;
+
+    virtual std::shared_ptr<input::Surface> input_surface() const = 0;
+    virtual void resize(geometry::Size const& size) = 0;
+
+private:
+    BasicSurface(BasicSurface const&) = delete;
+    BasicSurface& operator=(BasicSurface const&) = delete;
+};
+
+class Surface : public BasicSurface
 {
 public:
     Surface(std::shared_ptr<surfaces::SurfaceState> const& surface_state,

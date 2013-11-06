@@ -74,7 +74,7 @@ public:
     {
     }
 
-    std::weak_ptr<ms::Surface> create_surface(msh::Session*, msh::SurfaceCreationParameters const& )
+    std::weak_ptr<ms::BasicSurface> create_surface(msh::Session*, msh::SurfaceCreationParameters const& )
     {
         auto state = std::make_shared<mtd::MockSurfaceState>();
         dummy_surface = std::make_shared<ms::Surface>(
@@ -85,7 +85,7 @@ public:
         return dummy_surface;
     }
 
-    void destroy_surface(std::weak_ptr<ms::Surface> const& )
+    void destroy_surface(std::weak_ptr<ms::BasicSurface> const& )
     {
         reset_surface();
     }
@@ -102,7 +102,7 @@ public:
 
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
-    std::shared_ptr<ms::Surface> dummy_surface;
+    std::shared_ptr<ms::BasicSurface> dummy_surface;
     std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
 };
 
@@ -119,9 +119,9 @@ public:
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
     }
 
-    MOCK_METHOD2(create_surface, std::weak_ptr<ms::Surface> (msh::Session*, const msh::SurfaceCreationParameters&));
+    MOCK_METHOD2(create_surface, std::weak_ptr<ms::BasicSurface> (msh::Session*, const msh::SurfaceCreationParameters&));
 
-    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
+    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::BasicSurface> const&));
 
 private:
     StubSurfaceBuilder self;
