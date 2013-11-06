@@ -25,6 +25,9 @@ namespace mir
 {
 namespace surfaces
 {
+class SurfaceState;
+class SurfacesReport;
+
 class Surface : public BasicSurface
 {
 public:
