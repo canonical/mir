@@ -51,6 +51,7 @@ public:
 
     //ms::MutableSurfaceState
     void move_to(geometry::Point);
+    void resize(geometry::Size const& size);
     void frame_posted();
     void set_hidden(bool hidden);
     void apply_alpha(float alpha);

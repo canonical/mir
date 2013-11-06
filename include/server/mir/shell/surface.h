@@ -89,6 +89,8 @@ public:
 
     virtual void raise(std::shared_ptr<SurfaceController> const& controller);
 
+    virtual void resize(geometry::Size const& size);
+
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
