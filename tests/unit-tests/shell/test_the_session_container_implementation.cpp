@@ -20,7 +20,7 @@
 #include "src/server/shell/default_session_container.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/basic_surface.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"

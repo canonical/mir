@@ -23,7 +23,7 @@
 #include "mir/shell/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/basic_surface.h"
 
 #include "mir_toolkit/common.h"
 

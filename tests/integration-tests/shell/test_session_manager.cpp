@@ -23,7 +23,7 @@
 #include "src/server/shell/default_session_container.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/basic_surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test/gmock_fixes.h"

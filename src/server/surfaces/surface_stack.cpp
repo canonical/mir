@@ -20,7 +20,7 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/basic_surface.h"
 #include "surface_state.h"
 #include "surface_stack.h"
 #include "surface_factory.h"

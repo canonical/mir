@@ -18,7 +18,7 @@
 
 #include "surfaces_report.h"
 #include "mir/logging/logger.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/basic_surface.h"
 
 #include <sstream>
 

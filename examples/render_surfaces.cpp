@@ -28,7 +28,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/basic_surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 
