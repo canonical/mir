@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/null_input_configuration.h"
+#include "null_input_configuration.h"
 
 #include "mir/surfaces/input_registrar.h"
 #include "mir/shell/input_targeter.h"

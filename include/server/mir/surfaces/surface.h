@@ -68,7 +68,6 @@ public:
     void set_alpha(float alpha);
     void set_hidden(bool is_hidden);
 
-    /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
 
@@ -91,6 +90,9 @@ public:
     std::shared_ptr<compositor::BufferStream> buffer_stream() const;
 
     std::shared_ptr<input::Surface> input_surface() const;
+
+    void resize(geometry::Size const& size);
+
 private:
     std::shared_ptr<surfaces::SurfaceState> surface_state;
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;

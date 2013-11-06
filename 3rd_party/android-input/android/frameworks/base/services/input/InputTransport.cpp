@@ -593,7 +593,7 @@ void InputConsumer::updateTouchState(InputMessage* msg) {
             if (eventTime < touchState.lastResample.eventTime) {
                 rewriteMessage(touchState, msg);
             } else {
-                touchState.lastResample.idBits.clear();
+                touchState.lastResample.ids.clear();
             }
         }
         break;
@@ -603,7 +603,7 @@ void InputConsumer::updateTouchState(InputMessage* msg) {
         ssize_t index = findTouchState(deviceId, source);
         if (index >= 0) {
             TouchState& touchState = mTouchStates.editItemAt(index);
-            touchState.lastResample.idBits.clearBit(msg->body.motion.getActionId());
+            touchState.lastResample.ids.remove(msg->body.motion.getActionId());
             rewriteMessage(touchState, msg);
         }
         break;
@@ -614,7 +614,7 @@ void InputConsumer::updateTouchState(InputMessage* msg) {
         if (index >= 0) {
             TouchState& touchState = mTouchStates.editItemAt(index);
             rewriteMessage(touchState, msg);
-            touchState.lastResample.idBits.clearBit(msg->body.motion.getActionId());
+            touchState.lastResample.ids.remove(msg->body.motion.getActionId());
         }
         break;
     }
@@ -644,7 +644,7 @@ void InputConsumer::updateTouchState(InputMessage* msg) {
 void InputConsumer::rewriteMessage(const TouchState& state, InputMessage* msg) {
     for (size_t i = 0; i < msg->body.motion.pointerCount; i++) {
         uint32_t id = msg->body.motion.pointers[i].properties.id;
-        if (state.lastResample.idBits.hasBit(id)) {
+        if (state.lastResample.ids.contains(id)) {
             PointerCoords& msgCoords = msg->body.motion.pointers[i].coords;
             const PointerCoords& resampleCoords = state.lastResample.getPointerById(id);
 #if DEBUG_RESAMPLING
@@ -689,7 +689,7 @@ void InputConsumer::resampleTouchState(nsecs_t sampleTime, MotionEvent* event,
     size_t pointerCount = event->getPointerCount();
     for (size_t i = 0; i < pointerCount; i++) {
         uint32_t id = event->getPointerId(i);
-        if (!current->idBits.hasBit(id)) {
+        if (!current->ids.contains(id)) {
 #if DEBUG_RESAMPLING
             ALOGD("Not resampled, missing id %d", id);
 #endif
@@ -744,14 +744,14 @@ void InputConsumer::resampleTouchState(nsecs_t sampleTime, MotionEvent* event,
 
     // Resample touch coordinates.
     touchState.lastResample.eventTime = sampleTime;
-    touchState.lastResample.idBits.clear();
+    touchState.lastResample.ids.clear();
     for (size_t i = 0; i < pointerCount; i++) {
         uint32_t id = event->getPointerId(i);
         touchState.lastResample.idToIndex[id] = i;
-        touchState.lastResample.idBits.markBit(id);
+        touchState.lastResample.ids.insert(id);
         PointerCoords& resampledCoords = touchState.lastResample.pointers[i];
         const PointerCoords& currentCoords = current->getPointerById(id);
-        if (other->idBits.hasBit(id)
+        if (other->ids.contains(id)
                 && shouldResampleTool(event->getToolType(i))) {
             const PointerCoords& otherCoords = other->getPointerById(id);
             resampledCoords.copyFrom(currentCoords);

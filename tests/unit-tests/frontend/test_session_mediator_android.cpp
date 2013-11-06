@@ -16,7 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
@@ -32,6 +31,7 @@
 #include "mir_test_doubles/stub_shell.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 
@@ -47,27 +47,13 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
-{
-public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>();
-    }
-
-    virtual std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
-    }
-};
-
 struct SessionMediatorAndroidTest : public ::testing::Test
 {
     SessionMediatorAndroidTest()
         : shell{std::make_shared<mtd::StubShell>()},
           graphics_platform{std::make_shared<mtd::NullPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
+          buffer_allocator{std::make_shared<mtd::StubBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, display_changer,

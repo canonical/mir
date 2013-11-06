@@ -19,7 +19,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/buffer.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/session_mediator.h"
@@ -27,7 +26,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_display_changer.h"
@@ -89,15 +88,10 @@ mtd::StubDisplayConfig StubChanger::stub_display_config;
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
 public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
+    std::vector<geom::PixelFormat> supported_pixel_formats() override
     {
         return pixel_formats;
     }

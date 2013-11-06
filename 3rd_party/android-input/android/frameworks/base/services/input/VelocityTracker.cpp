@@ -27,7 +27,7 @@
 #include <limits.h>
 
 #include <androidfw/VelocityTracker.h>
-#include <std/BitSet.h>
+#include <androidfw/IntSet.h>
 #include <std/String8.h>
 #include <std/Timers.h>
 #include <std/Log.h>
@@ -109,7 +109,7 @@ static String8 matrixToString(const float* a, uint32_t m, uint32_t n, bool rowMa
 const char* VelocityTracker::DEFAULT_STRATEGY = "lsq2";
 
 VelocityTracker::VelocityTracker(const char* strategy) :
-        mLastEventTime(0), mCurrentPointerIdBits(0), mActivePointerId(-1) {
+        mLastEventTime(0), mActivePointerId(-1) {
     char value[PROPERTY_VALUE_MAX];
 
     // Allow the default strategy to be overridden using a system property for debugging.
@@ -202,29 +202,24 @@ VelocityTrackerStrategy* VelocityTracker::createStrategy(const char* strategy) {
 }
 
 void VelocityTracker::clear() {
-    mCurrentPointerIdBits.clear();
+    mCurrentPointerIds.clear();
     mActivePointerId = -1;
 
     mStrategy->clear();
 }
 
-void VelocityTracker::clearPointers(BitSet32 idBits) {
-    BitSet32 remainingIdBits(mCurrentPointerIdBits.value & ~idBits.value);
-    mCurrentPointerIdBits = remainingIdBits;
+void VelocityTracker::clearPointers(const IntSet &ids) {
+    mCurrentPointerIds.remove(ids);
 
-    if (mActivePointerId >= 0 && idBits.hasBit(mActivePointerId)) {
-        mActivePointerId = !remainingIdBits.isEmpty() ? remainingIdBits.firstMarkedBit() : -1;
+    if (mActivePointerId >= 0 && ids.contains(mActivePointerId)) {
+        mActivePointerId = !mCurrentPointerIds.isEmpty() ? mCurrentPointerIds.first() : -1;
     }
 
-    mStrategy->clearPointers(idBits);
+    mStrategy->clearPointers(ids);
 }
 
-void VelocityTracker::addMovement(nsecs_t eventTime, BitSet32 idBits, const Position* positions) {
-    while (idBits.count() > MAX_POINTERS) {
-        idBits.clearLastMarkedBit();
-    }
-
-    if ((mCurrentPointerIdBits.value & idBits.value)
+void VelocityTracker::addMovement(nsecs_t eventTime, const IntSet &ids, const Position* positions) {
+    if (!(mCurrentPointerIds & ids).isEmpty()
             && eventTime >= mLastEventTime + ASSUME_POINTER_STOPPED_TIME) {
 #if DEBUG_VELOCITY
         ALOGD("VelocityTracker: stopped for %0.3f ms, clearing state.",
@@ -236,20 +231,18 @@ void VelocityTracker::addMovement(nsecs_t eventTime, BitSet32 idBits, const Posi
     }
     mLastEventTime = eventTime;
 
-    mCurrentPointerIdBits = idBits;
-    if (mActivePointerId < 0 || !idBits.hasBit(mActivePointerId)) {
-        mActivePointerId = idBits.isEmpty() ? -1 : idBits.firstMarkedBit();
+    mCurrentPointerIds = ids;
+    if (mActivePointerId < 0 || !ids.contains(mActivePointerId)) {
+        mActivePointerId = ids.isEmpty() ? -1 : ids.first();
     }
 
-    mStrategy->addMovement(eventTime, idBits, positions);
+    mStrategy->addMovement(eventTime, ids, positions);
 
 #if DEBUG_VELOCITY
-    ALOGD("VelocityTracker: addMovement eventTime=%lld, idBits=0x%08x, activePointerId=%d",
-            eventTime, idBits.value, mActivePointerId);
-    for (BitSet32 iterBits(idBits); !iterBits.isEmpty(); ) {
-        uint32_t id = iterBits.firstMarkedBit();
-        uint32_t index = idBits.getIndexOfBit(id);
-        iterBits.clearBit(id);
+    ALOGD("VelocityTracker: addMovement eventTime=%lld, ids.cont()=%d, activePointerId=%d",
+            eventTime, ids.count(), mActivePointerId);
+    size_t index = 0;
+    ids.forEach([&](int32_t id) {
         Estimator estimator;
         getEstimator(id, &estimator);
         ALOGD("  %d: position (%0.3f, %0.3f), "
@@ -259,6 +252,7 @@ void VelocityTracker::addMovement(nsecs_t eventTime, BitSet32 idBits, const Posi
                 vectorToString(estimator.xCoeff, estimator.degree + 1).string(),
                 vectorToString(estimator.yCoeff, estimator.degree + 1).string(),
                 estimator.confidence);
+        ++index;
     }
 #endif
 }
@@ -276,9 +270,9 @@ void VelocityTracker::addMovement(const MotionEvent* event) {
         // Start a new movement trace for a pointer that just went down.
         // We do this on down instead of on up because the client may want to query the
         // final velocity for a pointer that just went up.
-        BitSet32 downIdBits;
-        downIdBits.markBit(event->getPointerId(event->getActionIndex()));
-        clearPointers(downIdBits);
+        IntSet downIds;
+        downIds.insert(event->getPointerId(event->getActionIndex()));
+        clearPointers(downIds);
         break;
     }
     case AMOTION_EVENT_ACTION_MOVE:
@@ -301,14 +295,14 @@ void VelocityTracker::addMovement(const MotionEvent* event) {
         pointerCount = MAX_POINTERS;
     }
 
-    BitSet32 idBits;
+    IntSet ids;
     for (size_t i = 0; i < pointerCount; i++) {
-        idBits.markBit(event->getPointerId(i));
+        ids.insert(event->getPointerId(i));
     }
 
     uint32_t pointerIndex[MAX_POINTERS];
     for (size_t i = 0; i < pointerCount; i++) {
-        pointerIndex[i] = idBits.getIndexOfBit(event->getPointerId(i));
+        pointerIndex[i] = ids.indexOf(event->getPointerId(i));
     }
 
     nsecs_t eventTime;
@@ -322,7 +316,7 @@ void VelocityTracker::addMovement(const MotionEvent* event) {
             positions[index].x = event->getHistoricalX(i, h);
             positions[index].y = event->getHistoricalY(i, h);
         }
-        addMovement(eventTime, idBits, positions);
+        addMovement(eventTime, ids, positions);
     }
 
     eventTime = event->getEventTime();
@@ -331,7 +325,7 @@ void VelocityTracker::addMovement(const MotionEvent* event) {
         positions[index].x = event->getX(i);
         positions[index].y = event->getY(i);
     }
-    addMovement(eventTime, idBits, positions);
+    addMovement(eventTime, ids, positions);
 }
 
 bool VelocityTracker::getVelocity(uint32_t id, float* outVx, float* outVy) const {
@@ -367,15 +361,14 @@ LeastSquaresVelocityTrackerStrategy::~LeastSquaresVelocityTrackerStrategy() {
 
 void LeastSquaresVelocityTrackerStrategy::clear() {
     mIndex = 0;
-    mMovements[0].idBits.clear();
+    mMovements[0].ids.clear();
 }
 
-void LeastSquaresVelocityTrackerStrategy::clearPointers(BitSet32 idBits) {
-    BitSet32 remainingIdBits(mMovements[mIndex].idBits.value & ~idBits.value);
-    mMovements[mIndex].idBits = remainingIdBits;
+void LeastSquaresVelocityTrackerStrategy::clearPointers(const IntSet &ids) {
+    mMovements[mIndex].ids.remove(ids);
 }
 
-void LeastSquaresVelocityTrackerStrategy::addMovement(nsecs_t eventTime, BitSet32 idBits,
+void LeastSquaresVelocityTrackerStrategy::addMovement(nsecs_t eventTime, const IntSet &ids,
         const VelocityTracker::Position* positions) {
     if (++mIndex == HISTORY_SIZE) {
         mIndex = 0;
@@ -383,9 +376,9 @@ void LeastSquaresVelocityTrackerStrategy::addMovement(nsecs_t eventTime, BitSet3
 
     Movement& movement = mMovements[mIndex];
     movement.eventTime = eventTime;
-    movement.idBits = idBits;
-    uint32_t count = idBits.count();
-    for (uint32_t i = 0; i < count; i++) {
+    movement.ids = ids;
+    size_t count = ids.count();
+    for (size_t i = 0; i < count; i++) {
         movement.positions[i] = positions[i];
     }
 }
@@ -570,7 +563,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
     const Movement& newestMovement = mMovements[mIndex];
     do {
         const Movement& movement = mMovements[index];
-        if (!movement.idBits.hasBit(id)) {
+        if (!movement.ids.contains(id)) {
             break;
         }
 
@@ -702,36 +695,44 @@ IntegratingVelocityTrackerStrategy::~IntegratingVelocityTrackerStrategy() {
 }
 
 void IntegratingVelocityTrackerStrategy::clear() {
-    mPointerIdBits.clear();
+    mPointerIds.clear();
 }
 
-void IntegratingVelocityTrackerStrategy::clearPointers(BitSet32 idBits) {
-    mPointerIdBits.value &= ~idBits.value;
+void IntegratingVelocityTrackerStrategy::clearPointers(const IntSet &ids) {
+    mPointerIds.remove(ids);
 }
 
-void IntegratingVelocityTrackerStrategy::addMovement(nsecs_t eventTime, BitSet32 idBits,
+void IntegratingVelocityTrackerStrategy::addMovement(nsecs_t eventTime, const IntSet &ids,
         const VelocityTracker::Position* positions) {
-    uint32_t index = 0;
-    for (BitSet32 iterIdBits(idBits); !iterIdBits.isEmpty();) {
-        uint32_t id = iterIdBits.clearFirstMarkedBit();
-        State& state = mPointerState[id];
-        const VelocityTracker::Position& position = positions[index++];
-        if (mPointerIdBits.hasBit(id)) {
-            updateState(state, eventTime, position.x, position.y);
-        } else {
-            initState(state, eventTime, position.x, position.y);
-        }
+
+    {
+        auto pointerIdsIt = mPointerIds.begin();
+        uint32_t index = 0;
+
+        for_each(ids.begin(), ids.end(), [&](int32_t id) {
+            State& state = mPointerState[id];
+            const VelocityTracker::Position& position = positions[index++];
+
+            while (*pointerIdsIt < id && pointerIdsIt != mPointerIds.end())
+                pointerIdsIt++;
+
+            if (pointerIdsIt != mPointerIds.end() && *pointerIdsIt == id) {
+                updateState(state, eventTime, position.x, position.y);
+            } else {
+                initState(state, eventTime, position.x, position.y);
+            }
+        });
     }
 
-    mPointerIdBits = idBits;
+    mPointerIds = ids;
 }
 
 bool IntegratingVelocityTrackerStrategy::getEstimator(uint32_t id,
         VelocityTracker::Estimator* outEstimator) const {
     outEstimator->clear();
 
-    if (mPointerIdBits.hasBit(id)) {
-        const State& state = mPointerState[id];
+    if (mPointerIds.contains(id)) {
+        const State& state = mPointerState.at(id);
         populateEstimator(state, outEstimator);
         return true;
     }
@@ -823,15 +824,14 @@ LegacyVelocityTrackerStrategy::~LegacyVelocityTrackerStrategy() {
 
 void LegacyVelocityTrackerStrategy::clear() {
     mIndex = 0;
-    mMovements[0].idBits.clear();
+    mMovements[0].ids.clear();
 }
 
-void LegacyVelocityTrackerStrategy::clearPointers(BitSet32 idBits) {
-    BitSet32 remainingIdBits(mMovements[mIndex].idBits.value & ~idBits.value);
-    mMovements[mIndex].idBits = remainingIdBits;
+void LegacyVelocityTrackerStrategy::clearPointers(const IntSet &ids) {
+    mMovements[mIndex].ids.remove(ids);
 }
 
-void LegacyVelocityTrackerStrategy::addMovement(nsecs_t eventTime, BitSet32 idBits,
+void LegacyVelocityTrackerStrategy::addMovement(nsecs_t eventTime, const IntSet &ids,
         const VelocityTracker::Position* positions) {
     if (++mIndex == HISTORY_SIZE) {
         mIndex = 0;
@@ -839,11 +839,8 @@ void LegacyVelocityTrackerStrategy::addMovement(nsecs_t eventTime, BitSet32 idBi
 
     Movement& movement = mMovements[mIndex];
     movement.eventTime = eventTime;
-    movement.idBits = idBits;
-    uint32_t count = idBits.count();
-    for (uint32_t i = 0; i < count; i++) {
-        movement.positions[i] = positions[i];
-    }
+    movement.ids = ids;
+    memcpy(movement.positions, positions, sizeof(VelocityTracker::Position) * ids.count());
 }
 
 bool LegacyVelocityTrackerStrategy::getEstimator(uint32_t id,
@@ -851,7 +848,7 @@ bool LegacyVelocityTrackerStrategy::getEstimator(uint32_t id,
     outEstimator->clear();
 
     const Movement& newestMovement = mMovements[mIndex];
-    if (!newestMovement.idBits.hasBit(id)) {
+    if (!newestMovement.ids.contains(id)) {
         return false; // no data
     }
 
@@ -862,7 +859,7 @@ bool LegacyVelocityTrackerStrategy::getEstimator(uint32_t id,
     do {
         uint32_t nextOldestIndex = (oldestIndex == 0 ? HISTORY_SIZE : oldestIndex) - 1;
         const Movement& nextOldestMovement = mMovements[nextOldestIndex];
-        if (!nextOldestMovement.idBits.hasBit(id)
+        if (!nextOldestMovement.ids.contains(id)
                 || nextOldestMovement.eventTime < minTime) {
             break;
         }

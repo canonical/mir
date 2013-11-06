@@ -17,11 +17,10 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/input/null_input_configuration.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
+#include "src/server/input/null_input_configuration.h"
 #include "mir/compositor/compositor.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/pixel_buffer.h"
+#include "src/server/shell/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -31,7 +30,7 @@
 #include "src/server/compositor/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -76,20 +75,10 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
     std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator() override
     {
-        struct StubBufferAllocator : public mg::GraphicBufferAllocator
-        {
-            std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties)
-            {
-                return std::make_shared<mtd::StubBuffer>(buffer_properties);
-            }
-
-            std::vector<geom::PixelFormat> supported_pixel_formats() { return {}; }
-        };
-
         return buffer_allocator(
             []
             {
-                return std::make_shared<StubBufferAllocator>();
+                return std::make_shared<mtd::StubBufferAllocator>();
             });
     }
 

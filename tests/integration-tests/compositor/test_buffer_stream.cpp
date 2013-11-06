@@ -125,6 +125,79 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
     }
 }
 
+TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
+{
+    auto old_size = buffer_stream.stream_size();
+
+    auto client1 = buffer_stream.secure_client_buffer();
+    EXPECT_EQ(old_size, client1->size());
+    client1.reset();
+
+    geom::Size const new_size
+    {
+        old_size.width.as_int() * 2,
+        old_size.height.as_int() * 3
+    };
+    buffer_stream.resize(new_size);
+    EXPECT_EQ(new_size, buffer_stream.stream_size());
+
+    auto client2 = buffer_stream.secure_client_buffer();
+    EXPECT_EQ(new_size, client2->size());
+    client2.reset();
+
+    buffer_stream.resize(old_size);
+    EXPECT_EQ(old_size, buffer_stream.stream_size());
+
+    auto client3 = buffer_stream.secure_client_buffer();
+    EXPECT_EQ(old_size, client3->size());
+    client3.reset();
+}
+
+TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
+{
+    auto old_size = buffer_stream.stream_size();
+
+    buffer_stream.secure_client_buffer().reset();
+
+    geom::Size const new_size
+    {
+        old_size.width.as_int() * 2,
+        old_size.height.as_int() * 3
+    };
+    buffer_stream.resize(new_size);
+    EXPECT_EQ(new_size, buffer_stream.stream_size());
+
+    buffer_stream.secure_client_buffer().reset();
+
+    auto comp1 = buffer_stream.lock_compositor_buffer(1);
+    EXPECT_EQ(old_size, comp1->size());
+    comp1.reset();
+
+    auto comp2 = buffer_stream.lock_compositor_buffer(2);
+    EXPECT_EQ(new_size, comp2->size());
+    comp2.reset();
+
+    buffer_stream.secure_client_buffer().reset();
+
+    auto comp3 = buffer_stream.lock_compositor_buffer(3);
+    EXPECT_EQ(new_size, comp3->size());
+    comp3.reset();
+
+    buffer_stream.resize(old_size);
+    EXPECT_EQ(old_size, buffer_stream.stream_size());
+
+    // No new client frames since resize(old_size), so compositor gets new_size
+    auto comp4 = buffer_stream.lock_compositor_buffer(4);
+    EXPECT_EQ(new_size, comp4->size());
+    comp4.reset();
+
+    // Generate a new frame, which should be back to old_size now
+    buffer_stream.secure_client_buffer().reset();
+    auto comp5 = buffer_stream.lock_compositor_buffer(5);
+    EXPECT_EQ(old_size, comp5->size());
+    comp5.reset();
+}
+
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
     buffer_stream.secure_client_buffer().reset();
