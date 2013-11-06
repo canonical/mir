@@ -28,6 +28,8 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
+// Just the following three functions stop render_surfaces.cpp using shell::Surface
+//    flag_for_render(), set_rotation() and set_alpha()
 #include "mir/surfaces/basic_surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
