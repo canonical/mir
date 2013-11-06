@@ -21,6 +21,7 @@
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -74,18 +75,23 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     return 2u;
 }
 
+//TODO: this function is going away
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    layer_list->set_fb_target(buffer);
+    frontbuffer = buffer;
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
     auto lg = lock_unblanked();
 
+    mga::LayerList ll({
+        mga::FramebufferLayer{*frontbuffer->native_buffer_handle()}
+    });
+  
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {ll.native_list(), nullptr};
 
     if (hwc_device->prepare(hwc_device.get(), 1, displays))
     {

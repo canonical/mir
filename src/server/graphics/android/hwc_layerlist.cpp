@@ -20,6 +20,7 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 
+#include <algorithm>
 #include <cstring>
 
 namespace mg=mir::graphics;
@@ -63,46 +64,18 @@ mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, bool mus
 {
 }
 
-#if 0
-mga::LayerList::LayerList()
-    : layer_list{std::make_shared<HWCFBLayer>()},
-      hwc_representation{std::make_shared<hwc_display_contents_1_t>()}
+mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 {
-    memset(hwc_representation.get(), 0, sizeof(hwc_display_contents_1_t));
-    update_list();
-}
-
-void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    auto native_buffer = buffer->native_buffer_handle();
-    native_buffer->wait_for_content();
-
-    geom::Point pt{0, 0};
-    geom::Rectangle rect{pt, buffer->size()};
-    HWCRect display_rect(rect);
-
-    auto fb_layer = std::make_shared<HWCFBLayer>(native_buffer->handle(), display_rect);
-    layer_list[fb_position] = fb_layer;
-
-    update_list();
-} 
-
-void mga::LayerList::update_list()
-{
-    if (layer_list.size() != hwc_representation->numHwLayers)
-    {
-        auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
-        hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
-            static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
-
-        hwc_representation->numHwLayers = layer_list.size();
-    }
+    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
+    hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+        static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
 
     auto i = 0u;
-    for( auto& layer : layer_list)
+    for(auto& layer : layer_list)
     {
-        hwc_representation->hwLayers[i++] = *layer;
+        hwc_representation->hwLayers[i++] = layer;        
     }
+    hwc_representation->numHwLayers = layer_list.size();
     hwc_representation->retireFenceFd = -1;
 }
 
@@ -110,4 +83,3 @@ hwc_display_contents_1_t* mga::LayerList::native_list() const
 {
     return hwc_representation.get();
 }
-#endif

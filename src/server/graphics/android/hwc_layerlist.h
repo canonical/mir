@@ -46,8 +46,23 @@ enum HWCLayerType : unsigned int
 struct HWCLayer : public hwc_layer_1
 {
     virtual ~HWCLayer() = default;
-    HWCLayer& operator=(HWCLayer const&) = delete;
-    HWCLayer(HWCLayer const&) = delete;
+
+    HWCLayer& operator=(HWCLayer const& layer)
+    {
+        *this = layer; 
+        this->visibleRegionScreen = {1, &this->visible_rect};
+        this->visible_rect = layer.visible_rect;
+        this->must_use_gl = layer.must_use_gl;
+        return *this;     
+    }
+
+    HWCLayer(HWCLayer const& layer)
+    {
+        *this = layer;
+        this->visibleRegionScreen = {1, &this->visible_rect};
+        this->visible_rect = layer.visible_rect;
+        this->must_use_gl = layer.must_use_gl; 
+    }
 
     HWCLayerType type() const;
 protected:
@@ -67,36 +82,16 @@ struct FramebufferLayer : public HWCLayer
     FramebufferLayer(NativeBuffer const&);
 };
 
-class HWCLayerList
+class LayerList
 {
 public:
-    virtual ~HWCLayerList() = default;
-
-    virtual hwc_display_contents_1_t* native_list() const = 0;
-    virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
-
-protected:
-    HWCLayerList() = default;
-    HWCLayerList& operator=(HWCLayerList const&) = delete;
-    HWCLayerList(HWCLayerList const&) = delete;
-
-};
-
-class LayerList : public HWCLayerList
-{
-public:
-    LayerList();
-
-    void set_fb_target(std::shared_ptr<Buffer> const&);
+    LayerList(std::initializer_list<HWCLayer> const& layers);
     hwc_display_contents_1_t* native_list() const;
 
 private:
-    std::vector<std::shared_ptr<HWCLayer>> layer_list;
-    void update_list();
-
-    static size_t const fb_position = 0u;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 };
+
 }
 }
 }
