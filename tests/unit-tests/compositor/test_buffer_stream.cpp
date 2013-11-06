@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -29,7 +29,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
 
 class BufferStreamTest : public ::testing::Test
 {
@@ -135,7 +134,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
     buffer_stream.secure_client_buffer();
 }
 
-TEST_F(BufferStreamTest, allow_framedropping_command)
+TEST_F(BufferStreamTest, allow_framedropping_device)
 {
     EXPECT_CALL(*mock_bundle, allow_framedropping(true))
         .Times(1);

@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 
-#include "display_support_provider.h"
+#include "display_device.h"
 #include <hardware/hwcomposer.h>
 
 #include <mutex>
@@ -40,24 +40,20 @@ struct HWCCallbacks
     HWCCommonDevice* self;
 };
 
-class HWCCommonDevice : public DisplaySupportProvider
+class HWCCommonDevice : public DisplayDevice
 {
 public:
     virtual ~HWCCommonDevice() noexcept;
 
-    /* from HWCDevice */
-    geometry::PixelFormat display_format() const;
-    unsigned int number_of_framebuffers_available() const; 
-    virtual void mode(MirPowerMode mode);
-
     void notify_vsync();
+    void mode(MirPowerMode mode);
+
 protected:
     HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
-protected:
     std::unique_lock<std::mutex> lock_unblanked();
 
 private:

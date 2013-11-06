@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
+#include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/connector.h"
@@ -55,6 +55,7 @@ namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::tools;
+namespace me = mir::examples;
 
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
@@ -248,7 +249,7 @@ private:
 
 ///\internal [RenderSurfacesServerConfiguration_tag]
 // Extend the default configuration to manage moveables.
-class RenderSurfacesServerConfiguration : public mir::examples::ServerConfiguration
+class RenderSurfacesServerConfiguration : public me::ServerConfiguration
 {
 public:
     RenderSurfacesServerConfiguration(int argc, char const** argv)
@@ -349,32 +350,32 @@ public:
             uint32_t frames;
         };
 
-        class RenderSurfacesDisplayBufferCompositorFactory : public mc::DefaultDisplayBufferCompositorFactory
+        class RenderSurfacesDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
         {
         public:
             RenderSurfacesDisplayBufferCompositorFactory(
-                std::shared_ptr<mc::Scene> const& scene,
-                std::shared_ptr<mc::RendererFactory> const& renderer_factory,
-                std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
+                std::shared_ptr<mc::DisplayBufferCompositorFactory> const& factory,
                 std::vector<Moveable>& moveables)
-                : DefaultDisplayBufferCompositorFactory{scene, renderer_factory, overlay_renderer},
+                : factory{factory},
                   moveables(moveables)
             {
             }
 
             std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
             {
-                auto cs = DefaultDisplayBufferCompositorFactory::create_compositor_for(display_buffer);
-                auto raw = new RenderSurfacesDisplayBufferCompositor(std::move(cs), moveables);
+                auto compositor = factory->create_compositor_for(display_buffer);
+                auto raw = new RenderSurfacesDisplayBufferCompositor(
+                    std::move(compositor), moveables);
                 return std::unique_ptr<RenderSurfacesDisplayBufferCompositor>(raw);
             }
+
+        private:
+            std::shared_ptr<mc::DisplayBufferCompositorFactory> const factory;
             std::vector<Moveable>& moveables;
         };
 
         return std::make_shared<RenderSurfacesDisplayBufferCompositorFactory>(
-            the_scene(),
-            the_renderer_factory(),
-            the_overlay_renderer(),
+            me::ServerConfiguration::the_display_buffer_compositor_factory(),
             moveables);
     }
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]

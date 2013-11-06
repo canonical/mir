@@ -24,11 +24,7 @@
 
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
-#include "mir/shell/session_manager.h"
-#include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/session_container.h"
-#include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
 
@@ -97,7 +93,6 @@ try
             // We use this strange two stage initialization to avoid a circular dependency between the EventFilters
             // and the SessionStore
             wm->set_focus_controller(config.the_focus_controller());
-            wm->set_session_manager(config.the_session_manager());
             wm->set_display(config.the_display());
             wm->set_compositor(config.the_compositor());
         });

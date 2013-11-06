@@ -24,11 +24,13 @@
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
-#include "display_support_provider.h"
+#include "display_device.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <system/window.h>
+#include <algorithm>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
@@ -37,6 +39,13 @@ namespace geom=mir::geometry;
 
 namespace
 {
+
+static EGLint const default_egl_config_attr [] =
+{
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
 
 static EGLint const default_egl_context_attr[] =
 {
@@ -50,6 +59,37 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_HEIGHT, 1,
     EGL_NONE
 };
+
+static EGLConfig select_egl_config(EGLDisplay egl_display, ANativeWindow const& native_window)
+{
+    int num_potential_configs, android_native_id;
+    EGLint num_match_configs;
+
+    eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
+    std::vector<EGLConfig> config_slots(num_potential_configs);
+
+    /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
+    eglChooseConfig(egl_display, default_egl_config_attr,
+                    config_slots.data(), num_potential_configs, &num_match_configs);
+    config_slots.resize(num_match_configs);
+
+    /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
+     * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
+     * eglChooseConfig */
+    native_window.query(&native_window, NATIVE_WINDOW_FORMAT, &android_native_id);
+    auto const pegl_config = std::find_if(begin(config_slots), end(config_slots),
+        [&](EGLConfig& current) -> bool
+        {
+            int visual_id;
+            eglGetConfigAttrib(egl_display, current, EGL_NATIVE_VISUAL_ID, &visual_id);
+            return (visual_id == android_native_id);
+        });
+
+    if (pegl_config == end(config_slots))
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config for use with framebuffer"));
+
+    return *pegl_config;
+}
 
 EGLDisplay create_and_initialize_display()
 {
@@ -108,13 +148,14 @@ private:
 
 }
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
-                                    std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
-                                    std::shared_ptr<DisplaySupportProvider> const& display_provider,
+mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<ANativeWindow> const& native_win,
+                                    std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
+                                    std::shared_ptr<mga::DisplayDevice> const& display_device,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
+      display_device(display_device),
       egl_display{create_and_initialize_display()},
-      egl_config{native_window->android_display_egl_config(egl_display)},
+      egl_config{select_egl_config(egl_display, *native_window)},
       egl_context_shared{egl_display,
                          eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
                                           default_egl_context_attr)},
@@ -122,8 +163,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-          native_window, display_provider, egl_display, egl_context_shared)},
-      display_provider(display_provider),
+          native_window, display_device, egl_display, egl_config, egl_context_shared)},
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
@@ -158,7 +198,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         // TODO: Properly support multiple outputs
-        display_provider->mode(output.power_mode);
+        display_device->mode(output.power_mode);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

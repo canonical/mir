@@ -85,6 +85,7 @@ class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
 class InputRegistrar;
+class SurfacesReport;
 }
 namespace graphics
 {
@@ -105,6 +106,7 @@ class InputConfiguration;
 class CursorListener;
 class InputRegion;
 class NestedInputRelay;
+class EventHandler;
 }
 
 namespace logging
@@ -138,7 +140,7 @@ public:
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
-    virtual std::shared_ptr<input::NestedInputRelay> the_nested_input_relay();
+    virtual std::shared_ptr<input::EventFilter> the_nested_event_filter();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -195,6 +197,7 @@ public:
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
     virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
     virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
+    virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -210,6 +213,7 @@ public:
      * configurable interfaces for modifying surfaces
      *  @{ */
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+    virtual std::shared_ptr<surfaces::SurfacesReport>    the_surfaces_report();
     /** @} */
 
     /** @name surfaces configuration - dependencies
@@ -276,6 +280,8 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
+    CachedPtr<surfaces::SurfacesReport> surfaces_report;
+
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
@@ -310,6 +316,7 @@ private:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
+    std::shared_ptr<input::NestedInputRelay> the_nested_input_relay();
 };
 }
 

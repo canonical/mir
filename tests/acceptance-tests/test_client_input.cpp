@@ -24,7 +24,7 @@
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 #include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface_stack_model.h"
+#include "src/server/surfaces/surface_stack_model.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -192,7 +192,7 @@ struct InputClient : ClientConfig
          auto request_params = parameters();
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
-         events_received.wait_for_at_most_seconds(2);
+         events_received.wait_for_at_most_seconds(60);
 
          mir_surface_release_sync(surface);
 

@@ -80,11 +80,13 @@ mc::SwitchingBundle::SwitchingBundle(
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
-    if (nbuffers < 1 || nbuffers > MAX_NBUFFERS)
+    if (nbuffers < min_buffers || nbuffers > max_buffers)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle only supports "
-                                               "nbuffers between 1 and " +
-                                               std::to_string(MAX_NBUFFERS)));
+                                               "nbuffers between " +
+                                               std::to_string(min_buffers) +
+                                               " and " +
+                                               std::to_string(max_buffers)));
     }
 }
 
@@ -239,6 +241,12 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         }
     }
 
+    if (ret->size() != bundle_properties.size)
+    {
+        ret = gralloc->alloc_buffer(bundle_properties);
+        ring[client].buf = ret;
+    }
+
     return ret;
 }
 
@@ -391,15 +399,24 @@ void mc::SwitchingBundle::force_requests_to_complete()
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 {
+    std::unique_lock<std::mutex> lock(guard);
     framedropping = allow_dropping;
 }
 
 bool mc::SwitchingBundle::framedropping_allowed() const
 {
+    std::unique_lock<std::mutex> lock(guard);
     return framedropping;
 }
 
 mg::BufferProperties mc::SwitchingBundle::properties() const
 {
+    std::unique_lock<std::mutex> lock(guard);
     return bundle_properties;
+}
+
+void mc::SwitchingBundle::resize(const geometry::Size &newsize)
+{
+    std::unique_lock<std::mutex> lock(guard);
+    bundle_properties.size = newsize;
 }

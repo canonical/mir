@@ -18,7 +18,7 @@
  */
 
 #include "mir/frontend/connector.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"

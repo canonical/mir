@@ -18,11 +18,13 @@ are prefixed with `MIR_SERVER_` and contain underscores ('_') instead of dashes
 
 Report                  | Handlers
 ----------------------- | --------
+connector-report        | log
 display-report          | log
 input-report            | log,lttng
 legacy-input-report     | log
 msg-processor-report    | log,lttng
 session-mediator-report | log
+surfaces-report         | log
 
 For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the

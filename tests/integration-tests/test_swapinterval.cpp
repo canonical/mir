@@ -19,11 +19,11 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/compositor/renderer.h"
+#include "src/server/compositor/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -48,7 +48,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class CountingBufferStream : public ms::BufferStream
+class CountingBufferStream : public mc::BufferStream
 {
 public:
     CountingBufferStream(int render_operations_fd)
@@ -79,7 +79,7 @@ public:
     {
     }
 
-    std::shared_ptr<ms::BufferStream> create_buffer_stream(mg::BufferProperties const&)
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&)
     {
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }
@@ -130,7 +130,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
             return stub_stream_factory;
         }
 
-        int num_of_swapinterval_commands()
+        int num_of_swapinterval_devices()
         {
             char c;
             int ops{0};
@@ -220,7 +220,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
     {
         client_config.wait_for(swapinterval_set);
 
-        EXPECT_EQ(2, server_config.num_of_swapinterval_commands());
+        EXPECT_EQ(2, server_config.num_of_swapinterval_devices());
 
         client_config.set_flag(do_client_finish);
     });

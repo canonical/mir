@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/rendering_operator.h"
+#include "src/server/compositor/rendering_operator.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -30,7 +30,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 
 namespace
@@ -49,7 +48,7 @@ public:
     void clear(unsigned long) override {}
 
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                mc::CompositingCriteria const&, ms::BufferStream&)
+                mc::CompositingCriteria const&, mc::BufferStream&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)

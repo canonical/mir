@@ -32,35 +32,37 @@ class Buffer;
 namespace android
 {
 
-class GraphicBufferAllocator;
-class FBSwapper;
-
 class ResourceFactory : public DisplayResourceFactory
 {
 public:
-    explicit ResourceFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator);
+    //native allocations
+    std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const;
+    std::shared_ptr<framebuffer_device_t> create_fb_native_device() const;
 
-    std::shared_ptr<DisplaySupportProvider> create_fb_device() const;
+    //devices
+    std::shared_ptr<DisplayDevice> create_fb_device(
+        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const;
+    std::shared_ptr<DisplayDevice> create_hwc11_device(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const;
+    std::shared_ptr<DisplayDevice> create_hwc10_device(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_native_device,
+        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const;
 
-    std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<DisplaySupportProvider> const& fb_device) const;
+    //fb buffer alloc
+    std::shared_ptr<FBSwapper> create_fb_buffers(
+        std::shared_ptr<DisplayDevice> const& device,
+        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator) const;
 
-    std::shared_ptr<DisplaySupportProvider> create_hwc_1_0(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<DisplaySupportProvider> const& fb_device) const;
-
+    //display alloc
     std::shared_ptr<graphics::Display> create_display(
-        std::shared_ptr<DisplaySupportProvider> const& support_provider,
+        std::shared_ptr<FBSwapper> const& swapper,
+        std::shared_ptr<DisplayDevice> const& device,
         std::shared_ptr<graphics::DisplayReport> const& report) const;
 
 private:
-    std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
-
-    virtual std::vector<std::shared_ptr<graphics::Buffer>> create_buffers(
-        std::shared_ptr<DisplaySupportProvider> const& info_provider) const;
-
-    virtual std::shared_ptr<FBSwapper> create_swapper(
+    std::vector<std::shared_ptr<graphics::Buffer>> create_buffers(
+        std::shared_ptr<DisplayDevice> const& device) const;
+    std::shared_ptr<FBSwapper> create_swapper(
         std::vector<std::shared_ptr<graphics::Buffer>> const& buffers) const;
 };
 

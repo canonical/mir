@@ -45,6 +45,7 @@ list(APPEND MIRSERVER_ARCHIVES
   miroptions
   mircompositor
   mirfrontend
+  mirgraphics
   mirplatform
   mirinput
   mirsharedinput
@@ -89,7 +90,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 9)
+set(MIRSERVER_ABI 10)
 
 set_target_properties(
   mirserver

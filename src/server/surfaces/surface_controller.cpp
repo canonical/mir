@@ -17,7 +17,7 @@
  */
 
 #include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface_stack_model.h"
+#include "surface_stack_model.h"
 
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;

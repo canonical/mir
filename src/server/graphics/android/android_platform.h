@@ -31,13 +31,16 @@ namespace android
 {
 class GraphicBufferAllocator;
 class FramebufferFactory;
+class DisplayResourceFactory;
 
 class AndroidPlatform : public Platform, public NativePlatform
 {
 public:
-    /* From Platform */
-    AndroidPlatform(std::shared_ptr<DisplayReport> const& display_report);
+    AndroidPlatform(
+        std::shared_ptr<DisplayResourceFactory> const& resource_factory,
+        std::shared_ptr<DisplayReport> const& display_report);
 
+    /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<Display> create_display(
@@ -48,12 +51,15 @@ public:
                           std::shared_ptr<graphics::Buffer> const& buffer) const;
 
 private:
+    std::shared_ptr<Display> create_fb_backup_display();
+
     void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
     // TODO a design that has this and create_buffer_allocator is missing simplicity
     virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
         const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
+    std::shared_ptr<DisplayResourceFactory> const display_resource_factory;
     std::shared_ptr<DisplayReport> const display_report;
 };
 

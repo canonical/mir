@@ -71,6 +71,10 @@ struct StubShellSession : public shell::Session
     {
         return std::shared_ptr<shell::Surface>();
     }
+
+    void set_lifecycle_state(MirLifecycleState /*state*/)
+    {
+    }
 };
 
 }

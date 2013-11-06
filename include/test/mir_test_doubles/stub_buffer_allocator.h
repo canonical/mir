@@ -37,15 +37,9 @@ namespace doubles
 
 struct StubBufferAllocator : public graphics::GraphicBufferAllocator
 {
-    StubBufferAllocator() : id{1} {}
-
     std::shared_ptr<graphics::Buffer> alloc_buffer(
-        graphics::BufferProperties const&)
+        graphics::BufferProperties const& properties)
     {
-        graphics::BufferProperties properties{geometry::Size{id, id},
-                                        geometry::PixelFormat::abgr_8888,
-                                        graphics::BufferUsage::hardware};
-        ++id;
         return std::make_shared<StubBuffer>(properties);
     }
 
@@ -53,8 +47,6 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
     {
         return {};
     }
-
-    unsigned int id;
 };
 
 }
