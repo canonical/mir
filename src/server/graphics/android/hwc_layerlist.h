@@ -78,11 +78,28 @@ struct FramebufferLayer : public HWCLayer
     FramebufferLayer(NativeBuffer const&);
 };
 
-class LayerList
+class HWCLayerList
+{
+public:
+    virtual ~HWCLayerList() = default;
+
+    virtual hwc_display_contents_1_t* native_list() const = 0;
+    virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
+
+protected:
+    HWCLayerList() = default;
+    HWCLayerList& operator=(HWCLayerList const&) = delete;
+    HWCLayerList(HWCLayerList const&) = delete;
+
+};
+
+class LayerList : public HWCLayerList
 {
 public:
     LayerList(std::initializer_list<HWCLayer> const& layers);
+
     hwc_display_contents_1_t* native_list() const;
+    void set_fb_target(std::shared_ptr<Buffer> const&);
 
 private:
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
