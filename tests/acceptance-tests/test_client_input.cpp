@@ -35,15 +35,13 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/client_event_matchers.h"
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <xkbcommon/xkbcommon.h>
-#include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <thread>
 #include <functional>
@@ -213,103 +211,6 @@ struct InputClient : ClientConfig
     static int const surface_height = 100;
 };
 
-MATCHER(KeyDownEvent, "")
-{
-    if (arg->type != mir_event_type_key)
-        return false;
-    if (arg->key.action != mir_key_action_down) // Key down
-        return false;
-
-    return true;
-}
-MATCHER_P(KeyOfSymbol, keysym, "")
-{
-    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
-        return true;
-    return false;
-}
-
-MATCHER(HoverEnterEvent, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_hover_enter)
-        return false;
-
-    return true;
-}
-MATCHER(HoverExitEvent, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_hover_exit)
-        return false;
-
-    return true;
-}
-
-MATCHER(HoverMoveEvent, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_hover_move)
-        return false;
-
-    return true;
-}
-
-MATCHER_P2(ButtonDownEvent, x, y, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_down)
-        return false;
-    if (arg->motion.button_state == 0)
-        return false;
-    if (arg->motion.pointer_coordinates[0].x != x)
-        return false;
-    if (arg->motion.pointer_coordinates[0].y != y)
-        return false;
-    return true;
-}
-
-MATCHER_P2(ButtonUpEvent, x, y, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_up)
-        return false;
-    if (arg->motion.pointer_coordinates[0].x != x)
-        return false;
-    if (arg->motion.pointer_coordinates[0].y != y)
-        return false;
-    return true;
-}
-
-MATCHER_P2(MotionEventWithPosition, x, y, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_move &&
-        arg->motion.action != mir_motion_action_hover_move)
-        return false;
-    if (arg->motion.pointer_coordinates[0].x != x)
-        return false;
-    if (arg->motion.pointer_coordinates[0].y != y)
-        return false;
-    return true;
-}
-
-MATCHER(MovementEvent, "")
-{
-    if (arg->type != mir_event_type_motion)
-        return false;
-    if (arg->motion.action != mir_motion_action_move &&
-        arg->motion.action != mir_motion_action_hover_move)
-        return false;
-    return true;
-}
-
 }
 
 namespace
@@ -469,8 +370,8 @@ TEST_F(TestClientInput, clients_receive_key_input)
             using namespace ::testing;
             InSequence seq;
 
-            EXPECT_CALL(handler, handle_input(KeyDownEvent())).Times(2);
-            EXPECT_CALL(handler, handle_input(KeyDownEvent())).Times(1)
+            EXPECT_CALL(handler, handle_input(mt::KeyDownEvent())).Times(2);
+            EXPECT_CALL(handler, handle_input(mt::KeyDownEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
 
          });
@@ -499,8 +400,8 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             using namespace ::testing;
             InSequence seq;
     
-            EXPECT_CALL(handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1);
-            EXPECT_CALL(handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
+            EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1);
+            EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
     launch_client_process(*client_config);
@@ -528,9 +429,9 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             InSequence seq;
 
             // We should see the cursor enter
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(1);
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
             EXPECT_CALL(handler, handle_input(
-                MotionEventWithPosition(InputClient::surface_width - 1,
+                mt::MotionEventWithPosition(InputClient::surface_width - 1,
                                         InputClient::surface_height - 1))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
@@ -560,7 +461,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
             InSequence seq;
             
             // The cursor starts at (0, 0).
-            EXPECT_CALL(handler, handle_input(ButtonDownEvent(0, 0))).Times(1)
+            EXPECT_CALL(handler, handle_input(mt::ButtonDownEvent(0, 0))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
     launch_client_process(*client_config);
@@ -598,17 +499,17 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
             InSequence seq;
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1);
-            EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(1)
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
+            EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1);
+            EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
     auto client_2 = make_event_expecting_client(test_client_2, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
              InSequence seq;
-             EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(1);
-             EXPECT_CALL(handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1)
+             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
+             EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1)
                  .WillOnce(mt::WakeUp(&events_received));
         });
 
@@ -707,17 +608,17 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     auto client_config = make_event_expecting_client(test_client_name, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(MovementEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::MovementEvent())).Times(AnyNumber());
 
             {
                 // We should see two of the three button pairs.
                 InSequence seq;
-                EXPECT_CALL(handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
-                EXPECT_CALL(handler, handle_input(ButtonUpEvent(1, 1))).Times(1);
-                EXPECT_CALL(handler, handle_input(ButtonDownEvent(99, 99))).Times(1);
-                EXPECT_CALL(handler, handle_input(ButtonUpEvent(99, 99))).Times(1)
+                EXPECT_CALL(handler, handle_input(mt::ButtonDownEvent(1, 1))).Times(1);
+                EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(1, 1))).Times(1);
+                EXPECT_CALL(handler, handle_input(mt::ButtonDownEvent(99, 99))).Times(1);
+                EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(99, 99))).Times(1)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         });
@@ -766,28 +667,28 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     auto client_config_1 = make_event_expecting_client(test_client_name_1, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(MovementEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::MovementEvent())).Times(AnyNumber());
             {
                 // We should only see one button event sequence.
                 InSequence seq;
-                EXPECT_CALL(handler, handle_input(ButtonDownEvent(51, 1))).Times(1);
-                EXPECT_CALL(handler, handle_input(ButtonUpEvent(51, 1))).Times(1)
+                EXPECT_CALL(handler, handle_input(mt::ButtonDownEvent(51, 1))).Times(1);
+                EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(51, 1))).Times(1)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         });
     auto client_config_2 = make_event_expecting_client(test_client_name_2, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(MovementEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::MovementEvent())).Times(AnyNumber());
             {
                 // Likewise we should only see one button sequence.
               InSequence seq;
-              EXPECT_CALL(handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
-              EXPECT_CALL(handler, handle_input(ButtonUpEvent(1, 1))).Times(1)
+              EXPECT_CALL(handler, handle_input(mt::ButtonDownEvent(1, 1))).Times(1);
+              EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(1, 1))).Times(1)
                   .WillOnce(mt::WakeUp(&events_received));
             }
         });
@@ -841,17 +742,17 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     auto client_config_1 = make_event_expecting_client(test_client_name, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(MotionEventWithPosition(2, 2))).Times(1)
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(2, 2))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
     auto client_config_2 = make_event_expecting_client(test_client_2_name, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
-            EXPECT_CALL(handler, handle_input(MotionEventWithPosition(1, 1))).Times(1)
+            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(1, 1))).Times(1)
                 .WillOnce(DoAll(SignalFence(&second_client_done_fence), mt::WakeUp(&events_received)));
         });
 
