@@ -38,7 +38,7 @@ struct NotifyArgs {
 struct NotifyConfigurationChangedArgs : public NotifyArgs {
     nsecs_t eventTime;
 
-    inline NotifyConfigurationChangedArgs() { }
+    inline NotifyConfigurationChangedArgs() : eventTime{0} { }
 
     NotifyConfigurationChangedArgs(nsecs_t eventTime);
 
