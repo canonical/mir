@@ -36,6 +36,23 @@ namespace test
 namespace doubles
 {
 
+MATCHER_P(AttrMatches, val, std::string("matches"))
+{
+    auto i = 0;
+    while ((val[i] != EGL_NONE) && (arg[i] != EGL_NONE))
+    {
+        if (val[i] != arg[i])
+            return false;
+        i++;
+    }
+
+    if ((val[i] == EGL_NONE) && (arg[i] == EGL_NONE))
+    {
+        return true;
+    }
+    return false;
+}
+
 class MockEGL
 {
 public:

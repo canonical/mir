@@ -19,17 +19,14 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_BUFFER_FACTORY_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_BUFFER_FACTORY_H_
 
-#include <memory>
-
+#include "mir/graphics/display_buffer.h"
 #include <EGL/egl.h>
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-
-class DisplayBuffer;
-
 namespace android
 {
 class DisplayDevice;
@@ -39,12 +36,10 @@ class AndroidDisplayBufferFactory
 public:
     virtual ~AndroidDisplayBufferFactory() = default;
 
+    virtual std::shared_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<DisplayBuffer> create_display_buffer(
-        std::shared_ptr<ANativeWindow> const& native_win,
         std::shared_ptr<DisplayDevice> const& display_device,
-        EGLDisplay egl_display,
-        EGLConfig egl_config,
-        EGLContext egl_context_shared) = 0;
+        EGLDisplay, EGLConfig, EGLContext) = 0;
 
 protected:
     AndroidDisplayBufferFactory() = default;

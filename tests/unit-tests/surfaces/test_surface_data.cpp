@@ -87,6 +87,24 @@ TEST_F(SurfaceDataTest, update_position)
     EXPECT_EQ(new_top_left, storage.position());
 }
 
+TEST_F(SurfaceDataTest, update_size)
+{ 
+    geom::Size const new_size{34, 56};
+
+    EXPECT_CALL(mock_callback, call())
+        .Times(1);
+
+    ms::SurfaceData storage{name, rect, mock_change_cb, false};
+    EXPECT_EQ(rect.size, storage.size());
+    EXPECT_NE(new_size, storage.size());
+
+    auto old_transformation = storage.transformation();
+
+    storage.resize(new_size);
+    EXPECT_EQ(new_size, storage.size());
+    EXPECT_NE(old_transformation, storage.transformation());
+}
+
 TEST_F(SurfaceDataTest, test_surface_set_rotation_updates_transform)
 {
     EXPECT_CALL(mock_callback, call())
