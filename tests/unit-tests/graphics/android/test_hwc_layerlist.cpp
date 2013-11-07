@@ -150,3 +150,30 @@ TEST_F(HWCLayerListTest, hwc_list_creation)
 //    EXPECT_EQ(surface_layer, list->hwLayers[0]);
 //    EXPECT_EQ(target_layer, list->hwLayers[1]);
 }
+
+TEST_F(HWCLayerListTest, update_fb_target)
+{
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, force_gl),
+        mga::FramebufferLayer(*native_handle_1)});
+    layerlist->set_fb_target(native_handle_2)
+
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = native_handle_2->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region; 
+    expected_layer.visibleRegionScreen = visible_region;  
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    auto native_list = layerlist->native_list();
+    EXPECT_THAT(native_list->, MatchesLayer(expected_layer));
+
+}

@@ -21,6 +21,7 @@
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -78,20 +79,20 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 //TODO: this function is going away
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
+    printf("ndosth\n");
     frontbuffer = buffer;
+    frontbuffer->native_buffer_handle()->wait_for_content();
+    printf("done.\n");
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
     auto lg = lock_unblanked();
-
-    mga::LayerList ll({
-        mga::FramebufferLayer{*frontbuffer->native_buffer_handle()}
-    });
   
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {ll.native_list(), nullptr};
+//    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {ll.native_list(), nullptr};
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {nullptr, nullptr};
 
     if (hwc_device->prepare(hwc_device.get(), 1, displays))
     {
@@ -105,12 +106,18 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
     }
 
-    if (hwc_device->set(hwc_device.get(), 1, displays))
+    mga::LayerList ll2({
+        mga::FramebufferLayer{*frontbuffer->native_buffer_handle()}
+    });
+  
+    //note, although we only have a primary display right now,
+    //      set the second display to nullptr, as exynos hwc always derefs displays[1]
+    hwc_display_contents_1_t* display2[HWC_NUM_DISPLAY_TYPES] {ll2.native_list(), nullptr};
+    if (hwc_device->set(hwc_device.get(), 1, display2))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
-
-    mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
+    mga::SyncFence fence(sync_ops, display2[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }
 

@@ -49,6 +49,7 @@ protected:
     hwc_display_contents_1_t empty_list;
 };
 
+#if 0
 TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
 {
     using namespace testing;
@@ -62,7 +63,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
     EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_set_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
 }
-
+#endif
 TEST_F(HWC11Device, test_hwc_gles_set_error)
 {
     using namespace testing;
