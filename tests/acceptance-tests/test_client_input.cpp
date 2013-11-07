@@ -71,85 +71,17 @@ namespace
 namespace
 {
 
-struct ClientConfig : mtf::TestingClientConfiguration
-{
-    ClientConfig() :
-        connection(0),
-        surface(0)
-    {
-    }
-
-    static void connection_callback(MirConnection* connection, void* context)
-    {
-        ClientConfig* config = reinterpret_cast<ClientConfig *>(context);
-        config->connection = connection;
-    }
-
-    static void create_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfig* config = reinterpret_cast<ClientConfig *>(context);
-        config->surface_created(surface);
-    }
-
-    static void release_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfig* config = reinterpret_cast<ClientConfig *>(context);
-        config->surface_released(surface);
-    }
-
-    virtual void connected(MirConnection* new_connection)
-    {
-        connection = new_connection;
-    }
-
-    virtual void surface_created(MirSurface* new_surface)
-    {
-        surface = new_surface;
-    }
-
-    virtual void surface_released(MirSurface* /* released_surface */)
-    {
-        surface = NULL;
-    }
-
-    MirConnection* connection;
-    MirSurface* surface;
-};
-
 struct MockInputHandler
 {
     MOCK_METHOD1(handle_input, void(MirEvent const*));
 };
 
-struct InputClient : ClientConfig
+struct InputClient : mtf::TestingClientConfiguration
 {
     InputClient(const mtf::CrossProcessSync& input_cb_setup_fence, std::string const& client_name)
             : input_cb_setup_fence(input_cb_setup_fence),
               client_name(client_name)
     {
-    }
-
-    virtual void surface_created(MirSurface* new_surface) override
-    {
-        ClientConfig::surface_created(new_surface);
-
-        MirEventDelegate const event_delegate =
-        {
-            handle_input,
-            this
-        };
-
-        // Set this in the callback, not main thread to avoid missing test events
-        mir_surface_set_event_handler(surface, &event_delegate);
-
-        try
-        {
-            input_cb_setup_fence.try_signal_ready_for();
-        } catch (const std::runtime_error& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
-
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
@@ -182,15 +114,30 @@ struct InputClient : ClientConfig
 
         expect_input(events_received);
 
-        mir_wait_for(mir_connect(
+        connection = mir_connect_sync(
             mir_test_socket,
-            client_name.c_str(),
-            connection_callback,
-            this));
+            client_name.c_str());
          ASSERT_TRUE(connection != NULL);
 
          auto request_params = parameters();
-         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
+         surface = mir_connection_create_surface_sync(connection, &request_params);
+
+         MirEventDelegate const event_delegate =
+             {
+                 handle_input,
+                 this
+             };
+         // Set this in the callback, not main thread to avoid missing test events
+         mir_surface_set_event_handler(surface, &event_delegate);
+         
+         try
+         {
+             input_cb_setup_fence.try_signal_ready_for();
+         } 
+         catch (const std::runtime_error& e)
+         {
+             std::cout << e.what() << std::endl;
+         }
 
          events_received.wait_for_at_most_seconds(60);
 
@@ -211,6 +158,9 @@ struct InputClient : ClientConfig
 
     static int const surface_width = 100;
     static int const surface_height = 100;
+
+    MirConnection* connection;
+    MirSurface* surface;
 };
 
 MATCHER(KeyDownEvent, "")
