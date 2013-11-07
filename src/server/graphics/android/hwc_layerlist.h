@@ -62,7 +62,7 @@ struct HWCLayer : public hwc_layer_1
 
     HWCLayerType type() const;
 protected:
-    HWCLayer(HWCLayerType type, NativeBuffer const& buffer, bool must_use_gl);
+    HWCLayer(HWCLayerType type, buffer_handle_t handle, int width, int height, bool must_use_gl);
 
     hwc_rect_t visible_rect;
     bool must_use_gl;
@@ -70,36 +70,23 @@ protected:
 
 struct CompositionLayer : public HWCLayer
 {
+    CompositionLayer(bool must_use_gl);
     CompositionLayer(NativeBuffer const&, bool must_use_gl);
 };
 
 struct FramebufferLayer : public HWCLayer
 {
+    FramebufferLayer();
     FramebufferLayer(NativeBuffer const&);
 };
 
-class HWCLayerList
-{
-public:
-    virtual ~HWCLayerList() = default;
-
-    virtual hwc_display_contents_1_t* native_list() const = 0;
-    virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
-
-protected:
-    HWCLayerList() = default;
-    HWCLayerList& operator=(HWCLayerList const&) = delete;
-    HWCLayerList(HWCLayerList const&) = delete;
-
-};
-
-class LayerList : public HWCLayerList
+class LayerList
 {
 public:
     LayerList(std::initializer_list<HWCLayer> const& layers);
 
     hwc_display_contents_1_t* native_list() const;
-    void set_fb_target(std::shared_ptr<Buffer> const&);
+    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
 
 private:
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;

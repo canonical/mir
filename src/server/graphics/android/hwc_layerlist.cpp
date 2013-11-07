@@ -27,7 +27,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer::HWCLayer(HWCLayerType type, mg::NativeBuffer const& buffer, bool must_use_gl)
+mga::HWCLayer::HWCLayer(HWCLayerType type, buffer_handle_t buffer_handle, int width, int height, bool must_use_gl)
 {
     int skip_flag = 0;
     if (must_use_gl)
@@ -46,13 +46,13 @@ mga::HWCLayer::HWCLayer(HWCLayerType type, mg::NativeBuffer const& buffer, bool 
 
     visible_rect.top = 0;
     visible_rect.left = 0;
-    visible_rect.bottom = buffer.anwb()->height;
-    visible_rect.right = buffer.anwb()->width; 
+    visible_rect.bottom = height;
+    visible_rect.right = width;
     sourceCrop = visible_rect;
     displayFrame = visible_rect;
     visibleRegionScreen.numRects=1;
     visibleRegionScreen.rects= &visible_rect;
-    handle = buffer.handle();
+    handle = buffer_handle;
 }
 
 mga::HWCLayerType mga::HWCLayer::type() const
@@ -66,13 +66,26 @@ mga::HWCLayerType mga::HWCLayer::type() const
     return mga::HWCLayerType::overlay;
 }
 
+//todo: remove this constructor once hwc11 buffer management is sorted out
+mga::FramebufferLayer::FramebufferLayer()
+    : HWCLayer(mga::HWCLayerType::framebuffer, nullptr, 0, 0, false)
+{
+}
+
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(mga::HWCLayerType::framebuffer, buffer, false)
+    : HWCLayer(mga::HWCLayerType::framebuffer, buffer.handle(),
+               buffer.anwb()->width, buffer.anwb()->height, false)
+{
+}
+
+mga::CompositionLayer::CompositionLayer(bool must_use_gl)
+    : HWCLayer(mga::HWCLayerType::gles, nullptr, 0, 0, must_use_gl)
 {
 }
 
 mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, bool must_use_gl)
-    : HWCLayer(mga::HWCLayerType::gles, buffer, must_use_gl)
+    : HWCLayer(mga::HWCLayerType::gles, buffer.handle(),
+               buffer.anwb()->width, buffer.anwb()->height, must_use_gl)
 {
 }
 
@@ -93,6 +106,15 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
     hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
     hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
     
+}
+
+void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
+{
+    auto fb_position = hwc_representation->numHwLayers - 1;
+    if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
+    {
+        hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
+    }
 }
 
 hwc_display_contents_1_t* mga::LayerList::native_list() const

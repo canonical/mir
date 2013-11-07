@@ -162,6 +162,6 @@ TEST_F(HWCLayerListTest, hwc_list_update)
 
     auto list = layerlist.native_list(); 
     ASSERT_EQ(2u, list->numHwLayers);
-    EXPECT_EQ(list->hwLayers[0].handle, native_handle_1.handle());
-    EXPECT_EQ(list->hwLayers[1].handle, native_handle_2.handle());
+    EXPECT_EQ(list->hwLayers[0].handle, native_handle_1->handle());
+    EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
 }

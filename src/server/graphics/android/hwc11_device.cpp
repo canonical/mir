@@ -31,11 +31,11 @@ namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HWCLayerList> const& layer_list,
+                              std::shared_ptr<HWCLayerList> const&,
                               std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list(layer_list),
+      layer_list({mga::FramebufferLayer{}}),
       fb_device(fbdev), 
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
@@ -76,13 +76,11 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     return 2u;
 }
 
-//TODO: this function is going away
+//TODO: this is two step initialization, and is going away soon
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    printf("ndosth\n");
-    frontbuffer = buffer;
-    frontbuffer->native_buffer_handle()->wait_for_content();
-    printf("done.\n");
+    layer_list.set_fb_target(buffer->native_buffer_handle());
+    buffer->native_buffer_handle()->wait_for_content();
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
@@ -91,8 +89,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
   
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-//    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {ll.native_list(), nullptr};
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {nullptr, nullptr};
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
 
     if (hwc_device->prepare(hwc_device.get(), 1, displays))
     {
@@ -100,24 +97,17 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     }
 
     /* note, swapbuffers will go around through the driver and call
-       set_next_frontbuffer, updating the fb target before committing */
+       set_next_frontbuffer, updating the fb in layerlist before committing */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
     }
 
-    mga::LayerList ll2({
-        mga::FramebufferLayer{*frontbuffer->native_buffer_handle()}
-    });
-  
-    //note, although we only have a primary display right now,
-    //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* display2[HWC_NUM_DISPLAY_TYPES] {ll2.native_list(), nullptr};
-    if (hwc_device->set(hwc_device.get(), 1, display2))
+    if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
-    mga::SyncFence fence(sync_ops, display2[HWC_DISPLAY_PRIMARY]->retireFenceFd);
+    mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }
 
