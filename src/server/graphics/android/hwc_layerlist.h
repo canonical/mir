@@ -49,19 +49,15 @@ struct HWCLayer : public hwc_layer_1
 
     HWCLayer& operator=(HWCLayer const& layer)
     {
-        *this = layer; 
+        memcpy(this, &layer, sizeof(HWCLayer)); 
         this->visibleRegionScreen = {1, &this->visible_rect};
-        this->visible_rect = layer.visible_rect;
-        this->must_use_gl = layer.must_use_gl;
         return *this;     
     }
 
     HWCLayer(HWCLayer const& layer)
     {
-        *this = layer;
+        memcpy(this, &layer, sizeof(HWCLayer)); 
         this->visibleRegionScreen = {1, &this->visible_rect};
-        this->visible_rect = layer.visible_rect;
-        this->must_use_gl = layer.must_use_gl; 
     }
 
     HWCLayerType type() const;

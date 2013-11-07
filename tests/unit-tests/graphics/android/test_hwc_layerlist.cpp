@@ -131,16 +131,13 @@ TEST_F(HWCLayerListTest, gl_target_layer_mutation_to_overlay)
     EXPECT_EQ(mga::HWCLayerType::overlay, target_layer.type());
 }
 
-#if 0
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
-    mga::FramebufferLayer target_layer(mock_buffer);
-    mga::CompositionLayer surface_layer(mock_buffer, force_gl);
-    hwc_layer_1* target_layer_ptr = &target_layer;
-    hwc_layer_1* surface_layer_ptr = &surface_layer;
-   
-    mga::LayerList layerlist({surface_layer, target_layer});
+    bool force_gl = false;
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, force_gl),
+        mga::FramebufferLayer(*native_handle_1)});
 
     auto list = layerlist.native_list(); 
     EXPECT_EQ(-1, list->retireFenceFd);
@@ -150,7 +147,6 @@ TEST_F(HWCLayerListTest, hwc_list_creation)
     EXPECT_NE(nullptr, list->sur);
 
     ASSERT_EQ(2u, list->numHwLayers);
-    EXPECT_EQ(surface_layer, list->hwLayers[0]);
-    EXPECT_EQ(target_layer, list->hwLayers[1]);
+//    EXPECT_EQ(surface_layer, list->hwLayers[0]);
+//    EXPECT_EQ(target_layer, list->hwLayers[1]);
 }
-#endif

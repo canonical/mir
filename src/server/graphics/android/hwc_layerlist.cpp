@@ -89,6 +89,10 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
     }
     hwc_representation->numHwLayers = layer_list.size();
     hwc_representation->retireFenceFd = -1;
+    hwc_representation->flags = HWC_GEOMETRY_CHANGED;
+    hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
+    hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
+    
 }
 
 hwc_display_contents_1_t* mga::LayerList::native_list() const
