@@ -45,6 +45,6 @@ std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    return std::make_shared<Surface>(session, surface_builder, surface_configurator, params, id, sender);
+    return std::make_shared<SurfaceImpl>(session, surface_builder, surface_configurator, params, id, sender);
 }
 

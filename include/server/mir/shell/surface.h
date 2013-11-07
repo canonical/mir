@@ -46,7 +46,25 @@ struct SurfaceCreationParameters;
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
-    Surface(
+    virtual void hide() = 0;
+    virtual void show() = 0;
+    virtual void move_to(geometry::Point const& top_left) = 0;
+    virtual geometry::Point top_left() const = 0;
+
+    virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter) = 0;
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
+
+    virtual void allow_framedropping(bool) = 0;
+
+    virtual void raise(std::shared_ptr<SurfaceController> const& controller) = 0;
+
+    virtual void resize(geometry::Size const& size) = 0;
+};
+
+class SurfaceImpl : public Surface
+{
+public:
+    SurfaceImpl(
         Session* session,
         std::shared_ptr<SurfaceBuilder> const& builder,
         std::shared_ptr<SurfaceConfigurator> const& configurator,
@@ -54,7 +72,7 @@ public:
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
-    ~Surface() noexcept;
+    ~SurfaceImpl() noexcept;
 
     virtual void hide();
     virtual void show();

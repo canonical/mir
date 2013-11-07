@@ -123,7 +123,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
 
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
-       Return(std::make_shared<msh::Surface>(
+       Return(std::make_shared<msh::SurfaceImpl>(
            nullptr,
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
@@ -159,7 +159,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
 {
     using namespace ::testing;
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
-        Return(std::make_shared<msh::Surface>(
+        Return(std::make_shared<msh::SurfaceImpl>(
            nullptr,
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));

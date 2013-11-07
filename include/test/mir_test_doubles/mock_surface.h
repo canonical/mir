@@ -36,10 +36,10 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public shell::Surface
+struct MockSurface : public shell::SurfaceImpl
 {
     MockSurface(shell::Session* session, std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(), 
+        shell::SurfaceImpl(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(),
             frontend::SurfaceId{}, std::make_shared<NullEventSink>())
     {
     }

@@ -162,7 +162,7 @@ TEST_F(ShellSurface, creation_and_destruction)
     EXPECT_CALL(surface_builder, create_surface(nullptr, params)).Times(1);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
 
-    msh::Surface test(
+    msh::SurfaceImpl test(
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         params, stub_id, stub_sender);
@@ -181,7 +181,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(Exactly(0));
 
     EXPECT_THROW({
-        msh::Surface test(
+        msh::SurfaceImpl test(
             nullptr,
             mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
             params, stub_id, stub_sender);
@@ -198,7 +198,7 @@ TEST_F(ShellSurface, destroy)
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 
     {
-        msh::Surface test(
+        msh::SurfaceImpl test(
                           nullptr,
                           mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
                           msh::a_surface(), stub_id, stub_sender);
@@ -215,7 +215,7 @@ TEST_F(ShellSurface, attributes)
 {
     using namespace testing;
 
-    msh::Surface surf(
+    msh::SurfaceImpl surf(
             nullptr,
             mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
             msh::a_surface(), stub_id, stub_sender);
@@ -229,7 +229,7 @@ TEST_F(ShellSurface, types)
 {
     using namespace testing;
 
-    msh::Surface surf(
+    msh::SurfaceImpl surf(
             nullptr,
             mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
             msh::a_surface(), stub_id, stub_sender);
@@ -264,7 +264,7 @@ TEST_F(ShellSurface, states)
 {
     using namespace testing;
 
-    msh::Surface surf(
+    msh::SurfaceImpl surf(
             nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
@@ -309,7 +309,7 @@ TEST_F(ShellSurface, sends_focus_notifications_when_focus_gained_and_lost)
             .Times(1);
     }
 
-    msh::Surface surf(
+    msh::SurfaceImpl surf(
             nullptr,
             mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
             msh::a_surface(), stub_id, mt::fake_shared(sink));
@@ -328,7 +328,7 @@ TEST_F(ShellSurface, configurator_selects_attribute_values)
         .WillOnce(Return(mir_surface_state_minimized));
     EXPECT_CALL(configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized)).Times(1);
 
-    msh::Surface surf(
+    msh::SurfaceImpl surf(
             nullptr,
             mt::fake_shared(surface_builder), mt::fake_shared(configurator),
             msh::a_surface(), stub_id, stub_sender);
@@ -340,7 +340,7 @@ TEST_F(ShellSurface, take_input_focus)
 {
     using namespace ::testing;
 
-    msh::Surface test(
+    msh::SurfaceImpl test(
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
@@ -353,7 +353,7 @@ TEST_F(ShellSurface, take_input_focus)
 
 TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
 {
-    msh::Surface test(
+    msh::SurfaceImpl test(
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
@@ -375,7 +375,7 @@ TEST_F(ShellSurface, raise)
     using namespace ::testing;
 
     mtd::MockSurfaceController surface_controller;
-    msh::Surface test(
+    msh::SurfaceImpl test(
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
