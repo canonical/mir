@@ -594,7 +594,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
             mir_connection_release(connection);
         }
 
-        // This is misleading. It should say "use_real_connection"...
         bool use_real_graphics(mir::options::Option const&) override
         {
             return true;
