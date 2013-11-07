@@ -87,13 +87,10 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
     EXPECT_EQ(sur, mock_device->display0_set_content.sur);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
     EXPECT_EQ(0u, mock_device->display0_set_content.flags);
-    EXPECT_EQ(0u, mock_device->display0_set_content.numHwLayers);
-
-    EXPECT_EQ(dpy, mock_device->display0_prepare_content.dpy);
-    EXPECT_EQ(sur, mock_device->display0_prepare_content.sur);
-    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(0u, mock_device->display0_prepare_content.flags);
-    EXPECT_EQ(0u, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(1u, mock_device->display0_set_content.numHwLayers);
+    ASSERT_NE(nullptr, mock_device->display0_set_content.hwLayers);
+    EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->display0_set_content.hwLayers[0].compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, mock_device->display0_set_content.hwLayers[0].flags);
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_async)
