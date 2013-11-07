@@ -36,25 +36,16 @@ public:
 
         width = 432; 
         height = 876; 
-        default_size = geom::Size{width, height};
-
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        native_handle_1->anwb()->width = width;
+        native_handle_1->anwb()->height = height;
         native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
-        ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(native_handle_1));
-        ON_CALL(*mock_buffer, size())
-            .WillByDefault(Return(default_size));
     }
 
     int width; 
     int height; 
-    geom::Size default_size;
-
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
     std::shared_ptr<mg::NativeBuffer> native_handle_2;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
 TEST_F(HWCLayerListTest, fb_target_layer)
@@ -106,7 +97,7 @@ TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
 
 TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
 {
-    bool force_gl = true;
+    bool force_gl = false;
     mga::CompositionLayer target_layer(*native_handle_1, force_gl);
     EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
 

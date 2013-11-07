@@ -52,11 +52,18 @@ mga::HWCLayer::HWCLayer(HWCLayerType type, mg::NativeBuffer const& buffer, bool 
     displayFrame = visible_rect;
     visibleRegionScreen.numRects=1;
     visibleRegionScreen.rects= &visible_rect;
+    handle = buffer.handle();
 }
 
 mga::HWCLayerType mga::HWCLayer::type() const
 {
-    return mga::HWCLayerType::framebuffer;
+    if (compositionType == HWC_FRAMEBUFFER)
+        return mga::HWCLayerType::gles;
+    if (compositionType == HWC_FRAMEBUFFER_TARGET)
+        return mga::HWCLayerType::framebuffer;
+    if (compositionType == HWC_OVERLAY)
+        return mga::HWCLayerType::overlay;
+    return mga::HWCLayerType::overlay;
 }
 
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
