@@ -17,14 +17,10 @@
  */
 
 #include "surface_source.h"
-//#include "mir/shell/surface_builder.h"
-#include "mir/shell/surface.h"
-#include "mir/frontend/surface.h"
-#include "mir/input/input_channel_factory.h"
+#include "surface_impl.h"
 
 #include <cassert>
 
-namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;

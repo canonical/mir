@@ -9,7 +9,7 @@ set(
   consuming_placement_strategy.cpp
   organising_surface_factory.cpp
   surface_source.cpp
-  surface.cpp
+  surface_impl.cpp
   surface_creation_parameters.cpp
   threaded_snapshot_strategy.cpp
   gl_pixel_buffer.cpp

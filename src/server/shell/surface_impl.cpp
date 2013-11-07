@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/surface.h"
+#include "surface_impl.h"
 #include "mir/surfaces/basic_surface.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/shell/surface_configurator.h"
@@ -24,6 +24,7 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/surface_id.h"
 
 #include "mir_toolkit/event.h"
 

@@ -21,7 +21,7 @@
 #include "mir/shell/session_manager.h"
 #include "src/server/shell/default_session_container.h"
 #include "mir/shell/session.h"
-#include "mir/shell/surface.h"
+#include "src/server/shell/surface_impl.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
