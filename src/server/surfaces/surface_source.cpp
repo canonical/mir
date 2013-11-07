@@ -21,13 +21,14 @@
 
 #include <cassert>
 
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 
 
-msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                                  std::shared_ptr<SurfaceConfigurator> const& surface_configurator)
+ms::SurfaceSource::SurfaceSource(std::shared_ptr<msh::SurfaceBuilder> const& surface_builder,
+                                  std::shared_ptr<msh::SurfaceConfigurator> const& surface_configurator)
     : surface_builder(surface_builder),
       surface_configurator(surface_configurator)
 {
@@ -35,7 +36,7 @@ msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface
     assert(surface_configurator);
 }
 
-std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
+std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
     msh::Session* session,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,

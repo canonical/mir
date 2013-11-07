@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef SURFACE_IMPL_H_
-#define SURFACE_IMPL_H_
+#ifndef MIR_SURFACES_SURFACE_IMPL_H_
+#define MIR_SURFACES_SURFACE_IMPL_H_
 
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_id.h"
@@ -38,15 +38,18 @@ class SurfaceBuilder;
 class SurfaceConfigurator;
 class SurfaceController;
 struct SurfaceCreationParameters;
+}
 
-class SurfaceImpl : public Surface
+namespace surfaces
+{
+class SurfaceImpl : public shell::Surface
 {
 public:
     SurfaceImpl(
-        Session* session,
-        std::shared_ptr<SurfaceBuilder> const& builder,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
-        SurfaceCreationParameters const& params,
+        shell::Session* session,
+        std::shared_ptr<shell::SurfaceBuilder> const& builder,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+        shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
@@ -77,12 +80,12 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
-    virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
+    virtual void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter);
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
 
     virtual void allow_framedropping(bool);
 
-    virtual void raise(std::shared_ptr<SurfaceController> const& controller);
+    virtual void raise(std::shared_ptr<shell::SurfaceController> const& controller);
 
     virtual void resize(geometry::Size const& size);
 
@@ -91,8 +94,8 @@ private:
     bool set_state(MirSurfaceState s);
     void notify_change(MirSurfaceAttrib attrib, int value);
 
-    std::shared_ptr<SurfaceBuilder> const builder;
-    std::shared_ptr<SurfaceConfigurator> const configurator;
+    std::shared_ptr<shell::SurfaceBuilder> const builder;
+    std::shared_ptr<shell::SurfaceConfigurator> const configurator;
     std::shared_ptr<mir::surfaces::BasicSurface> const surface;
 
     frontend::SurfaceId const id;
@@ -104,7 +107,4 @@ private:
 }
 }
 
-
-
-
-#endif /* SURFACE_IMPL_H_ */
+#endif /* MIR_SURFACES_SURFACE_IMPL_H_ */
