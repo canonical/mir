@@ -248,6 +248,16 @@ MATCHER(HoverExitEvent, "")
     return true;
 }
 
+MATCHER(HoverMoveEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_hover_move)
+        return false;
+
+    return true;
+}
+
 MATCHER_P2(ButtonDownEvent, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
@@ -354,7 +364,7 @@ std::shared_ptr<mtf::InputTestingServerConfiguration>
 make_event_producing_server(mtf::CrossProcessSync const& client_ready_fence, 
     int number_of_clients,
     std::function<void(mtf::InputTestingServerConfiguration& server)> const& produce_events,
-                            GeometryMap const& client_geometry_map, DepthMap const& client_depth_map)
+    GeometryMap const& client_geometry_map, DepthMap const& client_depth_map)
 {
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
@@ -812,9 +822,8 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         [&](mtf::InputTestingServerConfiguration& server)
         {
             // We send one event and then hide the surface on top before sending the next. 
-            // So we expect each of the two surfaces to receive one event pair.
+            // So we expect each of the two surfaces to receive one even
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
-
             // We use a fence to ensure we do not hide the client
             // before event dispatch occurs
             second_client_done_fence.wait_for_signal_ready_for();
@@ -824,6 +833,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
                 if (session->name() == test_client_2_name)
                     session->hide();
             });
+
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
         }, GeometryMap(), depths);
     launch_server_process(*server_config);
@@ -831,8 +841,6 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     auto client_config_1 = make_event_expecting_client(test_client_name, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            using namespace ::testing;
-            InSequence seq;    
             EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
             EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
             EXPECT_CALL(handler, handle_input(MotionEventWithPosition(2, 2))).Times(1)
@@ -841,9 +849,6 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     auto client_config_2 = make_event_expecting_client(test_client_2_name, fence,
          [&](MockInputHandler& handler, mt::WaitCondition& events_received)
          {
-            using namespace ::testing;
-            InSequence seq;    
-
             EXPECT_CALL(handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
             EXPECT_CALL(handler, handle_input(HoverExitEvent())).Times(AnyNumber());
             EXPECT_CALL(handler, handle_input(MotionEventWithPosition(1, 1))).Times(1)
