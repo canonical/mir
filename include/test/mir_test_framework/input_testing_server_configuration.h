@@ -52,8 +52,6 @@ class FakeEventHubInputConfiguration;
 namespace mir_test_framework
 {
 
-enum ClientLifecycleState { starting, appeared, vanished };
-
 class InputTestingServerConfiguration : public TestingServerConfiguration
 {
 public:
@@ -63,7 +61,6 @@ public:
     void on_exit();
     
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
-    std::shared_ptr<mir::frontend::Shell> the_frontend_shell() override;
 
     mir::input::android::FakeEventHub* fake_event_hub;
 
@@ -73,15 +70,9 @@ protected:
     void wait_until_client_appears(std::string const& surface_name);
 
 private:
-    std::mutex lifecycle_lock;
-
-    std::condition_variable lifecycle_condition;
-    std::map<std::string, ClientLifecycleState> client_lifecycles;
-    
     std::thread input_injection_thread;
     
     std::shared_ptr<mir::test::doubles::FakeEventHubInputConfiguration> input_configuration;
-    std::shared_ptr<mir::frontend::Shell> frontend_shell;
 };
 
 }

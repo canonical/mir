@@ -586,7 +586,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         
         void inject_input() override
         {
-            wait_until_client_appears(test_client_name);
             input_cb_setup_fence.wait_for_signal_ready_for();
             
             // First we will move the cursor in to the input region on the left side of the window. We should see a click here
