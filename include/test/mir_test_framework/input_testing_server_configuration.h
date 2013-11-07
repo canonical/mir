@@ -65,9 +65,10 @@ public:
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<mir::frontend::Shell> the_frontend_shell() override;
 
+    mir::input::android::FakeEventHub* fake_event_hub;
+
 protected:
     virtual void inject_input() = 0;
-    mir::input::android::FakeEventHub* fake_event_hub;
 
     void wait_until_client_appears(std::string const& surface_name);
 
