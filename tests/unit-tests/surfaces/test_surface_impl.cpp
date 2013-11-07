@@ -130,13 +130,13 @@ private:
 typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
 
-struct ShellSurface : testing::Test
+struct SurfaceImpl : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
     mtd::StubSurfaceController surface_controller;
 
-    ShellSurface() :
+    SurfaceImpl() :
         buffer_stream(std::make_shared<StubBufferStream>()),
         stub_sender(std::make_shared<mtd::NullEventSink>())
     {
@@ -151,7 +151,7 @@ struct ShellSurface : testing::Test
 };
 }
 
-TEST_F(ShellSurface, creation_and_destruction)
+TEST_F(SurfaceImpl, creation_and_destruction)
 {
     using namespace testing;
 
@@ -168,7 +168,7 @@ TEST_F(ShellSurface, creation_and_destruction)
         params, stub_id, stub_sender);
 }
 
-TEST_F(ShellSurface, creation_throws_means_no_destroy)
+TEST_F(SurfaceImpl, creation_throws_means_no_destroy)
 {
     using namespace testing;
 
@@ -188,7 +188,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
     }, std::runtime_error);
 }
 
-TEST_F(ShellSurface, destroy)
+TEST_F(SurfaceImpl, destroy)
 {
     using namespace testing;
     MockSurfaceBuilder surface_builder;
@@ -211,7 +211,7 @@ TEST_F(ShellSurface, destroy)
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 }
 
-TEST_F(ShellSurface, attributes)
+TEST_F(SurfaceImpl, attributes)
 {
     using namespace testing;
 
@@ -225,7 +225,7 @@ TEST_F(ShellSurface, attributes)
     }, std::logic_error);
 }
 
-TEST_F(ShellSurface, types)
+TEST_F(SurfaceImpl, types)
 {
     using namespace testing;
 
@@ -260,7 +260,7 @@ TEST_F(ShellSurface, types)
     EXPECT_EQ(mir_surface_type_freestyle, surf.type());
 }
 
-TEST_F(ShellSurface, states)
+TEST_F(SurfaceImpl, states)
 {
     using namespace testing;
 
@@ -295,7 +295,7 @@ TEST_F(ShellSurface, states)
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
 }
 
-TEST_F(ShellSurface, sends_focus_notifications_when_focus_gained_and_lost)
+TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;
 
@@ -318,7 +318,7 @@ TEST_F(ShellSurface, sends_focus_notifications_when_focus_gained_and_lost)
     surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
 
-TEST_F(ShellSurface, configurator_selects_attribute_values)
+TEST_F(SurfaceImpl, configurator_selects_attribute_values)
 {
     using namespace testing;
     
@@ -336,7 +336,7 @@ TEST_F(ShellSurface, configurator_selects_attribute_values)
     EXPECT_EQ(mir_surface_state_minimized, surf.configure(mir_surface_attrib_state, mir_surface_state_restored));
 }
 
-TEST_F(ShellSurface, take_input_focus)
+TEST_F(SurfaceImpl, take_input_focus)
 {
     using namespace ::testing;
 
@@ -351,7 +351,7 @@ TEST_F(ShellSurface, take_input_focus)
     test.take_input_focus(mt::fake_shared(targeter));
 }
 
-TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
+TEST_F(SurfaceImpl, with_most_recent_buffer_do_uses_compositor_buffer)
 {
     ms::SurfaceImpl test(
         nullptr,
@@ -370,7 +370,7 @@ TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
               buf_ptr);
 }
 
-TEST_F(ShellSurface, raise)
+TEST_F(SurfaceImpl, raise)
 {
     using namespace ::testing;
 
