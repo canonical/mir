@@ -56,13 +56,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
-    if (auto err = turn_screen_on())
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Could not unblank display")) <<
-            boost::errinfo_errno(-err));
-    }
+    turn_screen_on();
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
