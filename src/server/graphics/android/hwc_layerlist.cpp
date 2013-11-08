@@ -90,6 +90,9 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
     hwc_representation->numHwLayers = layer_list.size();
     hwc_representation->retireFenceFd = -1;
     hwc_representation->flags = HWC_GEOMETRY_CHANGED;
+
+    //aosp exynos hwc in particular, checks that these fields are non-null in hwc1.1, although
+    //these fields are deprecated in hwc1.1 and later.
     hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
     hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
     
