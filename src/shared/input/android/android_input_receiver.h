@@ -43,6 +43,7 @@ namespace input
 namespace receiver
 {
 class XKBMapper;
+class InputReceiverReport;
 
 namespace android
 {
@@ -51,8 +52,10 @@ namespace android
 class InputReceiver
 {
 public:
-    InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel);
-    InputReceiver(int fd);
+    InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
+                  std::shared_ptr<InputReceiverReport> const& report);
+    InputReceiver(int fd,
+                  std::shared_ptr<InputReceiverReport> const& report);
 
     virtual ~InputReceiver();
     int fd() const;
@@ -71,6 +74,8 @@ protected:
 
 private:
     droidinput::sp<droidinput::InputChannel> input_channel;
+    std::shared_ptr<InputReceiverReport> const report;
+
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
     droidinput::sp<droidinput::Looper> looper;

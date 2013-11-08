@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_display_device.h"
 
 #include <thread>
@@ -71,6 +72,7 @@ protected:
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }
 
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockDisplayDevice> mock_fbdev;
@@ -114,12 +116,14 @@ TYPED_TEST(HWCCommon, test_vsync_activation_failure_throws)
 {
     using namespace testing;
 
-    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
-        .Times(1)
-        .WillOnce(Return(-EINVAL));
+    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), 0, HWC_EVENT_VSYNC, _))
+        .WillRepeatedly(Return(-EINVAL));
 
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
     EXPECT_THROW({
         auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+        device->mode(mir_power_mode_off);
     }, std::runtime_error);
 }
 
@@ -136,20 +140,7 @@ TYPED_TEST(HWCCommon, test_hwc_turns_on_display_after_proc_registration)
     testing::Mock::VerifyAndClearExpectations(this->mock_device.get());
 }
 
-TYPED_TEST(HWCCommon, test_hwc_ensures_unblank_during_initialization)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_THROW({
-        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-    }, std::runtime_error);
-}
-
-TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
+TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_request_error)
 {
     using namespace testing;
 
@@ -158,10 +149,8 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_error)
         .Times(1)
         .WillOnce(Return(0));
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(1)
-        .WillOnce(Return(-1));
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(1)
+        .Times(2)
+        .WillOnce(Return(-1))
         .WillOnce(Return(0));
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
@@ -176,10 +165,10 @@ TYPED_TEST(HWCCommon, test_hwc_suspend_standby_turn_off)
 
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
         .Times(3)
-        .WillOnce(Return(0));
+        .WillRepeatedly(Return(0));
     EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .Times(3)
-        .WillOnce(Return(0));
+        .WillRepeatedly(Return(0));
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
     device->mode(mir_power_mode_off);

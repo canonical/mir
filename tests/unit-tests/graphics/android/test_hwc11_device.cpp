@@ -29,6 +29,7 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 
 class HWC11Device : public ::testing::Test
 {
@@ -185,8 +186,59 @@ TEST_F(HWC11Device, hwc_device_reports_2_fbs_available_by_default)
     EXPECT_EQ(2u, device.number_of_framebuffers_available());
 }
 
-TEST_F(HWC11Device, hwc_device_reports_abgr_8888_by_default)
+TEST_F(HWC11Device, hwc_version_11_format_selection)
 {
+    using namespace testing;
+    EGLint const expected_egl_config_attr [] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
+        EGL_NONE
+    };
+
+    int visual_id = HAL_PIXEL_FORMAT_BGRA_8888;
+    EGLDisplay fake_display = reinterpret_cast<EGLDisplay>(0x11235813);
+    EGLConfig fake_egl_config = reinterpret_cast<EGLConfig>(0x44);
+
+    Sequence seq;
+    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+        .InSequence(seq)
+        .WillOnce(Return(fake_display));
+    EXPECT_CALL(mock_egl, eglInitialize(fake_display,_,_))
+        .InSequence(seq);
+    EXPECT_CALL(mock_egl, eglChooseConfig(fake_display,mtd::AttrMatches(expected_egl_config_attr),_,1,_))
+        .InSequence(seq)
+        .WillOnce(DoAll(SetArgPointee<2>(fake_egl_config), SetArgPointee<4>(1), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(fake_display, fake_egl_config, EGL_NATIVE_VISUAL_ID, _))
+        .InSequence(seq)
+        .WillOnce(DoAll(SetArgPointee<3>(visual_id), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglTerminate(fake_display))
+        .InSequence(seq);
+ 
     mga::HWC11Device device(mock_device, nullptr, mock_display_device, mock_vsync);
-    EXPECT_EQ(mir::geometry::PixelFormat::abgr_8888, device.display_format());
+    EXPECT_EQ(geom::PixelFormat::argb_8888, device.display_format());
+}
+
+//not all hwc11 implementations give a hint about their framebuffer formats in their configuration.
+//prefer abgr_8888 if we can't figure things out
+TEST_F(HWC11Device, hwc_version_11_format_selection_failure)
+{
+    using namespace testing;
+    EGLDisplay fake_display = reinterpret_cast<EGLDisplay>(0x11235813);
+
+    Sequence seq;
+    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+        .InSequence(seq)
+        .WillOnce(Return(fake_display));
+    EXPECT_CALL(mock_egl, eglInitialize(fake_display,_,_))
+        .InSequence(seq);
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,_,_,_,_))
+        .InSequence(seq)
+        .WillOnce(DoAll(SetArgPointee<4>(0), Return(EGL_TRUE)));
+    EXPECT_CALL(mock_egl, eglTerminate(fake_display))
+        .InSequence(seq);
+    
+    mga::HWC11Device device(mock_device, nullptr, mock_display_device, mock_vsync);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, device.display_format());
 }

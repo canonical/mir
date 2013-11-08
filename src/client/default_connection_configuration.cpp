@@ -24,7 +24,9 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "native_client_platform_factory.h"
 #include "mir/input/input_platform.h"
+#include "mir/input/null_input_receiver_report.h"
 #include "logging/rpc_report.h"
+#include "logging/input_receiver_report.h"
 #include "lttng/rpc_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
@@ -88,9 +90,9 @@ std::shared_ptr<mir::input::receiver::InputPlatform>
 mcl::DefaultConnectionConfiguration::the_input_platform()
 {
     return input_platform(
-        []
+        [this]
         {
-            return mir::input::receiver::InputPlatform::create();
+            return mir::input::receiver::InputPlatform::create(the_input_receiver_report());
         });
 }
 
@@ -115,6 +117,22 @@ mcl::DefaultConnectionConfiguration::the_rpc_report()
                 return std::make_shared<mcl::lttng::RpcReport>();
             else
                 return std::make_shared<mcl::rpc::NullRpcReport>();
+        });
+}
+
+std::shared_ptr<mir::input::receiver::InputReceiverReport>
+mcl::DefaultConnectionConfiguration::the_input_receiver_report()
+{
+    return input_receiver_report(
+        [this] () -> std::shared_ptr<mir::input::receiver::InputReceiverReport>
+        {
+            auto val_raw = getenv("MIR_CLIENT_INPUT_RECEIVER_REPORT");
+            std::string const val{val_raw ? val_raw : off_opt_val};
+            
+            if (val == log_opt_val)
+                return std::make_shared<mcl::logging::InputReceiverReport>(the_logger());
+            else
+                return std::make_shared<mir::input::receiver::NullInputReceiverReport>();
         });
 }
 
