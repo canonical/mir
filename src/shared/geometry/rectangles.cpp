@@ -187,12 +187,3 @@ bool geom::Rectangles::operator!=(Rectangles const& rects) const
 {
     return !(*this == rects);
 }
-
-std::ostream& geom::operator<<(std::ostream& out, Rectangles const& value)
-{
-    out << '[';
-    for (auto const& rect : value)
-        out << rect << ", ";
-    out << ']';
-    return out;
-}

@@ -23,7 +23,7 @@
 #include "point.h"
 #include "size.h"
 
-#include <ostream>
+#include <iosfwd>
 
 namespace mir
 {
@@ -65,12 +65,7 @@ inline bool operator != (Rectangle const& lhs, Rectangle const& rhs)
     return lhs.top_left != rhs.top_left || lhs.size != rhs.size;
 }
 
-inline std::ostream& operator<<(std::ostream& out, Rectangle const& value)
-{
-    out << '(' << value.top_left << ", " << value.size << ')';
-    return out;
-}
-
+std::ostream& operator<<(std::ostream& out, Rectangle const& value);
 }
 }
 
