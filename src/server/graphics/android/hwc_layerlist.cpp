@@ -20,7 +20,6 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 
-#include <algorithm>
 #include <cstring>
 
 namespace mg=mir::graphics;
