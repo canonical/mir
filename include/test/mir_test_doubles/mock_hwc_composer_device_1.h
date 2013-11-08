@@ -21,6 +21,8 @@
 
 #include <hardware/hwcomposer.h>
 #include <gmock/gmock.h>
+#include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -60,6 +62,11 @@ public:
         hwc_display_contents_1_t* primary_display = *in;
         memcpy(out, primary_display, sizeof(hwc_display_contents_1_t));
 
+        for(auto i = 0u; i < out->numHwLayers; i++)
+        {
+            set_layerlist.push_back(out->hwLayers[i]);
+            set_layerlist.back().visibleRegionScreen = {0, nullptr};
+        }
         return 0;
 
     }
@@ -120,6 +127,7 @@ public:
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
 
     hwc_display_contents_1_t display0_set_content;
+    std::vector<hwc_layer_1> set_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
 };
 

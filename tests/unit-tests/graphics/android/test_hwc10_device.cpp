@@ -89,8 +89,8 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_device->display0_set_content.flags);
     EXPECT_EQ(1u, mock_device->display0_set_content.numHwLayers);
     ASSERT_NE(nullptr, mock_device->display0_set_content.hwLayers);
-//    EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->display0_set_content.hwLayers[0].compositionType);
-//    EXPECT_EQ(HWC_SKIP_LAYER, mock_device->display0_set_content.hwLayers[0].flags);
+    EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->set_layerlist[0].compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_async)
