@@ -1,6 +1,10 @@
 mir (0.1.1-0ubuntu1) UNRELEASED; urgency=low
 
   * Bump version to 0.1.1
+  * android-input: Assign more unique touch ids
+  * Remove false and misleading automatic snapshot messages
+  * input & shell: avoid publishing some internal headers
+  * Fix the armhf chroot setup script to point to the right library, so cross compiling can work again (LP: #1246975)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 30 Oct 2013 11:46:13 +0800
 
