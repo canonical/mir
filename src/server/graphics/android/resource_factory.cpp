@@ -106,9 +106,8 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc11_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
-//    auto layer_list = std::make_shared<mga::LayerList>();
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HWC11Device>(hwc_native_device, nullptr, nullptr, syncer);
+    return std::make_shared<mga::HWC11Device>(hwc_native_device, syncer);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(

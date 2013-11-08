@@ -30,7 +30,6 @@ class Buffer;
 
 namespace android
 {
-class HWCLayerList;
 class HWCVsyncCoordinator;
 class SyncFileOps;
 
@@ -38,8 +37,6 @@ class HWC11Device : public HWCCommonDevice
 {
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<HWCLayerList> const& layer_list,
-                std::shared_ptr<DisplayDevice> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
     ~HWC11Device() noexcept;
 
@@ -54,7 +51,6 @@ public:
 private:
     LayerList layer_list;
 
-    std::shared_ptr<DisplayDevice> const fb_device;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     geometry::PixelFormat fb_format;

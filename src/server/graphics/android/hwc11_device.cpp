@@ -72,12 +72,9 @@ geom::PixelFormat determine_fb_format()
 }
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HWCLayerList> const&,
-                              std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_list({mga::FramebufferLayer{}}),
-      fb_device(fbdev), 
       sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       fb_format(determine_fb_format())
 {
