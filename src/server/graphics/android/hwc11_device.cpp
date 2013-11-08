@@ -21,7 +21,10 @@
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
+#include "buffer.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
@@ -33,14 +36,12 @@ namespace geom = mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                              std::shared_ptr<HWCLayerList> const& layer_list,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       fb_bundle(fb_bundle),
-      layer_list(layer_list),
+      layer_list({mga::FramebufferLayer{}}),
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
-    printf("con con 11\n");
 }
 
 geom::Size mga::HWC11Device::display_size() const
@@ -61,11 +62,10 @@ std::shared_ptr<mg::Buffer> mga::HWC11Device::buffer_for_render()
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
     auto lg = lock_unblanked();
-
-printf("zog.\n");
+  
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
 
     if (hwc_device->prepare(hwc_device.get(), 1, displays))
     {
@@ -79,14 +79,16 @@ printf("zog.\n");
 
     /* update gles rendered surface */
     auto buffer = fb_bundle->last_rendered_buffer();
-    layer_list->set_fb_target(buffer);
+    layer_list.set_fb_target(buffer->native_buffer_handle());
+    //TODO: wait for framebuffer render to complete here. Eventually, we want to pass the fence right
+    //      into hwc_device->set() and let that wait for the render to complete.
+    buffer->native_buffer_handle()->wait_for_content();
 
     if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-printf("commit and go\n");
     mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }

@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 #include "hwc_common_device.h"
+#include "hwc_layerlist.h"
 #include <memory>
 
 namespace mir
@@ -29,7 +30,6 @@ class Buffer;
 
 namespace android
 {
-class HWCLayerList;
 class HWCVsyncCoordinator;
 class SyncFileOps;
 class FramebufferBundle;
@@ -41,7 +41,6 @@ public:
     //      we start doing overlays
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                std::shared_ptr<HWCLayerList> const& layer_list,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     geometry::Size display_size() const; 
@@ -53,8 +52,8 @@ public:
 
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
-    std::shared_ptr<HWCLayerList> const layer_list;
-    std::shared_ptr<DisplayDevice> const fb_device;
+    LayerList layer_list;
+
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     geometry::PixelFormat fb_format;

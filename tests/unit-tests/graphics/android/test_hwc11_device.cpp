@@ -20,10 +20,10 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
-#include "mir_test_doubles/mock_hwc_layerlist.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -45,7 +45,7 @@ struct MockFBBundle : public mga::FramebufferBundle
     {
         using namespace testing;
         ON_CALL(*this, last_rendered_buffer())
-            .WillByDefault(Return(nullptr));
+            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
     }
     MOCK_METHOD0(fb_format, geom::PixelFormat());
     MOCK_METHOD0(fb_size, geom::Size());
@@ -63,77 +63,38 @@ protected:
     {
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_hwc_layers = std::make_shared<testing::NiceMock<mtd::MockHWCLayerList>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
-
-        empty_list.numHwLayers = 0;
-        empty_list.retireFenceFd = -1;
-        ON_CALL(*mock_hwc_layers, native_list())
-            .WillByDefault(testing::Return(&empty_list));
     }
 
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
-    std::shared_ptr<mtd::MockHWCLayerList> mock_hwc_layers;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     EGLDisplay dpy;
     EGLSurface surf;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    hwc_display_contents_1_t empty_list;
 };
-
-namespace
-{
-struct HWCDummyLayer : public mga::HWCDefaultLayer
-{
-    HWCDummyLayer()
-     : HWCDefaultLayer({})
-    {
-    }
-};
-}
-
-TEST_F(HWC11Device, test_hwc_commit_empty_layerlist)
-{
-    using namespace testing;
-
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_hwc_layers, mock_vsync);
-
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
-        .Times(1);
-    device.commit_frame(dpy, surf);
-
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_set_content.numHwLayers);
-    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
-}
 
 TEST_F(HWC11Device, test_hwc_commit_order)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_hwc_layers, mock_vsync);
+    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
 
-    //the order here is very important. eglSwapBuffers will alter the layerlist,
-    //so it must come before assembling the data for set
     InSequence seq;
-    EXPECT_CALL(*mock_hwc_layers, native_list())
-        .Times(1);
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1);
-    EXPECT_CALL(*mock_hwc_layers, set_fb_target(_))
-        .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
 
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(1, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_set_content.numHwLayers);
+    EXPECT_EQ(1, mock_device->display0_set_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
 }
 
@@ -141,7 +102,7 @@ TEST_F(HWC11Device, test_hwc_commit_failure)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_hwc_layers, mock_vsync);
+    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
 
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1)
@@ -159,7 +120,7 @@ TEST_F(HWC11Device, test_hwc_swapbuffers_failure)
         .Times(1)
         .WillOnce(Return(EGL_FALSE));
 
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_hwc_layers, mock_vsync);
+    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
 
     EXPECT_THROW({
         device.commit_frame(dpy, surf);
