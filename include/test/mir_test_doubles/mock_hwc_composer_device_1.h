@@ -61,15 +61,9 @@ public:
 
         hwc_display_contents_1_t* primary_display = *in;
         memcpy(out, primary_display, sizeof(hwc_display_contents_1_t));
-
-        for(auto i = 0u; i < out->numHwLayers; i++)
-        {
-            set_layerlist.push_back(out->hwLayers[i]);
-            set_layerlist.back().visibleRegionScreen = {0, nullptr};
-        }
         return 0;
-
     }
+
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
         return save_args(&display0_prepare_content, displays);
@@ -77,6 +71,12 @@ public:
 
     int save_last_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
+        hwc_display_contents_1_t* display = *displays;
+        for(auto i = 0u; i < display->numHwLayers; i++)
+        {
+            set_layerlist.push_back(display->hwLayers[i]);
+            set_layerlist.back().visibleRegionScreen = {0, nullptr};
+        }
         return save_args(&display0_set_content, displays);
     }
 
