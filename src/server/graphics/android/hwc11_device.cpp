@@ -76,10 +76,11 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     return 2u;
 }
 
-//TODO: this is two step initialization, and is going away soon
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     layer_list.set_fb_target(buffer->native_buffer_handle());
+    //TODO: wait for framebuffer render to complete here. Eventually, we want to pass the fence right
+    //      into hwc_device->set() and let that wait for the render to complete.
     buffer->native_buffer_handle()->wait_for_content();
 }
 
