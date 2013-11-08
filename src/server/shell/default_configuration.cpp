@@ -27,7 +27,6 @@
 #include "mediating_display_changer.h"
 #include "organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
-#include "surface_source.h"
 #include "threaded_snapshot_strategy.h"
 
 #include "mir/graphics/display.h"
