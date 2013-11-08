@@ -63,6 +63,7 @@ public:
         return 0;
 
     }
+
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
         return save_args(&display0_prepare_content, displays);

@@ -46,10 +46,8 @@ protected:
     EGLDisplay dpy;
     EGLSurface surf;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    hwc_display_contents_1_t empty_list;
 };
 
-#if 0
 TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
 {
     using namespace testing;
@@ -60,10 +58,10 @@ TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
         .Times(1);
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_set_content.numHwLayers);
+    EXPECT_EQ(1, mock_device->display0_set_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
 }
-#endif
+
 TEST_F(HWC11Device, test_hwc_gles_set_error)
 {
     using namespace testing;
@@ -111,23 +109,11 @@ TEST_F(HWC11Device, test_hwc_commit_order_with_vsync)
 
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(1, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(empty_list.numHwLayers, mock_device->display0_set_content.numHwLayers);
+    EXPECT_EQ(1, mock_device->display0_set_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
 }
-
-#if 0
-TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_adds_to_layerlist)
-{
-    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(*this->mock_hwc_layers, set_fb_target(mock_buffer))
-        .Times(1);
- 
-    mga::HWC11Device device(mock_device, nullptr, mock_display_device, mock_vsync);
-    device.set_next_frontbuffer(mock_buffer);
-}
-#endif
 
 TEST_F(HWC11Device, test_hwc_device_display_config)
 {

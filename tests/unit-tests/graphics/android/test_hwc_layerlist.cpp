@@ -51,7 +51,6 @@ public:
 TEST_F(HWCLayerListTest, fb_target_layer)
 {
     mga::FramebufferLayer target_layer(*native_handle_1);
-    EXPECT_EQ(mga::HWCLayerType::framebuffer, target_layer.type());
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -75,7 +74,6 @@ TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
 {
     bool force_gl = true;
     mga::CompositionLayer target_layer(*native_handle_1, force_gl);
-    EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -99,7 +97,6 @@ TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
 {
     bool force_gl = false;
     mga::CompositionLayer target_layer(*native_handle_1, force_gl);
-    EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -119,25 +116,16 @@ TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
-//prepare() from hwcomposer.h is allowed to mutate the HWC_FRAMEBUFFER type like this
-TEST_F(HWCLayerListTest, gl_target_layer_mutation_to_overlay)
-{
-    bool force_gl = true;
-    mga::CompositionLayer target_layer(*native_handle_1, force_gl);
-    EXPECT_EQ(mga::HWCLayerType::gles, target_layer.type());
- 
-    target_layer.compositionType = HWC_OVERLAY;
-
-    EXPECT_EQ(mga::HWCLayerType::overlay, target_layer.type());
-}
-
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
     bool force_gl = false;
+    
+    mga::CompositionLayer surface_layer(*native_handle_1, force_gl);
+    mga::FramebufferLayer target_layer(*native_handle_1);
     mga::LayerList layerlist({
-        mga::CompositionLayer(*native_handle_1, force_gl),
-        mga::FramebufferLayer(*native_handle_1)});
+        surface_layer,
+        target_layer});
 
     auto list = layerlist.native_list(); 
     EXPECT_EQ(-1, list->retireFenceFd);
@@ -147,8 +135,8 @@ TEST_F(HWCLayerListTest, hwc_list_creation)
     EXPECT_NE(nullptr, list->sur);
 
     ASSERT_EQ(2u, list->numHwLayers);
-//    EXPECT_EQ(surface_layer, list->hwLayers[0]);
-//    EXPECT_EQ(target_layer, list->hwLayers[1]);
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
 TEST_F(HWCLayerListTest, hwc_list_update)

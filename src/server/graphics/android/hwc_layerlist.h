@@ -36,13 +36,6 @@ class Buffer;
 namespace android
 {
 
-enum HWCLayerType : unsigned int
-{
-    framebuffer = HWC_FRAMEBUFFER_TARGET, //a framebuffer layer
-    gles        = HWC_FRAMEBUFFER,        //a layer to be composited using OpenGL
-    overlay     = HWC_OVERLAY             //a layer to be composited as an overlay
-};
- 
 struct HWCLayer : public hwc_layer_1
 {
     virtual ~HWCLayer() = default;
@@ -60,9 +53,8 @@ struct HWCLayer : public hwc_layer_1
         this->visibleRegionScreen = {1, &this->visible_rect};
     }
 
-    HWCLayerType type() const;
 protected:
-    HWCLayer(HWCLayerType type, buffer_handle_t handle, int width, int height, bool must_use_gl);
+    HWCLayer(int type, buffer_handle_t handle, int width, int height, bool must_use_gl);
 
     hwc_rect_t visible_rect;
     bool must_use_gl;

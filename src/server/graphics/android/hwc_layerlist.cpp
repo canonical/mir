@@ -27,7 +27,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer::HWCLayer(HWCLayerType type, buffer_handle_t buffer_handle, int width, int height, bool must_use_gl)
+mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, bool must_use_gl)
 {
     int skip_flag = 0;
     if (must_use_gl)
@@ -55,36 +55,24 @@ mga::HWCLayer::HWCLayer(HWCLayerType type, buffer_handle_t buffer_handle, int wi
     handle = buffer_handle;
 }
 
-mga::HWCLayerType mga::HWCLayer::type() const
-{
-    if (compositionType == HWC_FRAMEBUFFER)
-        return mga::HWCLayerType::gles;
-    if (compositionType == HWC_FRAMEBUFFER_TARGET)
-        return mga::HWCLayerType::framebuffer;
-    if (compositionType == HWC_OVERLAY)
-        return mga::HWCLayerType::overlay;
-    return mga::HWCLayerType::overlay;
-}
-
-//todo: remove this constructor once hwc11 buffer management is sorted out
 mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(mga::HWCLayerType::framebuffer, nullptr, 0, 0, false)
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, false)
 {
 }
 
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(mga::HWCLayerType::framebuffer, buffer.handle(),
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
                buffer.anwb()->width, buffer.anwb()->height, false)
 {
 }
 
 mga::CompositionLayer::CompositionLayer(bool must_use_gl)
-    : HWCLayer(mga::HWCLayerType::gles, nullptr, 0, 0, must_use_gl)
+    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, must_use_gl)
 {
 }
 
 mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, bool must_use_gl)
-    : HWCLayer(mga::HWCLayerType::gles, buffer.handle(),
+    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
                buffer.anwb()->width, buffer.anwb()->height, must_use_gl)
 {
 }
