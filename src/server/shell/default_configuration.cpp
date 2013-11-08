@@ -27,13 +27,13 @@
 #include "mediating_display_changer.h"
 #include "organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
-#include "surface_source.h"
 #include "registration_order_focus_sequence.h"
 #include "threaded_snapshot_strategy.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
@@ -72,11 +72,8 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
     return shell_surface_factory(
         [this]()
         {
-            auto surface_source = std::make_shared<msh::SurfaceSource>(
-                the_surface_builder(), the_shell_surface_configurator());
-
             return std::make_shared<msh::OrganisingSurfaceFactory>(
-                surface_source,
+                the_surfaces_surface_factory(),
                 the_shell_placement_strategy());
         });
 }

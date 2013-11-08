@@ -18,7 +18,6 @@
 
 #include "mir/shell/application_session.h"
 #include "src/server/shell/default_session_container.h"
-
 #include "mir_test_doubles/stub_shell_session.h"
 
 #include <gmock/gmock.h>

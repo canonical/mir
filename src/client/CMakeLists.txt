@@ -29,6 +29,7 @@ set(
   mir_wait_handle.cpp
   mir_surface.cpp
   logging/rpc_report.cpp
+  logging/input_receiver_report.cpp
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp
