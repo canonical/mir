@@ -27,6 +27,10 @@
 #include "mir_protobuf.pb.h"
 
 #ifdef ANDROID
+/*
+ * MirNativeBuffer for Android is defined opaquely, but we now depend on
+ * it having width and height fields, for all platforms. So need definition...
+ */
 #include <system/window.h>  // for ANativeWindowBuffer AKA MirNativeBuffer
 #endif
 
@@ -537,11 +541,12 @@ TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
 }
 #endif
 
-#ifndef ANDROID
-// FIXME: It would be nice to run this on all platforms, but our Android test
-//        infrastructure isn't ready yet. And I don't know how to fix it.
-
+#ifdef ANDROID
+// Mir's Android test infrastructure isn't quite ready for this yet.
+TEST_F(DefaultDisplayServerTestFixture, DISABLED_client_gets_buffer_dimensions)
+#else
 TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
+#endif
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -602,7 +607,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
 
     launch_client_process(client_config);
 }
-#endif
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
