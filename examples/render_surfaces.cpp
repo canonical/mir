@@ -28,7 +28,9 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
-#include "mir/surfaces/surface.h"
+// Just the following three functions stop render_surfaces.cpp using shell::Surface
+//    flag_for_render(), set_rotation() and set_alpha()
+#include "mir/surfaces/basic_surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 
@@ -185,7 +187,7 @@ class Moveable
 {
 public:
     Moveable() {}
-    Moveable(ms::Surface& s, const geom::Size& display_size,
+    Moveable(ms::BasicSurface& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
         : surface(&s), display_size(display_size),
           x{static_cast<float>(s.top_left().x.as_uint32_t())},
@@ -233,7 +235,7 @@ public:
     }
 
 private:
-    ms::Surface* surface;
+    ms::BasicSurface* surface;
     geom::Size display_size;
     float x;
     float y;
@@ -406,7 +408,7 @@ public:
         int i = 0;
         for (auto& m : moveables)
         {
-            std::shared_ptr<ms::Surface> s = surface_builder->create_surface(
+            std::shared_ptr<ms::BasicSurface> s = surface_builder->create_surface(
                     nullptr,
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)

@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 
 #include "surface_allocator.h"
+#include "surface_source.h"
 #include "surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/input/input_configuration.h"
@@ -96,4 +97,15 @@ std::shared_ptr<msh::SurfaceController>
 mir::DefaultServerConfiguration::the_shell_surface_controller()
 {
     return the_surface_controller();
+}
+
+std::shared_ptr<msh::SurfaceFactory>
+mir::DefaultServerConfiguration::the_surfaces_surface_factory()
+{
+    return surfaces_surface_factory(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceSource>(
+                the_surface_builder(), the_shell_surface_configurator());
+        });
 }
