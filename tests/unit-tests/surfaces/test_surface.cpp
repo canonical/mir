@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface.h"
+#include "src/server/surfaces/surface.h"
 #include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/input_channel.h"

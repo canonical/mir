@@ -20,12 +20,12 @@
 #include "mir/shell/session_manager.h"
 #include "src/server/shell/default_session_container.h"
 #include "mir/shell/session.h"
-#include "mir/shell/surface.h"
+#include "src/server/surfaces/surface_impl.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/shell/session_event_sink.h"
-#include "mir/surfaces/surface.h"
+#include "mir/surfaces/basic_surface.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -115,7 +115,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
 
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
-       Return(std::make_shared<msh::Surface>(
+       Return(std::make_shared<ms::SurfaceImpl>(
            nullptr,
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
@@ -149,7 +149,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
 {
     using namespace ::testing;
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
-        Return(std::make_shared<msh::Surface>(
+        Return(std::make_shared<ms::SurfaceImpl>(
            nullptr,
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
