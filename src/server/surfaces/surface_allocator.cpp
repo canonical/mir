@@ -21,7 +21,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
 #include "surface_data.h"
-#include "mir/surfaces/surface.h"
+#include "surface.h"
 
 namespace geom=mir::geometry;
 namespace mc=mir::compositor;
@@ -40,7 +40,7 @@ ms::SurfaceAllocator::SurfaceAllocator(
 {
 }
 
-std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
+std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     msh::SurfaceCreationParameters const& params, std::function<void()> const& change_callback)
 {
     mg::BufferProperties buffer_properties{params.size,

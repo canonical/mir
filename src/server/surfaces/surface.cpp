@@ -18,7 +18,7 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface.h"
+#include "surface.h"
 #include "surface_state.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel.h"
