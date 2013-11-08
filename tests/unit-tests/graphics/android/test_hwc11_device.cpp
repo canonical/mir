@@ -92,10 +92,13 @@ TEST_F(HWC11Device, test_hwc_commit_order)
 
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(1, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(1, mock_device->display0_set_content.numHwLayers);
+    //set
+    EXPECT_EQ(2, mock_device->display0_set_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
+    EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[1].compositionType);
+    EXPECT_EQ(0, mock_device->set_layerlist[1].flags);
 }
 
 TEST_F(HWC11Device, test_hwc_commit_failure)
