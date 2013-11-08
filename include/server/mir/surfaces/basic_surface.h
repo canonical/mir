@@ -67,7 +67,6 @@ public:
     virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const = 0;
     virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
     virtual void force_requests_to_complete() = 0;
-    virtual void flag_for_render() = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

@@ -408,7 +408,7 @@ public:
         int i = 0;
         for (auto& m : moveables)
         {
-            std::shared_ptr<ms::BasicSurface> s = surface_builder->create_surface(
+            auto const s = surface_builder->create_surface(
                     nullptr,
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
@@ -416,10 +416,12 @@ public:
                     ).lock();
 
             /*
-             * Let the system know that the surface is suitable for rendering
-             * (i.e., that it contains buffers with valid contents).
+             * We call advance_client_buffer() twice so that the surface is
+             * considers the first buffer to be posted.
+             * (TODO There must be a better way!)
              */
-            s->flag_for_render();
+            s->advance_client_buffer();
+            s->advance_client_buffer();
 
             /*
              * Place each surface at a different starting location and give it a
