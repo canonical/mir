@@ -186,6 +186,7 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
+    virtual std::shared_ptr<shell::SurfaceFactory>      the_surfaces_surface_factory();
     virtual std::shared_ptr<shell::SessionContainer>    the_shell_session_container();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<shell::FocusSequence>       the_shell_focus_sequence();
@@ -283,6 +284,7 @@ protected:
     CachedPtr<surfaces::SurfacesReport> surfaces_report;
 
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
+    CachedPtr<shell::SurfaceFactory> surfaces_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<shell::FocusSequence>     shell_focus_sequence;

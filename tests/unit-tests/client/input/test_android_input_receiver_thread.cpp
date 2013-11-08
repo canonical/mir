@@ -19,6 +19,8 @@
 #include "src/shared/input/android/android_input_receiver_thread.h"
 #include "src/shared/input/android/android_input_receiver.h"
 
+#include "mir/input/null_input_receiver_report.h"
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include <gtest/gtest.h>
@@ -30,7 +32,8 @@
 
 #include <fcntl.h>
 
-namespace mircva = mir::input::receiver::android;
+namespace mircv = mir::input::receiver;
+namespace mircva = mircv::android;
 
 namespace
 {
@@ -43,7 +46,7 @@ struct MockEventHandler
 struct MockInputReceiver : public mircva::InputReceiver
 {
     MockInputReceiver(int fd)
-      : InputReceiver(fd)
+      : InputReceiver(fd, std::make_shared<mircv::NullInputReceiverReport>())
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));

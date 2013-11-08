@@ -33,17 +33,17 @@ struct SurfaceCreationParameters;
 namespace surfaces
 {
 
-class Surface;
+class BasicSurface;
 
 class SurfaceStackModel
 {
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<Surface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
-    virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
+    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
+    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
 
-    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void raise(std::weak_ptr<BasicSurface> const& surface) = 0;
 
 protected:
     SurfaceStackModel() = default;
