@@ -150,6 +150,37 @@ TEST_F(HWCLayerListTest, hwc_list_update)
 
     auto list = layerlist.native_list(); 
     ASSERT_EQ(2u, list->numHwLayers);
+    EXPECT_EQ(native_handle_1->handle(), list->hwLayers[0].handle);
+    EXPECT_EQ(-1, list->hwLayers[0].acquireFenceFd);
+    EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
+    EXPECT_EQ(handle_fence, list->hwLayers[0].acquireFenceFd);
+}
+
+TEST_F(HWCLayerListTest, get_fb_fence)
+{
+    int release_fence = 381;
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, force_gl),
+        mga::FramebufferLayer(*native_handle_1)});
+
+    auto list = layerlist.native_list();
+    list->hwLayer[1].releaseFenceFd = release_fence;
+
+    EXPECT_EQ(release_fence, layerlist.framebuffer_fence());
+}
+#if 0
+TEST_F(HWCLayerListTest, hwc_list_update)
+{
+    using namespace testing;
+    bool force_gl = false;
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, force_gl),
+        mga::FramebufferLayer(*native_handle_1)});
+    layerlist.set_fb_target(native_handle_2);
+
+    auto list = layerlist.native_list(); 
+    ASSERT_EQ(2u, list->numHwLayers);
     EXPECT_EQ(list->hwLayers[0].handle, native_handle_1->handle());
     EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
 }
+#endif
