@@ -55,6 +55,7 @@ private:
     std::shared_ptr<DisplayDevice> const fb_device;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
+    geometry::PixelFormat fb_format;
 };
 
 }

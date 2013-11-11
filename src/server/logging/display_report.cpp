@@ -18,7 +18,7 @@
 
 #include "display_report.h"
 #include "mir/logging/logger.h"
-
+#include <EGL/eglext.h>
 #include <sstream>
 #include <cstring>
 
@@ -138,7 +138,8 @@ void ml::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig conf
         STRMACRO(EGL_NON_CONFORMANT_CONFIG),
         STRMACRO(EGL_TRANSPARENT_RGB),
         STRMACRO(EGL_RGB_BUFFER),
-        STRMACRO(EGL_LUMINANCE_BUFFER)
+        STRMACRO(EGL_LUMINANCE_BUFFER),
+        STRMACRO(EGL_FRAMEBUFFER_TARGET_ANDROID)
     };
     #undef STRMACRO
 

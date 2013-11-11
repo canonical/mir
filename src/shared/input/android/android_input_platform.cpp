@@ -20,10 +20,13 @@
 #include "android_input_receiver.h"
 #include "android_input_receiver_thread.h"
 
+#include "mir/input/null_input_receiver_report.h"
+
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
 
-mircva::AndroidInputPlatform::AndroidInputPlatform()
+mircva::AndroidInputPlatform::AndroidInputPlatform(std::shared_ptr<mircv::InputReceiverReport> const& report)
+    : report(report)
 {
 }
 
@@ -34,11 +37,16 @@ mircva::AndroidInputPlatform::~AndroidInputPlatform()
 std::shared_ptr<mircv::InputReceiverThread> mircva::AndroidInputPlatform::create_input_thread(
     int fd, std::function<void(MirEvent*)> const& callback)
 {
-    auto receiver = std::make_shared<mircva::InputReceiver>(fd);
+    auto receiver = std::make_shared<mircva::InputReceiver>(fd, report);
     return std::make_shared<mircva::InputReceiverThread>(receiver, callback);
 }
 
 std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create()
 {
-    return std::make_shared<mircva::AndroidInputPlatform>();
+    return create(std::make_shared<mircv::NullInputReceiverReport>());
+}
+
+std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create(std::shared_ptr<mircv::InputReceiverReport> const& report)
+{
+    return std::make_shared<mircva::AndroidInputPlatform>(report);
 }

@@ -43,62 +43,15 @@ namespace
 
 namespace
 {
-
-struct ClientConfigCommon : TestingClientConfiguration
+struct ConnectingClient : TestingClientConfiguration
 {
-    ClientConfigCommon() :
-        connection(0),
-        surface(0)
-    {
-    }
-
-    static void connection_callback(MirConnection* connection, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connection = connection;
-    }
-
-    static void create_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_created(surface);
-    }
-
-    static void release_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_released(surface);
-    }
-
-    virtual void connected(MirConnection* new_connection)
-    {
-        connection = new_connection;
-    }
-
-    virtual void surface_created(MirSurface* new_surface)
-    {
-        surface = new_surface;
-    }
-
-    virtual void surface_released(MirSurface* /*released_surface*/)
-    {
-        surface = NULL;
-    }
-
-    MirConnection* connection;
-    MirSurface* surface;
-};
-
-struct ConnectingClient : ClientConfigCommon
-{
+    MirConnection *connection;
     void exec()
     {
-        mir_wait_for(mir_connect(
+        connection = mir_connect_sync(
             mir_test_socket,
-            __PRETTY_FUNCTION__,
-            connection_callback,
-            this));
-         mir_connection_release(connection);
+            __PRETTY_FUNCTION__);
+        mir_connection_release(connection);
     }
 };
 
@@ -235,11 +188,10 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
             pid_t client_pid = getpid();
             shared_region->post_client_process_pid(client_pid);
 
-            mir_wait_for(mir_connect(
+            connection = mir_connect_sync(
                 mir_test_socket,
-                __PRETTY_FUNCTION__,
-                connection_callback,
-                this));
+                __PRETTY_FUNCTION__);
+
             MirSurfaceParameters const parameters =
             {
                 __PRETTY_FUNCTION__,
