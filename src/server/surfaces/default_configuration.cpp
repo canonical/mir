@@ -17,14 +17,17 @@
  */
 
 #include "mir/default_server_configuration.h"
-
-#include "surface_allocator.h"
-#include "surface_source.h"
-#include "surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/input/input_configuration.h"
+#include "mir/abnormal_exit.h"
+
+#include "surface_allocator.h"
+#include "surfaces_report.h"
+#include "surface_source.h"
+#include "surface_stack.h"
 
 namespace mc = mir::compositor;
+namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 
@@ -108,4 +111,27 @@ mir::DefaultServerConfiguration::the_surfaces_surface_factory()
             return std::make_shared<ms::SurfaceSource>(
                 the_surface_builder(), the_shell_surface_configurator());
         });
+}
+
+std::shared_ptr<ms::SurfacesReport>
+mir::DefaultServerConfiguration::the_surfaces_report()
+{
+    return surfaces_report([this]() -> std::shared_ptr<ms::SurfacesReport>
+    {
+        auto opt = the_options()->get(surfaces_report_opt, off_opt_value);
+
+        if (opt == log_opt_value)
+        {
+            return std::make_shared<ml::SurfacesReport>(the_logger());
+        }
+        else if (opt == off_opt_value)
+        {
+            return std::make_shared<ms::NullSurfacesReport>();
+        }
+        else
+        {
+            throw AbnormalExit(std::string("Invalid ") + surfaces_report_opt + " option: " + opt +
+                " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
+        }
+    });
 }
