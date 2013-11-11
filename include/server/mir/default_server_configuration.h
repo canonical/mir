@@ -55,7 +55,6 @@ class DisplayChanger;
 namespace shell
 {
 class SurfaceFactory;
-class SurfaceBuilder;
 class SurfaceController;
 class InputTargeter;
 class SessionContainer;
@@ -81,6 +80,7 @@ class TimeSource;
 namespace surfaces
 {
 class BufferStreamFactory;
+class SurfaceBuilder;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
@@ -204,7 +204,7 @@ public:
     /** @name shell configuration - dependencies
      * dependencies of shell on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
+    virtual std::shared_ptr<surfaces::SurfaceBuilder>        the_surface_builder();
     virtual std::shared_ptr<surfaces::SurfaceController>     the_surface_controller();
 
     /** @} */

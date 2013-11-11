@@ -80,7 +80,7 @@ mir::DefaultServerConfiguration::the_scene()
 }
 
 
-std::shared_ptr<msh::SurfaceBuilder>
+std::shared_ptr<ms::SurfaceBuilder>
 mir::DefaultServerConfiguration::the_surface_builder()
 {
     return the_surface_controller();
