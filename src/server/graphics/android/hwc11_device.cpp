@@ -79,15 +79,15 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 
     /* update gles rendered surface */
     auto buffer = fb_bundle->last_rendered_buffer();
-    layer_list.set_fb_target(buffer->native_buffer_handle());
-    //TODO: wait for framebuffer render to complete here. Eventually, we want to pass the fence right
-    //      into hwc_device->set() and let that wait for the render to complete.
-    buffer->native_buffer_handle()->wait_for_content();
+    auto native_buffer = buffer->native_buffer_handle();
+    layer_list.set_fb_target(native_buffer);
 
     if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
+
+//    native_buffer->update_fence(layer_list.framebuffer_fence());
 
     mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();

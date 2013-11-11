@@ -20,6 +20,7 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -61,14 +62,25 @@ class HWC11Device : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+
+        mock_native_buffer = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
+        mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
+
+        ON_CALL(*mock_buffer, native_buffer_handle())
+            .WillByDefault(Return(mock_native_buffer));
+        ON_CALL(*mock_fb_bundle, last_rendered_buffer())
+            .WillByDefault(Return(mock_buffer));
     }
 
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
     EGLDisplay dpy;
     EGLSurface surf;
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -77,6 +89,8 @@ protected:
 TEST_F(HWC11Device, test_hwc_commit_order)
 {
     using namespace testing;
+    int hwc_return_fence = 94;
+    mock_device->hwc_set_return_fence(hwc_return_fence);
 
     mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
 
@@ -88,6 +102,8 @@ TEST_F(HWC11Device, test_hwc_commit_order)
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
         .Times(1);
 
     device.commit_frame(dpy, surf);

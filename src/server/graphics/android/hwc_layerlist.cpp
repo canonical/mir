@@ -109,7 +109,6 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
 {
     auto fb_position = hwc_representation->numHwLayers - 1;
 
-
     if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
     {
         hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
