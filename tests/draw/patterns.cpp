@@ -32,13 +32,13 @@ void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot draw region, incorrect format"));
 
-    uint32_t *pixel = (uint32_t*) region.vaddr;
-    int pixel_stride = region.stride / geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
     for(auto i = 0; i < region.height; i++)
     {
         for(auto j = 0; j < region.width; j++)
         {
-            pixel[i * pixel_stride + j] = color_value;
+            uint32_t *pixel = (uint32_t*) &region.vaddr[i*region.stride + (j * bpp)];
+            *pixel = color_value;
         }
     }
 }
@@ -48,13 +48,13 @@ bool mtd::DrawPatternSolid::check(MirGraphicsRegion const& region) const
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot check region, incorrect format"));
 
-    uint32_t *pixel = (uint32_t*) region.vaddr;
-    int pixel_stride = region.stride / geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
-    for(auto i = 0; i< region.width; i++)
+    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    for(auto i = 0; i < region.height; i++)
     {
-        for(auto j = 0; j < region.height; j++)
+        for(auto j = 0; j < region.width; j++)
         {
-            if (pixel[j * pixel_stride + i] != color_value)
+            uint32_t *pixel = (uint32_t*) &region.vaddr[i*region.stride + (j * bpp)];
+            if (*pixel != color_value)
             {
                 return false;
             }
