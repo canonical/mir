@@ -8,4 +8,6 @@ ADD_LIBRARY(
   surface_stack.cpp
   surface_controller.cpp
   surfaces_report.cpp
+  surface_source.cpp
+  surface_impl.cpp
 )

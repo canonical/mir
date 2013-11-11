@@ -90,21 +90,21 @@ TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
     geom::PixelFormat pf = geom::PixelFormat::abgr_8888;  
  
     EXPECT_CALL(*mock_display_device, number_of_framebuffers_available())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(fake_fb_num));
     EXPECT_CALL(*mock_display_device, display_size())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(disp_size));
     EXPECT_CALL(*mock_display_device, display_format())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(pf));
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(
         disp_size,pf,mga::BufferUsage::use_framebuffer_gles))
         .Times(fake_fb_num);
 
-    mga::ResourceFactory factory;
-    factory.create_fb_buffers(mock_display_device, mock_buffer_allocator);
+    mga::ResourceFactory factory(mock_buffer_allocator);
+    factory.create_native_window(mock_display_device);
 }
 
 TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
@@ -113,7 +113,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_native_device();
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
@@ -121,7 +121,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
 {
     using namespace testing;
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -149,7 +149,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_hwc_native_device();
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
@@ -166,7 +166,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation_failures)
         .WillOnce(Return(-1))
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     EXPECT_THROW({ 
         factory.create_hwc_native_device();

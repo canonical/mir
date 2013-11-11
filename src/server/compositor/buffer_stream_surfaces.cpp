@@ -64,6 +64,11 @@ geom::Size mc::BufferStreamSurfaces::stream_size()
     return buffer_bundle->properties().size; 
 }
 
+void mc::BufferStreamSurfaces::resize(geom::Size const& size)
+{
+    buffer_bundle->resize(size);
+}
+
 void mc::BufferStreamSurfaces::force_requests_to_complete()
 {
     buffer_bundle->force_requests_to_complete();

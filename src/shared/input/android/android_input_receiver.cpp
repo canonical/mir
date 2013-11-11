@@ -19,6 +19,7 @@
 #include "android_input_receiver.h"
 
 #include "mir/input/xkb_mapper.h"
+#include "mir/input/input_receiver_report.h"
 #include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/InputTransport.h>
@@ -29,8 +30,10 @@ namespace mircva = mircv::android;
 
 namespace mia = mir::input::android;
 
-mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
+mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
+                                     std::shared_ptr<mircv::InputReceiverReport> const& report)
   : input_channel(input_channel),
+    report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
@@ -38,8 +41,10 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
 {
 }
 
-mircva::InputReceiver::InputReceiver(int fd)
+mircva::InputReceiver::InputReceiver(int fd,
+                                     std::shared_ptr<mircv::InputReceiverReport> const& report)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
+    report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
@@ -84,6 +89,8 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
         map_key_event(xkb_mapper, ev);
 
         input_consumer->sendFinishedSignal(event_sequence_id, true);
+        
+        report->received_event(ev);
 
         return true;
     }

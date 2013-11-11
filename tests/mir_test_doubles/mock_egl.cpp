@@ -54,7 +54,7 @@ mtd::MockEGL::MockEGL()
       fake_egl_surface((EGLSurface) 0xa034),
       fake_egl_context((EGLContext) 0xbeef),
       fake_egl_image((EGLImageKHR) 0x1234),
-      fake_visual_id(5)
+      fake_visual_id(1) //HAL_PIXEL_FORMAT_RGBA on android
 {
     using namespace testing;
     assert(global_mock_egl == NULL && "Only one mock object per process is allowed");

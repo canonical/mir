@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace surfaces { class Surface; }
+namespace surfaces { class BasicSurface; }
 
 namespace shell
 {
@@ -34,9 +34,9 @@ struct SurfaceCreationParameters;
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<surfaces::Surface> create_surface(Session* session, SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<surfaces::BasicSurface> create_surface(Session* session, SurfaceCreationParameters const& params) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+    virtual void destroy_surface(std::weak_ptr<surfaces::BasicSurface> const& surface) = 0;
 protected:
     SurfaceBuilder() = default;
     virtual ~SurfaceBuilder() {} // should be "= default;" but that causes "noexcept" spread
