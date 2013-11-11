@@ -26,17 +26,24 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, bool must_use_gl)
+mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
 {
-    int skip_flag = 0;
-    if (must_use_gl)
-    {
-        skip_flag = HWC_SKIP_LAYER;
-    }
+    memcpy(this, &layer, sizeof(HWCLayer)); 
+    this->visibleRegionScreen = {1, &this->visible_rect};
+    return *this;     
+}
 
+mga::HWCLayer::HWCLayer(HWCLayer const& layer)
+{
+    memcpy(this, &layer, sizeof(HWCLayer)); 
+    this->visibleRegionScreen = {1, &this->visible_rect};
+}
+
+mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, int layer_flags)
+{
     compositionType = type;
     hints = 0;
-    flags = skip_flag;
+    flags = layer_flags;
     transform = 0;
     blending = HWC_BLENDING_NONE;
     //TODO: acquireFenceFd should be buffer.fence()
@@ -55,24 +62,24 @@ mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int 
 }
 
 mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, false)
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
 {
 }
 
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
     : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, false)
+               buffer.anwb()->width, buffer.anwb()->height, 0)
 {
 }
 
-mga::CompositionLayer::CompositionLayer(bool must_use_gl)
-    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, must_use_gl)
+mga::CompositionLayer::CompositionLayer(int layer_flags)
+    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
 {
 }
 
-mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, bool must_use_gl)
+mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
     : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, must_use_gl)
+               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
 {
 }
 
@@ -101,9 +108,12 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
     auto fb_position = hwc_representation->numHwLayers - 1;
+
+
     if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
     {
         hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
+        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
     }
 }
 
