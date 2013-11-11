@@ -49,60 +49,13 @@ namespace
 namespace
 {
 
-struct ClientConfigCommon : TestingClientConfiguration
-{
-    ClientConfigCommon() :
-        connection(0),
-        surface(0)
-    {
-    }
-
-    static void connection_callback(MirConnection* connection, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connection = connection;
-    }
-
-    static void create_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_created(surface);
-    }
-
-    static void release_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_released(surface);
-    }
-
-    virtual void connected(MirConnection* new_connection)
-    {
-        connection = new_connection;
-    }
-
-    virtual void surface_created(MirSurface* new_surface)
-    {
-        surface = new_surface;
-    }
-
-    virtual void surface_released(MirSurface* /*released_surface*/)
-    {
-        surface = NULL;
-    }
-
-    MirConnection* connection;
-    MirSurface* surface;
-};
-
-struct SurfaceCreatingClient : ClientConfigCommon
+struct SurfaceCreatingClient : mtf::TestingClientConfiguration
 {
     void exec()
     {
-        mir_wait_for(mir_connect(
+        connection = mir_connect_sync(
             mir_test_socket,
-            __PRETTY_FUNCTION__,
-            connection_callback,
-            this));
+            __PRETTY_FUNCTION__);
          ASSERT_TRUE(connection != NULL);
          MirSurfaceParameters const request_params =
          {
@@ -112,9 +65,12 @@ struct SurfaceCreatingClient : ClientConfigCommon
             mir_buffer_usage_hardware,
             mir_display_output_id_invalid
          };
-         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
+         surface = mir_connection_create_surface_sync(connection, &request_params);
          mir_connection_release(connection);
     }
+
+    MirConnection* connection;
+    MirSurface* surface;
 };
 
 }
