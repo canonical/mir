@@ -89,6 +89,9 @@ public:
 
     virtual void resize(geometry::Size const& size);
 
+    virtual void set_rotation(float degrees, glm::vec3 const& axis);
+    virtual void set_alpha(float alpha);
+
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
