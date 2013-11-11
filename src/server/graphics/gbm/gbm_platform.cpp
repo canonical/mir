@@ -163,6 +163,11 @@ std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
     return std::make_shared<mgg::InternalClient>(internal_native_display);
 }
 
+EGLNativeDisplayType mgg::GBMPlatform::egl_native_display() const
+{
+    return gbm.device;
+}
+
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();

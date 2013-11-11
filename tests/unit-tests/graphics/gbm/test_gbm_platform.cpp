@@ -221,6 +221,12 @@ TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal
     EXPECT_EQ(MIR_MESA_FALSE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
 }
 
+TEST_F(GBMGraphicsPlatform, egl_native_display_is_gbm_device)
+{
+    auto platform = create_platform();
+    EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
+}
+
 namespace
 {
 

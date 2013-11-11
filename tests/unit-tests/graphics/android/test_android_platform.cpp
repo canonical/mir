@@ -102,3 +102,12 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 
     platform.fill_ipc_package(mock_packer, mock_buffer);
 }
+
+TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
+{
+    mga::AndroidPlatform platform(
+        std::make_shared<mtd::StubDisplayBufferFactory>(),
+        std::make_shared<mg::NullDisplayReport>());
+
+    EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
+}

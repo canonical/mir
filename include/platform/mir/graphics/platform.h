@@ -20,6 +20,8 @@
 #ifndef MIR_GRAPHICS_PLATFORM_H_
 #define MIR_GRAPHICS_PLATFORM_H_
 
+#include "offscreen_platform.h"
+
 #include <memory>
 
 namespace mir
@@ -57,7 +59,7 @@ class GraphicBufferAllocator;
  * Interface to platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class Platform
+class Platform : public OffscreenPlatform
 {
 public:
     Platform() = default;
