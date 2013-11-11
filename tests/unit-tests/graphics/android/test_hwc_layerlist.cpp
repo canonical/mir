@@ -72,8 +72,7 @@ TEST_F(HWCLayerListTest, fb_target_layer)
 
 TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
 {
-    bool force_gl = true;
-    mga::CompositionLayer target_layer(*native_handle_1, force_gl);
+    mga::CompositionLayer target_layer(*native_handle_1, HWC_SKIP_LAYER);
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -95,8 +94,7 @@ TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
 
 TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
 {
-    bool force_gl = false;
-    mga::CompositionLayer target_layer(*native_handle_1, force_gl);
+    mga::CompositionLayer target_layer(*native_handle_1, HWC_SKIP_LAYER);
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
