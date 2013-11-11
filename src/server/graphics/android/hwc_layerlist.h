@@ -40,30 +40,19 @@ struct HWCLayer : public hwc_layer_1
 {
     virtual ~HWCLayer() = default;
 
-    HWCLayer& operator=(HWCLayer const& layer)
-    {
-        memcpy(this, &layer, sizeof(HWCLayer)); 
-        this->visibleRegionScreen = {1, &this->visible_rect};
-        return *this;     
-    }
-
-    HWCLayer(HWCLayer const& layer)
-    {
-        memcpy(this, &layer, sizeof(HWCLayer)); 
-        this->visibleRegionScreen = {1, &this->visible_rect};
-    }
+    HWCLayer& operator=(HWCLayer const& layer);
+    HWCLayer(HWCLayer const& layer);
 
 protected:
-    HWCLayer(int type, buffer_handle_t handle, int width, int height, bool must_use_gl);
+    HWCLayer(int type, buffer_handle_t handle, int width, int height, int layer_flags);
 
     hwc_rect_t visible_rect;
-    bool must_use_gl;
 };
 
 struct CompositionLayer : public HWCLayer
 {
-    CompositionLayer(bool must_use_gl);
-    CompositionLayer(NativeBuffer const&, bool must_use_gl);
+    CompositionLayer(int layer_flags);
+    CompositionLayer(NativeBuffer const&, int layer_flags);
 };
 
 struct FramebufferLayer : public HWCLayer

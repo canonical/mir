@@ -92,9 +92,9 @@ TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
+TEST_F(HWCLayerListTest, gl_target_layer_without_skip)
 {
-    mga::CompositionLayer target_layer(*native_handle_1, HWC_SKIP_LAYER);
+    mga::CompositionLayer target_layer(*native_handle_1, 0);
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -117,9 +117,8 @@ TEST_F(HWCLayerListTest, gl_target_layer_without_force_gl)
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
-    bool force_gl = false;
     
-    mga::CompositionLayer surface_layer(*native_handle_1, force_gl);
+    mga::CompositionLayer surface_layer(*native_handle_1, 0);
     mga::FramebufferLayer target_layer(*native_handle_1);
     mga::LayerList layerlist({
         surface_layer,
@@ -140,9 +139,8 @@ TEST_F(HWCLayerListTest, hwc_list_creation)
 TEST_F(HWCLayerListTest, hwc_list_update)
 {
     using namespace testing;
-    bool force_gl = false;
     mga::LayerList layerlist({
-        mga::CompositionLayer(*native_handle_1, force_gl),
+        mga::CompositionLayer(*native_handle_1, 0),
         mga::FramebufferLayer(*native_handle_1)});
     layerlist.set_fb_target(native_handle_2);
 
