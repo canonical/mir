@@ -115,8 +115,8 @@ TEST_F(HWC11Device, test_hwc_commit_order)
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
     EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->set_layerlist[0].compositionType);
     EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
-    EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[0].compositionType);
-    EXPECT_EQ(0, mock_device->set_layerlist[0].flags);
+    EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[1].compositionType);
+    EXPECT_EQ(0, mock_device->set_layerlist[1].flags);
 }
 
 TEST_F(HWC11Device, test_hwc_commit_failure)

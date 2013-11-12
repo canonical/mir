@@ -89,8 +89,9 @@ public:
 
         if (primary_display->hwLayers)
         {
-            primary_display->hwLayers[0].releaseFenceFd = fb_fence;
+            primary_display->hwLayers[1].releaseFenceFd = fb_fence;
         }
+
         return save_args(&display0_set_content, displays);
     }
 

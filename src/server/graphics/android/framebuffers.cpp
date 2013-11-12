@@ -128,11 +128,9 @@ geom::Size mga::Framebuffers::fb_size()
 
 std::shared_ptr<mg::Buffer> mga::Framebuffers::buffer_for_render()
 {
-    printf("buffer for rende\n");
     std::unique_lock<std::mutex> lk(queue_lock);
     while (buffer_being_rendered)
     {
-        printf(".... and ... wait.\n");
         cv.wait(lk);
     }
 
@@ -141,7 +139,6 @@ std::shared_ptr<mg::Buffer> mga::Framebuffers::buffer_for_render()
     return std::shared_ptr<mg::Buffer>(buffer_being_rendered.get(),
         [this](mg::Buffer*)
         {
-            printf("RETURN.\n");
             std::unique_lock<std::mutex> lk(queue_lock);
             queue.push(buffer_being_rendered);
             buffer_being_rendered.reset();

@@ -54,7 +54,6 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer,
 {
     resource_cache->update_native_fence(buffer, fence_fd);
     resource_cache->retrieve_buffer(buffer);
-printf("RETURN!\n");
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)
