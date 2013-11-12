@@ -38,6 +38,8 @@ public:
     void remove_session(std::shared_ptr<Session> const& session);
     void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
+    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& session) const;
+
 private:
     std::vector<std::shared_ptr<Session>> apps;
     mutable std::mutex guard;
