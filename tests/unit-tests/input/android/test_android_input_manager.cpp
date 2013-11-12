@@ -156,5 +156,5 @@ TEST_F(AndroidInputManagerSetup, manager_returns_android_input_channel)
     mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 
     auto package = manager.make_input_channel();
-    EXPECT_NE(nullptr, std::dynamic_ptr_cast<mia::AndroidInputChannel>(package));
+    EXPECT_NE(nullptr, std::dynamic_pointer_cast<mia::AndroidInputChannel>(package));
 }
