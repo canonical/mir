@@ -20,7 +20,7 @@
 #define MIR_GEOMETRY_POINT_H_
 
 #include "dimensions.h"
-#include <ostream>
+#include <iosfwd>
 
 namespace mir
 {
@@ -50,12 +50,7 @@ inline bool operator != (Point const& lhs, Point const& rhs)
     return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
-inline std::ostream& operator<<(std::ostream& out, Point const& value)
-{
-    out << '(' << value.x << ", " << value.y << ')';
-    return out;
-}
-
+std::ostream& operator<<(std::ostream& out, Point const& value);
 }
 }
 
