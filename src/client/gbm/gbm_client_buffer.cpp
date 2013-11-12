@@ -125,10 +125,10 @@ struct GBMMemoryRegion : mcl::MemoryRegion
 mclg::GBMClientBuffer::GBMClientBuffer(
         std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
         std::shared_ptr<MirBufferPackage> const& package,
-        geom::Size size, geom::PixelFormat pf)
+        geom::PixelFormat pf)
     : drm_fd_handler{drm_fd_handler},
       creation_package(std::move(package)),
-      rect({geom::Point{0, 0}, size}),
+      rect({geom::Point{0, 0}, geom::Size{package->width, package->height}}),
       buffer_pf{pf}
 {
 }

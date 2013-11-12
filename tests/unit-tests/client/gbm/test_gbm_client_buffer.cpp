@@ -33,22 +33,18 @@ struct MirGBMBufferTest : public testing::Test
 {
     void SetUp()
     {
-        width = geom::Width(12);
-        height =geom::Height(14);
         stride = geom::Stride(66);
         pf = geom::PixelFormat::abgr_8888;
-        size = geom::Size{width, height};
         drm_fd_handler = std::make_shared<testing::NiceMock<mclg::MockDRMFDHandler>>();
 
         package = std::make_shared<MirBufferPackage>();
         package->stride = stride.as_uint32_t();
+        package->width = 12;
+        package->height = 14;
         package_copy = std::make_shared<MirBufferPackage>(*package.get());
     }
-    geom::Width width;
-    geom::Height height;
     geom::Stride stride;
     geom::PixelFormat pf;
-    geom::Size size;
 
     std::shared_ptr<testing::NiceMock<mclg::MockDRMFDHandler>> drm_fd_handler;
     std::shared_ptr<MirBufferPackage> package;
@@ -60,10 +56,10 @@ TEST_F(MirGBMBufferTest, width_and_height)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
-    EXPECT_EQ(buffer.size().height, height);
-    EXPECT_EQ(buffer.size().width, width);
+    EXPECT_EQ(buffer.size().height.as_int(), package->height);
+    EXPECT_EQ(buffer.size().width.as_int(), package->width);
     EXPECT_EQ(buffer.pixel_format(), pf);
 }
 
@@ -71,7 +67,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
     EXPECT_EQ(buffer.stride(), stride);
 }
@@ -80,7 +76,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
     auto package_return = buffer.native_buffer_handle();
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
@@ -108,12 +104,12 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_drm_buffer)
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
     auto mem_region = buffer.secure_for_cpu_write();
     ASSERT_EQ(map_addr, mem_region->vaddr.get());
-    ASSERT_EQ(width, mem_region->width);
-    ASSERT_EQ(height, mem_region->height);
+    ASSERT_EQ(package->width, mem_region->width.as_int());
+    ASSERT_EQ(package->height, mem_region->height.as_int());
     ASSERT_EQ(stride, mem_region->stride);
     ASSERT_EQ(pf, mem_region->format);
 }
@@ -133,7 +129,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_prime_handle_failure)
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
         .Times(0);
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
     EXPECT_THROW({
         buffer.secure_for_cpu_write();
@@ -155,7 +151,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_dumb_failure)
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
     EXPECT_THROW({
         auto mem_region = buffer.secure_for_cpu_write();
@@ -177,7 +173,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_failure)
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), pf);
 
     EXPECT_THROW({
         auto mem_region = buffer.secure_for_cpu_write();
@@ -196,7 +192,7 @@ TEST_F(MirGBMBufferTest, prime_fd_closed_on_buffer_destruction)
     EXPECT_CALL(*drm_fd_handler, close(prime_fd))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, package, pf);
 }
 
 TEST_F(MirGBMBufferTest, buffer_does_not_take_a_gem_reference_when_not_mapping)
@@ -210,5 +206,5 @@ TEST_F(MirGBMBufferTest, buffer_does_not_take_a_gem_reference_when_not_mapping)
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
         .Times(0);
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
+    mclg::GBMClientBuffer buffer(drm_fd_handler, package, pf);
 }
