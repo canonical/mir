@@ -17,7 +17,7 @@
  */
 
 #include "mediating_display_changer.h"
-#include "mir/shell/session_container.h"
+#include "session_container.h"
 #include "mir/shell/session.h"
 #include "session_event_handler_register.h"
 #include "mir/graphics/display.h"

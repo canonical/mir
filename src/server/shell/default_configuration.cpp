@@ -29,7 +29,7 @@
 #include "organising_surface_factory.h"
 #include "threaded_snapshot_strategy.h"
 
-#include "mir/shell/session_container.h"
+#include "session_container.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session.h"
 

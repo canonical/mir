@@ -18,7 +18,7 @@
 
 #include "mir/shell/session_manager.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "session_container.h"
 #include "mir/shell/surface_factory.h"
 #include "focus_setter.h"
 #include "mir/shell/session.h"

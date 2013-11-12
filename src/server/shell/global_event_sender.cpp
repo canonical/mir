@@ -17,7 +17,7 @@
  */
 
 #include "global_event_sender.h"
-#include "mir/shell/session_container.h"
+#include "session_container.h"
 #include "mir/shell/session.h"
 
 namespace mg=mir::graphics;
