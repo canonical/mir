@@ -19,5 +19,6 @@ add_library(
 
   rectangle.cpp
   rectangles.cpp
+  ostream.cpp
 )
 
