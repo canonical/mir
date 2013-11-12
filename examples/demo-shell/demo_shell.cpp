@@ -24,7 +24,6 @@
 
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
-#include "mir/shell/session_container.h"
 #include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
 
