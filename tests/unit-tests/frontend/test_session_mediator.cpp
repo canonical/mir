@@ -25,7 +25,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/surfaces/basic_surface.h"
+#include "src/server/surfaces/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
