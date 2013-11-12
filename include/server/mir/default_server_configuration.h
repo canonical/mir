@@ -60,7 +60,6 @@ class SurfaceController;
 class InputTargeter;
 class SessionContainer;
 class FocusSetter;
-class FocusSequence;
 class PlacementStrategy;
 class SessionListener;
 class FocusController;
@@ -189,7 +188,6 @@ public:
     virtual std::shared_ptr<shell::SurfaceFactory>      the_surfaces_surface_factory();
     virtual std::shared_ptr<shell::SessionContainer>    the_shell_session_container();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
-    virtual std::shared_ptr<shell::FocusSequence>       the_shell_focus_sequence();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::PixelBuffer>         the_shell_pixel_buffer();
@@ -287,7 +285,6 @@ protected:
     CachedPtr<shell::SurfaceFactory> surfaces_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
-    CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<shell::SessionListener> shell_session_listener;
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;

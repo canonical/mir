@@ -20,7 +20,7 @@
 #define MIR_GEOMETRY_SIZE_H_
 
 #include "dimensions.h"
-#include <ostream>
+#include <iosfwd>
 
 namespace mir
 {
@@ -50,12 +50,7 @@ inline bool operator != (Size const& lhs, Size const& rhs)
     return lhs.width != rhs.width || lhs.height != rhs.height;
 }
 
-inline std::ostream& operator<<(std::ostream& out, Size const& value)
-{
-    out << '(' << value.width << ", " << value.height << ')';
-    return out;
-}
-
+std::ostream& operator<<(std::ostream& out, Size const& value);
 }
 }
 
