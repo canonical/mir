@@ -25,6 +25,8 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 
+#include <glm/glm.hpp>
+
 #include <memory>
 
 namespace mir

@@ -39,7 +39,7 @@ public:
     virtual void destroy_surface(std::weak_ptr<surfaces::BasicSurface> const& surface) = 0;
 protected:
     SurfaceBuilder() = default;
-    virtual ~SurfaceBuilder() {} // should be "= default;" but that causes "noexcept" spread
+    virtual ~SurfaceBuilder() = default;
     SurfaceBuilder(SurfaceBuilder const&) = delete;
     SurfaceBuilder& operator=(SurfaceBuilder const&) = delete;
 };

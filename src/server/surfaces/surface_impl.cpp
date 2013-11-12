@@ -248,3 +248,13 @@ void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
 }
+
+void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
+{
+    surface->set_rotation(degrees, axis);
+}
+
+void ms::SurfaceImpl::set_alpha(float alpha)
+{
+    surface->set_alpha(alpha);
+}

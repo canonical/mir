@@ -50,6 +50,8 @@ public:
     virtual void raise(std::shared_ptr<SurfaceController> const& controller) = 0;
 
     virtual void resize(geometry::Size const& size) = 0;
+    virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
+    virtual void set_alpha(float alpha) = 0;
 };
 }
 }
