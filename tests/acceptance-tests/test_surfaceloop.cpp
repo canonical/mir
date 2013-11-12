@@ -20,6 +20,7 @@
 #include "mir/geometry/size.h"
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_debug.h"
 #include "src/client/mir_connection.h"
 
 #include "mir_protobuf.pb.h"
@@ -39,7 +40,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-geom::Size const size{geom::Width{640}, geom::Height{480}};
+geom::Size const size{640, 480};
 geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 }
 
@@ -168,7 +169,8 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
@@ -221,7 +223,8 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
@@ -234,8 +237,8 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
             wait_for_surface_create(ssync+1);
 
             EXPECT_NE(
-                mir_surface_get_id(ssync[0].surface),
-                mir_surface_get_id(ssync[1].surface));
+                mir_debug_surface_id(ssync[0].surface),
+                mir_debug_surface_id(ssync[1].surface));
 
             mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
             wait_for_surface_release(ssync+1);
@@ -265,7 +268,8 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             for (int i = 0; i != max_surface_count; ++i)
@@ -280,12 +284,12 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
                 {
                     if (i == j)
                         EXPECT_EQ(
-                            mir_surface_get_id(ssync[i].surface),
-                            mir_surface_get_id(ssync[j].surface));
+                            mir_debug_surface_id(ssync[i].surface),
+                            mir_debug_surface_id(ssync[j].surface));
                     else
                         EXPECT_NE(
-                            mir_surface_get_id(ssync[i].surface),
-                            mir_surface_get_id(ssync[j].surface));
+                            mir_debug_surface_id(ssync[i].surface),
+                            mir_debug_surface_id(ssync[j].surface));
                 }
             }
 

@@ -20,11 +20,12 @@
 #ifndef MIR_GRAPHICS_GBM_GBM_BUFFER_H_
 #define MIR_GRAPHICS_GBM_GBM_BUFFER_H_
 
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 
 #include <gbm.h>
 
 #include <memory>
+#include <limits>
 
 namespace mir
 {
@@ -33,15 +34,22 @@ namespace graphics
 namespace gbm
 {
 
+struct GBMNativeBuffer : MirNativeBuffer
+{
+    struct gbm_bo *bo;
+};
+
 geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
+enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
 
 class BufferTextureBinder;
 
-class GBMBuffer: public compositor::BufferBasic
+class GBMBuffer: public BufferBasic
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+              uint32_t bo_flags,
               std::unique_ptr<BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
     ~GBMBuffer();
@@ -58,8 +66,11 @@ public:
 
     virtual void bind_to_texture();
 
+    bool can_bypass() const override;
+
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
+    uint32_t bo_flags;
     std::unique_ptr<BufferTextureBinder> const texture_binder;
     int prime_fd;
 };

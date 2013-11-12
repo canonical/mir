@@ -37,8 +37,10 @@ struct NativeHandleDeleter
     void operator()(const native_handle_t* t)
     {
         module->unregisterBuffer(module.get(), t);
-        for(auto i=0; i < t->numFds; i++)
+        for(auto i = 0; i < t->numFds; i++)
+        {
             close(t->data[i]);
+        }
         ::operator delete(const_cast<native_handle_t*>(t));
     }
 private:

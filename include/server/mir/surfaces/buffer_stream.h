@@ -22,13 +22,13 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -41,8 +41,10 @@ class BufferStream
 public:
     virtual ~BufferStream() {/* TODO: make nothrow */}
 
-    virtual std::shared_ptr<compositor::Buffer> secure_client_buffer() = 0;
-    virtual std::shared_ptr<compositor::Buffer> lock_back_buffer() = 0;
+    virtual std::shared_ptr<graphics::Buffer> secure_client_buffer() = 0;
+    virtual std::shared_ptr<graphics::Buffer>
+        lock_compositor_buffer(unsigned long frameno) = 0;
+    virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
     virtual geometry::PixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void allow_framedropping(bool) = 0;

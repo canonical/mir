@@ -22,34 +22,30 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+#include <memory>
 
 namespace mir
 {
-
-namespace frontend
-{
-class Surface;
-}
-
 namespace graphics
 {
+class InternalSurface;
+
 namespace android
 {
-
 class InterpreterResourceCache;
 class InternalClientWindow : public AndroidDriverInterpreter
 {
 public:
-    InternalClientWindow(std::shared_ptr<frontend::Surface> const&,
+    InternalClientWindow(std::shared_ptr<InternalSurface> const&,
                          std::shared_ptr<InterpreterResourceCache> const&);
-    ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
+    graphics::NativeBuffer* driver_requests_buffer();
+    void driver_returns_buffer(ANativeWindowBuffer*, int);
     void dispatch_driver_request_format(int);
     int  driver_requests_info(int) const;
     void sync_to_display(bool sync); 
 
 private:
-    std::shared_ptr<frontend::Surface> const surface;
+    std::shared_ptr<InternalSurface> const surface;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
     int format;
 };

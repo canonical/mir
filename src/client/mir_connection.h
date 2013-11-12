@@ -34,7 +34,6 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
-#include "mir/events/event_sink.h"
 
 namespace mir
 {
@@ -43,6 +42,9 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class SurfaceMap;
+class DisplayConfiguration;
+class LifecycleControl;
 
 namespace rpc
 {
@@ -64,7 +66,7 @@ class Logger;
 }
 }
 
-struct MirConnection : mir::client::ClientContext, private mir::events::EventSink
+struct MirConnection : mir::client::ClientContext
 {
 public:
     MirConnection();
@@ -98,8 +100,14 @@ public:
                                   mir_drm_auth_magic_callback callback,
                                   void* context);
 
+    void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
+
+    void register_display_change_callback(mir_display_config_callback callback, void* context);
+
     void populate(MirPlatformPackage& platform_package);
-    void populate(MirDisplayInfo& display_info);
+    MirDisplayConfiguration* create_copy_of_display_config(); 
+    void possible_pixel_formats(MirPixelFormat* formats,
+                                unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
@@ -110,9 +118,13 @@ public:
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
-    void handle_event(MirEvent const&);
+
+    MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
+    void done_display_configure();
 
 private:
+    std::recursive_mutex mutex; // Protects all members of *this
+
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
     std::shared_ptr<mir::logging::Logger> logger;
@@ -121,6 +133,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
+    mir::protobuf::DisplayConfiguration display_configuration_response;
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
@@ -133,15 +146,16 @@ private:
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle drm_auth_magic_wait_handle;
+    MirWaitHandle configure_display_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 
-    static std::mutex connection_guard;
-    static std::unordered_set<MirConnection*> valid_connections;
+    std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
 
-    typedef std::unordered_map<int, MirSurface*> SurfaceMap;
-    SurfaceMap valid_surfaces;
+    std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
+
+    std::shared_ptr<mir::client::SurfaceMap> surface_map;
 
     struct SurfaceRelease;
 
@@ -149,6 +163,7 @@ private:
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
+    bool validate_user_display_config(MirDisplayConfiguration* config);
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

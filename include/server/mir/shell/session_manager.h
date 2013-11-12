@@ -30,6 +30,10 @@
 namespace mir
 {
 
+namespace frontend
+{
+class EventSink;
+}
 /// Management of sessions and surfaces
 namespace shell
 {
@@ -40,6 +44,7 @@ class FocusSetter;
 class Session;
 class InputRegistrar;
 class SnapshotStrategy;
+class SessionEventSink;
 class SessionListener;
 struct SurfaceCreationParameters;
 
@@ -51,10 +56,12 @@ public:
                             std::shared_ptr<FocusSequence> const& focus_sequence,
                             std::shared_ptr<FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
+                            std::shared_ptr<SessionEventSink> const& session_event_sink,
                             std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink);
+    virtual std::shared_ptr<frontend::Session> open_session(
+        std::string const& name, std::shared_ptr<frontend::EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
@@ -63,6 +70,8 @@ public:
     void focus_next();
     std::weak_ptr<Session> focussed_application() const;
     void set_focus_to(std::shared_ptr<Session> const& focus);
+    
+    void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
 protected:
     SessionManager(const SessionManager&) = delete;
@@ -74,6 +83,7 @@ private:
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
+    std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
 
     std::mutex mutex;

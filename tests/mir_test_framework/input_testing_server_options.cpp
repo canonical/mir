@@ -18,10 +18,13 @@
 
 #include "mir_test_framework/input_testing_server_configuration.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/viewable_area.h"
+#include "mir/input/surface.h"
+#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/shell.h"
+#include "mir/frontend/session.h"
+#include "mir/input/composite_event_filter.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -34,6 +37,8 @@
 namespace mtf = mir_test_framework;
 
 namespace ms = mir::surfaces;
+namespace msh = mir::shell;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -47,8 +52,7 @@ class SurfaceReadinessListener
 public:
     virtual ~SurfaceReadinessListener() = default;
     
-    virtual void surface_ready_for_input(std::string const& surface_name) = 0;
-    virtual void surface_finished_for_input(std::string const& surface_name) = 0;
+    virtual void channel_ready_for_input(std::string const& channel_name) = 0;
 
 protected:
     SurfaceReadinessListener() = default;
@@ -56,46 +60,46 @@ protected:
     SurfaceReadinessListener& operator=(SurfaceReadinessListener const&) = delete;
 };
 
-class ProxyInputRegistrar : public ms::InputRegistrar
+class ProxyShell : public mf::Shell
 {
 public:
-    ProxyInputRegistrar(std::shared_ptr<ms::InputRegistrar> const underlying_registrar,
-                        std::shared_ptr<SurfaceReadinessListener> const listener)
-        : underlying_registrar(underlying_registrar),
+    ProxyShell(std::shared_ptr<mf::Shell> const& underlying_shell,
+               std::shared_ptr<SurfaceReadinessListener> const listener)
+        : underlying_shell(underlying_shell),
           listener(listener)
     {   
     }
 
-    ~ProxyInputRegistrar() noexcept(true) = default;
+    ~ProxyShell() noexcept(true) = default;
     
-    void input_surface_opened(std::shared_ptr<mi::SurfaceTarget> const& opened_surface)
+    mf::SurfaceId create_surface_for(std::shared_ptr<mf::Session> const& session,
+        msh::SurfaceCreationParameters const& params)
     {
-        underlying_registrar->input_surface_opened(opened_surface);
-        listener->surface_ready_for_input(opened_surface->name());
+        return underlying_shell->create_surface_for(session, params);
     }
-    void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const& closed_surface)
+
+    std::shared_ptr<mf::Session> open_session(std::string const& name, 
+                                              std::shared_ptr<mf::EventSink> const& sink)
     {
-        underlying_registrar->input_surface_closed(closed_surface);
-        listener->surface_finished_for_input(closed_surface->name());
+        return underlying_shell->open_session(name, sink);
+    }
+
+    void close_session(std::shared_ptr<mf::Session> const& session)
+    {
+        underlying_shell->close_session(session);
+    }
+    
+    void handle_surface_created(std::shared_ptr<mf::Session> const& session)
+    {
+        underlying_shell->handle_surface_created(session);
+        listener->channel_ready_for_input(session->name());
     }
 
 private:
-    std::shared_ptr<ms::InputRegistrar> const underlying_registrar;
+    std::shared_ptr<mf::Shell> const underlying_shell;
     std::shared_ptr<SurfaceReadinessListener> const listener;
 };
 
-struct SizedViewArea : public mg::ViewableArea
-{
-    SizedViewArea(geom::Rectangle const& area)
-        : area(area)
-    {
-    }
-    geom::Rectangle view_area() const override
-    {
-        return area;
-    }
-    geom::Rectangle area;
-};
 }
 
 mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
@@ -118,8 +122,9 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
     {
         std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
 
-        input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(the_event_filters(),
-            the_display(),
+        input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
+            the_composite_event_filter(),
+            the_input_region(),
             null_cursor_listener,
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();
@@ -132,7 +137,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
     return input_configuration;
 }
 
-std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_input_registrar()
+std::shared_ptr<mf::Shell> mtf::InputTestingServerConfiguration::the_frontend_shell()
 {
     struct LifecycleTracker : public SurfaceReadinessListener
     {
@@ -144,83 +149,43 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
               client_lifecycles(client_lifecycles)
         {
         }
-        void surface_ready_for_input(std::string const& surface_name)
+        void channel_ready_for_input(std::string const& channel_name)
         {
             std::unique_lock<std::mutex> lg(lifecycle_lock);
-            client_lifecycles[surface_name] = mtf::ClientLifecycleState::appeared;
+            client_lifecycles[channel_name] = mtf::ClientLifecycleState::appeared;
             lifecycle_condition.notify_all();
         }
 
-        void surface_finished_for_input(std::string const& surface_name)
-        {
-            std::unique_lock<std::mutex> lg(lifecycle_lock);
-            client_lifecycles[surface_name] = mtf::ClientLifecycleState::vanished;
-            lifecycle_condition.notify_all();
-        }
         std::mutex &lifecycle_lock;
         std::condition_variable &lifecycle_condition;
         std::map<std::string, mtf::ClientLifecycleState> &client_lifecycles;
     };
     
-    if (!input_registrar)
+    if (!frontend_shell)
     {
-        auto registrar_listener = std::make_shared<LifecycleTracker>(lifecycle_lock,
+        auto readiness_listener = std::make_shared<LifecycleTracker>(lifecycle_lock,
             lifecycle_condition,
             client_lifecycles);
-        input_registrar = std::make_shared<ProxyInputRegistrar>(the_input_configuration()->the_input_registrar(),
-            registrar_listener);
+        frontend_shell = std::make_shared<ProxyShell>(DefaultServerConfiguration::the_frontend_shell(), readiness_listener);
     }
 
-    return input_registrar;
+    return frontend_shell;
 }
 
-geom::Rectangle mtf::InputTestingServerConfiguration::the_screen_geometry()
-{
-    static geom::Rectangle const default_geometry{geom::Point{geom::X{0}, geom::Y{0}},
-        geom::Size{geom::Width{1600}, geom::Height{1600}}};
-    return default_geometry;
-}
-
-std::shared_ptr<mg::ViewableArea> mtf::InputTestingServerConfiguration::the_viewable_area()
-{
-    if (!view_area)
-        view_area = std::make_shared<SizedViewArea>(the_screen_geometry());
-    return view_area;
-}
-
-void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& surface_name)
+void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& channel_name)
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
     
-    std::chrono::seconds timeout(60);
+    std::chrono::minutes timeout(2);
     auto end_time = std::chrono::system_clock::now() + timeout;
     
-    if (client_lifecycles[surface_name] == vanished)
+    if (client_lifecycles[channel_name] == vanished)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to appear but it has already vanished"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + channel_name + ") to appear but it has already vanished"));
     }
-    while (client_lifecycles[surface_name] != appeared)
+    while (client_lifecycles[channel_name] != appeared)
     {
         if (lifecycle_condition.wait_until(lg, end_time) == std::cv_status::timeout)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
-    }
-}
-
-void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::string const& surface_name)
-{
-    std::unique_lock<std::mutex> lg(lifecycle_lock);
-
-    std::chrono::seconds timeout(60);
-    auto end_time = std::chrono::system_clock::now() + timeout;
-    
-
-    if (client_lifecycles[surface_name] == appeared)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to vanish but it has already appeared"));
-    }
-    while (client_lifecycles[surface_name] != vanished)
-    {
-        if (lifecycle_condition.wait_until(lg, end_time) == std::cv_status::timeout)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + channel_name + ") to appear"));
     }
 }

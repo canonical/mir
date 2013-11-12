@@ -25,8 +25,8 @@ namespace mir
 {
 namespace frontend
 {
-class Communicator;
-class CommunicatorReport;
+class Connector;
+class ConnectorReport;
 }
 
 namespace protobuf
@@ -45,10 +45,10 @@ struct TestProtobufServer
     TestProtobufServer(
         std::string const& socket_name,
         std::shared_ptr<protobuf::DisplayServer> const& tool,
-        std::shared_ptr<frontend::CommunicatorReport> const& report);
+        std::shared_ptr<frontend::ConnectorReport> const& report);
 
     // "Server" side
-    std::shared_ptr<frontend::Communicator> const comm;
+    std::shared_ptr<frontend::Connector> const comm;
 };
 }
 }

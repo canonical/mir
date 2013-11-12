@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <gtest/gtest.h>
 
-namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
@@ -39,14 +39,14 @@ public:
         buffer3 = std::make_shared<mtd::MockBuffer>();
     }
 
-    std::shared_ptr<mc::Buffer> buffer1;
-    std::shared_ptr<mc::Buffer> buffer2;
-    std::shared_ptr<mc::Buffer> buffer3;
+    std::shared_ptr<mg::Buffer> buffer1;
+    std::shared_ptr<mg::Buffer> buffer2;
+    std::shared_ptr<mg::Buffer> buffer3;
 };
 
 TEST_F(FBSimpleSwapperTest, simple_swaps_returns_valid)
 {
-    std::initializer_list<std::shared_ptr<mc::Buffer>> double_list{buffer1, buffer2};
+    std::initializer_list<std::shared_ptr<mg::Buffer>> double_list{buffer1, buffer2};
     mga::FBSimpleSwapper fb_swapper(double_list);
 
     auto test_buffer = fb_swapper.compositor_acquire();
@@ -56,7 +56,7 @@ TEST_F(FBSimpleSwapperTest, simple_swaps_returns_valid)
 
 TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
 {
-    std::initializer_list<std::shared_ptr<mc::Buffer>> double_list{buffer1, buffer2};
+    std::initializer_list<std::shared_ptr<mg::Buffer>> double_list{buffer1, buffer2};
     mga::FBSimpleSwapper fb_swapper(double_list);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
@@ -74,7 +74,7 @@ TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
 
 TEST_F(FBSimpleSwapperTest, triple_swaps_return_abcab_pattern)
 {
-    std::initializer_list<std::shared_ptr<mc::Buffer>> triple_list{buffer1, buffer2, buffer3};
+    std::initializer_list<std::shared_ptr<mg::Buffer>> triple_list{buffer1, buffer2, buffer3};
     mga::FBSimpleSwapper fb_swapper(triple_list);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
@@ -103,10 +103,10 @@ TEST_F(FBSimpleSwapperTest, triple_swaps_return_abcab_pattern)
 
 TEST_F(FBSimpleSwapperTest, synctest)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> test_buffers{buffer1, buffer2};
+    std::vector<std::shared_ptr<mg::Buffer>> test_buffers{buffer1, buffer2};
     mga::FBSimpleSwapper fb_swapper(test_buffers);
 
-    std::vector<std::shared_ptr<mc::Buffer>> blist;
+    std::vector<std::shared_ptr<mg::Buffer>> blist;
     std::mutex mut;
     for(auto i=0u; i < 150; ++i)
     {

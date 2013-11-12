@@ -34,6 +34,25 @@ struct Rectangle
 {
     Point top_left;
     Size size;
+
+    /** 
+     * The bottom right boundary point of the rectangle.
+     *
+     * Note that the returned point is *not* included in the rectangle
+     * area, that is, the rectangle is represented as [top_left,bottom_right).
+     */
+    Point bottom_right() const;
+    bool contains(Point const& p) const;
+
+    /**
+     * Test if the rectangle contains another.
+     *
+     * Note that an empty rectangle can still contain other empty rectangles,
+     * which are treated as points or lines of thickness zero.
+     */
+    bool contains(Rectangle const& r) const;
+
+    bool overlaps(Rectangle const& r) const;
 };
 
 inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)

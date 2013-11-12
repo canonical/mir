@@ -30,7 +30,8 @@ namespace mir
 
 namespace input
 {
-class SurfaceTarget;
+class Surface;
+class InputChannel;
 
 namespace android
 {
@@ -39,7 +40,8 @@ class InputWindowHandle : public droidinput::InputWindowHandle
 {
 public:
     InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
-                      std::shared_ptr<input::SurfaceTarget> const& surface);
+                      std::shared_ptr<input::InputChannel> const& channel,
+                      std::shared_ptr<input::Surface> const& surface);
     ~InputWindowHandle() {}
 
     bool updateInfo();
@@ -49,7 +51,8 @@ protected:
     InputWindowHandle& operator=(InputWindowHandle const&) = delete;
 
 private:
-    std::shared_ptr<input::SurfaceTarget> surface;
+    std::shared_ptr<input::InputChannel> input_channel;
+    std::shared_ptr<input::Surface> surface;
 };
 
 }

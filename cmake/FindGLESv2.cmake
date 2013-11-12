@@ -10,13 +10,8 @@ pkg_check_modules(PC_GLESv2 QUIET glesv2)
 find_path(GLESv2_INCLUDE_DIR GLES2/gl2.h
           HINTS ${PC_GLESv2_INCLUDEDIR} ${PC_GLESv2_INCLUDE_DIRS})
 
-if (MIR_PLATFORM STREQUAL "android") 
-find_library(GLESv2_LIBRARY libGLESv2.so.2
-             HINTS /usr/lib/arm-linux-gnueabihf/libhybris-egl/)
-else()
 find_library(GLESv2_LIBRARY GLESv2
              HINTS ${PC_GLESv2_LIBDIR} ${PC_GLESv2_LIBRARY_DIRS})
-endif()
 
 set(GLESv2_LIBRARIES ${GLESv2_LIBRARY})
 set(GLESv2_INCLUDE_DIRS ${GLESv2_INCLUDE_DIR})

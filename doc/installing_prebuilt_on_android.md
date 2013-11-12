@@ -29,18 +29,12 @@ Installing Mir
        $ adb root
        $ adb shell
 
-3. In the adb shell, stop SurfaceFlinger, Android's compositing engine that
-   owns the display, and open the Ubuntu Touch shell:
+3. Add the Mir staging PPA to your device's sources list:
 
-       # stop
-       # ubuntu_chroot shell
-
-4. Add the Mir staging PPA to your device's sources list:
-
-       # apt-get install software-properties-common (to get the add-apt-repository command)
+       # apt-get install software-properties-common
        # add-apt-repository ppa:mir-team/staging
        # apt-get update
 
-5. Install Mir:
+4. Install Mir:
 
        # apt-get install mir-demos

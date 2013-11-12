@@ -19,11 +19,9 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_EVENT_HUB_INPUT_CONFIGURATION_H_
 #define MIR_TEST_DOUBLES_FAKE_EVENT_HUB_INPUT_CONFIGURATION_H_
 
-#include "src/server/input/android/default_android_input_configuration.h"
+#include "mir/input/android/default_android_input_configuration.h"
 
 #include <utils/StrongPointer.h>
-
-#include <initializer_list>
 
 namespace droidinput = android;
 
@@ -34,10 +32,6 @@ class EventHubInterface;
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
 namespace input
 {
 class CursorListener;
@@ -57,8 +51,8 @@ namespace doubles
 class FakeEventHubInputConfiguration : public input::android::DefaultInputConfiguration
 {
 public:
-    FakeEventHubInputConfiguration(std::initializer_list<std::shared_ptr<input::EventFilter> const> const& filters,
-                                   std::shared_ptr<graphics::ViewableArea> const& view_area,
+    FakeEventHubInputConfiguration(std::shared_ptr<input::EventFilter> const& event_filter,
+                                   std::shared_ptr<input::InputRegion> const& input_region,
                                    std::shared_ptr<input::CursorListener> const& cursor_listener,
                                    std::shared_ptr<input::InputReport> const& input_report);
     virtual ~FakeEventHubInputConfiguration();

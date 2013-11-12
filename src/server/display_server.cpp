@@ -21,9 +21,11 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
+#include "mir/server_status_listener.h"
+#include "mir/display_changer.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
 
@@ -61,38 +63,22 @@ private:
     std::function<void()> const revert;
 };
 
-class ApplyNowAndRevertOnScopeExit
-{
-public:
-    ApplyNowAndRevertOnScopeExit(std::function<void()> const& apply,
-                                 std::function<void()> const& revert)
-        : revert{revert}
-    {
-        apply();
-    }
-
-    ~ApplyNowAndRevertOnScopeExit()
-    {
-        revert();
-    }
-
-private:
-    ApplyNowAndRevertOnScopeExit(ApplyNowAndRevertOnScopeExit const&) = delete;
-    ApplyNowAndRevertOnScopeExit& operator=(ApplyNowAndRevertOnScopeExit const&) = delete;
-
-    std::function<void()> const revert;
-};
-
 }
 
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
-        : display{config.the_display()},
+        : graphics_platform{config.the_graphics_platform()},
+          display{config.the_display()},
+          input_configuration{config.the_input_configuration()},
           compositor{config.the_compositor()},
-          communicator{config.the_communicator()},
+          connector{config.the_connector()},
           input_manager{config.the_input_manager()},
-          main_loop{config.the_main_loop()}
+          main_loop{config.the_main_loop()},
+          server_status_listener{config.the_server_status_listener()},
+          display_changer{config.the_display_changer()},
+          paused{false},
+          configure_display_on_resume{false}
     {
         display->register_configuration_change_handler(
             *main_loop,
@@ -117,15 +103,19 @@ struct mir::DisplayServer::Private
                 [this] { compositor->start(); }};
 
             TryButRevertIfUnwinding comm{
-                [this] { communicator->stop(); },
-                [this] { communicator->start(); }};
+                [this] { connector->stop(); },
+                [this] { connector->start(); }};
 
             display->pause();
+
+            paused = true;
         }
         catch(std::runtime_error const&)
         {
             return false;
         }
+
+        server_status_listener->paused();
 
         return true;
     }
@@ -139,37 +129,60 @@ struct mir::DisplayServer::Private
                 [this] { display->pause(); }};
 
             TryButRevertIfUnwinding comm{
-                [this] { communicator->start(); },
-                [this] { communicator->stop(); }};
+                [this] { connector->start(); },
+                [this] { connector->stop(); }};
+
+            if (configure_display_on_resume)
+            {
+                auto conf = display->configuration();
+                display_changer->configure_for_hardware_change(
+                    conf, DisplayChanger::RetainSystemState);
+                configure_display_on_resume = false;
+            }
 
             TryButRevertIfUnwinding input{
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
 
             compositor->start();
+
+            paused = false;
         }
         catch(std::runtime_error const&)
         {
             return false;
         }
 
+        server_status_listener->resumed();
+
         return true;
     }
 
     void configure_display()
     {
-        ApplyNowAndRevertOnScopeExit comp{
-            [this] { compositor->stop(); },
-            [this] { compositor->start(); }};
-
-        display->configure(*display->configuration());
+        if (!paused)
+        {
+            auto conf = display->configuration();
+            display_changer->configure_for_hardware_change(
+                conf, DisplayChanger::PauseResumeSystem);
+        }
+        else
+        {
+            configure_display_on_resume = true;
+        }
     }
 
-    std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<mf::Communicator> communicator;
-    std::shared_ptr<mi::InputManager> input_manager;
-    std::shared_ptr<mir::MainLoop> main_loop;
+    std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
+    std::shared_ptr<mg::Display> const display;
+    std::shared_ptr<input::InputConfiguration> const input_configuration;
+    std::shared_ptr<mc::Compositor> const compositor;
+    std::shared_ptr<mf::Connector> const connector;
+    std::shared_ptr<mi::InputManager> const input_manager;
+    std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
+    std::shared_ptr<mir::DisplayChanger> const display_changer;
+    bool paused;
+    bool configure_display_on_resume;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
@@ -188,15 +201,17 @@ mir::DisplayServer::~DisplayServer()
 
 void mir::DisplayServer::run()
 {
-    p->communicator->start();
+    p->connector->start();
     p->compositor->start();
     p->input_manager->start();
+
+    p->server_status_listener->started();
 
     p->main_loop->run();
 
     p->input_manager->stop();
     p->compositor->stop();
-    p->communicator->stop();
+    p->connector->stop();
 }
 
 void mir::DisplayServer::stop()

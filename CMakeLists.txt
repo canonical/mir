@@ -27,8 +27,8 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 0)
-set(MIR_VERSION_PATCH 5)
+set(MIR_VERSION_MINOR 1)
+set(MIR_VERSION_PATCH 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -42,12 +42,13 @@ include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror -Wall -pedantic -Wextra -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Werror -Wall -pedantic -Wextra -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
 endif()
 
 #####################################################################
@@ -110,14 +111,11 @@ include_directories (${GLM_INCLUDE_DIRS})
 
 add_definitions(-DANDROID_USE_STD)
 
-# By default we can run our tests
-set( MIR_TESTS_AVAILABLE TRUE )
-
 if (MIR_PLATFORM STREQUAL "android")
+  find_package( PkgConfig )
   include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
   list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
   add_definitions( -DANDROID )
@@ -131,11 +129,6 @@ elseif (MIR_PLATFORM STREQUAL "gbm")
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
   pkg_check_modules( UDEV REQUIRED libudev )
-  pkg_check_modules( UMOCKDEV umockdev-1.0 )
-  if ( NOT UMOCKDEV_FOUND )
-    message( WARNING "Umockdev not found, tests are disabled" )
-    set(MIR_TESTS_AVAILABLE FALSE)
-  endif ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
 else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
@@ -162,38 +155,18 @@ set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 # Don't treat warnings as errors in 3rd_party/{gmock}
 string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-# Pulling in local gmock version
-# While this seems evil, we are doing
-# it to ensure/allow for:
-#   (1.) a matching gmock/gtest version
-#   (2.) a stream-lined cross-compilation workflow
-set(
-  GTEST_INCLUDE_DIR
-
-  3rd_party/gmock/include
-  3rd_party/gmock/gtest/include)
-
-add_subdirectory(3rd_party/gmock/)
-set(GMOCK_LIBRARY gmock)
-set(GMOCK_MAIN_LIBRARY gmock_main)
-set(
-  GTEST_BOTH_LIBRARIES
-
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY})
-set(GTEST_FOUND TRUE)
-# GMock/GTest build finished and available to subsequent components
-include_directories (
-  ${GTEST_INCLUDE_DIR}
-)
 
 # Restore -Werror for non-3rd-party code
 set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
-add_subdirectory(benchmarks/)
-if (MIR_TESTS_AVAILABLE)
-  add_subdirectory(tests/)
+option(MIR_ENABLE_TESTS "Build tests" ON)
+
+if (MIR_ENABLE_TESTS)
+   find_package(Gtest REQUIRED)
+   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
+   add_subdirectory(tests/)
 endif ()
+add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(guides/)
@@ -201,7 +174,7 @@ add_subdirectory(cmake/)
 
 # There's no nice way to format this. Thanks CMake.
 add_test(LGPL-required
-  /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared"
+  /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
 )
 add_test(GPL-required
   /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"

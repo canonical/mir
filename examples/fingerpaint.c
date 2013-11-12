@@ -217,7 +217,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             max_fingers = 0;
         }
 
-        if (masked_action == mir_motion_action_move)
+        if (masked_action == mir_motion_action_move ||
+            masked_action == mir_motion_action_down)
         {
             size_t p;
 
@@ -248,38 +249,114 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     }
 }
 
+static const MirDisplayOutput *find_active_output(
+    const MirDisplayConfiguration *conf)
+{
+    const MirDisplayOutput *output = NULL;
+    int d;
+
+    for (d = 0; d < (int)conf->num_outputs; d++)
+    {
+        const MirDisplayOutput *out = conf->outputs + d;
+
+        if (out->used &&
+            out->connected &&
+            out->num_modes &&
+            out->current_mode < out->num_modes)
+        {
+            output = out;
+            break;
+        }
+    }
+
+    return output;
+}
+
 int main(int argc, char *argv[])
 {
     static const Color background = {0x40, 0x40, 0x40, 0xff};
     MirConnection *conn;
     MirSurfaceParameters parm;
-    MirDisplayInfo dinfo;
     MirSurface *surf;
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
-    int f;
+    unsigned int f;
 
-    (void)argc;
+    char *mir_socket = NULL;
 
-    conn = mir_connect_sync(NULL, argv[0]);
+    if (argc > 1)
+    {
+        int i;
+        for (i = 1; i < argc; i++)
+        {
+            int help = 0;
+            const char *arg = argv[i];
+
+            if (arg[0] == '-')
+            {
+                switch (arg[1])
+                {
+                case 'm':
+                    mir_socket = argv[++i];
+                    break;
+                case 'h':
+                default:
+                    help = 1;
+                    break;
+                }
+            }
+            else
+            {
+                help = 1;
+            }
+
+            if (help)
+            {
+                printf("Usage: %s [<options>]\n"
+                       "  -h               Show this help text\n"
+                       "  -m socket        Mir server socket\n"
+                       , argv[0]);
+                return 0;
+            }
+        }
+    }
+
+    conn = mir_connect_sync(mir_socket, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
         fprintf(stderr, "Could not connect to a display server.\n");
         return 1;
     }
 
-    mir_connection_get_display_info(conn, &dinfo);
+    MirDisplayConfiguration *display_config =
+        mir_connection_create_display_config(conn);
+
+    const MirDisplayOutput *dinfo = find_active_output(display_config);
+    if (dinfo == NULL)
+    {
+        fprintf(stderr, "No active outputs found.\n");
+        mir_connection_release(conn);
+        return 1;
+    }
 
     parm.buffer_usage = mir_buffer_usage_software;
+    parm.output_id = mir_display_output_id_invalid;
+
+    unsigned int const pf_size = 32;
+    MirPixelFormat formats[pf_size];
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
+
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo.supported_pixel_format_items; f++)
+    for (f = 0; f < valid_formats; f++)
     {
-        if (BYTES_PER_PIXEL(dinfo.supported_pixel_format[f]) == 4)
+        if (BYTES_PER_PIXEL(formats[f]) == 4)
         {
-            parm.pixel_format = dinfo.supported_pixel_format[f];
+            parm.pixel_format = formats[f];
             break;
         }
     }
+
     if (parm.pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
@@ -288,8 +365,11 @@ int main(int argc, char *argv[])
     }
 
     parm.name = "Paint Canvas";
-    parm.width = dinfo.width;
-    parm.height = dinfo.height;
+    parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
+    parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
+
+    mir_display_config_destroy(display_config);
+
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)
     {

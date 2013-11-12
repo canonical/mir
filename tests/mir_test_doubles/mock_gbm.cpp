@@ -62,6 +62,9 @@ mtd::MockGBM::MockGBM()
 
     ON_CALL(*this, gbm_bo_set_user_data(_,_,_))
     .WillByDefault(Invoke(this, &MockGBM::on_gbm_bo_set_user_data));
+
+    ON_CALL(*this, gbm_bo_write(_,_,_))
+    .WillByDefault(Return(0));
 }
 
 mtd::MockGBM::~MockGBM()
@@ -154,6 +157,11 @@ void gbm_bo_set_user_data(struct gbm_bo *bo, void *data,
 void *gbm_bo_get_user_data(struct gbm_bo *bo)
 {
     return global_mock->gbm_bo_get_user_data(bo);
+}
+
+int gbm_bo_write(struct gbm_bo *bo, const void *buf, size_t count)
+{
+    return global_mock->gbm_bo_write(bo, buf, count);
 }
 
 void gbm_bo_destroy(struct gbm_bo *bo)

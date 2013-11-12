@@ -19,6 +19,8 @@
 #ifndef MIR_SURFACES_INPUT_REGISTRAR_H_
 #define MIR_SURFACES_INPUT_REGISTRAR_H_
 
+#include "mir/input/input_reception_mode.h"
+
 #include <memory>
 
 namespace mir
@@ -26,7 +28,8 @@ namespace mir
 namespace input
 {
 class SessionTarget;
-class SurfaceTarget;
+class InputChannel;
+class Surface;
 }
 
 namespace surfaces
@@ -39,8 +42,10 @@ class InputRegistrar
 public:
     virtual ~InputRegistrar() = default;
     
-    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;
-    virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface) = 0;
+    virtual void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
+                                      std::shared_ptr<input::Surface> const& info,
+                                      input::InputReceptionMode input_mode) = 0;
+    virtual void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel) = 0;
 
 protected:
     InputRegistrar() = default;

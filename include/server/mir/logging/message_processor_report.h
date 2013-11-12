@@ -68,6 +68,8 @@ public:
 
     void exception_handled(void const* mediator, std::exception const& error);
 
+    void sent_event(void const* mediator, MirSurfaceEvent const& event);
+
     ~MessageProcessorReport() noexcept(true);
 
 private:

@@ -19,18 +19,19 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 
+#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+
+#include <EGL/egl.h>
 #include <memory>
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
+class Buffer;
+
 namespace android
 {
 
@@ -44,8 +45,11 @@ public:
     virtual unsigned int number_of_framebuffers_available() const = 0;
     //this function schedules the next frontbuffer to be "buffer" parameter. depending on implementation, it may
     //post immediately, or be deferred.
-    virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
+    virtual void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual void sync_to_display(bool sync) = 0;
+    virtual void mode(MirPowerMode mode) = 0;
+    virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
+
 protected:
     DisplaySupportProvider() = default;
     DisplaySupportProvider& operator=(DisplaySupportProvider const&) = delete;

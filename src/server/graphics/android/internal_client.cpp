@@ -21,11 +21,9 @@
 #include "internal_client_window.h"
 #include "mir/graphics/android/mir_native_window.h"
 
-namespace mf=mir::frontend;
 namespace mga=mir::graphics::android;
 
 mga::InternalClient::InternalClient()
-    : client_window(0)
 {
 }
 
@@ -34,14 +32,14 @@ EGLNativeDisplayType mga::InternalClient::egl_native_display()
     return EGL_DEFAULT_DISPLAY;
 }
 
-EGLNativeWindowType mga::InternalClient::egl_native_window(std::shared_ptr<mf::Surface> const& surface)
+EGLNativeWindowType mga::InternalClient::egl_native_window(std::shared_ptr<InternalSurface> const& surface)
 {
-    if (!client_window)
+    if (!client_windows[surface])
     {
         auto cache = std::make_shared<mga::InterpreterCache>();
         auto interpreter = std::make_shared<mga::InternalClientWindow>(surface, cache); 
-        client_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+        client_windows[surface] = std::make_shared<mga::MirNativeWindow>(interpreter);
     }
 
-    return client_window.get();
+    return client_windows[surface].get();
 }

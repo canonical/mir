@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -35,7 +35,7 @@ namespace tools
 class BufferRenderTarget
 {
 public:
-    BufferRenderTarget(mir::compositor::Buffer& buffer);
+    BufferRenderTarget(mir::graphics::Buffer& buffer);
     ~BufferRenderTarget();
 
     void make_current();
@@ -49,7 +49,7 @@ private:
         {
         }
         ~Resources();
-        void setup(mir::compositor::Buffer& buffer);
+        void setup(mir::graphics::Buffer& buffer);
 
         GLuint fbo;
         GLuint color_tex;
@@ -57,7 +57,8 @@ private:
     };
 
     Resources resources;
-    mir::compositor::Buffer& buffer;
+    mir::graphics::Buffer& buffer;
+    GLint old_viewport[4];
 };
 
 }

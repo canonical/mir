@@ -34,18 +34,18 @@ namespace mir
 {
 namespace input
 {
-class SurfaceTarget;
+class InputChannel;
 namespace android
 {
 
 /// Interface internal to mir::input::android used for tracking the assosciation between droidinput::InputWindowHandle
-/// and mir::input::SurfaceTarget
+/// and mir::input::InputChannel
 class WindowHandleRepository
 {
 public:
     virtual ~WindowHandleRepository() = default;
     
-    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface) = 0;
+    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel) = 0;
 protected:
     WindowHandleRepository() = default;
     WindowHandleRepository(const WindowHandleRepository&) = delete;

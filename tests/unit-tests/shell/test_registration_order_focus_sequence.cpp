@@ -20,10 +20,12 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/surfaces/surface.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
@@ -31,7 +33,6 @@
 #include <string>
 
 namespace mc = mir::compositor;
-namespace me = mir::events;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
@@ -52,7 +53,8 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
         return std::make_shared<msh::ApplicationSession>(
             factory, name,
             std::shared_ptr<msh::SnapshotStrategy>(),
-            std::shared_ptr<me::EventSink>());
+            std::make_shared<msh::NullSessionListener>(),
+            std::make_shared<mtd::NullEventSink>());
     }
 
     std::shared_ptr<mtd::MockSurfaceFactory> const factory;

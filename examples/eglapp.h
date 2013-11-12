@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 typedef int mir_eglapp_bool;
+struct MirConnection;
+struct MirSurface;
+
+extern float mir_eglapp_background_opacity;
 
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                                 unsigned int *width, unsigned int *height);
@@ -31,6 +35,8 @@ void            mir_eglapp_swap_buffers(void);
 mir_eglapp_bool mir_eglapp_running(void);
 void            mir_eglapp_shutdown(void);
 
+struct MirConnection* mir_eglapp_native_connection();
+struct MirSurface*    mir_eglapp_native_surface();
 #ifdef __cplusplus
 }
 #endif

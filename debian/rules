@@ -14,7 +14,6 @@ override_dh_auto_test:
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DMIR_DISABLE_EPOLL_REACTOR=YES \
   -DBUILD_DOXYGEN=YES \
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"
 
@@ -22,13 +21,21 @@ override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=android
+	  -DMIR_PLATFORM=android \
+	  -DMIR_ENABLE_UNIT_TESTS=NO \
+	  -DMIR_ENABLE_ACCEPTANCE_TESTS=NO \
+	  -DMIR_ENABLE_INTEGRATION_TESTS=NO
+else
+ifeq ($(DEB_HOST_ARCH),powerpc)
+	dh_auto_configure -- \
+	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DMIR_ENABLE_TESTS=NO
 else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS)
 endif
+endif
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -p libmirserver0 -V 'libmirserver0 (= ${EXACT_PACKAGE_VERSION})'
-	dh_makeshlibs --remaining-packages -V
+	dh_makeshlibs -V

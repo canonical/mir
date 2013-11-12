@@ -20,6 +20,8 @@
 #ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_REPORT_H_
 #define MIR_FRONTEND_MESSAGE_PROCESSOR_REPORT_H_
 
+#include "mir_toolkit/event.h"
+
 #include <string>
 
 namespace mir
@@ -42,6 +44,8 @@ public:
     virtual void exception_handled(void const* mediator, int id, std::exception const& error) = 0;
 
     virtual void exception_handled(void const* mediator, std::exception const& error) = 0;
+    
+    virtual void sent_event(void const* mediator, MirSurfaceEvent const& ev) = 0;
 
 private:
     MessageProcessorReport(MessageProcessorReport const&) = delete;

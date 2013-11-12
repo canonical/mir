@@ -20,6 +20,7 @@
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
+#include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -28,7 +29,7 @@
 namespace mfd = mir::frontend::detail;
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
-    MessageSender* sender,
+    std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
@@ -37,6 +38,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     resource_cache(resource_cache),
     report(report)
 {
+    send_response_buffer.reserve(serialization_buffer_size);
 }
 
 template<class ResultMessage>
@@ -48,8 +50,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
-    send_response(id, static_cast<google::protobuf::Message*>(response));
-    sender->send_fds(fd);
+    send_response(id, response, {fd});
     resource_cache->free_resource(response);
 }
 
@@ -59,8 +60,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_platform()) :
         std::vector<int32_t>();
 
-    send_response(id, static_cast<google::protobuf::Message*>(response));
-    sender->send_fds(fd);
+    send_response(id, response, {fd});
     resource_cache->free_resource(response);
 }
 
@@ -71,9 +71,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
 
-    send_response(id, static_cast<google::protobuf::Message*>(response));
-    sender->send_fds(surface_fd);
-    sender->send_fds(buffer_fd);
+    send_response(id, response, {surface_fd, buffer_fd});;
     resource_cache->free_resource(response);
 }
 
@@ -124,44 +122,22 @@ void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
-    std::string buffer;
-    response->SerializeToString(&buffer);
-
-    mir::protobuf::wire::Result result;
-    result.set_id(id);
-    result.set_response(buffer);
-
-    result.SerializeToString(&buffer);
-
-    sender->send(buffer);
+    send_response(id, response, FdSets());
 }
 
-void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
+void mfd::ProtobufMessageProcessor::send_response(
+    ::google::protobuf::uint32 id,
+    google::protobuf::Message* response,
+    FdSets const& fd_sets)
 {
-    // In future we might send multiple events, or insert them into messages
-    // containing other responses, but for now we send them individually.
-    mir::protobuf::EventSequence seq;
-    mir::protobuf::Event *ev = seq.add_event();
-    ev->set_raw(&e, sizeof(MirEvent));
+    response->SerializeToString(&send_response_buffer);
 
-    std::string buffer;
-    seq.SerializeToString(&buffer);
+    send_response_result.set_id(id);
+    send_response_result.set_response(send_response_buffer);
 
-    mir::protobuf::wire::Result result;
-    result.add_events(buffer);
+    send_response_result.SerializeToString(&send_response_buffer);
 
-    result.SerializeToString(&buffer);
-
-    sender->send(buffer);
-}
-
-void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
-{
-    // Limit the types of events we wish to send over protobuf, for now.
-    if (e.type == mir_event_type_surface)
-    {
-        send_event(e);
-    }
+    sender->send(send_response_buffer, fd_sets);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
@@ -198,6 +174,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
         }
+        else if ("configure_display" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::configure_display, invocation);
+        }
         else if ("configure_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::configure_surface, invocation);
@@ -231,6 +211,9 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     {
         mir::protobuf::wire::Invocation invocation;
         invocation.ParseFromIstream(&msg);
+
+        if (invocation.has_protocol_version() && invocation.protocol_version() != 1)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
 
         return dispatch(invocation);
     }

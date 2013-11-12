@@ -27,7 +27,7 @@
 #include "src/server/graphics/gbm/gbm_buffer.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mir/graphics/null_display_report.h"
@@ -40,7 +40,6 @@
 #include <cstdint>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
@@ -56,11 +55,11 @@ protected:
 
         fake_devices.add_standard_drm_devices();
 
-        size = geom::Size{geom::Width{300}, geom::Height{200}};
+        size = geom::Size{300, 200};
         pf = geom::PixelFormat::argb_8888;
         stride = geom::Stride{4 * size.width.as_uint32_t()};
-        usage = mc::BufferUsage::hardware;
-        buffer_properties = mc::BufferProperties{size, pf, usage};
+        usage = mg::BufferUsage::hardware;
+        buffer_properties = mg::BufferProperties{size, pf, usage};
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(size.width.as_uint32_t()));
@@ -77,7 +76,7 @@ protected:
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
+        allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, null_init));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -92,8 +91,8 @@ protected:
     geom::PixelFormat pf;
     geom::Size size;
     geom::Stride stride;
-    mc::BufferUsage usage;
-    mc::BufferProperties buffer_properties;
+    mg::BufferUsage usage;
+    mg::BufferProperties buffer_properties;
 
     mtf::UdevEnvironment fake_devices;
 };

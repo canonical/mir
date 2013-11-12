@@ -28,14 +28,13 @@ namespace test
 namespace doubles
 {
 
-class StubSurface : public frontend::Surface
+class StubSurface : public frontend::ClientTrackingSurface
 {
 public:
     virtual ~StubSurface() = default;
 
     void hide() {}
     void show() {}
-    void destroy() {}
     void force_requests_to_complete() {}
 
     geometry::Size size() const
@@ -47,9 +46,9 @@ public:
         return geometry::PixelFormat();
     }
 
-    std::shared_ptr<compositor::Buffer> advance_client_buffer()
+    std::shared_ptr<graphics::Buffer> advance_client_buffer()
     {
-        return std::shared_ptr<compositor::Buffer>();
+        return std::shared_ptr<graphics::Buffer>();
     }
 
     virtual int configure(MirSurfaceAttrib, int)

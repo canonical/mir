@@ -27,9 +27,12 @@
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "mir_test_framework/udev_environment.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #else
 #include "src/server/graphics/android/android_framebuffer_window_query.h"
 #include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/display_buffer_factory.h"
+#include "mir_test_doubles/stub_display_support_provider.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
 
@@ -85,12 +88,15 @@ public:
 
         return std::make_shared<mg::android::AndroidDisplay>(
             std::make_shared<StubAndroidFramebufferWindowQuery>(),
+            std::make_shared<mg::android::DisplayBufferFactory>(),
+            std::make_shared<mtd::StubDisplaySupportProvider>(),
             std::make_shared<mg::NullDisplayReport>());
 #else
         auto platform = std::make_shared<mg::gbm::GBMPlatform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
-        return platform->create_display();
+        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        return platform->create_display(conf_policy);
 #endif
     }
 

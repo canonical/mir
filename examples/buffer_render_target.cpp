@@ -17,24 +17,32 @@
  */
 
 #include "buffer_render_target.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <GLES2/gl2ext.h>
 #include <stdexcept>
 
 namespace geom = mir::geometry;
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mt = mir::tools;
 
-mt::BufferRenderTarget::BufferRenderTarget(mc::Buffer& buffer)
+mt::BufferRenderTarget::BufferRenderTarget(mg::Buffer& buffer)
     : buffer(buffer)
 {
+    /*
+     * With the new lazy buffer allocation method, we may be executing inside
+     * the compositor's GL context. So be careful to save and restore what
+     * we change...
+     */
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
     resources.setup(buffer);
 }
 
 mt::BufferRenderTarget::~BufferRenderTarget()
 {
     glFinish();
+    glViewport(old_viewport[0], old_viewport[1],
+               old_viewport[2], old_viewport[3]);
 }
 
 void mt::BufferRenderTarget::make_current()
@@ -55,7 +63,7 @@ mt::BufferRenderTarget::Resources::~Resources()
         glDeleteFramebuffers(1, &fbo);
 }
 
-void mt::BufferRenderTarget::Resources::setup(mc::Buffer& buffer)
+void mt::BufferRenderTarget::Resources::setup(mg::Buffer& buffer)
 {
     geom::Size buf_size = buffer.size();
 

@@ -40,7 +40,8 @@ extern "C" {
  *            locking appropriate to protect your data accessed in the
  *            callback.
  *   \param [in] server       File path of the server socket to connect to, or
- *                            NULL to choose the default server
+ *                            NULL to choose the default server (can be set by
+ *                            the $MIR_SOCKET environment variable)
  *   \param [in] app_name     A name referring to the application
  *   \param [in] callback     Callback function to be invoked when request
  *                            completes
@@ -95,11 +96,63 @@ void mir_connection_release(MirConnection *connection);
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
 /**
- * Query the display
- *   \param [in]  connection    The connection
- *   \param [out] display_info  Structure to be populated
+ * Register a callback to be called when a Lifecycle state change occurs.
+ *   \param [in] connection     The connection
+ *   \param [in] callback       The function to be called when the state change occurs
+ *   \param [in,out] context    User data passed to the callback function
  */
+void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
+    mir_lifecycle_event_callback callback, void* context);
+
+/** 
+ * \deprecated Use mir_connection_create_display_config
+ */
+__attribute__((__deprecated__("Use mir_connection_create_display_config()")))
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+
+/**
+ * Query the display
+ *   \warning return value must be destroyed via mir_display_config_destroy() 
+ *   \warning may return null if connection is invalid 
+ *   \param [in]  connection        The connection
+ *   \return                        structure that describes the display configuration
+ */
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
+
+/**
+ * Register a callback to be called when the hardware display configuration changes
+ *
+ * Once a change has occurred, you can use mir_connection_create_display_config to see
+ * the new configuration.
+ *
+ *   \param [in] connection  The connection
+ *   \param [in] callback     The function to be called when a display change occurs
+ *   \param [in,out] context  User data passed to the callback function
+ */
+void mir_connection_set_display_config_change_callback(
+    MirConnection* connection,
+    mir_display_config_callback callback, void* context);
+
+/**
+ * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
+ *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
+ */
+void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
+
+/**
+ * Apply the display configuration
+ *
+ * The display configuration is applied to this connection only (per-connection
+ * configuration) and is invalidated when a hardware change occurs. Clients should
+ * register a callback with mir_connection_set_display_config_change_callback()
+ * to get notified about hardware changes, so that the can apply a new configuration.
+ *
+ *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
+ *   \param [in] connection             The connection
+ *   \param [in] display_configuration  The display_configuration to apply 
+ *   \return                            A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
@@ -107,6 +160,17 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
  *   \return                 An EGLNativeDisplayType that the client can use
  */
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
+
+/**
+ * Get the list of possible formats that a surface can be created with.
+ *   \param [in] connection         The connection
+ *   \param [out] formats           List of valid formats to create surfaces with 
+ *   \param [in]  formats_size      size of formats list
+ *   \param [out] num_valid_formats number of valid formats returned in formats
+ */ 
+void mir_connection_get_available_surface_formats(
+    MirConnection* connection, MirPixelFormat* formats,
+    unsigned const int format_size, unsigned int *num_valid_formats);
 
 /**
  * Request a new Mir surface on the supplied connection with the supplied
@@ -265,16 +329,25 @@ MirWaitHandle *mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface);
 
 /**
- * Wait on the supplied handle until the associated request has completed.
+ * Wait on the supplied handle until all instances of the associated request
+ * have completed.
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for(MirWaitHandle *wait_handle);
 
 /**
- * Return the ID of a surface (only useful for debug output).
- *   \param [in] surface  The surface
- *   \return              An internal ID that identifies the surface
+ * Wait on the supplied handle until one instance of the associated request
+ * has completed. Use this instead of mir_wait_for in a threaded environment
+ * to ensure that the act of waiting does not clear all results associated
+ * with the wait handle; only one.
+ *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
+void mir_wait_for_one(MirWaitHandle *wait_handle);
+
+/**
+ * \deprecated Use mir_debug_surface_id()
+ */
+__attribute__((__deprecated__("Use mir_debug_surface_id()")))
 int mir_surface_get_id(MirSurface *surface);
 
 /**

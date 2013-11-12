@@ -42,8 +42,7 @@ public:
     TestGrallocMapper();
     TestGrallocMapper(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
     ~TestGrallocMapper();
-    std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
-                            std::shared_ptr<ANativeWindowBuffer> const& package);
+    std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(ANativeWindowBuffer* package);
 
 private:
     TestGrallocMapper(TestGrallocMapper const&) = delete;
@@ -53,8 +52,6 @@ private:
     gralloc_module_t* module;
     alloc_device_t* alloc_dev;
 };
-
-bool is_surface_flinger_running();
 
 }
 }

@@ -21,10 +21,9 @@
 #include "mir/frontend/surface.h"
 #include "mir/geometry/size.h"
 #include "mir/input/input_channel.h"
-#include "mir/input/surface_target.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
 #include <cstdlib>
@@ -49,13 +48,10 @@ struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
     bool updateInfo() { return true; }
 };
 
-struct MockSurfaceTarget : public mi::SurfaceTarget
+struct MockInputChannel : public mi::InputChannel
 {
-    MOCK_CONST_METHOD0(server_input_fd, int());
-    MOCK_CONST_METHOD0(top_left, geom::Point());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(name, std::string const&());
-    MOCK_CONST_METHOD0(input_region, std::shared_ptr<mi::InputRegion>());
+    MOCK_CONST_METHOD0(client_fd, int());
+    MOCK_CONST_METHOD0(server_fd, int());
 };
 
 }
@@ -64,8 +60,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 {
     using namespace ::testing;
 
-    geom::Size const default_surface_size = geom::Size{geom::Width{256},
-                                                      geom::Height{256}};
+    geom::Size const default_surface_size{256, 256};
     geom::Point const default_surface_top_left = geom::Point{geom::X{10}, geom::Y{10}};
     std::string const testing_surface_name = "Test";
 
@@ -76,21 +71,27 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     // We don't actually need the file to exist after this test.
     unlink(filename);
 
-    MockSurfaceTarget surface;
+    MockInputChannel mock_channel;
+    mtd::MockInputSurface mock_surface;
 
-    EXPECT_CALL(surface, server_input_fd()).Times(1)
+    EXPECT_CALL(mock_channel, server_fd())
+        .Times(1)
         .WillOnce(Return(testing_server_fd));
+
     // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position
-    EXPECT_CALL(surface, size()).Times(1)
+    EXPECT_CALL(mock_surface, size())
+        .Times(1)
         .WillOnce(Return(default_surface_size));
-    EXPECT_CALL(surface, top_left()).Times(1)
+    EXPECT_CALL(mock_surface, position())
+        .Times(1)
         .WillOnce(Return(default_surface_top_left));
-    EXPECT_CALL(surface, name()).Times(1)
+    EXPECT_CALL(mock_surface, name())
+        .Times(1)
         .WillOnce(ReturnRef(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
-                                  mt::fake_shared(surface));
+                                  mt::fake_shared(mock_channel), mt::fake_shared(mock_surface));
 
     auto info = handle.getInfo();
 

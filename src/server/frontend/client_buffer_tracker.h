@@ -25,7 +25,7 @@
 namespace mir
 {
 
-namespace compositor
+namespace graphics
 {
 class BufferID;
 }
@@ -48,11 +48,11 @@ public:
     /// Add a BufferID to the list of buffers known by the client.
     ///
     /// Typically this should be done just prior to or just after sending the buffer information
-    void add(compositor::BufferID const& id);
-    bool client_has(compositor::BufferID const& id) const;
+    void add(graphics::BufferID const& id);
+    bool client_has(graphics::BufferID const& id) const;
 private:
 
-    std::list<compositor::BufferID> ids;
+    std::list<graphics::BufferID> ids;
     unsigned int const cache_size;
 };
 

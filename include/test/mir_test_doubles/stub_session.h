@@ -58,7 +58,11 @@ struct StubSession : public frontend::Session
     {
         return 0;
     }
-    void set_event_sink(std::shared_ptr<events::EventSink> const&)
+    void set_event_sink(std::shared_ptr<frontend::EventSink> const&)
+    {
+    }
+
+    void send_display_config(graphics::DisplayConfiguration const&)
     {
     }
 };

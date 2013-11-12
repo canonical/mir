@@ -21,7 +21,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_native_window.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_surface_interpreter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_syncfence.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

@@ -18,19 +18,23 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/input/null_input_configuration.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/compositor.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/graphics/renderer.h"
-#include "mir/frontend/communicator.h"
+#include "mir/shell/null_session_listener.h"
+#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
+#include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
 
@@ -57,22 +61,24 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         return input_configuration;
     }
 
-    std::shared_ptr<mf::Communicator> the_communicator() override
+    std::shared_ptr<mf::Connector> the_connector() override
     {
-        struct NullCommunicator : public mf::Communicator
+        struct NullConnector : public mf::Connector
         {
             void start() {}
             void stop() {}
+            int client_socket_fd() const override { return 0; }
+            void remove_endpoint() const override { }
         };
 
-        return std::make_shared<NullCommunicator>();
+        return std::make_shared<NullConnector>();
     }
 
-    std::shared_ptr<mc::GraphicBufferAllocator> the_buffer_allocator() override
+    std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator() override
     {
-        struct StubBufferAllocator : public mc::GraphicBufferAllocator
+        struct StubBufferAllocator : public mg::GraphicBufferAllocator
         {
-            std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& buffer_properties)
+            std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties)
             {
                 return std::make_shared<mtd::StubBuffer>(buffer_properties);
             }
@@ -87,21 +93,30 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             });
     }
 
-    std::shared_ptr<mg::Renderer> the_renderer() override
+    std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
     {
-        struct NullRenderer : public mg::Renderer
+        struct StubRenderer : public mc::Renderer
         {
-            void clear() {}
+            void clear(unsigned long) override {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mg::Renderable& renderable)
+                        mc::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
-                renderable.graphic_region();
+                stream.lock_compositor_buffer(0);
             }
 
             void ensure_no_live_buffers_bound() {}
         };
 
-        return std::make_shared<NullRenderer>();
+        struct StubRendererFactory : public mc::RendererFactory
+        {
+            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+            {
+                auto raw = new StubRenderer{};
+                return std::unique_ptr<StubRenderer>(raw);
+            }
+        };
+
+        return std::make_shared<StubRendererFactory>();
     }
 
 
@@ -109,7 +124,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubPixelBuffer : public msh::PixelBuffer
         {
-            void fill_from(mc::Buffer&) {}
+            void fill_from(mg::Buffer&) {}
             void const* as_argb_8888() { return nullptr; }
             geom::Size size() const { return geom::Size(); }
             geom::Stride stride() const { return geom::Stride(); }
@@ -126,7 +141,13 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubDisplay : public mtd::NullDisplay
         {
-            StubDisplay() : buffers(3) {}
+            StubDisplay()
+                : buffers{mtd::StubDisplayBuffer{geom::Rectangle{{0,0},{100,100}}},
+                          mtd::StubDisplayBuffer{geom::Rectangle{{100,0},{100,100}}},
+                          mtd::StubDisplayBuffer{geom::Rectangle{{0,100},{100,100}}}}
+            {
+
+            }
 
             void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
             {
@@ -134,7 +155,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
                     f(db);
             }
 
-            std::vector<mtd::NullDisplayBuffer> buffers;
+            std::vector<mtd::StubDisplayBuffer> buffers;
         };
 
         return display(
@@ -156,12 +177,16 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
     msh::ApplicationSession session{
         conf.the_shell_surface_factory(),
         "stress",
-        conf.the_shell_snapshot_strategy()};
+        conf.the_shell_snapshot_strategy(),
+        std::make_shared<msh::NullSessionListener>(),
+        std::make_shared<mtd::NullEventSink>()
+    };
     session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();
 
     compositor->start();
+    session.default_surface()->allow_framedropping(true);
 
     std::thread client_thread{
         [&session]

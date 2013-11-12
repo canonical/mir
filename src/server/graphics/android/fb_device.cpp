@@ -16,7 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
 
 #include "fb_device.h"
 #include "buffer.h"
@@ -26,10 +28,10 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
- 
+
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     : fb_device(fbdev)
 {
@@ -39,10 +41,12 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     }
 }
 
-void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
+void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    auto handle = buffer->native_buffer_handle();
-    if (fb_device->post(fb_device.get(), handle->handle) != 0)
+    auto native_buffer = buffer->native_buffer_handle();
+    native_buffer->wait_for_content();
+
+    if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
@@ -50,8 +54,7 @@ void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buff
 
 geom::Size mga::FBDevice::display_size() const
 {
-    return geom::Size{geom::Width{fb_device->width},
-                      geom::Height{fb_device->height}};
+    return {fb_device->width, fb_device->height};
 } 
 
 geom::PixelFormat mga::FBDevice::display_format() const
@@ -78,4 +81,18 @@ void mga::FBDevice::sync_to_display(bool sync)
     {
         fb_device->setSwapInterval(fb_device.get(), 0);
     }
+}
+
+void mga::FBDevice::commit_frame(EGLDisplay dpy, EGLSurface sur)
+{
+    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
+    }
+}
+
+void mga::FBDevice::mode(MirPowerMode mode)
+{
+    // TODO: Implement
+    (void) mode;
 }

@@ -1,14 +1,14 @@
 body {
   background-color: #fff;
   color: #333;
-  font-family: sans-serif;
+  font-family: Ubuntu,Arial,sans-serif;
   font-size: 10pt;
   margin-right: 100px;
   margin-left: 100px;
 }
 
 h1, h2, h3, h4, h5, h6, .toc_title {
-  color: #06c;
+  color: #dd4814;
   margin-top: 2em;
   margin-bottom: 1em;
 }
@@ -118,8 +118,8 @@ hr {
 .stylepoint_section {
   display: block;
   margin-bottom: 1em;
-  color: #5588ff;
-  font-family: sans-serif;
+  color: #772953;
+  font-family: Ubuntu,Arial,sans-serif;
   font-size: 90%;
   font-weight: bold;
   margin-left: -2%;
@@ -127,7 +127,7 @@ hr {
 
 .stylepoint_subsection {
   color: #667799;
-  font-family: sans-serif;
+  font-family: Ubuntu,Arial,sans-serif;
   font-size: 90%;
   font-weight: bold;
   margin-left: -1%;
@@ -135,7 +135,7 @@ hr {
 
 .stylepoint_subsubsection {
   color: #667799;
-  font-family: sans-serif;
+  font-family: Ubuntu,Arial,sans-serif;
   font-size: 80%;
   font-weight: bold;
   margin-left: 0;

@@ -20,6 +20,9 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/gl_context.h"
+#include "mir/main_loop.h"
+#include "mir_test/gmock_fixes.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -32,19 +35,19 @@ namespace doubles
 struct MockDisplay : public graphics::Display
 {
 public:
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
     MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD1(configure, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD2(register_configuration_change_handler,
-                 void(MainLoop&, graphics::DisplayConfigurationChangeHandler const&));
+                 void(graphics::EventHandlerRegister&, graphics::DisplayConfigurationChangeHandler const&));
 
-    MOCK_METHOD3(register_pause_resume_handlers, void(MainLoop&,
+    MOCK_METHOD3(register_pause_resume_handlers, void(graphics::EventHandlerRegister&,
                                                       graphics::DisplayPauseHandler const&,
                                                       graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
-    MOCK_METHOD0(create_gl_context, std::unique_ptr<mg::GLContext>());
+    MOCK_METHOD0(the_cursor, std::weak_ptr<graphics::Cursor>());
+    MOCK_METHOD0(create_gl_context, std::unique_ptr<graphics::GLContext>());
 };
 
 }

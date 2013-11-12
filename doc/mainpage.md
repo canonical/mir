@@ -34,6 +34,7 @@ Using Mir
 
  - \ref using_mir_on_pc
  - \ref using_mir_on_android
+ - \ref debug_for_xmir
 
 Getting involved
 ----------------
@@ -58,7 +59,7 @@ Writing client applications
 ---------------------------
 
  - \ref mir_toolkit "Mir API Documentation"
- - \subpage demo_client.c "demo_client.c: A simple Mir client"
+ - \subpage basic.c "basic.c: A basic Mir client (which does nothing)"
 
 Writing server applications
 ---------------------------

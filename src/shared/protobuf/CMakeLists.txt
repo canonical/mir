@@ -20,17 +20,19 @@ add_library(
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS})
 
+set(MIRPROTOBUF_ABI 0)
+
 set_target_properties(
   mirprotobuf
+
   PROPERTIES
-  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION ${MIR_VERSION_MAJOR})
+  SOVERSION ${MIRPROTOBUF_ABI}
+)
 
 target_link_libraries(
   mirprotobuf
 
   ${PROTOBUF_LIBRARIES}
-  -lpthread
 )
 
 # Export the include directories

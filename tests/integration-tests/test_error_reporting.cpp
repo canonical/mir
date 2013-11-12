@@ -21,7 +21,7 @@
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/connector.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -207,8 +207,7 @@ TEST_F(ErrorReporting, c_api_returns_error)
     {
         std::shared_ptr<mf::ProtobufIpcFactory> the_ipc_factory(
             std::shared_ptr<mir::frontend::Shell> const&,
-            std::shared_ptr<mg::ViewableArea> const&,
-            std::shared_ptr<mc::GraphicBufferAllocator> const&) override
+            std::shared_ptr<mg::GraphicBufferAllocator> const&) override
         {
             static auto error_server = std::make_shared<ErrorServer>();
             return std::make_shared<mtd::StubIpcFactory>(*error_server);
@@ -234,7 +233,8 @@ TEST_F(ErrorReporting, c_api_returns_error)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);

@@ -24,6 +24,10 @@ namespace mir
 {
 namespace client
 {
+class SurfaceMap;
+class DisplayConfiguration;
+class LifecycleControl;
+
 namespace rpc
 {
 class MirBasicRpcChannel;
@@ -31,7 +35,10 @@ class RpcReport;
 
 std::shared_ptr<MirBasicRpcChannel>
 make_rpc_channel(std::string const& name,
-                 std::shared_ptr<RpcReport> const& rpc_report);
+                 std::shared_ptr<SurfaceMap> const& map,
+                 std::shared_ptr<DisplayConfiguration> const& disp_conf,
+                 std::shared_ptr<RpcReport> const& rpc_report,
+                 std::shared_ptr<LifecycleControl> const& lifecycle_control);
 }
 }
 }

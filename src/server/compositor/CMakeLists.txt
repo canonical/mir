@@ -1,20 +1,18 @@
 set(
   MIR_COMPOSITOR_SRCS
 
-  basic_compositing_strategy.cpp
-  default_compositing_strategy.cpp
-  buffer_basic.cpp
+  default_display_buffer_compositor.cpp
+  default_display_buffer_compositor_factory.cpp
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
-  buffer_swapper_multi.cpp
-  buffer_swapper_spin.cpp
-  swapper_factory.cpp
   rendering_operator.cpp
+  gl_renderer.cpp
+  gl_renderer_factory.cpp
   multi_threaded_compositor.cpp
   switching_bundle.cpp
-  rw_lock.cpp
-  multi_acquisition_back_buffer_strategy.cpp
+  bypass.cpp
+  occlusion.cpp
 )
 
 ADD_LIBRARY(

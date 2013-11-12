@@ -40,10 +40,13 @@ class DefaultConnectionConfiguration : public ConnectionConfiguration
 public:
     DefaultConnectionConfiguration(std::string const& socket_file);
 
+    std::shared_ptr<SurfaceMap> the_surface_map();
     std::shared_ptr<rpc::MirBasicRpcChannel> the_rpc_channel();
     std::shared_ptr<mir::logging::Logger> the_logger();
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory();
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform();
+    std::shared_ptr<DisplayConfiguration> the_display_configuration();
+    std::shared_ptr<LifecycleControl> the_lifecycle_control();
 
     virtual std::string the_socket_file();
     virtual std::shared_ptr<rpc::RpcReport> the_rpc_report();
@@ -53,6 +56,9 @@ protected:
     CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
     CachedPtr<input::receiver::InputPlatform> input_platform;
+    CachedPtr<SurfaceMap> surface_map;
+    CachedPtr<DisplayConfiguration> display_configuration;
+    CachedPtr<LifecycleControl> lifecycle_control;
 
     CachedPtr<rpc::RpcReport> rpc_report;
 

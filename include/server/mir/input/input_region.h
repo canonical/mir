@@ -13,29 +13,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_INPUT_INPUT_REGION_H_
 #define MIR_INPUT_INPUT_REGION_H_
 
-#include <stdint.h>
-
 namespace mir
 {
 namespace geometry
 {
+struct Rectangle;
 struct Point;
 }
 namespace input
 {
 
+/**
+ * Interface to the region of valid input coordinates.
+ */
 class InputRegion
 {
 public:
     virtual ~InputRegion() = default;
 
-    virtual bool contains(geometry::Point const& point) const = 0;
+    /** The bounding rectangle of the input region */
+    virtual geometry::Rectangle bounding_rectangle() = 0;
+
+    /**
+     * Confines a point to the input region.
+     *
+     * If the point is within input region it remains unchanged,
+     * otherwise it is replaced by the region point that is closest to
+     * it.
+     *
+     * @param [in,out] point the point to confine
+     */
+    virtual void confine(geometry::Point& point) = 0;
 
 protected:
     InputRegion() = default;
@@ -46,4 +60,4 @@ protected:
 }
 }
 
-#endif // MIR_INPUT_INPUT_REGION
+#endif /* MIR_INPUT_INPUT_REGION_H_ */

@@ -9,24 +9,9 @@
 set -e
 
 pushd /tmp > /dev/null
-    rm -f libgoogle-glog0_0.3.2-4ubuntu1_armhf.deb
-    rm -f libgflags2_2.0-1_armhf.deb 
-
-    wget "https://launchpad.net/ubuntu/+archive/primary/+files/libgoogle-glog0_0.3.2-4ubuntu1_armhf.deb"
-    wget "https://launchpad.net/ubuntu/+archive/primary/+files/libgflags2_2.0-1_armhf.deb"
-
-    adb push libgoogle-glog0_0.3.2-4ubuntu1_armhf.deb /data/ubuntu/root
-    adb push libgflags2_2.0-1_armhf.deb /data/ubuntu/root
-
-    echo "ubuntu_chroot shell;
-        cd /root;
-        dpkg -i libgflags2_2.0-1_armhf.deb libgoogle-glog0_0.3.2-4ubuntu1_armhf.deb
-        apt-get -y install libprotobuf7 \
-                           libboost-system1.49.0 \
-                           libboost-program-options1.49.0 \
-                           libboost-thread1.49.0 \
-                           libxkbcommon0
-
-            exit;
-            exit" | adb shell
+    echo "apt-get -y install libprotobuf7 \
+                             libgoogle-glog0 \
+                             libboost-program-options1.53.0 \
+                             libboost-system1.53.0
+          exit" | adb shell
 popd > /dev/null

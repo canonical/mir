@@ -19,7 +19,7 @@
 #include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/shell/pixel_buffer.h"
 #include "mir/shell/surface_buffer_access.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
@@ -31,7 +31,7 @@
 #include <thread>
 #include <atomic>
 
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -43,7 +43,7 @@ public:
     ~StubSurfaceBufferAccess() noexcept {}
 
     void with_most_recent_buffer_do(
-        std::function<void(mc::Buffer&)> const& exec)
+        std::function<void(mg::Buffer&)> const& exec)
     {
         exec(buffer);
     }
@@ -56,7 +56,7 @@ class MockPixelBuffer : public msh::PixelBuffer
 public:
     ~MockPixelBuffer() noexcept {}
 
-    MOCK_METHOD1(fill_from, void(mc::Buffer& buffer));
+    MOCK_METHOD1(fill_from, void(mg::Buffer& buffer));
     MOCK_METHOD0(as_argb_8888, void const*());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
@@ -67,7 +67,7 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
     using namespace testing;
 
     void const* pixels{reinterpret_cast<void*>(0xabcd)};
-    geom::Size size{geom::Width{10}, geom::Height{11}};
+    geom::Size size{10, 11};
     geom::Stride stride{123};
 
     MockPixelBuffer pixel_buffer;

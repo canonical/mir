@@ -25,9 +25,9 @@
 
 namespace mir
 {
-namespace graphics
+namespace shell
 {
-class ViewableArea;
+class DisplayLayout;
 }
 namespace examples
 {
@@ -35,17 +35,17 @@ namespace examples
 class FullscreenPlacementStrategy : public shell::PlacementStrategy
 {
 public:
-    FullscreenPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
+    FullscreenPlacementStrategy(std::shared_ptr<shell::DisplayLayout> const& display_layout);
     ~FullscreenPlacementStrategy() = default;
     
-    shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
+    shell::SurfaceCreationParameters place(shell::Session const&, shell::SurfaceCreationParameters const& request_parameters);
 
 protected:
     FullscreenPlacementStrategy(FullscreenPlacementStrategy const&) = delete;
     FullscreenPlacementStrategy& operator=(FullscreenPlacementStrategy const&) = delete;
 
 private:
-    std::shared_ptr<graphics::ViewableArea> const display_area;
+    std::shared_ptr<shell::DisplayLayout> const display_layout;
 };
 
 }

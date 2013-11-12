@@ -20,6 +20,7 @@
 #include "rpc_report.h"
 
 #include "mir_protobuf_wire.pb.h"
+#include "mir/frontend/client_constants.h"
 
 #include <sstream>
 
@@ -58,10 +59,30 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         rpc_report->complete_response(result);
 
         completion.response->ParseFromString(result.response());
-        completion.complete->Run();
+
+        // Let the completion closure live a bit longer than our lock...
+        std::shared_ptr<google::protobuf::Closure> complete =
+            completion.complete;
         pending_calls.erase(call);
+
+        lock.unlock();  // Avoid deadlocks in callbacks
+        complete->Run();
     }
 }
+
+void mclrd::PendingCallCache::force_completion()
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    for (auto& call : pending_calls)
+    {
+        auto& completion = call.second;
+        completion.complete->Run();
+    }
+
+    pending_calls.erase(pending_calls.begin(), pending_calls.end());
+}
+
+
 
 bool mclrd::PendingCallCache::empty() const
 {
@@ -85,14 +106,20 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     const google::protobuf::MethodDescriptor* method,
     const google::protobuf::Message* request)
 {
-    std::ostringstream buffer;
-    request->SerializeToOstream(&buffer);
+    char buffer[mir::frontend::serialization_buffer_size];
+
+    auto const size = request->ByteSize();
+    // In practice size will be 10s of bytes - but have a test to detect problems
+    assert(size < static_cast<decltype(size)>(sizeof buffer));
+
+    request->SerializeToArray(buffer, sizeof buffer);
 
     mir::protobuf::wire::Invocation invoke;
 
     invoke.set_id(next_id());
     invoke.set_method_name(method->name());
-    invoke.set_parameters(buffer.str());
+    invoke.set_parameters(buffer, size);
+    invoke.set_protocol_version(1);
 
     return invoke;
 }

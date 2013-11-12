@@ -25,27 +25,25 @@
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
 namespace shell
 {
+class DisplayLayout;
 
 class ConsumingPlacementStrategy : public PlacementStrategy
 {
 public:
-    explicit ConsumingPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
+    explicit ConsumingPlacementStrategy(
+            std::shared_ptr<DisplayLayout> const& display_layout);
     virtual ~ConsumingPlacementStrategy() {}
 
-    virtual shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
+    virtual shell::SurfaceCreationParameters place(shell::Session const& session, shell::SurfaceCreationParameters const& request_parameters);
 
 protected:
     ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;
     ConsumingPlacementStrategy& operator=(ConsumingPlacementStrategy const&) = delete;
 
 private:
-    std::shared_ptr<graphics::ViewableArea> const display_area;
+    std::shared_ptr<DisplayLayout> const display_layout;
 };
 
 }

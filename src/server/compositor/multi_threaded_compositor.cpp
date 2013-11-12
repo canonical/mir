@@ -19,8 +19,9 @@
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/scene.h"
 
 #include <thread>
 #include <condition_variable>
@@ -54,12 +55,12 @@ private:
 class CompositingFunctor
 {
 public:
-    CompositingFunctor(std::shared_ptr<mc::CompositingStrategy> const& strategy,
+    CompositingFunctor(std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
                        mg::DisplayBuffer& buffer)
-        : compositing_strategy{strategy},
+        : display_buffer_compositor_factory{db_compositor_factory},
           buffer(buffer),
           running{true},
-          compositing_scheduled{false}
+          frames_scheduled{0}
     {
     }
 
@@ -73,22 +74,24 @@ public:
          */
         CurrentRenderingTarget target{buffer};
 
+        auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
-            while (!compositing_scheduled && running)
+            while (!frames_scheduled && running)
                 run_cv.wait(lock);
 
-            compositing_scheduled = false;
+            frames_scheduled--;
 
             /*
-             * Check if we are running before rendering, since we may have
+             * Check if we are running before compositing, since we may have
              * been stopped while waiting for the run_cv above.
              */
             if (running)
             {
                 lock.unlock();
-                compositing_strategy->render(buffer);
+                display_buffer_compositor->composite();
                 lock.lock();
             }
         }
@@ -97,11 +100,17 @@ public:
     void schedule_compositing()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-        if (!compositing_scheduled)
-        {
-            compositing_scheduled = true;
-            run_cv.notify_one();
-        }
+
+        /*
+         * Each surface could have a number of frames ready in its buffer
+         * queue. And we need to ensure that we render all of them so that
+         * none linger in the queue indefinitely (seen as input lag). So while
+         * there's no API support for finding out queue lengths, assume the
+         * worst and schedule enough frames to ensure all surfaces' queues
+         * are fully drained.
+         */
+        frames_scheduled = max_client_buffers;
+        run_cv.notify_one();
     }
 
     void stop()
@@ -112,10 +121,10 @@ public:
     }
 
 private:
-    std::shared_ptr<mc::CompositingStrategy> const compositing_strategy;
+    std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
     bool running;
-    bool compositing_scheduled;
+    int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
 };
@@ -125,11 +134,11 @@ private:
 
 mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::Renderables> const& renderables,
-    std::shared_ptr<mc::CompositingStrategy> const& strategy)
+    std::shared_ptr<mc::Scene> const& scene,
+    std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory)
     : display{display},
-      renderables{renderables},
-      compositing_strategy{strategy}
+      scene{scene},
+      display_buffer_compositor_factory{db_compositor_factory}
 {
 }
 
@@ -143,15 +152,15 @@ void mc::MultiThreadedCompositor::start()
     /* Start the compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{compositing_strategy, buffer};
+        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
         threads.push_back(std::thread{std::ref(*thread_functor)});
         thread_functors.push_back(std::move(thread_functor));
     });
 
-    /* Recomposite whenever the renderables change */
-    renderables->set_change_callback([this]()
+    /* Recomposite whenever the scene changes */
+    scene->set_change_callback([this]()
     {
         for (auto& f : thread_functors)
             f->schedule_compositing();
@@ -164,7 +173,7 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    renderables->set_change_callback([]{});
+    scene->set_change_callback([]{});
 
     for (auto& f : thread_functors)
         f->stop();

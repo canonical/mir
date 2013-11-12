@@ -18,11 +18,13 @@
  */
 
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/default_android_input_configuration.h"
+#include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
 #include "mir/input/null_input_report.h"
+#include "mir/input/input_region.h"
+#include "mir/geometry/rectangle.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -30,7 +32,6 @@
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
-#include "mir_test_doubles/mock_viewable_area.h"
 
 #include <thread>
 
@@ -40,7 +41,6 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -53,7 +53,19 @@ using namespace ::testing;
 
 struct StubInputTargets : public mi::InputTargets
 {
-    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const&)
+    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const&)
+    {
+    }
+};
+
+struct StubInputRegion : public mi::InputRegion
+{
+    geom::Rectangle bounding_rectangle()
+    {
+        return {geom::Point{}, geom::Size{1024, 1024}};
+    }
+
+    void confine(geom::Point&)
     {
     }
 };
@@ -69,21 +81,12 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 {
     void SetUp()
     {
-        static const geom::Rectangle visible_rectangle
-        {
-            geom::Point(),
-            geom::Size{geom::Width(1024), geom::Height(1024)}
-        };
-
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter},
-            mt::fake_shared(viewable_area),
+            event_filter,
+            mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
             std::make_shared<mi::NullInputReport>());
-
-        ON_CALL(viewable_area, view_area())
-            .WillByDefault(Return(visible_rectangle));
 
         fake_event_hub = configuration->the_fake_event_hub();
 
@@ -103,10 +106,10 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<MockEventFilter> event_filter;
-    NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
     std::shared_ptr<StubInputTargets> stub_targets;
+    StubInputRegion input_region;
 };
 
 }

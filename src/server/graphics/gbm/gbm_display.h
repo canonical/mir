@@ -20,8 +20,11 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "kms_output_container.h"
+#include "real_kms_output_container.h"
+#include "real_kms_display_configuration.h"
 #include "gbm_display_helpers.h"
+
+#include <mutex>
 
 #include <vector>
 
@@ -36,6 +39,8 @@ namespace graphics
 
 class DisplayReport;
 class DisplayBuffer;
+class DisplayConfigurationPolicy;
+class EventHandlerRegister;
 
 namespace gbm
 {
@@ -51,6 +56,7 @@ class GBMDisplay : public Display
 public:
     GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                std::shared_ptr<VideoDevices> const& video_devices,
+               std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                std::shared_ptr<DisplayReport> const& listener);
     ~GBMDisplay();
 
@@ -61,11 +67,11 @@ public:
     void configure(DisplayConfiguration const& conf);
 
     void register_configuration_change_handler(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         DisplayConfigurationChangeHandler const& conf_change_handler);
 
     void register_pause_resume_handlers(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         DisplayPauseHandler const& pause_handler,
         DisplayResumeHandler const& resume_handler);
 
@@ -76,12 +82,16 @@ public:
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
+    void clear_connected_unused_outputs();
+
+    std::mutex configuration_mutex;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<VideoDevices> const video_devices;
     std::shared_ptr<DisplayReport> const listener;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
-    KMSOutputContainer output_container;
+    RealKMSOutputContainer output_container;
+    RealKMSDisplayConfiguration current_display_configuration;
     std::shared_ptr<GBMCursor> cursor;
 };
 

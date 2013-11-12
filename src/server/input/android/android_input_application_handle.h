@@ -30,15 +30,14 @@ namespace mir
 
 namespace input
 {
-class SurfaceTarget;
-
+class Surface;
 namespace android
 {
 
 class InputApplicationHandle : public droidinput::InputApplicationHandle
 {
 public:
-    InputApplicationHandle(std::shared_ptr<input::SurfaceTarget> const& surface);
+    InputApplicationHandle(std::shared_ptr<input::Surface> const& surface);
     ~InputApplicationHandle() {}
 
     bool updateInfo();
@@ -48,7 +47,7 @@ protected:
     InputApplicationHandle& operator=(InputApplicationHandle const&) = delete;
 
 private:
-    std::weak_ptr<input::SurfaceTarget> weak_surface;
+    std::shared_ptr<input::Surface> surface;
 };
 
 }

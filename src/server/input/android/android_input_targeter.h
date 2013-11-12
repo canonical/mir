@@ -23,7 +23,6 @@
 
 #include <utils/StrongPointer.h>
 
-#include <map>
 #include <mutex>
 
 namespace android
@@ -48,9 +47,9 @@ class InputTargeter : public shell::InputTargeter
 public:
     explicit InputTargeter(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher,
                            std::shared_ptr<WindowHandleRepository> const& repository);
-    virtual ~InputTargeter() noexcept(true) {}
-    
-    void focus_changed(std::shared_ptr<input::SurfaceTarget const> const& focus_surface);
+    virtual ~InputTargeter() noexcept(true);
+
+    void focus_changed(std::shared_ptr<input::InputChannel const> const& focus_channel);
     void focus_cleared();
 
 protected:

@@ -96,7 +96,7 @@ mtd::TestGrallocMapper::~TestGrallocMapper()
 }
 
 std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_handle(
-                        std::shared_ptr<ANativeWindowBuffer> const& package)
+    ANativeWindowBuffer* package)
 {
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
@@ -112,10 +112,4 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_h
     region->pixel_format = mir_pixel_format_abgr_8888;
 
     return std::shared_ptr<MirGraphicsRegion>(region, del);
-}
-
-bool mtd::is_surface_flinger_running()
-{
-    struct dirent **namelist;
-    return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);
 }

@@ -33,7 +33,7 @@ namespace doubles
 struct MockInputTargeter : public shell::InputTargeter
 {
     virtual ~MockInputTargeter() noexcept(true) {}
-    MOCK_METHOD1(focus_changed, void(std::shared_ptr<input::SurfaceTarget const> const& focus_surface));
+    MOCK_METHOD1(focus_changed, void(std::shared_ptr<input::InputChannel const> const&));
     MOCK_METHOD0(focus_cleared, void());
 };
 

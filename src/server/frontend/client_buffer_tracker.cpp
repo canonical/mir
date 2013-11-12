@@ -19,10 +19,10 @@
 #include <algorithm>
 
 #include "client_buffer_tracker.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 namespace mf = mir::frontend;
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
     : ids(),
@@ -30,7 +30,7 @@ mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
 {
 }
 
-void mf::ClientBufferTracker::add(mc::BufferID const& id)
+void mf::ClientBufferTracker::add(mg::BufferID const& id)
 {
     auto existing_id = std::find(ids.begin(), ids.end(), id);
 
@@ -47,7 +47,7 @@ void mf::ClientBufferTracker::add(mc::BufferID const& id)
         ids.pop_back();
 }
 
-bool mf::ClientBufferTracker::client_has(mc::BufferID const& id) const
+bool mf::ClientBufferTracker::client_has(mg::BufferID const& id) const
 {
     return std::find(ids.begin(), ids.end(), id) != ids.end();
 }

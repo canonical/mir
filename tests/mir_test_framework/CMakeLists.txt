@@ -9,9 +9,11 @@ include_directories(
 set(
   TEST_FRAMEWORK_SRCS
 
+  cross_process_sync.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
   testing_process_manager.cpp
+  testing_client_options.cpp
   display_server_test_fixture.cpp
   process.cpp
 )
@@ -25,6 +27,8 @@ if (MIR_PLATFORM STREQUAL "gbm")
   list(APPEND TEST_FRAMEWORK_SRCS
     udev_environment.cpp
   )
+  # Umockdev uses glib, which uses the deprecated "register" storage qualifier
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 endif()
 
 add_library(

@@ -17,57 +17,84 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/compositor/buffer.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer.h"
+#include "mir/frontend/session_authorizer.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
+#include "mir/frontend/resource_cache.h"
+#include "mir/frontend/session_mediator.h"
+#include "mir/frontend/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/null_display_changer.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
+#include "mir_test/display_config_matchers.h"
+#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <condition_variable>
+#include <thread>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 
-namespace mir /* So that std::this_thread::yield() can be found on android... */
-{
 namespace
 {
 
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const { return rectangle; }
+    StubDisplay()
+    {
+    }
 
-    static geom::Rectangle const rectangle;
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+private:
+    mtd::NullDisplayBuffer display_buffer;
 };
 
-geom::Rectangle const StubDisplay::rectangle{geom::Point{geom::X{25}, geom::Y{36}},
-                                             geom::Size{geom::Width{49}, geom::Height{64}}};
-
-}
-}
-
-using mir::StubDisplay;
-
-namespace
+class StubChanger : public mtd::NullDisplayChanger
 {
+public:
+    std::shared_ptr<mg::DisplayConfiguration> active_configuration() override
+    {
+        return mt::fake_shared(stub_display_config);
+    }
+
+    static mtd::StubDisplayConfig stub_display_config;
+private:
+    mtd::NullDisplayBuffer display_buffer;
+};
+
+mtd::StubDisplayConfig StubChanger::stub_display_config;
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new mtd::StubBuffer());
+        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -87,31 +114,32 @@ std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
 class StubPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
-        return std::make_shared<StubDisplay>();
+        if (!display)
+            display = std::make_shared<StubDisplay>();
+        return display;
     }
+
+    std::shared_ptr<StubDisplay> display;
 };
 
-void connection_callback(MirConnection* connection, void* context)
-{
-    auto connection_ptr = static_cast<MirConnection**>(context);
-    *connection_ptr = connection;
 }
 
-}
-
-TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
+/* TODO: this test currently checks the same format list against both the surface formats
+         and display formats. Improve test to return different format lists for both concepts */ 
+TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> the_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
         {
             using namespace testing;
 
@@ -121,6 +149,14 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             return platform;
         }
 
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
+        {
+            if (!changer)
+                changer = std::make_shared<StubChanger>();
+            return changer; 
+        }
+
+        std::shared_ptr<StubChanger> changer;
         std::shared_ptr<StubPlatform> platform;
     } server_config;
 
@@ -130,26 +166,19 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
     {
         void exec()
         {
-            MirConnection* connection{nullptr};
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
-                                     connection_callback, &connection));
+            MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
-            MirDisplayInfo info;
+            unsigned int const format_storage_size = 4;
+            MirPixelFormat formats[format_storage_size]; 
+            unsigned int returned_format_size = 0;
+            mir_connection_get_available_surface_formats(connection,
+                formats, format_storage_size, &returned_format_size);
 
-            mir_connection_get_display_info(connection, &info);
-
-            EXPECT_EQ(StubDisplay::rectangle.size.width.as_uint32_t(),
-                      static_cast<uint32_t>(info.width));
-            EXPECT_EQ(StubDisplay::rectangle.size.height.as_uint32_t(),
-                      static_cast<uint32_t>(info.height));
-
-            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
-                      static_cast<uint32_t>(info.supported_pixel_format_items));
-
-            for (int i = 0; i < info.supported_pixel_format_items; ++i)
+            ASSERT_EQ(returned_format_size, StubGraphicBufferAllocator::pixel_formats.size());
+            for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info.supported_pixel_format[i]));
+                          static_cast<geom::PixelFormat>(formats[i]));
             }
 
             mir_connection_release(connection);

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
 
-#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 
 #include <gmock/gmock.h>
 
@@ -30,12 +30,13 @@ namespace test
 namespace doubles
 {
 
-struct MockPacker : public compositor::BufferIPCPacker
+struct MockPacker : public graphics::BufferIPCPacker
 {
     ~MockPacker() noexcept {}
     MOCK_METHOD1(pack_fd, void(int));
     MOCK_METHOD1(pack_data, void(int));
     MOCK_METHOD1(pack_stride, void(geometry::Stride));
+    MOCK_METHOD1(pack_flags, void(unsigned int));
 };
 
 }

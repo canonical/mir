@@ -38,6 +38,7 @@ namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -104,12 +105,13 @@ struct SurfaceCreatingClient : ClientConfigCommon
             this));
          ASSERT_TRUE(connection != NULL);
          MirSurfaceParameters const request_params =
-        {
+         {
             __PRETTY_FUNCTION__,
             640, 480,
             mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware
-        };
+            mir_buffer_usage_hardware,
+            mir_display_output_id_invalid
+         };
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
          mir_connection_release(connection);
     }
@@ -122,10 +124,6 @@ namespace
 MATCHER(NonNullSession, "")
 {
     return arg != std::shared_ptr<msh::Session>();
-}
-MATCHER(NonNullSurfaceTarget, "")
-{
-    return arg != std::shared_ptr<mi::SurfaceTarget>();
 }
 }
 
@@ -188,7 +186,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
                 {
                     InSequence seq;
-                    EXPECT_CALL(*targeter, focus_changed(NonNullSurfaceTarget())).Times(1);
+                    EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
                     expected = true;
                 }
             }

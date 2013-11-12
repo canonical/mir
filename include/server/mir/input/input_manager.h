@@ -26,11 +26,6 @@
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
-
 namespace input
 {
 class InputChannel;

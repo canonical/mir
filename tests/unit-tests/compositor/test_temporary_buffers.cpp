@@ -17,7 +17,6 @@
  */
 
 #include "src/server/compositor/temporary_buffers.h"
-#include "mir/compositor/back_buffer_strategy.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -25,6 +24,7 @@
 #include <stdexcept>
 
 namespace mtd=mir::test::doubles;
+namespace mg = mir::graphics;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
@@ -33,37 +33,28 @@ namespace
 class TemporaryTestBuffer : public mc::TemporaryBuffer
 {
 public:
-    TemporaryTestBuffer(const std::shared_ptr<mc::Buffer>& buf)
+    TemporaryTestBuffer(const std::shared_ptr<mg::Buffer>& buf)
         : TemporaryBuffer(buf)
     {
     }
-};
-
-class MockBackBufferStrategy : public mc::BackBufferStrategy
-{
-public:
-    ~MockBackBufferStrategy() noexcept {}
-    MOCK_METHOD0(acquire, std::shared_ptr<mc::Buffer>());
-    MOCK_METHOD1(release, void(std::shared_ptr<mc::Buffer> const&));
 };
 
 class TemporaryBuffersTest : public ::testing::Test
 {
 public:
     TemporaryBuffersTest()
-        : buffer_size{geom::Width{1024}, geom::Height{768}},
+        : buffer_size{1024, 768},
           buffer_stride{1024},
           buffer_pixel_format{geom::PixelFormat::abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(
                           buffer_size, buffer_stride, buffer_pixel_format)},
-          mock_bundle{std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()},
-          mock_back_buffer_strategy{std::make_shared<MockBackBufferStrategy>()}
+          mock_bundle{std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()}
     {
         using namespace testing;
 
         ON_CALL(*mock_bundle, client_acquire())
             .WillByDefault(Return(mock_buffer));
-        ON_CALL(*mock_bundle, compositor_acquire())
+        ON_CALL(*mock_bundle, compositor_acquire(_))
             .WillByDefault(Return(mock_buffer));
     }
 
@@ -72,7 +63,6 @@ public:
     geom::PixelFormat const buffer_pixel_format;
     std::shared_ptr<mtd::MockBuffer> const mock_buffer;
     std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
-    std::shared_ptr<MockBackBufferStrategy> mock_back_buffer_strategy;
 };
 }
 
@@ -102,24 +92,23 @@ TEST_F(TemporaryBuffersTest, client_buffer_handles_bundle_destruction)
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_back_buffer_strategy, acquire())
+    EXPECT_CALL(*mock_bundle, compositor_acquire(_))
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_back_buffer_strategy, release(_))
+    EXPECT_CALL(*mock_bundle, compositor_release(_))
         .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_back_buffer_strategy);
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle, 0);
 }
 
-TEST_F(TemporaryBuffersTest, compositor_buffer_handles_back_buffer_strategy_destruction)
+TEST_F(TemporaryBuffersTest, snapshot_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_back_buffer_strategy, acquire())
+    EXPECT_CALL(*mock_bundle, snapshot_acquire())
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_back_buffer_strategy, release(_))
-        .Times(0);
+    EXPECT_CALL(*mock_bundle, snapshot_release(_))
+        .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_back_buffer_strategy);
-    mock_back_buffer_strategy.reset();
+    mc::TemporarySnapshotBuffer proxy_buffer(mock_bundle);
 }
 
 TEST_F(TemporaryBuffersTest, base_test_size)

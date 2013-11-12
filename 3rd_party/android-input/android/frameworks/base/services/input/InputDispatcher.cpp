@@ -1151,8 +1151,6 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
 
         // Traverse windows from front to back to find touched window and outside targets.
         mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
-            if (newTouchedWindowHandle != NULL)
-                return;
             const InputWindowInfo* windowInfo = windowHandle->getInfo();
             int32_t flags = windowInfo->layoutParamsFlags;
 
@@ -1553,8 +1551,25 @@ void InputDispatcher::addWindowTargetLocked(const sp<InputWindowHandle>& windowH
     target.pointerIds = pointerIds;
 }
 
+namespace
+{
+static inline bool targets_contains_channel(Vector<InputTarget> const& input_targets, sp<InputChannel> const& channel)
+{
+    for (size_t i = 0; i < input_targets.size(); i++)
+    {
+        auto target = input_targets[i];
+        if (target.inputChannel == channel)
+            return true;
+    }
+    return false;
+}
+}
+
 void InputDispatcher::addMonitoringTargetsLocked(Vector<InputTarget>& inputTargets) {
     for (size_t i = 0; i < mMonitoringChannels.size(); i++) {
+        if (targets_contains_channel(inputTargets, mMonitoringChannels[i]))
+            continue;
+        
         inputTargets.push();
 
         InputTarget& target = inputTargets.editTop();

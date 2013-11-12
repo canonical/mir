@@ -21,35 +21,33 @@
 #ifndef MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
-#include "mir/compositor/buffer.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 
 #include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+class GraphicBufferAllocator;
+}
 namespace compositor
 {
-
-class BufferAllocationStrategy;
-class GraphicBufferAllocator;
-struct BufferProperties;
 
 class BufferStreamFactory : public surfaces::BufferStreamFactory
 {
 public:
 
     explicit BufferStreamFactory(
-        const std::shared_ptr<BufferAllocationStrategy>& strategy);
+        const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc);
 
     virtual ~BufferStreamFactory() {}
 
-    // From BufferStreamFactory
     virtual std::shared_ptr<surfaces::BufferStream> create_buffer_stream(
-        BufferProperties const& buffer_properties);
+        graphics::BufferProperties const& buffer_properties);
 
 private:
-    std::shared_ptr<BufferAllocationStrategy> swapper_factory;
+    std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
 
 };
 

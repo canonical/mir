@@ -20,9 +20,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_BUFFER_H_
 
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "buffer_usage.h"
 
+#include <mutex>
+#include <condition_variable>
 #include <map>
 
 #define GL_GLEXT_PROTOTYPES
@@ -38,10 +40,10 @@ struct EGLExtensions;
 namespace android
 {
 
-class Buffer: public compositor::BufferBasic 
+class Buffer: public BufferBasic
 {
 public:
-    Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
+    Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
            std::shared_ptr<EGLExtensions> const& extensions);
     ~Buffer();
 
@@ -49,12 +51,18 @@ public:
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
     void bind_to_texture();
-    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
+    bool can_bypass() const override;
+
+    //note, you will get the native representation of an android buffer, including
+    //the fences associated with the buffer. You must close these fences
+    std::shared_ptr<NativeBuffer> native_buffer_handle() const;
 
 private:
+    std::mutex mutable content_lock;
+
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
-    std::shared_ptr<ANativeWindowBuffer> native_buffer;
+    std::shared_ptr<NativeBuffer> native_buffer;
     std::shared_ptr<EGLExtensions> egl_extensions;
 };
 

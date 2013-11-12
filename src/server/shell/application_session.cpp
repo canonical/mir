@@ -20,6 +20,8 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
+#include "mir/shell/session_listener.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -28,30 +30,24 @@
 #include <cassert>
 #include <algorithm>
 
-namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace mg = mir::graphics;
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<me::EventSink> const& sink) :
+    std::shared_ptr<msh::SessionListener> const& session_listener,
+    std::shared_ptr<mf::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
+    session_listener(session_listener),
     event_sink(sink),
     next_surface_id(0)
 {
     assert(surface_factory);
-}
-
-msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::string const& session_name,
-    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy) :
-    ApplicationSession(surface_factory, session_name, snapshot_strategy, std::shared_ptr<me::EventSink>())
-{
 }
 
 msh::ApplicationSession::~ApplicationSession()
@@ -59,7 +55,7 @@ msh::ApplicationSession::~ApplicationSession()
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto const& pair_id_surface : surfaces)
     {
-        pair_id_surface.second->destroy();
+        session_listener->destroying_surface(*this, pair_id_surface.second);
     }
 }
 
@@ -71,10 +67,13 @@ mf::SurfaceId msh::ApplicationSession::next_id()
 mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
 {
     auto const id = next_id();
-    auto surf = surface_factory->create_surface(params, id, event_sink);
+    auto surf = surface_factory->create_surface(this, params, id, event_sink);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
+    
+    session_listener->surface_created(*this, surf);
+    
     return id;
 }
 
@@ -114,8 +113,9 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
+    
+    session_listener->destroying_surface(*this, p->second);
 
-    p->second->destroy();
     surfaces.erase(p);
 }
 
@@ -153,10 +153,20 @@ void msh::ApplicationSession::show()
 
 int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
                                                MirSurfaceAttrib attrib,
-                                               int value)
+                                               int requested_value)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<mf::Surface> surf(checked_find(id)->second);
+    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
-    return surf->configure(attrib, value);
+    return surf->configure(attrib, requested_value);
+}
+
+void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
+{
+    event_sink->handle_display_config_change(info);
+}
+
+void msh::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
+{
+    event_sink->handle_lifecycle_event(state);
 }

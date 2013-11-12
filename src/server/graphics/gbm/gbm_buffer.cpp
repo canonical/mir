@@ -27,10 +27,8 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <limits>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
@@ -69,8 +67,7 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:
-        /* There is no explicit invalid GBM pixel format! */
-        gbm_pf = std::numeric_limits<uint32_t>::max();
+        gbm_pf = mgg::invalid_gbm_format;
         break;
     }
 
@@ -78,8 +75,12 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+                          uint32_t bo_flags,
                           std::unique_ptr<BufferTextureBinder> texture_binder)
-    : gbm_handle{handle}, texture_binder{std::move(texture_binder)}, prime_fd{-1}
+    : gbm_handle{handle},
+      bo_flags{bo_flags},
+      texture_binder{std::move(texture_binder)},
+      prime_fd{-1}
 {
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
@@ -104,8 +105,7 @@ mgg::GBMBuffer::~GBMBuffer()
 
 geom::Size mgg::GBMBuffer::size() const
 {
-    return {geom::Width{gbm_bo_get_width(gbm_handle.get())},
-            geom::Height{gbm_bo_get_height(gbm_handle.get())}};
+    return {gbm_bo_get_width(gbm_handle.get()), gbm_bo_get_height(gbm_handle.get())};
 }
 
 geom::Stride mgg::GBMBuffer::stride() const
@@ -125,10 +125,18 @@ void mgg::GBMBuffer::bind_to_texture()
 
 std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
 {
-    auto temp = std::make_shared<MirNativeBuffer>();
+    auto temp = std::make_shared<GBMNativeBuffer>();
 
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
+    temp->flags = can_bypass() ? mir_buffer_flag_can_scanout : 0;
+    temp->bo = gbm_handle.get();
+
     return temp;
+}
+
+bool mgg::GBMBuffer::can_bypass() const
+{
+    return bo_flags & GBM_BO_USE_SCANOUT;
 }

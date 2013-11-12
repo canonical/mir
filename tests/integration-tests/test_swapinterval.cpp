@@ -19,11 +19,10 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/scene.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 
@@ -57,8 +56,9 @@ public:
     {
     }
 
-    std::shared_ptr<mc::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
-    std::shared_ptr<mc::Buffer> lock_back_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> lock_compositor_buffer(unsigned long) { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> lock_snapshot_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }
     void force_requests_to_complete() {}
@@ -79,7 +79,7 @@ public:
     {
     }
 
-    std::shared_ptr<ms::BufferStream> create_buffer_stream(mc::BufferProperties const&)
+    std::shared_ptr<ms::BufferStream> create_buffer_stream(mg::BufferProperties const&)
     {
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }
@@ -167,7 +167,8 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");

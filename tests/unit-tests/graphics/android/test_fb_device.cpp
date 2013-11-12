@@ -20,13 +20,14 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
 
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mt=mir::test;
 
@@ -44,17 +45,17 @@ struct FBDevice : public ::testing::Test
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
-        dummy_buffer = std::make_shared<ANativeWindowBuffer>();
-        dummy_buffer->handle = (buffer_handle_t) 0x4893;
+        native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
         ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(dummy_buffer));
+            .WillByDefault(Return(native_buffer));
     }
 
     unsigned int width, height, format, fbnum;
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
+    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(FBDevice, set_next_frontbuffer_ok)
@@ -62,7 +63,7 @@ TEST_F(FBDevice, set_next_frontbuffer_ok)
     using namespace testing;
     mga::FBDevice fbdev(fb_hal_mock);
 
-    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),dummy_buffer->handle))
+    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
         .Times(1);
 
     fbdev.set_next_frontbuffer(mock_buffer); 
@@ -73,7 +74,7 @@ TEST_F(FBDevice, set_next_frontbuffer_fail)
     using namespace testing;
     mga::FBDevice fbdev(fb_hal_mock);
 
-    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),dummy_buffer->handle))
+    EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),native_buffer->handle()))
         .Times(1)
         .WillOnce(Return(-1));
 
@@ -94,6 +95,25 @@ TEST_F(FBDevice, determine_fbnum)
 {
     mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
+}
+
+TEST_F(FBDevice, commit_frame)
+{
+    using namespace testing;
+    int bad = 0xdfefefe; 
+    EGLDisplay dpy = static_cast<EGLDisplay>(&bad);
+    EGLSurface surf = static_cast<EGLSurface>(&bad);
+    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
+        .Times(2)
+        .WillOnce(Return(EGL_FALSE))
+        .WillOnce(Return(EGL_TRUE));
+
+    mga::FBDevice fbdev(fb_hal_mock);
+
+    EXPECT_THROW({
+        fbdev.commit_frame(dpy, surf);
+    }, std::runtime_error);
+    fbdev.commit_frame(dpy, surf);
 }
 
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement

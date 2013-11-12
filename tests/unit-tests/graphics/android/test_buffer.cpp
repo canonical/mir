@@ -18,18 +18,23 @@
 
 #include "mir/graphics/egl_extensions.h"
 #include "src/server/graphics/android/buffer.h"
+#include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_fence.h"
+#include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <memory>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 
 class AndroidGraphicBufferBasic : public ::testing::Test
 {
@@ -37,20 +42,23 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_buffer_handle = std::make_shared<ANativeWindowBuffer>();
-        mock_buffer_handle->width = 44;
-        mock_buffer_handle->height = 45;
-        mock_buffer_handle->stride = 46;
-        mock_buffer_handle->format = HAL_PIXEL_FORMAT_RGBA_8888;
+        mock_native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+
+        anwb = mock_native_buffer->anwb();
+        anwb->width = 44;
+        anwb->height = 45;
+        anwb->stride = 46;
+        anwb->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         default_use = mga::BufferUsage::use_hardware;
         pf = geom::PixelFormat::abgr_8888;
-        size = geom::Size{geom::Width{300}, geom::Height{200}};
+        size = geom::Size{300, 200};
         extensions = std::make_shared<mg::EGLExtensions>();
     }
 
-    mtd::MockEGL mock_egl;
-    std::shared_ptr<ANativeWindowBuffer> mock_buffer_handle;
+    ANativeWindowBuffer *anwb;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
     geom::PixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;
@@ -61,10 +69,9 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
 
-    geom::Size expected_size{geom::Width{mock_buffer_handle->width},
-                             geom::Height{mock_buffer_handle->height}};
+    geom::Size expected_size{anwb->width, anwb->height};
     EXPECT_EQ(expected_size, buffer.size());
 }
 
@@ -72,24 +79,40 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
 }
 
-TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_when_asked)
+TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
 {
     using namespace testing;
+    int acquire_fake_fence_fd1 = 948;
+    int acquire_fake_fence_fd2 = 954;
 
-    mga::Buffer buffer(mock_buffer_handle, extensions);
-    EXPECT_EQ(mock_buffer_handle, buffer.native_buffer_handle());
+    EXPECT_CALL(*mock_native_buffer, update_fence(acquire_fake_fence_fd1))
+        .Times(1);
+    EXPECT_CALL(*mock_native_buffer, update_fence(acquire_fake_fence_fd2))
+        .Times(1);
+
+    mga::Buffer buffer(mock_native_buffer, extensions);
+    {
+        auto native_resource = buffer.native_buffer_handle();
+        EXPECT_EQ(mock_native_buffer, native_resource);
+        native_resource->update_fence(acquire_fake_fence_fd1);
+    }
+    {
+        auto native_resource = buffer.native_buffer_handle();
+        EXPECT_EQ(mock_native_buffer, native_resource);
+        native_resource->update_fence(acquire_fake_fence_fd2);
+    }
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 {
     using namespace testing;
 
-    geom::Stride expected_stride{mock_buffer_handle->stride *
+    geom::Stride expected_stride{anwb->stride *
                                  geom::bytes_per_pixel(pf)};
-    mga::Buffer buffer(mock_buffer_handle, extensions);
+    mga::Buffer buffer(mock_native_buffer, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

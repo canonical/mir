@@ -95,6 +95,21 @@ void mgg::DRMModeResources::for_each_crtc(std::function<void(DRMModeCrtcUPtr)> c
     }
 }
 
+size_t mgg::DRMModeResources::num_connectors()
+{
+    return resources->count_connectors;
+}
+
+size_t mgg::DRMModeResources::num_encoders()
+{
+    return resources->count_encoders;
+}
+
+size_t mgg::DRMModeResources::num_crtcs()
+{
+    return resources->count_crtcs;
+}
+
 mgg::DRMModeConnectorUPtr mgg::DRMModeResources::connector(uint32_t id) const
 {
     auto connector_raw = drmModeGetConnector(drm_fd, id);

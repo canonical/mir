@@ -20,6 +20,7 @@
 #ifndef MIR_TEST_FRAMEWORK_PROCESS_H_
 #define MIR_TEST_FRAMEWORK_PROCESS_H_
 
+#include <chrono>
 #include <cstdlib>
 #include <functional>
 #include <iosfwd>
@@ -70,7 +71,7 @@ public:
     ~Process();
 
     // Wait for the process to terminate, and return the results.
-    Result wait_for_termination();
+    Result wait_for_termination(const std::chrono::milliseconds& timeout = std::chrono::milliseconds(60 * 1000));
 
     void kill();
     void terminate();

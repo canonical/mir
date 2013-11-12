@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_EVENT_MATCHERS_H_
 #define MIR_TEST_EVENT_MATCHERS_H_
 
+#include "mir_toolkit/event.h"
+
 #include <androidfw/Input.h>
 
 #include <gmock/gmock.h>
@@ -62,6 +64,18 @@ MATCHER_P2(MotionEvent, dx, dy, "")
         return false;
     auto coords = &arg.motion.pointer_coordinates[0];
     return (coords->x == dx) && (coords->y == dy);
+}
+
+MATCHER_P2(SurfaceEvent, attrib, value, "")
+{
+    if (arg.type != mir_event_type_surface)
+        return false;
+    auto surface_ev = arg.surface;
+    if (surface_ev.attrib != attrib)
+        return false;
+    if (surface_ev.value != value)
+        return false;
+    return true;
 }
 
 }

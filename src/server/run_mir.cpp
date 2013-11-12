@@ -20,9 +20,40 @@
 #include "mir/display_server.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
+#include "mir/frontend/connector.h"
+#include "mir/raii.h"
 
 #include <csignal>
+#include <cstdlib>
 #include <cassert>
+
+namespace
+{
+auto const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
+
+std::weak_ptr<mir::frontend::Connector> weak_connector;
+
+extern "C" void delete_endpoint()
+{
+    if (auto connector = weak_connector.lock())
+    {
+        weak_connector.reset();
+        connector->remove_endpoint();
+    }
+}
+
+extern "C" { typedef void (*sig_handler)(int); }
+
+volatile sig_handler old_handler[SIGUNUSED]  = { nullptr };
+
+extern "C" void fatal_signal_cleanup(int sig)
+{
+    delete_endpoint();
+
+    signal(sig, old_handler[sig]);
+    raise(sig);
+}
+}
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
@@ -33,12 +64,27 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
         {SIGINT, SIGTERM},
         [&server_ptr](int)
         {
+            delete_endpoint();
             assert(server_ptr);
             server_ptr->stop();
         });
 
     DisplayServer server(config);
     server_ptr = &server;
+
+    weak_connector = config.the_connector();
+
+    auto const raii = raii::paired_calls(
+        [&]{ for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
+        [&]{ for (auto sig : intercepted) signal(sig, old_handler[sig]); });
+
+    static bool atexit_called{false};
+
+    if (!atexit_called)
+    {
+        std::atexit(&delete_endpoint);
+        atexit_called = true;
+    }
 
     init(server);
     server.run();

@@ -19,8 +19,11 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/input/input_targets.h"
+#include "mir/input/input_region.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/null_input_report.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -31,8 +34,8 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
-#include "mir_test_doubles/mock_viewable_area.h"
-#include "mir_test_doubles/stub_surface_target.h"
+#include "mir_test_doubles/mock_input_surface.h"
+#include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/event_matchers.h"
@@ -50,7 +53,6 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
-namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -63,15 +65,24 @@ namespace
 {
 using namespace ::testing;
 
-static const geom::Rectangle default_view_area =
-        geom::Rectangle{geom::Point(),
-                        geom::Size{geom::Width(1600), geom::Height(1400)}};
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
 struct StubInputTargets : public mi::InputTargets
 {
-    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const&)
+    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const&)
+    {
+    }
+};
+
+struct StubInputRegion : public mi::InputRegion
+{
+    geom::Rectangle bounding_rectangle()
+    {
+        return {geom::Point{}, geom::Size{1600, 1400}};
+    }
+
+    void confine(geom::Point&)
     {
     }
 };
@@ -82,9 +93,11 @@ public:
     AndroidInputManagerAndEventFilterDispatcherSetup()
     {
         event_filter = std::make_shared<MockEventFilter>();
-        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter}, mt::fake_shared(viewable_area), null_cursor_listener, std::make_shared<mi::NullInputReport>());
-        ON_CALL(viewable_area, view_area())
-            .WillByDefault(Return(default_view_area));
+        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
+                event_filter,
+                mt::fake_shared(input_region),
+                null_cursor_listener,
+                std::make_shared<mi::NullInputReport>());
 
         fake_event_hub = configuration->the_fake_event_hub();
         
@@ -106,7 +119,7 @@ public:
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<MockEventFilter> event_filter;
-    NiceMock<mtd::MockViewableArea> viewable_area;
+    StubInputRegion input_region;
     std::shared_ptr<StubInputTargets> stub_targets;
 };
 
@@ -230,10 +243,10 @@ struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
 struct TestingInputConfiguration : public mtd::FakeEventHubInputConfiguration
 {
     TestingInputConfiguration(std::shared_ptr<mi::EventFilter> const& filter,
-                              std::shared_ptr<mg::ViewableArea> const& view_area,
+                              std::shared_ptr<mi::InputRegion> const& input_region,
                               std::shared_ptr<mi::CursorListener> const& cursor_listener,
                               std::shared_ptr<mi::InputReport> const& input_report)
-        : FakeEventHubInputConfiguration({}, view_area, cursor_listener, input_report),
+        : FakeEventHubInputConfiguration({}, input_region, cursor_listener, input_report),
           dispatcher_policy(new MockDispatcherPolicy(filter))
     {
     }
@@ -256,11 +269,9 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<TestingInputConfiguration>(
             event_filter,
-            mt::fake_shared(viewable_area), null_cursor_listener, std::make_shared<mi::NullInputReport>());
+            mt::fake_shared(input_region), null_cursor_listener, std::make_shared<mi::NullInputReport>());
         fake_event_hub = configuration->the_fake_event_hub();
 
-        ON_CALL(viewable_area, view_area())
-            .WillByDefault(Return(default_view_area));
         input_manager = configuration->the_input_manager();
         
         input_registrar = configuration->the_input_registrar();
@@ -294,7 +305,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     }
 
     std::shared_ptr<MockEventFilter> event_filter;
-    NiceMock<mtd::MockViewableArea> viewable_area;
+    StubInputRegion input_region;
     std::shared_ptr<TestingInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
@@ -315,22 +326,23 @@ MATCHER_P(WindowHandleWithInputFd, input_fd, "")
 
 }
 
-TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_surface_is_sent_unfiltered_key_events)
+TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_channel_is_sent_unfiltered_key_events)
 {
     using namespace ::testing;
 
     mt::WaitCondition wait_condition;
 
     auto input_fd = test_fd();
-    mtd::StubSurfaceTarget surface(input_fd);
+    mtd::StubInputChannel channel(input_fd);
+    mtd::StubInputSurface surface;
 
     EXPECT_CALL(*event_filter, handle(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_registrar->input_surface_opened(mt::fake_shared(surface));
-    input_targeter->focus_changed(mt::fake_shared(surface));
+    input_registrar->input_channel_opened(mt::fake_shared(channel), mt::fake_shared(surface), mi::InputReceptionMode::normal);
+    input_targeter->focus_changed(mt::fake_shared(channel));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -346,13 +358,14 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
 
     mt::WaitCondition wait1, wait2, wait3;
 
+    mtd::StubInputSurface surface;
     auto input_fd_1 = test_fd();
-    mtd::StubSurfaceTarget surface1(input_fd_1);
+    mtd::StubInputChannel channel1(input_fd_1);
     auto input_fd_2 = test_fd();
-    mtd::StubSurfaceTarget surface2(input_fd_2);
+    mtd::StubInputChannel channel2(input_fd_2);
 
-    input_registrar->input_surface_opened(mt::fake_shared(surface1));
-    input_registrar->input_surface_opened(mt::fake_shared(surface2));
+    input_registrar->input_channel_opened(mt::fake_shared(channel1), mt::fake_shared(surface), mi::InputReceptionMode::normal);
+    input_registrar->input_channel_opened(mt::fake_shared(channel2), mt::fake_shared(surface), mi::InputReceptionMode::normal);
 
     EXPECT_CALL(*event_filter, handle(_)).Times(3).WillRepeatedly(Return(false));
 
@@ -370,17 +383,17 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    input_targeter->focus_changed(mt::fake_shared(surface1));
+    input_targeter->focus_changed(mt::fake_shared(channel1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_1));
     wait1.wait_for_at_most_seconds(1);
 
-    input_targeter->focus_changed(mt::fake_shared(surface2));
+    input_targeter->focus_changed(mt::fake_shared(channel2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_2));
     wait2.wait_for_at_most_seconds(1);
 
-    input_targeter->focus_changed(mt::fake_shared(surface1));
+    input_targeter->focus_changed(mt::fake_shared(channel1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_3));
     wait3.wait_for_at_most_seconds(5);

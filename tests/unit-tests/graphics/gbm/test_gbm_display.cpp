@@ -22,6 +22,7 @@
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/asio_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"
@@ -63,7 +64,7 @@ public:
 
     MOCK_METHOD0(set_graphics_mode, void());
     MOCK_METHOD3(register_switch_handlers,
-                 void(mir::MainLoop&,
+                 void(mg::EventHandlerRegister&,
                       std::function<bool()> const&,
                       std::function<bool()> const&));
 };
@@ -74,7 +75,7 @@ public:
     ~MockVideoDevices() noexcept(true) {}
 
     MOCK_METHOD2(register_change_handler,
-                 void(mir::MainLoop&,
+                 void(mg::EventHandlerRegister&,
                       std::function<void()> const&));
 };
 
@@ -124,6 +125,7 @@ public:
         return std::make_shared<mgg::GBMDisplay>(
             platform,
             std::make_shared<mtd::NullVideoDevices>(),
+            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
             null_report);
     }
 
@@ -280,10 +282,7 @@ TEST_F(GBMDisplayTest, create_display)
         .WillOnce(Return(0));
 
 
-    EXPECT_NO_THROW(
-    {
-        auto display = create_display(create_platform());
-    });
+    auto display = create_display(create_platform());
 }
 
 TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
@@ -320,10 +319,7 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
             .Times(1);
     }
 
-    EXPECT_NO_THROW(
-    {
-        auto display = create_display(create_platform());
-    });
+    auto display = create_display(create_platform());
 }
 
 TEST_F(GBMDisplayTest, create_display_drm_failure)
@@ -347,6 +343,10 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 {
     using namespace testing;
 
+    auto platform = create_platform();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
     EXPECT_CALL(mock_drm, drmModeGetResources(_))
         .Times(Exactly(1))
         .WillOnce(Return(reinterpret_cast<drmModeRes*>(0)));
@@ -356,8 +356,6 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(1));
-
-    auto platform = create_platform();
 
     EXPECT_THROW({
         auto display = create_display(platform);
@@ -439,14 +437,11 @@ TEST_F(GBMDisplayTest, post_update)
     }
 
 
-    EXPECT_NO_THROW(
-    {
-        auto display = create_display(create_platform());
+    auto display = create_display(create_platform());
 
-        display->for_each_display_buffer([](mg::DisplayBuffer& db)
-        {
-            db.post_update();
-        });
+    display->for_each_display_buffer([](mg::DisplayBuffer& db)
+    {
+        db.post_update();
     });
 }
 
@@ -516,13 +511,11 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
         *mock_report,
         report_egl_configuration(mock_egl.fake_egl_display,mock_egl.fake_configs[0])).Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        auto display = std::make_shared<mgg::GBMDisplay>(
-                            create_platform(),
-                            std::make_shared<mtd::NullVideoDevices>(),
-                            mock_report);
-    });
+    auto display = std::make_shared<mgg::GBMDisplay>(
+                        create_platform(),
+                        std::make_shared<mtd::NullVideoDevices>(),
+                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        mock_report);
 }
 
 TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_resources)
@@ -678,10 +671,10 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     using namespace testing;
 
     EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillOnce(SetErrnoAndReturn(EACCES, -1));
+        .WillOnce(SetErrnoAndReturn(EACCES, -EACCES));
 
     EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(SetErrnoAndReturn(EPERM, -1));
+        .WillOnce(SetErrnoAndReturn(EPERM, -EPERM));
 
     EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
     EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
@@ -692,6 +685,7 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     auto display = std::make_shared<mgg::GBMDisplay>(
                         platform,
                         std::make_shared<mtd::NullVideoDevices>(),
+                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
 
     EXPECT_THROW({
@@ -712,6 +706,7 @@ TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
     auto display = std::make_shared<mgg::GBMDisplay>(
                         create_platform(),
                         mock_video_devices,
+                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         null_report);
 
     mir::AsioMainLoop ml;

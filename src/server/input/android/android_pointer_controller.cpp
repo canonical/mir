@@ -16,32 +16,35 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/graphics/viewable_area.h"
+#include "mir/input/input_region.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/point.h"
 
 #include "android_pointer_controller.h"
 
 #include <algorithm>
 
-namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace geom = mir::geometry;
 
-mia::PointerController::PointerController(std::shared_ptr<mg::ViewableArea> const& viewable_area)
+mia::PointerController::PointerController(
+    std::shared_ptr<mi::InputRegion> const& input_region)
         : state(0),
           x(0.0),
           y(0.0),
-          viewable_area(viewable_area),
+          input_region(input_region),
           cursor_listener(std::shared_ptr<mi::CursorListener>())
 {
 }
 
 mia::PointerController::PointerController(
-    std::shared_ptr<mg::ViewableArea> const& viewable_area,
+    std::shared_ptr<mi::InputRegion> const& input_region,
     std::shared_ptr<mi::CursorListener> const& cursor_listener)
         : state(0),
           x(0.0),
           y(0.0),
-          viewable_area(viewable_area),
+          input_region(input_region),
           cursor_listener(cursor_listener)
 
 {
@@ -70,7 +73,7 @@ bool mia::PointerController::get_bounds_locked(
     float* out_max_x,
     float* out_max_y) const
 {
-    auto bounds = viewable_area->view_area();
+    auto bounds = input_region->bounding_rectangle();
     *out_min_x = bounds.top_left.x.as_float();
     *out_min_y = bounds.top_left.y.as_float();
     *out_max_x = bounds.top_left.x.as_float() + bounds.size.width.as_float();
@@ -97,12 +100,12 @@ int32_t mia::PointerController::getButtonState() const
 void mia::PointerController::setPosition(float new_x, float new_y)
 {
     std::lock_guard<std::mutex> lg(guard);
-    float min_x, min_y, max_x, max_y;
 
-    get_bounds_locked(&min_x, &min_y, &max_x, &max_y);
+    geom::Point p{new_x, new_y};
+    input_region->confine(p);
 
-    x = std::max(min_x, std::min(max_x, new_x));
-    y = std::max(min_y, std::min(max_y, new_y));
+    x = p.x.as_float();
+    y = p.y.as_float();
 
     // I think it's correct to hold this lock while notifying the listener (i.e. cursor rendering update)
     // to prevent the InputReader from getting ahead of rendering. This may need to be thought about later.

@@ -3,25 +3,6 @@ that it can be used isolatedly, outside android proper.
 
 All the needed base, helper and utility classes (e.g. String8) were also brought along.
 
-Subdirectories:
- * android_pristine - The original, unmodified, android files, as they were
-                      fetched from android's source tree. Here just as a reference
-                      to track the local modifications made. Useful when you want to
-                      update the project to the latest android source tree.
- * android - The android files, but with some modifications to work on this
-             project. They are the ones that actually get compiled.
-
-We strive to keep a minimal delta between android and android_pristine to make easier
-for us to get all updates made by them on the android project. That is, to avoid
-forking that code and therefore having to maintain it all ourselves. We just maintain
-the delta/modifications instead.
-
-Running
-=======
-
-Set the following environment variables to something or any path, otherwise applications
-seg fault: ANDROID_ROOT, ANDROID_DATA
-
 Debugging
 =========
 

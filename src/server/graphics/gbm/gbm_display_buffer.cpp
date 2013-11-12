@@ -20,6 +20,7 @@
 #include "gbm_platform.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
+#include "gbm_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <GLES2/gl2.h>
@@ -97,7 +98,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
                                         std::shared_ptr<DisplayReport> const& listener,
                                         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                                         GBMSurfaceUPtr surface_gbm_param,
-                                        geom::Size const& size,
+                                        geom::Rectangle const& area,
                                         EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       platform(platform),
@@ -105,7 +106,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
       drm(platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
-      size(size),
+      area(area),
       needs_set_crtc{false}
 {
     egl.setup(platform->gbm, surface_gbm.get(), shared_context);
@@ -158,19 +159,41 @@ mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
 
 geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
 {
-    return {{geom::X(0), geom::Y(0)}, size};
+    return area;
+}
+
+bool mgg::GBMDisplayBuffer::can_bypass() const
+{
+    return true;
 }
 
 void mgg::GBMDisplayBuffer::post_update()
+{
+    post_update(nullptr);
+}
+
+void mgg::GBMDisplayBuffer::post_update(
+    std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
      */
-    if (!egl.swap_buffers())
+    if (!bypass_buf && !egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    auto bufobj = get_front_buffer_object();
+    mgg::BufferObject *bufobj;
+    if (bypass_buf)
+    {
+        auto native = bypass_buf->native_buffer_handle();
+        auto gbm_native = static_cast<mgg::GBMNativeBuffer*>(native.get());
+        bufobj = get_buffer_object(gbm_native->bo);
+    }
+    else
+    {
+        bufobj = get_front_buffer_object();
+    }
+
     if (!bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
 
@@ -183,7 +206,8 @@ void mgg::GBMDisplayBuffer::post_update()
      */
     if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
     {
-        bufobj->release();
+        if (!bypass_buf)
+            bufobj->release();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
     }
     else if (needs_set_crtc)
@@ -203,12 +227,31 @@ void mgg::GBMDisplayBuffer::post_update()
     if (last_flipped_bufobj)
         last_flipped_bufobj->release();
 
-    last_flipped_bufobj = bufobj;
+    last_flipped_bufobj = bypass_buf ? nullptr : bufobj;
+
+    /*
+     * Keep a reference to the buffer being bypassed for the entire duration
+     * of the frame. This ensures the buffer doesn't get reused by the client
+     * prematurely, which would be seen as tearing.
+     * If not bypassing, then bypass_buf will be nullptr.
+     */
+    last_flipped_bypass_buf = bypass_buf;
 }
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
 {
-    auto bo = gbm_surface_lock_front_buffer(surface_gbm.get());
+    auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
+    auto ret = get_buffer_object(front);
+
+    if (!ret)
+        gbm_surface_release_buffer(surface_gbm.get(), front);
+
+    return ret;
+}
+
+mgg::BufferObject* mgg::GBMDisplayBuffer::get_buffer_object(
+    struct gbm_bo *bo)
+{
     if (!bo)
         return nullptr;
 
@@ -225,13 +268,10 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
     auto stride = gbm_bo_get_stride(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, size.width.as_uint32_t(), size.height.as_uint32_t(),
+    auto ret = drmModeAddFB(drm.fd, area.size.width.as_uint32_t(), area.size.height.as_uint32_t(),
                             24, 32, stride, handle, &fb_id);
     if (ret)
-    {
-        gbm_surface_release_buffer(surface_gbm.get(), bo);
         return nullptr;
-    }
 
     /* Create a BufferObject and associate it with the gbm_bo */
     bufobj = new BufferObject{surface_gbm.get(), bo, fb_id};

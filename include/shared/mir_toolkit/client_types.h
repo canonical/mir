@@ -22,6 +22,7 @@
 #define MIR_TOOLKIT_CLIENT_TYPES_H_
 
 #include <mir_toolkit/event.h>
+#include <mir_toolkit/common.h>
 
 #include <stddef.h>
 
@@ -76,6 +77,26 @@ typedef void (*mir_event_delegate_callback)(
     MirSurface* surface, MirEvent const* event, void* context);
 
 /**
+ * Callback called when a lifecycle event/callback is requested
+ * from the running server.
+ *   \param [in] connection     The connection associated with the lifecycle event
+ *   \param [in] cb             The callback requested
+ *   \param [in,out] context    The context provided by the client
+ */
+
+typedef void (*mir_lifecycle_event_callback)(
+    MirConnection* connection, MirLifecycleState state, void* context);
+
+/**
+ * Callback called when a display config change has occurred
+ *   \param [in] connection     The connection associated with the display change
+ *   \param [in,out] context    The context provided by client
+ */
+
+typedef void (*mir_display_config_callback)(
+    MirConnection* connection, void* context);
+
+/**
  * The order of components in a format enum matches the
  * order of the components as they would be written in an
  *  integer representing a pixel value of that format.
@@ -116,6 +137,15 @@ typedef struct MirSurfaceParameters
     int height;
     MirPixelFormat pixel_format;
     MirBufferUsage buffer_usage;
+    /**
+     * The id of the output to place the surface in.
+     *
+     * Use one of the output ids from MirDisplayConfiguration/MirDisplayOutput
+     * to place a surface on that output. Only fullscreen placements are
+     * currently supported. If you don't have special placement requirements,
+     * use the value mir_display_output_id_invalid.
+     */
+    uint32_t output_id;
 } MirSurfaceParameters;
 
 enum { mir_platform_package_max = 32 };
@@ -153,11 +183,10 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
-enum { mir_supported_pixel_format_max = 32 };
-
-/**
- * MirDisplayInfo provides details of the graphics environment.
+/** 
+ * DEPRECATED. use MirDisplayConfiguration
  */
+enum { mir_supported_pixel_format_max = 32 };
 typedef struct MirDisplayInfo
 {
     uint32_t width;
@@ -166,6 +195,78 @@ typedef struct MirDisplayInfo
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
+
+/**
+ * MirDisplayConfiguration provides details of the graphics environment.
+ */
+
+typedef struct MirDisplayCard
+{
+    uint32_t card_id;
+    uint32_t max_simultaneous_outputs;
+} MirDisplayCard;
+
+typedef enum MirDisplayOutputType
+{
+    mir_display_output_type_unknown,
+    mir_display_output_type_vga,
+    mir_display_output_type_dvii,
+    mir_display_output_type_dvid,
+    mir_display_output_type_dvia,
+    mir_display_output_type_composite,
+    mir_display_output_type_svideo,
+    mir_display_output_type_lvds,
+    mir_display_output_type_component,
+    mir_display_output_type_ninepindin,
+    mir_display_output_type_displayport,
+    mir_display_output_type_hdmia,
+    mir_display_output_type_hdmib,
+    mir_display_output_type_tv,
+    mir_display_output_type_edp
+} MirDisplayOutputType;
+
+typedef struct MirDisplayMode
+{
+    uint32_t vertical_resolution;
+    uint32_t horizontal_resolution;
+    double refresh_rate;
+} MirDisplayMode;
+
+enum { mir_display_output_id_invalid = 0 };
+
+typedef struct MirDisplayOutput
+{
+    uint32_t num_modes;
+    MirDisplayMode* modes;
+    uint32_t preferred_mode;
+    uint32_t current_mode; 
+
+    uint32_t num_output_formats;
+    MirPixelFormat* output_formats;
+    uint32_t current_output_format;
+
+    uint32_t card_id;
+    uint32_t output_id;
+    MirDisplayOutputType type;
+
+    int32_t position_x;
+    int32_t position_y;
+    uint32_t connected;
+    uint32_t used;
+
+    uint32_t physical_width_mm;
+    uint32_t physical_height_mm;
+    
+    MirPowerMode power_mode;
+} MirDisplayOutput;
+
+typedef struct MirDisplayConfiguration
+{
+    uint32_t num_outputs;
+    MirDisplayOutput* outputs;
+    uint32_t num_cards;
+    MirDisplayCard *cards;
+} MirDisplayConfiguration;
 
 /**
  * MirEventDelegate may be used to specify (at surface creation time)

@@ -51,7 +51,7 @@ struct MyAgingBuffer : public mcl::AgingBuffer
         exit(1);
     }
 
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const
     {
         exit(1);
     }

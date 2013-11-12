@@ -11,19 +11,18 @@ add_library(
   android_buffer_allocator.cpp
   buffer.cpp
   android_display.cpp
-  hwc_display.cpp
+  android_display_configuration.cpp
+  display_buffer_factory.cpp
   hwc_layerlist.cpp
   hwc10_device.cpp
   hwc11_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp
-  android_hwc_factory.cpp
-  android_display_allocator.cpp
   android_framebuffer_window.cpp
   android_display_factory.cpp
   android_alloc_adaptor.cpp
   server_render_window.cpp
-  default_framebuffer_factory.cpp
+  resource_factory.cpp
   fb_simple_swapper.cpp
   fb_device.cpp
   internal_client_window.cpp
@@ -33,7 +32,8 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
-  mirserver
+
+  mirplatform
   mirsharedandroid
 
   ${LIBHARDWARE_LIBRARIES}

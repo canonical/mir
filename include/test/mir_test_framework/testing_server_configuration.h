@@ -44,7 +44,7 @@ public:
 
     // TODO can we remove this function and default to real graphics in tests?
     std::shared_ptr<graphics::Platform> the_graphics_platform();
-    std::shared_ptr<graphics::Renderer> the_renderer();
+    std::shared_ptr<compositor::RendererFactory> the_renderer_factory();
     // We override the_input_manager in the default server configuration
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.

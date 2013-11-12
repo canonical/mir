@@ -1,13 +1,6 @@
-if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_GRAPHICS})
-  message(STATUS "Tests are NOT run with real graphics support.")
-else()
-  message(STATUS "Tests are run with real graphics.")
-endif()
-
-if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_INPUT})
-  message(STATUS "Tests are NOT run with real input.")
-else()
-  message(STATUS "Tests are run with real input.")
+pkg_check_modules(UMOCKDEV umockdev-1.0)
+if (NOT UMOCKDEV_FOUND)
+  message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
@@ -16,17 +9,32 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/include/server)
-include_directories(${PROJECT_SOURCE_DIR}/include/client)
-include_directories(${PROJECT_SOURCE_DIR}/include/test)
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/include/test)
 
 if (MIR_PLATFORM STREQUAL "android")
   include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
 endif()
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(unit-tests/)
-add_subdirectory(integration-tests/)
+option(MIR_ENABLE_ACCEPTANCE_TESTS "Build & run acceptance tests" ON)
+option(MIR_ENABLE_INTEGRATION_TESTS "Build & run integration tests" ON)
+option(MIR_ENABLE_UNIT_TESTS "Build & run unit tests" ON)
+
+if (MIR_ENABLE_ACCEPTANCE_TESTS)
+  add_subdirectory(acceptance-tests/)
+endif (MIR_ENABLE_ACCEPTANCE_TESTS)
+
+if (MIR_ENABLE_UNIT_TESTS)
+  add_subdirectory(unit-tests/)
+endif (MIR_ENABLE_UNIT_TESTS)
+
+if (MIR_ENABLE_INTEGRATION_TESTS)
+  add_subdirectory(integration-tests/)
+endif (MIR_ENABLE_INTEGRATION_TESTS)
+
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)

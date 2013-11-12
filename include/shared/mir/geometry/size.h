@@ -30,10 +30,11 @@ namespace geometry
 struct Size
 {
     Size() {}
+    Size(Size const&) = default;
+    Size& operator=(Size const&) = default;
 
-    Size(const Width& w, const Height& h) : width {w}, height {h}
-    {
-    }
+    template<typename WidthType, typename HeightType>
+    Size(WidthType&& width, HeightType&& height) : width(width), height(height) {}
 
     Width width;
     Height height;

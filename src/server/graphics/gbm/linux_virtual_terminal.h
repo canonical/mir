@@ -24,6 +24,7 @@
 #include <memory>
 
 #include <linux/vt.h>
+#include <termios.h>
 #include <unistd.h>
 
 namespace mir
@@ -45,6 +46,8 @@ public:
     virtual int close(int fd) = 0;
     virtual int ioctl(int d, int request, int val) = 0;
     virtual int ioctl(int d, int request, void* p_val) = 0;
+    virtual int tcsetattr(int d, int acts, const struct termios *tcattr) = 0;
+    virtual int tcgetattr(int d, struct termios *tcattr) = 0;
 
 protected:
     VTFileOperations() = default;
@@ -62,7 +65,7 @@ public:
 
     void set_graphics_mode();
     void register_switch_handlers(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back);
 
@@ -90,6 +93,8 @@ private:
     FDWrapper const vt_fd;
     int prev_kd_mode;
     struct vt_mode prev_vt_mode;
+    int prev_tty_mode;
+    struct termios prev_tcattr;
     bool active;
 };
 

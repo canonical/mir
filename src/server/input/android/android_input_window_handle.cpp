@@ -20,8 +20,7 @@
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/input_region.h"
-#include "mir/input/surface_target.h"
+#include "mir/input/surface.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -35,26 +34,25 @@ namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
 {
-    WindowInfo(std::shared_ptr<mi::SurfaceTarget> const& surface)
+    WindowInfo(std::shared_ptr<mi::Surface> const& surface)
         : surface(surface)
     {
     }
 
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        uint32_t rel_x = x-surface->top_left().x.as_uint32_t();
-        uint32_t rel_y = y-surface->top_left().y.as_uint32_t();
-        
-        return surface->input_region()->contains({geom::X{rel_x}, geom::Y{rel_y}});
+        return surface->contains(geom::Point{x, y});
     }
-    
-    std::shared_ptr<mi::SurfaceTarget> const surface;
+
+    std::shared_ptr<mi::Surface> const surface;
 };
 }
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
-                                          std::shared_ptr<mi::SurfaceTarget> const& surface)
+                                          std::shared_ptr<mi::InputChannel> const& channel,
+                                          std::shared_ptr<mi::Surface> const& surface)
   : droidinput::InputWindowHandle(input_app_handle),
+    input_channel(channel),
     surface(surface)
 {
     updateInfo();
@@ -68,13 +66,14 @@ bool mia::InputWindowHandle::updateInfo()
 
         // TODO: How can we avoid recreating the InputChannel which the InputChannelFactory has already created?
         mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),
-                                                           surface->server_input_fd());
+                                                           input_channel->server_fd());
     }
 
-    auto surface_position = surface->top_left();
+    auto surface_size = surface->size();
+    auto surface_position = surface->position();
+
     mInfo->frameLeft = surface_position.x.as_uint32_t();
     mInfo->frameTop = surface_position.y.as_uint32_t();
-    auto surface_size = surface->size();
     mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
     mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
     

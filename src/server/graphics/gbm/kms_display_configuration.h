@@ -21,10 +21,6 @@
 
 #include "mir/graphics/display_configuration.h"
 
-#include <memory>
-
-#include <xf86drmMode.h>
-
 namespace mir
 {
 namespace graphics
@@ -37,17 +33,10 @@ class DRMModeResources;
 class KMSDisplayConfiguration : public DisplayConfiguration
 {
 public:
-    KMSDisplayConfiguration(int drm_fd);
-
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const;
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const;
-
-    uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
-
-private:
-    void add_output(DRMModeResources const& resources, drmModeConnector const& connector);
-
-    std::vector<DisplayConfigurationOutput> outputs;
+    virtual uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const = 0;
+    virtual size_t get_kms_mode_index(DisplayConfigurationOutputId id,
+                                      size_t conf_mode_index) const = 0;
+    virtual void update() = 0;
 };
 
 }

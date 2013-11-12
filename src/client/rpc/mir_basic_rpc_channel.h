@@ -29,10 +29,6 @@
 
 namespace mir
 {
-namespace events
-{
-class EventSink;
-}
 namespace protobuf
 {
 namespace wire
@@ -66,6 +62,8 @@ public:
 
     void complete_response(mir::protobuf::wire::Result& result);
 
+    void force_completion();
+
     bool empty() const;
 
 private:
@@ -96,8 +94,6 @@ class MirBasicRpcChannel : public google::protobuf::RpcChannel
 public:
     MirBasicRpcChannel();
     ~MirBasicRpcChannel();
-
-    virtual void set_event_handler(events::EventSink *sink) = 0;
 
 protected:
     mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,

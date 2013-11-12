@@ -17,9 +17,10 @@
  */
 
 #include "mir/compositor/rendering_operator.h"
+#include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
-#include "mir_test_doubles/mock_graphic_region.h"
-#include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_compositing_criteria.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -29,10 +30,12 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
 
 namespace
 {
-class StubRenderer : public mg::Renderer
+class StubRenderer : public mc::Renderer
 {
 public:
     StubRenderer()
@@ -43,9 +46,10 @@ public:
     {
     }
 
-    void clear() {}
+    void clear(unsigned long) override {}
 
-    void render(std::function<void(std::shared_ptr<void> const&)> save_resource, mg::Renderable&)
+    void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
+                mc::CompositingCriteria const&, ms::BufferStream&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)
@@ -74,15 +78,6 @@ public:
     int counter;
 };
 
-class MockRenderer : public mg::Renderer
-{
-public:
-    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&));
-    MOCK_METHOD0(clear, void ());
-
-    ~MockRenderer() noexcept {}
-};
-
 }
 
 TEST(RenderingOperator, render_operator_saves_resources)
@@ -90,7 +85,8 @@ TEST(RenderingOperator, render_operator_saves_resources)
     using namespace testing;
 
     StubRenderer stub_renderer;
-    mtd::MockRenderable mock_renderable;
+    mtd::MockCompositingCriteria mock_criteria;
+    mtd::MockBufferStream mock_stream;
 
     auto use_count_before0 = stub_renderer.resource0.use_count();
     auto use_count_before1 = stub_renderer.resource1.use_count();
@@ -103,9 +99,9 @@ TEST(RenderingOperator, render_operator_saves_resources)
                 stub_renderer,
                 [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); });
 
-            rendering_operator(mock_renderable);
-            rendering_operator(mock_renderable);
-            rendering_operator(mock_renderable);
+            rendering_operator(mock_criteria, mock_stream);
+            rendering_operator(mock_criteria, mock_stream);
+            rendering_operator(mock_criteria, mock_stream);
         }
 
         EXPECT_EQ(use_count_before0 + 1, stub_renderer.resource0.use_count());

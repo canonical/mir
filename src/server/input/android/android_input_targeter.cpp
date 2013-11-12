@@ -40,6 +40,9 @@ mia::InputTargeter::InputTargeter(droidinput::sp<droidinput::InputDispatcherInte
 {
 }
 
+mia::InputTargeter::~InputTargeter() noexcept(true) {}
+
+
 void mia::InputTargeter::focus_cleared()
 {
     droidinput::sp<droidinput::InputWindowHandle> null_window = nullptr;
@@ -47,12 +50,12 @@ void mia::InputTargeter::focus_cleared()
     input_dispatcher->setKeyboardFocus(null_window);
 }
 
-void mia::InputTargeter::focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface)
+void mia::InputTargeter::focus_changed(std::shared_ptr<mi::InputChannel const> const& focus_channel)
 {
-    auto window_handle = repository->handle_for_surface(surface);
+    auto window_handle = repository->handle_for_channel(focus_channel);
     
     if (window_handle == NULL)
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set keyboard focus to an unregistered surface"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set keyboard focus to an unregistered input channel"));
     
     input_dispatcher->setKeyboardFocus(window_handle);
 }

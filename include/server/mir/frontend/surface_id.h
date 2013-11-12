@@ -25,7 +25,8 @@ namespace mir
 {
 namespace frontend
 {
-typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
+namespace detail { struct SessionsSurfaceIdTag; }
+typedef IntWrapper<detail::SessionsSurfaceIdTag> SurfaceId;
 }
 } // namespace mir
 

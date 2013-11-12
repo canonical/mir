@@ -19,11 +19,12 @@
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
-#include "mir/compositor/buffer_basic.h"
-#include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
+#include "mir/graphics/buffer_basic.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/null_input_configuration.h"
@@ -32,9 +33,17 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
 #include <thread>
+
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
@@ -52,12 +61,57 @@ char const* dummy[] = {0};
 int argc = 0;
 char const** argv = dummy;
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubFDBuffer : public mtd::StubBuffer
+{
+public:
+    StubFDBuffer(mg::BufferProperties const& properties)
+        : StubBuffer(properties),
+          properties{properties}
+    {
+        fd = open("/dev/zero", O_RDONLY);
+        if (fd < 0)
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to open dummy fd")) << boost::errinfo_errno(errno));
+    }
+
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
+    {
+#ifndef ANDROID
+        auto native_buffer = std::make_shared<mg::NativeBuffer>();
+        native_buffer->data_items = 1;
+        native_buffer->data[0] = 0xDEADBEEF;
+        native_buffer->fd_items = 1;
+        native_buffer->fd[0] = fd;
+
+        native_buffer->flags = 0;
+        if (properties.size.width.as_int() >= 800 &&
+            properties.size.height.as_int() >= 600 &&
+            properties.usage == mg::BufferUsage::hardware)
+        {
+            native_buffer->flags |= mir_buffer_flag_can_scanout;
+        }
+        return native_buffer;
+#else
+        return std::shared_ptr<mg::NativeBuffer>();
+#endif
+    }
+
+    ~StubFDBuffer() noexcept
+    {
+        close(fd);
+    }
+private:
+    int fd;
+    const mg::BufferProperties properties;
+};
+
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties)
     {
-        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(properties));
+        return std::unique_ptr<mg::Buffer>(new StubFDBuffer(properties));
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -66,41 +120,110 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
+class StubDisplayConfiguration : public mtd::NullDisplayConfiguration
+{
+public:
+    StubDisplayConfiguration(geom::Rectangle& rect)
+         : modes{mg::DisplayConfigurationMode{rect.size, 1.0f}}
+    {
+    }
+
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
+    {
+        mg::DisplayConfigurationOutput dummy_output_config{
+            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::vga,
+            std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
+
+        f(dummy_output_config);
+    }
+private:
+    std::vector<mg::DisplayConfigurationMode> modes;
+};
+
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : rect{geom::Point{0,0}, geom::Size{1600,1600}},
+          display_buffer(rect)
     {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
     }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+ 
+    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    {
+        return std::make_shared<StubDisplayConfiguration>(rect);
+    }
+
+private:
+    geom::Rectangle rect;
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 class StubGraphicPlatform : public mtd::NullPlatform
 {
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& packer,
+                          std::shared_ptr<mg::Buffer> const& buffer) const override
+    {
+#ifndef ANDROID
+        auto native_handle = buffer->native_buffer_handle();
+        for(auto i=0; i<native_handle->data_items; i++)
+        {
+            packer->pack_data(native_handle->data[i]);
+        }
+        for(auto i=0; i<native_handle->fd_items; i++)
+        {
+            packer->pack_fd(native_handle->fd[i]);
+        }
+
+        packer->pack_stride(buffer->stride());
+        packer->pack_flags(native_handle->flags);
+#else
+        (void)packer;
+        (void)buffer;
+#endif
+    }
+
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
         return std::make_shared<StubDisplay>();
     }
 };
 
-class StubRenderer : public mg::Renderer
+class StubRenderer : public mc::Renderer
 {
 public:
-    virtual void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable& r)
+    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
+                        mc::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
-        r.graphic_region();
+        stream.lock_compositor_buffer(0);
     }
 
-    void clear() {}
+    void clear(unsigned long) override {}
+};
+
+class StubRendererFactory : public mc::RendererFactory
+{
+public:
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    {
+        return std::unique_ptr<StubRenderer>(new StubRenderer());
+    }
 };
 
 struct StubInputChannel : public mi::InputChannel
@@ -160,17 +283,17 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
+std::shared_ptr<mc::RendererFactory> mtf::TestingServerConfiguration::the_renderer_factory()
 {
     auto options = the_options();
 
     if (options->get("tests-use-real-graphics", false))
-        return DefaultServerConfiguration::the_renderer();
+        return DefaultServerConfiguration::the_renderer_factory();
     else
-        return renderer(
+        return renderer_factory(
             [&]()
             {
-                return std::make_shared<StubRenderer>();
+                return std::make_shared<StubRendererFactory>();
             });
 }
 

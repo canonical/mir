@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
@@ -24,12 +24,14 @@
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/null_display_changer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
@@ -39,7 +41,6 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
@@ -48,12 +49,12 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>();
+        return std::shared_ptr<mg::Buffer>();
     }
 
     virtual std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -65,7 +66,7 @@ public:
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::shared_ptr<StubGraphicBufferAllocator>();
@@ -74,24 +75,18 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-class NullEventSink : public mir::events::EventSink
-{
-public:
-    void handle_event(MirEvent const& ) override {}
-};
-
 struct SessionMediatorGBMTest : public ::testing::Test
 {
     SessionMediatorGBMTest()
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
-          graphics_display{std::make_shared<mtd::NullDisplay>()},
+          display_changer{std::make_shared<mtd::NullDisplayChanger>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{shell, mock_platform, graphics_display,
+          mediator{shell, mock_platform, display_changer,
                    buffer_allocator, report,
-                   std::make_shared<NullEventSink>(),
+                   std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -99,8 +94,8 @@ struct SessionMediatorGBMTest : public ::testing::Test
 
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
-    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mf::DisplayChanger> const display_changer;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

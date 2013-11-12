@@ -21,7 +21,7 @@
 
 #include "surface_stack_model.h"
 
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 #include "mir/surfaces/depth_id.h"
 #include "mir/input/input_targets.h"
 
@@ -35,8 +35,8 @@ namespace mir
 namespace compositor
 {
 class RenderableCollection;
-class FilterForRenderables;
-class OperatorForRenderables;
+class FilterForScene;
+class OperatorForScene;
 }
 
 namespace frontend
@@ -47,38 +47,42 @@ struct SurfaceCreationParameters;
 namespace input
 {
 class InputChannelFactory;
-class SurfaceTarget;
+class InputChannel;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
-class BufferStreamFactory;
+class SurfaceFactory;
 class InputRegistrar;
 class Surface;
 
-class SurfaceStack : public compositor::Renderables, public input::InputTargets, public SurfaceStackModel
+class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
 public:
-    explicit SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
-                          std::shared_ptr<input::InputChannelFactory> const& input_factory,
+    explicit SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
                           std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    // From Renderables
-    virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
+    // From Scene
+    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
+    virtual void reverse_for_each_if(compositor::FilterForScene& filter,
+                                     compositor::OperatorForScene& op);
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
-    void for_each(std::function<void(std::shared_ptr<input::SurfaceTarget> const&)> const& callback);
+    void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel 
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params, DepthId depth);
+    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
     
     virtual void raise(std::weak_ptr<Surface> const& surface);
+
+    virtual void lock();
+    virtual void unlock();
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
@@ -86,9 +90,8 @@ private:
 
     void emit_change_notification();
 
-    std::mutex guard;
-    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
-    std::shared_ptr<input::InputChannelFactory> const input_factory;
+    std::recursive_mutex guard;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
 
     typedef std::vector<std::shared_ptr<Surface>> Layer;

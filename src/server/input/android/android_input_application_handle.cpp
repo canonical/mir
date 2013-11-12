@@ -18,15 +18,16 @@
 
 #include "android_input_application_handle.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
+#include "mir/input/surface.h"
 
 #include <limits.h>
 
 namespace mi = mir::input;
-namespace mia = mi::android;
+namespace mia = mir::input::android;
 
-mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::SurfaceTarget> const& surface)
-  : weak_surface(surface)
+mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::Surface> const& surface)
+  : surface(surface)
 {
     updateInfo();
 }
@@ -36,10 +37,6 @@ bool mia::InputApplicationHandle::updateInfo()
     if (mInfo == NULL)
         mInfo = new droidinput::InputApplicationInfo;
     
-    auto surface = weak_surface.lock();
-    if (!surface)
-        return false;
-
     mInfo->dispatchingTimeout = INT_MAX;
     mInfo->name = droidinput::String8(surface->name().c_str());
 

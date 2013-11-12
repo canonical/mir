@@ -16,16 +16,17 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "event_filter_chain.h"
+#include "mir/input/event_filter_chain.h"
 
 namespace mi = mir::input;
 
-mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi::EventFilter> const> values) :
-    filters(values.begin(), values.end())
+mi::EventFilterChain::EventFilterChain(
+    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& values)
+    : filters(values.begin(), values.end())
 {
 }
 
-bool mi::EventFilterChain::handle(const MirEvent &event)
+bool mi::EventFilterChain::handle(MirEvent const& event)
 {
     auto it = filters.begin();
     while (it != filters.end())
@@ -42,3 +43,12 @@ bool mi::EventFilterChain::handle(const MirEvent &event)
     return false;
 }
 
+void mi::EventFilterChain::append(std::shared_ptr<EventFilter> const& filter)
+{
+    filters.push_back(filter);
+}
+
+void mi::EventFilterChain::prepend(std::shared_ptr<EventFilter> const& filter)
+{
+    filters.insert(filters.begin(), filter);
+}

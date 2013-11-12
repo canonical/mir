@@ -19,32 +19,16 @@
 #ifndef MIR_MAIN_LOOP_H_
 #define MIR_MAIN_LOOP_H_
 
-#include <functional>
-#include <initializer_list>
+#include "mir/graphics/event_handler_register.h"
 
 namespace mir
 {
 
-class MainLoop
+class MainLoop : public graphics::EventHandlerRegister
 {
 public:
-    virtual ~MainLoop() = default;
-
     virtual void run() = 0;
     virtual void stop() = 0;
-
-    virtual void register_signal_handler(
-        std::initializer_list<int> signals,
-        std::function<void(int)> const& handler) = 0;
-
-    virtual void register_fd_handler(
-        std::initializer_list<int> fds,
-        std::function<void(int)> const& handler) = 0;
-
-protected:
-    MainLoop() = default;
-    MainLoop(MainLoop const&) = delete;
-    MainLoop& operator=(MainLoop const&) = delete;
 };
 
 }

@@ -18,12 +18,14 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/buffer_stream_factory.h"
-#include "mir/compositor/buffer_properties.h"
-#include "mir/graphics/renderer.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/compositor/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "surface_state.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_factory.h"
+#include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 
@@ -41,59 +43,64 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
-                               std::shared_ptr<mi::InputChannelFactory> const& input_factory,
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
                                std::shared_ptr<ms::InputRegistrar> const& input_registrar)
-    : buffer_stream_factory{bb_factory},
-      input_factory{input_factory},
+    : surface_factory{surface_factory},
       input_registrar{input_registrar},
       notify_change{[]{}}
 {
-    assert(buffer_stream_factory);
 }
 
-void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
+void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
 {
-    std::lock_guard<std::mutex> lock(guard);
+    std::lock_guard<std::recursive_mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mg::Renderable& renderable = **it;
-            if (filter(renderable)) renderable_operator(renderable);
+            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
+            ms::BufferStream& stream = *((*it)->buffer_stream());
+            if (filter(info)) op(info, stream);
+        }
+    }
+}
+
+void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
+                                           mc::OperatorForScene& op)
+{
+    std::lock_guard<std::recursive_mutex> lg(guard);
+    for (auto layer = layers_by_depth.rbegin();
+         layer != layers_by_depth.rend();
+         ++layer)
+    {
+        auto surfaces = layer->second;
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        {
+            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
+            ms::BufferStream& stream = *((*it)->buffer_stream());
+            if (filter(info)) op(info, stream);
         }
     }
 }
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::lock_guard<std::mutex> lock{notify_change_mutex};
+    std::lock_guard<std::mutex> lg{notify_change_mutex};
     assert(f);
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params, ms::DepthId depth)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
-    mc::BufferProperties buffer_properties{params.size,
-                                           params.pixel_format,
-                                           params.buffer_usage};
-
-    std::shared_ptr<ms::Surface> surface(
-        new ms::Surface(
-            params.name, params.top_left,
-            buffer_stream_factory->create_buffer_stream(buffer_properties),
-            input_factory->make_input_channel(),
-            [this]() { emit_change_notification(); }));
-    
+    auto change_cb = [this]() { emit_change_notification(); };
+    auto surface = surface_factory->create_surface(params, change_cb); 
     {
-        std::lock_guard<std::mutex> lg(guard);
-        layers_by_depth[depth].push_back(surface);
+        std::lock_guard<std::recursive_mutex> lg(guard);
+        layers_by_depth[params.depth].push_back(surface);
     }
 
-    // TODO: It might be a nice refactoring to combine this with input channel creation
-    // i.e. client_fd = registrar->register_for_input(surface). ~racarr
-    input_registrar->input_surface_opened(surface);
+    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.input_mode);
 
     emit_change_notification();
 
@@ -105,7 +112,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     auto keep_alive = surface.lock();
     bool found_surface = false;
     {
-        std::lock_guard<std::mutex> lg(guard);
+        std::lock_guard<std::recursive_mutex> lg(guard);
 
         for (auto &layer : layers_by_depth)
         {
@@ -121,24 +128,24 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         }
     }
     if (found_surface)
-        input_registrar->input_surface_closed(keep_alive);
+        input_registrar->input_channel_closed(keep_alive->input_channel());
     emit_change_notification();
     // TODO: error logging when surface not found
 }
 
 void ms::SurfaceStack::emit_change_notification()
 {
-    std::lock_guard<std::mutex> lock{notify_change_mutex};
+    std::lock_guard<std::mutex> lg{notify_change_mutex};
     notify_change();
 }
 
-void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard<std::recursive_mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
-            callback(*it);
+            callback((*it)->input_channel());
     }
 }
 
@@ -147,7 +154,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
     auto surface = s.lock();
 
     {
-        std::unique_lock<std::mutex> ul(guard);
+        std::unique_lock<std::recursive_mutex> ul(guard);
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;
@@ -167,4 +174,14 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+}
+
+void ms::SurfaceStack::lock()
+{
+    guard.lock();
+}
+
+void ms::SurfaceStack::unlock()
+{
+    guard.unlock();
 }

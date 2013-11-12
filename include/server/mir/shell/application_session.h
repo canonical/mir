@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace events
+namespace frontend
 {
 class EventSink;
 }
@@ -34,6 +34,7 @@ namespace shell
 class SurfaceFactory;
 class Surface;
 class SnapshotStrategy;
+class SessionListener;
 
 class ApplicationSession : public Session
 {
@@ -41,13 +42,9 @@ public:
     ApplicationSession(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::string const& session_name,
-        std::shared_ptr<SnapshotStrategy> const& snapshot_strategy);
-
-    ApplicationSession(
-        std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-        std::shared_ptr<events::EventSink> const& sink);
+        std::shared_ptr<SessionListener> const& session_listener,
+        std::shared_ptr<frontend::EventSink> const& sink);
 
     ~ApplicationSession();
 
@@ -65,7 +62,10 @@ public:
     void hide();
     void show();
 
+    void send_display_config(graphics::DisplayConfiguration const& info);
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
+
+    void set_lifecycle_state(MirLifecycleState state);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -75,7 +75,8 @@ private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<SessionListener> const session_listener;
+    std::shared_ptr<frontend::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();
 

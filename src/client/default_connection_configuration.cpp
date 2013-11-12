@@ -18,6 +18,7 @@
 
 #include "default_connection_configuration.h"
 
+#include "display_configuration.h"
 #include "rpc/make_rpc_channel.h"
 #include "rpc/null_rpc_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -25,6 +26,8 @@
 #include "mir/input/input_platform.h"
 #include "logging/rpc_report.h"
 #include "lttng/rpc_report.h"
+#include "connection_surface_map.h"
+#include "lifecycle_control.h"
 
 namespace mcl = mir::client;
 
@@ -41,13 +44,23 @@ mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
 {
 }
 
+std::shared_ptr<mcl::SurfaceMap>
+mcl::DefaultConnectionConfiguration::the_surface_map()
+{
+    return surface_map([]
+        {
+            return std::make_shared<mcl::ConnectionSurfaceMap>();
+        });
+}
+
 std::shared_ptr<mcl::rpc::MirBasicRpcChannel>
 mcl::DefaultConnectionConfiguration::the_rpc_channel()
 {
     return rpc_channel(
         [this]
         {
-            return mcl::rpc::make_rpc_channel(the_socket_file(), the_rpc_report());
+            return mcl::rpc::make_rpc_channel(
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control());
         });
 }
 
@@ -102,5 +115,23 @@ mcl::DefaultConnectionConfiguration::the_rpc_report()
                 return std::make_shared<mcl::lttng::RpcReport>();
             else
                 return std::make_shared<mcl::rpc::NullRpcReport>();
+        });
+}
+
+std::shared_ptr<mcl::DisplayConfiguration> mcl::DefaultConnectionConfiguration::the_display_configuration()
+{
+    return display_configuration(
+        []
+        {
+            return std::make_shared<mcl::DisplayConfiguration>();
+        });
+}
+
+std::shared_ptr<mcl::LifecycleControl> mcl::DefaultConnectionConfiguration::the_lifecycle_control()
+{
+    return lifecycle_control(
+        []
+        {
+            return std::make_shared<mcl::LifecycleControl>();
         });
 }

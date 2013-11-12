@@ -17,21 +17,12 @@
  */
 
 #include "internal_native_display.h"
-#include "mir/display_server.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/platform.h"
-#include "mir/frontend/surface.h"
-#include "mir/compositor/buffer.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
-#include <cstring>
-#include <mutex>
-#include <set>
-
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
-namespace mf = mir::frontend;
 
 mgg::InternalNativeDisplay::InternalNativeDisplay(std::shared_ptr<mg::PlatformIPCPackage> const& platform_package)
     : platform_package(platform_package)

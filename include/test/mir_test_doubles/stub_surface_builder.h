@@ -25,6 +25,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/mock_surface_state.h"
 
 namespace mir
 {
@@ -42,10 +43,11 @@ public:
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const& param)
+    std::weak_ptr<surfaces::Surface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
     {
-        dummy_surface = std::make_shared<surfaces::Surface>(param.name, param.top_left, buffer_stream, 
-            std::shared_ptr<input::InputChannel>(), []{});
+        auto state = std::make_shared<MockSurfaceState>();
+        dummy_surface = std::make_shared<surfaces::Surface>(
+            state, buffer_stream, std::shared_ptr<input::InputChannel>());
         return dummy_surface;
     }
 

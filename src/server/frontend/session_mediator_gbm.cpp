@@ -36,10 +36,15 @@ void mir::frontend::SessionMediator::drm_auth_magic(
     mir::protobuf::DRMAuthMagicStatus* response,
     google::protobuf::Closure* done)
 {
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
 
-    report->session_drm_auth_magic_called(session->name());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_drm_auth_magic_called(session->name());
+    }
 
     auto const magic = static_cast<drm_magic_t>(request->magic());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);

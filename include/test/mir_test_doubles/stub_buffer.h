@@ -19,10 +19,14 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
-#include "mir/compositor/buffer_basic.h"
-#include "mir/compositor/buffer_properties.h"
+#ifdef ANDROID
+#include "mock_android_native_buffer.h"
+#endif
+
+#include "mir/graphics/buffer_basic.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 namespace mir
 {
@@ -31,16 +35,16 @@ namespace test
 namespace doubles
 {
 
-class StubBuffer : public compositor::BufferBasic
+class StubBuffer : public graphics::BufferBasic
 {
 public:
     StubBuffer()
-        : buf_size{geometry::Size{geometry::Width{0}, geometry::Height{0}}},
+        : buf_size{0, 0},
           buf_pixel_format{geometry::PixelFormat::abgr_8888}
     {
     }
 
-    StubBuffer(compositor::BufferProperties const& properties)
+    StubBuffer(graphics::BufferProperties const& properties)
         : buf_size{properties.size},
           buf_pixel_format{properties.format}
     {
@@ -52,11 +56,17 @@ public:
 
     virtual geometry::PixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
-        return std::shared_ptr<MirNativeBuffer>();
+#ifndef ANDROID
+        return std::make_shared<graphics::NativeBuffer>();
+#else
+        return std::make_shared<StubAndroidNativeBuffer>();
+#endif
     }
     virtual void bind_to_texture() {}
+
+    virtual bool can_bypass() const override { return false; }
 
     geometry::Size const buf_size;
     geometry::PixelFormat const buf_pixel_format;

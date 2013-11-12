@@ -18,13 +18,15 @@
 
 #include "mir/shell/surface_creation_parameters.h"
 
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 msh::SurfaceCreationParameters::SurfaceCreationParameters()
-    : name(), size(), top_left(), buffer_usage(mc::BufferUsage::undefined),
-      pixel_format(geom::PixelFormat::invalid)
+    : name(), size(), top_left(), buffer_usage(mg::BufferUsage::undefined),
+      pixel_format(geom::PixelFormat::invalid),
+      depth{0}, input_mode(mi::InputReceptionMode::normal)
 {
 }
 
@@ -47,7 +49,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
     geometry::Width::ValueType width,
     geometry::Height::ValueType height)
 {
-    return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
+    return of_size({width, height});
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geometry::Point const& new_top_left)
@@ -58,7 +60,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geom
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
-        mc::BufferUsage new_buffer_usage)
+        mg::BufferUsage new_buffer_usage)
 {
     buffer_usage = new_buffer_usage;
 
@@ -73,13 +75,41 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
     return *this;
 }
 
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
+    surfaces::DepthId const& new_depth)
+{
+    depth = new_depth;
+    
+    return *this;
+}
+
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_input_mode(input::InputReceptionMode const& new_mode)
+{
+    input_mode = new_mode;
+    
+    return *this;
+}
+
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_output_id(
+    graphics::DisplayConfigurationOutputId const& new_output_id)
+{
+    output_id = new_output_id;
+
+    return *this;
+}
+
 bool msh::operator==(
     const SurfaceCreationParameters& lhs,
     const msh::SurfaceCreationParameters& rhs)
 {
-    return lhs.size == rhs.size &&
-           lhs.buffer_usage == rhs.buffer_usage &&
-           lhs.pixel_format == rhs.pixel_format;
+    return lhs.name == rhs.name && 
+        lhs.size == rhs.size &&
+        lhs.top_left == rhs.top_left &&
+        lhs.buffer_usage == rhs.buffer_usage &&
+        lhs.pixel_format == rhs.pixel_format &&
+        lhs.depth == rhs.depth &&
+        lhs.input_mode == rhs.input_mode &&
+        lhs.output_id == lhs.output_id;
 }
 
 bool msh::operator!=(

@@ -5,11 +5,19 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
+               pkg-config,
                debhelper (>= 9),
                doxygen,
                xsltproc,
                graphviz,
-               libboost-all-dev,
+               libboost-dev,
+               libboost-chrono-dev,
+               libboost-date-time-dev,
+               libboost-program-options-dev,
+               libboost-system-dev,
+               libboost-thread-dev,
+               libboost-regex-dev,
+               libboost-filesystem-dev,
                protobuf-compiler,
                libdrm-dev [!armhf],
                libegl1-mesa-dev,
@@ -18,14 +26,15 @@ Build-Depends: cmake,
                libglm-dev,
                libprotobuf-dev,
                pkg-config,
-               libhybris-dev [armhf],
+               libhardware-dev [armhf],
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
                libumockdev-dev,
                umockdev,
                libudev-dev,
-               valgrind,
+               google-mock (>= 1.6.0+svn437),
+               valgrind [!arm64],
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -34,7 +43,7 @@ Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
 Package: libmirprotobuf0
 Section: libs
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -47,7 +56,7 @@ Description: Display server for Ubuntu - protocol implementation
 
 Package: libmirprotobuf-dev
 Section: libdevel
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirprotobuf0 (= ${binary:Version}),
@@ -60,22 +69,38 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver0
+Package: libmirserver9
 Section: libs
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         libmirplatform (= ${binary:Version}),
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the shared library needed by server applications for Mir.
 
+Package: libmirplatform
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Replaces: libmirserver0
+Description: Display server for Ubuntu - platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the underlying hardware platform.
+
 Package: mircommon-dev
 Section: libdevel
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -87,10 +112,10 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirserver-dev
 Section: libdevel
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver0 (= ${binary:Version}),
+Depends: libmirserver9 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -102,9 +127,9 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient1
+Package: libmirclient4
 Section: libs
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -117,10 +142,10 @@ Description: Display server for Ubuntu - client library
 
 Package: libmirclient-dev
 Section: libdevel
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient1 (= ${binary:Version}),
+Depends: libmirclient4 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          ${misc:Depends},
@@ -131,7 +156,7 @@ Description: Display server for Ubuntu - development headers
  Contains header files required to develop against Mir.
 
 Package: mir-demos
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Recommends: mir-doc
@@ -151,7 +176,7 @@ Description: API documentation for mir
  This package installs the mir API documentation.
 
 Package: mir-test-tools
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},

@@ -1,6 +1,7 @@
 set(
   LOGGING_SOURCES
 
+  connector_report.cpp
   glog_logger.cpp
   session_mediator_report.cpp
   message_processor_report.cpp
@@ -16,6 +17,8 @@ add_library(
 
 target_link_libraries(
   mirlogging
+
+  mirplatform
 
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}

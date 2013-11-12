@@ -1,3 +1,1435 @@
+mir (0.1.0+14.04.20131030-0ubuntu1) trusty; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Alan Griffiths ]
+  * client: Remove the timeout for detecting server crashes There are
+    valid cases when the server blocks for an indeterminate amount of
+    time during a client request, like when a next_buffer request blocks
+    because a surface is not visible or the server is paused. In such
+    cases, the timeout mechanism we used to detect server crashes caused
+    the clients to fail. Furthermore, the clients seem able to detect
+    server crashes without the timeout, rendering it needless anyway.
+    (LP: #1245958)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1163
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 30 Oct 2013 18:37:21 +0000
+
+mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
+
+  [ Daniel van Vugt ]
+  * Bump version 0.1.0
+  * Add method for testing if Rectangle::contains(Rectangle), which is
+    the basis of any occlusion detection. (LP: #1227739)
+  * Add support for traversing the Scene from front surface to back.
+    This is required for occlusion detection at least (coming soon). .
+    (LP: #1227739)
+  * Optimization: Turn off blending for surfaces that are not blendable.
+    On some systems this can have a noticeable performance benefit.
+  * Avoid rendering surfaces that are fully hidden by other surfaces.
+    This is particularly important for mobile device performance. (LP:
+    #1227739) . (LP: #1227739)
+  * Remove orphaned tags, which appear to have come from the Compiz
+    project (!?) Add tags for the most recent releases up to 0.0.16. No
+    files changed, only tags.
+  * Fix significant performance issues LP: #1241369 / LP: #1241371, and
+    probably more(!) Added regression test to catch such regressions and
+    revert the offending commit r1049. (LP: #1241369, #1241371)
+
+  [ Brandon Schaefer ]
+  * When Scroll events come in we don't keep around the android vscroll
+    hscroll data. Store it now. (LP: #1233089)
+
+  [ Albert Astals ]
+  * Fix mismatched free() / delete / delete [] reported by valgrind
+
+  [ Alexandros Frantzis ]
+  * server: Extend server status (formerly pause/resume) listener to
+    report "started" events This change is needed by users of
+    libmirserver, so they can properly synchronize external interactions
+    with the server. (LP: #1239876)
+  * graphics,examples: Don't enable more outputs than supported when
+    changing the display configuration. (LP: #1217877)
+  * client: Allow clients to call API functions after a connection break
+    has been detected When a client tries to call an API function after
+    a connection break has been detected in a previous API call, the
+    client blocks in the new call. This happens because in
+    MirSocketRpcChannel::notify_disconnected() the pending RPC calls are
+    not forced to complete, since the channel has already been marked as
+    'disconnected' by the failure in the previous call. Note that if the
+    break is first detected while calling an API function, then that
+    call doesn't block, since this is the first time we call
+    MirSocketRpcChannel::notify_disconnected() and the pending RPC calls
+    are forced to complete. This commit solves this problem by always
+    forcing requests to complete when a communication failure occurs,
+    even if a disconnection has already been handled. This is preferred
+    over the alternative of manually calling the completion callback in
+    a try-catch block when calling an RPC method because of: 1.
+    Correctness: In case the communication problem first occurs in that
+    call, the callback will be called twice, once by
+    notify_disconnected() and once manually. 2. Consistency: The
+    callback is called from one place regardless of whether the
+    communication problem is first detected during that call or not.
+    (LP: #1201436)
+  * graphics: Improve signature of native platform initialization method
+    Use an interface to provide the functionality needed by native
+    platforms.
+
+  [ Eleni Maria Stea ]
+  * Test GBMBufferAllocatorTest.bypass_disables_via_environment
+    overrides the MIR_BYPASS env variable, causing other tests that use
+    the MIR_BYPASS to fail when we run the unit-tests with --
+    gtest_repeat=N, N>1. Set back the MIR_BYPASS env. var. (LP:
+    #1238000)
+
+  [ Kevin DuBois ]
+  * fix: lp 1239577 TestClientIPCRender (an android-only gfx driver
+    test) was hanging due to changes in signal handling. refactor the
+    test, changing the cross-process sync mechanism so it doesn't use
+    sigcont. (LP: #1239577)
+  * graphics: android: eliminate one of the two DisplayBuffers. both
+    hwc/gpu displays use the same displaybuffer now. .
+
+  [ Daniel d'Andrada ]
+  * Add InputReader performance test.
+
+  [ Alan Griffiths ]
+  * logging: correct component tag in connector report.
+  * client: fix hang(s) in client API when server dies. (LP: #1227743)
+  * Fix failing acceptance-test:
+    ServerShutdown/OnSignal.removes_endpoint_on_signal (LP: #1237710)
+    Avoid fatal_signal_cleanup getting caught in a loop restoring itself
+    and then re-entering itself. This could happen in some permutations
+    of acceptance-tests where run_mir is entered with
+    fatal_signal_cleanup already set up from previous tests' server
+    instances. (LP: #1237710)
+  * CMake: remove creation of link to non-existent file.
+  * shared: some utility functions to provide some consistent ways to
+    use RAII and application of these functions to some code that has
+    had RAII related discussions recently.
+  * config: separate out the configuration options from the
+    configuration builder.
+  * config: ensure USC can access
+    DefaultConfigurationOptions::parse_options (LP: #1244192) (LP:
+    #1244192)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1161
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Oct 2013 02:04:31 +0000
+
+mir (0.0.15+13.10.20131014-0ubuntu2) trusty; urgency=low
+
+  * No change rebuild for Boost 1.54 transition.
+
+ -- Dmitrijs Ledkovs <xnox@ubuntu.com>  Mon, 21 Oct 2013 15:06:19 +0100
+
+mir (0.0.15+13.10.20131014-0ubuntu1) saucy; urgency=low
+
+  [ Kevin Gunn ]
+  * bump version 0.0.15
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1133
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Oct 2013 23:55:33 +0000
+
+mir (0.0.14+13.10.20131011-0ubuntu1) saucy; urgency=low
+
+  [ thomas-voss ]
+  * Clean up duplicate instances of the valid connections set. Remove
+    the static instances from the header file. (LP: #1238312) Requested
+    to be merged directly to lp:mir by didrocks, tvoss. (LP: #1238312)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1097
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Oct 2013 06:59:30 +0000
+
+mir (0.0.14+13.10.20131010-0ubuntu1) saucy; urgency=low
+
+  [ Colin Watson ]
+  * Don't build-depend on valgrind on arm64 for now, as it is not yet
+    ported there.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1095
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 10 Oct 2013 01:17:01 +0000
+
+mir (0.0.14+13.10.20131009.4-0ubuntu1) saucy; urgency=low
+
+  [Kevin Gunn]
+  * bump version to 0.0.14
+
+  [ Robert Carr ]
+  * Hold ms::Surface alive from msh::Surface, and remove the explicit
+    throw calls. This way holding a shared_ptr to msh::Surface becomes
+    safe (as long as you drop it eventually!). (LP: #1234609). (LP:
+    #1234609)
+
+  [ Alan Griffiths ]
+  * client: use lock_guard as it is simpler than unique_lock. (fix for
+    mallit) frontend: Remove the endpoint first when shutting down.
+    Fixes bug lp#1235159. (LP: #1235159)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1093
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 09 Oct 2013 21:57:59 +0000
+
+mir (0.0.13+13.10.20131003-0ubuntu1) saucy; urgency=low
+
+  [ Kevin Gunn ]
+  * bump version to 0.0.13
+
+  [ Daniel d'Andrada ]
+  * Fix for LP#1233944 Fixes the Mir-side of bug
+    https://bugs.launchpad.net/mir/+bug/1233944 Event files are first
+    created with root:root permissions and only later udev rules are
+    applied to it, changing its permissions to root:android-input and
+    therefore making it readable by unity8-mir in short: Retry opening a
+    file when its permissions change as it might be readable now. (LP:
+    #1233944)
+
+  [ Robert Carr ]
+  * Fix for LP#1233944 Fixes the Mir-side of bug
+    https://bugs.launchpad.net/mir/+bug/1233944 Event files are first
+    created with root:root permissions and only later udev rules are
+    applied to it, changing its permissions to root:android-input and
+    therefore making it readable by unity8-mir in short: Retry opening a
+    file when its permissions change as it might be readable now. (LP:
+    #1233944)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1089
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 03 Oct 2013 06:34:41 +0000
+
+mir (0.0.12+13.10.20131001.1-0ubuntu1) saucy; urgency=low
+
+  [ Michael Terry ]
+  * merge latest dev branch.
+
+  [ Kevin DuBois ]
+  * merge latest dev branch.
+
+  [ Daniel d'Andrada ]
+  * merge latest dev branch.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1086
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Oct 2013 10:04:25 +0000
+
+mir (0.0.12+13.10.20130926.1-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Bump version to 0.0.12
+
+  [ Alexandros Frantzis ]
+  * tests: Fix compiler warning about maybe-uninitialized struct member
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1084
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 26 Sep 2013 08:39:29 +0000
+
+mir (0.0.11+13.10.20130924.1-0ubuntu1) saucy; urgency=low
+
+  [ kg ]
+  * bump version for ABI break (LP: #1229212)
+
+  [ Robert Ancell ]
+  * Allow an application to override the options being populated.
+  * Pass the program options to parse_options().
+  * Add missing include for std::cerr.
+  * Report when paused and resumed via configuration. (LP: #1192843)
+  * Add missing directory separator when searching for a config file to
+    parse.
+
+  [ Kevin Gunn ]
+  * change test timeouts and fix fence.
+
+  [ Alexandros Frantzis ]
+  * examples: Only check key information for key events This fixes a
+    memory error reported by valgrind for examples that use eglapp.
+  * shell: Apply the base configuration on a hardware change only if no
+    per-session configuration is active.
+  * graphics: consolidated fixed for nested code and examples on android
+    stack.
+
+  [ Eleni Maria Stea ]
+  * graphics: Pull in Eleni's changes to get the DRM fd to init GBM from
+    the host Mir instance.
+
+  [ Didier Roche ]
+  * remove (unused in the ppa as we have libmirserver3) hack to force
+    depending and building against the exact same version.
+
+  [ Robert Carr ]
+  * Add DPMS configuration API. (LP: #1193222)
+  * Deduplicate mtd::NullDisplayConfig and
+    mtd::NullDisplayConfiguration.
+  * Fix multiple internal client surfaces on android. (LP: #1228144)
+  * change test timeouts and fix fence.
+  * Add DPMS API and GBM/android impls.
+
+  [ Kevin DuBois ]
+  * platform, graphics: support nested (mir-on-mir) rendering on the
+    Android platform.
+
+  [ Michael Terry ]
+  * Change how Mir chooses socket locations to make it simpler for a
+    nested-Mir world, by using MIR_SOCKET as the host socket if no other
+    host socket is provided and passing MIR_SOCKET on to any children.
+    Also, change --nested-mode to --host-socket for clarity and add --
+    standalone to force standalone mode.
+
+  [ Daniel d'Andrada ]
+  * android-input housekeeping - Updated README - Removed some dead
+    code.
+
+  [ Daniel van Vugt ]
+  * Add DPMS configuration API. (LP: #1193222)
+  * Add a "flags" field to MirBufferPackage so that clients can find out
+    if the buffer they've been given is scanout-capable. This is
+    normally something a client should never need to know. However there
+    are two specialized cases where it's required to fix bugs in the
+    intel and radeon X drivers:   LP: #1218735, LP: #1218815 The intel
+    fix (already landed) contains a hack which will be updated after
+    this branch lands. (LP: #1218815, #1218735)
+  * GBM: Ensure that we don't create scanout buffers if bypass is
+    explicitly disabled from the environment. (LP: #1227133) . (LP:
+    #1227133)
+
+  [ Alan Griffiths ]
+  * graphics: Pull in Eleni's changes to get the DRM fd to init GBM from
+    the host Mir instance.
+  * input: Separate the code for dispatching input from that reading it.
+  * graphics: Hook up nested surfaces events to input.
+  * input: Connect nested input relay to input dispatch.
+  * graphics: Simplify NativeAndroidPlatform out of existence.
+  * tests: Fixes to get the tests "passing" on android/arm stack. (LP:
+    #1226284)
+  * graphics: consolidated fixed for nested code and examples on android
+    stack.
+  * examples: add command-line options to examples so the Mir server
+    connection can be selected.
+  * change test timeouts and fix fence.
+  * client: Add client side support for connecting via an existing FD.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Revert revision 1054 ABI-change (the libmirclient3 one), which seems
+    to cause a lot of problems.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1081
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 24 Sep 2013 06:04:59 +0000
+
+mir (0.0.10+13.10.20130904-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * fix lp:1220441 (a test for android display ID was not updated). (LP:
+    #1220441)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1051
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 04 Sep 2013 06:04:46 +0000
+
+mir (0.0.10+13.10.20130903-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * SwitchingBundle: Simplify and clarify guarantees that
+    compositor_acquire always has a buffer to return without blocking or
+    throwing an exception. The trade-off is that to enforce the
+    guarantee we need to permanently reserve one buffer for compositing.
+    This reduces the flexibility of SwitchingBundle a little, such that
+    minimum nbuffers is now 2. This was originally requested by
+    Alexandros, as the potential throw concerned him. Although, it was
+    logically guaranteed to never happen for other reasons. The second
+    reason for doing this is to eliminate recycling logic, which while
+    safe and correct, was quite confusing. So this change further proves
+    that that logic (now removed) is not to blame for frame ordering
+    bugs. .
+
+  [ Christopher James Halse Rogers ]
+  * Synthesise an unfocused event on destruction of a focused window We
+    probably need to rethink focus entirely, but this is an incremental
+    improvement that I need.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1049
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 03 Sep 2013 14:04:56 +0000
+
+mir (0.0.10+13.10.20130902-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * graphics: tidy up the roles and responsibilities of nested classes.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1046
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 02 Sep 2013 18:05:02 +0000
+
+mir (0.0.10+13.10.20130830.1-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * config, input: make nested::HostConnection available in
+    input::NestedInput.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1044
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 30 Aug 2013 18:04:58 +0000
+
+mir (0.0.10+13.10.20130830-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Dramatically improved multi-monitor frame synchronization, using a
+    global frame count equivalent to the highest refresh rate of all
+    monitors. This is much more reliable than the old logic which was
+    based on timers. This fixes LP: #1210478. (LP: #1210478)
+  * Remove dead code: surfaces::Surface::compositor_buffer() It's
+    unused. Though I suspect in future we might or should go back to
+    using it instead of accessing the buffer stream directly (r856). .
+
+  [ Alan Griffiths ]
+  * graphcs, config: make the nested HostConnection available in
+    configuration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1042
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 30 Aug 2013 10:04:58 +0000
+
+mir (0.0.10+13.10.20130829.2-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * eglapp: Add a new option -oN to force the surface placement onto
+    output N. Unfortunately we haven't yet written any tool to tell you
+    what your output IDs are.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1038
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 18:05:29 +0000
+
+mir (0.0.10+13.10.20130829.1-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * config, input: default_android_input_configuration.cpp should only
+    use public headers.
+  * config, input: Stubbed version of input for nested mir.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1036
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 14:05:26 +0000
+
+mir (0.0.10+13.10.20130829-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Add "composition bypass" support, whereby fullscreen surfaces are
+    allowed to go straight to the display hardware without being
+    composited at all, hence avoiding the overhead of any OpenGL or
+    texturing where possible. Hardware support: intel: Excellent radeon:
+    Good, but REQUIRES kernel 3.11.0 nouveau: Good, but REQUIRES kernel
+    3.11.0 android: No bypass implemented yet. (LP: #1109963)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1033
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 10:04:53 +0000
+
+mir (0.0.10+13.10.20130828.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * I've noticed some confusion in the community around the purposes of
+    the mir_demo_* binaries. For example: - Users expected
+    mir_demo_client to do something. - Users expected mir_demo_server to
+    be useful, when they would get more use from mir_demo_server_shell.
+    - Users thought mir_demo_client_{un}accelerated were the only
+    examples of {un}accelerated clients. This proposal renames
+    mir_demo_client_* to more accurately describe what they are and what
+    they do. .
+
+  [ Alan Griffiths ]
+  * graphics: make nested code compatable with "bypass" branch.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1031
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Aug 2013 22:05:08 +0000
+
+mir (0.0.10+13.10.20130828-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * graphics.nested: sketch out NestedOutput implementation.
+
+  [ Eleni Maria Stea ]
+  * removed the struct NativeGBMPlatform from gbm_platform.cpp and added
+    a NativeGBMPlatform class instead.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1028
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Aug 2013 10:04:57 +0000
+
+mir (0.0.10+13.10.20130827.1-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * ipc: add a protocol version to the wire protocol so that we can bump
+    it in future.
+  * graphics::nested: Handling of output configuration changes.
+  * graphics.nested: Hookup NestedDisplay to display change
+    notifications.
+
+  [ Daniel van Vugt ]
+  * Introducing mir_demo_client_progressbar. It's pretty boring;
+    designed to simulate key repeat scrolling in a terminal, as an aid
+    for tracking down bug 1216472. . (LP: #1216472)
+
+  [ Eleni Maria Stea ]
+  * changed the GBMBufferAllocator constructor and class to use the
+    gbm_device instead of the GBMPlatform to remove the dependency from
+    the mg::Platform interface - this way we can use the
+    GBMBufferAllocator with the NativeGBMPlatform (nested mir).
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1025
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 27 Aug 2013 18:04:47 +0000
+
+mir (0.0.10+13.10.20130827-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Allow the Mir server socket to be set with the MIR_SOCKET enviroment
+    variable.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1019
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 27 Aug 2013 06:04:57 +0000
+
+mir (0.0.10+13.10.20130826.1-0ubuntu1) saucy; urgency=low
+
+  [ Christopher James Halse Rogers ]
+  * Fix server-side tracking of client buffers When the server knows the
+    client has a given buffer cached it only needs to send the BufferID
+    rather than the full IPC package. While this is an optimisation,
+    it's also required for correctness - the client will not clean up
+    fds for buffers it has cached, so if the server sends a full IPC
+    package for a buffer the client knows about any buffer fds leak. The
+    buffer cache is per-surface on the client side, but was per-session
+    on the server side. This meant that the server did not accurately
+    track the client's buffers, resulting in it sending unexpected fds
+    that the client then leaked. Fix this by making the buffer tracker
+    per-surface server-side.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1017
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Aug 2013 14:04:34 +0000
+
+mir (0.0.10+13.10.20130826-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Fix uninitialized fields causing strange exceptions in some clients
+    such as fingerpaint and multiwin since r991. (LP: #1215754) The
+    uninitialized field output_id was only introduced in r991. Of
+    course, giving it an invalid value should not cause such wacky
+    exceptions. I'll log a bug to improve the error checking separately.
+    (LP: #1215754)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1015
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Aug 2013 04:52:13 +0000
+
+mir (0.0.10-0ubuntu1) saucy; urgency=low
+
+  * New release
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 26 Aug 2013 11:36:02 +1200
+
+mir (0.0.9+13.10.20130825.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Disambiguate an exception message which could come from three
+    places: Output has no associated crtc with more rich and meaningful
+    information: Output <NAME> has no associated CRTC to <ACTION> on.
+
+  [ Robert Carr ]
+  * SessionMediator must hold only a weak reference to the session. (LP:
+    #1195089)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1012
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 14:04:38 +0000
+
+mir (0.0.9+13.10.20130825-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Add whitespace to prevent errors in non -fpermissive compilations.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1009
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 10:05:08 +0000
+
+mir (0.0.9+13.10.20130823.3-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * mir: std::hash support for mir::IntWrapper<> .
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1007
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 22:04:51 +0000
+
+mir (0.0.9+13.10.20130823.2-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * * Implement lifecycle events interface.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1005
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 18:04:51 +0000
+
+mir (0.0.9+13.10.20130823.1-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Send focus notifications to client. (LP: #1196744, #1192843,
+    #1102757, #1201435)
+
+  [ Robert Carr ]
+  * Send focus notifications to client. (LP: #1196744, #1192843,
+    #1102757, #1201435)
+
+  [ Alan Griffiths ]
+  * graphics: spike of NestedDisplayConfiguration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1003
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 14:05:22 +0000
+
+mir (0.0.9+13.10.20130823-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * event_sender.cpp: I've never seen this before. So it should not have
+    my name on it.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1000
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 06:05:00 +0000
+
+mir (0.0.9+13.10.20130822.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Revert the grey background. It's too visually intrusive while we
+    don't yet have the ability to give a shell any control over
+    compositing (and override GLRenderer::clear) like it should
+    eventually have. (LP: #1215322). (LP: #1215322)
+
+  [ Alan Griffiths ]
+  * graphics: Fills in some more bits of NestedDisplay.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 998
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 14:04:56 +0000
+
+mir (0.0.9+13.10.20130822-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * eglplasma: Don't include the alpha component in gradient
+    calculations. We want the whole surface to be opaque. (LP:
+    #1215285). (LP: #1215285)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 995
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 10:05:21 +0000
+
+mir (0.0.9+13.10.20130821.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Make compositor::Scene lockable. This allows us to do multiple
+    operations on a scene atomically using a nice simple:
+    std::lock_guard<Scene> lock(scene); In the short term, this is
+    required by the bypass branch. In the longer term it will also be
+    useful if/when Scene gets an iterator.
+  * Check a connection is valid (not NULL) before trying to dereference
+    it. Such a NULL dereference led to worrying valgrind errors seen in
+    LP: #1212516. (LP: #1212516)
+
+  [ Alan Griffiths ]
+  * graphics: hard-wire nested Mir to create an output for every host
+    output.
+
+  [ Alexandros Frantzis ]
+  * Allow clients to specify the output they want to place a surface in.
+    Only fullscreen placements are supported for now, but the policy is
+    easy to change. This MP breaks the client API/ABI, so I bumped the
+    client ABI version. I took this opportunity to rename some fields in
+    MirDisplayConfiguration to improve consistency. .
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 993
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 21 Aug 2013 14:05:07 +0000
+
+mir (0.0.9+13.10.20130821-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Release the mir surfaces when done in multiwin demo.
+  * Clean up config->cards when were are deleting the display config.
+
+  [ Alexandros Frantzis ]
+  * server: Handle both user initiated and hardware display changes with
+    MediatingDisplayChanger Enhance MediatingDisplayChanger to handle
+    both user initiated display changes and hardware changes, by making
+    it implement two interfaces for the two responsibilities
+    (mg::DisplayChanger, mf::DisplayChanger).
+  * shell: Notify sessions when the display configuration changes This
+    patchset implements client notifications for display configuration
+    changes. It also adds a mir_demo_client_display_config example which
+    can be used to test and demo client initiated display configuration
+    changes. Use of the example uncovered some issues that are also
+    fixed by this patchset (see individual commits for more info).
+  * shell: Add infrastructure for emitting and handling session related
+    events.
+  * shell: Support per-session display configurations This MP adds
+    support for per-session display configurations, i.e., configurations
+    that are active only when the client that submitted them has the
+    focus. mir_connection_apply_display_config() now changes the session
+    display configuration instead of the base/global one.
+
+  [ Alan Griffiths ]
+  * graphics::nested: sketch out some more of the nested mir
+    implementation.
+  * tests: Workaround for test timeout under valgrind. (LP: #1212518)
+  * config: use the DisplayServer to hold ownership of system
+    components, not the DefaultServerConfiguration.
+  * graphics: Start on the NativePlatform interface.
+  * graphics: Split the output state out of the NestedDisplay class.
+
+  [ Daniel van Vugt ]
+  * setup-android-dependencies.sh: Update for saucy flipped phablet
+    images.
+  * Give Mir a grey background by default, so you can see which monitors
+    it is using.
+
+  [ Eleni Maria Stea ]
+  * graphics::nested: sketch out some more of the nested mir
+    implementation.
+  * nested_platform.cpp functions.
+
+  [ Robert Carr ]
+  * Pass session through placement strategy.
+
+  [ Christopher James Halse Rogers ]
+  * Add a little extra debugging API.
+  * Add missing mutex around display config call.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 988
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 21 Aug 2013 06:04:49 +0000
+
+mir (0.0.9+13.10.20130813-0ubuntu1) saucy; urgency=low
+
+  [ Daniel d'Andrada ]
+  * Add mir_surface_type_inputmethod enum value.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 970
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 13 Aug 2013 02:04:54 +0000
+
+mir (0.0.9+13.10.20130812.4-0ubuntu1) saucy; urgency=low
+
+  [ Alexandros Frantzis ]
+  * server,client: Add type, preferred mode and max. simultaneous
+    outputs information to the display configuration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 968
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 18:05:30 +0000
+
+mir (0.0.9+13.10.20130812.3-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * eglapp: Add sizing parameters: -f (fullscreen) and -s WxH (specific
+    size).
+
+  [ Alan Griffiths ]
+  * frontend, examples, tests: provide a utility to adapt
+    frontend::Surface to the graphics::InternalSurface interface.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 966
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 14:04:37 +0000
+
+mir (0.0.9+13.10.20130812.2-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Remove apport hook - we're not installing it and libraries don't
+    have hooks anyway. Apps that use libmirserver will have hooks
+    (unity-system-compositor, unity-mir). (LP: #1204284)
+
+  [ Alexandros Frantzis ]
+  * protobuf: Pass a DisplayConfiguration submessage with the
+    Connection.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 963
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 11:04:00 +0000
+
+mir (0.0.9+13.10.20130812.1-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Fix libmirserver dependent packages requiring the exact version - it
+    hadn't been updated for the soname change in revision 948. (LP:
+    #1210811)
+
+  [ Alan Griffiths ]
+  * platform: workaround link errors on i386/g++ 4.8.1. (LP: #1208774)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 960
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 06:04:36 +0000
+
+mir (0.0.9-0ubuntu1) saucy; urgency=low
+
+  * New release
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 12 Aug 2013 09:19:43 +1200
+
+mir (0.0.8+13.10.20130810-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Remove documentation on the system-compositor-testing PPA now
+    everything is in main/universe in saucy.
+
+  [ Kevin DuBois ]
+  * Add an object for sending display config change messages to all
+    connected clients (globally).
+
+  [ Daniel van Vugt ]
+  * Fix the compositor side of lag observed between input events and the
+    screen. This is half the fix for LP: #1199450. The other half of the
+    fix is to resolve client buffers arriving out of order, which has
+    not been fully diagnosed but is known to be resolved by the "switch"
+    branch. . (LP: #1199450)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 956
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 10 Aug 2013 02:04:55 +0000
+
+mir (0.0.8+13.10.20130809.4-0ubuntu1) saucy; urgency=low
+
+  [ Michael Terry ]
+  * Pass on the owning Session when creating Surfaces. (LP: #1200035)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 952
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 18:05:05 +0000
+
+mir (0.0.8+13.10.20130809.3-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Simplify and generalize buffer swapping to support arbitrary numbers
+    of: - buffers - compositors - clients This is a unified N-buffers
+    algorithm which supports any positive number of buffers, as well as
+    dynamically switching between synchronous and asynchronous
+    behaviour. So it does everything the existing code does and more.
+    The key requirement is to support an arbitrary number of (different)
+    simultaneous compositor acquisitions, as is needed for bypass
+    support (coming soon). This then leads to the requirement that a
+    compositor and a snapshot buffer should be acquired differently.
+    Because a snapshot should never consume frames, only observe them.
+    On the other hand, a compositior acquire must consume a frame (if
+    available) so as to guarantee correct ordering when more than one
+    are acquired simultaneously in bypass mode. Also fixes LP: #1199717
+    and is half the fix for LP: #1199450. (LP: #1199450, #1199717)
+
+  [ Alan Griffiths ]
+  * doc, tools: update instructions for "flipped" image.
+
+  [ Christopher James Halse Rogers ]
+  * Split out unversioned Mir platform package to fix upgrades across
+    libmirserver SONAME bumps.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 950
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 11:14:41 +0000
+
+mir (0.0.8+13.10.20130808.2-0ubuntu1) saucy; urgency=low
+
+  [ Alexandros Frantzis ]
+  * gbm: Don't try to allocate buffers with unsupported formats. (LP:
+    #1124948)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 946
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 08 Aug 2013 15:18:56 +0000
+
+mir (0.0.8+13.10.20130808.1-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * VT switch on alt+ctrl+Fn.
+  * Add missing iostream import. This was accidentally removed in
+    revision 939. Local builds and CI builds both seem to have treated
+    this as a warning; debian package builds as an error. Fixes
+    packaging builds.
+
+  [ Robert Carr ]
+  * Add an interface by which the shell may be notified of and interfere
+    with surface configuration requests.
+
+  [ Alexandros Frantzis ]
+  * Bring back revision 931 with a fix for the crash it caused (LP:
+    #1209053). (LP: #1209053)
+  * examples: Quit the example servers and standalone programs when
+    Ctrl+Alt+Backspace is pressed.
+
+  [ Maarten Lankhorst ]
+  * Re-introduce console support, and ignore control characters. (LP:
+    #1102756, #1195509)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 944
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 08 Aug 2013 05:03:26 +0000
+
+mir (0.0.8+13.10.20130807.3-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * platform: Install and use mirplatform headers. (LP: #1209104)
+
+  [ Daniel van Vugt ]
+  * Revert r931. It is causing instant and widespread crashes (LP:
+    #1209053). (LP: #1209053)
+
+  [ Alan Griffiths ]
+  * platform: remove spurious ${MIR_COMMON_PLATFORM_LIBRARIES}.
+  * platform: Install and use mirplatform headers. (LP: #1209104)
+
+  [ Christopher James Halse Rogers ]
+  * Fix multihead API usage in EGL example clients.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 937
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 07 Aug 2013 16:24:16 +0000
+
+mir (0.0.8+13.10.20130807.1-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Add support for sending display change events to the client to the
+    api/protocol.
+
+  [ Ricardo Salveti de Araujo ]
+  * Just use libhardware instead of libhybris when building mir (avoid
+    conflicts with egl/gles) .
+
+  [ Alan Griffiths ]
+  * graphics: Split off platform abstraction as a shared library.
+  * graphics: Split off platform abstraction as an LGPL shared library.
+
+  [ Alexandros Frantzis ]
+  * display_server: Don't configure the display while the display server
+    is paused Don't configure the display while the display server is
+    paused. Postpone the configuration until the display server resumes.
+  * server: Make EventFilter customization easier.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 932
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 07 Aug 2013 06:10:58 +0000
+
+mir (0.0.8+13.10.20130806-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Add protobuf message and api for requesting display configuration
+    change. Requests to change the display are authorized by the shell
+    authorizer .
+
+  [ Alan Griffiths ]
+  * 1. establish a MirConnection during the NestedPlatform
+    initialization 2. check that the socket filename that is used by the
+    nested mir to accept connections is not the same with the host mir's
+    socket filename 3. release the connection when the NestedPlatform is
+    deleted.
+
+  [ Eleni Maria Stea ]
+  * 1. establish a MirConnection during the NestedPlatform
+    initialization 2. check that the socket filename that is used by the
+    nested mir to accept connections is not the same with the host mir's
+    socket filename 3. release the connection when the NestedPlatform is
+    deleted.
+
+  [ Colin Watson ]
+  * The upcoming arm64 architecture is called arm64, not armel64.
+
+  [ Alexandros Frantzis ]
+  * gbm,compositor: Misc multimonitor related fixes. (LP: #1208354)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 925
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 06 Aug 2013 00:02:45 +0000
+
+mir (0.0.8+13.10.20130803-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * fingerpaint: Paint on single clicks, and not just drags. This helps
+    in testing input/buffer lag issues ;).
+
+  [ Robert Carr ]
+  * Replace SingleVisibilityFocusMechanism with a simpler and more
+    flexible mechanism based around raising the surface.
+  * Do not target hidden surfaces for pointer events.
+
+  [ Alan Griffiths ]
+  * graphics: Break the dependency of graphics platforms on MainLoop.
+
+  [ Christopher James Halse Rogers ]
+  * Fix mir_connection_get_display_info There's no guarantee that
+    config->displays[0] will be valid, and indeed it's always invalid in
+    all my tests. This causes a segfault when trying to dereference the
+    current mode of an inactive display.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 920
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 03 Aug 2013 00:02:40 +0000
+
+mir (0.0.8+13.10.20130802-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Fix crashing demo clients, since the introduction of multimonitor.
+    (LP: #1207145). (LP: #1207145)
+  * tools/install_on_android.sh: Don't upload to/test in Android
+    directories. We don't need to now that the phablet images are
+    flipped. /tmp is much safer. Also don't hardcode a particular ABI
+    (which was wrong). .
+
+  [ Alan Griffiths ]
+  * graphics, compositor: Move compositor/buffer_properties.h and
+    compositor/graphic_buffer_allocator.h to graphics.
+  * graphics, compositor: Move buffer_ipc_packer.h to graphics.
+  * graphics/gbm: negate negative error codes returned by drm so they
+    can be interpreted by boost.
+
+  [ Alexandros Frantzis ]
+  * examples: Add option to specify the display configuration policy to
+    use We offer three display configuration policies to all the
+    examples that use configurations based on
+    mir::example::ServerConfiguration: 1. clone (default) 2. sidebyside
+    (outputs are placed side-by-side in the virtual space, in increasing
+    connector id order) 3. single (only the first, in connector id
+    order, is used).
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 914
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 02 Aug 2013 00:02:52 +0000
+
+mir (0.0.8+13.10.20130801-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * connect multi-display info from the display, to the client by
+    improving SessionMediator.
+  * prepare for global event sending (like display resizing) by
+    separating the ability to send messages into distinct classes that
+    is used in the client request service loops clean up constructors
+    that aren't used, functions that aren't needed as well.
+
+  [ Robert Carr ]
+  * Support monitor input channels for the shell.
+
+  [ Eleni Maria Stea ]
+  * stub Platform functions to NestedPlatform replaced
+    create_nested_platform with a call to the NestedPlatform constructor
+    in the default_server_configuration.cpp.
+
+  [ Alexandros Frantzis ]
+  * gbm: Handle the cursor properly with multiple monitors.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 907
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 01 Aug 2013 00:02:49 +0000
+
+mir (0.0.8+13.10.20130731.2-0ubuntu1) saucy; urgency=low
+
+  [ Dmitrijs Ledkovs ]
+  * Use explicit boost-dev packages.
+
+  [ Alexandros Frantzis ]
+  * gbm: Support non-cloned display configurations.
+
+  [ Thomas Voß ]
+  * Adjust documentation to account for lightdm/packaging changes.
+  * Don't make Mir become a process group leader, to avoid CTRL-C
+    killing the X server.
+
+  [ Alan Griffiths ]
+  * test_framework: Provide boost exception diagnostics.
+  * graphics: Remove use of frontend::Surface from graphics interface &
+    implementation.
+
+  [ Daniel van Vugt ]
+  * Don't run Android commands which are no longer valid in flipped
+    phablet images. They will only kill your connection to the device.
+    (LP: #1206369). (LP: #1206369)
+  * Fix documentation to suit the new "flipped" phablet images. Also
+    remove extraneous comment which could cause copy/paste mistakes.
+
+  [ Eleni Maria Stea ]
+  * mir option --nested-mode <host-socket>.
+  * added a native platform interface in
+    include/server/mir/graphics/native_platform.h added a new static
+    library for the nested platform added some stub
+    create_native_platform and create_nested_platform functions to be
+    called when mir runs in nested mode.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 901
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 31 Jul 2013 12:55:57 +0000
+
+mir (0.0.8+13.10.20130730-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Use the soname in the filename of all the public libraries.
+    Explicityly set soname for libmirserver and libmirprotobuf.
+
+  [ Daniel van Vugt ]
+  * Separate MockBufferAllocator for reuse in other test cases.
+  * Silence noisy integration tests (Uninteresting mock function calls)
+    (LP: #1192618). (LP: #1192618)
+  * Distinguish between a buffer locked for composition vs snapshotting.
+    The difference will become very important with the introduction of
+    bypass. Stay tuned.
+
+  [ Alexandros Frantzis ]
+  * graphics, shell: move GLPixelBuffer to shell.
+  * compositor: Introduce and use a different DisplayBufferCompositor
+    object per non-cloned output.
+  * geometry: Use an closed-open representation for Rectangle end
+    points.
+
+  [ Thomas Voß ]
+  * Adjust the Process class to correctly trace child processes. This
+    should help a lot in avoiding/diagnosing races on armhf.
+
+  [ Kevin DuBois ]
+  * expand client api so that multiple MirDisplayInfo can be returned
+    for multimonitor situations.
+  * add a function to the client api to query the possible formats to
+    create a surface with.
+  * client: decouple MirConnection from MirEvent a bit. stop two-step
+    initialization of the client rpc channel.
+
+  [ Robert Carr ]
+  * Add surface lifecycle notification to the session listener.
+  * Build test_android_input_registrar.cpp.
+
+  [ Alan Griffiths ]
+  * graphics, shell: move GLPixelBuffer to shell.
+
+  [ Maarten Lankhorst ]
+  * Fixes LP: #1195509. (LP: #1195509)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 890
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 30 Jul 2013 00:03:17 +0000
+
+mir (0.0.8-0ubuntu1) saucy; urgency=low
+
+  * New release
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 22 Jul 2013 10:07:38 +1200
+
+mir (0.0.7+13.10.20130721ubuntu.unity.next-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Update debian/copyright for 3rd_party files. (LP: #1194073)
+  * update to xmir instructions.
+  * Put demos back into bin, not libexec. It's confusing, conflicts with
+    the documentation and makes it harder to run them.
+  * Add some XMir diagnostic and recovery documentation.
+  * Update docs to refer to saucy, not raring.
+  * Display command line options error when failed.
+  * Remove dead tag code in SessionManager.
+  * Remove dead code in ProtobufSocketCommunicator.
+  * Releasing 0.0.6
+  * Close the platform file descriptors on destruction of MirConnection.
+    (LP: #1198022)
+  * Remove libancilliary and implement required functionality directly.
+  * add xmir guide to debug.
+  * Only use a DRM device if it has connections. (LP: #1197708)
+  * Add instructions on how to compile Mesa and X.Org with Mir support.
+    (LP: #1193261)
+
+  [ Jussi Pakkanen ]
+  * Explicitly create output directory before running custom command.
+
+  [ Alexandros Frantzis ]
+  * graphics: Implement GLBufferPixels to extract buffer pixels using
+    GL.
+  * lttng: Install tracepoint provider libraries in private lib
+    subdirectory.
+  * surfaces: Fix Surface::flag_for_render() Fixes lp:1195105. (LP:
+    #1195105)
+  * compositor: Manage the rendering target properly in the compositing
+    threads.
+  * shell: Implement Session::take_snapshot() method.
+  * graphics: Add Display::configure() method.
+  * server: Support handlers for file descriptors in MainLoop.
+  * graphics: Reconfigure the Display when the display configuration
+    changes.
+  * tests: Fix race condition in MockDRM leading to memory errors
+    Previously, because we allocated and returned memory in two step,
+    using a unique storage point to hold the allocated memory, there was
+    the potential for memory errors (e.g. double frees) in multithreaded
+    tests (like
+    drm_close_not_called_concurrently_on_ipc_package_destruction). (LP:
+    #1197408)
+  * server: Make symbols of loaded SharedLibraries available globally.
+  * gbm: Provide different functions for validating server and client
+    Mesa EGL native displays. (LP: #1177902)
+  * gbm: Update mesa egl native display validation function names Update
+    mesa egl native display validation function names to match the ones
+    used by Mesa.
+  * graphics: Introduce a DisplayConfigurationPolicy to set up
+    DisplayConfigurations.
+  * geometry: Add Rectangles class to hold a collection of rectangles.
+  * android: Separate Display and DisplayBuffer implementations.
+  * graphics: Fall back to reading RGBA pixel data in GLPixelBuffer if
+    BGRA is not supported.
+  * Replace ViewableArea with more fitting interfaces.
+
+  [ Eleni Maria Stea ]
+  * minor fix of typo in the example: mir_client_accelerated.
+  * fixed invalid C++ code, which was using a non-standard gcc language
+    extension, for named initialization of structure elements.
+
+  [ Stephen M. Webb ]
+  * disable running the integration test suite on arm architecture
+    during the packaging builds (lp: #1195265). (LP: #1195265, #1195260)
+
+  [ Didier Roche ]
+  * lttng: Install tracepoint provider libraries in private lib
+    subdirectory.
+  * build-dep on valgrind as it's used in integration tests. (LP:
+    #1195265)
+  * only build on archs we support.
+  * Don't build on powerpc.
+  * Disable unity armhf tests, they are failing the armhf build on
+    buildds.
+
+  [ Kevin DuBois ]
+  * unify advance_client_buffer and client_buffer() interfaces on
+    ms::Surface. change the ms::Surface class so that it does not hold
+    the client resource on behalf of the clients, the frontend or native
+    windows do.
+  * android drivers have an interface for the drivers to obtain a strong
+    reference to the native window type. Allow the drivers to acquire
+    this strong reference to the buffer backing their texture/fbo.
+  * Activate sending a "swapinterval" signal over IPC. Add client api
+    for software clients to request different swapintervals.
+    (eglSwapInterval is not glued together just yet) Currently only
+    swapinterval of 0 or 1 is supported. (LP: #1130553)
+  * link eglSwapInterval hook in gbm driver to the ipc message to enable
+    swapinterval0. This makes eglSwapInterval (1) or (0) work for gbm
+    ipc clients only.
+  * fix: lp:1196647 (test bug results in crash in android unit tests)
+    bug was just in test code on android. (LP: #1196647)
+  * fix: lp1192742 by cleaning up FD's when an android client
+    unregisters its native_handle_t. (LP: #1192742)
+  * saucy's default boost version is 1.53, yet the cross compile script
+    was still on 1.49. switch script to 1.53.
+  * begin cleanup of ms::Surface by breaking "ms::Surface : public
+    mi::SurfaceTarget" inheritance the input system was using the
+    surface object (specifically the std::weak_ptr<mi::SurfaceTarget> to
+    the ms::Surface) as its 'key' for coordinating the surfaces. This
+    bound the input system tightly to the surface stack, which prevented
+    any proxying of ms::Surface and made the lifetime of ms::Surface
+    tangled. This change breaks this dependency by making ms::Surface
+    own an InputChannel, instead of it being a SurfaceTarget.
+  * remove google mock from the internal source tree. Rather, use the
+    google-mock package and build the source externally. (LP: #1185265,
+    #1194017)
+  * disable running the integration test suite on arm architecture
+    during the packaging builds (lp: #1195265). (LP: #1195265, #1195260)
+  * break ms::Surface : public mg::Renderable dependency, paving the way
+    for a more sensible interface surrounding our ms::Surface object.
+    Also ensure that graphics data is maintained synchronously. Remove
+    most state from ms::Surface.
+  * fixes: lp:1200782 by freeing fd's associated with buffer package.
+    (LP: #1200782)
+
+  [ Kevin Gunn ]
+  * this is to change the doc's fpr preinstalled binaries to reference
+    using the system-compositor-testing ppa.
+  * update to xmir instructions.
+  * add xmir guide to debug.
+
+  [ Alan Griffiths ]
+  * graphics, config: Dynamically load the graphics platform.
+  * config: allow graphics platform library to be selected by command-
+    line/config. (LP: #1118909)
+  * docs: A move towards house style for the webpages.
+  * Make gmock and umockdev dependencies of the tests, clean up, and
+    make not building tests an option. (LP: #1196987)
+  * client: remove some unnecessary memory allocation, copying and
+    threading.
+  * frontend: Guard SessionMediator::session against race conditions.
+  * frontend: remove redundant and misleading comment.
+  * frontend: cut down memory allocations by pre-allocating and reusing
+    buffers.
+  * geometry: more tractable construction of objects. (LP: #1199756)
+  * tests: rework test to prevent test input events being missed before
+    handler is registered. (LP: #1200236)
+  * geometry: make geometry compound types easier to construct. (LP:
+    #1199756)
+  * doc: use house font and colors for coding guidelines.
+  * mir: Simpler IntWrapper that doesn't need type tags upfront.
+  * graphics, conpositor: Move dependencies of graphics platform into
+    graphics.
+  * graphics: Delete unused file -
+    include/server/mir/graphics/framebuffer_backend.h.
+  * graphics, compositor: Move the rendering interfaces and code to
+    compositor.
+  * graphics, compositor: move BufferBasic to graphics.
+  * graphics::gbm: delete unused headers.
+
+  [ Christopher James Halse Rogers ]
+  * Improve GBM platform's device probing, by actually making it probe
+    devices.
+  * Fix clearly-broken code, for which clang produced deliberately
+    broken output.
+  * Fix two issues caught by Clang's static analyser.
+  * I like clang's error messages. Let's keep Mir building on clang.
+  * Make libmirclient not aggressively signal-unsafe by blocking signals
+    on our IO thread. Fixes infinite loop in XMir (LP: #1199319). (LP:
+    #1199319)
+  * Document XMir drivers too.
+
+  [ Sebastien Bacher ]
+  * Small copyright fixes (lp: #1195647). (LP: #1195647)
+
+  [ Daniel van Vugt ]
+  * Cache the transformation matrix; only recalculate it when some part
+    of the transformation changes. (LP: #1193020) . (LP: #1193020)
+  * Don't pass a clang-only option to gcc. It will not understand and
+    cause build failure (LP: #1194385). (LP: #1194385)
+  * Fix build failure due to differing exception specifiers. noexcept
+    destructors should be enforced in derived classes if the base uses
+    them. (LP: #1194703). (LP: #1194703)
+  * Document thread safety pitfalls about client-side callbacks. .
+  * Fix mismatched destructor exception specifiers causing build failure
+    in gcc 4.7. Also fix struct/class mismatches that some compilers
+    will treat as an error. (LP: #1196415). (LP: #1196415)
+  * mir_demo_client_unaccelerated: Add an FPS count, and a "-n" option
+    to disable vsync (set swap interval to 0).
+  * mir_demo_client_egl*: Add a "-n" option to disable syncing to vblank
+    (hence to use swap interval == 0).
+  * Initial attempts at making the Mir client API thread safe.
+    Ordinarily you would not build locking into an API, however the fact
+    that Mir clients implicitly get multiple threads created for them
+    makes it important for the API itself to be automatically thread
+    safe. I've tried to avoid API changes, but adding a new function:
+    mir_wait_for_one was necessary. This is because mir_wait_for doesn't
+    work if multiple threads are waiting on the same thing
+    simultaneously. And the fact that waiting at all is optional means
+    we can't change the behaviour of mir_wait_for -- it must always wait
+    for all outstanding results (which is only safe in clients where the
+    waiting happens in a single thread). .
+  * Work around GCC issue 50043 which is causing build failures on
+    raring. (LP: #1199210) The gcc bug is only fixed in 4.8/saucy. (LP:
+    #1199210)
+  * MockDisplayConfigurationPolicy: Work around gcc-4.7 bugs causing
+    build failure on raring. (LP: #1200064). (LP: #1200064)
+  * Another workaround for gcc-4.7 bugs causing build failure. (LP:
+    #1200107). (LP: #1200107)
+  * buffer_swapper_spin.h: Remove dead code: initialize_queues.
+  * Remove unused interface surfaces::GraphicRegion It became unused
+    when Kevin's work landed in r856 yesterday. .
+  * Rename compositor::Renderables --> compositor::Scene What is a
+    "Renderables"? It's the interface by which we know the scene graph,
+    or the model of how all the surfaces relate to each other. Right,
+    then call it a scene graph... but the word "graph" might imply a
+    particular structure. And we don't want to imply such things in an
+    interface. So just call it "scene". That makes slightly more sense
+    than imagining what a "Renderables" (singular) is.
+  * Fix comments which mention incorrect namespaces for Buffer following
+    yesterday's landings.
+
+  [ Ricardo Mendoza ]
+  * Fix broken tests/unit-
+    tests/client/android/test_client_android_registrar.cpp due to unused
+    return value.
+
+  [ Thomas Voß ]
+  * Wait for vt to become active if we need to activate it.
+  * Remove disabling asio's epoll reactor implementation from the
+    package build flags.
+  * Introduce cmake options to be able to selectively switch acceptance,
+    integration and unit tests on/off. (LP: #1195265)
+
+  [ Thomi Richards ]
+  * Remove workaround for bug #1198022. (LP: #1198022)
+
+  [ Robert Carr ]
+  * Add raise method to surface stack.
+  * Remove cucumber and all references. (LP: #1194075)
+  * Add support for shaped input regions.
+  * Store MirMotionAction as integer due to usage of extra bits by
+    android input stack. (LP: #1197108)
+  * Fix obscurance of touch events according to stacking.
+  * Extract DefaultServerConfiguration::the_cursor_listener from
+    DefaultServerConfiguration::the_input_configuration. (LP: #1192916)
+  * Implement a connection authorization mechanism.
+  * Correct test_surface_stack.cpp ordering tests.
+  * Move the DepthId in surface creation to
+    msh::SurfaceCreationParameters.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 874 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 21 Jul 2013 00:03:59 +0000
+
+mir (0.0.7-0ubuntu1) saucy; urgency=low
+
+  * New release
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 15 Jul 2013 09:29:56 +1200
+
 mir (0.0.6-0ubuntu1) saucy; urgency=low
 
   * New release

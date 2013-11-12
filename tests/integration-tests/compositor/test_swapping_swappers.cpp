@@ -16,15 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "multithread_harness.h"
 
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
-#include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
 #include <future>
@@ -32,6 +29,7 @@
 #include <chrono>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -39,29 +37,15 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockBufferAllocator : public mc::GraphicBufferAllocator
-{
-    MockBufferAllocator()
-    {
-        using namespace testing;
-        ON_CALL(*this, alloc_buffer(_))
-            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
-    }
-    ~MockBufferAllocator() noexcept{}
-
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
-};
-
 struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        auto allocator = std::make_shared<MockBufferAllocator>();
-        auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
-        auto properties = mc::BufferProperties{geom::Size{geom::Width{380}, geom::Height{210}},
-                                          geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
-        switching_bundle = std::make_shared<mc::SwitchingBundle>(factory, properties);
+        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
+        auto properties = mg::BufferProperties{geom::Size{380, 210},
+                                          geom::PixelFormat::abgr_8888,
+                                          mg::BufferUsage::hardware};
+        switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;
@@ -88,9 +72,10 @@ TEST_F(SwapperSwappingStress, swapper)
     auto g = std::async(std::launch::async,
                 [this]
                 {
+                    unsigned long count = 0;
                     while(!client_thread_done)
                     {
-                        auto b = switching_bundle->compositor_acquire();
+                        auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
                     }
@@ -132,9 +117,10 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto g = std::async(std::launch::async,
                 [this]
                 {
+                    unsigned long count = 0;
                     while(!client_thread_done)
                     {
-                        auto b = switching_bundle->compositor_acquire();
+                        auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
                     }

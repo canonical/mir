@@ -24,6 +24,7 @@
 #include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
+#include "mir_test_framework/testing_client_configuration.h"
 
 #include <memory>
 #include <list>
@@ -32,18 +33,15 @@
 namespace mir
 {
 class DisplayServer;
+namespace options
+{
+class Option;
+}
 }
 
 namespace mir_test_framework
 {
 using namespace mir;
-
-struct TestingClientConfiguration
-{
-    virtual ~TestingClientConfiguration() = default;
-    // Code to run in client process
-    virtual void exec() = 0;
-};
 
 
 class TestingProcessManager
@@ -53,13 +51,15 @@ public:
     ~TestingProcessManager();
 
     void launch_server_process(TestingServerConfiguration& config);
-    void launch_client_process(TestingClientConfiguration& config);
+    void launch_client_process(TestingClientConfiguration& config,
+                               mir::options::Option const& test_options);
 
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
     Result shutdown_server_process();
     void kill_client_processes();
+    void terminate_client_processes();
     void run_in_test_process(std::function<void()> const& run_code);
 
 private:

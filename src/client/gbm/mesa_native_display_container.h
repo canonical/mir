@@ -22,6 +22,7 @@
 #include "../egl_native_display_container.h"
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/mesa/native_display.h"
 
 #include <unordered_set>
 #include <mutex>
@@ -30,9 +31,9 @@ namespace mir
 {
 namespace client
 {
-
 namespace gbm
 {
+
 class MesaNativeDisplayContainer : public EGLNativeDisplayContainer
 {
 public:
@@ -52,6 +53,9 @@ private:
     std::mutex mutable guard;
     std::unordered_set<MirEGLNativeDisplayType> valid_displays;
 };
+
+extern "C" int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);
+
 }
 }
 } // namespace mir

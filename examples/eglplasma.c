@@ -63,12 +63,12 @@ int main(int argc, char *argv[])
         "precision mediump float;                                \n"
         "uniform float theta;                                    \n"
         "varying vec2 texcoord;                                  \n"
-        "uniform vec4 low_color, high_color;                     \n"
+        "uniform vec3 low_color, high_color;                     \n"
         "                                                        \n"
-        "vec4 gradient(float x)                                  \n"
+        "vec3 gradient(float x)                                  \n"
         "{                                                       \n"
-        "    vec4 col;                                           \n"
-        "    const vec4 white = vec4(1.0, 1.0, 1.0, 1.0);        \n"
+        "    vec3 col;                                           \n"
+        "    const vec3 white = vec3(1.0, 1.0, 1.0);             \n"
         "    if (x < 0.333)                                      \n"
         "        col = x * low_color / 0.333;                    \n"
         "    else if (x < 0.666)                                 \n"
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
         "                cos(1.7 * v * cos(2.0 * t))             \n"
         "               ) / 3.0;                                 \n"
         "    float x = (us * vs + 1.0) / 2.0;                    \n"
-        "    gl_FragColor = gradient(x);                         \n"
+        "    gl_FragColor = vec4(gradient(x), 1.0);              \n"
         "}                                                       \n";
 
     const GLfloat vertices[] =
@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
     low_color = glGetUniformLocation(prog, "low_color");
     high_color = glGetUniformLocation(prog, "high_color");
     theta = glGetUniformLocation(prog, "theta");
-    glUniform4f(low_color, DARK_AUBERGINE, 1.0f);
-    glUniform4f(high_color, ORANGE, 1.0f);
+    glUniform3f(low_color, DARK_AUBERGINE);
+    glUniform3f(high_color, ORANGE);
 
     glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);

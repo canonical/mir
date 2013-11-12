@@ -25,9 +25,6 @@
 
 namespace mir
 {
-
-class MainLoop;
-
 namespace graphics
 {
 namespace gbm
@@ -39,7 +36,7 @@ public:
     UdevVideoDevices(udev* udev_ctx);
 
     void register_change_handler(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         std::function<void()> const& change_handler);
 
 private:

@@ -17,7 +17,9 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
+#include "mir/input/composite_event_filter.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -28,21 +30,25 @@
 #include <cstdio>
 #include <fcntl.h>
 
+namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 namespace
 {
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class NullRenderer : public mg::Renderer
+class NullRenderer : public mc::Renderer
 {
 public:
-    void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&)
+    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
+                                   mc::CompositingCriteria const&, ms::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed
@@ -52,7 +58,17 @@ public:
         std::this_thread::yield();
     }
 
-    void clear() {}
+    void clear(unsigned long) override {}
+};
+
+
+class NullRendererFactory : public mc::RendererFactory
+{
+public:
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    {
+        return std::unique_ptr<mc::Renderer>(new NullRenderer());
+    }
 };
 
 void null_surface_callback(MirSurface*, void*)
@@ -96,7 +112,9 @@ private:
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_blocked)
+using ServerShutdown = BespokeDisplayServerTestFixture;
+
+TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
 {
     Flag next_buffer_done1{"next_buffer_done1_c5d49978.tmp"};
     Flag next_buffer_done2{"next_buffer_done2_c5d49978.tmp"};
@@ -105,9 +123,9 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Renderer> the_renderer() override
+        std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
         {
-            return renderer([] { return std::make_shared<NullRenderer>(); });
+            return renderer_factory([] { return std::make_shared<NullRendererFactory>(); });
         }
     } server_config;
 
@@ -133,7 +151,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
@@ -182,7 +201,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
     });
 }
 
-TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_with_connected_clients)
+TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clients)
 {
     Flag surface_created1{"surface_created1_7e9c69fc.tmp"};
     Flag surface_created2{"surface_created2_7e9c69fc.tmp"};
@@ -200,8 +219,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
             {
                 input_configuration =
                     std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                        std::initializer_list<std::shared_ptr<mi::EventFilter> const>{},
-                        the_viewable_area(),
+                        the_composite_event_filter(),
+                        the_input_region(),
                         std::shared_ptr<mi::CursorListener>(),
                         the_input_report());
             }
@@ -249,7 +268,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_connection_create_surface_sync(connection, &request_params);
@@ -301,19 +321,19 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
      */
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
-    std::weak_ptr<mir::frontend::Communicator> communicator = server_config->the_communicator();
+    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
     std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
 
     server_config.reset();
 
     EXPECT_EQ(0, display.use_count());
     EXPECT_EQ(0, compositor.use_count());
-    EXPECT_EQ(0, communicator.use_count());
+    EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
 
     if (display.use_count() != 0 ||
         compositor.use_count() != 0 ||
-        communicator.use_count() != 0 ||
+        connector.use_count() != 0 ||
         input_manager.use_count() != 0)
     {
         resources_freed_failure.set();
@@ -323,3 +343,91 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
         resources_freed_success.set();
     }
 }
+
+namespace
+{
+bool file_exists(std::string const& filename)
+{
+    struct stat statbuf;
+    return 0 == stat(filename.c_str(), &statbuf);
+}
+}
+
+TEST_F(ServerShutdown, server_removes_endpoint_on_normal_exit)
+{
+    using ServerConfig = TestingServerConfiguration;
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        shutdown_server_process();
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void exec() override
+        {
+            abort();
+        }
+    };
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        using std::chrono::steady_clock;
+        std::chrono::seconds const limit(2);
+
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        // shutdown should fail as the server aborted
+        ASSERT_FALSE(shutdown_server_process());
+
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
+
+TEST_P(OnSignal, removes_endpoint_on_signal)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void exec() override
+        {
+            raise(sig);
+        }
+
+        ServerConfig(int sig) : sig(sig) {}
+        int const sig;
+    };
+
+    ServerConfig server_config(GetParam());
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        using std::chrono::steady_clock;
+        std::chrono::seconds const limit(2);
+
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        // shutdown should fail as the server faulted
+        ASSERT_FALSE(shutdown_server_process());
+
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+INSTANTIATE_TEST_CASE_P(ServerShutdown,
+    OnSignal,
+    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));

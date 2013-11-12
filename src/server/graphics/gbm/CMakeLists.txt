@@ -20,11 +20,11 @@ add_library(
   gbm_cursor.cpp
   gbm_display_helpers.cpp
   gbm_display.cpp
-  kms_display_configuration.cpp
+  real_kms_display_configuration.cpp
   drm_mode_resources.cpp
   gbm_display_buffer.cpp
-  kms_output.cpp
-  kms_output_container.cpp
+  real_kms_output.cpp
+  real_kms_output_container.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   internal_native_display.cpp
@@ -33,11 +33,13 @@ add_library(
   drm_close_threadsafe.cpp
   udev_wrapper.cpp
   udev_video_devices.cpp
+  overlapping_output_grouping.cpp
+  native_gbm_platform.cpp
 )
 
 target_link_libraries(
   mirplatformgraphics
-  mirserver
+  mirplatform
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}

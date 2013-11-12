@@ -21,15 +21,14 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 
 mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
-    std::initializer_list<std::shared_ptr<mir::input::EventFilter> const> const& filters,
-    std::shared_ptr<mg::ViewableArea> const& view_area,
+    std::shared_ptr<mir::input::EventFilter> const& event_filter,
+    std::shared_ptr<mi::InputRegion> const& input_region,
     std::shared_ptr<mi::CursorListener> const& cursor_listener,
     std::shared_ptr<mi::InputReport> const& input_report)
-      : DefaultInputConfiguration(filters, view_area, cursor_listener, input_report)
+      : DefaultInputConfiguration(event_filter, input_region, cursor_listener, input_report)
 {
     event_hub = new mia::FakeEventHub();
 }

@@ -24,7 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_native_buffer.h"
+#include "mir/graphics/native_buffer.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <functional>
+#include <mutex>
 
 namespace mir
 {
@@ -78,9 +79,10 @@ public:
     MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
-    std::shared_ptr<MirNativeBuffer> get_current_buffer_package();
+    MirNativeBuffer* get_current_buffer_package();
     MirPlatformType platform_type();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
+    uint32_t get_current_buffer_id() const;
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
@@ -92,6 +94,8 @@ public:
     void handle_event(MirEvent const& e);
 
 private:
+    mutable std::recursive_mutex mutex; // Protects all members of *this
+
     void on_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
@@ -119,7 +123,7 @@ private:
     mir::protobuf::SurfaceSetting configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
-    int attrib_cache[mir_surface_attrib_arraysize_];
+    int attrib_cache[mir_surface_attrib_enum_max_];
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;

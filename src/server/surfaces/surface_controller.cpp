@@ -20,16 +20,16 @@
 #include "mir/surfaces/surface_stack_model.h"
 
 namespace ms = mir::surfaces;
+namespace msh = mir::shell;
 
 ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) :
     surface_stack(surface_stack)
 {
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(msh::Session*, shell::SurfaceCreationParameters const& params)
 {
-    static ms::DepthId const default_surface_depth{0};
-    return surface_stack->create_surface(params, default_surface_depth);
+    return surface_stack->create_surface(params);
 }
 
 void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)

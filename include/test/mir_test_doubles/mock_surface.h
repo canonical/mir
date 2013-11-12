@@ -22,6 +22,8 @@
 #include "mir/shell/surface.h"
 
 #include "mir/shell/surface_creation_parameters.h"
+#include "null_event_sink.h"
+#include "null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 
@@ -36,8 +38,9 @@ namespace doubles
 
 struct MockSurface : public shell::Surface
 {
-    MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(builder, shell::a_surface())
+    MockSurface(shell::Session* session, std::shared_ptr<shell::SurfaceBuilder> const& builder) :
+        shell::Surface(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(), 
+            frontend::SurfaceId{}, std::make_shared<NullEventSink>())
     {
     }
 
@@ -46,10 +49,10 @@ struct MockSurface : public shell::Surface
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_METHOD0(visible, bool());
+    MOCK_METHOD1(raise, void(std::shared_ptr<shell::SurfaceController> const&));
 
-    MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<compositor::Buffer>());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
 
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(size, geometry::Size());
@@ -57,7 +60,6 @@ struct MockSurface : public shell::Surface
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
-    MOCK_CONST_METHOD0(server_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));

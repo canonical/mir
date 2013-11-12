@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "null_gl_context.h"
+#include "null_display_configuration.h"
 #include <thread>
 
 namespace mir
@@ -33,7 +34,6 @@ namespace doubles
 class NullDisplay : public graphics::Display
 {
  public:
-    geometry::Rectangle view_area() const { return geometry::Rectangle(); }
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&)
     {
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */
@@ -41,17 +41,17 @@ class NullDisplay : public graphics::Display
     }
     std::shared_ptr<graphics::DisplayConfiguration> configuration()
     {
-        return std::shared_ptr<graphics::DisplayConfiguration>();
+        return std::make_shared<NullDisplayConfiguration>();
     }
     void configure(graphics::DisplayConfiguration const&) {}
     void register_configuration_change_handler(
-        MainLoop&,
-        graphics::DisplayConfigurationChangeHandler const&)
+        graphics::EventHandlerRegister&,
+        graphics::DisplayConfigurationChangeHandler const&) override
     {
     }
-    void register_pause_resume_handlers(MainLoop&,
+    void register_pause_resume_handlers(graphics::EventHandlerRegister&,
                                         graphics::DisplayPauseHandler const&,
-                                        graphics::DisplayResumeHandler const&)
+                                        graphics::DisplayResumeHandler const&) override
     {
     }
     void pause() {}

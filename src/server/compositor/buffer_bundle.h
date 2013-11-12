@@ -20,25 +20,29 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include <memory>
 
 namespace mir
 {
+namespace graphics { class Buffer; struct BufferProperties; }
+
 namespace compositor
 {
-class Buffer;
 
 class BufferBundle
 {
 public:
     virtual ~BufferBundle() noexcept {}
-    virtual std::shared_ptr<Buffer> client_acquire() = 0;
-    virtual void client_release(std::shared_ptr<Buffer> const&) = 0;
-    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
-    virtual void compositor_release(std::shared_ptr<Buffer> const&) = 0;
+    virtual std::shared_ptr<graphics::Buffer> client_acquire() = 0;
+    virtual void client_release(std::shared_ptr<graphics::Buffer> const&) = 0;
+    virtual std::shared_ptr<graphics::Buffer>
+        compositor_acquire(unsigned long frameno) = 0;
+    virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
+    virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
+    virtual void snapshot_release(std::shared_ptr<graphics::Buffer> const&) = 0;
 
-    virtual BufferProperties properties() const = 0;
+    virtual graphics::BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual void force_requests_to_complete() = 0;
 protected:

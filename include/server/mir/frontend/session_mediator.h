@@ -21,25 +21,19 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
+#include "mir/frontend/surface_id.h"
 
-#include <map>
+#include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
-namespace events
-{
-class EventSink;
-}
 namespace graphics
 {
-class Platform;
-class ViewableArea;
-}
-
-namespace compositor
-{
 class Buffer;
+class Platform;
+class Display;
 class GraphicBufferAllocator;
 }
 
@@ -53,19 +47,20 @@ class Session;
 class ResourceCache;
 class SessionMediatorReport;
 class ClientBufferTracker;
+class EventSink;
+class DisplayChanger;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
-
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<frontend::DisplayChanger> const& display_changer,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
-        std::shared_ptr<events::EventSink> const& event_sink,
+        std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     ~SessionMediator() noexcept;
@@ -74,56 +69,65 @@ public:
     void connect(::google::protobuf::RpcController* controller,
                  const ::mir::protobuf::ConnectParameters* request,
                  ::mir::protobuf::Connection* response,
-                 ::google::protobuf::Closure* done);
+                 ::google::protobuf::Closure* done) override;
 
     void create_surface(google::protobuf::RpcController* controller,
                         const mir::protobuf::SurfaceParameters* request,
                         mir::protobuf::Surface* response,
-                        google::protobuf::Closure* done);
+                        google::protobuf::Closure* done) override;
 
     void next_buffer(
         google::protobuf::RpcController* controller,
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done);
+        google::protobuf::Closure* done) override;
 
     void release_surface(google::protobuf::RpcController* controller,
                          const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,
-                         google::protobuf::Closure* done);
+                         google::protobuf::Closure* done) override;
 
     void disconnect(google::protobuf::RpcController* controller,
                     const mir::protobuf::Void* request,
                     mir::protobuf::Void* response,
-                    google::protobuf::Closure* done);
+                    google::protobuf::Closure* done) override;
+
+    void configure_surface(google::protobuf::RpcController* controller,
+                           const mir::protobuf::SurfaceSetting*,
+                           mir::protobuf::SurfaceSetting*,
+                           google::protobuf::Closure* done) override;
+
+    void configure_display(::google::protobuf::RpcController* controller,
+                       const ::mir::protobuf::DisplayConfiguration* request,
+                       ::mir::protobuf::DisplayConfiguration* response,
+                       ::google::protobuf::Closure* done) override;
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
                         mir::protobuf::DRMAuthMagicStatus* response,
-                        google::protobuf::Closure* done);
-
-    void configure_surface(google::protobuf::RpcController* controller,
-                           const mir::protobuf::SurfaceSetting*,
-                           mir::protobuf::SurfaceSetting*,
-                           google::protobuf::Closure* done);
+                        google::protobuf::Closure* done) override;
 
 private:
+    void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
+                              std::shared_ptr<graphics::Buffer> const& graphics_buffer,
+                              bool need_full_ipc);
+
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
-    // TODO this is a dubious dependency - to get display_info (is there only one?)
-    std::shared_ptr<graphics::ViewableArea> const viewable_area;
     // TODO this is a dubious dependency - to get supported_pixel_formats
-    std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
 
+    std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
-    std::shared_ptr<ClientBufferTracker> const client_tracker;
 
-    std::shared_ptr<compositor::Buffer> client_buffer_resource;
-    std::shared_ptr<Session> session;
+    std::unordered_map<SurfaceId,std::shared_ptr<graphics::Buffer>> client_buffer_resource;
+
+    std::mutex session_mutex;
+    std::weak_ptr<Session> weak_session;
 };
 
 }

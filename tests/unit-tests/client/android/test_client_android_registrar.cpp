@@ -103,7 +103,7 @@ protected:
         auto t = geom::X(top);
         auto l = geom::Y(left);
         auto pt = geom::Point{t,l};
-        rect = geom::Rectangle{ pt, {geom::Width(width), geom::Height(height)}};
+        rect = geom::Rectangle{ pt, {width, height}};
         package = std::make_shared<MirBufferPackage>();
         package->fd_items = 4;
         package->data_items = 21;
@@ -214,7 +214,7 @@ protected:
         auto t = geom::X(top);
         auto l = geom::Y(left);
         auto pt = geom::Point{t,l};
-        rect = geom::Rectangle{ pt, {geom::Width(width), geom::Height(height)}};
+        rect = geom::Rectangle{ pt, {width, height}};
         fake_package = std::make_shared<native_handle_t>();
     }
 

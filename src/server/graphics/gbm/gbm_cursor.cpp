@@ -20,6 +20,8 @@
 #include "gbm_platform.h"
 #include "kms_output.h"
 #include "kms_output_container.h"
+#include "kms_display_configuration.h"
+#include "mir/geometry/rectangle.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -34,10 +36,11 @@ int const height = black_arrow.height;
 }
 
 namespace mgg = mir::graphics::gbm;
+namespace geom = mir::geometry;
 
-mgg::GBMCursor::GBMBOWrapper::GBMBOWrapper(GBMPlatform& platform) :
+mgg::GBMCursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
-                platform.gbm.device,
+                gbm,
                 width,
                 height,
                 GBM_FORMAT_ARGB8888,
@@ -50,14 +53,15 @@ inline mgg::GBMCursor::GBMBOWrapper::operator gbm_bo*() { return buffer; }
 inline mgg::GBMCursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
 
 mgg::GBMCursor::GBMCursor(
-    std::shared_ptr<GBMPlatform> const& platform,
-    KMSOutputContainer const& output_container) :
+    gbm_device* gbm,
+    KMSOutputContainer& output_container,
+    std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
-        buffer(*platform)
+        buffer(gbm),
+        current_configuration(current_configuration)
 {
-    set_image(black_arrow.pixel_data,
-              geometry::Size{geometry::Width(width), geometry::Height(height)});
+    set_image(black_arrow.pixel_data, geometry::Size{width, height});
 
     show_at_last_known_position();
 }
@@ -69,7 +73,7 @@ mgg::GBMCursor::~GBMCursor() noexcept
 
 void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 {
-    if (size != geometry::Size{geometry::Width(width), geometry::Height(height)})
+    if (size != geometry::Size{width, height})
         BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
 
     auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
@@ -84,21 +88,66 @@ void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 
 void mgg::GBMCursor::move_to(geometry::Point position)
 {
-    output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(position); });
-    current_position = position;
+    place_cursor_at(position, UpdateState);
 }
 
 void mgg::GBMCursor::show_at_last_known_position()
 {
-    output_container.for_each_output([&](KMSOutput& output)
-    {
-        output.move_cursor(current_position);
-        output.set_cursor(buffer);
-    });
+    place_cursor_at(current_position, ForceState);
 }
 
 void mgg::GBMCursor::hide()
 {
     output_container.for_each_output(
         [&](KMSOutput& output) { output.clear_cursor(); });
+}
+
+void mgg::GBMCursor::for_each_used_output(
+    std::function<void(KMSOutput&, geom::Rectangle const&)> const& f)
+{
+    current_configuration->with_current_configuration_do(
+        [this,&f](KMSDisplayConfiguration const& kms_conf)
+        {
+            kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+            {
+                if (conf_output.used)
+                {
+                    uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+                    auto output = output_container.get_kms_output_for(connector_id);
+                    geom::Rectangle output_rect
+                    {
+                        conf_output.top_left,
+                        conf_output.modes[conf_output.current_mode_index].size
+                    };
+                    f(*output, output_rect);
+                }
+            });
+        });
+}
+
+void mgg::GBMCursor::place_cursor_at(
+    geometry::Point position,
+    ForceCursorState force_state)
+{
+    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect)
+    {
+        if (output_rect.contains(position))
+        {
+            auto dp = position - output_rect.top_left;
+            output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
+            if (force_state || !output.has_cursor())
+            {
+                output.set_cursor(buffer);
+            }
+        }
+        else
+        {
+            if (force_state || output.has_cursor())
+            {
+                output.clear_cursor();
+            }
+        }
+    });
+
+    current_position = position;
 }

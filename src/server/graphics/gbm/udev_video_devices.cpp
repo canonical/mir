@@ -17,7 +17,7 @@
  */
 
 #include "udev_video_devices.h"
-#include "mir/main_loop.h"
+#include "mir/graphics/event_handler_register.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -32,7 +32,7 @@ mgg::UdevVideoDevices::UdevVideoDevices(udev* udev_ctx)
 }
 
 void mgg::UdevVideoDevices::register_change_handler(
-        MainLoop& main_loop,
+    EventHandlerRegister& handlers,
         std::function<void()> const& change_handler)
 {
     auto monitor = std::shared_ptr<udev_monitor>(
@@ -43,7 +43,7 @@ void mgg::UdevVideoDevices::register_change_handler(
 
     udev_monitor_filter_add_match_subsystem_devtype(monitor.get(), "drm", "drm_minor");
 
-    main_loop.register_fd_handler(
+    handlers.register_fd_handler(
         {udev_monitor_get_fd(monitor.get())},
         [change_handler, monitor](int)
         {
