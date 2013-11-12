@@ -312,6 +312,7 @@ private:
     std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
     std::shared_ptr<surfaces::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<surfaces::SurfaceController>    the_surface_controller();
+    std::function<void()> the_for_all_sessions_force_requests_to_complete_functor();
 };
 }
 

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/frontend/global_event_sender.h"
+#include "src/server/shell/global_event_sender.h"
 #include "mir/shell/session_container.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_shell_session.h"
@@ -29,7 +29,6 @@
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace msh=mir::shell;
-namespace mf=mir::frontend;
 
 namespace
 {
@@ -55,7 +54,7 @@ TEST(GlobalEventSender, sender)
         .Times(1)
         .WillOnce(SaveArg<0>(&called_fn)); 
 
-    mf::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
+    msh::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
 
     mtd::StubDisplayConfig stub_display_config;
     g_sender.handle_display_config_change(stub_display_config);

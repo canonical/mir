@@ -23,11 +23,15 @@
 #include "default_focus_mechanism.h"
 #include "default_session_container.h"
 #include "gl_pixel_buffer.h"
+#include "global_event_sender.h"
 #include "graphics_display_layout.h"
 #include "mediating_display_changer.h"
 #include "organising_surface_factory.h"
-#include "mir/shell/session_manager.h"
 #include "threaded_snapshot_strategy.h"
+
+#include "mir/shell/session_container.h"
+#include "mir/shell/session_manager.h"
+#include "mir/shell/session.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
@@ -185,5 +189,28 @@ mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
         {
             return std::make_shared<msh::ThreadedSnapshotStrategy>(
                 the_shell_pixel_buffer());
+        });
+}
+
+std::function<void()>
+mir::DefaultServerConfiguration::the_for_all_sessions_force_requests_to_complete_functor()
+{
+    auto shell_sessions = the_shell_session_container();
+    return [shell_sessions]
+    {
+        shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
+        {
+            session->force_requests_to_complete();
+        });
+    };
+}
+
+std::shared_ptr<mf::EventSink>
+mir::DefaultServerConfiguration::the_global_event_sink()
+{
+    return global_event_sink(
+        [this]()
+        {
+            return std::make_shared<msh::GlobalEventSender>(the_shell_session_container());
         });
 }
