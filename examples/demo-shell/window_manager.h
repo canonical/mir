@@ -21,6 +21,7 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/geometry/displacement.h"
+#include "mir/geometry/size.h"
 
 #include <memory>
 
@@ -64,6 +65,8 @@ private:
 
     geometry::Displacement relative_click;  // Click location in window space
     geometry::Point click;                  // Click location in screen space
+    geometry::Size old_size;  // Initial size of the surface before resize
+    float old_pinch;          // Initial diamemeter of the multitouch pinch
     int max_fingers;  // Maximum number of fingers touched during gesture
 };
 

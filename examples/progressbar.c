@@ -33,6 +33,12 @@ typedef struct
     uint8_t r, g, b, a;
 } Color;
 
+static const Color blue = {0, 0, 255, 255};
+static const Color white = {255, 255, 255, 255};
+
+static const Color *const foreground = &white;
+static const Color *const background = &blue;
+
 static volatile sig_atomic_t running = 1;
 
 static void shutdown(int signum)
@@ -178,6 +184,7 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
     MirGraphicsRegion backbuffer;
 
     mir_surface_get_graphics_region(surface, &backbuffer);
+    clear_region(&backbuffer, background);
     copy_region(&backbuffer, canvas);
     mir_surface_swap_buffers_sync(surface);
 }
@@ -264,8 +271,6 @@ int main(int argc, char *argv[])
         
             while (running)
             {
-                static const Color background = {0, 0, 255, 255};
-                static const Color foreground = {255, 255, 255, 255};
                 static const int width = 8;
                 static const int space = 1;
                 const int grid = width + 2 * space;
@@ -275,11 +280,11 @@ int main(int argc, char *argv[])
                 const int y = (t / row) * grid + space;
 
                 if (t % square == 0)
-                    clear_region(&canvas, &background);
+                    clear_region(&canvas, background);
 
                 t = (t + 1) % square;
 
-                draw_box(&canvas, x, y, width, &foreground);
+                draw_box(&canvas, x, y, width, foreground);
 
                 redraw(surf, &canvas);
                 usleep(sleep_usec);

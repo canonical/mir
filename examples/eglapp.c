@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <time.h>
 #include <EGL/egl.h>
+#include <GLES2/gl2.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -75,6 +76,7 @@ void mir_eglapp_swap_buffers(void)
     time_t now = time(NULL);
     time_t dtime;
     int dcount;
+    EGLint width, height;
 
     if (!running)
         return;
@@ -89,6 +91,14 @@ void mir_eglapp_swap_buffers(void)
         printf("%d FPS\n", dcount);
         lasttime = now;
         lastcount = count;
+    }
+
+    /* This is one way to handle window resizing. But in future it would be
+       better to have resize events coming from the server */
+    if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width) &&
+        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height))
+    {
+        glViewport(0, 0, width, height);
     }
 }
 

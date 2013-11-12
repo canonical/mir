@@ -29,6 +29,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cmath>
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
@@ -41,7 +42,7 @@ const int min_swipe_distance = 100;  // How long must a swipe be to act on?
 }
 
 me::WindowManager::WindowManager()
-    : max_fingers(0)
+    : old_pinch(0.0f), max_fingers(0)
 {
 }
 
@@ -77,6 +78,30 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
     y /= count;
 
     return Point{x, y};
+}
+
+float pinch_diameter(MirMotionEvent const& motion)
+{
+    int count = static_cast<int>(motion.pointer_count);
+    float max = 0.0f;
+
+    for (int i = 0; i < count; i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            int dx = motion.pointer_coordinates[i].x -
+                     motion.pointer_coordinates[j].x;
+            int dy = motion.pointer_coordinates[i].y -
+                     motion.pointer_coordinates[j].y;
+
+            float diam = sqrtf(dx*dx + dy*dy);
+
+            if (diam > max)
+                max = diam;
+        }
+    }
+
+    return max;
 }
 
 bool me::WindowManager::handle(MirEvent const& event)
@@ -148,21 +173,46 @@ bool me::WindowManager::handle(MirEvent const& event)
                 (event.motion.modifiers & mir_key_modifier_alt ||
                  fingers >= 3))
             {
+                auto pinch = pinch_diameter(event.motion);
+
                 // Start of a gesture: When the latest finger/button goes down
                 if (action == mir_motion_action_down ||
                     action == mir_motion_action_pointer_down)
                 {
                     relative_click = cursor - surf->top_left();
+                    old_size = surf->size();
+                    old_pinch = pinch;
                     click = cursor;
                 }
-                else if (event.motion.action == mir_motion_action_move)
-                { // Movement is happening with one or more fingers/button down
-                    geometry::Point abs = cursor - relative_click;
-                    if (max_fingers <= 3)  // Avoid accidental movement
-                    {
-                        surf->move_to(abs);
-                        return true;
+                else if (event.motion.action == mir_motion_action_move &&
+                         max_fingers <= 3)  // Avoid accidental movement
+                {
+                    auto pinch_delta = pinch - old_pinch;
+
+                    if (event.motion.button_state == mir_motion_button_tertiary)
+                    {  // Resize by mouse middle button
+                        geometry::Displacement dir = cursor - click;
+                        int width = old_size.width.as_int() + dir.dx.as_int();
+                        int height = old_size.height.as_int() + dir.dy.as_int();
+                        if (width <= 0) width = 1;
+                        if (height <= 0) height = 1; 
+                        surf->resize({width, height});
                     }
+                    else
+                    { // Move surface (by mouse or 3 fingers)
+                        geometry::Point abs = cursor - relative_click;
+                        surf->move_to(abs);
+                    }
+
+                    if (fingers == 3)
+                    {  // Resize by pinch/zoom
+                        int width = old_size.width.as_int() + pinch_delta;
+                        int height = old_size.height.as_int() + pinch_delta;
+                        if (width <= 0) width = 1;
+                        if (height <= 0) height = 1; 
+                        surf->resize({width, height});
+                    }
+                    return true;
                 }
             }
         }
