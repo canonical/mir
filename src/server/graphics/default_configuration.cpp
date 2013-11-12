@@ -21,6 +21,7 @@
 #include "default_display_configuration_policy.h"
 #include "nested/host_connection.h"
 #include "nested/nested_platform.h"
+#include "offscreen/display.h"
 
 #include "mir/graphics/buffer_initializer.h"
 
@@ -108,10 +109,20 @@ std::shared_ptr<mg::Display>
 mir::DefaultServerConfiguration::the_display()
 {
     return display(
-        [this]()
+        [this]() -> std::shared_ptr<mg::Display>
         {
-            return the_graphics_platform()->create_display(
-                the_display_configuration_policy());
+            if (the_options()->is_set(offscreen_opt))
+            {
+                return std::make_shared<mg::offscreen::Display>(
+                    the_graphics_platform(),
+                    the_display_configuration_policy(),
+                    the_display_report());
+            }
+            else
+            {
+                return the_graphics_platform()->create_display(
+                    the_display_configuration_policy());
+            }
         });
 }
 
