@@ -57,7 +57,8 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
     int device_count = 0;
     for (auto& device : enumerator)
     {
-        (void)device;
+        // Silence unused variable warning
+        static_cast<void>(device);
         ++device_count;
     }
 

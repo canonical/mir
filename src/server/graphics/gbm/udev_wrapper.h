@@ -65,7 +65,7 @@ public:
     char const* devpath() const;
     char const* devnode() const;
 
-    friend class UdevEnumerator;
+    udev_device const* device() const;
 private:
     udev_device* dev;   
 };

@@ -70,6 +70,11 @@ char const* mgg::UdevDevice::devnode() const
     return udev_device_get_devnode(dev);
 }
 
+udev_device const* mgg::UdevDevice::device() const
+{
+    return dev;
+}
+
 ////////////////////////
 //    UdevEnumerator
 ////////////////////////
@@ -158,7 +163,8 @@ void mgg::UdevEnumerator::match_subsystem(std::string const& subsystem)
 
 void mgg::UdevEnumerator::match_parent(mgg::UdevDevice const& parent)
 {
-    udev_enumerate_add_match_parent(enumerator, parent.dev);
+    // Need to const_cast<> as this increases the udev_device's reference count
+    udev_enumerate_add_match_parent(enumerator, const_cast<udev_device *>(parent.device()));
 }
 
 void mgg::UdevEnumerator::match_sysname(std::string const& sysname)

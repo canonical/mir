@@ -25,7 +25,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iostream>
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
+
 
 namespace mtf = mir::mir_test_framework;
 
@@ -69,6 +71,10 @@ std::string mtf::UdevEnvironment::add_device(char const* subsystem,
                                                    parent,
                                                    const_cast<gchar**>(attrib.data()),
                                                    const_cast<gchar**>(props.data()));
+
+    if (syspath == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create mock udev device"));
+
     std::string retval(syspath);
     g_free(syspath);
     return retval;
