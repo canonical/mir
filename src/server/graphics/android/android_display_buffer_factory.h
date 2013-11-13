@@ -30,6 +30,7 @@ namespace graphics
 namespace android
 {
 class DisplayDevice;
+class GLContext;
 
 class AndroidDisplayBufferFactory
 {
@@ -39,7 +40,7 @@ public:
     virtual std::shared_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,
-        EGLDisplay, EGLConfig, EGLContext) = 0;
+        GLContext const& gl_context) = 0;
 
 protected:
     AndroidDisplayBufferFactory() = default;

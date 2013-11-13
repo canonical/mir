@@ -20,10 +20,9 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/egl_resources.h"
 #include "android_display_configuration.h"
+#include "gl_context.h"
 
-#include <EGL/egl.h>
 #include <memory>
 
 namespace mir

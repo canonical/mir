@@ -43,8 +43,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFac
     : db_factory{db_factory},
       display_device(db_factory->create_display_device()),
       gl_context{display_device->display_format()},
-      display_buffer{db_factory->create_display_buffer(
-          display_device, gl_context),
+      display_buffer{db_factory->create_display_buffer(display_device, gl_context)},
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
@@ -53,7 +52,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFac
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
-    display_report->report_egl_configuration(egl_display, egl_config);
+//    display_report->report_egl_configuration(egl_display, egl_config);
 }
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -104,6 +103,7 @@ auto mga::AndroidDisplay::the_cursor() -> std::weak_ptr<Cursor>
 
 std::unique_ptr<mg::GLContext> mga::AndroidDisplay::create_gl_context()
 {
-    return std::unique_ptr<AndroidGLContext>{
-        new EGLHelper(gl_context, mga::create_dummy_pbuffer_surface)}
+    return std::unique_ptr<mg::GLContext>{
+        new mga::GLContext(gl_context, mga::create_dummy_pbuffer_surface)};
+
 }

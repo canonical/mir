@@ -19,6 +19,7 @@
 #include "display_buffer.h"
 #include "display_device.h"
 
+#include <functional>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -27,12 +28,10 @@ namespace geom=mir::geometry;
 
 mga::DisplayBuffer::DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
-    GLContext const& shared_gl_context)
+    mga::GLContext const& shared_gl_context)
     : display_device{display_device},
       native_window{native_window},
-      gl_context{shared_egl_context, make_db_egl_surface}
-          [](EGLDisplay display
-          eglCreateWindowSurface(connection, config, native_window.get(), NULL)}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, native_window.get())}
 {
 }
 
@@ -53,6 +52,7 @@ void mga::DisplayBuffer::release_current()
 
 void mga::DisplayBuffer::post_update()
 {
+#if 0
     display_device->prepare();
 
     if (display_device->should_swapbuffers())
@@ -60,6 +60,7 @@ void mga::DisplayBuffer::post_update()
 
     auto fb = framebuffers->last_rendered();
     display_device->commit_frame(fb);
+#endif
 }
 
 bool mga::DisplayBuffer::can_bypass() const

@@ -19,6 +19,10 @@
 #ifndef MIR_GRAPHICS_ANDROID_GL_CONTEXT_H_
 #define MIR_GRAPHICS_ANDROID_GL_CONTEXT_H_
 
+#include "mir/graphics/gl_context.h"
+#include "mir/graphics/egl_resources.h"
+#include "mir/geometry/pixel_format.h"
+
 namespace mir
 {
 namespace graphics
@@ -34,17 +38,17 @@ class GLContext : public graphics::GLContext
 {
 public:
     //For creating a gl context
-    EGLHelper(geom::PixelFormat display_format);
+    GLContext(geometry::PixelFormat display_format);
 
-    //For creating a gl context shared with another EGLHelper
-    EGLHelper(EGLHelper copied_helper,
+    //For creating a gl context shared with another GLContext
+    GLContext(GLContext const& copied_helper,
               std::function<EGLSurface(EGLDisplay, EGLConfig, EGLContext)> const& create_egl_surface);
 
-    ~EGLHelper();
+    ~GLContext();
 
-    make_current();
-    swap_buffers();
-    release_current();
+    void make_current();
+    void swap_buffers();
+    void release_current();
 
 private:
     EGLDisplay const egl_display;
@@ -53,7 +57,7 @@ private:
 
     EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface;
-}
+};
 
 }
 }
