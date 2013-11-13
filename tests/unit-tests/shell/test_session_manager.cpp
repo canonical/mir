@@ -25,7 +25,7 @@
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/shell/session_event_sink.h"
-#include "mir/surfaces/basic_surface.h"
+#include "src/server/surfaces/basic_surface.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"

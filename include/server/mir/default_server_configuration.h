@@ -55,7 +55,6 @@ class DisplayChanger;
 namespace shell
 {
 class SurfaceFactory;
-class SurfaceBuilder;
 class SurfaceController;
 class InputTargeter;
 class SessionContainer;
@@ -80,6 +79,7 @@ class TimeSource;
 namespace surfaces
 {
 class BufferStreamFactory;
+class SurfaceBuilder;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
@@ -199,15 +199,6 @@ public:
     virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
 
-    /** @name shell configuration - dependencies
-     * dependencies of shell on the rest of the Mir
-     *  @{ */
-    virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
-    virtual std::shared_ptr<surfaces::SurfaceController>     the_surface_controller();
-
-    /** @} */
-
-
     /** @name surfaces configuration - customization
      * configurable interfaces for modifying surfaces
      *  @{ */
@@ -296,26 +287,31 @@ protected:
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
-    CachedPtr<input::NestedInputRelay> nested_input_relay;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
 private:
     std::shared_ptr<input::EventFilter> const default_filter;
-
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
-    std::shared_ptr<input::NestedInputRelay> the_nested_input_relay();
+
+    // The following caches and factory functions are internal to the
+    // default implementations of corresponding the Mir components
+    CachedPtr<input::NestedInputRelay> nested_input_relay;
+    CachedPtr<surfaces::SurfaceController> surface_controller;
+
+    std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
+    std::shared_ptr<surfaces::SurfaceBuilder>       the_surface_builder();
+    std::shared_ptr<surfaces::SurfaceController>    the_surface_controller();
 };
 }
 
