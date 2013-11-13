@@ -29,6 +29,7 @@
 #include "mir/options/option.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -84,7 +85,7 @@ private:
             shell,
             graphics_platform,
             changer,
-            buffer_allocator,
+            buffer_allocator->supported_pixel_formats(),
             sm_report,
             sink,
             resource_cache());

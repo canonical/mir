@@ -355,23 +355,21 @@ MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
     return display_configuration->copy_to_client();
 }
 
-void MirConnection::possible_pixel_formats(
+void MirConnection::available_surface_formats(
     MirPixelFormat* formats,
     unsigned int formats_size,
     unsigned int& valid_formats)
 {
-    //TODO we're just using the display buffer's pixel formats as the list of supported
-    //     formats for the time being. should have a separate message
-    if (!connect_result.has_error() && connect_result.has_display_configuration() &&
-        connect_result.display_configuration().display_output_size() > 0)
+    valid_formats = 0;
+    if (!connect_result.has_error())
     {
-        auto const& display_output = connect_result.display_configuration().display_output(0);
         valid_formats = std::min(
-            static_cast<unsigned int>(display_output.pixel_format_size()), formats_size);
+            static_cast<unsigned int>(connect_result.surface_pixel_format_size()),
+            formats_size);
 
         for (auto i = 0u; i < valid_formats; i++)
         {
-            formats[i] = static_cast<MirPixelFormat>(display_output.pixel_format(i));
+            formats[i] = static_cast<MirPixelFormat>(connect_result.surface_pixel_format(i));
         }      
     }
 }
