@@ -40,6 +40,7 @@ public:
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer, int* fence);
     int queueBuffer(struct ANativeWindowBuffer* buffer, int fence);
+    int cancelBuffer(struct ANativeWindowBuffer* buffer, int fence);
     int setSwapInterval(int interval);
 private:
 

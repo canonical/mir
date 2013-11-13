@@ -271,6 +271,8 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 
         buffer_package.stride = buffer.stride();
         buffer_package.flags = buffer.flags();
+        buffer_package.width = buffer.width();
+        buffer_package.height = buffer.height();
     }
     else
     {
