@@ -40,6 +40,7 @@ TEST(ProtobufBufferPacker, packing)
 
     packer.pack_stride(dummy_stride);
     packer.pack_flags(123);
+    packer.pack_size(geom::Size{456, 789});
 
     EXPECT_EQ(num_fd, response.fd_size());
     EXPECT_EQ(num_int, response.data_size());
@@ -49,4 +50,6 @@ TEST(ProtobufBufferPacker, packing)
         EXPECT_EQ(i, response.data(i));
     EXPECT_EQ(dummy_stride.as_uint32_t(), static_cast<unsigned int>(response.stride()));
     EXPECT_EQ(123U, response.flags());
+    EXPECT_EQ(456, response.width());
+    EXPECT_EQ(789, response.height());
 }

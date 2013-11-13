@@ -44,6 +44,7 @@ public:
     void pack_data(int);
     void pack_stride(geometry::Stride);
     void pack_flags(unsigned int);
+    void pack_size(geometry::Size const& size);
 private:
     protobuf::Buffer* buffer_response;
 };

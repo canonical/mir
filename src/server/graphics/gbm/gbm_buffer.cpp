@@ -133,6 +133,10 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     temp->flags = can_bypass() ? mir_buffer_flag_can_scanout : 0;
     temp->bo = gbm_handle.get();
 
+    auto const& dim = size();
+    temp->width = dim.width.as_int();
+    temp->height = dim.height.as_int();
+
     return temp;
 }
 

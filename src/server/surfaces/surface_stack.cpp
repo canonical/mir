@@ -33,7 +33,7 @@
 //  for_each(), for_each_if(), reverse_for_each_if(), create_surface() and destroy_surface()
 // to access:
 //  compositing_criteria(), buffer_stream() and input_channel()
-#include "mir/surfaces/basic_surface.h"
+#include "basic_surface.h"
 
 #include <boost/throw_exception.hpp>
 

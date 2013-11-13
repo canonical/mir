@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SURFACE_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_SURFACE_BUILDER_H_
 
-#include "mir/shell/surface_builder.h"
+#include "src/server/surfaces/surface_builder.h"
 #include "src/server/surfaces/surface.h"
 #include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -35,7 +35,7 @@ namespace test
 namespace doubles
 {
 
-class StubSurfaceBuilder : public shell::SurfaceBuilder
+class StubSurfaceBuilder : public surfaces::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :

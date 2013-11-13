@@ -110,16 +110,17 @@ int lockBuffer_static(struct ANativeWindow* /*window*/,
     return 0;
 }
 
-int cancelBuffer_deprecated_static(struct ANativeWindow* /*window*/,
-                        struct ANativeWindowBuffer* /*buffer*/)
+int cancelBuffer_deprecated_static(struct ANativeWindow* window,
+                        struct ANativeWindowBuffer* buffer)
 {
-    return 0;
+    return cancelBuffer_static(window, buffer, -1);
 }
 
-int cancelBuffer_static(struct ANativeWindow* /*window*/,
-                        struct ANativeWindowBuffer* /*buffer*/, int /*fence_fd*/)
+int cancelBuffer_static(struct ANativeWindow* window,
+                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
-    return 0;
+    auto self = static_cast<mga::MirNativeWindow*>(window);
+    return self->cancelBuffer(buffer, fence_fd);
 }
 
 }
@@ -169,6 +170,12 @@ int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_d
 }
 
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
+{
+    driver_interpreter->driver_returns_buffer(buffer, fence);
+    return 0;
+}
+
+int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer, int fence)
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;

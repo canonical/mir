@@ -27,7 +27,7 @@ namespace mg = mir::graphics;
 namespace mt = mir::tools;
 
 mt::BufferRenderTarget::BufferRenderTarget(mg::Buffer& buffer)
-    : buffer(buffer)
+    : buffer(buffer), old_fbo(), old_viewport()
 {
     /*
      * With the new lazy buffer allocation method, we may be executing inside
@@ -35,12 +35,14 @@ mt::BufferRenderTarget::BufferRenderTarget(mg::Buffer& buffer)
      * we change...
      */
     glGetIntegerv(GL_VIEWPORT, old_viewport);
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_fbo);
     resources.setup(buffer);
 }
 
 mt::BufferRenderTarget::~BufferRenderTarget()
 {
     glFinish();
+    glBindFramebuffer(GL_FRAMEBUFFER, old_fbo);
     glViewport(old_viewport[0], old_viewport[1],
                old_viewport[2], old_viewport[3]);
 }
