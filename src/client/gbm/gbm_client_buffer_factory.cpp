@@ -31,6 +31,10 @@ mclg::GBMClientBufferFactory::GBMClientBufferFactory(
 
 std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geometry::Size size, geometry::PixelFormat pf)
 {
-    (void)size; // Deprecated. Use dimensions from package instead.
-    return std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, package, pf);
+    (void)size; // TODO: remove this unused parameter
+    return std::make_shared<mclg::GBMClientBuffer>(
+        drm_fd_handler,
+        package,
+        geometry::Size{package->width, package->height},
+        pf);
 }

@@ -27,16 +27,12 @@ namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 
-mcla::AndroidClientBuffer::AndroidClientBuffer(
-    std::shared_ptr<AndroidRegistrar> const& registrar,
-    std::shared_ptr<const native_handle_t> const& handle,
-    std::shared_ptr<MirBufferPackage> const& package,
-    geom::PixelFormat pf)
+mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
+                                               std::shared_ptr<const native_handle_t> const& handle,
+                                               geom::Size size, geom::PixelFormat pf, geometry::Stride stride)
  : buffer_registrar(registrar),
    native_handle(handle),
-   buffer_pf(pf),
-   buffer_stride{package->stride},
-   buffer_size{package->width, package->height}
+   buffer_pf(pf), buffer_stride{stride}, buffer_size(size)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1);
@@ -51,7 +47,7 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(
     anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
     //note: mir uses stride in bytes, ANativeWindowBuffer needs it in pixel units. some drivers care
     //about byte-stride, they will pass stride via ANativeWindowBuffer::handle (which is opaque to us)
-    anwb->stride = buffer_stride.as_uint32_t() /
+    anwb->stride = stride.as_uint32_t() /
                                    geom::bytes_per_pixel(buffer_pf);
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = native_handle.get();
