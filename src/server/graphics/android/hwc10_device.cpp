@@ -27,6 +27,7 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<FramebufferBundle> const&,// fb_bundle,
                               std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),

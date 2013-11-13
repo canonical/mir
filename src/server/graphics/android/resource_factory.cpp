@@ -109,5 +109,6 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto fb_device = create_fb_device(fb_native_device);
-    return std::make_shared<mga::HWC10Device>(hwc_native_device, fb_device, syncer);
+    auto framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native_device);
+    return std::make_shared<mga::HWC10Device>(hwc_native_device, framebuffers, fb_device, syncer);
 }

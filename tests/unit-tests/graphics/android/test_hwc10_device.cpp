@@ -42,6 +42,7 @@ protected:
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fbdev = std::make_shared<mtd::MockDisplayDevice>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
     }
 
@@ -52,6 +53,7 @@ protected:
     std::shared_ptr<mtd::MockDisplayDevice> mock_fbdev;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
 
@@ -61,9 +63,9 @@ TEST_F(HWC10Device, buffer_for_render)
     EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    mga::FBDevice fbdev(fb_hal_mock, mock_fb_bundle);
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
 
-    EXPECT_EQ(mock_buffer, fbdev.buffer_for_render());
+    EXPECT_EQ(mock_buffer, device.buffer_for_render());
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_sync)
