@@ -40,12 +40,13 @@ class DisplayDevice
 public:
     virtual ~DisplayDevice() = default;
 
+    //TODO: (kdub) these 4 functions should be removed from this interface. The classes currently using
+    //      these four functions will start to use mga::FramebufferBundle
     virtual geometry::Size display_size() const = 0; 
-    virtual geometry::PixelFormat display_format() const = 0;
- 
+    virtual geometry::PixelFormat display_format() const = 0; 
     virtual std::shared_ptr<graphics::Buffer> buffer_for_render() = 0;
-
     virtual void sync_to_display(bool sync) = 0;
+
     virtual void mode(MirPowerMode mode) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 

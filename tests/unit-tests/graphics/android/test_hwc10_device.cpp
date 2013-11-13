@@ -56,7 +56,6 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-
 TEST_F(HWC10Device, buffer_for_render)
 {
     using namespace testing;
