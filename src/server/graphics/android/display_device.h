@@ -47,6 +47,8 @@ public:
 
     virtual void sync_to_display(bool sync) = 0;
     virtual void mode(MirPowerMode mode) = 0;
+
+    //TODO: we only pass EGLDisplay and EGLSurface for hwc1.0. we should eliminate these parameters
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 
 protected:

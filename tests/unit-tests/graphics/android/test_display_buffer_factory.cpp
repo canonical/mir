@@ -199,6 +199,7 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
     factory.create_display_device();
 }
 
+#if 0
 TEST_F(DisplayBufferCreation, db_creation)
 {
     using namespace testing;
@@ -212,3 +213,4 @@ TEST_F(DisplayBufferCreation, db_creation)
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
     factory.create_display_buffer(mt::fake_shared(stub_device), disp, conf, cont);
 }
+#endif

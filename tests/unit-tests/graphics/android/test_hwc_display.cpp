@@ -44,6 +44,8 @@ protected:
         dummy_display = reinterpret_cast<EGLDisplay>(0x34);
         dummy_config = reinterpret_cast<EGLConfig>(0x44);
         dummy_context = reinterpret_cast<EGLContext>(0x58);
+
+
     }
 
     int visual_id;
