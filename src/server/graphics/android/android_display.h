@@ -45,7 +45,6 @@ class AndroidDisplay : public Display
 public:
     explicit AndroidDisplay(std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
                             std::shared_ptr<DisplayReport> const& display_report);
-    ~AndroidDisplay();
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 

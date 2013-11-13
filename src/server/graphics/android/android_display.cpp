@@ -25,14 +25,7 @@
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
 #include "display_device.h"
-#include "android_format_conversion-inl.h"
 #include "mir/geometry/rectangle.h"
-
-#include <boost/throw_exception.hpp>
-
-#include <system/window.h>
-#include <algorithm>
-#include <stdexcept>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;

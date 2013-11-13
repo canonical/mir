@@ -27,6 +27,7 @@ add_library(
   internal_client_window.cpp
   interpreter_cache.cpp
   internal_client.cpp
+  gl_context.cpp
 )
 
 target_link_libraries(

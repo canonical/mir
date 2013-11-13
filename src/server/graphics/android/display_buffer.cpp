@@ -31,7 +31,7 @@ mga::DisplayBuffer::DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_
     mga::GLContext const& shared_gl_context)
     : display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, native_window.get())}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
 {
 }
 
@@ -52,15 +52,8 @@ void mga::DisplayBuffer::release_current()
 
 void mga::DisplayBuffer::post_update()
 {
-#if 0
-    display_device->prepare();
-
-    if (display_device->should_swapbuffers())
-        gl_context.swap_buffers();
-
-    auto fb = framebuffers->last_rendered();
-    display_device->commit_frame(fb);
-#endif
+    display_device->commit_frame(
+        gl_context.display(), gl_context.surface());
 }
 
 bool mga::DisplayBuffer::can_bypass() const

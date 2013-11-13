@@ -16,55 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "gl_context.h"
+#include "android_format_conversion-inl.h"
 
-mga::GLContext::GLContext(geom::PixelFormat display_format)
-    : egl_display(create_and_initialize()),
-      own_display(true),
-      egl_config(select_egl_config_with_format(egl_display, display_format),
-      egl_context_shared{egl_display,
-                     eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
-                                      default_egl_context_attr)},
-      egl_surface{egl_display,
-                    eglCreatePbufferSurface(egl_display, egl_config,
-                                            dummy_pbuffer_attribs)}
-{
+#include <algorithm>
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
-}
-
-mga::GLContext::GLContext(
-    GLContext copied_helper,
-    std::function<EGLSurface(EGLDisplay, EGLConfig, EGLContext)> const& create_egl_surface)
-     : egl_display(copied_helper.display),
-       own_display(false),
-       egl_config(ecopied_helper.config),
-       egl_context_shared{egl_display,
-                          eglCreateContext(egl_display, egl_config, copied_helper.shared_context,
-                                          default_egl_context_attr)},
-          egl_surface{egl_display, create_egl_surface(egl_display, egl_config, egl_context_shared)}
-{
-}
-
-mga::GLContext::make_current()
-{
-    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("could not activate surface with eglMakeCurrent\n"));
-    }
-}
-
-mga::GLContext::release_current()
-{
-
-}
-
-mga::GLContext::~GLContext()
-{
-    if (eglGetCurrentContext() == egl_context)
-        release_current();
-    if (own_display)
-        eglTerminate(egl_display);
-}
+namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
 
 namespace
 {
@@ -88,6 +48,22 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_HEIGHT, 1,
     EGL_NONE
 };
+
+static EGLDisplay create_and_initialize_display()
+{
+    EGLint major, minor;
+
+    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglGetDisplay failed\n"));
+
+    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglInitialize failure\n"));
+
+    if ((major != 1) || (minor != 4))
+        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
+    return egl_display;
+}
 
 /* the minimum requirement is to have EGL_WINDOW_BIT and EGL_OPENGL_ES2_BIT, and to select a config
    whose pixel format matches that of the framebuffer. */
@@ -117,18 +93,60 @@ static EGLConfig select_egl_config_with_format(EGLDisplay egl_display, geom::Pix
     return *pegl_config;
 }
 
-static EGLDisplay create_and_initialize_display()
+}
+
+EGLSurface mga::create_dummy_pbuffer_surface(EGLDisplay disp, EGLConfig config)
 {
-    EGLint major, minor;
+    return eglCreatePbufferSurface(disp, config, dummy_pbuffer_attribs);
+}
 
-    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglGetDisplay failed\n"));
+EGLSurface mga::create_window_surface(EGLDisplay disp, EGLConfig config, EGLNativeWindowType native)
+{
+    return eglCreateWindowSurface(disp, config, native, NULL);
+}
 
-    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglInitialize failure\n"));
+mga::GLContext::GLContext(geom::PixelFormat display_format)
+    : egl_display(create_and_initialize_display()),
+      own_display(true),
+      egl_config(select_egl_config_with_format(egl_display, display_format)),
+      egl_context{egl_display,
+                  eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr)},
+      egl_surface{egl_display,
+                    eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
+{
+}
 
-    if ((major != 1) || (minor != 4))
-        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
-    return egl_display;
+mga::GLContext::GLContext(
+    GLContext const& shared_gl_context,
+    std::function<EGLSurface(EGLDisplay, EGLConfig)> const& create_egl_surface)
+     : egl_display(shared_gl_context.egl_display),
+       own_display(false),
+       egl_config(shared_gl_context.egl_config),
+       egl_context{egl_display,
+                   eglCreateContext(egl_display, egl_config, shared_gl_context.egl_context,
+                                    default_egl_context_attr)},
+       egl_surface{egl_display, create_egl_surface(egl_display, egl_config)}
+{
+}
+
+void mga::GLContext::make_current()
+{
+    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+    }
+}
+
+void mga::GLContext::release_current()
+{
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
+mga::GLContext::~GLContext()
+{
+    if (eglGetCurrentContext() == egl_context)
+        release_current();
+    if (own_display)
+        eglTerminate(egl_display);
 }

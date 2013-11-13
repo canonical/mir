@@ -22,6 +22,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/geometry/pixel_format.h"
+#include <functional>
 
 namespace mir
 {
@@ -31,8 +32,8 @@ namespace android
 {
 
 //handy functions
-EGLSurface create_dummy_pbuffer_surface(EGLDisplay, EGLConfig, EGLContext);
-EGLSurface create_window_surface(EGLDisplay, EGLConfig, EGLContext, EGLNativeWindowType);
+EGLSurface create_dummy_pbuffer_surface(EGLDisplay, EGLConfig);
+EGLSurface create_window_surface(EGLDisplay, EGLConfig, EGLNativeWindowType);
 
 class GLContext : public graphics::GLContext
 {
@@ -41,8 +42,8 @@ public:
     GLContext(geometry::PixelFormat display_format);
 
     //For creating a gl context shared with another GLContext
-    GLContext(GLContext const& copied_helper,
-              std::function<EGLSurface(EGLDisplay, EGLConfig, EGLContext)> const& create_egl_surface);
+    GLContext(GLContext const& shared_gl_context,
+              std::function<EGLSurface(EGLDisplay, EGLConfig)> const& create_egl_surface);
 
     ~GLContext();
 
@@ -50,12 +51,22 @@ public:
     void swap_buffers();
     void release_current();
 
+    /* TODO: (kdub) remove these two functions once HWC1.0 construction is sorted out. */
+    EGLDisplay display()
+    {
+        return egl_display;
+    }
+    EGLSurface surface()
+    {
+        return egl_surface;
+    }
+
 private:
     EGLDisplay const egl_display;
     bool const own_display;
     EGLConfig const egl_config;
 
-    EGLContextStore const egl_context_shared;
+    EGLContextStore const egl_context;
     EGLSurfaceStore const egl_surface;
 };
 
