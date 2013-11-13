@@ -19,7 +19,7 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
-#include "src/server/graphics/android/framebuffer_bundle.h"
+#include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -33,23 +33,6 @@ namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 namespace mt=mir::test;
-
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-struct MockFBBundle : public mga::FramebufferBundle
-{
-    MOCK_METHOD0(fb_format, geom::PixelFormat());
-    MOCK_METHOD0(fb_size, geom::Size());
-    MOCK_METHOD0(buffer_for_render, std::shared_ptr<mg::Buffer>());
-    MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<mg::Buffer>());
-};
-}
-}
-}
 
 struct FBDevice : public ::testing::Test
 {
@@ -109,6 +92,16 @@ TEST_F(FBDevice, commit_frame)
     fbdev.commit_frame(dpy, surf);
 }
 
+TEST_F(FBDevice, buffer_for_render)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
+    mga::FBDevice fbdev(fb_hal_mock, mock_fb_bundle);
+
+    EXPECT_EQ(mock_buffer, fbdev.buffer_for_render());
+}
 
 TEST_F(FBDevice, set_swapinterval)
 {
