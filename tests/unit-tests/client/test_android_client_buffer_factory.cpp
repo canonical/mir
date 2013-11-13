@@ -39,9 +39,10 @@ struct MirBufferFactoryTest : public testing::Test
         pf = geom::PixelFormat::abgr_8888;
 
         mock_registrar = std::make_shared<mtd::MockAndroidRegistrar>();
-        package1 = std::make_shared<MirBufferPackage>();
-        package2 = std::make_shared<MirBufferPackage>();
 
+        package1 = std::make_shared<MirBufferPackage>();
+        package1->width = width.as_int();
+        package1->height = height.as_int();
     }
     geom::Width width;
     geom::Height height;
@@ -51,7 +52,6 @@ struct MirBufferFactoryTest : public testing::Test
     std::shared_ptr<mtd::MockAndroidRegistrar> mock_registrar;
 
     std::shared_ptr<MirBufferPackage> package1;
-    std::shared_ptr<MirBufferPackage> package2;
 
 };
 
@@ -68,7 +68,7 @@ TEST_F(MirBufferFactoryTest, factory_sets_width_and_height)
 
     auto buffer = buffer_factory.create_buffer(package1, size, pf);
 
-    EXPECT_EQ(buffer->size().height, height);
-    EXPECT_EQ(buffer->size().width, width);
+    EXPECT_EQ(package1->width, buffer->size().width.as_int());
+    EXPECT_EQ(package1->height, buffer->size().height.as_int());
     EXPECT_EQ(buffer->pixel_format(), pf);
 }

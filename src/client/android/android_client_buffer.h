@@ -39,8 +39,7 @@ class AndroidClientBuffer : public AgingBuffer
 public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const&,
                         std::shared_ptr<const native_handle_t> const&,
-                        std::shared_ptr<MirBufferPackage> const& package,
-                        geometry::PixelFormat pf);
+                        geometry::Size size, geometry::PixelFormat pf, geometry::Stride stride);
     ~AndroidClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();

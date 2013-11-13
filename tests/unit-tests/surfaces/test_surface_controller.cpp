@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/surfaces/surface_controller.h"
+#include "src/server/surfaces/surface_controller.h"
 #include "src/server/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_creation_parameters.h"
 

@@ -34,7 +34,6 @@ namespace shell
 {
 class InputTargeter;
 class Session;
-class SurfaceBuilder;
 class SurfaceConfigurator;
 class SurfaceController;
 struct SurfaceCreationParameters;
@@ -42,12 +41,14 @@ struct SurfaceCreationParameters;
 
 namespace surfaces
 {
+class SurfaceBuilder;
+
 class SurfaceImpl : public shell::Surface
 {
 public:
     SurfaceImpl(
         shell::Session* session,
-        std::shared_ptr<shell::SurfaceBuilder> const& builder,
+        std::shared_ptr<SurfaceBuilder> const& builder,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
         shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
@@ -97,7 +98,7 @@ private:
     bool set_state(MirSurfaceState s);
     void notify_change(MirSurfaceAttrib attrib, int value);
 
-    std::shared_ptr<shell::SurfaceBuilder> const builder;
+    std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<shell::SurfaceConfigurator> const configurator;
     std::shared_ptr<mir::surfaces::BasicSurface> const surface;
 

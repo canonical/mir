@@ -148,6 +148,8 @@ struct MockServerPackageGenerator : public StubServerTool
         }
 
         response->set_stride(server_package.stride);
+        response->set_width(server_package.width);
+        response->set_height(server_package.height);
     }
 
     void create_surface_response(mir::protobuf::Surface* response)

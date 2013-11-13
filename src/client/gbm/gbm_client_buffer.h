@@ -40,6 +40,7 @@ class GBMClientBuffer : public AgingBuffer
 public:
     GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
                     std::shared_ptr<MirBufferPackage> const& buffer_package,
+                    geometry::Size size,
                     geometry::PixelFormat pf);
 
     virtual ~GBMClientBuffer() noexcept;

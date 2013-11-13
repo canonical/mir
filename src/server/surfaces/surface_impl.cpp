@@ -17,8 +17,8 @@
  */
 
 #include "surface_impl.h"
-#include "mir/surfaces/basic_surface.h"
-#include "mir/shell/surface_builder.h"
+#include "basic_surface.h"
+#include "surface_builder.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/surface_controller.h"
 #include "mir/shell/input_targeter.h"
@@ -44,7 +44,7 @@ namespace mf = mir::frontend;
 
 ms::SurfaceImpl::SurfaceImpl(
     msh::Session* session,
-    std::shared_ptr<msh::SurfaceBuilder> const& builder,
+    std::shared_ptr<SurfaceBuilder> const& builder,
     std::shared_ptr<msh::SurfaceConfigurator> const& configurator,
     msh::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/surfaces/surface_controller.h"
+#include "surface_controller.h"
 #include "surface_stack_model.h"
 
 namespace ms = mir::surfaces;
