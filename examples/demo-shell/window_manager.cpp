@@ -83,7 +83,7 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
 float pinch_diameter(MirMotionEvent const& motion)
 {
     int count = static_cast<int>(motion.pointer_count);
-    float max = 0.0f;
+    int max = 0;
 
     for (int i = 0; i < count; i++)
     {
@@ -94,14 +94,14 @@ float pinch_diameter(MirMotionEvent const& motion)
             int dy = motion.pointer_coordinates[i].y -
                      motion.pointer_coordinates[j].y;
 
-            float diam = sqrtf(dx*dx + dy*dy);
+            int sqr = dx*dx + dy*dy;
 
-            if (diam > max)
-                max = diam;
+            if (sqr > max)
+                max = sqr;
         }
     }
 
-    return max;
+    return sqrtf(max);
 }
 
 bool me::WindowManager::handle(MirEvent const& event)
@@ -187,8 +187,6 @@ bool me::WindowManager::handle(MirEvent const& event)
                 else if (event.motion.action == mir_motion_action_move &&
                          max_fingers <= 3)  // Avoid accidental movement
                 {
-                    auto pinch_delta = pinch - old_pinch;
-
                     if (event.motion.button_state == mir_motion_button_tertiary)
                     {  // Resize by mouse middle button
                         geometry::Displacement dir = cursor - click;
@@ -206,6 +204,7 @@ bool me::WindowManager::handle(MirEvent const& event)
 
                     if (fingers == 3)
                     {  // Resize by pinch/zoom
+                        auto pinch_delta = pinch - old_pinch;
                         int width = old_size.width.as_int() + pinch_delta;
                         int height = old_size.height.as_int() + pinch_delta;
                         if (width <= 0) width = 1;
