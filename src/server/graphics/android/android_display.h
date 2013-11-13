@@ -73,10 +73,7 @@ private:
     std::shared_ptr<AndroidDisplayBufferFactory> const db_factory;
     std::shared_ptr<DisplayDevice> const display_device;
 
-    EGLDisplay const egl_display;
-    EGLConfig const egl_config;
-    EGLContextStore const egl_context_shared;
-    EGLSurfaceStore const egl_surface_dummy;
+    GLContext gl_context;
 
     //we only have a primary display at the moment
     std::unique_ptr<DisplayBuffer> const display_buffer;

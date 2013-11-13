@@ -25,26 +25,13 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-namespace
-{
-static EGLint const egl_context_attr[] =
-{
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-}
-
 mga::DisplayBuffer::DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
-    EGLDisplay connection, EGLConfig config, EGLContext shared_context)
+    GLContext const& shared_gl_context)
     : display_device{display_device},
       native_window{native_window},
-      egl_display{connection},
-      egl_context{
-          connection,
-          eglCreateContext(connection, config, shared_context, egl_context_attr)},
-      egl_surface{
-          connection,
+      gl_context{shared_egl_context, make_db_egl_surface}
+          [](EGLDisplay display
           eglCreateWindowSurface(connection, config, native_window.get(), NULL)}
 {
 }
@@ -56,22 +43,23 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
 
 void mga::DisplayBuffer::make_current()
 {
-    if (eglMakeCurrent(egl_display, egl_surface,
-                       egl_surface, egl_context) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
-    }
+    gl_context.make_current();
 }
 
 void mga::DisplayBuffer::release_current()
 {
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE,
-                   EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    gl_context.release_current();
 }
 
 void mga::DisplayBuffer::post_update()
 {
-    display_device->commit_frame(egl_display, egl_surface);
+    display_device->prepare();
+
+    if (display_device->should_swapbuffers())
+        gl_context.swap_buffers();
+
+    auto fb = framebuffers->last_rendered();
+    display_device->commit_frame(fb);
 }
 
 bool mga::DisplayBuffer::can_bypass() const
