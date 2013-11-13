@@ -30,7 +30,7 @@ mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list({mga::CompositionLayer{true}}),
+      layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}}),
       fb_device(fbdev),
       wait_for_vsync(true)
 {
