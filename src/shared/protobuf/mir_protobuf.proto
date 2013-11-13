@@ -31,6 +31,8 @@ message Buffer {
   optional int32  fds_on_side_channel = 4;
   optional int32  stride = 5;
   optional uint32 flags = 6;
+  optional int32  width = 7;
+  optional int32  height = 8;
 
   optional string error = 127;
 }

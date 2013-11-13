@@ -118,6 +118,8 @@ std::shared_ptr<mg::Buffer> ms::Surface::advance_client_buffer()
     }
     else
     {
+        // TODO There is something crazy about assuming that giving out any buffer
+        // TODO after the first implies that previous buffers have been rendered.
         flag_for_render();
     }
 
