@@ -87,3 +87,9 @@ std::string mtf::UdevEnvironment::add_device(char const* subsystem,
     g_free(syspath);
     return retval;
 }
+
+void mtf::UdevEnvironment::remove_device(std::string const& device_path)
+{
+    umockdev_testbed_uevent(testbed, device_path.c_str(), "remove");
+    umockdev_testbed_remove_device(testbed, device_path.c_str());
+}

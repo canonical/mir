@@ -228,10 +228,24 @@ void mgg::UdevMonitor::enable(void)
     udev_monitor_enable_receiving(monitor);
 }
 
+static mgg::UdevMonitor::EventType action_to_event_type(const char* action)
+{
+    if (strcmp(action, "add") == 0)
+        return mgg::UdevMonitor::EventType::ADDED;
+    if (strcmp(action, "remove") == 0)
+        return mgg::UdevMonitor::EventType::REMOVED;
+    if (strcmp(action, "change") == 0)
+        return mgg::UdevMonitor::EventType::CHANGED;
+    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Unknown udev action encountered: ") + action));
+}
+
 void mgg::UdevMonitor::process_events(std::function<void(mgg::UdevMonitor::EventType,
                                                          mgg::UdevDevice const&)> const& handler) const
 {
-    udev_device *dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
-    if (dev != nullptr)
-        handler(UdevMonitor::EventType::ADDED, UdevDevice(dev));
+    udev_device *dev;
+    do {
+        dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
+        if (dev != nullptr) 
+            handler(action_to_event_type(udev_device_get_action(dev)), UdevDevice(dev));
+    } while (dev != nullptr);
 }

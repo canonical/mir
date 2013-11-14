@@ -42,6 +42,7 @@ public:
                            char const* parent,
                            std::initializer_list<char const*> attributes,
                            std::initializer_list<char const*> properties);
+    void remove_device(std::string const& device_path);
 
     UMockdevTestbed *testbed;
 private:
