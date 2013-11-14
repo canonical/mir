@@ -333,3 +333,25 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 
     EXPECT_TRUE(changed_event_received);    
 }
+
+TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    bool event_handler_called = false;
+
+    monitor.enable();
+
+    auto sysfs_path = udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    mgg::UdevDevice device(ctx, sysfs_path);
+
+    monitor.process_events(
+        [&event_handler_called, &device](mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+            {
+                event_handler_called = true;
+                EXPECT_EQ(device, dev);
+            });
+
+    ASSERT_TRUE(event_handler_called);
+}
