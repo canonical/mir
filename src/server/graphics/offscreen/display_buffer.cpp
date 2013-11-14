@@ -18,8 +18,10 @@
 
 #include "display_buffer.h"
 #include "gl_extensions_base.h"
+#include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -52,6 +54,10 @@ public:
 mgo::detail::GLFramebufferObject::GLFramebufferObject(geom::Size const& size)
     : size{size}, color_renderbuffer{0}, depth_renderbuffer{0}, fbo{0}
 {
+    /* Save previous FBO state */
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_fbo);
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
+
     GLExtensions const extensions;
 
     GLenum gl_color_format{GL_RGBA4};
@@ -63,6 +69,7 @@ mgo::detail::GLFramebufferObject::GLFramebufferObject(geom::Size const& size)
         gl_color_format = GL_RGBA8_OES;
     }
 
+    /* Create a renderbuffer for the color attachment */
     glGenRenderbuffers(1, &color_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, gl_color_format,
@@ -76,31 +83,28 @@ mgo::detail::GLFramebufferObject::GLFramebufferObject(geom::Size const& size)
 
     /* Create a FBO and set it up */
     glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    auto const fbo_raii = mir::raii::paired_calls(
+        [this] { glBindFramebuffer(GL_FRAMEBUFFER, fbo); },
+        [this] { glBindFramebuffer(GL_FRAMEBUFFER, old_fbo); });
+
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                               GL_RENDERBUFFER, color_renderbuffer);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                               GL_RENDERBUFFER, depth_renderbuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set up FBO"));
 }
 
 mgo::detail::GLFramebufferObject::~GLFramebufferObject()
 {
     if (fbo)
-    {
         glDeleteFramebuffers(1, &fbo);
-        fbo = 0;
-    }
     if (color_renderbuffer)
-    {
         glDeleteRenderbuffers(1, &color_renderbuffer);
-        color_renderbuffer = 0;
-    }
     if (depth_renderbuffer)
-    {
         glDeleteRenderbuffers(1, &depth_renderbuffer);
-        depth_renderbuffer = 0;
-    }
 }
 
 void mgo::detail::GLFramebufferObject::bind() const
@@ -111,7 +115,9 @@ void mgo::detail::GLFramebufferObject::bind() const
 
 void mgo::detail::GLFramebufferObject::unbind() const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, old_fbo);
+    glViewport(old_viewport[0], old_viewport[1],
+               old_viewport[2], old_viewport[3]);
 }
 
 mgo::DisplayBuffer::DisplayBuffer(SurfacelessEGLContext egl_context,

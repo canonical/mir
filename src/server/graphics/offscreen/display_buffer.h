@@ -47,6 +47,8 @@ public:
 
 private:
     geometry::Size const size;
+    int old_fbo;
+    int old_viewport[4];
     unsigned int color_renderbuffer;
     unsigned int depth_renderbuffer;
     unsigned int fbo;

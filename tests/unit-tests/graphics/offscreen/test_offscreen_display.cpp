@@ -10,6 +10,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <stdexcept>
+
 namespace mg=mir::graphics;
 namespace mgo=mir::graphics::offscreen;
 namespace mtd=mir::test::doubles;
@@ -42,9 +44,9 @@ public:
         using namespace ::testing;
 
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
-        .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
-                             SetArgPointee<4>(1),
-                             Return(EGL_TRUE)));
+            .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                                 SetArgPointee<4>(1),
+                                 Return(EGL_TRUE)));
 
         const char* const egl_exts = "EGL_KHR_image EGL_KHR_image_base";
         const char* const gl_exts = "GL_OES_EGL_image";
@@ -53,6 +55,8 @@ public:
             .WillByDefault(Return(egl_exts));
         ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
             .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+        ON_CALL(mock_gl, glCheckFramebufferStatus(_))
+            .WillByDefault(Return(GL_FRAMEBUFFER_COMPLETE));
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -111,4 +115,33 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
             Mock::VerifyAndClearExpectations(&mock_egl);
             Mock::VerifyAndClearExpectations(&mock_gl);
         });
+}
+
+TEST_F(OffscreenDisplayTest, restores_previous_state_on_fbo_setup_failure)
+{
+    using namespace ::testing;
+
+    GLuint const old_fbo{66};
+    GLuint const new_fbo{67};
+    EGLNativeDisplayType const native_display{
+        reinterpret_cast<EGLNativeDisplayType>(0x12345)};
+
+    EXPECT_CALL(mock_gl, glGetIntegerv(GL_FRAMEBUFFER_BINDING, _))
+        .WillOnce(SetArgPointee<1>(old_fbo));
+    EXPECT_CALL(mock_gl, glGetIntegerv(GL_VIEWPORT, _));
+
+    InSequence s;
+    EXPECT_CALL(mock_gl, glGenFramebuffers(1,_))
+        .WillOnce(SetArgPointee<1>(new_fbo));
+    EXPECT_CALL(mock_gl, glBindFramebuffer(_,new_fbo));
+    EXPECT_CALL(mock_gl, glCheckFramebufferStatus(_))
+        .WillOnce(Return(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT));
+    EXPECT_CALL(mock_gl, glBindFramebuffer(_,old_fbo));
+
+    EXPECT_THROW({
+        mgo::Display display(
+            std::make_shared<StubOffscreenPlatform>(native_display),
+            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mg::NullDisplayReport>());
+    }, std::runtime_error);
 }
