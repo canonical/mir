@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/gbm/gbm_client_buffer.h"
+#include "src/client/gbm/gbm_client_buffer_factory.h"
 #include "mock_drm_fd_handler.h"
 
 #include <xf86drm.h>
@@ -42,6 +43,9 @@ struct MirGBMBufferTest : public testing::Test
 
         package = std::make_shared<MirBufferPackage>();
         package->stride = stride.as_uint32_t();
+        package->width = width.as_int();
+        package->height = height.as_int();
+
         package_copy = std::make_shared<MirBufferPackage>(*package.get());
     }
     geom::Width width;
@@ -212,3 +216,20 @@ TEST_F(MirGBMBufferTest, buffer_does_not_take_a_gem_reference_when_not_mapping)
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
 }
+
+TEST_F(MirGBMBufferTest, factory_gets_size_from_package)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferFactory factory(drm_fd_handler);
+
+    geom::Size unused_size{0, 0};
+    auto buffer = factory.create_buffer(package, unused_size, pf);
+
+    auto const& buf_size = buffer->size();
+    EXPECT_EQ(package->width, buf_size.width.as_int());
+    EXPECT_EQ(package->height, buf_size.height.as_int());
+
+    EXPECT_NE(unused_size, buf_size);
+}
+
