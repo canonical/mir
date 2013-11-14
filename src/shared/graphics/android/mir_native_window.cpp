@@ -69,7 +69,6 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
-    printf("DEQUEUE DEP!\n");
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBufferAndWait(buffer);
 }
