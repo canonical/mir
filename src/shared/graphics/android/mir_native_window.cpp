@@ -69,10 +69,13 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
+    printf("DEQUEUE DEP!\n");
     int fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    //todo: we have to close the fence
-    return self->dequeueBuffer(buffer, &fence_fd);
+    auto rc = self->dequeueBuffer(buffer, &fence_fd);
+    if (fence_fd > 0)
+        close(fence_fd);
+    return rc; 
 }
 
 int dequeueBuffer_static (struct ANativeWindow* window,

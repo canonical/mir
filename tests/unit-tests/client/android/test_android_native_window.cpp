@@ -176,15 +176,21 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
     using namespace testing;
 
     ANativeWindowBuffer* returned_buffer;
-    auto fake_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto mock_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .Times(1)
-        .WillOnce(Return(fake_buffer.get()));
+        .WillOnce(Return(mock_buffer.get()));
+    EXPECT_CALL(*mock_buffer, wait_for_content())
+        .Times(1);
+    EXPECT_CALL(*mock_buffer, copy_fence())
+        .Times(0)
+    MOCK_CONST_METHOD0(copy_fence, graphics::android::NativeFence());
+        .WillOnce(Return(mock_buffer.get()));
 
     window->dequeueBuffer_DEPRECATED(window.get(), &returned_buffer);
-    EXPECT_EQ(fake_buffer->anwb(), returned_buffer);
+    EXPECT_EQ(mock_buffer->anwb(), returned_buffer);
 }
 
 /* queue hook tests */

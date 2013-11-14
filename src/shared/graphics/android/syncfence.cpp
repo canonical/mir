@@ -32,6 +32,7 @@ mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, int fd)
 
 mga::SyncFence::~SyncFence() noexcept
 {
+    printf("CLOSE Fence %i\n", fence_fd);
     if (fence_fd > 0)
     {
         ops->close(fence_fd);
@@ -53,16 +54,19 @@ void mga::SyncFence::merge_with(NativeFence& merge_fd)
 {
     if (merge_fd < 0)
     {
+        printf("merge with no fd\n");
         return;
     }
 
     if (fence_fd < 0)
     {
+        printf("adopt fd\n");
         //our fence was invalid, adopt the other fence
         fence_fd = merge_fd;
     }
     else 
     {
+        printf("meger fd\n");
         //both fences were valid, must merge
         struct sync_merge_data data { merge_fd, "mirfence", infinite_timeout };
         ops->ioctl(fence_fd, SYNC_IOC_MERGE, &data);

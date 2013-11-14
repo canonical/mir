@@ -118,6 +118,9 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
 
 mga::NativeFence mga::LayerList::framebuffer_fence()
 {
+    printf("LAYER 0 fd: %i\n", hwc_representation->hwLayers[0].releaseFenceFd);
+    printf("LAYER 1 fd: %i\n", hwc_representation->hwLayers[1].releaseFenceFd);
+    close(hwc_representation->hwLayers[0].releaseFenceFd); 
     auto fb_position = hwc_representation->numHwLayers - 1;
     return hwc_representation->hwLayers[fb_position].releaseFenceFd; 
 }
