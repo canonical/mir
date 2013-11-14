@@ -19,6 +19,7 @@
 
 #include "hwc10_device.h"
 #include "hwc_vsync_coordinator.h"
+#include "framebuffer_bundle.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -27,10 +28,12 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<FramebufferBundle> const& fb_bundle,
                               std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list({mga::CompositionLayer{true}}),
+      fb_bundle(fb_bundle),
+      layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}}),
       fb_device(fbdev),
       wait_for_vsync(true)
 {
@@ -44,6 +47,11 @@ geom::Size mga::HWC10Device::display_size() const
 geom::PixelFormat mga::HWC10Device::display_format() const
 {
     return fb_device->display_format();
+}
+
+std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
+{
+    return fb_bundle->buffer_for_render();
 }
 
 void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
@@ -76,9 +84,4 @@ void mga::HWC10Device::sync_to_display(bool sync)
 {
     wait_for_vsync = sync;
     fb_device->sync_to_display(sync);
-}
-
-std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
-{
-    return nullptr;
 }

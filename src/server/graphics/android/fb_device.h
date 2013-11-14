@@ -51,7 +51,6 @@ public:
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
-
 };
 
 }

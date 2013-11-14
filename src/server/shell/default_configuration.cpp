@@ -27,7 +27,6 @@
 #include "mediating_display_changer.h"
 #include "organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
-#include "registration_order_focus_sequence.h"
 #include "threaded_snapshot_strategy.h"
 
 #include "mir/graphics/display.h"
@@ -46,7 +45,6 @@ mir::DefaultServerConfiguration::the_session_manager()
             return std::make_shared<msh::SessionManager>(
                 the_shell_surface_factory(),
                 the_shell_session_container(),
-                the_shell_focus_sequence(),
                 the_shell_focus_setter(),
                 the_shell_snapshot_strategy(),
                 the_shell_session_event_sink(),
@@ -177,17 +175,6 @@ std::shared_ptr<mir::DisplayChanger>
 mir::DefaultServerConfiguration::the_display_changer()
 {
     return the_mediating_display_changer();
-}
-
-std::shared_ptr<msh::FocusSequence>
-mir::DefaultServerConfiguration::the_shell_focus_sequence()
-{
-    return shell_focus_sequence(
-        [this]
-        {
-            return std::make_shared<msh::RegistrationOrderFocusSequence>(
-                the_shell_session_container());
-        });
 }
 
 std::shared_ptr<msh::SnapshotStrategy>

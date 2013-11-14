@@ -39,6 +39,7 @@ public:
     MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
 };
 }
 

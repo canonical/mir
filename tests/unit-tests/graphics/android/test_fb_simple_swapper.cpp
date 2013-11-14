@@ -183,8 +183,6 @@ TEST_F(PostingFBBundleTest, hwc_version_11_format_selection_failure)
     EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
 }
 
-
-
 TEST_F(PostingFBBundleTest, bundle_from_fb)
 {
     using namespace testing;
@@ -197,7 +195,6 @@ TEST_F(PostingFBBundleTest, bundle_from_fb)
     EXPECT_EQ(display_size, framebuffers.fb_size());
     EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
 }
-
 
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
 TEST_F(PostingFBBundleTest, determine_fbnum_always_reports_2_minimum)
@@ -218,10 +215,9 @@ TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
     auto test_buffer = framebuffers.last_rendered_buffer();
     EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
 
-    std::shared_ptr<mg::Buffer> first_buffer;
-    first_buffer = framebuffers.buffer_for_render();
-    {
-        EXPECT_NE(first_buffer, framebuffers.last_rendered_buffer());
-    }
-    EXPECT_EQ(first_buffer, framebuffers.last_rendered_buffer());
+    auto first_buffer = framebuffers.buffer_for_render();
+    auto first_buffer_ptr = first_buffer.get();
+    EXPECT_NE(first_buffer, framebuffers.last_rendered_buffer());
+    first_buffer.reset();
+    EXPECT_EQ(first_buffer_ptr, framebuffers.last_rendered_buffer().get());
 } 

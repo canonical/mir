@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -33,29 +34,6 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
-
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-struct MockFBBundle : public mga::FramebufferBundle
-{
-    MockFBBundle()
-    {
-        using namespace testing;
-        ON_CALL(*this, last_rendered_buffer())
-            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
-    }
-    MOCK_METHOD0(fb_format, geom::PixelFormat());
-    MOCK_METHOD0(fb_size, geom::Size());
-    MOCK_METHOD0(buffer_for_render, std::shared_ptr<mg::Buffer>());
-    MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<mg::Buffer>());
-};
-}
-}
-}
 
 class HWC11Device : public ::testing::Test
 {
@@ -117,6 +95,16 @@ TEST_F(HWC11Device, test_hwc_commit_order)
     EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
     EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[1].compositionType);
     EXPECT_EQ(0, mock_device->set_layerlist[1].flags);
+}
+
+TEST_F(HWC11Device, buffer_for_render)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
+    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
+    EXPECT_EQ(mock_buffer, device.buffer_for_render());
 }
 
 TEST_F(HWC11Device, test_hwc_commit_failure)

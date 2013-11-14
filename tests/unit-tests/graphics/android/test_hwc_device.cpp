@@ -47,7 +47,7 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
                                                 std::shared_ptr<mga::DisplayDevice> const& fbdev,
                                                 std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
-    return std::make_shared<mga::HWC10Device>(hwc_device, fbdev, coordinator);
+    return std::make_shared<mga::HWC10Device>(hwc_device, nullptr, fbdev, coordinator);
 }
 
 template <>

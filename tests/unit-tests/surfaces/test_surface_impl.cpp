@@ -21,7 +21,7 @@
 #include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/surfaces/surface_stack_model.h"
-#include "mir/shell/surface_builder.h"
+#include "src/server/surfaces/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 
@@ -65,7 +65,7 @@ struct MockEventSink : public mf::EventSink
     MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
 };
 
-class StubSurfaceBuilder : public msh::SurfaceBuilder
+class StubSurfaceBuilder : public ms::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
@@ -106,7 +106,7 @@ private:
     std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
 };
 
-class MockSurfaceBuilder : public msh::SurfaceBuilder
+class MockSurfaceBuilder : public ms::SurfaceBuilder
 {
 public:
     MockSurfaceBuilder()

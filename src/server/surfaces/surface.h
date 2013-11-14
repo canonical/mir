@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_H_
 #define MIR_SURFACES_SURFACE_H_
 
-#include "mir/surfaces/basic_surface.h"
+#include "basic_surface.h"
 
 namespace mir
 {
