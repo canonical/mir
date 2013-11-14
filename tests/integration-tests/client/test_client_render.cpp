@@ -213,6 +213,10 @@ struct StubServerGenerator : public mt::StubServerTool
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
         response->mutable_buffer()->set_stride(client_buffer->stride().as_uint32_t());
 
+        auto const& size = client_buffer->size();
+        response->mutable_buffer()->set_width(size.width.as_int());
+        response->mutable_buffer()->set_height(size.height.as_int());
+
         response->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         for(auto i=0; i<native_handle->numFds; i++)
@@ -242,6 +246,11 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         response->set_stride(client_buffer->stride().as_uint32_t());
+
+        auto const& size = client_buffer->size();
+        response->set_width(size.width.as_int());
+        response->set_height(size.height.as_int());
+
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
