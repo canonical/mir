@@ -46,6 +46,7 @@ public:
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
+    std::shared_ptr<FramebufferBundle> const fb_bundle;
     LayerList layer_list;
 
     std::shared_ptr<DisplayDevice> const fb_device;

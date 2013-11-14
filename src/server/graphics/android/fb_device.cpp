@@ -57,6 +57,11 @@ geom::PixelFormat mga::FBDevice::display_format() const
     return to_mir_format(fb_device->format);
 }
 
+std::shared_ptr<mg::Buffer> mga::FBDevice::buffer_for_render()
+{
+    return fb_bundle->buffer_for_render();
+}
+
 void mga::FBDevice::sync_to_display(bool sync)
 {
     if (!fb_device->setSwapInterval)
@@ -93,9 +98,4 @@ void mga::FBDevice::mode(MirPowerMode mode)
 {
     // TODO: Implement
     (void) mode;
-}
-
-std::shared_ptr<mg::Buffer> mga::FBDevice::buffer_for_render()
-{
-    return nullptr;
 }

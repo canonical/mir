@@ -37,8 +37,6 @@ class FramebufferBundle;
 class HWC11Device : public HWCCommonDevice
 {
 public:
-    //TODO, (kdub) might make more sense for fb bundle to be owned and managed by LayerList, once
-    //      we start doing overlays
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<FramebufferBundle> const& fb_bundle,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);

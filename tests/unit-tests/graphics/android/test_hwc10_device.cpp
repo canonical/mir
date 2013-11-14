@@ -156,7 +156,6 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
     }, std::runtime_error);
 }
 
-#if 0
 TEST_F(HWC10Device, determine_attributes_uses_fb)
 {
     using namespace testing;
@@ -166,13 +165,8 @@ TEST_F(HWC10Device, determine_attributes_uses_fb)
     EXPECT_CALL(*mock_fbdev, display_format())
         .Times(1)
         .WillOnce(Return(test_pf));
-    EXPECT_CALL(*mock_fbdev, number_of_framebuffers_available())
-        .Times(1)
-        .WillOnce(Return(test_numfb));
 
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
     EXPECT_EQ(test_size, device.display_size());
     EXPECT_EQ(test_pf, device.display_format());
-    EXPECT_EQ(test_numfb, device.number_of_framebuffers_available());
 }
-#endif
