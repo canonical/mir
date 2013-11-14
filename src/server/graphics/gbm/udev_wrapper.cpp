@@ -28,8 +28,13 @@ namespace mgg = mir::graphics::gbm;
 /////////////////////
 
 mgg::UdevDevice::UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath)
+    : UdevDevice(udev_device_new_from_syspath(ctx->ctx(), syspath.c_str()))
 {
-    dev = udev_device_new_from_syspath(ctx->ctx(), syspath.c_str());
+}
+
+mgg::UdevDevice::UdevDevice(udev_device *dev)
+    : dev(dev)
+{
     if (!dev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
 }
@@ -204,4 +209,29 @@ mgg::UdevContext::~UdevContext() noexcept
 udev* mgg::UdevContext::ctx()
 {
     return context;
+}
+
+///////////////////
+//   UdevMonitor
+///////////////////
+mgg::UdevMonitor::UdevMonitor(std::shared_ptr<mgg::UdevContext> const& ctx)
+    : ctx(ctx)
+{
+    monitor = udev_monitor_new_from_netlink(ctx->ctx(), "udev");
+
+    if (!monitor)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev_monitor"));
+}
+
+void mgg::UdevMonitor::enable(void)
+{
+    udev_monitor_enable_receiving(monitor);
+}
+
+void mgg::UdevMonitor::process_events(std::function<void(mgg::UdevMonitor::EventType,
+                                                         mgg::UdevDevice const&)> const& handler) const
+{
+    udev_device *dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
+    if (dev != nullptr)
+        handler(UdevMonitor::EventType::ADDED, UdevDevice(dev));
 }

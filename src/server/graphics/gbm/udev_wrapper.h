@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <libudev.h>
+#include <mir/graphics/event_handler_register.h>
 
 namespace mir
 {
@@ -52,6 +53,7 @@ class UdevDevice
 {
 public:
     UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath);
+    UdevDevice(udev_device *dev);
     ~UdevDevice() noexcept;
 
     UdevDevice(UdevDevice const&) = delete;
@@ -115,6 +117,26 @@ private:
     std::shared_ptr<UdevContext> ctx;
     udev_enumerate* enumerator;
     bool scanned;
+};
+
+class UdevMonitor
+{
+public:
+    enum EventType {
+        ADDED,
+        REMOVED,
+        CHANGED,
+    };
+
+    UdevMonitor(std::shared_ptr<UdevContext> const& ctx);
+
+    void enable(void);
+
+    void process_events(std::function<void(EventType, UdevDevice const&)> const& handler) const;
+
+private:
+    std::shared_ptr<UdevContext> ctx;
+    udev_monitor *monitor;
 };
 
 }

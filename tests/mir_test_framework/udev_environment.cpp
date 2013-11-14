@@ -34,11 +34,17 @@ namespace mtf = mir::mir_test_framework;
 mtf::UdevEnvironment::UdevEnvironment()
 {
     testbed = umockdev_testbed_new();
+
+    udev *ctx = udev_new();
+    workaround = udev_monitor_new_from_netlink(ctx, "udev");
+    udev_monitor_enable_receiving(workaround);
+    udev_unref(ctx);
 }
 
 mtf::UdevEnvironment::~UdevEnvironment() noexcept
 {
     g_object_unref(testbed);
+    udev_monitor_unref(workaround);
 }
 
 void mtf::UdevEnvironment::add_standard_drm_devices()
@@ -74,6 +80,8 @@ std::string mtf::UdevEnvironment::add_device(char const* subsystem,
 
     if (syspath == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create mock udev device"));
+
+    umockdev_testbed_uevent(testbed, syspath, "add");
 
     std::string retval(syspath);
     g_free(syspath);

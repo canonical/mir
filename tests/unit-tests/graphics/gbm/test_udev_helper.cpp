@@ -17,7 +17,6 @@
  */
 
 #include "mir_test_framework/udev_environment.h"
-
 #include "src/server/graphics/gbm/udev_wrapper.h"
 
 #include <gtest/gtest.h>
@@ -257,4 +256,36 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
         EXPECT_TRUE(boost::regex_match(device.devpath(), boost::regex(".*card[0-9].*")))
             << "Unexpected device with devpath:" << device.devpath();
     }
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    bool event_handler_called = false;
+
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});    
+
+    monitor.process_events([&event_handler_called](mgg::UdevMonitor::EventType,
+                                                   mgg::UdevDevice const&) {event_handler_called = true;});
+
+    EXPECT_FALSE(event_handler_called);
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    bool event_handler_called = false;
+
+    monitor.enable();
+
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});    
+
+    monitor.process_events([&event_handler_called](mgg::UdevMonitor::EventType,
+                                                   mgg::UdevDevice const&) {event_handler_called = true;});
+
+    EXPECT_TRUE(event_handler_called);
 }
