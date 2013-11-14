@@ -185,9 +185,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
     EXPECT_CALL(*mock_buffer, wait_for_content())
         .Times(1);
     EXPECT_CALL(*mock_buffer, copy_fence())
-        .Times(0)
-    MOCK_CONST_METHOD0(copy_fence, graphics::android::NativeFence());
-        .WillOnce(Return(mock_buffer.get()));
+        .Times(0);
 
     window->dequeueBuffer_DEPRECATED(window.get(), &returned_buffer);
     EXPECT_EQ(mock_buffer->anwb(), returned_buffer);
