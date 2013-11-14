@@ -38,9 +38,10 @@ mgo::GLExtensionsBase::GLExtensionsBase(char const* extensions)
 bool mgo::GLExtensionsBase::support(char const* ext) const
 {
     char const* ext_ptr = extensions;
-    size_t len = strlen(ext);
+    size_t const len = strlen(ext);
 
-    while ((ext_ptr = strstr(ext_ptr, ext)) != nullptr) {
+    while ((ext_ptr = strstr(ext_ptr, ext)) != nullptr)
+    {
         if (ext_ptr[len] == ' ' || ext_ptr[len] == '\0')
             break;
         ext_ptr += len;
