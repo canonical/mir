@@ -292,9 +292,7 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
             egl_display{egl_display},
             egl_config{egl_display.choose_config(detail::nested_egl_config_attribs)},
             egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)},
-            egl_surface{egl_display,
-                        eglCreatePbufferSurface(egl_display, egl_config,
-                                                dummy_pbuffer_attribs)}
+            egl_surface{egl_display, eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
         {
         }
 
