@@ -311,3 +311,25 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 
     EXPECT_TRUE(remove_event_received);
 }
+
+TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    bool changed_event_received = false;
+
+    monitor.enable();
+
+    auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.emit_device_changed(test_sysfspath);
+
+    monitor.process_events([&changed_event_received]
+        (mgg::UdevMonitor::EventType action, mgg::UdevDevice const&)
+            {
+                if (action == mgg::UdevMonitor::EventType::CHANGED)
+                    changed_event_received = true;
+            });
+
+    EXPECT_TRUE(changed_event_received);    
+}

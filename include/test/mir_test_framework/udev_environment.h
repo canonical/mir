@@ -43,6 +43,7 @@ public:
                            std::initializer_list<char const*> attributes,
                            std::initializer_list<char const*> properties);
     void remove_device(std::string const& device_path);
+    void emit_device_changed(std::string const& device_path);
 
     UMockdevTestbed *testbed;
 private:
