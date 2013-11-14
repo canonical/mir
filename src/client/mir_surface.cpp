@@ -41,7 +41,6 @@ MirSurface::MirSurface(
     MirSurfaceParameters const & params,
     mir_surface_callback callback, void * context)
     : server(server),
-      size{params.width, params.height},
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
@@ -85,8 +84,8 @@ MirSurfaceParameters MirSurface::get_parameters() const
 
     return MirSurfaceParameters {
         0,
-        size.width.as_int(),
-        size.height.as_int(),
+        surface.width(),
+        surface.height(),
         static_cast<MirPixelFormat>(surface.pixel_format()),
         static_cast<MirBufferUsage>(surface.buffer_usage()),
         mir_display_output_id_invalid};
@@ -170,20 +169,20 @@ void MirSurface::process_incoming_buffer()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    int id = 0;
-    if (surface.has_buffer())
-    {
-        auto const& buffer = surface.buffer();
-        id = buffer.buffer_id();
+    auto const& buffer = surface.buffer();
 
-        /*
-         * On most frames the server decides it doesn't "need full IPC",
-         * which means most of buffer is uninitialized. So check if width
-         * and height are actually present...
-         */
-        if (buffer.has_width() && buffer.has_height())
-            size = geom::Size{buffer.width(), buffer.height()};
+    /*
+     * On most frames when the properties aren't changing, the server won't
+     * fill in the width and height. I think this is an intentional
+     * protocol optimization ("need_full_ipc").
+     */
+    if (buffer.has_width() && buffer.has_height())
+    {
+        surface.set_width(buffer.width());
+        surface.set_height(buffer.height());
     }
+
+    auto surface_size = geom::Size{surface.width(), surface.height()};
     auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format());
 
     auto ipc_package = std::make_shared<MirBufferPackage>();
@@ -192,7 +191,8 @@ void MirSurface::process_incoming_buffer()
     try
     {
         buffer_depository->deposit_package(std::move(ipc_package),
-                                           id, size, surface_pf);
+                                           buffer.buffer_id(),
+                                           surface_size, surface_pf);
     }
     catch (const std::runtime_error& err)
     {

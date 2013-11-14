@@ -109,8 +109,6 @@ private:
     mir::protobuf::Surface surface;
     std::string error_message;
 
-    mir::geometry::Size size;
-
     MirConnection *connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
