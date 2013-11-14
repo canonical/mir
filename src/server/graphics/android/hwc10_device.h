@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
 #include "hwc_common_device.h"
+#include "hwc_layerlist.h"
 
 namespace mir
 {
@@ -44,6 +45,8 @@ public:
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
+    LayerList layer_list;
+
     std::shared_ptr<DisplayDevice> const fb_device;
     bool wait_for_vsync;
 };
