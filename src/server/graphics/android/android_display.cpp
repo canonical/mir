@@ -35,7 +35,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFac
                                     std::shared_ptr<DisplayReport> const& display_report)
     : db_factory{db_factory},
       display_device(db_factory->create_display_device()),
-      gl_context{display_device->display_format()},
+      gl_context{display_device->display_format(), *display_report},
       display_buffer{db_factory->create_display_buffer(display_device, gl_context)},
       current_configuration{display_buffer->view_area().size}
 {
@@ -45,7 +45,6 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFac
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
-//    display_report->report_egl_configuration(egl_display, egl_config);
 }
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)

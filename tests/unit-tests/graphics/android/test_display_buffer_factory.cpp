@@ -204,7 +204,7 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
 TEST_F(DisplayBufferCreation, db_creation)
 {
     using namespace testing;
-    mga::GLContext gl_context(mga::to_mir_format(mock_egl.fake_visual_id));
+    mga::GLContext gl_context(mga::to_mir_format(mock_egl.fake_visual_id), *mock_display_report);
 
     mtd::StubDisplayDevice stub_device;
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))

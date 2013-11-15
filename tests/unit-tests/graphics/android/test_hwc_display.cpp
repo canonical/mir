@@ -46,7 +46,8 @@ protected:
         dummy_display = mock_egl.fake_egl_display;
         dummy_config = mock_egl.fake_configs[0];
         dummy_context = mock_egl.fake_egl_context;
-        gl_context = std::make_shared<mga::GLContext>(mga::to_mir_format(mock_egl.fake_visual_id));
+        mtd::MockDisplayReport report;
+        gl_context = std::make_shared<mga::GLContext>(mga::to_mir_format(mock_egl.fake_visual_id),report);
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;

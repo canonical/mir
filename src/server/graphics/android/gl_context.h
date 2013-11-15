@@ -28,6 +28,7 @@ namespace mir
 {
 namespace graphics
 {
+class DisplayReport;
 namespace android
 {
 
@@ -39,7 +40,7 @@ class GLContext : public graphics::GLContext
 {
 public:
     //For creating a gl context
-    GLContext(geometry::PixelFormat display_format);
+    GLContext(geometry::PixelFormat display_format, DisplayReport& report);
 
     //For creating a gl context shared with another GLContext
     GLContext(GLContext const& shared_gl_context,
