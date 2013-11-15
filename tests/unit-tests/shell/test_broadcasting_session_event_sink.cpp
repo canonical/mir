@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
@@ -31,7 +32,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
     mtd::StubShellSession session1;
     std::vector<msh::Session*> handler_called(3, nullptr);
 
-    msh::BroadcastingSessionEventSink events;
+    ms::BroadcastingSessionEventSink events;
 
     for (auto& h : handler_called)
     {
@@ -55,7 +56,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
     mtd::StubShellSession session1;
     std::vector<int> handler_called(3, 0);
 
-    msh::BroadcastingSessionEventSink events;
+    ms::BroadcastingSessionEventSink events;
 
     for (auto& h : handler_called)
     {
@@ -79,7 +80,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_session_stopping)
     mtd::StubShellSession session1;
     std::vector<msh::Session*> handler_called(3, nullptr);
 
-    msh::BroadcastingSessionEventSink events;
+    ms::BroadcastingSessionEventSink events;
 
     for (auto& h : handler_called)
     {

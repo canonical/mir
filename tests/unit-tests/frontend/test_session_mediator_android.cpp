@@ -19,7 +19,7 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
-#include "mir/shell/application_session.h"
+#include "src/server/surfaces/application_session.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"

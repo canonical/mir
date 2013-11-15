@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullSessionEventSink : public shell::SessionEventSink
+class NullSessionEventSink : public surfaces::SessionEventSink
 {
 public:
     void handle_focus_change(std::shared_ptr<shell::Session> const&) {}

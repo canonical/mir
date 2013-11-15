@@ -31,7 +31,7 @@ class SurfacesReport;
 class Surface : public BasicSurface
 {
 public:
-    Surface(std::shared_ptr<surfaces::SurfaceState> const& surface_state,
+    Surface(std::shared_ptr<SurfaceState> const& surface_state,
             std::shared_ptr<compositor::BufferStream> const& buffer_stream,
             std::shared_ptr<input::InputChannel> const& input_channel,
             std::shared_ptr<SurfacesReport> const& report);
@@ -70,7 +70,7 @@ public:
     void resize(geometry::Size const& size);
 
 private:
-    std::shared_ptr<surfaces::SurfaceState> surface_state;
+    std::shared_ptr<SurfaceState> surface_state;
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SurfacesReport> const report;

@@ -51,7 +51,7 @@ namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::shared_ptr<ms::InputRegistrar> const& input_registrar,
+    std::shared_ptr<InputRegistrar> const& input_registrar,
     std::shared_ptr<SurfacesReport> const& report) :
     surface_factory{surface_factory},
     input_registrar{input_registrar},
@@ -117,7 +117,7 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceC
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::BasicSurface> const& surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
 {
     auto keep_alive = surface.lock();
 
@@ -164,7 +164,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<ms::BasicSurface> const& s)
+void ms::SurfaceStack::raise(std::weak_ptr<BasicSurface> const& s)
 {
     auto surface = s.lock();
 

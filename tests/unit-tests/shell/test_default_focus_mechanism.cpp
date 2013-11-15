@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/shell/application_session.h"
+#include "src/server/surfaces/application_session.h"
 #include "src/server/shell/default_focus_mechanism.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"

@@ -678,7 +678,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             // before event dispatch occurs
             second_client_done_fence.wait_for_signal_ready_for();
 
-            server.the_shell_session_container()->for_each([&](std::shared_ptr<msh::Session> const& session) -> void
+            server.the_session_container()->for_each([&](std::shared_ptr<msh::Session> const& session) -> void
             {
                 if (session->name() == test_client_2_name)
                     session->hide();

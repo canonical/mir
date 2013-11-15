@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
-#define MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
+#ifndef MIR_SURFACES_MEDIATING_DISPLAY_CHANGER_H_
+#define MIR_SURFACES_MEDIATING_DISPLAY_CHANGER_H_
 
 #include "mir/frontend/display_changer.h"
 #include "mir/display_changer.h"
@@ -34,12 +34,10 @@ namespace graphics
     class DisplayConfigurationPolicy;
 }
 namespace compositor { class Compositor; }
-
-namespace shell
+namespace surfaces
 {
-
-class SessionContainer;
 class SessionEventHandlerRegister;
+class SessionContainer;
 
 class MediatingDisplayChanger : public frontend::DisplayChanger,
                                 public mir::DisplayChanger
@@ -74,7 +72,7 @@ private:
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<compositor::Compositor> const compositor;
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const display_configuration_policy;
-    std::shared_ptr<shell::SessionContainer> const session_container;
+    std::shared_ptr<SessionContainer> const session_container;
     std::shared_ptr<SessionEventHandlerRegister> const session_event_handler_register;
     std::mutex configuration_mutex;
     std::map<std::weak_ptr<frontend::Session>,
@@ -88,4 +86,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_ */
+#endif /* MIR_SURFACES_MEDIATING_DISPLAY_CHANGER_H_ */

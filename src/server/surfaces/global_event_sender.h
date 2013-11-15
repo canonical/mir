@@ -16,15 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SHELL_GLOBAL_EVENT_SENDER_H_
-#define MIR_SHELL_GLOBAL_EVENT_SENDER_H_
+#ifndef MIR_SURFACES_GLOBAL_EVENT_SENDER_H_
+#define MIR_SURFACES_GLOBAL_EVENT_SENDER_H_
 
 #include "mir/frontend/event_sink.h"
 #include <memory>
 
 namespace mir
 {
-namespace shell
+namespace surfaces
 {
 class SessionContainer;
 
@@ -43,4 +43,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_GLOBAL_EVENT_SENDER_H_ */
+#endif /* MIR_SURFACES_GLOBAL_EVENT_SENDER_H_ */

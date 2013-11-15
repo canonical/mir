@@ -26,6 +26,7 @@
 #include "mir/graphics/display_configuration.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -57,11 +58,11 @@ private:
 
 }
 
-msh::MediatingDisplayChanger::MediatingDisplayChanger(
+ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy,
-    std::shared_ptr<msh::SessionContainer> const& session_container,
+    std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register)
     : display{display},
       compositor{compositor},
@@ -72,7 +73,7 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
       base_configuration_applied{true}
 {
     session_event_handler_register->register_focus_change_handler(
-        [this](std::shared_ptr<Session> const& session)
+        [this](std::shared_ptr<msh::Session> const& session)
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -107,7 +108,7 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     session_event_handler_register->register_session_stopping_handler(
-        [this](std::shared_ptr<Session> const& session)
+        [this](std::shared_ptr<msh::Session> const& session)
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -116,7 +117,7 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
 
 }
 
-void msh::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const& session)
+void ms::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const& session)
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
     bool switched = false;
@@ -142,7 +143,7 @@ void msh::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Se
         configure(session, conf);
 }
 
-void msh::MediatingDisplayChanger::configure(
+void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
@@ -158,14 +159,14 @@ void msh::MediatingDisplayChanger::configure(
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
-msh::MediatingDisplayChanger::active_configuration()
+ms::MediatingDisplayChanger::active_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
     return display->configuration();
 }
 
-void msh::MediatingDisplayChanger::configure_for_hardware_change(
+void ms::MediatingDisplayChanger::configure_for_hardware_change(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
@@ -186,7 +187,7 @@ void msh::MediatingDisplayChanger::configure_for_hardware_change(
     send_config_to_all_sessions(conf);
 }
 
-void msh::MediatingDisplayChanger::apply_config(
+void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
@@ -206,14 +207,14 @@ void msh::MediatingDisplayChanger::apply_config(
     base_configuration_applied = false;
 }
 
-void msh::MediatingDisplayChanger::apply_base_config(
+void ms::MediatingDisplayChanger::apply_base_config(
     SystemStateHandling pause_resume_system)
 {
     apply_config(base_configuration, pause_resume_system);
     base_configuration_applied = true;
 }
 
-void msh::MediatingDisplayChanger::send_config_to_all_sessions(
+void ms::MediatingDisplayChanger::send_config_to_all_sessions(
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     session_container->for_each(

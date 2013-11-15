@@ -17,20 +17,25 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/input/input_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/shell/session.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
+#include "gl_pixel_buffer.h"
 #include "global_event_sender.h"
 #include "mediating_display_changer.h"
 #include "session_container.h"
+#include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
 #include "surfaces_report.h"
 #include "surface_source.h"
 #include "surface_stack.h"
+#include "threaded_snapshot_strategy.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -143,47 +148,47 @@ mir::DefaultServerConfiguration::the_surfaces_report()
     });
 }
 
-std::shared_ptr<msh::BroadcastingSessionEventSink>
+std::shared_ptr<ms::BroadcastingSessionEventSink>
 mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
 {
     return broadcasting_session_event_sink(
         []
         {
-            return std::make_shared<msh::BroadcastingSessionEventSink>();
+            return std::make_shared<ms::BroadcastingSessionEventSink>();
         });
 }
 
-std::shared_ptr<msh::SessionEventSink>
-mir::DefaultServerConfiguration::the_shell_session_event_sink()
+std::shared_ptr<ms::SessionEventSink>
+mir::DefaultServerConfiguration::the_session_event_sink()
 {
     return the_broadcasting_session_event_sink();
 }
 
-std::shared_ptr<msh::SessionEventHandlerRegister>
-mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
+std::shared_ptr<ms::SessionEventHandlerRegister>
+mir::DefaultServerConfiguration::the_session_event_handler_register()
 {
     return the_broadcasting_session_event_sink();
 }
 
-std::shared_ptr<msh::SessionContainer>
-mir::DefaultServerConfiguration::the_shell_session_container()
+std::shared_ptr<ms::SessionContainer>
+mir::DefaultServerConfiguration::the_session_container()
 {
-    return shell_session_container(
-        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
+    return session_container(
+        []{ return std::make_shared<ms::DefaultSessionContainer>(); });
 }
 
-std::shared_ptr<msh::MediatingDisplayChanger>
+std::shared_ptr<ms::MediatingDisplayChanger>
 mir::DefaultServerConfiguration::the_mediating_display_changer()
 {
     return mediating_display_changer(
         [this]()
         {
-            return std::make_shared<msh::MediatingDisplayChanger>(
+            return std::make_shared<ms::MediatingDisplayChanger>(
                 the_display(),
                 the_compositor(),
                 the_display_configuration_policy(),
-                the_shell_session_container(),
-                the_shell_session_event_handler_register());
+                the_session_container(),
+                the_session_event_handler_register());
         });
 
 }
@@ -203,7 +208,7 @@ mir::DefaultServerConfiguration::the_display_changer()
 std::function<void()>
 mir::DefaultServerConfiguration::force_threads_to_unblock_callback()
 {
-    auto shell_sessions = the_shell_session_container();
+    auto shell_sessions = the_session_container();
     return [shell_sessions]
     {
         shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
@@ -219,6 +224,56 @@ mir::DefaultServerConfiguration::the_global_event_sink()
     return global_event_sink(
         [this]()
         {
-            return std::make_shared<msh::GlobalEventSender>(the_shell_session_container());
+            return std::make_shared<ms::GlobalEventSender>(the_session_container());
+        });
+}
+
+std::shared_ptr<ms::SessionManager>
+mir::DefaultServerConfiguration::the_session_manager()
+{
+    return session_manager(
+        [this]() -> std::shared_ptr<ms::SessionManager>
+        {
+            return std::make_shared<ms::SessionManager>(
+                the_shell_surface_factory(),
+                the_session_container(),
+                the_shell_focus_setter(),
+                the_snapshot_strategy(),
+                the_session_event_sink(),
+                the_shell_session_listener());
+        });
+}
+
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
+{
+    return the_session_manager();
+}
+
+std::shared_ptr<msh::FocusController>
+mir::DefaultServerConfiguration::the_focus_controller()
+{
+    return the_session_manager();
+}
+
+std::shared_ptr<ms::PixelBuffer>
+mir::DefaultServerConfiguration::the_pixel_buffer()
+{
+    return pixel_buffer(
+        [this]()
+        {
+            return std::make_shared<ms::GLPixelBuffer>(
+                the_display()->create_gl_context());
+        });
+}
+
+std::shared_ptr<ms::SnapshotStrategy>
+mir::DefaultServerConfiguration::the_snapshot_strategy()
+{
+    return snapshot_strategy(
+        [this]()
+        {
+            return std::make_shared<ms::ThreadedSnapshotStrategy>(
+                the_pixel_buffer());
         });
 }

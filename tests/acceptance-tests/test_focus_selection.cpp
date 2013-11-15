@@ -21,7 +21,7 @@
 #include "src/server/surfaces/session_container.h"
 #include "src/server/shell/consuming_placement_strategy.h"
 #include "src/server/shell/organising_surface_factory.h"
-#include "mir/shell/session_manager.h"
+#include "src/server/surfaces/session_manager.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
 
