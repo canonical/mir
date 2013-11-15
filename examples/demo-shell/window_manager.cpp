@@ -62,6 +62,9 @@ void me::WindowManager::set_compositor(std::shared_ptr<mc::Compositor> const& cp
     compositor = cptor;
 }
 
+namespace
+{
+
 mir::geometry::Point average_pointer(MirMotionEvent const& motion)
 {
     using namespace mir;
@@ -81,7 +84,8 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
     return Point{x, y};
 }
 
-float pinch_diameter(MirMotionEvent const& motion)
+float measure_pinch(MirMotionEvent const& motion,
+                    mir::geometry::Displacement& dir)
 {
     int count = static_cast<int>(motion.pointer_count);
     int max = 0;
@@ -98,12 +102,22 @@ float pinch_diameter(MirMotionEvent const& motion)
             int sqr = dx*dx + dy*dy;
 
             if (sqr > max)
+            {
                 max = sqr;
+                dir = mir::geometry::Displacement{dx, dy};
+            }
         }
     }
 
-    return sqrtf(max);
+    return sqrtf(max);  // return pinch diameter
 }
+
+bool mostly_vertical(mir::geometry::Displacement const& dir)
+{
+    return abs(dir.dy.as_int()) >= abs(dir.dx.as_int());
+}
+
+} // namespace
 
 bool me::WindowManager::handle(MirEvent const& event)
 {
@@ -174,7 +188,9 @@ bool me::WindowManager::handle(MirEvent const& event)
                 (event.motion.modifiers & mir_key_modifier_alt ||
                  fingers >= 3))
             {
-                auto pinch = pinch_diameter(event.motion);
+                geometry::Displacement pinch_dir;
+                auto pinch_diam =
+                    measure_pinch(event.motion, pinch_dir);
 
                 // Start of a gesture: When the latest finger/button goes down
                 if (action == mir_motion_action_down ||
@@ -182,7 +198,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 {
                     relative_click = cursor - surf->top_left();
                     old_size = surf->size();
-                    old_pinch = pinch;
+                    old_pinch = pinch_diam;
                     click = cursor;
                 }
                 else if (event.motion.action == mir_motion_action_move &&
@@ -205,11 +221,19 @@ bool me::WindowManager::handle(MirEvent const& event)
 
                     if (fingers == 3)
                     {  // Resize by pinch/zoom
-                        auto pinch_delta = pinch - old_pinch;
-                        int width = old_size.width.as_int() + pinch_delta;
-                        int height = old_size.height.as_int() + pinch_delta;
-                        if (width <= 0) width = 1;
-                        if (height <= 0) height = 1; 
+                        auto pinch_delta = pinch_diam - old_pinch;
+                        int width = old_size.width.as_int();
+                        int height = old_size.height.as_int();
+                        if (mostly_vertical(pinch_dir))
+                        {
+                            height += pinch_delta;
+                            if (height <= 0) height = 1; 
+                        }
+                        else
+                        {
+                            width += pinch_delta;
+                            if (width <= 0) width = 1; 
+                        }
                         surf->resize({width, height});
                     }
                     return true;
