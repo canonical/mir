@@ -260,7 +260,7 @@ int mgg::UdevMonitor::fd(void) const
 
 void mgg::UdevMonitor::filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype)
 {
-    if (enabled)
-        BOOST_THROW_EXCEPTION(std::logic_error("Filters must be installed before event receiving is enabled"));
     udev_monitor_filter_add_match_subsystem_devtype(monitor, subsystem.c_str(), devtype.c_str());
+    if (enabled)
+        udev_monitor_filter_update(monitor);
 }
