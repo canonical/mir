@@ -17,6 +17,8 @@
  */
 
 #include "src/server/graphics/android/display_buffer_factory.h"
+#include "src/server/graphics/android/gl_context.h"
+#include "src/server/graphics/android/android_format_conversion-inl.h"
 #include "src/server/graphics/android/resource_factory.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
@@ -78,7 +80,7 @@ public:
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     }
 
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
@@ -199,18 +201,15 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
     factory.create_display_device();
 }
 
-#if 0
 TEST_F(DisplayBufferCreation, db_creation)
 {
     using namespace testing;
+    mga::GLContext gl_context(mga::to_mir_format(mock_egl.fake_visual_id));
+
     mtd::StubDisplayDevice stub_device;
-    EGLDisplay disp = reinterpret_cast<EGLDisplay>(0x3);
-    EGLConfig conf = reinterpret_cast<EGLConfig>(0x3);
-    EGLContext cont = reinterpret_cast<EGLContext>(0x3);
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
-    factory.create_display_buffer(mt::fake_shared(stub_device), disp, conf, cont);
+    factory.create_display_buffer(mt::fake_shared(stub_device), gl_context);
 }
-#endif
