@@ -43,7 +43,7 @@ const int min_swipe_distance = 100;  // How long must a swipe be to act on?
 }
 
 me::WindowManager::WindowManager()
-    : old_pinch(0.0f), max_fingers(0)
+    : old_pinch_diam(0.0f), max_fingers(0)
 {
 }
 
@@ -198,7 +198,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 {
                     relative_click = cursor - surf->top_left();
                     old_size = surf->size();
-                    old_pinch = pinch_diam;
+                    old_pinch_diam = pinch_diam;
                     click = cursor;
                 }
                 else if (event.motion.action == mir_motion_action_move &&
@@ -221,19 +221,26 @@ bool me::WindowManager::handle(MirEvent const& event)
 
                     if (fingers == 3)
                     {  // Resize by pinch/zoom
-                        auto pinch_delta = pinch_diam - old_pinch;
-                        int width = old_size.width.as_int();
-                        int height = old_size.height.as_int();
-                        if (mostly_vertical(pinch_dir))
+                        // Resize vector is length=len, dir=pinch_dir
+                        float len = pinch_diam - old_pinch_diam;
+                        float lenlen = len * len;
+                        int x = pinch_dir.dx.as_int();
+                        int y = pinch_dir.dy.as_int();
+                        int xx = x * x;
+                        int yy = y * y;
+                        int div = xx + yy;
+                        int dx = sqrtf(lenlen * xx / div);
+                        int dy = sqrtf(lenlen * yy / div);
+                        if (len < 0.0f)
                         {
-                            height += pinch_delta;
-                            if (height <= 0) height = 1; 
+                            dx = -dx;
+                            dy = -dy;
                         }
-                        else
-                        {
-                            width += pinch_delta;
-                            if (width <= 0) width = 1; 
-                        }
+
+                        int width = old_size.width.as_int() + dx;
+                        int height = old_size.height.as_int() + dy;
+                        if (width <= 0) width = 1; 
+                        if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
                     return true;
