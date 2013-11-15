@@ -275,7 +275,7 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 
 namespace
 {
-static EGLint const dummy_pbuffer_attribs[] =
+EGLint const dummy_pbuffer_attribs[] =
 {
     EGL_WIDTH, 1,
     EGL_HEIGHT, 1,
