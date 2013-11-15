@@ -39,6 +39,7 @@ class AndroidDisplayBufferTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        stub_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
         native_window = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
 
@@ -58,6 +59,7 @@ protected:
     EGLContext dummy_context;
     std::shared_ptr<mga::GLContext> gl_context;
 
+    std::shared_ptr<mtd::MockBuffer> stub_buffer;
     std::shared_ptr<ANativeWindow> native_window;
     std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
 };
@@ -71,9 +73,17 @@ TEST_F(AndroidDisplayBufferTest, test_post_submits_right_egl_parameters)
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size)); 
 
-    mga::DisplayBuffer db(mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(mock_display_device, mock_fb_bundle, native_window, *gl_context);
 
-    EXPECT_CALL(*mock_display_device, commit_frame(dummy_display, mock_egl.fake_egl_surface))
+    InSequence seq;
+    EXPECT_CALL(*mock_display_device, prepare())
+        .Times(1);
+    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
+        .Times(1);
+    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
+        .Times(1)
+        .WillOnce(Return(stub_buffer));
+    EXPECT_CALL(*mock_display_device, commit_frame(stub_buffer))
         .Times(1);
 
     db.post_update();
