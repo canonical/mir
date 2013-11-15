@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 #define MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
-#include "focus_setter.h"
+#include "mir/shell/focus_setter.h"
 
 #include <memory>
 #include <mutex>
