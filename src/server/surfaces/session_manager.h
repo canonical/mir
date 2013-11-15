@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SHELL_APPLICATION_MANAGER_H_
-#define MIR_SHELL_APPLICATION_MANAGER_H_
+#ifndef MIR_SURFACES_APPLICATION_MANAGER_H_
+#define MIR_SURFACES_APPLICATION_MANAGER_H_
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
@@ -29,28 +29,29 @@
 
 namespace mir
 {
-/// Management of sessions and surfaces
+
 namespace shell
 {
 class SurfaceFactory;
-class SessionContainer;
 class FocusSetter;
-class SnapshotStrategy;
-class SessionEventSink;
 class SessionListener;
+}
 
-// TODO make private to shell
-// This first needs unity-mir to be updated to use FocusController
-// and that first needs -c 1175 of development-branch to land on lp:mir
+namespace surfaces
+{
+class SessionEventSink;
+class SessionContainer;
+class SnapshotStrategy;
+
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
-    explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
+    explicit SessionManager(std::shared_ptr<shell::SurfaceFactory> const& surface_factory,
                             std::shared_ptr<SessionContainer> const& app_container,
-                            std::shared_ptr<FocusSetter> const& focus_setter,
+                            std::shared_ptr<shell::FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
-                            std::shared_ptr<SessionListener> const& session_listener);
+                            std::shared_ptr<shell::SessionListener> const& session_listener);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
@@ -58,11 +59,11 @@ public:
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
-                                 SurfaceCreationParameters const& params);
+                                 shell::SurfaceCreationParameters const& params);
 
     void focus_next();
-    std::weak_ptr<Session> focussed_application() const;
-    void set_focus_to(std::shared_ptr<Session> const& focus);
+    std::weak_ptr<shell::Session> focussed_application() const;
+    void set_focus_to(std::shared_ptr<shell::Session> const& focus);
 
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
@@ -71,20 +72,20 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<SurfaceFactory> const surface_factory;
+    std::shared_ptr<shell::SurfaceFactory> const surface_factory;
     std::shared_ptr<SessionContainer> const app_container;
-    std::shared_ptr<FocusSetter> const focus_setter;
+    std::shared_ptr<shell::FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
-    std::shared_ptr<SessionListener> const session_listener;
+    std::shared_ptr<shell::SessionListener> const session_listener;
 
     std::mutex mutex;
-    std::weak_ptr<Session> focus_application;
+    std::weak_ptr<shell::Session> focus_application;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<shell::Session> const& next_focus);
 };
 
 }
 }
 
-#endif // MIR_SHELL_APPLICATION_MANAGER_H_
+#endif // MIR_SURFACES_APPLICATION_MANAGER_H_

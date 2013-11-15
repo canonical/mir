@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_SNAPSHOT_STRATEGY_H_
-#define MIR_SHELL_SNAPSHOT_STRATEGY_H_
+#ifndef MIR_SURFACES_SNAPSHOT_STRATEGY_H_
+#define MIR_SURFACES_SNAPSHOT_STRATEGY_H_
 
 #include "mir/shell/snapshot.h"
 
@@ -27,17 +27,19 @@ namespace mir
 {
 namespace shell
 {
-
 class SurfaceBufferAccess;
+}
 
+namespace surfaces
+{
 class SnapshotStrategy
 {
 public:
     virtual ~SnapshotStrategy() = default;
 
     virtual void take_snapshot_of(
-        std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
-        SnapshotCallback const& snapshot_taken) = 0;
+        std::shared_ptr<shell::SurfaceBufferAccess> const& surface_buffer_access,
+        shell::SnapshotCallback const& snapshot_taken) = 0;
 
 protected:
     SnapshotStrategy() = default;
@@ -48,4 +50,4 @@ protected:
 }
 }
 
-#endif /* MIR_SHELL_SNAPSHOT_STRATEGY_H_ */
+#endif /* MIR_SURFACES_SNAPSHOT_STRATEGY_H_ */
