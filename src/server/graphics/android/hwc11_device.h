@@ -32,6 +32,7 @@ namespace android
 {
 class HWCVsyncCoordinator;
 class SyncFileOps;
+class SyncFence;
 class FramebufferBundle;
 
 class HWC11Device : public HWCCommonDevice
@@ -52,6 +53,7 @@ private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     LayerList layer_list;
 
+    std::shared_ptr<SyncFence> last_display_fence;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     geometry::PixelFormat fb_format;
