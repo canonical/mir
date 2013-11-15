@@ -20,7 +20,7 @@
 #include "mir/shell/application_session.h"
 #include "session_container.h"
 #include "mir/shell/surface_factory.h"
-#include "focus_setter.h"
+#include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
