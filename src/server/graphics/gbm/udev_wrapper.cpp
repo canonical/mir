@@ -215,7 +215,7 @@ udev* mgg::UdevContext::ctx()
 //   UdevMonitor
 ///////////////////
 mgg::UdevMonitor::UdevMonitor(std::shared_ptr<mgg::UdevContext> const& ctx)
-    : ctx(ctx)
+    : enabled(false)
 {
     monitor = udev_monitor_new_from_netlink(ctx->ctx(), "udev");
 
@@ -226,6 +226,7 @@ mgg::UdevMonitor::UdevMonitor(std::shared_ptr<mgg::UdevContext> const& ctx)
 void mgg::UdevMonitor::enable(void)
 {
     udev_monitor_enable_receiving(monitor);
+    enabled = true;
 }
 
 static mgg::UdevMonitor::EventType action_to_event_type(const char* action)
@@ -248,4 +249,18 @@ void mgg::UdevMonitor::process_events(std::function<void(mgg::UdevMonitor::Event
         if (dev != nullptr) 
             handler(action_to_event_type(udev_device_get_action(dev)), UdevDevice(dev));
     } while (dev != nullptr);
+}
+
+int mgg::UdevMonitor::fd(void) const
+{
+    if (!enabled)
+        BOOST_THROW_EXCEPTION(std::logic_error("Must enable event receiving before calling UdevMonitor::fd()"));
+    return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
+}
+
+void mgg::UdevMonitor::filter_by_path_and_type(std::string const& syspath, std::string const& devtype)
+{
+    if (enabled)
+        BOOST_THROW_EXCEPTION(std::logic_error("Filters must be installed before event receiving is enabled"));
+    udev_monitor_filter_add_match_subsystem_devtype(monitor, syspath.c_str(), devtype.c_str());
 }

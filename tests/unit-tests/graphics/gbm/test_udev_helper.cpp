@@ -29,6 +29,7 @@
 
 #include <umockdev.h>
 #include <libudev.h>
+#include <poll.h>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -354,4 +355,94 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
             });
 
     ASSERT_TRUE(event_handler_called);
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+
+    monitor.enable();
+
+    udev_environment.add_device("drm", "card0", NULL, {}, {});
+
+    struct pollfd fds;
+    fds.fd = monitor.fd();
+    fds.events = POLLIN;
+
+    ASSERT_GT(poll(&fds, 1, 0), 0);
+
+    EXPECT_TRUE(fds.revents & POLLIN);    
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+
+    monitor.enable();
+
+    udev_environment.add_device("drm", "card0", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+    udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
+
+    struct pollfd fds;
+    fds.fd = monitor.fd();
+    fds.events = POLLIN;
+
+    ASSERT_GT(poll(&fds, 1, 0), 0);
+    ASSERT_TRUE(fds.revents & POLLIN);    
+
+    monitor.process_events([](mgg::UdevMonitor::EventType, mgg::UdevDevice const&){});
+
+    EXPECT_EQ(poll(&fds, 1, 0), 0);
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorFdThrowsLogicErrorBeforeEnablement)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+
+    EXPECT_THROW({ monitor.fd(); },
+                 std::logic_error);
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    bool event_received = false;
+
+    monitor.filter_by_path_and_type("drm", "drm_minor");
+
+    monitor.enable();
+
+    auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
+    mgg::UdevDevice minor_device(ctx, test_sysfspath);
+    udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
+    udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
+
+    monitor.process_events([&event_received, &minor_device]
+        (mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+            {
+                EXPECT_EQ(dev, minor_device);
+                event_received = true;
+            });
+
+    ASSERT_TRUE(event_received);    
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorFilterThrowsLogicErrorIfEnabled)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    monitor.enable();
+
+    EXPECT_THROW({ monitor.filter_by_path_and_type("usb", ""); },
+                 std::logic_error);
 }

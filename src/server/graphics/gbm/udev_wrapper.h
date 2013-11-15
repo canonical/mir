@@ -84,7 +84,7 @@ public:
     void match_parent(UdevDevice const& parent);
     void match_sysname(std::string const& sysname);
 
-    class iterator : 
+        class iterator : 
         public std::iterator<std::input_iterator_tag, UdevDevice>
     {
     public:
@@ -131,12 +131,15 @@ public:
     UdevMonitor(std::shared_ptr<UdevContext> const& ctx);
 
     void enable(void);
+    int fd(void) const;
+
+    void filter_by_path_and_type(std::string const& syspath, std::string const& devtype);
 
     void process_events(std::function<void(EventType, UdevDevice const&)> const& handler) const;
 
 private:
-    std::shared_ptr<UdevContext> ctx;
     udev_monitor *monitor;
+    bool enabled;
 };
 
 }
