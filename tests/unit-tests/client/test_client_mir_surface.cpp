@@ -29,7 +29,7 @@
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/input_receiver_thread.h"

@@ -19,7 +19,7 @@
 #define MIR_TEST_DRAW_ANDROID_GRAPHICS
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/size.h"
 
 #include <hardware/gralloc.h>

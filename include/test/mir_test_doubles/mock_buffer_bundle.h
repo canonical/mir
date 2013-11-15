@@ -47,6 +47,7 @@ public:
     MOCK_CONST_METHOD0(properties, graphics::BufferProperties());
     MOCK_METHOD0(force_client_abort, void());
     MOCK_METHOD0(force_requests_to_complete, void());
+    MOCK_METHOD1(resize, void(const geometry::Size &));
 };
 
 }

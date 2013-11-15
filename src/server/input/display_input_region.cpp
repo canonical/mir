@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/input/display_input_region.h"
+#include "display_input_region.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 

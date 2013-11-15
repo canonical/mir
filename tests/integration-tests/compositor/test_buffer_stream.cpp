@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 
@@ -32,7 +32,6 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 namespace mt = mir::testing;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
@@ -146,7 +145,7 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 namespace
 {
 
-void client_loop(int nframes, ms::BufferStream& stream)
+void client_loop(int nframes, mc::BufferStream& stream)
 {
     for (int f = 0; f < nframes; f++)
     {
@@ -156,7 +155,7 @@ void client_loop(int nframes, ms::BufferStream& stream)
     }
 }
 
-void compositor_loop(ms::BufferStream &stream,
+void compositor_loop(mc::BufferStream &stream,
                      std::atomic<bool> &done)
 {
     unsigned long count = 0;
@@ -177,7 +176,7 @@ void compositor_loop(ms::BufferStream &stream,
     }
 }
 
-void snapshot_loop(ms::BufferStream &stream,
+void snapshot_loop(mc::BufferStream &stream,
                    std::atomic<bool> &done)
 {
     while (!done.load())

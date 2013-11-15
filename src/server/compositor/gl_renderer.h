@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_GL_RENDERER_H_
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
-#include "mir/compositor/renderer.h"
+#include "renderer.h"
 #include "mir/geometry/rectangle.h"
 #include <GLES2/gl2.h>
 
@@ -35,7 +35,7 @@ public:
 
     /* From renderer */
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                                   CompositingCriteria const& info, surfaces::BufferStream& stream);
+                                   CompositingCriteria const& info, BufferStream& stream);
     void clear(unsigned long frameno) override;
 
     ~GLRenderer() noexcept {}

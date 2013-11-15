@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface_allocator.h"
+#include "src/server/surfaces/surface_allocator.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 
 #include <gmock/gmock.h>

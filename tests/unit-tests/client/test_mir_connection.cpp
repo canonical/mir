@@ -26,7 +26,7 @@
 #include "src/client/mir_surface.h"
 #include "src/client/client_buffer_factory.h"
 
-#include "mir/frontend/resource_cache.h" /* needed by test_server.h */
+#include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 
@@ -557,4 +557,51 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
     wait_handle->wait_for_all();
 
     EXPECT_FALSE(unfocused_received);
+}
+
+namespace
+{
+
+ACTION_P(FillPlatformDataWith, sample_data)
+{
+    for (auto d : sample_data)
+        arg1->mutable_platform()->add_data(d);
+}
+
+}
+
+TEST_F(MirConnectionTest, sets_extra_platform_data)
+{
+    using namespace testing;
+    std::vector<int> const initial_data{0x66, 0x67, 0x68};
+    std::vector<int> const extra_data{0x11, 0x12, 0x13};
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(FillPlatformDataWith(initial_data));
+
+    MirWaitHandle *wait_handle =
+        connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    MirPlatformPackage pkg;
+
+    /* Check initial data */
+    connection->populate(pkg);
+
+    EXPECT_EQ(initial_data.size(), static_cast<size_t>(pkg.data_items));
+    for (size_t i = 0; i < initial_data.size(); i++)
+        EXPECT_EQ(initial_data[i], pkg.data[i]) << " i=" << i;
+
+    /* Check initial data plus extra data*/
+    connection->set_extra_platform_data(extra_data);
+    connection->populate(pkg);
+
+    EXPECT_EQ(initial_data.size() + extra_data.size(),
+              static_cast<size_t>(pkg.data_items));
+
+    for (size_t i = 0; i < initial_data.size(); i++)
+        EXPECT_EQ(initial_data[i], pkg.data[i]) << " i=" << i;
+
+    for (size_t i = 0; i < extra_data.size(); i++)
+        EXPECT_EQ(extra_data[i], pkg.data[i + initial_data.size()]) << " i=" << i;
 }

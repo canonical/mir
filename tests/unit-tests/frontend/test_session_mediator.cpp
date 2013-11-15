@@ -16,11 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
-#include "mir/frontend/session_mediator.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/session_mediator.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"

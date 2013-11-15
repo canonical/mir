@@ -39,6 +39,7 @@ void mgg::NativeGBMPlatform::initialize(
     auto fds = nested_context->platform_fd_items();
     drm_fd = fds.at(0);
     gbm.setup(drm_fd);
+    nested_context->drm_set_gbm_device(gbm.device);
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgg::NativeGBMPlatform::create_buffer_allocator(

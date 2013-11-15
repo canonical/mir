@@ -20,12 +20,12 @@
 #include "mir/shell/application_session.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/surface_factory.h"
-#include "mir/shell/focus_sequence.h"
+#include "focus_sequence.h"
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
-#include "mir/shell/session_event_sink.h"
+#include "session_event_sink.h"
 
 #include <memory>
 #include <cassert>

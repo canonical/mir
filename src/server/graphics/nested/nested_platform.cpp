@@ -16,8 +16,8 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/graphics/nested/nested_platform.h"
-#include "mir/graphics/nested/host_connection.h"
+#include "nested_platform.h"
+#include "host_connection.h"
 #include "mir/graphics/nested_context.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
@@ -61,6 +61,15 @@ public:
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
                     std::runtime_error(msg)) << boost::errinfo_errno(status));
+        }
+    }
+
+    void drm_set_gbm_device(struct gbm_device* dev)
+    {
+        if (!mir_connection_drm_set_gbm_device(*connection, dev))
+        {
+            std::string const msg("Nested Mir failed to set the gbm device");
+            BOOST_THROW_EXCEPTION(std::runtime_error(msg));
         }
     }
 

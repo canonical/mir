@@ -19,7 +19,7 @@
 
 #include "mir/frontend/connector.h"
 #include "mir/frontend/connector_report.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/frontend/protobuf_session_creator.h"
 

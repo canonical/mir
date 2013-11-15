@@ -16,12 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/default_display_buffer_compositor_factory.h"
+#include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/overlay_renderer.h"
+#include "src/server/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "src/server/compositor/renderer.h"
+#include "src/server/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
@@ -112,7 +112,7 @@ struct WrappingRenderer : mc::Renderer
 
     void clear(unsigned long f) override { renderer->clear(f); }
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                mc::CompositingCriteria const& info, mir::surfaces::BufferStream& stream)
+                mc::CompositingCriteria const& info, mc::BufferStream& stream)
     {
         renderer->render(save_resource, info, stream);
     }

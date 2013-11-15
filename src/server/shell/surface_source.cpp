@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/shell/surface_source.h"
-#include "mir/shell/surface_builder.h"
+#include "surface_source.h"
+//#include "mir/shell/surface_builder.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface.h"
 #include "mir/input/input_channel_factory.h"
