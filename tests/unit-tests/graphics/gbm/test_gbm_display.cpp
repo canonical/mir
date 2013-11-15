@@ -30,7 +30,6 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir_test_doubles/null_video_devices.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -69,15 +68,17 @@ public:
                       std::function<bool()> const&));
 };
 
-class MockVideoDevices : public mgg::VideoDevices
+class MockEventRegister : public mg::EventHandlerRegister
 {
 public:
-    ~MockVideoDevices() noexcept(true) {}
-
-    MOCK_METHOD2(register_change_handler,
-                 void(mg::EventHandlerRegister&,
-                      std::function<void()> const&));
+    MOCK_METHOD2(register_signal_handler,
+                 void(std::initializer_list<int>,
+                 std::function<void(int)> const&));
+    MOCK_METHOD2(register_fd_handler,
+                 void(std::initializer_list<int>,
+                 std::function<void(int)> const&));
 };
+
 
 class GBMDisplayTest : public ::testing::Test
 {
@@ -124,7 +125,6 @@ public:
     {
         return std::make_shared<mgg::GBMDisplay>(
             platform,
-            std::make_shared<mtd::NullVideoDevices>(),
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
             null_report);
     }
@@ -513,7 +513,6 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
 
     auto display = std::make_shared<mgg::GBMDisplay>(
                         create_platform(),
-                        std::make_shared<mtd::NullVideoDevices>(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
 }
@@ -684,7 +683,6 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
                         std::make_shared<mtd::NullVirtualTerminal>());
     auto display = std::make_shared<mgg::GBMDisplay>(
                         platform,
-                        std::make_shared<mtd::NullVideoDevices>(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
 
@@ -701,17 +699,13 @@ TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
 
-    auto mock_video_devices = std::make_shared<MockVideoDevices>();
-
     auto display = std::make_shared<mgg::GBMDisplay>(
                         create_platform(),
-                        mock_video_devices,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         null_report);
+    MockEventRegister mock_register;
 
-    mir::AsioMainLoop ml;
+    EXPECT_CALL(mock_register, register_fd_handler(_,_));
 
-    EXPECT_CALL(*mock_video_devices, register_change_handler(Ref(ml),_));
-
-    display->register_configuration_change_handler(ml, []{});
+    display->register_configuration_change_handler(mock_register, []{});
 }

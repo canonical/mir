@@ -32,7 +32,6 @@ add_library(
   internal_client.cpp
   drm_close_threadsafe.cpp
   udev_wrapper.cpp
-  udev_video_devices.cpp
   overlapping_output_grouping.cpp
   native_gbm_platform.cpp
 )

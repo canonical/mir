@@ -22,7 +22,6 @@
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
-#include "udev_video_devices.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
@@ -124,7 +123,6 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
-        std::make_shared<UdevVideoDevices>(udev->ctx()),
         initial_conf_policy,
         listener);
 }

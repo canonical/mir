@@ -58,6 +58,9 @@ public:
     int get_authenticated_fd();
     void auth_magic(drm_magic_t magic) const;
 
+    void register_display_hotplug_handler(EventHandlerRegister& handlers,
+                                          std::function<void(void)> const& handler);
+
     void drop_master() const;
     void set_master() const;
 

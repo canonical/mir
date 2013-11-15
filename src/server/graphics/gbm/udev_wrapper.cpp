@@ -253,8 +253,6 @@ void mgg::UdevMonitor::process_events(std::function<void(mgg::UdevMonitor::Event
 
 int mgg::UdevMonitor::fd(void) const
 {
-    if (!enabled)
-        BOOST_THROW_EXCEPTION(std::logic_error("Must enable event receiving before calling UdevMonitor::fd()"));
     return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
 }
 

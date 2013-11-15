@@ -400,16 +400,6 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
     EXPECT_EQ(poll(&fds, 1, 0), 0);
 }
 
-TEST_F(UdevWrapperTest, UdevMonitorFdThrowsLogicErrorBeforeEnablement)
-{
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
-
-    EXPECT_THROW({ monitor.fd(); },
-                 std::logic_error);
-}
-
 TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 {
     auto ctx = std::make_shared<mgg::UdevContext>();
