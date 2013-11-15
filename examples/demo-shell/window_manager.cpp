@@ -196,9 +196,6 @@ bool me::WindowManager::handle(MirEvent const& event)
                 if (action == mir_motion_action_down ||
                     action == mir_motion_action_pointer_down)
                 {
-                    relative_click = cursor - surf->top_left();
-                    old_size = surf->size();
-                    old_pinch_diam = pinch_diam;
                     click = cursor;
                 }
                 else if (event.motion.action == mir_motion_action_move &&
@@ -206,7 +203,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 {
                     if (event.motion.button_state == mir_motion_button_tertiary)
                     {  // Resize by mouse middle button
-                        geometry::Displacement dir = cursor - click;
+                        geometry::Displacement dir = cursor - old_cursor;
                         int width = old_size.width.as_int() + dir.dx.as_int();
                         int height = old_size.height.as_int() + dir.dy.as_int();
                         if (width <= 0) width = 1;
@@ -215,8 +212,8 @@ bool me::WindowManager::handle(MirEvent const& event)
                     }
                     else
                     { // Move surface (by mouse or 3 fingers)
-                        geometry::Point abs = cursor - relative_click;
-                        surf->move_to(abs);
+                        geometry::Displacement dir = cursor - old_cursor;
+                        surf->move_to(old_pos + dir);
                     }
 
                     if (fingers == 3)
@@ -245,6 +242,11 @@ bool me::WindowManager::handle(MirEvent const& event)
                     }
                     return true;
                 }
+
+                old_pos = surf->top_left();
+                old_size = surf->size();
+                old_pinch_diam = pinch_diam;
+                old_cursor = cursor;
             }
         }
 
