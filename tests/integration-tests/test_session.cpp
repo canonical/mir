@@ -160,7 +160,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
 }
 
-TEST(ShellSessionTest, stress_test_take_snapshot)
+TEST(ApplicationSession, stress_test_take_snapshot)
 {
     TestServerConfiguration conf;
 
