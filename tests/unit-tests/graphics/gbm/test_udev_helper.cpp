@@ -417,7 +417,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
     auto monitor = mgg::UdevMonitor(ctx);
     bool event_received = false;
 
-    monitor.filter_by_path_and_type("drm", "drm_minor");
+    monitor.filter_by_subsystem_and_type("drm", "drm_minor");
 
     monitor.enable();
 
@@ -433,7 +433,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
                 event_received = true;
             });
 
-    ASSERT_TRUE(event_received);    
+    ASSERT_TRUE(event_received);
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorFilterThrowsLogicErrorIfEnabled)
@@ -443,6 +443,37 @@ TEST_F(UdevWrapperTest, UdevMonitorFilterThrowsLogicErrorIfEnabled)
     auto monitor = mgg::UdevMonitor(ctx);
     monitor.enable();
 
-    EXPECT_THROW({ monitor.filter_by_path_and_type("usb", ""); },
+    EXPECT_THROW({ monitor.filter_by_subsystem_and_type("usb", ""); },
                  std::logic_error);
+}
+
+TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
+{
+    auto ctx = std::make_shared<mgg::UdevContext>();
+
+    auto monitor = mgg::UdevMonitor(ctx);
+    bool usb_event_received = false, drm_event_recieved = false;
+
+    monitor.filter_by_subsystem_and_type("drm", "drm_minor");
+    monitor.filter_by_subsystem_and_type("usb", "hid");
+
+    monitor.enable();
+
+    auto drm_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
+    mgg::UdevDevice drm_device(ctx, drm_sysfspath);
+    udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
+    auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", NULL, {}, {"DEVTYPE", "hid"});
+    mgg::UdevDevice usb_device(ctx, usb_sysfspath);
+
+    monitor.process_events([&drm_event_recieved, &drm_device, &usb_event_received, &usb_device]
+        (mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+            {
+                if (dev == drm_device)
+                    drm_event_recieved = true;
+                if (dev == usb_device)
+                    usb_event_received = true;
+            });
+
+    EXPECT_TRUE(drm_event_recieved);
+    EXPECT_TRUE(usb_event_received);
 }

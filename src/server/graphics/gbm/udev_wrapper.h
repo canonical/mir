@@ -133,7 +133,7 @@ public:
     void enable(void);
     int fd(void) const;
 
-    void filter_by_path_and_type(std::string const& syspath, std::string const& devtype);
+    void filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype);
 
     void process_events(std::function<void(EventType, UdevDevice const&)> const& handler) const;
 

@@ -258,9 +258,9 @@ int mgg::UdevMonitor::fd(void) const
     return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
 }
 
-void mgg::UdevMonitor::filter_by_path_and_type(std::string const& syspath, std::string const& devtype)
+void mgg::UdevMonitor::filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype)
 {
     if (enabled)
         BOOST_THROW_EXCEPTION(std::logic_error("Filters must be installed before event receiving is enabled"));
-    udev_monitor_filter_add_match_subsystem_devtype(monitor, syspath.c_str(), devtype.c_str());
+    udev_monitor_filter_add_match_subsystem_devtype(monitor, subsystem.c_str(), devtype.c_str());
 }
