@@ -112,11 +112,6 @@ float measure_pinch(MirMotionEvent const& motion,
     return sqrtf(max);  // return pinch diameter
 }
 
-bool mostly_vertical(mir::geometry::Displacement const& dir)
-{
-    return abs(dir.dy.as_int()) >= abs(dir.dx.as_int());
-}
-
 } // namespace
 
 bool me::WindowManager::handle(MirEvent const& event)
