@@ -35,9 +35,9 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
-    std::function<void()> const& force_requests_to_complete,
+    std::function<void()> const& force_threads_to_unblock,
     std::shared_ptr<ConnectorReport> const& report)
-:   BasicConnector(session_creator, threads, force_requests_to_complete, report),
+:   BasicConnector(session_creator, threads, force_threads_to_unblock, report),
     socket_file(socket_file),
     acceptor(io_service, socket_file)
 {
@@ -83,11 +83,11 @@ void mf::PublishedSocketConnector::on_new_connection(
 mf::BasicConnector::BasicConnector(
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
-    std::function<void()> const& force_requests_to_complete,
+    std::function<void()> const& force_threads_to_unblock,
     std::shared_ptr<ConnectorReport> const& report)
 :   report(report),
     io_service_threads(threads),
-    force_requests_to_complete(force_requests_to_complete),
+    force_threads_to_unblock(force_threads_to_unblock),
     session_creator{session_creator}
 {
 }
@@ -126,7 +126,7 @@ void mf::BasicConnector::stop()
      * Ensure that any pending requests will complete (i.e., that they
      * will not block indefinitely waiting for a resource from the server)
      */
-    force_requests_to_complete();
+    force_threads_to_unblock();
 
     report->stopping_threads(io_service_threads.size());
 

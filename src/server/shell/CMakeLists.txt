@@ -10,6 +10,7 @@ set(
   surface_creation_parameters.cpp
   threaded_snapshot_strategy.cpp
   gl_pixel_buffer.cpp
+  global_event_sender.cpp
   graphics_display_layout.cpp
   mediating_display_changer.cpp
   broadcasting_session_event_sink.cpp

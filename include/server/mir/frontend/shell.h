@@ -36,7 +36,7 @@ class Session;
 class Shell
 {
 public:
-    virtual ~Shell() {}
+    virtual ~Shell() = default;
 
     virtual std::shared_ptr<Session> open_session(
         std::string const& name, std::shared_ptr<EventSink> const& sink) = 0;
@@ -44,7 +44,7 @@ public:
 
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
                                          shell::SurfaceCreationParameters const& params) = 0;
-    
+
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
 protected:
