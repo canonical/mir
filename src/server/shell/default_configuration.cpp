@@ -193,7 +193,7 @@ mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
 }
 
 std::function<void()>
-mir::DefaultServerConfiguration::the_for_all_sessions_force_requests_to_complete_functor()
+mir::DefaultServerConfiguration::force_threads_to_unblock_callback()
 {
     auto shell_sessions = the_shell_session_container();
     return [shell_sessions]

@@ -119,14 +119,14 @@ mir::DefaultServerConfiguration::the_connector()
             auto const threads = the_options()->get(frontend_threads,
                                                     default_ipc_threads);
 
-            auto const& force_requests_to_complete = the_for_all_sessions_force_requests_to_complete_functor();
+            auto const& force_threads_to_unblock = force_threads_to_unblock_callback();
 
             if (the_options()->is_set(no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_session_creator(),
                     threads,
-                    force_requests_to_complete,
+                    force_threads_to_unblock,
                     the_connector_report());
             }
             else
@@ -135,7 +135,7 @@ mir::DefaultServerConfiguration::the_connector()
                     the_socket_file(),
                     the_session_creator(),
                     threads,
-                    force_requests_to_complete,
+                    force_threads_to_unblock,
                     the_connector_report());
             }
         });
