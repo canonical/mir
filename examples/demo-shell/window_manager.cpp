@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "window_manager.h"
