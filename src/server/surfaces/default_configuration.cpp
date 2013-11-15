@@ -19,7 +19,13 @@
 #include "mir/default_server_configuration.h"
 #include "mir/input/input_configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/shell/session.h"
 
+#include "broadcasting_session_event_sink.h"
+#include "default_session_container.h"
+#include "global_event_sender.h"
+#include "mediating_display_changer.h"
+#include "session_container.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
 #include "surfaces_report.h"
@@ -27,6 +33,7 @@
 #include "surface_stack.h"
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
@@ -134,4 +141,84 @@ mir::DefaultServerConfiguration::the_surfaces_report()
                 " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
         }
     });
+}
+
+std::shared_ptr<msh::BroadcastingSessionEventSink>
+mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
+{
+    return broadcasting_session_event_sink(
+        []
+        {
+            return std::make_shared<msh::BroadcastingSessionEventSink>();
+        });
+}
+
+std::shared_ptr<msh::SessionEventSink>
+mir::DefaultServerConfiguration::the_shell_session_event_sink()
+{
+    return the_broadcasting_session_event_sink();
+}
+
+std::shared_ptr<msh::SessionEventHandlerRegister>
+mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
+{
+    return the_broadcasting_session_event_sink();
+}
+
+std::shared_ptr<msh::SessionContainer>
+mir::DefaultServerConfiguration::the_shell_session_container()
+{
+    return shell_session_container(
+        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
+}
+
+std::shared_ptr<msh::MediatingDisplayChanger>
+mir::DefaultServerConfiguration::the_mediating_display_changer()
+{
+    return mediating_display_changer(
+        [this]()
+        {
+            return std::make_shared<msh::MediatingDisplayChanger>(
+                the_display(),
+                the_compositor(),
+                the_display_configuration_policy(),
+                the_shell_session_container(),
+                the_shell_session_event_handler_register());
+        });
+
+}
+
+std::shared_ptr<mf::DisplayChanger>
+mir::DefaultServerConfiguration::the_frontend_display_changer()
+{
+    return the_mediating_display_changer();
+}
+
+std::shared_ptr<mir::DisplayChanger>
+mir::DefaultServerConfiguration::the_display_changer()
+{
+    return the_mediating_display_changer();
+}
+
+std::function<void()>
+mir::DefaultServerConfiguration::force_threads_to_unblock_callback()
+{
+    auto shell_sessions = the_shell_session_container();
+    return [shell_sessions]
+    {
+        shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
+        {
+            session->force_requests_to_complete();
+        });
+    };
+}
+
+std::shared_ptr<mf::EventSink>
+mir::DefaultServerConfiguration::the_global_event_sink()
+{
+    return global_event_sink(
+        [this]()
+        {
+            return std::make_shared<msh::GlobalEventSender>(the_shell_session_container());
+        });
 }

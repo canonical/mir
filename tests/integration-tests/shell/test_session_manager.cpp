@@ -19,7 +19,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session.h"
 #include "mir/shell/focus_setter.h"
-#include "src/server/shell/default_session_container.h"
+#include "src/server/surfaces/default_session_container.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/surfaces/basic_surface.h"

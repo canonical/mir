@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/shell/global_event_sender.h"
-#include "src/server/shell/session_container.h"
+#include "src/server/surfaces/global_event_sender.h"
+#include "src/server/surfaces/session_container.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
