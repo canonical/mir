@@ -201,34 +201,40 @@ bool me::WindowManager::handle(MirEvent const& event)
                 else if (event.motion.action == mir_motion_action_move &&
                          max_fingers <= 3)  // Avoid accidental movement
                 {
-                    if (event.motion.button_state == mir_motion_button_tertiary)
+                    geometry::Displacement drag = cursor - old_cursor;
+
+                    if (event.motion.button_state ==
+                        mir_motion_button_tertiary)
                     {  // Resize by mouse middle button
-                        geometry::Displacement dir = cursor - old_cursor;
-                        int width = old_size.width.as_int() + dir.dx.as_int();
-                        int height = old_size.height.as_int() + dir.dy.as_int();
+                        int width = old_size.width.as_int() +
+                                    drag.dx.as_int();
+                        int height = old_size.height.as_int() +
+                                     drag.dy.as_int();
                         if (width <= 0) width = 1;
                         if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
                     else
                     { // Move surface (by mouse or 3 fingers)
-                        geometry::Displacement dir = cursor - old_cursor;
-                        surf->move_to(old_pos + dir);
+                        surf->move_to(old_pos + drag);
                     }
 
                     if (fingers == 3)
                     {  // Resize by pinch/zoom
-                        // Resize vector is length=len, dir=pinch_dir
-                        float len = pinch_diam - old_pinch_diam;
-                        float lenlen = len * len;
+                        float diam_delta = pinch_diam - old_pinch_diam;
+                        /*
+                         * Resize vector (dx,dy) has length=diam_delta and
+                         * direction=pinch_dir, so solve for (dx,dy)...
+                         */
+                        float lenlen = diam_delta * diam_delta;
                         int x = pinch_dir.dx.as_int();
                         int y = pinch_dir.dy.as_int();
                         int xx = x * x;
                         int yy = y * y;
-                        int div = xx + yy;
-                        int dx = sqrtf(lenlen * xx / div);
-                        int dy = sqrtf(lenlen * yy / div);
-                        if (len < 0.0f)
+                        int xxyy = xx + yy;
+                        int dx = sqrtf(lenlen * xx / xxyy);
+                        int dy = sqrtf(lenlen * yy / xxyy);
+                        if (diam_delta < 0.0f)
                         {
                             dx = -dx;
                             dy = -dy;
@@ -240,6 +246,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                         if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
+
                     return true;
                 }
 
