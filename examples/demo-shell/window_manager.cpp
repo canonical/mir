@@ -127,6 +127,8 @@ bool me::WindowManager::handle(MirEvent const& event)
     assert(display);
     assert(compositor);
 
+    bool handled = false;
+
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
     {
@@ -197,6 +199,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                     action == mir_motion_action_pointer_down)
                 {
                     click = cursor;
+                    handled = true;
                 }
                 else if (event.motion.action == mir_motion_action_move &&
                          max_fingers <= 3)  // Avoid accidental movement
@@ -247,7 +250,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                         surf->resize({width, height});
                     }
 
-                    return true;
+                    handled = true;
                 }
 
                 old_pos = surf->top_left();
@@ -263,9 +266,9 @@ bool me::WindowManager::handle(MirEvent const& event)
             if (abs(dir.dx.as_int()) >= min_swipe_distance)
             {
                 focus_controller->focus_next();
-                return true;
+                handled = true;
             }
         }
     }
-    return false;
+    return handled;
 }
