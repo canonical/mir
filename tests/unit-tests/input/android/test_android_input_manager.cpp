@@ -19,6 +19,7 @@
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
+#include "src/server/input/android/android_input_channel.h"
 
 #include "mir/input/input_channel.h"
 
