@@ -43,7 +43,7 @@ public:
     UdevContext(UdevContext const&) = delete;
     UdevContext& operator=(UdevContext const&) = delete;
 
-    udev* ctx();
+    udev* ctx() const;
 
 private:
 	udev* context;
@@ -52,7 +52,7 @@ private:
 class UdevDevice
 {
 public:
-    UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath);
+    UdevDevice(UdevContext const& ctx, std::string const& syspath);
     UdevDevice(udev_device *dev);
     ~UdevDevice() noexcept;
 

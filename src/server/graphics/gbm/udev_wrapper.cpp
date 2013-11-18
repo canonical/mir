@@ -27,8 +27,8 @@ namespace mgg = mir::graphics::gbm;
 //    UdevDevice
 /////////////////////
 
-mgg::UdevDevice::UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath)
-    : UdevDevice(udev_device_new_from_syspath(ctx->ctx(), syspath.c_str()))
+mgg::UdevDevice::UdevDevice(UdevContext const& ctx, std::string const& syspath)
+    : UdevDevice(udev_device_new_from_syspath(ctx.ctx(), syspath.c_str()))
 {
 }
 
@@ -37,10 +37,13 @@ mgg::UdevDevice::UdevDevice(udev_device *dev)
 {
     if (!dev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
+
+    udev_ref(udev_device_get_udev(dev));
 }
 
 mgg::UdevDevice::~UdevDevice() noexcept
 {
+    udev_unref(udev_device_get_udev(dev));
     udev_device_unref(dev);
 }
 
@@ -93,7 +96,7 @@ mgg::UdevEnumerator::iterator::iterator (std::shared_ptr<UdevContext> const& ctx
     entry(entry)
 {
     if (entry)
-        current = std::make_shared<UdevDevice>(ctx, udev_list_entry_get_name(entry));
+        current = std::make_shared<UdevDevice>(*ctx, udev_list_entry_get_name(entry));
 }
 
 void mgg::UdevEnumerator::iterator::increment()
@@ -103,7 +106,7 @@ void mgg::UdevEnumerator::iterator::increment()
     {
         try
         {
-            current = std::make_shared<UdevDevice>(ctx, udev_list_entry_get_name(entry));
+            current = std::make_shared<UdevDevice>(*ctx, udev_list_entry_get_name(entry));
         }
         catch (std::runtime_error)
         {
@@ -206,7 +209,7 @@ mgg::UdevContext::~UdevContext() noexcept
     udev_unref(context);
 }
 
-udev* mgg::UdevContext::ctx()
+udev* mgg::UdevContext::ctx() const
 {
     return context;
 }
