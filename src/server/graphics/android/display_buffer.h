@@ -32,10 +32,12 @@ namespace android
 {
 
 class DisplayDevice;
+class FramebufferBundle;
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_device,
+    DisplayBuffer(std::shared_ptr<FramebufferBundle> const& fb_bundle,
+                  std::shared_ptr<DisplayDevice> const& display_device,
                   std::shared_ptr<ANativeWindow> const& native_window,
                   GLContext const& shared_gl_context);
 
@@ -46,6 +48,7 @@ public:
     bool can_bypass() const override;
     
 private:
+    std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;

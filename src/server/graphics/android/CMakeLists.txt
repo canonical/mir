@@ -13,7 +13,7 @@ add_library(
   android_display.cpp
   android_display_configuration.cpp
   display_buffer.cpp
-  display_buffer_factory.cpp
+  output_builder.cpp
   hwc_layerlist.cpp
   hwc10_device.cpp
   hwc11_device.cpp

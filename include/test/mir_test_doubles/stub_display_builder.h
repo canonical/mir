@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/server/graphics/android/android_display_buffer_factory.h"
+#include "src/server/graphics/android/display_builder.h"
 #include "stub_display_buffer.h"
 #include "stub_display_device.h"
 #include <gmock/gmock.h>
@@ -72,4 +72,4 @@ struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
 }
 } // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_ */

@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_display_buffer_factory.h"
+#include "mir_test_doubles/stub_display_builder.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 

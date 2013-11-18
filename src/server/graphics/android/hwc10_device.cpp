@@ -27,61 +27,41 @@
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
+
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                              std::shared_ptr<DisplayDevice> const& fbdev,
+                              std::shared_ptr<FBDevice> const& fb_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      fb_bundle(fb_bundle),
       layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}}),
-      fb_device(fbdev),
-      wait_for_vsync(true)
+      fb_device{fb_device}
 {
 }
 
-geom::Size mga::HWC10Device::display_size() const
+void mga::HWC10Device::prepare_composition()
 {
-    return fb_device->display_size();
-}
-
-geom::PixelFormat mga::HWC10Device::display_format() const
-{
-    return fb_device->display_format();
-}
-
-std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
-{
-    return fb_bundle->buffer_for_render();
-}
-
-void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
-{
-    auto lg = lock_unblanked();
-
     auto display_list = layer_list.native_list();
-    display_list->dpy = dpy;
-    display_list->sur = sur;
-
-    auto rc = hwc_device->prepare(hwc_device.get(), 1, &display_list);
-    if (rc != 0)
+    if (hwc_device->prepare(hwc_device.get(), 1, &display_list) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
+}
 
-    rc = hwc_device->set(hwc_device.get(), 1, &display_list);
-    if (rc != 0)
+void mga::HWC10Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
+{
+    auto display_list = layer_list.native_list();
+    display_list->dpy = dpy;
+    display_list->sur = sur;
+    if (hwc_device->set(hwc_device.get(), 1, &display_list) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
-
-    if (wait_for_vsync)
-    {
-        coordinator->wait_for_vsync();
-    }
 }
 
-void mga::HWC10Device::sync_to_display(bool sync)
+void mga::HWC10Device::post(mg::Buffer const&)
 {
-    wait_for_vsync = sync;
-    fb_device->sync_to_display(sync);
+    auto lg = lock_unblanked();
+
+
+
+    coordinator->wait_for_vsync();
 }

@@ -83,7 +83,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_submits_right_egl_parameters)
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
         .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, commit_frame(stub_buffer))
+    EXPECT_CALL(*mock_display_device, post(stub_buffer))
         .Times(1);
 
     db.post_update();

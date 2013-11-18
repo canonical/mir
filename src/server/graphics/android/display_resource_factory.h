@@ -33,8 +33,7 @@ class DisplayReport;
 namespace android
 {
 class DisplayDevice;
-class FBSwapper;
-class GraphicBufferAllocator;
+class FramebufferBundle;
 
 class DisplayResourceFactory
 {
@@ -45,7 +44,7 @@ public:
     virtual std::shared_ptr<framebuffer_device_t> create_fb_native_device() const = 0;
 
     virtual std::shared_ptr<ANativeWindow> create_native_window(
-        std::shared_ptr<DisplayDevice> const& device) const = 0;
+        std::shared_ptr<FramebufferBundle> const& device) const = 0;
 
     virtual std::shared_ptr<DisplayDevice> create_fb_device(
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;

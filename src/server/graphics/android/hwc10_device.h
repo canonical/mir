@@ -27,30 +27,23 @@ namespace graphics
 {
 namespace android
 {
+class FBDevice;
 class DisplayDevice;
-class FramebufferBundle;
 
 class HWC10Device : public HWCCommonDevice
 {
 public:
     HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                std::shared_ptr<DisplayDevice> const& fbdev,
+                std::shared_ptr<FBDevice> const& fb_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const;
-
-    std::shared_ptr<graphics::Buffer> buffer_for_render();
-    void sync_to_display(bool sync); 
-    void commit_frame(EGLDisplay dpy, EGLSurface sur);
+    void prepare_composition();
+    void gpu_render(EGLDisplay dpy, EGLSurface sur); 
+    void post(Buffer const& buffer);
 
 private:
-    std::shared_ptr<FramebufferBundle> const fb_bundle;
     LayerList layer_list;
-
-    std::shared_ptr<DisplayDevice> const fb_device;
-    bool wait_for_vsync;
+    std::shared_ptr<FBDevice> const fb_device;
 };
 
 }

@@ -16,40 +16,41 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
 
-#include "mir/graphics/display_buffer.h"
-#include <EGL/egl.h>
+#include "mir/geometry/pixel_format.h"
 #include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+class DisplayBuffer;
 namespace android
 {
 class DisplayDevice;
 class GLContext;
 
-class AndroidDisplayBufferFactory
+class DisplayBuilder
 {
 public:
-    virtual ~AndroidDisplayBufferFactory() = default;
+    virtual ~DisplayBuilder() = default;
 
+    virtual geometry::PixelFormat display_format() = 0;
     virtual std::shared_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,
         GLContext const& gl_context) = 0;
 
 protected:
-    AndroidDisplayBufferFactory() = default;
-    AndroidDisplayBufferFactory(AndroidDisplayBufferFactory const&) = delete;
-    AndroidDisplayBufferFactory& operator=(AndroidDisplayBufferFactory const&) = delete;
+    DisplayBuilder() = default;
+    DisplayBuilder(DisplayBuilder const&) = delete;
+    DisplayBuilder& operator=(DisplayBuilder const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_ */
