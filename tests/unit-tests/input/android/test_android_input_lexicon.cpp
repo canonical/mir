@@ -108,6 +108,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const float orientation = 700.0;
     const float vscroll = 800.0;
     const float hscroll = 900.0;
+    const MirMotionToolType tool_type = mir_motion_tool_type_mouse;
 
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_X, x_axis);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_Y, y_axis);
@@ -118,6 +119,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, vscroll);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, hscroll);
+    pointer_properties.toolType = tool_type;
 
     android_motion_ev->initialize(device_id, source_id, action, flags, edge_flags,
                                   meta_state, button_state, x_offset, y_offset,
@@ -165,6 +167,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(mir_pointer_coords->orientation, orientation);
     EXPECT_EQ(mir_pointer_coords->vscroll, vscroll);
     EXPECT_EQ(mir_pointer_coords->hscroll, hscroll);
+    EXPECT_EQ(mir_pointer_coords->tool_type, tool_type);
 
 
     delete android_motion_ev;
@@ -208,6 +211,9 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     const float vscroll[2] = {800.0, 8000.0};
     const float hscroll[2] = {900.0, 9000.0};
 
+    const MirMotionToolType tool_types[2] = {mir_motion_tool_type_mouse,
+                                             mir_motion_tool_type_finger};
+
     for (size_t p = 0; p < pointer_count; p++)
     {
         pointer_properties[p].id = pointer_id[p];
@@ -227,6 +233,8 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
                                        vscroll[p]);
         pointer_coords[p].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL,
                                        hscroll[p]);
+
+        pointer_properties[p].toolType = tool_types[p];
     }
 
     android_motion_ev->initialize(device_id, source_id, action, flags,
@@ -276,6 +284,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
         EXPECT_EQ(pointer[p].orientation, orientation[p]);
         EXPECT_EQ(pointer[p].vscroll, vscroll[p]);
         EXPECT_EQ(pointer[p].hscroll, hscroll[p]);
+        EXPECT_EQ(pointer[p].tool_type, tool_types[p]);
     }
 
     delete android_motion_ev;
