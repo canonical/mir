@@ -22,6 +22,8 @@
 #include "hwc_vsync_coordinator.h"
 #include "android_format_conversion-inl.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/android/native_buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
@@ -70,12 +72,9 @@ geom::PixelFormat determine_fb_format()
 }
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HWCLayerList> const& layer_list,
-                              std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list(layer_list),
-      fb_device(fbdev), 
+      layer_list({mga::FramebufferLayer{}}),
       sync_ops(std::make_shared<mga::RealSyncFileOps>()),
       fb_format(determine_fb_format())
 {
@@ -118,16 +117,19 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    layer_list->set_fb_target(buffer);
+    layer_list.set_fb_target(buffer->native_buffer_handle());
+    //TODO: wait for framebuffer render to complete here. Eventually, we want to pass the fence right
+    //      into hwc_device->set() and let that wait for the render to complete.
+    buffer->native_buffer_handle()->wait_for_content();
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
     auto lg = lock_unblanked();
-
+  
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list->native_list(), nullptr};
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
 
     if (hwc_device->prepare(hwc_device.get(), 1, displays))
     {
@@ -135,7 +137,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     }
 
     /* note, swapbuffers will go around through the driver and call
-       set_next_frontbuffer, updating the fb target before committing */
+       set_next_frontbuffer, updating the fb in layerlist before committing */
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
@@ -145,7 +147,6 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
-
     mga::SyncFence fence(sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
     fence.wait();
 }

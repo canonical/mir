@@ -17,7 +17,6 @@
  */
 
 #include "default_session_container.h"
-#include "mir/shell/session.h"
 
 #include <boost/throw_exception.hpp>
 
