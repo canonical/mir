@@ -30,7 +30,6 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
 #include "mir/frontend/display_changer.h"
@@ -58,13 +57,13 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::vector<geom::PixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
-    buffer_allocator(buffer_allocator),
+    surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
     event_sink(sender),
@@ -107,6 +106,9 @@ void mf::SessionMediator::connect(
     auto display_config = display_changer->active_configuration();
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
+
+    for (auto pf : surface_pixel_formats)
+        response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
 
     resource_cache->save_resource(response, ipc_package);
 

@@ -34,7 +34,6 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -55,7 +54,7 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
-        return std::shared_ptr<mtd::StubBufferAllocator>();
+        return std::shared_ptr<mg::GraphicBufferAllocator>();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
@@ -67,11 +66,11 @@ struct SessionMediatorGBMTest : public ::testing::Test
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          buffer_allocator{std::make_shared<mtd::StubBufferAllocator>()},
+          surface_pixel_formats{geom::PixelFormat::argb_8888, geom::PixelFormat::xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, display_changer,
-                   buffer_allocator, report,
+                   surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
@@ -81,7 +80,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
+    std::vector<geom::PixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

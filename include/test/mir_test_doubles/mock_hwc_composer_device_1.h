@@ -64,19 +64,34 @@ public:
         return 0;
     }
 
+    void hwc_set_return_fence(int fence)
+    {
+        fb_fence = fence; 
+    }
+
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
         return save_args(&display0_prepare_content, displays);
     }
 
-    int save_last_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
+    int save_last_set_arguments(
+        struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
-        hwc_display_contents_1_t* display = *displays;
-        for(auto i = 0u; i < display->numHwLayers; i++)
+        hwc_display_contents_1_t* primary_display = *displays;
+        if (!primary_display)
+            return -1;
+
+        for(auto i = 0u; i < primary_display->numHwLayers; i++)
         {
-            set_layerlist.push_back(display->hwLayers[i]);
+            set_layerlist.push_back(primary_display->hwLayers[i]);
             set_layerlist.back().visibleRegionScreen = {0, nullptr};
         }
+
+        if (primary_display->hwLayers)
+        {
+            primary_display->hwLayers[1].releaseFenceFd = fb_fence;
+        }
+
         return save_args(&display0_set_content, displays);
     }
 
@@ -129,6 +144,7 @@ public:
     hwc_display_contents_1_t display0_set_content;
     std::vector<hwc_layer_1> set_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
+    int fb_fence;
 };
 
 }
