@@ -129,6 +129,7 @@ public:
     };
 
     UdevMonitor(std::shared_ptr<UdevContext> const& ctx);
+    ~UdevMonitor() noexcept;
 
     void enable(void);
     int fd(void) const;

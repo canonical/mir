@@ -226,6 +226,11 @@ mgg::UdevMonitor::UdevMonitor(std::shared_ptr<mgg::UdevContext> const& ctx)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev_monitor"));
 }
 
+mgg::UdevMonitor::~UdevMonitor() noexcept
+{
+    udev_monitor_unref(monitor);
+}
+
 void mgg::UdevMonitor::enable(void)
 {
     udev_monitor_enable_receiving(monitor);
