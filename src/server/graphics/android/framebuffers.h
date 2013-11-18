@@ -20,8 +20,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_FB_SIMPLE_SWAPPER_H_
 #define MIR_GRAPHICS_ANDROID_FB_SIMPLE_SWAPPER_H_
 
-#include "fb_swapper.h"
+#include "framebuffer_bundle.h"
 
+#include <hardware/gralloc.h>
+#include <hardware/fb.h>
+#include <hardware/hwcomposer.h>
 #include <condition_variable>
 #include <queue>
 #include <vector>
@@ -33,26 +36,28 @@ namespace graphics
 {
 namespace android
 {
+class GraphicBufferAllocator;
 
-class FBSimpleSwapper : public FBSwapper
+class Framebuffers : public FramebufferBundle
 {
 public:
-    template<typename BufferPtrContainer>
-    explicit FBSimpleSwapper(BufferPtrContainer const& buffer_list)
-    {
-        for (auto& buffer : buffer_list)
-        {
-            queue.push(buffer);
-        }
-    }
+    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
+                 std::shared_ptr<hwc_composer_device_1> const& hwc);
+    Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
+                 std::shared_ptr<framebuffer_device_t> const& fb);
 
-    std::shared_ptr<Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
+    geometry::PixelFormat fb_format();
+    geometry::Size fb_size();
+    std::shared_ptr<Buffer> buffer_for_render();
+    std::shared_ptr<Buffer> last_rendered_buffer();
 
 private:
-    std::mutex queue_lock;
-    std::condition_variable cv;
+    geometry::PixelFormat const format;
+    geometry::Size const size;
 
+    std::mutex queue_lock;
+    std::shared_ptr<Buffer> buffer_being_rendered;
+    std::condition_variable cv;
     std::queue<std::shared_ptr<graphics::Buffer>> queue;
 };
 

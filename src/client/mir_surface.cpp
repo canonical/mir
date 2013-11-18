@@ -171,9 +171,18 @@ void MirSurface::process_incoming_buffer()
 
     auto const& buffer = surface.buffer();
 
-    auto surface_width = geom::Width(surface.width());
-    auto surface_height = geom::Height(surface.height());
-    auto surface_size = geom::Size{surface_width, surface_height};
+    /*
+     * On most frames when the properties aren't changing, the server won't
+     * fill in the width and height. I think this is an intentional
+     * protocol optimization ("need_full_ipc").
+     */
+    if (buffer.has_width() && buffer.has_height())
+    {
+        surface.set_width(buffer.width());
+        surface.set_height(buffer.height());
+    }
+
+    auto surface_size = geom::Size{surface.width(), surface.height()};
     auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format());
 
     auto ipc_package = std::make_shared<MirBufferPackage>();
@@ -271,6 +280,8 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 
         buffer_package.stride = buffer.stride();
         buffer_package.flags = buffer.flags();
+        buffer_package.width = buffer.width();
+        buffer_package.height = buffer.height();
     }
     else
     {

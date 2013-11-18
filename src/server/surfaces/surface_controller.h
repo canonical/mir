@@ -20,7 +20,7 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/shell/surface_builder.h"
+#include "surface_builder.h"
 #include "mir/shell/surface_controller.h"
 
 namespace mir
@@ -35,7 +35,7 @@ namespace surfaces
 class SurfaceStackModel;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public shell::SurfaceBuilder, public shell::SurfaceController
+class SurfaceController : public SurfaceBuilder, public shell::SurfaceController
 {
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);

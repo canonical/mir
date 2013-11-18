@@ -17,7 +17,6 @@
  */
 
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
 
@@ -151,7 +150,7 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
     manager.stop();
 }
 
-TEST_F(AndroidInputManagerSetup, manager_returns_android_input_channel)
+TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 {
     mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 

@@ -37,6 +37,9 @@ class SurfaceController;
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
+    virtual std::string name() const = 0;
+    virtual MirSurfaceType type() const = 0;
+    virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual void move_to(geometry::Point const& top_left) = 0;
@@ -50,6 +53,8 @@ public:
     virtual void raise(std::shared_ptr<SurfaceController> const& controller) = 0;
 
     virtual void resize(geometry::Size const& size) = 0;
+    virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
+    virtual void set_alpha(float alpha) = 0;
 };
 }
 }

@@ -43,11 +43,13 @@ struct StubDisplayDevice : public graphics::android::DisplayDevice
 
     geometry::Size display_size() const { return sz; }
     geometry::PixelFormat display_format() const { return geometry::PixelFormat::abgr_8888; }
-    unsigned int number_of_framebuffers_available() const { return 0; }
-    void set_next_frontbuffer(std::shared_ptr<mir::graphics::Buffer> const&) {}
     void sync_to_display(bool) {}
     void mode(MirPowerMode) {}
     void commit_frame(EGLDisplay, EGLSurface) {}
+    std::shared_ptr<graphics::Buffer> buffer_for_render()
+    {
+        return nullptr;
+    }
 
 private:
     geometry::Size sz;

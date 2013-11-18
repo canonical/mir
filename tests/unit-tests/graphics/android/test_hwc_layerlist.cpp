@@ -36,140 +36,24 @@ public:
 
         width = 432; 
         height = 876; 
-        default_size = geom::Size{width, height};
-
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
-        ON_CALL(*mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(native_handle_1));
-        ON_CALL(*mock_buffer, size())
-            .WillByDefault(Return(default_size));
+        native_handle_1->anwb()->width = width;
+        native_handle_1->anwb()->height = height;
+        native_handle_2 = std::make_shared<mtd::MockAndroidNativeBuffer>();
     }
 
     int width; 
     int height; 
-    geom::Size default_size;
-
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
-    std::shared_ptr<mg::NativeBuffer> native_handle_2;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
 };
 
-TEST(HWCLayerDeepCopy, hwc_layer)
+TEST_F(HWCLayerListTest, fb_target_layer)
 {
-    mga::HWCDefaultLayer original({});
-    hwc_layer_1 layer = original;
-    EXPECT_EQ(0u, layer.visibleRegionScreen.numRects); 
-    EXPECT_EQ(nullptr, layer.visibleRegionScreen.rects);
+    mga::FramebufferLayer target_layer(*native_handle_1);
 
-    geom::Rectangle r0{geom::Point{geom::X{0},geom::Y{1}},
-                       geom::Size{2, 3}};
-    geom::Rectangle r1{geom::Point{geom::X{0},geom::Y{1}},
-                       geom::Size{3, 3}};
-    geom::Rectangle r2{geom::Point{geom::X{1},geom::Y{1}},
-                       geom::Size{2, 3}};
-    mga::HWCRect a(r0), b(r1), c(r2);
-    mga::HWCDefaultLayer original2({a, b, c});
-    layer = original2;
-
-    ASSERT_EQ(3u, layer.visibleRegionScreen.numRects);
-    ASSERT_NE(nullptr, layer.visibleRegionScreen.rects);
-    EXPECT_THAT(a, HWCRectMatchesRect(layer.visibleRegionScreen.rects[0],""));
-    EXPECT_THAT(b, HWCRectMatchesRect(layer.visibleRegionScreen.rects[1],""));
-    EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
-}
-
-TEST_F(HWCLayerListTest, hwc_list_creation_loads_latest_fb_target)
-{
-    using namespace testing;
-   
-    hwc_rect_t expected_sc, expected_df, expected_visible;
-    expected_sc = {0, 0, width, height};
-    expected_df = expected_visible = expected_sc;
-    EXPECT_CALL(*mock_buffer, size())
-        .Times(1)
-        .WillOnce(Return(default_size));
-
-    mga::LayerList layerlist;
-    layerlist.set_fb_target(mock_buffer);
-
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list->numHwLayers);
-    hwc_layer_1 target_layer = list->hwLayers[0];
-    EXPECT_THAT(target_layer.sourceCrop, MatchesRect( expected_sc, "sourceCrop"));
-    EXPECT_THAT(target_layer.displayFrame, MatchesRect( expected_df, "displayFrame"));
-
-    ASSERT_EQ(1u, target_layer.visibleRegionScreen.numRects); 
-    ASSERT_NE(nullptr, target_layer.visibleRegionScreen.rects); 
-    EXPECT_THAT(target_layer.visibleRegionScreen.rects[0], MatchesRect( expected_visible, "visible"));
-}
-
-TEST_F(HWCLayerListTest, fb_target)
-{
-    using namespace testing;
-
-    mga::LayerList layerlist;
-
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list->numHwLayers);
-    hwc_layer_1 target_layer = list->hwLayers[0];
-    EXPECT_EQ(nullptr, target_layer.handle); 
-}
-
-TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
-{
-    using namespace testing;
-
-    mga::LayerList layerlist;
-
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .Times(1)
-        .WillOnce(Return(native_handle_1));
-
-    layerlist.set_fb_target(mock_buffer);
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list->numHwLayers);
-    hwc_layer_1 target_layer = list->hwLayers[0]; 
-    EXPECT_EQ(native_handle_1->handle(), target_layer.handle); 
-}
-
-TEST_F(HWCLayerListTest, set_fb_target_2x)
-{
-    using namespace testing;
-
-    mga::LayerList layerlist;
-
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .Times(2)
-        .WillOnce(Return(native_handle_1))
-        .WillOnce(Return(native_handle_2));
-
-    layerlist.set_fb_target(mock_buffer);
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list->numHwLayers);
-    hwc_layer_1 target_layer = list->hwLayers[0]; 
-    EXPECT_EQ(native_handle_1->handle(), target_layer.handle); 
-
-    layerlist.set_fb_target(mock_buffer);
-    auto list_second = layerlist.native_list();
-    ASSERT_EQ(1u, list_second->numHwLayers);
-    target_layer = list_second->hwLayers[0]; 
-    EXPECT_EQ(native_handle_2->handle(), target_layer.handle); 
-}
-
-TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
-{
-    using namespace testing;
-
-    mga::LayerList layerlist;
-    layerlist.set_fb_target(mock_buffer);
-
-    hwc_rect_t source_region = {0,0,width, height};
-    hwc_rect_t target_region = source_region;
-    hwc_region_t region {1, nullptr};
-
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
     expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
     expected_layer.hints = 0;
@@ -177,14 +61,112 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
     expected_layer.handle = native_handle_1->handle();
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = source_region;
-    expected_layer.displayFrame = target_region; 
-    expected_layer.visibleRegionScreen = region;  
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region; 
+    expected_layer.visibleRegionScreen = visible_region;  
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+}
+
+TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
+{
+    mga::CompositionLayer target_layer(*native_handle_1, HWC_SKIP_LAYER);
+
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.hints = 0;
+    expected_layer.flags = HWC_SKIP_LAYER;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region; 
+    expected_layer.visibleRegionScreen = visible_region;  
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+}
+
+TEST_F(HWCLayerListTest, gl_target_layer_without_skip)
+{
+    mga::CompositionLayer target_layer(*native_handle_1, 0);
+
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region; 
+    expected_layer.visibleRegionScreen = visible_region;  
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+}
+
+TEST_F(HWCLayerListTest, hwc_list_creation)
+{
+    using namespace testing;
+    
+    mga::CompositionLayer surface_layer(*native_handle_1, 0);
+    mga::FramebufferLayer target_layer(*native_handle_1);
+    mga::LayerList layerlist({
+        surface_layer,
+        target_layer});
+
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list->numHwLayers);
-    hwc_layer_1 target_layer = list->hwLayers[0]; 
-    EXPECT_THAT(target_layer, MatchesLayer( expected_layer ));
+    EXPECT_EQ(-1, list->retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags); 
+    /* note, mali hwc1.1 actually falsely returns if these are not set to something. set to garbage */ 
+    EXPECT_NE(nullptr, list->dpy);
+    EXPECT_NE(nullptr, list->sur);
+
+    ASSERT_EQ(2u, list->numHwLayers);
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
+}
+
+TEST_F(HWCLayerListTest, hwc_list_update)
+{
+    using namespace testing;
+
+    int handle_fence = 442;
+    EXPECT_CALL(*native_handle_2, copy_fence())
+        .Times(1)
+        .WillOnce(Return(handle_fence));
+
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, 0),
+        mga::FramebufferLayer(*native_handle_1)});
+    layerlist.set_fb_target(native_handle_2);
+
+    auto list = layerlist.native_list(); 
+    ASSERT_EQ(2u, list->numHwLayers);
+    EXPECT_EQ(native_handle_1->handle(), list->hwLayers[0].handle);
+    EXPECT_EQ(-1, list->hwLayers[0].acquireFenceFd);
+    EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
+    EXPECT_EQ(handle_fence, list->hwLayers[1].acquireFenceFd);
+}
+
+TEST_F(HWCLayerListTest, get_fb_fence)
+{
+    int release_fence = 381;
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, 0),
+        mga::FramebufferLayer(*native_handle_1)});
+
+    auto list = layerlist.native_list();
+    list->hwLayers[1].releaseFenceFd = release_fence;
+
+    EXPECT_EQ(release_fence, layerlist.framebuffer_fence());
 }

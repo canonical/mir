@@ -42,6 +42,10 @@ class AndroidGPUDisplay : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
+        /* note: exynos5 hwc driver can sends sigterm to vsync thread when closing hwc.
+           the server can handle this, but we need the test to as well */
+        original_sigterm_handler = signal(SIGTERM, [](int){});
+
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
@@ -52,14 +56,17 @@ protected:
 
     static void TearDownTestCase()
     {
+        signal(SIGTERM, original_sigterm_handler);
         display_resource_factory.reset();
     }
 
     md::glAnimationBasic gl_animation;
 
     static std::shared_ptr<mga::ResourceFactory> display_resource_factory;
+    static void (*original_sigterm_handler)(int);
 };
 
+void (*AndroidGPUDisplay::original_sigterm_handler)(int);
 std::shared_ptr<mga::ResourceFactory> AndroidGPUDisplay::display_resource_factory;
 }
 
