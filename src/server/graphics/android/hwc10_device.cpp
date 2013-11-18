@@ -20,6 +20,9 @@
 #include "hwc10_device.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
+#include "android_format_conversion-inl.h"
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/android/native_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -28,25 +31,25 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<framebuffer_device_t> const& fb_device,
                               std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                              std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
+      fb_device(fb_device),
       fb_bundle(fb_bundle),
       layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}}),
-      fb_device(fbdev),
       wait_for_vsync(true)
 {
 }
 
 geom::Size mga::HWC10Device::display_size() const
 {
-    return fb_device->display_size();
-}
+    return {fb_device->width, fb_device->height};
+} 
 
 geom::PixelFormat mga::HWC10Device::display_format() const
 {
-    return fb_device->display_format();
+    return to_mir_format(fb_device->format);
 }
 
 std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
@@ -68,10 +71,19 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
 
+    //with hwc 1.0 only, set() goes and calls eglSwapBuffers
     rc = hwc_device->set(hwc_device.get(), 1, &display_list);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+    }
+
+    auto buffer = fb_bundle->last_rendered_buffer();
+    auto native_buffer = buffer->native_buffer_handle();
+    native_buffer->wait_for_content();
+    if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
 
     if (wait_for_vsync)
@@ -83,5 +95,4 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 void mga::HWC10Device::sync_to_display(bool sync)
 {
     wait_for_vsync = sync;
-    fb_device->sync_to_display(sync);
 }
