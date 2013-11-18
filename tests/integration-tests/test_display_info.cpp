@@ -83,7 +83,10 @@ private:
     mtd::NullDisplayBuffer display_buffer;
 };
 
-mtd::StubDisplayConfig StubChanger::stub_display_config;
+mtd::StubDisplayConfig StubChanger::stub_display_config{
+    2,
+    { geom::PixelFormat::xrgb_8888 }
+};
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -99,9 +102,9 @@ public:
 };
 
 std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
-    geom::PixelFormat::bgr_888,
-    geom::PixelFormat::abgr_8888,
-    geom::PixelFormat::xbgr_8888
+    geom::PixelFormat::argb_8888,
+    geom::PixelFormat::xbgr_8888,
+    geom::PixelFormat::bgr_888
 };
 
 class StubPlatform : public mtd::NullPlatform
@@ -126,9 +129,9 @@ public:
 
 }
 
-/* TODO: this test currently checks the same format list against both the surface formats
-         and display formats. Improve test to return different format lists for both concepts */ 
-TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
+using AvailableSurfaceFormatsTest = BespokeDisplayServerTestFixture;
+
+TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
@@ -171,7 +174,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(formats[i]));
+                          static_cast<geom::PixelFormat>(formats[i])) << "i=" << i;
             }
 
             mir_connection_release(connection);
