@@ -22,7 +22,7 @@
 #include "dimensions.h"
 #include "point.h"
 
-#include <ostream>
+#include <iosfwd>
 
 namespace mir
 {
@@ -57,11 +57,7 @@ inline bool operator!=(Displacement const& lhs, Displacement const& rhs)
     return lhs.dx != rhs.dx || lhs.dy != rhs.dy;
 }
 
-inline std::ostream& operator<<(std::ostream& out, Displacement const& value)
-{
-    out << '(' << value.dx << ", " << value.dy << ')';
-    return out;
-}
+std::ostream& operator<<(std::ostream& out, Displacement const& value);
 
 inline Displacement operator+(Displacement const& lhs, Displacement const& rhs)
 {

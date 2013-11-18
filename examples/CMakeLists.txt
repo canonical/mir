@@ -114,6 +114,7 @@ add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(mir_demo_standalone_render_surfaces
     mirserver
     mirshell
+    mirsharedgeometry
     ${Boost_LIBRARIES}
 )
 

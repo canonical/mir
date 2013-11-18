@@ -155,6 +155,8 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
         .WillOnce(testing::Return(native_handle));
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
+    EXPECT_CALL(*mock_buffer, size())
+        .WillOnce(testing::Return(mir::geometry::Size{123, 456}));
 
     auto platform = create_platform();
 
@@ -172,6 +174,8 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
         .Times(1);
     EXPECT_CALL(*mock_packer, pack_flags(testing::_))
+        .Times(1);
+    EXPECT_CALL(*mock_packer, pack_size(testing::_))
         .Times(1);
 
     platform->fill_ipc_package(mock_packer, mock_buffer);

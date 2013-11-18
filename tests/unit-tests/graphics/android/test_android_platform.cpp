@@ -83,6 +83,8 @@ protected:
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
+    using namespace ::testing;
+
     mga::AndroidPlatform platform(stub_db_factory, stub_display_report);
 
     auto mock_packer = std::make_shared<mtd::MockPacker>();
@@ -97,7 +99,15 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
         EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
+
+    EXPECT_CALL(*mock_buffer, stride())
+        .WillOnce(Return(stride));
     EXPECT_CALL(*mock_packer, pack_stride(stride))
+        .Times(1);
+
+    EXPECT_CALL(*mock_buffer, size())
+        .WillOnce(Return(mir::geometry::Size{123, 456}));
+    EXPECT_CALL(*mock_packer, pack_size(_))
         .Times(1);
 
     platform.fill_ipc_package(mock_packer, mock_buffer);

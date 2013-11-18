@@ -91,6 +91,17 @@ MATCHER_P(ModeUsesSignal, sig, "")
            vtm->acqsig == sig;
 }
 
+MATCHER_P(VTModeMatches, mode, "")
+{
+    auto vtm = static_cast<vt_mode*>(arg);
+
+    return vtm->mode == mode.mode &&
+           vtm->waitv == mode.waitv &&
+           vtm->relsig == mode.relsig &&
+           vtm->acqsig == mode.acqsig &&
+           vtm->frsig == mode.frsig;
+}
+
 }
 
 class LinuxVirtualTerminalTest : public ::testing::Test
@@ -99,7 +110,8 @@ public:
     LinuxVirtualTerminalTest()
         : fake_vt_fd{5},
           fake_kd_mode{KD_TEXT},
-          fake_vt_mode{VT_AUTO, 0, 0, 0, 0},
+          fake_vt_mode_auto{VT_AUTO, 0, 0, 0, 0},
+          fake_vt_mode_process{VT_PROCESS, 0, SIGUSR1, SIGUSR2, 0},
           fake_kb_mode{K_RAW},
           fake_tc_attr()
     {
@@ -132,6 +144,12 @@ public:
 
     void set_up_expectations_for_vt_setup(int vt_num, bool activate)
     {
+        set_up_expectations_for_vt_setup(vt_num, activate, fake_vt_mode_auto);
+    }
+
+    void set_up_expectations_for_vt_setup(int vt_num, bool activate,
+                                          vt_mode const& vtm)
+    {
         using namespace testing;
 
         std::stringstream ss;
@@ -152,7 +170,7 @@ public:
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGETMODE, An<void*>()))
             .WillOnce(DoAll(SetIoctlPointee<int>(fake_kd_mode), Return(0)));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_GETMODE, An<void*>()))
-            .WillOnce(DoAll(SetIoctlPointee<vt_mode>(fake_vt_mode), Return(0)));
+            .WillOnce(DoAll(SetIoctlPointee<vt_mode>(vtm), Return(0)));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGKBMODE, An<void*>()))
             .WillOnce(DoAll(SetIoctlPointee<int>(fake_kb_mode), Return(0)));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSKBMODE, K_OFF))
@@ -175,6 +193,11 @@ public:
 
     void set_up_expectations_for_vt_teardown()
     {
+        set_up_expectations_for_vt_teardown(fake_vt_mode_auto);
+    }
+
+    void set_up_expectations_for_vt_teardown(vt_mode const& vt_mode)
+    {
         using namespace testing;
 
         EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
@@ -183,15 +206,27 @@ public:
             .WillOnce(Return(0));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, fake_kd_mode))
             .WillOnce(Return(0));
-        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE, An<void*>()))
-            .WillOnce(Return(0));
+
+        if (vt_mode.mode == VT_AUTO)
+        {
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE,
+                                         Matcher<void*>(VTModeMatches(vt_mode))))
+                .WillOnce(Return(0));
+        }
+        else
+        {
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE, An<void*>()))
+                .Times(0);
+        }
+
         EXPECT_CALL(mock_fops, close(fake_vt_fd))
             .WillOnce(Return(0));
     }
 
     int const fake_vt_fd;
     int const fake_kd_mode;
-    vt_mode fake_vt_mode;
+    vt_mode const fake_vt_mode_auto;
+    vt_mode const fake_vt_mode_process;
     int const fake_kb_mode;
     struct termios fake_tc_attr;
     std::function<void(int)> sig_handler;
@@ -260,6 +295,24 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
     EXPECT_THROW({
         mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
     }, std::runtime_error);
+}
+
+TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_mode_if_vt_process)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    set_up_expectations_for_current_vt_search(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false, fake_vt_mode_process);
+    set_up_expectations_for_vt_teardown(fake_vt_mode_process);
+
+    auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
+    auto null_report = std::make_shared<mg::NullDisplayReport>();
+
+    mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
 }
 
 TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)

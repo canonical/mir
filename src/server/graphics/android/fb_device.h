@@ -29,16 +29,19 @@ namespace graphics
 {
 namespace android
 {
+class FramebufferBundle;
 
 class FBDevice : public DisplayDevice 
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev,
+             std::shared_ptr<FramebufferBundle> const& bundle);
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const; 
     unsigned int number_of_framebuffers_available() const;
 
+    std::shared_ptr<graphics::Buffer> buffer_for_render();
     void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
     void sync_to_display(bool sync); 
     void mode(MirPowerMode mode);
@@ -47,6 +50,7 @@ public:
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
+    std::shared_ptr<FramebufferBundle> const fb_bundle;
 };
 
 }

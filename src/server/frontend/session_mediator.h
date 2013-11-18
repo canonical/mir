@@ -22,10 +22,12 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <unordered_map>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 namespace mir
 {
@@ -59,7 +61,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::vector<geometry::PixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
@@ -118,8 +120,7 @@ private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
-    // TODO this is a dubious dependency - to get supported_pixel_formats
-    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
+    std::vector<geometry::PixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;

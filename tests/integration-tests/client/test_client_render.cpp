@@ -50,7 +50,6 @@ namespace
 {
 static int test_width  = 300;
 static int test_height = 200;
-
 static uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
                                    {0x34567890, 0x45678901}};
 static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
@@ -61,6 +60,30 @@ static const char socket_file[] = "./test_client_ipc_render_socket";
 
 struct TestClient
 {
+    static MirPixelFormat select_format_for_visual_id(int visual_id)
+    {
+        if (visual_id == 5)
+            return mir_pixel_format_argb_8888;
+        if (visual_id == 1)
+            return mir_pixel_format_abgr_8888;
+
+        return mir_pixel_format_invalid;
+    }
+
+    static MirSurface* create_mir_surface(MirConnection * connection, EGLDisplay display, EGLConfig config)
+    {
+        int visual_id;
+        eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &visual_id);
+
+        /* make surface */
+        MirSurfaceParameters surface_parameters;
+        surface_parameters.name = "testsurface";
+        surface_parameters.width = test_width;
+        surface_parameters.height = test_height;
+        surface_parameters.pixel_format = select_format_for_visual_id(visual_id);
+        return mir_connection_create_surface_sync(connection, &surface_parameters);
+    }
+
     static int render_cpu_pattern(mtf::CrossProcessSync& process_sync, int num_frames)
     {
         process_sync.wait_for_signal_ready_for();
@@ -107,27 +130,28 @@ struct TestClient
 
         /* set up egl context */
         int major, minor, n;
-        EGLDisplay disp;
         EGLContext context;
         EGLSurface egl_surface;
         EGLConfig egl_config;
         EGLint attribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_GREEN_SIZE, 8,
+            EGL_BUFFER_SIZE, 32,
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
             EGL_NONE };
         EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-        EGLNativeDisplayType native_display = (EGLNativeDisplayType)mir_connection_get_egl_native_display(connection);
-        EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
+        auto native_display = mir_connection_get_egl_native_display(connection);
+        auto egl_display = eglGetDisplay(native_display);
+        eglInitialize(egl_display, &major, &minor);
+        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n); 
 
-        disp = eglGetDisplay(native_display);
-        eglInitialize(disp, &major, &minor);
-
-        eglChooseConfig(disp, attribs, &egl_config, 1, &n);
-        egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
-        context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-        eglMakeCurrent(disp, egl_surface, egl_surface, context);
+        auto mir_surface = create_mir_surface(connection, egl_display, egl_config); 
+        auto native_window = static_cast<EGLNativeWindowType>(
+            mir_surface_get_egl_native_window(mir_surface)); 
+    
+        egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
+        context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
+        eglMakeCurrent(egl_display, egl_surface, egl_surface, context);
 
         for (auto i=0; i < num_frames; i++)
         {
@@ -146,13 +170,12 @@ struct TestClient
             }
             glClear(GL_COLOR_BUFFER_BIT);
 
-            eglSwapBuffers(disp, egl_surface);
+            eglSwapBuffers(egl_display, egl_surface);
         }
 
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
         return 0;
-
     }
 
     static int exit_function()
@@ -165,15 +188,13 @@ struct TestClient
 struct StubServerGenerator : public mt::StubServerTool
 {
     StubServerGenerator()
-     : next_received(false),
-       next_allowed(false)
     {
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
         auto size = geom::Size{test_width, test_height};
-        auto pf = geom::PixelFormat::abgr_8888;
-        last_posted = allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_hardware);
-        client_buffer = allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_hardware);
+        surface_pf = geom::PixelFormat::abgr_8888;
+        last_posted = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
+        client_buffer = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
     }
 
     void create_surface(google::protobuf::RpcController* /*controller*/,
@@ -184,17 +205,23 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_id()->set_value(13);
         response->set_width(test_width);
         response->set_height(test_height);
+        surface_pf = geom::PixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
 
         auto buf = client_buffer->native_buffer_handle();
-        response->mutable_buffer()->set_stride(buf->anwb()->stride);
+        //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
+        response->mutable_buffer()->set_stride(client_buffer->stride().as_uint32_t());
+
+        auto const& size = client_buffer->size();
+        response->mutable_buffer()->set_width(size.width.as_int());
+        response->mutable_buffer()->set_height(size.height.as_int());
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(native_handle->data[i]);
-        for(auto i=0; i<native_handle->numInts; i++)
+        for(auto i=0; i < native_handle->numInts; i++)
             response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
         std::unique_lock<std::mutex> lock(guard);
@@ -216,26 +243,44 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_buffer_id(client_buffer->id().as_uint32_t());
 
         auto buf = client_buffer->native_buffer_handle();
-
         response->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
-        response->set_stride(buf->anwb()->stride);
+        response->set_stride(client_buffer->stride().as_uint32_t());
+
+        auto const& size = client_buffer->size();
+        response->set_width(size.width.as_int());
+        response->set_height(size.height.as_int());
+
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(native_handle->data[i]);
         for(auto i=0; i<native_handle->numInts; i++)
             response->add_data(native_handle->data[native_handle->numFds+i]);
-
-
         done->Run();
     }
 
-    std::shared_ptr<mga::Buffer> second_to_last_posted_buffer()
+    uint32_t red_value_for_surface()
+    {
+        if ((surface_pf == geom::PixelFormat::abgr_8888) || (surface_pf == geom::PixelFormat::xbgr_8888))
+            return 0xFF0000FF;
+
+        if ((surface_pf == geom::PixelFormat::argb_8888) || (surface_pf == geom::PixelFormat::xrgb_8888))
+            return 0xFFFF0000;
+
+        return 0x0;
+    }
+
+    uint32_t green_value_for_surface()
+    {
+        return 0xFF00FF00;
+    }
+
+    std::shared_ptr<mg::Buffer> second_to_last_posted_buffer()
     {
         std::unique_lock<std::mutex> lk(buffer_mutex);
         return client_buffer;
     }
 
-    std::shared_ptr<mga::Buffer> last_posted_buffer()
+    std::shared_ptr<mg::Buffer> last_posted_buffer()
     {
         std::unique_lock<std::mutex> lk(buffer_mutex);
         return last_posted;
@@ -243,16 +288,10 @@ struct StubServerGenerator : public mt::StubServerTool
 
 private:
     std::shared_ptr<mga::AndroidGraphicBufferAllocator> allocator;
-    std::shared_ptr<mga::Buffer> client_buffer;
-    std::shared_ptr<mga::Buffer> last_posted;
-
+    std::shared_ptr<mg::Buffer> client_buffer;
+    std::shared_ptr<mg::Buffer> last_posted;
     std::mutex buffer_mutex;
-    std::condition_variable next_cv;
-    std::condition_variable allow_cv;
-    bool next_received;
-    bool next_allowed;
-
-    int handle_id;
+    geom::PixelFormat surface_pf;
 };
 
 }

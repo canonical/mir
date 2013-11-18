@@ -17,7 +17,7 @@
  */
 
 #include "src/server/shell/mediating_display_changer.h"
-#include "mir/shell/session_container.h"
+#include "src/server/shell/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "src/server/shell/broadcasting_session_event_sink.h"
 

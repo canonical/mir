@@ -37,6 +37,7 @@ struct MockPacker : public graphics::BufferIPCPacker
     MOCK_METHOD1(pack_data, void(int));
     MOCK_METHOD1(pack_stride, void(geometry::Stride));
     MOCK_METHOD1(pack_flags, void(unsigned int));
+    MOCK_METHOD1(pack_size, void(geometry::Size const&));
 };
 
 }

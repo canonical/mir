@@ -22,7 +22,7 @@ add_library(
   android_alloc_adaptor.cpp
   server_render_window.cpp
   resource_factory.cpp
-  fb_simple_swapper.cpp
+  framebuffers.cpp
   fb_device.cpp
   internal_client_window.cpp
   interpreter_cache.cpp

@@ -116,6 +116,8 @@ struct MockServerPackageGenerator : public StubServerTool
             server_package.data[i] = (global_buffer_id + i) * 2;
         }
         server_package.stride = stride_sent;
+        server_package.width = width_sent;
+        server_package.height = height_sent;
     }
 
     MirBufferPackage server_package;
@@ -148,6 +150,8 @@ struct MockServerPackageGenerator : public StubServerTool
         }
 
         response->set_stride(server_package.stride);
+        response->set_width(server_package.width);
+        response->set_height(server_package.height);
     }
 
     void create_surface_response(mir::protobuf::Surface* response)
@@ -544,6 +548,49 @@ TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
     buffer_wait_handle->wait_for_all();
+    Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
+}
+
+TEST_F(MirClientSurfaceTest, surface_resizes_with_latest_buffer)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
+        .Times(1);
+
+    auto surface = std::make_shared<MirSurface> (connection.get(),
+                                                 *client_comm_channel,
+                                                 mock_buffer_factory,
+                                                 input_platform,
+                                                 params,
+                                                 &empty_callback,
+                                                 nullptr);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_all();
+    Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
+
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
+        .Times(2);
+
+    auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback,
+                                                   nullptr);
+    buffer_wait_handle->wait_for_all();
+
+    int new_width = mock_server_tool->width_sent += 12;
+    int new_height = mock_server_tool->height_sent -= 34;
+
+    auto const& before = surface->get_parameters();
+    EXPECT_NE(new_width, before.width);
+    EXPECT_NE(new_height, before.height);
+
+    buffer_wait_handle = surface->next_buffer(&empty_surface_callback,
+                                              nullptr);
+    buffer_wait_handle->wait_for_all();
+
+    auto const& after = surface->get_parameters();
+    EXPECT_EQ(new_width, after.width);
+    EXPECT_EQ(new_height, after.height);
+
     Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 }
 

@@ -89,6 +89,7 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> con
     }
 
     packer->pack_stride(buffer->stride());
+    packer->pack_size(buffer->size());
 }
 
 EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const

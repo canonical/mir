@@ -19,7 +19,6 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
-#include "buffer.h"
 
 #include <cstring>
 
@@ -27,112 +26,100 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCRect::HWCRect()
-    : self{0,0,0,0}
+mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
+{
+    memcpy(this, &layer, sizeof(HWCLayer)); 
+    this->visibleRegionScreen = {1, &this->visible_rect};
+    return *this;     
+}
+
+mga::HWCLayer::HWCLayer(HWCLayer const& layer)
+{
+    memcpy(this, &layer, sizeof(HWCLayer)); 
+    this->visibleRegionScreen = {1, &this->visible_rect};
+}
+
+mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, int layer_flags)
+{
+    compositionType = type;
+    hints = 0;
+    flags = layer_flags;
+    transform = 0;
+    blending = HWC_BLENDING_NONE;
+    //TODO: acquireFenceFd should be buffer.fence()
+    acquireFenceFd = -1;
+    releaseFenceFd = -1;
+
+    visible_rect.top = 0;
+    visible_rect.left = 0;
+    visible_rect.bottom = height;
+    visible_rect.right = width;
+    sourceCrop = visible_rect;
+    displayFrame = visible_rect;
+    visibleRegionScreen.numRects=1;
+    visibleRegionScreen.rects= &visible_rect;
+    handle = buffer_handle;
+}
+
+mga::FramebufferLayer::FramebufferLayer()
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
 {
 }
 
-mga::HWCRect::HWCRect(geom::Rectangle& rect)
-{
-    self.top = rect.top_left.y.as_uint32_t();
-    self.left = rect.top_left.x.as_uint32_t();
-    self.bottom= rect.size.height.as_uint32_t();
-    self.right = rect.size.width.as_uint32_t();
-}
-
-mga::HWCDefaultLayer::HWCDefaultLayer(std::initializer_list<mga::HWCRect> list)
-{
-    /* default values.*/
-    self.compositionType = HWC_FRAMEBUFFER_TARGET;
-    self.hints = 0;
-    self.flags = 0;
-    self.transform = 0;
-    self.blending = HWC_BLENDING_NONE;
-    self.acquireFenceFd = -1;
-    self.releaseFenceFd = -1;
-
-    HWCRect emptyrect;
-    self.sourceCrop = emptyrect;
-    self.displayFrame = emptyrect;
-    self.visibleRegionScreen.numRects=list.size();
-    self.visibleRegionScreen.rects=nullptr;
-    if (list.size() != 0)
-    {
-        auto rect_array = new hwc_rect_t[list.size()];
-        auto i = 0u;
-        for( auto& rect : list )
-        {
-            rect_array[i++] = rect; 
-        }
-        self.visibleRegionScreen.rects = rect_array;
-    }
-}
-
-mga::HWCDefaultLayer::~HWCDefaultLayer()
-{
-    if (self.visibleRegionScreen.rects)
-    {
-        delete[] self.visibleRegionScreen.rects;
-    }
-}
-
-mga::HWCFBLayer::HWCFBLayer(
-        buffer_handle_t native_handle,
-        HWCRect display_frame_rect)
-    : HWCDefaultLayer{display_frame_rect}
-{
-    self.compositionType = HWC_FRAMEBUFFER_TARGET;
-
-    self.handle = native_handle;
-    self.sourceCrop = display_frame_rect;
-    self.displayFrame = display_frame_rect;
-}
-
-mga::HWCFBLayer::HWCFBLayer()
-    : HWCFBLayer{nullptr, mga::HWCRect{}}
+mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
+               buffer.anwb()->width, buffer.anwb()->height, 0)
 {
 }
 
-mga::LayerList::LayerList()
-    : layer_list{std::make_shared<HWCFBLayer>()},
-      hwc_representation{std::make_shared<hwc_display_contents_1_t>()}
+mga::CompositionLayer::CompositionLayer(int layer_flags)
+    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
 {
-    memset(hwc_representation.get(), 0, sizeof(hwc_display_contents_1_t));
-    update_list();
 }
 
-void mga::LayerList::set_fb_target(std::shared_ptr<mg::Buffer> const& buffer)
+mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
+    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
+               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
 {
-    auto native_buffer = buffer->native_buffer_handle();
-    native_buffer->wait_for_content();
+}
 
-    geom::Point pt{0, 0};
-    geom::Rectangle rect{pt, buffer->size()};
-    HWCRect display_rect(rect);
-
-    auto fb_layer = std::make_shared<HWCFBLayer>(native_buffer->handle(), display_rect);
-    layer_list[fb_position] = fb_layer;
-
-    update_list();
-} 
-
-void mga::LayerList::update_list()
+mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 {
-    if (layer_list.size() != hwc_representation->numHwLayers)
-    {
-        auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
-        hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
-            static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
-
-        hwc_representation->numHwLayers = layer_list.size();
-    }
+    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
+    hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+        static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
 
     auto i = 0u;
-    for( auto& layer : layer_list)
+    for(auto& layer : layer_list)
     {
-        hwc_representation->hwLayers[i++] = *layer;
+        hwc_representation->hwLayers[i++] = layer;        
     }
+    hwc_representation->numHwLayers = layer_list.size();
     hwc_representation->retireFenceFd = -1;
+    hwc_representation->flags = HWC_GEOMETRY_CHANGED;
+
+    //aosp exynos hwc in particular, checks that these fields are non-null in hwc1.1, although
+    //these fields are deprecated in hwc1.1 and later.
+    hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
+    hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
+    
+}
+
+void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
+{
+    auto fb_position = hwc_representation->numHwLayers - 1;
+
+    if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
+    {
+        hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
+        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
+    }
+}
+
+mga::NativeFence mga::LayerList::framebuffer_fence()
+{
+    auto fb_position = hwc_representation->numHwLayers - 1;
+    return hwc_representation->hwLayers[fb_position].releaseFenceFd; 
 }
 
 hwc_display_contents_1_t* mga::LayerList::native_list() const

@@ -21,9 +21,9 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
-#include "mir/shell/session_container.h"
+#include "src/server/shell/session_container.h"
 #include "mir/shell/session.h"
-#include "mir/surfaces/surface_controller.h"
+#include "src/server/surfaces/surface_controller.h"
 #include "src/server/surfaces/surface_stack_model.h"
 
 #include "src/server/input/android/android_input_manager.h"

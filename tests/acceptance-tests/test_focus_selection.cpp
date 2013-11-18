@@ -18,8 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/shell/session_container.h"
-#include "src/server/shell/registration_order_focus_sequence.h"
+#include "src/server/shell/session_container.h"
 #include "src/server/shell/consuming_placement_strategy.h"
 #include "src/server/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"

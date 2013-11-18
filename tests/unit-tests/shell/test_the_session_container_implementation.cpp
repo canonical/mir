@@ -55,6 +55,27 @@ TEST(DefaultSessionContainer, for_each)
     container.for_each(std::ref(functor));
 }
 
+TEST(DefaultSessionContainer, successor_of)
+{
+    using namespace ::testing;
+    msh::DefaultSessionContainer container;
+    
+    auto session1 = std::make_shared<mtd::StubShellSession>();
+    auto session2 = std::make_shared<mtd::StubShellSession>();
+    auto session3 = std::make_shared<mtd::StubShellSession>();
+
+    container.insert_session(session1);
+    container.insert_session(session2);
+    container.insert_session(session3);
+
+    EXPECT_EQ(session2, container.successor_of(session1));
+    EXPECT_EQ(session3, container.successor_of(session2));
+    EXPECT_EQ(session1, container.successor_of(session3));
+
+    // Successor of no session is the last session.
+    EXPECT_EQ(session3, container.successor_of(std::shared_ptr<msh::Session>()));
+}
+
 TEST(DefaultSessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
