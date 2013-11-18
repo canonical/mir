@@ -38,7 +38,7 @@ class Buffer;
 class GraphicBufferAllocator
 {
 public:
-    virtual std::shared_ptr<Buffer> alloc_buffer_platform(
+    virtual std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
         geometry::Size sz, geometry::PixelFormat pf, BufferUsage use) = 0;
 
 protected:

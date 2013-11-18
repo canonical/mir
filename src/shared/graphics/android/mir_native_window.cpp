@@ -69,10 +69,8 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
-    int fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    //todo: we have to close the fence
-    return self->dequeueBuffer(buffer, &fence_fd);
+    return self->dequeueBufferAndWait(buffer);
 }
 
 int dequeueBuffer_static (struct ANativeWindow* window,
@@ -166,6 +164,14 @@ int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_d
     //driver is responsible for closing this native handle
     *fence_fd = buffer->copy_fence();
     *buffer_to_driver = buffer->anwb();
+    return 0;
+}
+
+int mga::MirNativeWindow::dequeueBufferAndWait(struct ANativeWindowBuffer** buffer_to_driver)
+{
+    auto buffer = driver_interpreter->driver_requests_buffer();
+    *buffer_to_driver = buffer->anwb();
+    buffer->wait_for_content();
     return 0;
 }
 

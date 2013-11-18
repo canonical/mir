@@ -39,13 +39,13 @@ public:
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
-        native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        native_handle_2 = std::make_shared<mtd::MockAndroidNativeBuffer>();
     }
 
     int width; 
     int height; 
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
-    std::shared_ptr<mg::NativeBuffer> native_handle_2;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
 };
 
 TEST_F(HWCLayerListTest, fb_target_layer)
@@ -139,6 +139,12 @@ TEST_F(HWCLayerListTest, hwc_list_creation)
 TEST_F(HWCLayerListTest, hwc_list_update)
 {
     using namespace testing;
+
+    int handle_fence = 442;
+    EXPECT_CALL(*native_handle_2, copy_fence())
+        .Times(1)
+        .WillOnce(Return(handle_fence));
+
     mga::LayerList layerlist({
         mga::CompositionLayer(*native_handle_1, 0),
         mga::FramebufferLayer(*native_handle_1)});
@@ -146,6 +152,21 @@ TEST_F(HWCLayerListTest, hwc_list_update)
 
     auto list = layerlist.native_list(); 
     ASSERT_EQ(2u, list->numHwLayers);
-    EXPECT_EQ(list->hwLayers[0].handle, native_handle_1->handle());
+    EXPECT_EQ(native_handle_1->handle(), list->hwLayers[0].handle);
+    EXPECT_EQ(-1, list->hwLayers[0].acquireFenceFd);
     EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
+    EXPECT_EQ(handle_fence, list->hwLayers[1].acquireFenceFd);
+}
+
+TEST_F(HWCLayerListTest, get_fb_fence)
+{
+    int release_fence = 381;
+    mga::LayerList layerlist({
+        mga::CompositionLayer(*native_handle_1, 0),
+        mga::FramebufferLayer(*native_handle_1)});
+
+    auto list = layerlist.native_list();
+    list->hwLayers[1].releaseFenceFd = release_fence;
+
+    EXPECT_EQ(release_fence, layerlist.framebuffer_fence());
 }

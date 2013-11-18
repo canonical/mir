@@ -19,6 +19,7 @@
 
 #include "hwc10_device.h"
 #include "hwc_vsync_coordinator.h"
+#include "framebuffer_bundle.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -27,16 +28,14 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<FramebufferBundle> const& fb_bundle,
                               std::shared_ptr<DisplayDevice> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
+      fb_bundle(fb_bundle),
       layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}}),
       fb_device(fbdev),
       wait_for_vsync(true)
-{
-}
-
-mga::HWC10Device::~HWC10Device() noexcept
 {
 }
 
@@ -50,14 +49,9 @@ geom::PixelFormat mga::HWC10Device::display_format() const
     return fb_device->display_format();
 }
 
-unsigned int mga::HWC10Device::number_of_framebuffers_available() const
+std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
 {
-    return fb_device->number_of_framebuffers_available();
-}
-
-void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    fb_device->set_next_frontbuffer(buffer);
+    return fb_bundle->buffer_for_render();
 }
 
 void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
