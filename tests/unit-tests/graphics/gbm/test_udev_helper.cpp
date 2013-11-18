@@ -255,9 +255,7 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
 
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
     bool event_handler_called = false;
 
     udev_environment.add_device("drm", "control64D", NULL, {}, {});
@@ -270,9 +268,7 @@ TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 
 TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
     bool event_handler_called = false;
 
     monitor.enable();
@@ -287,9 +283,7 @@ TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 
 TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
     bool remove_event_received = false;
 
     monitor.enable();
@@ -309,9 +303,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 
 TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
     bool changed_event_received = false;
 
     monitor.enable();
@@ -331,7 +323,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 
 TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    mgg::UdevContext ctx;
 
     auto monitor = mgg::UdevMonitor(ctx);
     bool event_handler_called = false;
@@ -339,7 +331,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
     monitor.enable();
 
     auto sysfs_path = udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    mgg::UdevDevice device(*ctx, sysfs_path);
+    mgg::UdevDevice device(ctx, sysfs_path);
 
     monitor.process_events(
         [&event_handler_called, &device](mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
@@ -353,9 +345,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
 
     monitor.enable();
 
@@ -372,9 +362,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
-
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
 
     monitor.enable();
 
@@ -396,7 +384,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
 
 TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    mgg::UdevContext ctx;
 
     auto monitor = mgg::UdevMonitor(ctx);
     bool event_received = false;
@@ -406,7 +394,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
     monitor.enable();
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mgg::UdevDevice minor_device(*ctx, test_sysfspath);
+    mgg::UdevDevice minor_device(ctx, test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
@@ -422,7 +410,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 
 TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    mgg::UdevContext ctx;
 
     auto monitor = mgg::UdevMonitor(ctx);
     bool usb_event_received = false, drm_event_recieved = false;
@@ -433,10 +421,10 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
     monitor.enable();
 
     auto drm_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mgg::UdevDevice drm_device(*ctx, drm_sysfspath);
+    mgg::UdevDevice drm_device(ctx, drm_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
     auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", NULL, {}, {"DEVTYPE", "hid"});
-    mgg::UdevDevice usb_device(*ctx, usb_sysfspath);
+    mgg::UdevDevice usb_device(ctx, usb_sysfspath);
 
     monitor.process_events([&drm_event_recieved, &drm_device, &usb_event_received, &usb_device]
         (mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
@@ -453,7 +441,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
 
 TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    mgg::UdevContext ctx;
 
     auto monitor = mgg::UdevMonitor(ctx);
     bool event_received = false;
@@ -463,7 +451,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mgg::UdevDevice minor_device(*ctx, test_sysfspath);
+    mgg::UdevDevice minor_device(ctx, test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 

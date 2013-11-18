@@ -128,7 +128,7 @@ public:
         CHANGED,
     };
 
-    UdevMonitor(std::shared_ptr<UdevContext> const& ctx);
+    UdevMonitor(const UdevContext &ctx);
     ~UdevMonitor() noexcept;
 
     void enable(void);

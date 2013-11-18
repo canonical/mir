@@ -217,17 +217,20 @@ udev* mgg::UdevContext::ctx() const
 ///////////////////
 //   UdevMonitor
 ///////////////////
-mgg::UdevMonitor::UdevMonitor(std::shared_ptr<mgg::UdevContext> const& ctx)
+mgg::UdevMonitor::UdevMonitor(mgg::UdevContext const& ctx)
     : enabled(false)
 {
-    monitor = udev_monitor_new_from_netlink(ctx->ctx(), "udev");
+    monitor = udev_monitor_new_from_netlink(ctx.ctx(), "udev");
 
     if (!monitor)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev_monitor"));
+
+    udev_ref(udev_monitor_get_udev(monitor));
 }
 
 mgg::UdevMonitor::~UdevMonitor() noexcept
 {
+    udev_unref(udev_monitor_get_udev(monitor));
     udev_monitor_unref(monitor);
 }
 

@@ -79,7 +79,7 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                             std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
-      monitor(std::make_shared<UdevContext>()),
+      monitor(mgg::UdevContext()),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
       current_display_configuration{platform->drm.fd}
