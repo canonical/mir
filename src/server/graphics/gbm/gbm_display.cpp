@@ -189,9 +189,9 @@ void mgg::GBMDisplay::register_configuration_change_handler(
 {
     handlers.register_fd_handler(
         {monitor.fd()},
-        [&conf_change_handler, this](int)
+        [conf_change_handler, this](int)
         {
-            monitor.process_events([&conf_change_handler]
+            monitor.process_events([conf_change_handler]
                                    (UdevMonitor::EventType, UdevDevice const&)
                                    {
                                         conf_change_handler();

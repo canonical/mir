@@ -39,6 +39,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -708,4 +709,45 @@ TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
     EXPECT_CALL(mock_register, register_fd_handler(_,_));
 
     display->register_configuration_change_handler(mock_register, []{});
+}
+
+TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
+{
+    using namespace testing;
+
+    auto display = std::make_shared<mgg::GBMDisplay>(
+                        create_platform(),
+                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        null_report);
+
+    auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+
+    mir::AsioMainLoop ml;
+
+    int const expected_call_count{10};
+    std::atomic<int> call_count{0};
+
+    display->register_configuration_change_handler(
+        ml,
+        [&call_count, &ml]()
+        {
+            if (++call_count == expected_call_count)
+                ml.stop();
+        });
+
+    std::thread t{
+        [this, syspath]
+        {
+            for (int i = 0; i < expected_call_count; ++i)
+            {
+                fake_devices.emit_device_changed(syspath);
+                std::this_thread::sleep_for(std::chrono::microseconds{500});
+            }
+        }};
+
+    ml.run();
+
+    t.join();
+
+    EXPECT_EQ(expected_call_count, call_count);
 }
