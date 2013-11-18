@@ -1,4 +1,4 @@
-#include "mir/graphics/offscreen_platform.h"
+#include "mir/graphics/basic_platform.h"
 #include "src/server/graphics/offscreen/display.h"
 #include "mir/graphics/null_display_report.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
@@ -19,10 +19,10 @@ namespace mtd=mir::test::doubles;
 namespace
 {
 
-class StubOffscreenPlatform : public mg::OffscreenPlatform
+class StubBasicPlatform : public mg::BasicPlatform
 {
 public:
-    StubOffscreenPlatform(EGLNativeDisplayType native_display)
+    StubBasicPlatform(EGLNativeDisplayType native_display)
         : native_display{native_display}
     {
     }
@@ -65,7 +65,7 @@ public:
 
 }
 
-TEST_F(OffscreenDisplayTest, uses_offscreen_platform_egl_native_display)
+TEST_F(OffscreenDisplayTest, uses_basic_platform_egl_native_display)
 {
     using namespace ::testing;
 
@@ -78,7 +78,7 @@ TEST_F(OffscreenDisplayTest, uses_offscreen_platform_egl_native_display)
     EXPECT_CALL(mock_egl, eglTerminate(mock_egl.fake_egl_display));
 
     mgo::Display display{
-        std::make_shared<StubOffscreenPlatform>(native_display),
+        std::make_shared<StubBasicPlatform>(native_display),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
         std::make_shared<mg::NullDisplayReport>()};
 }
@@ -97,7 +97,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
         .WillRepeatedly(SetArgPointee<1>(fbo));
 
     mgo::Display display{
-        std::make_shared<StubOffscreenPlatform>(native_display),
+        std::make_shared<StubBasicPlatform>(native_display),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
         std::make_shared<mg::NullDisplayReport>()};
 
@@ -140,7 +140,7 @@ TEST_F(OffscreenDisplayTest, restores_previous_state_on_fbo_setup_failure)
 
     EXPECT_THROW({
         mgo::Display display(
-            std::make_shared<StubOffscreenPlatform>(native_display),
+            std::make_shared<StubBasicPlatform>(native_display),
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
             std::make_shared<mg::NullDisplayReport>());
     }, std::runtime_error);

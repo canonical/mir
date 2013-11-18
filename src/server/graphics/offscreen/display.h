@@ -33,7 +33,7 @@ namespace mir
 namespace graphics
 {
 
-class OffscreenPlatform;
+class BasicPlatform;
 class DisplayConfigurationPolicy;
 class DisplayReport;
 
@@ -64,7 +64,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    Display(std::shared_ptr<OffscreenPlatform> const& offscreen_platform,
+    Display(std::shared_ptr<BasicPlatform> const& basic_platform,
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
             std::shared_ptr<DisplayReport> const& listener);
     ~Display() noexcept;
@@ -90,7 +90,7 @@ public:
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
-    std::shared_ptr<OffscreenPlatform> const offscreen_platform;
+    std::shared_ptr<BasicPlatform> const basic_platform;
     EGLDisplay const egl_display;
     SurfacelessEGLContext const egl_context_shared;
     std::mutex configuration_mutex;

@@ -18,7 +18,7 @@
 
 #include "display.h"
 #include "display_buffer.h"
-#include "mir/graphics/offscreen_platform.h"
+#include "mir/graphics/basic_platform.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/geometry/size.h"
@@ -61,10 +61,10 @@ private:
 };
 
 mgo::detail::EGLDisplayHandle
-create_and_initialize_display(mg::OffscreenPlatform& offscreen_platform)
+create_and_initialize_display(mg::BasicPlatform& basic_platform)
 {
     mgo::detail::EGLDisplayHandle egl_display{
-        offscreen_platform.egl_native_display()};
+        basic_platform.egl_native_display()};
 
     egl_display.initialize();
 
@@ -104,11 +104,11 @@ mgo::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 }
 
 mgo::Display::Display(
-    std::shared_ptr<OffscreenPlatform> const& offscreen_platform,
+    std::shared_ptr<BasicPlatform> const& basic_platform,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const&)
-    : offscreen_platform{offscreen_platform},
-      egl_display{create_and_initialize_display(*offscreen_platform)},
+    : basic_platform{basic_platform},
+      egl_display{create_and_initialize_display(*basic_platform)},
       egl_context_shared{egl_display, EGL_NO_CONTEXT},
       current_display_configuration{geom::Size{1024,768}}
 {
