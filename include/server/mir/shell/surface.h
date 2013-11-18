@@ -37,6 +37,9 @@ class SurfaceController;
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
+    virtual std::string name() const = 0;
+    virtual MirSurfaceType type() const = 0;
+    virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual void move_to(geometry::Point const& top_left) = 0;

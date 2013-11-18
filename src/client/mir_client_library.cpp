@@ -196,7 +196,7 @@ void mir_connection_get_available_surface_formats(
     unsigned const int format_size, unsigned int *num_valid_formats)
 {
     if ((connection) && (formats) && (num_valid_formats))
-        connection->possible_pixel_formats(formats, format_size, *num_valid_formats);
+        connection->available_surface_formats(formats, format_size, *num_valid_formats);
 }
 
 MirWaitHandle* mir_connection_create_surface(

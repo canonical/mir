@@ -312,6 +312,7 @@ private:
     std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
     std::shared_ptr<surfaces::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<surfaces::SurfaceController>    the_surface_controller();
+    std::function<void()> force_threads_to_unblock_callback();
 };
 }
 
