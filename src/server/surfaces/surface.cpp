@@ -114,8 +114,6 @@ void ms::Surface::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
     if (buffer)
     {
         buffer.reset();
-        // TODO There is something crazy about assuming that giving out any buffer
-        // TODO after the first implies that previous buffers have been rendered.
         flag_for_render();
     }
 
@@ -132,7 +130,6 @@ std::shared_ptr<mg::Buffer> ms::Surface::snapshot_buffer() const
     return surface_buffer_stream->lock_snapshot_buffer();
 }
 
-//TODO: this is just used in example code, could be private
 void ms::Surface::flag_for_render()
 {
     surface_state->frame_posted();

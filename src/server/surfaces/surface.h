@@ -52,7 +52,6 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer);
     void force_requests_to_complete();
-    void flag_for_render();
 
     bool supports_input() const;
     int client_input_fd() const;
@@ -70,6 +69,8 @@ public:
     void resize(geometry::Size const& size);
 
 private:
+    void flag_for_render();
+
     std::shared_ptr<surfaces::SurfaceState> surface_state;
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
