@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_OFFSCREEN_PLATFORM_H_
-#define MIR_GRAPHICS_OFFSCREEN_PLATFORM_H_
+#ifndef MIR_GRAPHICS_BASIC_PLATFORM_H_
+#define MIR_GRAPHICS_BASIC_PLATFORM_H_
 
 #include <EGL/egl.h>
 
@@ -26,20 +26,20 @@ namespace mir
 namespace graphics
 {
 
-class OffscreenPlatform
+class BasicPlatform
 {
 public:
-    virtual ~OffscreenPlatform() = default;
+    virtual ~BasicPlatform() = default;
 
     virtual EGLNativeDisplayType egl_native_display() const = 0;
 
 protected:
-    OffscreenPlatform() = default;
-    OffscreenPlatform(OffscreenPlatform const&) = delete;
-    OffscreenPlatform& operator=(OffscreenPlatform const&) = delete;
+    BasicPlatform() = default;
+    BasicPlatform(BasicPlatform const&) = delete;
+    BasicPlatform& operator=(BasicPlatform const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_GRAPHICS_OFFSCREEN_PLATFORM_H_ */
+#endif /* MIR_GRAPHICS_BASIC_PLATFORM_H_ */
