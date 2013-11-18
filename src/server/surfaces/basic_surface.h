@@ -65,7 +65,7 @@ public:
     virtual geometry::PixelFormat pixel_format() const = 0;
 
     virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const = 0;
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
+    virtual void swap_buffers(std::shared_ptr<graphics::Buffer>&) = 0;
     virtual void force_requests_to_complete() = 0;
 
     virtual bool supports_input() const = 0;

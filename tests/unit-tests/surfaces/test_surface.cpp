@@ -242,7 +242,10 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
         .Times(1)
         .WillOnce(Return(graphics_resource));
 
-    EXPECT_EQ(graphics_resource, surf.advance_client_buffer());
+    std::shared_ptr<mg::Buffer> result;
+    surf.swap_buffers(result);
+
+    EXPECT_EQ(graphics_resource, result);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
@@ -256,8 +259,10 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         .Times(1)
         .WillOnce(Return(stub_buffer));
 
-    auto ret_ipc = surf.advance_client_buffer();
-    EXPECT_EQ(stub_buffer, ret_ipc);
+    std::shared_ptr<mg::Buffer> result;
+    surf.swap_buffers(result);
+
+    EXPECT_EQ(stub_buffer, result);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -405,16 +410,18 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
 
+    std::shared_ptr<mg::Buffer> buffer;
+
     EXPECT_CALL(*mock_basic_state, frame_posted())
         .Times(0);
-    surf.advance_client_buffer();
+    surf.swap_buffers(buffer);
     testing::Mock::VerifyAndClearExpectations(mock_basic_state.get());
     
     EXPECT_CALL(*mock_basic_state, frame_posted())
         .Times(3);
-    surf.advance_client_buffer();
-    surf.advance_client_buffer();
-    surf.advance_client_buffer();
+    surf.swap_buffers(buffer);
+    surf.swap_buffers(buffer);
+    surf.swap_buffers(buffer);
     testing::Mock::VerifyAndClearExpectations(mock_basic_state.get());
 }
 

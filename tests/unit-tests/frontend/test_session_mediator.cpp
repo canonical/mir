@@ -44,6 +44,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface.h"
 
+#include "gmock_set_arg.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -102,7 +103,7 @@ public:
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-        EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
+        EXPECT_CALL(*mock_surface, swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer));
 
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
         EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -122,7 +123,7 @@ public:
 
             EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-            EXPECT_CALL(*mock_surfaces[id], advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
+            EXPECT_CALL(*mock_surfaces[id], swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer));
 
             EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
             EXPECT_CALL(*mock_surfaces[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -520,10 +521,10 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mp::Buffer buffer_response;
     mp::SurfaceParameters surface_request;
 
-    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_))
         .Times(2)
-        .WillOnce(Return(stub_buffer1))
-        .WillOnce(Return(stub_buffer2));
+        .WillOnce(SetArg<0>(stub_buffer1))
+        .WillOnce(SetArg<0>(stub_buffer2));
  
     auto refcount = stub_buffer1.use_count();
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
@@ -557,8 +558,8 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_
      * the pre-created stubbed_session->mock_surface. Further create_surface()
      * invocations create new surfaces in stubbed_session->mock_surfaces[].
      */
-    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
-        .WillOnce(Return(stub_buffer1));
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_))
+        .WillOnce(SetArg<0>(stub_buffer1));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     auto refcount = stub_buffer1.use_count();

@@ -50,7 +50,7 @@ public:
     geometry::PixelFormat pixel_format() const;
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    std::shared_ptr<graphics::Buffer> advance_client_buffer();
+    void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer);
     void force_requests_to_complete();
     void flag_for_render();
 
@@ -74,7 +74,6 @@ private:
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SurfacesReport> const report;
-    bool surface_in_startup;
 };
 }
 }

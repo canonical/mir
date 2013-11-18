@@ -35,7 +35,7 @@ class InternalSurface
 public:
     virtual ~InternalSurface() = default;
 
-    virtual std::shared_ptr<Buffer> advance_client_buffer() = 0;
+    virtual void swap_buffers(std::shared_ptr<graphics::Buffer>&) = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 

@@ -183,7 +183,9 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
             for (int i = 0; i < 500; ++i)
             {
                 auto surface = session.default_surface();
-                surface->advance_client_buffer();
+                std::shared_ptr<mg::Buffer> buffer;
+                surface->swap_buffers(buffer);
+                buffer.reset();
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};
