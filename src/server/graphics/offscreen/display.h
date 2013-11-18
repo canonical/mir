@@ -91,7 +91,7 @@ public:
 
 private:
     std::shared_ptr<BasicPlatform> const basic_platform;
-    EGLDisplay const egl_display;
+    detail::EGLDisplayHandle const egl_display;
     SurfacelessEGLContext const egl_context_shared;
     std::mutex configuration_mutex;
     DisplayConfiguration current_display_configuration;
