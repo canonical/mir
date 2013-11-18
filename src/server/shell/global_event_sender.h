@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
-#define MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
+#ifndef MIR_SHELL_GLOBAL_EVENT_SENDER_H_
+#define MIR_SHELL_GLOBAL_EVENT_SENDER_H_
 
 #include "mir/frontend/event_sink.h"
 #include <memory>
@@ -27,22 +27,20 @@ namespace mir
 namespace shell
 {
 class SessionContainer;
-}
-namespace frontend
-{
-class GlobalEventSender : public EventSink
+
+class GlobalEventSender : public frontend::EventSink
 {
 public:
-    GlobalEventSender(std::shared_ptr<shell::SessionContainer> const&);
+    GlobalEventSender(std::shared_ptr<SessionContainer> const&);
 
     void handle_event(MirEvent const& e);
     void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
 
 private:
-    std::shared_ptr<shell::SessionContainer> const sessions;
+    std::shared_ptr<SessionContainer> const sessions;
 };
 }
 }
 
-#endif /* MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_ */
+#endif /* MIR_SHELL_GLOBAL_EVENT_SENDER_H_ */

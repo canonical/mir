@@ -29,23 +29,15 @@
 
 namespace mir
 {
-
-namespace frontend
-{
-class EventSink;
-}
 /// Management of sessions and surfaces
 namespace shell
 {
 class SurfaceFactory;
 class SessionContainer;
 class FocusSetter;
-class Session;
-class InputRegistrar;
 class SnapshotStrategy;
 class SessionEventSink;
 class SessionListener;
-struct SurfaceCreationParameters;
 
 // TODO make private to shell
 // This first needs unity-mir to be updated to use FocusController
@@ -71,7 +63,7 @@ public:
     void focus_next();
     std::weak_ptr<Session> focussed_application() const;
     void set_focus_to(std::shared_ptr<Session> const& focus);
-    
+
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
 protected:
