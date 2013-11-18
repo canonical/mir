@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/frontend/global_event_sender.h"
-#include "mir/shell/session_container.h"
+#include "src/server/shell/global_event_sender.h"
+#include "src/server/shell/session_container.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -29,7 +29,6 @@
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace msh=mir::shell;
-namespace mf=mir::frontend;
 
 namespace
 {
@@ -39,6 +38,7 @@ public:
     MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
 };
 }
 
@@ -54,7 +54,7 @@ TEST(GlobalEventSender, sender)
         .Times(1)
         .WillOnce(SaveArg<0>(&called_fn)); 
 
-    mf::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
+    msh::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
 
     mtd::StubDisplayConfig stub_display_config;
     g_sender.handle_display_config_change(stub_display_config);

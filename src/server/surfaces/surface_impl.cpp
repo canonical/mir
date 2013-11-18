@@ -16,13 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/surface.h"
-#include "mir/shell/surface_builder.h"
+#include "surface_impl.h"
+#include "basic_surface.h"
+#include "surface_builder.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/surface_controller.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/surface_id.h"
 
 #include "mir_toolkit/event.h"
 
@@ -31,6 +33,7 @@
 #include <stdexcept>
 #include <cstring>
 
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -39,11 +42,11 @@ namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
-msh::Surface::Surface(
-    Session* session,
+ms::SurfaceImpl::SurfaceImpl(
+    msh::Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
-    std::shared_ptr<SurfaceConfigurator> const& configurator,
-    shell::SurfaceCreationParameters const& params,
+    std::shared_ptr<msh::SurfaceConfigurator> const& configurator,
+    msh::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
@@ -56,79 +59,79 @@ msh::Surface::Surface(
 {
 }
 
-msh::Surface::~Surface() noexcept
+ms::SurfaceImpl::~SurfaceImpl() noexcept
 {
     builder->destroy_surface(surface);
 }
 
-void msh::Surface::hide()
+void ms::SurfaceImpl::hide()
 {
     surface->set_hidden(true);
 }
 
-void msh::Surface::show()
+void ms::SurfaceImpl::show()
 {
     surface->set_hidden(false);
 }
 
-void msh::Surface::force_requests_to_complete()
+void ms::SurfaceImpl::force_requests_to_complete()
 {
     surface->force_requests_to_complete();
 }
 
-mir::geometry::Size msh::Surface::size() const
+mir::geometry::Size ms::SurfaceImpl::size() const
 {
     return surface->size();
 }
 
-void msh::Surface::move_to(geometry::Point const& p)
+void ms::SurfaceImpl::move_to(geometry::Point const& p)
 {
     surface->move_to(p);
 }
 
-mir::geometry::Point msh::Surface::top_left() const
+mir::geometry::Point ms::SurfaceImpl::top_left() const
 {
     return surface->top_left();
 }
 
-std::string msh::Surface::name() const
+std::string ms::SurfaceImpl::name() const
 {
     return surface->name();
 }
 
-mir::geometry::PixelFormat msh::Surface::pixel_format() const
+mir::geometry::PixelFormat ms::SurfaceImpl::pixel_format() const
 {
     return surface->pixel_format();
 }
 
-std::shared_ptr<mg::Buffer> msh::Surface::advance_client_buffer()
+std::shared_ptr<mg::Buffer> ms::SurfaceImpl::advance_client_buffer()
 {
     return surface->advance_client_buffer();
 }
 
-void msh::Surface::allow_framedropping(bool allow)
+void ms::SurfaceImpl::allow_framedropping(bool allow)
 {
     surface->allow_framedropping(allow);
 }
  
-void msh::Surface::with_most_recent_buffer_do(
+void ms::SurfaceImpl::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
     auto buf = surface->snapshot_buffer();
     exec(*buf);
 }
 
-bool msh::Surface::supports_input() const
+bool ms::SurfaceImpl::supports_input() const
 {
     return surface->supports_input();
 }
 
-int msh::Surface::client_input_fd() const
+int ms::SurfaceImpl::client_input_fd() const
 {
     return surface->client_input_fd();
 }
 
-int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
+int ms::SurfaceImpl::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
     bool allow_dropping = false;
@@ -170,12 +173,12 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
     return result;
 }
 
-MirSurfaceType msh::Surface::type() const
+MirSurfaceType ms::SurfaceImpl::type() const
 {
     return type_value;
 }
 
-bool msh::Surface::set_type(MirSurfaceType t)
+bool ms::SurfaceImpl::set_type(MirSurfaceType t)
 {
     bool valid = false;
 
@@ -188,12 +191,12 @@ bool msh::Surface::set_type(MirSurfaceType t)
     return valid;
 }
 
-MirSurfaceState msh::Surface::state() const
+MirSurfaceState ms::SurfaceImpl::state() const
 {
     return state_value;
 }
 
-bool msh::Surface::set_state(MirSurfaceState s)
+bool ms::SurfaceImpl::set_state(MirSurfaceState s)
 {
     bool valid = false;
 
@@ -209,7 +212,7 @@ bool msh::Surface::set_state(MirSurfaceState s)
     return valid;
 }
 
-void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
+void ms::SurfaceImpl::notify_change(MirSurfaceAttrib attrib, int value)
 {
     MirEvent e;
 
@@ -226,17 +229,32 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
     event_sink->handle_event(e);
 }
 
-void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
+void ms::SurfaceImpl::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
     targeter->focus_changed(surface->input_channel());
 }
 
-void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
+void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& region)
 {
     surface->set_input_region(region);
 }
 
-void msh::Surface::raise(std::shared_ptr<msh::SurfaceController> const& controller)
+void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& controller)
 {
     controller->raise(surface);
+}
+
+void ms::SurfaceImpl::resize(geom::Size const& size)
+{
+    surface->resize(size);
+}
+
+void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
+{
+    surface->set_rotation(degrees, axis);
+}
+
+void ms::SurfaceImpl::set_alpha(float alpha)
+{
+    surface->set_alpha(alpha);
 }

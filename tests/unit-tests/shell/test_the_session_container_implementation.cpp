@@ -18,13 +18,7 @@
 
 #include "mir/shell/application_session.h"
 #include "src/server/shell/default_session_container.h"
-#include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/null_session_listener.h"
-#include "mir/surfaces/surface.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_factory.h"
-#include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/stub_shell_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -34,56 +28,60 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
-namespace
-{
-
-std::shared_ptr<msh::ApplicationSession> make_session(
-    std::shared_ptr<msh::SurfaceFactory> const& factory,
-    std::string const& session_name)
-{
-    return std::make_shared<msh::ApplicationSession>(
-        factory, session_name,
-        std::make_shared<mtd::NullSnapshotStrategy>(),
-        std::make_shared<msh::NullSessionListener>(),
-        std::make_shared<mtd::NullEventSink>());
-}
-
-}
-
 TEST(DefaultSessionContainer, for_each)
 {
     using namespace ::testing;
-    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::DefaultSessionContainer container;
+    
+    auto session1 = std::make_shared<mtd::StubShellSession>();
+    auto session2 = std::make_shared<mtd::StubShellSession>();
 
-    container.insert_session(make_session(factory, "Visual Studio 7"));
-    container.insert_session(make_session(factory, "Visual Studio 8"));
-
+    container.insert_session(session1);
+    container.insert_session(session2);
+    
     struct local
     {
-        MOCK_METHOD1(check_name, void (std::string const&));
-
-        void operator()(std::shared_ptr<mf::Session> const& session)
+        MOCK_METHOD1(see, void(std::shared_ptr<msh::Session> const&));
+        void operator()(std::shared_ptr<msh::Session> const& session)
         {
-            check_name(session->name());
+            see(session);
         }
     } functor;
 
     InSequence seq;
-    EXPECT_CALL(functor, check_name("Visual Studio 7"));
-    EXPECT_CALL(functor, check_name("Visual Studio 8"));
+    EXPECT_CALL(functor, see(Eq(session1)));
+    EXPECT_CALL(functor, see(Eq(session2)));
 
     container.for_each(std::ref(functor));
+}
+
+TEST(DefaultSessionContainer, successor_of)
+{
+    using namespace ::testing;
+    msh::DefaultSessionContainer container;
+    
+    auto session1 = std::make_shared<mtd::StubShellSession>();
+    auto session2 = std::make_shared<mtd::StubShellSession>();
+    auto session3 = std::make_shared<mtd::StubShellSession>();
+
+    container.insert_session(session1);
+    container.insert_session(session2);
+    container.insert_session(session3);
+
+    EXPECT_EQ(session2, container.successor_of(session1));
+    EXPECT_EQ(session3, container.successor_of(session2));
+    EXPECT_EQ(session1, container.successor_of(session3));
+
+    // Successor of no session is the last session.
+    EXPECT_EQ(session3, container.successor_of(std::shared_ptr<msh::Session>()));
 }
 
 TEST(DefaultSessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
-    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::DefaultSessionContainer container;
 
-    auto session = make_session(factory, "Visual Studio 7");
     EXPECT_THROW({
-        container.remove_session(session);
+        container.remove_session(std::make_shared<mtd::StubShellSession>());
     }, std::logic_error);
 }

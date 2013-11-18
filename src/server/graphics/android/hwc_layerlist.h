@@ -19,81 +19,60 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
+#include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
 #include <initializer_list>
+
 namespace mir
 {
 namespace graphics
 {
+
+class NativeBuffer;
 class Buffer;
 
 namespace android
 {
- 
-struct HWCRect
+
+struct HWCLayer : public hwc_layer_1
 {
-    HWCRect(); 
-    HWCRect(geometry::Rectangle& rect);
+    virtual ~HWCLayer() = default;
 
-    operator hwc_rect_t const& () const { return self; }
-    operator hwc_rect_t& () { return self; }
-private:
-    hwc_rect_t self;
-};
-
-struct HWCDefaultLayer
-{
-    HWCDefaultLayer(std::initializer_list<HWCRect> list);
-    ~HWCDefaultLayer();
-
-    operator hwc_layer_1 const& () const { return self; }
-    operator hwc_layer_1& () { return self; }
+    HWCLayer& operator=(HWCLayer const& layer);
+    HWCLayer(HWCLayer const& layer);
 
 protected:
-    HWCDefaultLayer& operator=(HWCDefaultLayer const&) = delete;
-    HWCDefaultLayer(HWCDefaultLayer const&) = delete;
+    HWCLayer(int type, buffer_handle_t handle, int width, int height, int layer_flags);
 
-    hwc_layer_1 self;
+    hwc_rect_t visible_rect;
 };
 
-struct HWCFBLayer : public HWCDefaultLayer
+struct CompositionLayer : public HWCLayer
 {
-    HWCFBLayer();
-    HWCFBLayer(buffer_handle_t native_buf,
-               HWCRect display_frame_rect);
+    CompositionLayer(int layer_flags);
+    CompositionLayer(NativeBuffer const&, int layer_flags);
 };
 
-class HWCLayerList
+struct FramebufferLayer : public HWCLayer
 {
-public:
-    virtual ~HWCLayerList() = default;
-
-    virtual hwc_display_contents_1_t* native_list() const = 0;
-    virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
-
-protected:
-    HWCLayerList() = default;
-    HWCLayerList& operator=(HWCLayerList const&) = delete;
-    HWCLayerList(HWCLayerList const&) = delete;
-
+    FramebufferLayer();
+    FramebufferLayer(NativeBuffer const&);
 };
 
-class LayerList : public HWCLayerList
+class LayerList
 {
 public:
-    LayerList();
+    LayerList(std::initializer_list<HWCLayer> const& layers);
 
-    void set_fb_target(std::shared_ptr<Buffer> const&);
     hwc_display_contents_1_t* native_list() const;
 
-private:
-    std::vector<std::shared_ptr<HWCDefaultLayer>> layer_list;
-    void update_list();
+    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
+    NativeFence framebuffer_fence();
 
-    static size_t const fb_position = 0u;
+private:
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 };
 

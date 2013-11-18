@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/surfaces/surface_controller.h"
+#include "surface_controller.h"
 #include "surface_stack_model.h"
 
 namespace ms = mir::surfaces;
@@ -27,17 +27,17 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 {
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(msh::Session*, shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(msh::Session*, shell::SurfaceCreationParameters const& params)
 {
     return surface_stack->create_surface(params);
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
+void ms::SurfaceController::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
 {
     surface_stack->destroy_surface(surface);
 }
 
-void ms::SurfaceController::raise(std::weak_ptr<Surface> const& surface)
+void ms::SurfaceController::raise(std::weak_ptr<BasicSurface> const& surface)
 {
     surface_stack->raise(surface);
 }

@@ -44,9 +44,7 @@ class DisplaySupportProvider;
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay(std::shared_ptr<ANativeWindow> const&,
-                            std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
-                            std::shared_ptr<DisplayDevice> const& display_device,
+    explicit AndroidDisplay(std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
                             std::shared_ptr<DisplayReport> const& display_report);
     ~AndroidDisplay();
 
@@ -71,14 +69,18 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
-    std::shared_ptr<ANativeWindow> const native_window;
+    //to allocate new displays on hotplug
+    std::shared_ptr<AndroidDisplayBufferFactory> const db_factory;
     std::shared_ptr<DisplayDevice> const display_device;
 
-    EGLDisplay egl_display;
-    EGLConfig egl_config;
+    EGLDisplay const egl_display;
+    EGLConfig const egl_config;
     EGLContextStore const egl_context_shared;
     EGLSurfaceStore const egl_surface_dummy;
-    std::unique_ptr<DisplayBuffer> display_buffer;
+
+    //we only have a primary display at the moment
+    std::unique_ptr<DisplayBuffer> const display_buffer;
+
     
     AndroidDisplayConfiguration current_configuration;
 };

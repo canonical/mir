@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 #define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
-enum { mir_buffer_package_max = 31 };
+enum { mir_buffer_package_max = 30 };
 
 typedef enum
 {
@@ -33,9 +33,13 @@ typedef struct MirBufferPackage
     int fd_items;
 
     int data[mir_buffer_package_max];
-    int unused1;  /* Retain ABI compatibility (avoid rebuilding Mesa) */
+
+    int width;  /* These must come after data[] to keep ABI compatibility */
+    int height;
 
     int fd[mir_buffer_package_max];
+
+    int unused0;  /* Retain ABI compatibility (avoid rebuilding Mesa) */
 
     unsigned int flags;  /* MirBufferFlag's */
     int stride;

@@ -17,10 +17,7 @@
  */
 
 #include "surface_source.h"
-//#include "mir/shell/surface_builder.h"
-#include "mir/shell/surface.h"
-#include "mir/frontend/surface.h"
-#include "mir/input/input_channel_factory.h"
+#include "surface_impl.h"
 
 #include <cassert>
 
@@ -30,8 +27,8 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 
 
-msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                                  std::shared_ptr<SurfaceConfigurator> const& surface_configurator)
+ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
+                                  std::shared_ptr<msh::SurfaceConfigurator> const& surface_configurator)
     : surface_builder(surface_builder),
       surface_configurator(surface_configurator)
 {
@@ -39,12 +36,12 @@ msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface
     assert(surface_configurator);
 }
 
-std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
+std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
     msh::Session* session,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    return std::make_shared<Surface>(session, surface_builder, surface_configurator, params, id, sender);
+    return std::make_shared<SurfaceImpl>(session, surface_builder, surface_configurator, params, id, sender);
 }
 

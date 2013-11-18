@@ -55,7 +55,7 @@ namespace surfaces
 {
 class SurfaceFactory;
 class InputRegistrar;
-class Surface;
+class BasicSurface;
 class SurfacesReport;
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
@@ -77,11 +77,11 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel 
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    virtual std::weak_ptr<BasicSurface> create_surface(const shell::SurfaceCreationParameters& params);
 
-    virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
+    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface);
     
-    virtual void raise(std::weak_ptr<Surface> const& surface);
+    virtual void raise(std::weak_ptr<BasicSurface> const& surface);
 
     virtual void lock();
     virtual void unlock();
@@ -97,7 +97,7 @@ private:
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SurfacesReport> const report;
 
-    typedef std::vector<std::shared_ptr<Surface>> Layer;
+    typedef std::vector<std::shared_ptr<BasicSurface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
 
     std::mutex notify_change_mutex;

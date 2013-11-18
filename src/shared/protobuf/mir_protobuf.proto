@@ -2,6 +2,11 @@ option cc_generic_services = true;
 
 package mir.protobuf;
 
+// Outside of the IPC code no-one should care as this is all wrapped up.
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
+
 message ConnectParameters {
   required string application_name = 1;
 }
@@ -20,10 +25,6 @@ message SurfaceId {
   required int32 value = 1;
 };
 
-// Outside of the IPC code no-one should care as this is all wrapped up. 
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message Buffer {
   optional int32 buffer_id = 1;
   repeated sint32 fd = 2;
@@ -31,14 +32,12 @@ message Buffer {
   optional int32  fds_on_side_channel = 4;
   optional int32  stride = 5;
   optional uint32 flags = 6;
+  optional int32  width = 7;
+  optional int32  height = 8;
 
   optional string error = 127;
 }
 
-// Outside of the IPC code no-one should care as this is all wrapped up. 
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message Platform {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
@@ -77,33 +76,22 @@ message DisplayOutput {
 }
 
 // DEPRECATED
-// Outside of the IPC code no-one should care as this is all wrapped up. 
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message DisplayInfo {
   required uint32 width = 1;
   required uint32 height = 2;
   repeated uint32 supported_pixel_format = 3;
 }
 
-// Outside of the IPC code no-one should care as this is all wrapped up.
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message Connection {
   optional Platform platform = 1;
   optional DisplayInfo display_info = 2;
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
+  repeated uint32 surface_pixel_format = 5;
 
   optional string error = 127;
 }
 
-// Outside of the IPC code no-one should care as this is all wrapped up.
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message Surface {
   optional SurfaceId id = 1;
   optional int32 width = 2;
@@ -118,28 +106,16 @@ message Surface {
   optional string error = 127;
 }
 
-// Outside of the IPC code no-one should care as this is all wrapped up. 
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message DRMMagic {
   optional uint32 magic = 1;
   optional string error = 127;
 }
 
-// Outside of the IPC code no-one should care as this is all wrapped up.
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message DRMAuthMagicStatus {
   optional int32 status_code = 1;
   optional string error = 127;
 }
 
-// Outside of the IPC code no-one should care as this is all wrapped up.
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message Void {
   optional string error = 127;
 }

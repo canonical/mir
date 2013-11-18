@@ -18,10 +18,9 @@
 
 #include "mir/shell/session_manager.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "session_container.h"
 #include "mir/shell/surface_factory.h"
-#include "focus_sequence.h"
-#include "focus_setter.h"
+#include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
@@ -36,21 +35,18 @@ namespace msh = mir::shell;
 
 msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
     std::shared_ptr<msh::SessionContainer> const& container,
-    std::shared_ptr<msh::FocusSequence> const& sequence,
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
     std::shared_ptr<msh::SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<msh::SessionEventSink> const& session_event_sink,
     std::shared_ptr<msh::SessionListener> const& session_listener) :
     surface_factory(surface_factory),
     app_container(container),
-    focus_sequence(sequence),
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener)
 {
     assert(surface_factory);
-    assert(sequence);
     assert(container);
     assert(focus_setter);
     assert(session_listener);
@@ -127,7 +123,7 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
     app_container->remove_session(shell_session);
 
     std::unique_lock<std::mutex> lock(mutex);
-    set_focus_to_locked(lock, focus_sequence->default_focus());
+    set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<msh::Session>()));
 }
 
 void msh::SessionManager::focus_next()
@@ -136,11 +132,11 @@ void msh::SessionManager::focus_next()
     auto focus = focus_application.lock();
     if (!focus)
     {
-        focus = focus_sequence->default_focus();
+        focus = app_container->successor_of(std::shared_ptr<msh::Session>());
     }
     else
     {
-        focus = focus_sequence->successor_of(focus);
+        focus = app_container->successor_of(focus);
     }
     set_focus_to_locked(lock, focus);
 }

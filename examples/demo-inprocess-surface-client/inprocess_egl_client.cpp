@@ -21,7 +21,7 @@
 
 #include "mir/main_loop.h"
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/session.h"
 #include "mir/frontend/session.h"
@@ -47,7 +47,6 @@
 #include <signal.h>
 
 namespace mf = mir::frontend;
-namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace me = mir::examples;

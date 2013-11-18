@@ -18,7 +18,7 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface.h"
+#include "surface.h"
 #include "surface_state.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel.h"
@@ -118,6 +118,8 @@ std::shared_ptr<mg::Buffer> ms::Surface::advance_client_buffer()
     }
     else
     {
+        // TODO There is something crazy about assuming that giving out any buffer
+        // TODO after the first implies that previous buffers have been rendered.
         flag_for_render();
     }
 
@@ -167,4 +169,22 @@ std::shared_ptr<mi::Surface> ms::Surface::input_surface() const
 void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     surface_state->set_input_region(input_rectangles);
+}
+
+void ms::Surface::resize(geom::Size const& size)
+{
+    if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
+    }
+    /*
+     * Other combinations may still be invalid (like dimensions too big or
+     * insufficient resources), but those are runtime and platform-specific, so
+     * not predictable here. Such critical exceptions would arise from
+     * the platform buffer allocator as a runtime_error via:
+     */
+    surface_buffer_stream->resize(size);
+
+    // Now the buffer stream has successfully resized, update the state second;
+    surface_state->resize(size);
 }

@@ -42,7 +42,7 @@ class MockAndroidGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
 public:
     MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mga::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
+    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 
     ~MockAndroidGraphicBufferAllocator() noexcept {}
@@ -64,11 +64,9 @@ public:
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
         ON_CALL(*mock_display_device, display_size())
             .WillByDefault(Return(geom::Size{2, 3}));
-        ON_CALL(*mock_display_device, number_of_framebuffers_available())
-            .WillByDefault(Return(fake_fb_num));
 
         ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
-            .WillByDefault(Return(std::shared_ptr<mga::Buffer>()));
+            .WillByDefault(Return(std::shared_ptr<mg::Buffer>()));
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_report;
@@ -79,41 +77,13 @@ public:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-//note: @kdub imo, the hwc api has a hole in it that it doesn't allow query for format. surfaceflinger code
-//      makes note of this api hole in its comments too. It always uses rgba8888, which we try to do too.
-TEST_F(ResourceFactoryTest, test_native_window_creation_figures_out_fb_number)
-{
-    using namespace testing; 
-    geom::Width disp_width{44};
-    geom::Height disp_height{4567654};
-    geom::Size disp_size{disp_width, disp_height};
-    geom::PixelFormat pf = geom::PixelFormat::abgr_8888;  
- 
-    EXPECT_CALL(*mock_display_device, number_of_framebuffers_available())
-        .Times(1)
-        .WillOnce(Return(fake_fb_num));
-    EXPECT_CALL(*mock_display_device, display_size())
-        .Times(1)
-        .WillOnce(Return(disp_size));
-    EXPECT_CALL(*mock_display_device, display_format())
-        .Times(1)
-        .WillOnce(Return(pf));
-
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(
-        disp_size,pf,mga::BufferUsage::use_framebuffer_gles))
-        .Times(fake_fb_num);
-
-    mga::ResourceFactory factory;
-    factory.create_fb_buffers(mock_display_device, mock_buffer_allocator);
-}
-
 TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 {
     using namespace testing;
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_fb_native_device();
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
@@ -121,7 +91,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
 {
     using namespace testing;
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -140,7 +110,6 @@ TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
     EXPECT_THROW({
         factory.create_fb_native_device();
     }, std::runtime_error);
-
 }
 
 TEST_F(ResourceFactoryTest, hwc_allocation)
@@ -149,7 +118,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
     factory.create_hwc_native_device();
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
@@ -166,7 +135,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation_failures)
         .WillOnce(Return(-1))
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    mga::ResourceFactory factory;
+    mga::ResourceFactory factory(mock_buffer_allocator);
 
     EXPECT_THROW({ 
         factory.create_hwc_native_device();

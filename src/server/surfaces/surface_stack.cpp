@@ -20,15 +20,20 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/surfaces/surface.h"
 #include "surface_state.h"
 #include "surface_stack.h"
 #include "surface_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
-
 #include "mir/surfaces/surfaces_report.h"
+
+// TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
+// It is needed by the following member functions:
+//  for_each(), for_each_if(), reverse_for_each_if(), create_surface() and destroy_surface()
+// to access:
+//  compositing_criteria(), buffer_stream() and input_channel()
+#include "basic_surface.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -95,10 +100,10 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
     auto change_cb = [this]() { emit_change_notification(); };
-    auto surface = surface_factory->create_surface(params, change_cb); 
+    auto surface = surface_factory->create_surface(params, change_cb);
     {
         std::lock_guard<std::recursive_mutex> lg(guard);
         layers_by_depth[params.depth].push_back(surface);
@@ -112,7 +117,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::BasicSurface> const& surface)
 {
     auto keep_alive = surface.lock();
 
@@ -159,7 +164,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
+void ms::SurfaceStack::raise(std::weak_ptr<ms::BasicSurface> const& s)
 {
     auto surface = s.lock();
 
@@ -169,12 +174,12 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
         {
             auto &surfaces = layer.second;
             auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
-    
+
             if (p != surfaces.end())
             {
                 surfaces.erase(p);
                 surfaces.push_back(surface);
-            
+
                 ul.unlock();
                 emit_change_notification();
 

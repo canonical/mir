@@ -17,29 +17,32 @@
  */
 
 
-#ifndef MIR_SHELL_SURFACE_BUILDER_H_
-#define MIR_SHELL_SURFACE_BUILDER_H_
+#ifndef MIR_SURFACES_SURFACE_BUILDER_H_
+#define MIR_SURFACES_SURFACE_BUILDER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace surfaces { class Surface; }
-
 namespace shell
 {
 class Session;
 struct SurfaceCreationParameters;
+}
+
+namespace surfaces
+{
+class BasicSurface;
 
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<surfaces::Surface> create_surface(Session* session, SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<BasicSurface> create_surface(shell::Session* session, shell::SurfaceCreationParameters const& params) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
 protected:
     SurfaceBuilder() = default;
-    virtual ~SurfaceBuilder() {} // should be "= default;" but that causes "noexcept" spread
+    virtual ~SurfaceBuilder() = default;
     SurfaceBuilder(SurfaceBuilder const&) = delete;
     SurfaceBuilder& operator=(SurfaceBuilder const&) = delete;
 };
@@ -47,4 +50,4 @@ protected:
 }
 
 
-#endif /* MIR_SHELL_SURFACE_BUILDER_H_ */
+#endif /* MIR_SURFACES_SURFACE_BUILDER_H_ */

@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SHELL_SURFACE_SOURCE_H_
-#define MIR_SHELL_SURFACE_SOURCE_H_
+#ifndef MIR_SURFACES_SURFACE_SOURCE_H_
+#define MIR_SURFACES_SURFACE_SOURCE_H_
 
 #include "mir/shell/surface_factory.h"
 
@@ -29,18 +29,22 @@ namespace mir
 namespace shell
 {
 class Session;
-class SurfaceBuilder;
 class SurfaceConfigurator;
+}
 
-class SurfaceSource : public SurfaceFactory
+namespace surfaces
+{
+class SurfaceBuilder;
+
+class SurfaceSource : public shell::SurfaceFactory
 {
 public:
     SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                  std::shared_ptr<SurfaceConfigurator> const& surface_configurator);
+                  std::shared_ptr<shell::SurfaceConfigurator> const& surface_configurator);
     virtual ~SurfaceSource() {}
 
-    std::shared_ptr<Surface> create_surface(
-        Session* session,
+    std::shared_ptr<shell::Surface> create_surface(
+        shell::Session* session,
         shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& sink);
@@ -51,10 +55,10 @@ protected:
 
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
-    std::shared_ptr<SurfaceConfigurator> const surface_configurator;
+    std::shared_ptr<shell::SurfaceConfigurator> const surface_configurator;
 };
 
 }
 }
 
-#endif // MIR_SHELL_SURFACE_SOURCE_H_
+#endif // MIR_SURFACES_SURFACE_SOURCE_H_
