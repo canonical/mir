@@ -46,8 +46,6 @@ bool supports_surfaceless_context(EGLDisplay egl_display)
 
 EGLConfig choose_config(EGLDisplay egl_display, bool surfaceless)
 {
-    EGLExtensions const extensions{egl_display};
-
     EGLint const surface_type = surfaceless ? EGL_DONT_CARE : EGL_PBUFFER_BIT;
 
     EGLint const config_attr[] = {
