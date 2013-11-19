@@ -55,7 +55,7 @@ MirSurface::MirSurface(
     
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
-    for (int i = 0; i < mir_surface_attrib_enum_max_; i++)
+    for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
     attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
@@ -384,7 +384,7 @@ void MirSurface::handle_event(MirEvent const& e)
     if (e.type == mir_event_type_surface)
     {
         MirSurfaceAttrib a = e.surface.attrib;
-        if (a < mir_surface_attrib_enum_max_)
+        if (a < mir_surface_attribs)
             attrib_cache[a] = e.surface.value;
     }
 
