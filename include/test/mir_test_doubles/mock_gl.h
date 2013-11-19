@@ -71,7 +71,9 @@ public:
     MOCK_METHOD2(glGenFramebuffers, void(GLsizei, GLuint *));
     MOCK_METHOD2(glBindFramebuffer, void(GLenum, GLuint));
     MOCK_METHOD5(glFramebufferTexture2D, void(GLenum, GLenum, GLenum, GLuint, GLint));
+    MOCK_METHOD1(glCheckFramebufferStatus, GLenum(GLenum));
     MOCK_METHOD7(glReadPixels, void(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*));
+    MOCK_METHOD2(glGetIntegerv, void(GLenum, GLint*));
 };
 
 }

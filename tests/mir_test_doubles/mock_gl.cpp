@@ -295,9 +295,21 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
 
 }
 
+GLenum glCheckFramebufferStatus(GLenum target)
+{
+    CHECK_GLOBAL_MOCK(GLenum);
+    return global_mock_gl->glCheckFramebufferStatus(target);
+}
+
 void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                   GLenum format, GLenum type, GLvoid* pixels)
 {
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glReadPixels(x, y, width, height, format, type, pixels);
+}
+
+void glGetIntegerv(GLenum target, GLint* params)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glGetIntegerv(target, params);
 }
