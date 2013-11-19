@@ -211,7 +211,8 @@ TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
     mgg::UdevEnumerator devices(ctx);
     std::string error_msg;
 
-    try {
+    try
+    {
         devices.begin();
     }
     catch (std::logic_error& e)

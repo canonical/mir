@@ -18,7 +18,7 @@
 
 #include "udev_wrapper.h"
 #include <libudev.h>
-#include <string.h>
+#include <cstring>
 #include <boost/throw_exception.hpp>
 
 namespace mgg = mir::graphics::gbm;
@@ -199,8 +199,8 @@ mgg::UdevEnumerator::iterator mgg::UdevEnumerator::end()
 ///////////////////
 
 mgg::UdevContext::UdevContext()
+    : context(udev_new())
 {
-    context = udev_new();
     if (!context)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev context"));
 }
@@ -218,10 +218,9 @@ udev* mgg::UdevContext::ctx() const
 //   UdevMonitor
 ///////////////////
 mgg::UdevMonitor::UdevMonitor(mgg::UdevContext const& ctx)
-    : enabled(false)
+    : monitor(udev_monitor_new_from_netlink(ctx.ctx(), "udev")),
+      enabled(false)
 {
-    monitor = udev_monitor_new_from_netlink(ctx.ctx(), "udev");
-
     if (!monitor)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev_monitor"));
 
@@ -255,7 +254,8 @@ void mgg::UdevMonitor::process_events(std::function<void(mgg::UdevMonitor::Event
                                                          mgg::UdevDevice const&)> const& handler) const
 {
     udev_device *dev;
-    do {
+    do
+    {
         dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
         if (dev != nullptr) 
             handler(action_to_event_type(udev_device_get_action(dev)), UdevDevice(dev));

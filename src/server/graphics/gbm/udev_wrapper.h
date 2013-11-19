@@ -46,7 +46,7 @@ public:
     udev* ctx() const;
 
 private:
-	udev* context;
+    udev* const context;
 };
 
 class UdevDevice
@@ -69,7 +69,7 @@ public:
 
     udev_device const* device() const;
 private:
-    udev_device* dev;   
+    udev_device* const dev;
 };
 
 class UdevEnumerator
@@ -114,8 +114,8 @@ public:
     iterator end();
 
 private:
-    std::shared_ptr<UdevContext> ctx;
-    udev_enumerate* enumerator;
+    std::shared_ptr<UdevContext> const ctx;
+    udev_enumerate* const enumerator;
     bool scanned;
 };
 
@@ -139,7 +139,7 @@ public:
     void process_events(std::function<void(EventType, UdevDevice const&)> const& handler) const;
 
 private:
-    udev_monitor *monitor;
+    udev_monitor* const monitor;
     bool enabled;
 };
 
