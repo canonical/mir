@@ -64,14 +64,7 @@ TEST_F(HWC10Device, hwc10_render_frame)
     EGLDisplay dpy;
     EGLSurface sur;
 
-    InSequence inseq;
-    EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
-        .Times(1);
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), _))
-        .Times(1);
-    EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .Times(1);
 
     mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
