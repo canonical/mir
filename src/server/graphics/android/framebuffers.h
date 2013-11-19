@@ -50,6 +50,7 @@ public:
     geometry::Size fb_size();
     std::shared_ptr<Buffer> buffer_for_render();
     std::shared_ptr<Buffer> last_rendered_buffer();
+    void wait_for_consumed_buffer(bool);
 
 private:
     geometry::PixelFormat const format;

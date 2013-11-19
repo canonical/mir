@@ -41,6 +41,7 @@ public:
     virtual geometry::Size fb_size() = 0;
     virtual std::shared_ptr<Buffer> buffer_for_render() = 0;
     virtual std::shared_ptr<Buffer> last_rendered_buffer() = 0;
+    virtual void wait_for_consumed_buffer(bool) = 0;
 
 protected:
     FramebufferBundle() = default;
