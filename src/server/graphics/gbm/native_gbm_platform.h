@@ -40,7 +40,7 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) override;
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
-    void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer, std::shared_ptr<Buffer> const& buffer) const override;
+    void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const override;
 
 private:
     int drm_fd;

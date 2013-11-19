@@ -87,28 +87,28 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 
     mga::AndroidPlatform platform(stub_db_factory, stub_display_report);
 
-    auto mock_packer = std::make_shared<mtd::MockPacker>();
+    mtd::MockPacker mock_packer;
     int offset = 0;
     for(auto i=0u; i<num_fds; i++)
     {
-        EXPECT_CALL(*mock_packer, pack_fd(native_buffer_handle->data[offset++]))
+        EXPECT_CALL(mock_packer, pack_fd(native_buffer_handle->data[offset++]))
             .Times(1);
     } 
     for(auto i=0u; i<num_ints; i++)
     {
-        EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
+        EXPECT_CALL(mock_packer, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(*mock_packer, pack_stride(stride))
+    EXPECT_CALL(mock_packer, pack_stride(stride))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())
         .WillOnce(Return(mir::geometry::Size{123, 456}));
-    EXPECT_CALL(*mock_packer, pack_size(_))
+    EXPECT_CALL(mock_packer, pack_size(_))
         .Times(1);
 
-    platform.fill_ipc_package(mock_packer, mock_buffer);
+    platform.fill_ipc_package(&mock_packer, mock_buffer.get());
 }

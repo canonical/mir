@@ -343,7 +343,7 @@ void mf::SessionMediator::pack_protobuf_buffer(
 
     if (need_full_ipc)
     {
-        auto packer = std::make_shared<mfd::ProtobufBufferPacker>(&protobuf_buffer);
-        graphics_platform->fill_ipc_package(packer, graphics_buffer);
+        mfd::ProtobufBufferPacker packer{&protobuf_buffer};
+        graphics_platform->fill_ipc_package(&packer, graphics_buffer.get());
     }
 }
