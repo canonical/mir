@@ -300,12 +300,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const MirDisplayMode *mode = &output->modes[output->current_mode];
 
-    const unsigned int max_formats = 10;
-    unsigned int format[max_formats];
+    unsigned int format[mir_pixel_formats];
     unsigned int nformats;
 
     mir_connection_get_available_surface_formats(connection,
-        format, max_formats, &nformats);
+        format, mir_pixel_formats, &nformats);
 
     surfaceparm.pixel_format = format[0];
     for (unsigned int f = 0; f < nformats; f++)
@@ -322,18 +321,17 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         }
     }
 
-    printf("Connected to display: resolution (%dx%d), position(%dx%d), "
-           "supports %d pixel formats\n",
+    printf("Current active output is %dx%d %+d%+d\n",
            mode->horizontal_resolution, mode->vertical_resolution,
-           output->position_x, output->position_y,
-           output->num_output_formats);
+           output->position_x, output->position_y);
 
     surfaceparm.width = *width > 0 ? *width : mode->horizontal_resolution;
     surfaceparm.height = *height > 0 ? *height : mode->vertical_resolution;
 
     mir_display_config_destroy(display_config);
 
-    printf("Using pixel format #%d\n", surfaceparm.pixel_format);
+    printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
+        nformats, mir_pixel_formats, surfaceparm.pixel_format);
     unsigned int bpp = get_bpp(surfaceparm.pixel_format);
     EGLint attribs[] =
     {
