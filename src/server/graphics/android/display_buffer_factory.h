@@ -43,7 +43,7 @@ public:
     std::shared_ptr<DisplayDevice> create_display_device();
     std::unique_ptr<DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,
-        EGLDisplay, EGLConfig, EGLContext);
+        GLContext const& gl_context);
 
 private:
     std::shared_ptr<DisplayResourceFactory> const res_factory;

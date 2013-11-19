@@ -95,6 +95,9 @@ TEST_F(AndroidDisplayTest, display_creation)
         .Times(1);
 
     //on destruction
+    EXPECT_CALL(mock_egl, eglGetCurrentContext())
+        .Times(1)
+        .WillOnce(Return(dummy_context));
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
         .Times(1);
     EXPECT_CALL(mock_egl, eglDestroySurface(dummy_display, fake_surface))

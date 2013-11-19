@@ -93,9 +93,9 @@ std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_de
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
     std::shared_ptr<DisplayDevice> const& display_device,
-    EGLDisplay display, EGLConfig config, EGLContext context)
+    GLContext const& gl_context)
 {
     auto native_window = res_factory->create_native_window(display_device);
     return std::unique_ptr<mg::DisplayBuffer>(
-        new DisplayBuffer(display_device, native_window, display, config, context)); 
+        new DisplayBuffer(display_device, native_window, gl_context)); 
 }
