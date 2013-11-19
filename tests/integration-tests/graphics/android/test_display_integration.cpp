@@ -21,7 +21,7 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/resource_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/display_buffer_factory.h"
+#include "src/server/graphics/android/output_builder.h"
 
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
@@ -49,9 +49,7 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-        auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-        display_resource_factory = std::make_shared<mga::ResourceFactory>(fb_allocator);
+        display_resource_factory = std::make_shared<mga::ResourceFactory>();
     }
 
     static void TearDownTestCase()
@@ -73,9 +71,11 @@ std::shared_ptr<mga::ResourceFactory> AndroidGPUDisplay::display_resource_factor
 TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     auto should_use_fb_fallback = true;
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto display_buffer_factory = std::make_shared<mga::DisplayBufferFactory>(
-        display_resource_factory, mock_display_report, should_use_fb_fallback);
+    auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
+        fb_allocator, display_resource_factory, mock_display_report, should_use_fb_fallback);
 
     mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
     display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
@@ -95,8 +95,10 @@ TEST_F(AndroidGPUDisplay, hwc_display_ok_with_gles)
 {
     auto should_use_fb_fallback = false;
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto display_buffer_factory = std::make_shared<mga::DisplayBufferFactory>(
-        display_resource_factory, mock_display_report, should_use_fb_fallback);
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
+        fb_allocator, display_resource_factory, mock_display_report, should_use_fb_fallback);
 
     mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
     display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)

@@ -57,7 +57,7 @@ protected:
         dummy_config = mock_egl.fake_configs[0];
 
         mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
-        stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>(display_size);
+        stub_db_factory = std::make_shared<mtd::StubDisplayBuilder>(display_size);
     }
 
     EGLConfig dummy_config;
@@ -65,7 +65,7 @@ protected:
     EGLContext dummy_context;
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    std::shared_ptr<mtd::StubDisplayBufferFactory> stub_db_factory;
+    std::shared_ptr<mtd::StubDisplayBuilder> stub_db_factory;
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
@@ -249,7 +249,7 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend))
         .InSequence(seq);
 
-    auto stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>(mock_display_device);
+    auto stub_db_factory = std::make_shared<mtd::StubDisplayBuilder>(mock_display_device);
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
    
     auto configuration = display.configuration();

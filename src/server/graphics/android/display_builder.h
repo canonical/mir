@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
 
+#include "mir/graphics/display_buffer.h"
 #include "mir/geometry/pixel_format.h"
 #include <memory>
 
@@ -26,7 +27,6 @@ namespace mir
 {
 namespace graphics
 {
-class DisplayBuffer;
 namespace android
 {
 class DisplayDevice;

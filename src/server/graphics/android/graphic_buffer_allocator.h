@@ -31,9 +31,9 @@ namespace mir
 {
 namespace graphics
 {
+class Buffer;
 namespace android
 {
-class Buffer;
 
 class GraphicBufferAllocator
 {

@@ -30,24 +30,24 @@ namespace test
 {
 namespace doubles
 {
-struct StubDisplayBufferFactory : public graphics::android::DisplayBuilder
+struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 {
-    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
+    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
         : stub_dev(stub_dev), sz(sz)
     {
     }
 
-    StubDisplayBufferFactory()
-        : StubDisplayBufferFactory(std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
+    StubDisplayBuilder()
+        : StubDisplayBuilder(std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
     {
     }
 
-    StubDisplayBufferFactory(geometry::Size sz)
-        : StubDisplayBufferFactory(std::make_shared<StubDisplayDevice>(), sz)
+    StubDisplayBuilder(geometry::Size sz)
+        : StubDisplayBuilder(std::make_shared<StubDisplayDevice>(), sz)
     {
     }
 
-    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
+    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
         : stub_dev(stub_dev), sz(geometry::Size{0,0})
     {
     }

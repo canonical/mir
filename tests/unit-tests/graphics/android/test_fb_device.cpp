@@ -45,18 +45,14 @@ struct FBDevice : public ::testing::Test
         fbnum = 4;
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
-        ON_CALL(*mock_fb_bundle, last_rendered_buffer())
-            .WillByDefault(Return(mock_buffer)); 
     }
 
     unsigned int width, height, format, fbnum;
-    std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
@@ -64,61 +60,53 @@ struct FBDevice : public ::testing::Test
     mtd::MockEGL mock_egl;
 };
 
-TEST_F(FBDevice, commit_frame)
+TEST_F(FBDevice, render)
 {
     using namespace testing;
     int bad = 0xdfefefe; 
     EGLDisplay dpy = static_cast<EGLDisplay>(&bad);
     EGLSurface surf = static_cast<EGLSurface>(&bad);
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(3)
+        .Times(2)
         .WillOnce(Return(EGL_FALSE))
-        .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_TRUE));
 
+    mga::FBDevice fbdev(fb_hal_mock);
+
+    EXPECT_THROW({
+        fbdev.gpu_render(dpy, surf);
+    }, std::runtime_error);
+
+    fbdev.gpu_render(dpy, surf);
+}
+
+TEST_F(FBDevice, commit_frame)
+{
+    using namespace testing;
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
         .Times(2)
         .WillOnce(Return(-1))
         .WillOnce(Return(0));
 
-    mga::FBDevice fbdev(fb_hal_mock, mock_fb_bundle);
+    mga::FBDevice fbdev(fb_hal_mock);
 
     EXPECT_THROW({
-        fbdev.commit_frame(dpy, surf);
+        fbdev.post(*mock_buffer);
     }, std::runtime_error);
-    EXPECT_THROW({
-        fbdev.commit_frame(dpy, surf);
-    }, std::runtime_error);
-    fbdev.commit_frame(dpy, surf);
-}
 
-TEST_F(FBDevice, buffer_for_render)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
-        .Times(1)
-        .WillOnce(Return(mock_buffer));
-    mga::FBDevice fbdev(fb_hal_mock, mock_fb_bundle);
-
-    EXPECT_EQ(mock_buffer, fbdev.buffer_for_render());
+    fbdev.post(*mock_buffer);
 }
 
 TEST_F(FBDevice, set_swapinterval)
 {
     EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
         .Times(1);
-    mga::FBDevice fbdev(fb_hal_mock, mock_fb_bundle);
-
-    testing::Mock::VerifyAndClearExpectations(fb_hal_mock.get());
-
-    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 0))
-        .Times(1);
-    fbdev.sync_to_display(false);
+    mga::FBDevice fbdev(fb_hal_mock);
 }
 
-TEST_F(FBDevice, set_swapinterval_with_nullhook)
+//not all fb devices provide a swap interval hook. make sure we don't explode if thats the case
+TEST_F(FBDevice, set_swapinterval_with_null_hook)
 {
     fb_hal_mock->setSwapInterval = nullptr;
-    mga::FBDevice fbdev(fb_hal_mock, mock_fb_bundle);
-    fbdev.sync_to_display(false);
+    mga::FBDevice fbdev(fb_hal_mock);
 }
