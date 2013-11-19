@@ -28,11 +28,6 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-namespace
-{
-char const* const no_server_socket_opt        = "no-file";
-}
-
 std::shared_ptr<mf::SessionCreator>
 mir::DefaultServerConfiguration::the_session_creator()
 {

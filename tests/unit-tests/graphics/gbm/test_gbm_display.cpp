@@ -40,6 +40,7 @@
 #include <memory>
 #include <stdexcept>
 #include <thread>
+#include <atomic>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;

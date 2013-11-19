@@ -184,7 +184,7 @@ int mggh::DRMHelper::count_connections(int fd)
 int mggh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
 {    
     int tmp_fd = -1;
-    int error;
+    int error = ENODEV; //Default error is "there are no DRM devices"
 
     UdevEnumerator devices(udev);
     devices.match_subsystem("drm");
