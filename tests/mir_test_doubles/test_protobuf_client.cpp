@@ -46,6 +46,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     next_buffer_called(false),
     release_surface_called(false),
     disconnect_done_called(false),
+    drm_auth_magic_done_called(false),
     configure_display_done_called(false),
     tfd_done_called(false),
     connect_done_count(0),
