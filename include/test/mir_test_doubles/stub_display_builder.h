@@ -30,7 +30,7 @@ namespace test
 {
 namespace doubles
 {
-struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBufferFactory
+struct StubDisplayBufferFactory : public graphics::android::DisplayBuilder
 {
     StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
         : stub_dev(stub_dev), sz(sz)
@@ -50,6 +50,11 @@ struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
     StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
         : stub_dev(stub_dev), sz(geometry::Size{0,0})
     {
+    }
+
+    geometry::PixelFormat display_format()
+    {
+        return geometry::PixelFormat::abgr_8888;
     }
 
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
