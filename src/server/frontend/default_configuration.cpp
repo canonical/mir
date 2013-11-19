@@ -34,8 +34,6 @@ namespace msh = mir::shell;
 
 namespace
 {
-char const* const no_server_socket_opt        = "no-file";
-
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:

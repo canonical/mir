@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
 
 #include "drm_mode_resources.h"
+#include "udev_wrapper.h"
 
 #include <cstddef>
 #include <memory>
@@ -31,7 +32,6 @@
 
 #include <EGL/egl.h>
 #include <xf86drmMode.h>
-#include <libudev.h>
 
 namespace mir
 {
@@ -45,22 +45,6 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
-// TODO (RAOF): This is going to morph into an approximately fully-featured
-// C++ udev library, and probably a top-level Mir interface.
-//
-// For now, do the simple thing.
-struct UdevHelper
-{
-public:
-    UdevHelper();
-    ~UdevHelper() noexcept;
-
-    UdevHelper(UdevHelper const&) = delete;
-    UdevHelper &operator=(UdevHelper const&) = delete;
-
-    udev* ctx;
-};
-
 class DRMHelper
 {
 public:
@@ -70,7 +54,7 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
-    void setup(UdevHelper const& udev);
+    void setup(std::shared_ptr<UdevContext> const& udev);
     int get_authenticated_fd();
     void auth_magic(drm_magic_t magic) const;
 
@@ -82,11 +66,11 @@ public:
 private:
     // TODO: This herustic is temporary; should be replaced with
     // handling >1 DRM device.
-    int is_appropriate_device(UdevHelper const& udev, udev_device* dev);
+    int is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& dev);
 
     int count_connections(int fd);
 
-    int open_drm_device(UdevHelper const& udev);
+    int open_drm_device(std::shared_ptr<UdevContext> const& udev);
 };
 
 class GBMHelper

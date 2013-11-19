@@ -28,6 +28,16 @@
 #include <lttng/tracepoint.h>
 #include <stdint.h>
 
+#ifdef __clang__
+/*
+ * TRACEPOINT_EVENT defines functions; since we disable tracepoints under clang
+ * these functions are unused and so generate fatal warnings.
+ * (see mir_tracepoint.h and http://sourceware.org/bugzilla/show_bug.cgi?id=13974)
+ */
+#pragma clang diagnostic push
+#pragma clang diagnostic warning "-Wunused-function"
+#endif
+
 TRACEPOINT_EVENT(
     mir_server_input,
     received_event_from_kernel,
@@ -72,6 +82,9 @@ TRACEPOINT_EVENT(
     )
 )
 
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 #endif /* MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_ */
 

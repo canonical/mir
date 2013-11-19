@@ -22,7 +22,6 @@
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
-#include "udev_video_devices.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
@@ -96,7 +95,8 @@ std::shared_ptr<mgg::InternalNativeDisplay> mgg::GBMPlatform::internal_native_di
 bool mgg::GBMPlatform::internal_display_clients_present;
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
                               std::shared_ptr<VirtualTerminal> const& vt)
-    : listener{listener},
+    : udev{std::make_shared<UdevContext>()},
+      listener{listener},
       vt{vt}
 {
     drm.setup(udev);
@@ -123,7 +123,6 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
-        std::make_shared<UdevVideoDevices>(udev.ctx),
         initial_conf_policy,
         listener);
 }
