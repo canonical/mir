@@ -58,6 +58,11 @@ class NullPlatform : public graphics::Platform
                           std::shared_ptr<graphics::Buffer> const&) const
     {
     }
+
+    EGLNativeDisplayType egl_native_display() const
+    {
+        return EGLNativeDisplayType();
+    }
 };
 }
 }
