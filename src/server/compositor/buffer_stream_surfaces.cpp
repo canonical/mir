@@ -17,7 +17,7 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_stream_surfaces.h"
+#include "buffer_stream_surfaces.h"
 #include "buffer_bundle.h"
 #include "mir/graphics/buffer_properties.h"
 
@@ -62,6 +62,11 @@ geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
     return buffer_bundle->properties().size; 
+}
+
+void mc::BufferStreamSurfaces::resize(geom::Size const& size)
+{
+    buffer_bundle->resize(size);
 }
 
 void mc::BufferStreamSurfaces::force_requests_to_complete()

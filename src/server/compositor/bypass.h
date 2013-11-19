@@ -50,12 +50,12 @@ class BypassMatch : public OperatorForScene
 {
 public:
     void operator()(const CompositingCriteria &,
-                    surfaces::BufferStream &stream) override;
-    surfaces::BufferStream *topmost_fullscreen() const;
+                    compositor::BufferStream &stream) override;
+    compositor::BufferStream *topmost_fullscreen() const;
 
 private:
     // This has to be a pointer. We have no control over BufferStream lifetime
-    surfaces::BufferStream *latest = nullptr;
+    compositor::BufferStream *latest = nullptr;
 };
 
 } // namespace compositor

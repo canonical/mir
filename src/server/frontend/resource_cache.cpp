@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/resource_cache.h"
+#include "resource_cache.h"
 
 void mir::frontend::ResourceCache::save_resource(
     google::protobuf::Message* key,

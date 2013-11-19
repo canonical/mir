@@ -56,13 +56,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
-    if (auto err = turn_screen_on())
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Could not unblank display")) <<
-            boost::errinfo_errno(-err));
-    }
+    turn_screen_on();
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
@@ -70,16 +64,6 @@ mga::HWCCommonDevice::~HWCCommonDevice() noexcept
     std::unique_lock<std::mutex> lg(blanked_mutex);
     if (current_mode == mir_power_mode_on)
         turn_screen_off();
-}
-
-geom::PixelFormat mga::HWCCommonDevice::display_format() const
-{
-    return geom::PixelFormat::abgr_8888;
-}
-
-unsigned int mga::HWCCommonDevice::number_of_framebuffers_available() const
-{
-    return 2u;
 }
 
 void mga::HWCCommonDevice::notify_vsync()

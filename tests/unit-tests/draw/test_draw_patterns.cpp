@@ -28,17 +28,17 @@ class DrawPatternsTest : public ::testing::Test
 {
 protected:
     DrawPatternsTest()
-     : stride_color(0x77777777)
+     : stride_color(0x77)
     {}
 
     virtual void SetUp()
     {
 
         test_region.pixel_format = mir_pixel_format_abgr_8888;
-        int bytes_pp = 4;
+        bytes_pp = 4;
         test_region.width  = 100;
         /* misaligned stride to tease out stride problems */
-        test_region.stride = 102;
+        test_region.stride = (test_region.width * bytes_pp) + 2;
         test_region.height = 50;
         auto region_size =
             sizeof(char) * bytes_pp * test_region.height * test_region.stride;
@@ -58,29 +58,28 @@ protected:
 
     MirGraphicsRegion test_region;
     uint32_t pattern_colors [2][2];
+    int bytes_pp;
     std::shared_ptr<char> region;
 private:
     /* check that no pattern writes or checks the stride region */
     void write_stride_region()
     {
-        uint32_t* region = (uint32_t*) test_region.vaddr;
-        for(auto i=0; i < test_region.height; i++)
+        for(auto i = 0; i < test_region.height; i++)
         {
-            for(auto j=test_region.width; j<test_region.stride; j++)
+            for(auto j = test_region.width * bytes_pp; j < test_region.stride; j++)
             {
-                region[ (i*test_region.stride) + j ] = stride_color;
+                test_region.vaddr[ (i * test_region.stride) + j ] = stride_color;
             }
         }
     }
 
     bool check_stride_region_unaltered()
     {
-        uint32_t* region = (uint32_t*) test_region.vaddr;
         for(auto i=0; i < test_region.height; i++)
         {
-            for(auto j=test_region.width; j<test_region.stride; j++)
+            for(auto j=test_region.width * bytes_pp; j < test_region.stride; j++)
             {
-                if(region[ ((i*test_region.stride) + j) ] != stride_color)
+                if(test_region.vaddr[ ((i * test_region.stride) + j) ] != stride_color)
                 {
                     return false;
                 }
@@ -89,7 +88,7 @@ private:
         return true;
     }
 
-    const uint32_t stride_color;
+    const char stride_color;
 };
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated)

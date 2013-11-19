@@ -79,12 +79,10 @@ class DummyPointerController : public droidinput::PointerControllerInterface
     {
         (void)presentation;
     }
-    virtual void setSpots(const droidinput::PointerCoords* spot_coords,
-                          const uint32_t* spot_id_to_index, droidinput::BitSet32 spot_id_nits)
+    virtual void setSpots(const droidinput::PointerCoords* spot_coords, uint32_t spot_count)
     {
         (void)spot_coords;
-        (void)spot_id_to_index;
-        (void)spot_id_nits;
+        (void)spot_count;
     }
     virtual void clearSpots()
     {

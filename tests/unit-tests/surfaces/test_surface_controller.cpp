@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface_stack_model.h"
+#include "src/server/surfaces/surface_controller.h"
+#include "src/server/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
@@ -33,9 +33,9 @@ namespace
 {
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
 {
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(msh::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> const&));
-    MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::BasicSurface>(msh::SurfaceCreationParameters const&));
+    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::BasicSurface> const&));
+    MOCK_METHOD1(raise, void(std::weak_ptr<ms::BasicSurface> const&));
 };
 }
 
@@ -43,7 +43,7 @@ TEST(SurfaceController, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    std::weak_ptr<ms::Surface> null_surface;
+    std::weak_ptr<ms::BasicSurface> null_surface;
     MockSurfaceStackModel model;
 
     ms::SurfaceController controller(mt::fake_shared(model));
@@ -65,5 +65,5 @@ TEST(SurfaceController, raise_surface)
 
     EXPECT_CALL(model, raise(_)).Times(1);
 
-    controller.raise(std::weak_ptr<ms::Surface>());
+    controller.raise(std::weak_ptr<ms::BasicSurface>());
 }

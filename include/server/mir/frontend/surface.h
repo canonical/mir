@@ -25,6 +25,8 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 
+#include <glm/glm.hpp>
+
 #include <memory>
 
 namespace mir
@@ -55,12 +57,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
 
-    /// Submit the current client buffer, return the next client buffer
-    ///
-    /// \param [out] need_ipc:  True if the buffer content must be sent via IPC
-    ///                         False if only the buffer's ID must be sent.
-    /// \returns                The next client buffer
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer(bool& need_full_ipc) = 0;
+    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;
@@ -75,21 +72,7 @@ protected:
 
 auto as_internal_surface(std::shared_ptr<Surface> const& surface)
     -> std::shared_ptr<graphics::InternalSurface>;
-
-class ClientTrackingSurface : public Surface
-{
-public:
-    ClientTrackingSurface();
-    virtual ~ClientTrackingSurface() = default;
-    
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer(bool& need_full_ipc) override;
-
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
-private:
-    std::shared_ptr<ClientBufferTracker> client_tracker;
-};
-
-}   
+}
 }
 
 

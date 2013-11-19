@@ -21,87 +21,40 @@
 #define MIR_SHELL_SURFACE_H_
 
 #include "mir/shell/surface_buffer_access.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/surfaces/surface.h"
-
-#include "mir_toolkit/common.h"
 
 #include <string>
+#include <vector>
 
 namespace mir
 {
-namespace frontend
-{
-class EventSink;
-}
 namespace shell
 {
 class InputTargeter;
-class Session;
-class SurfaceBuilder;
-class SurfaceConfigurator;
 class SurfaceController;
-struct SurfaceCreationParameters;
 
-class Surface : public frontend::ClientTrackingSurface, public shell::SurfaceBufferAccess
+class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
-    Surface(
-        Session* session,
-        std::shared_ptr<SurfaceBuilder> const& builder,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
-        SurfaceCreationParameters const& params,
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& event_sink);
+    virtual std::string name() const = 0;
+    virtual MirSurfaceType type() const = 0;
+    virtual MirSurfaceState state() const = 0;
+    virtual void hide() = 0;
+    virtual void show() = 0;
+    virtual void move_to(geometry::Point const& top_left) = 0;
+    virtual geometry::Point top_left() const = 0;
 
-    ~Surface() noexcept;
+    virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter) = 0;
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
 
-    virtual void hide();
-    virtual void show();
+    virtual void allow_framedropping(bool) = 0;
 
-    virtual void force_requests_to_complete();
+    virtual void raise(std::shared_ptr<SurfaceController> const& controller) = 0;
 
-    virtual std::string name() const;
-
-    virtual void move_to(geometry::Point const& top_left);
-
-    virtual geometry::Size size() const;
-    virtual geometry::Point top_left() const;
-
-    virtual geometry::PixelFormat pixel_format() const;
-
-    virtual void with_most_recent_buffer_do(
-        std::function<void(graphics::Buffer&)> const& exec);
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer();
-
-    virtual bool supports_input() const;
-    virtual int client_input_fd() const;
-
-    virtual int configure(MirSurfaceAttrib attrib, int value);
-    virtual MirSurfaceType type() const;
-    virtual MirSurfaceState state() const;
-
-    virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
-    virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
-
-    virtual void allow_framedropping(bool); 
-    
-    virtual void raise(std::shared_ptr<SurfaceController> const& controller);
-private:
-    bool set_type(MirSurfaceType t);  // Use configure() to make public changes
-    bool set_state(MirSurfaceState s);
-    void notify_change(MirSurfaceAttrib attrib, int value);
-
-    std::shared_ptr<SurfaceBuilder> const builder;
-    std::shared_ptr<SurfaceConfigurator> const configurator;
-    std::shared_ptr<mir::surfaces::Surface> const surface;
-
-    frontend::SurfaceId const id;
-    std::shared_ptr<frontend::EventSink> const event_sink;
-
-    MirSurfaceType type_value;
-    MirSurfaceState state_value;
+    virtual void resize(geometry::Size const& size) = 0;
+    virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
+    virtual void set_alpha(float alpha) = 0;
 };
 }
 }

@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
@@ -27,6 +26,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -54,7 +54,7 @@ mg::BufferUsage const usage{mg::BufferUsage::hardware};
 mg::BufferProperties const buffer_properties{size, format, usage};
 
 
-class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
  public:
     MockGraphicBufferAllocator()
@@ -69,14 +69,9 @@ class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
         std::shared_ptr<mg::Buffer> (mg::BufferProperties const&));
 
 
-    std::vector<geom::PixelFormat> supported_pixel_formats()
+    std::shared_ptr<mg::Buffer> on_create_swapper(mg::BufferProperties const&)
     {
-        return std::vector<geom::PixelFormat>();
-    }
-
-    std::unique_ptr<mg::Buffer> on_create_swapper(mg::BufferProperties const&)
-    {
-        return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(::buffer_properties));
+        return std::make_shared<mtd::StubBuffer>(::buffer_properties);
     }
 
     ~MockGraphicBufferAllocator() noexcept {}
@@ -392,18 +387,12 @@ struct BufferCounterConfig : TestingServerConfiguration
         static std::atomic<int> buffers_destroyed;
     };
 
-    class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+    class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
     {
      public:
-        virtual std::shared_ptr<mg::Buffer> alloc_buffer(
-            mg::BufferProperties const&)
+        std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&) override
         {
-            return std::unique_ptr<mg::Buffer>(new CountingStubBuffer());
-        }
-
-        std::vector<geom::PixelFormat> supported_pixel_formats()
-        {
-            return std::vector<geom::PixelFormat>();
+            return std::make_shared<CountingStubBuffer>();
         }
     };
 

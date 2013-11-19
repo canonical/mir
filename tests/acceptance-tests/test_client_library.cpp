@@ -26,6 +26,14 @@
 
 #include "mir_protobuf.pb.h"
 
+#ifdef ANDROID
+/*
+ * MirNativeBuffer for Android is defined opaquely, but we now depend on
+ * it having width and height fields, for all platforms. So need definition...
+ */
+#include <system/window.h>  // for ANativeWindowBuffer AKA MirNativeBuffer
+#endif
+
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
@@ -532,6 +540,73 @@ TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
     launch_client_process(client_config);
 }
 #endif
+
+#ifdef ANDROID
+// Mir's Android test infrastructure isn't quite ready for this yet.
+TEST_F(DefaultDisplayServerTestFixture, DISABLED_client_gets_buffer_dimensions)
+#else
+TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
+#endif
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            MirSurfaceParameters parm =
+            {
+                __PRETTY_FUNCTION__,
+                0, 0,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            struct {int width, height;} const sizes[] =
+            {
+                {12, 34},
+                {56, 78},
+                {90, 21},
+            };
+
+            for (auto const& size : sizes)
+            {
+                parm.width = size.width;
+                parm.height = size.height;
+    
+                surface = mir_connection_create_surface_sync(connection, &parm);
+                ASSERT_TRUE(surface != NULL);
+                ASSERT_TRUE(mir_surface_is_valid(surface));
+
+                MirNativeBuffer *native = NULL;
+                mir_surface_get_current_buffer(surface, &native);
+                ASSERT_TRUE(native != NULL);
+                EXPECT_EQ(parm.width, native->width);
+                EXPECT_EQ(parm.height, native->height);
+
+                mir_surface_swap_buffers_sync(surface);
+                mir_surface_get_current_buffer(surface, &native);
+                ASSERT_TRUE(native != NULL);
+                EXPECT_EQ(parm.width, native->width);
+                EXPECT_EQ(parm.height, native->height);
+
+                mir_surface_release_sync(surface);
+            }
+
+            mir_connection_release(connection);
+        }
+
+        bool use_real_graphics(mir::options::Option const&) override
+        {
+            return true;
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {

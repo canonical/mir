@@ -23,7 +23,7 @@
 #include "socket_messenger.h"
 #include "socket_session.h"
 
-#include "mir/frontend/protobuf_ipc_factory.h"
+#include "protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 

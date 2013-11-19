@@ -41,16 +41,23 @@ public:
     }
 
     StubDisplayConfig(unsigned int num_displays)
+        : StubDisplayConfig(num_displays,
+                            {
+                                geometry::PixelFormat::bgr_888,
+                                geometry::PixelFormat::abgr_8888,
+                                geometry::PixelFormat::xbgr_8888
+                            })
+    {
+    }
+
+    StubDisplayConfig(unsigned int num_displays,
+                      std::vector<geometry::PixelFormat> const& pfs)
     {
         /* construct a non-trivial dummy display config to send */
         int mode_index = 0;
         for (auto i = 0u; i < num_displays; i++)
         {
             std::vector<graphics::DisplayConfigurationMode> modes;
-            std::vector<geometry::PixelFormat> pfs{
-                geometry::PixelFormat::bgr_888,
-                geometry::PixelFormat::abgr_8888,
-                geometry::PixelFormat::xbgr_8888};
 
             for (auto j = 0u; j <= i; j++)
             {

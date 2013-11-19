@@ -107,6 +107,7 @@ inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 
 typedef detail::IntWrapper<detail::width> Width;
 typedef detail::IntWrapper<detail::height> Height;
+// Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
 typedef detail::IntWrapper<detail::stride> Stride;
 
 typedef detail::IntWrapper<detail::x> X;

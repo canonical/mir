@@ -106,8 +106,8 @@ public:
 
     void populate(MirPlatformPackage& platform_package);
     MirDisplayConfiguration* create_copy_of_display_config(); 
-    void possible_pixel_formats(MirPixelFormat* formats,
-                                unsigned int formats_size, unsigned int& valid_formats);
+    void available_surface_formats(MirPixelFormat* formats,
+                                   unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
@@ -121,6 +121,8 @@ public:
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
+
+    bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
 private:
     std::recursive_mutex mutex; // Protects all members of *this
@@ -156,6 +158,8 @@ private:
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
+
+    std::vector<int> extra_platform_data;
 
     struct SurfaceRelease;
 

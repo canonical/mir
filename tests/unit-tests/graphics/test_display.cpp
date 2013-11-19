@@ -18,22 +18,22 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/options/program_option.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "mir_test_framework/udev_environment.h"
-#include "mir/graphics/default_display_configuration_policy.h"
 #else
-#include "src/server/graphics/android/android_framebuffer_window_query.h"
-#include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/display_buffer_factory.h"
-#include "mir_test_doubles/stub_display_support_provider.h"
+#include "src/server/graphics/android/android_platform.h"
+#include "mir_test_doubles/stub_display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_display_device.h"
 #endif
 
 #include "mir/graphics/null_display_report.h"
@@ -73,31 +73,17 @@ public:
 
     std::shared_ptr<mg::Display> create_display()
     {
-#ifdef ANDROID
-        struct StubAndroidFramebufferWindowQuery : public mg::android::AndroidFramebufferWindowQuery
-        {
-            EGLNativeWindowType android_native_window_type() const
-            {
-                return reinterpret_cast<EGLNativeWindowType>(0x123);
-            }
-            EGLConfig android_display_egl_config(EGLDisplay) const
-            {
-                return reinterpret_cast<EGLConfig>(0x789);
-            }
-        };
-
-        return std::make_shared<mg::android::AndroidDisplay>(
-            std::make_shared<StubAndroidFramebufferWindowQuery>(),
-            std::make_shared<mg::android::DisplayBufferFactory>(),
-            std::make_shared<mtd::StubDisplaySupportProvider>(),
-            std::make_shared<mg::NullDisplayReport>());
-#else
-        auto platform = std::make_shared<mg::gbm::GBMPlatform>(
-            std::make_shared<mg::NullDisplayReport>(),
-            std::make_shared<mir::test::doubles::NullVirtualTerminal>());
         auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-        return platform->create_display(conf_policy);
+        auto report = std::make_shared<mg::NullDisplayReport>();
+#ifdef ANDROID
+        auto platform = mg::create_platform(
+            std::make_shared<mir::options::ProgramOption>(),
+            report); 
+#else
+        auto platform = std::make_shared<mg::gbm::GBMPlatform>(report,
+            std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
+        return platform->create_display(conf_policy);
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

@@ -38,6 +38,8 @@ namespace compositor
 class SwitchingBundle : public BufferBundle 
 {
 public:
+    enum {min_buffers = 1, max_buffers = 5};
+
     SwitchingBundle(int nbuffers,
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
                     const graphics::BufferProperties &);
@@ -55,6 +57,14 @@ public:
     void allow_framedropping(bool dropping_allowed);
     bool framedropping_allowed() const;
 
+    /**
+     * Change the dimensions of the buffers contained in the bundle. For
+     * client_acquire, the change is guaranteed to be immediate. For
+     * compositors and snapshotters however, the change may be delayed by
+     * nbuffers frames while old frames of the old size are consumed.
+     */
+    void resize(const geometry::Size &newsize) override;
+
 private:
     graphics::BufferProperties bundle_properties;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
@@ -68,13 +78,12 @@ private:
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
 
-    enum {MAX_NBUFFERS = 5};
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
         int users = 0; // presently just a count of compositors sharing the buf
     };
-    SharedBuffer ring[MAX_NBUFFERS];
+    SharedBuffer ring[max_buffers];
 
     const int nbuffers;
     int first_compositor;
@@ -86,7 +95,7 @@ private:
     int snapshot;
     int nsnapshotters;
 
-    std::mutex guard;
+    mutable std::mutex guard;
     std::condition_variable cond;
 
     unsigned long last_consumed;

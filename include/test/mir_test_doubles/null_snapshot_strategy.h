@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_
 #define MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_
 
-#include "mir/shell/snapshot_strategy.h"
+#include "src/server/shell/snapshot_strategy.h"
 
 namespace mir
 {

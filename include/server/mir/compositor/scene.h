@@ -26,12 +26,9 @@
 
 namespace mir
 {
-namespace surfaces
-{
-class BufferStream;
-}
 namespace compositor
 {
+class BufferStream;
 class CompositingCriteria;
 
 class FilterForScene
@@ -52,7 +49,7 @@ class OperatorForScene
 public:
     virtual ~OperatorForScene() {}
 
-    virtual void operator()(CompositingCriteria const&, surfaces::BufferStream&) = 0;
+    virtual void operator()(CompositingCriteria const&, BufferStream&) = 0;
 
 protected:
     OperatorForScene() = default;
@@ -78,7 +75,7 @@ public:
      * Scene changes.
      *
      * The supplied callback should not directly or indirectly (e.g.,
-     * by changing a property of a Renderable) change the state of
+     * by changing a property of a surface) change the state of
      * the Scene, otherwise a deadlock may occur.
      */
     virtual void set_change_callback(std::function<void()> const& f) = 0;

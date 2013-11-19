@@ -75,7 +75,7 @@ bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
 }
 
 void OcclusionMatch::operator()(const CompositingCriteria &criteria,
-                                surfaces::BufferStream &)
+                                compositor::BufferStream &)
 {
     hidden.insert(&criteria);
 }

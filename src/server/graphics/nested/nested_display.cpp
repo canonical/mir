@@ -23,7 +23,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/nested/host_connection.h"
+#include "host_connection.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -32,6 +32,34 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mgnw = mir::graphics::nested::mir_api_wrappers;
 namespace geom = mir::geometry;
+
+namespace
+{
+
+MirPixelFormat find_opaque_surface_format(MirConnection* connection)
+{
+    static unsigned const max_formats = 32;
+    MirPixelFormat formats[max_formats];
+    unsigned int valid_formats;
+
+    mir_connection_get_available_surface_formats(connection, formats,
+                                                 max_formats, &valid_formats);
+
+    // Find an opaque surface format
+    for (auto f = formats; f != formats+valid_formats; ++f)
+    {
+        if (*f == mir_pixel_format_xbgr_8888 ||
+            *f == mir_pixel_format_xrgb_8888)
+        {
+            return *f;
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(
+        std::runtime_error("Nested Mir failed to find an opaque surface format"));
+}
+
+}
 
 EGLint const mgn::detail::nested_egl_config_attribs[] = {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -125,30 +153,12 @@ mgn::NestedDisplay::NestedDisplay(
     event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
-    egl_pixel_format{mir_pixel_format_xbgr_8888},
+    egl_pixel_format{find_opaque_surface_format(*connection)},
     outputs{}
 {
     egl_display.initialize();
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
     configure(*configuration());
-
-
-    static unsigned const max_formats = 32;
-    MirPixelFormat formats[max_formats];
-    unsigned int valid_formats;
-
-    mir_connection_get_available_surface_formats(*connection, formats, max_formats, &valid_formats);
-
-    // Find an opaque buffer format
-    for (auto f = formats; f != formats+valid_formats; ++f)
-    {
-        if (*f == mir_pixel_format_xbgr_8888 ||
-            *f == mir_pixel_format_xrgb_8888)
-        {
-            egl_pixel_format = *f;
-            break;
-        }
-    }
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
@@ -263,6 +273,16 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
     return std::weak_ptr<Cursor>();
 }
 
+namespace
+{
+EGLint const dummy_pbuffer_attribs[] =
+{
+    EGL_WIDTH, 1,
+    EGL_HEIGHT, 1,
+    EGL_NONE
+};
+}
+
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
     class NestedGLContext : public mg::GLContext
@@ -271,13 +291,24 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
         NestedGLContext(detail::EGLDisplayHandle const& egl_display) :
             egl_display{egl_display},
             egl_config{egl_display.choose_config(detail::nested_egl_config_attribs)},
-            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)}
+            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)},
+            egl_surface{egl_display, eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
         {
+        }
+
+        ~NestedGLContext() noexcept
+        {
+            if (eglGetCurrentContext() == egl_context)
+                release_current();
         }
 
         void make_current() override
         {
-            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
+            if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
+            {
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+            }
         }
 
         void release_current() override
@@ -289,6 +320,7 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
         EGLDisplay const egl_display;
         EGLConfig const egl_config;
         EGLContextStore const egl_context;
+        EGLSurfaceStore const egl_surface;
     };
 
     return std::unique_ptr<mg::GLContext>{new NestedGLContext(egl_display)};

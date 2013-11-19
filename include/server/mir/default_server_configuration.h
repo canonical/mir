@@ -55,12 +55,10 @@ class DisplayChanger;
 namespace shell
 {
 class SurfaceFactory;
-class SurfaceBuilder;
 class SurfaceController;
 class InputTargeter;
 class SessionContainer;
 class FocusSetter;
-class FocusSequence;
 class PlacementStrategy;
 class SessionListener;
 class FocusController;
@@ -81,10 +79,12 @@ class TimeSource;
 namespace surfaces
 {
 class BufferStreamFactory;
+class SurfaceBuilder;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
 class InputRegistrar;
+class SurfacesReport;
 }
 namespace graphics
 {
@@ -105,6 +105,7 @@ class InputConfiguration;
 class CursorListener;
 class InputRegion;
 class NestedInputRelay;
+class EventHandler;
 }
 
 namespace logging
@@ -138,7 +139,7 @@ public:
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
-    virtual std::shared_ptr<input::NestedInputRelay> the_nested_input_relay();
+    virtual std::shared_ptr<input::EventFilter> the_nested_event_filter();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -184,9 +185,9 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
+    virtual std::shared_ptr<shell::SurfaceFactory>      the_surfaces_surface_factory();
     virtual std::shared_ptr<shell::SessionContainer>    the_shell_session_container();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
-    virtual std::shared_ptr<shell::FocusSequence>       the_shell_focus_sequence();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::PixelBuffer>         the_shell_pixel_buffer();
@@ -195,21 +196,14 @@ public:
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
     virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
     virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
+    virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
-
-    /** @name shell configuration - dependencies
-     * dependencies of shell on the rest of the Mir
-     *  @{ */
-    virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
-    virtual std::shared_ptr<surfaces::SurfaceController>     the_surface_controller();
-
-    /** @} */
-
 
     /** @name surfaces configuration - customization
      * configurable interfaces for modifying surfaces
      *  @{ */
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+    virtual std::shared_ptr<surfaces::SurfacesReport>    the_surfaces_report();
     /** @} */
 
     /** @name surfaces configuration - dependencies
@@ -276,10 +270,12 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
+    CachedPtr<surfaces::SurfacesReport> surfaces_report;
+
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
+    CachedPtr<shell::SurfaceFactory> surfaces_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
-    CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<shell::SessionListener> shell_session_listener;
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
@@ -291,25 +287,32 @@ protected:
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
-    CachedPtr<input::NestedInputRelay> nested_input_relay;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
 private:
     std::shared_ptr<input::EventFilter> const default_filter;
-
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
+
+    // The following caches and factory functions are internal to the
+    // default implementations of corresponding the Mir components
+    CachedPtr<input::NestedInputRelay> nested_input_relay;
+    CachedPtr<surfaces::SurfaceController> surface_controller;
+
+    std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
+    std::shared_ptr<surfaces::SurfaceBuilder>       the_surface_builder();
+    std::shared_ptr<surfaces::SurfaceController>    the_surface_controller();
+    std::function<void()> force_threads_to_unblock_callback();
 };
 }
 

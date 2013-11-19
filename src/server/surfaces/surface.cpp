@@ -18,11 +18,13 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface.h"
+#include "surface.h"
 #include "surface_state.h"
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
+
+#include "mir/surfaces/surfaces_report.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -36,13 +38,16 @@ namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     std::shared_ptr<ms::SurfaceState> const& state,
-    std::shared_ptr<ms::BufferStream> const& buffer_stream,
-    std::shared_ptr<input::InputChannel> const& input_channel)
-    : surface_state(state),
-      surface_buffer_stream(buffer_stream),
-      server_input_channel(input_channel),
-      surface_in_startup(true)
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<input::InputChannel> const& input_channel,
+    std::shared_ptr<SurfacesReport> const& report) :
+    surface_state(state),
+    surface_buffer_stream(buffer_stream),
+    server_input_channel(input_channel),
+    report(report),
+    surface_in_startup(true)
 {
+    report->surface_created(this);
 }
 
 void ms::Surface::force_requests_to_complete()
@@ -52,9 +57,10 @@ void ms::Surface::force_requests_to_complete()
 
 ms::Surface::~Surface()
 {
+    report->surface_deleted(this);
 }
 
-std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
+std::shared_ptr<mc::BufferStream> ms::Surface::buffer_stream() const
 {
     return surface_buffer_stream;
 }
@@ -112,6 +118,8 @@ std::shared_ptr<mg::Buffer> ms::Surface::advance_client_buffer()
     }
     else
     {
+        // TODO There is something crazy about assuming that giving out any buffer
+        // TODO after the first implies that previous buffers have been rendered.
         flag_for_render();
     }
 
@@ -161,4 +169,22 @@ std::shared_ptr<mi::Surface> ms::Surface::input_surface() const
 void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     surface_state->set_input_region(input_rectangles);
+}
+
+void ms::Surface::resize(geom::Size const& size)
+{
+    if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
+    }
+    /*
+     * Other combinations may still be invalid (like dimensions too big or
+     * insufficient resources), but those are runtime and platform-specific, so
+     * not predictable here. Such critical exceptions would arise from
+     * the platform buffer allocator as a runtime_error via:
+     */
+    surface_buffer_stream->resize(size);
+
+    // Now the buffer stream has successfully resized, update the state second;
+    surface_state->resize(size);
 }

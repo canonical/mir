@@ -17,10 +17,11 @@
  */
 
 #include "src/server/graphics/android/hwc10_device.h"
-#include "mir_test_doubles/mock_display_support_provider.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
+#include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -39,62 +40,31 @@ protected:
         test_pf = geom::PixelFormat::abgr_8888;
         test_numfb = 558u;
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<mtd::MockDisplaySupportProvider>();
+        mock_fbdev = std::make_shared<mtd::MockDisplayDevice>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
-        ON_CALL(*mock_fbdev, display_size())
-            .WillByDefault(Return(test_size)); 
-        ON_CALL(*mock_fbdev, display_format())
-            .WillByDefault(Return(test_pf)); 
-        ON_CALL(*mock_fbdev, number_of_framebuffers_available())
-            .WillByDefault(Return(test_numfb)); 
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
     }
 
     geom::PixelFormat test_pf;
     geom::Size test_size;
     unsigned int test_numfb;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fbdev;
+    std::shared_ptr<mtd::MockDisplayDevice> mock_fbdev;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
+    std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-TEST_F(HWC10Device, hwc10_gets_size_from_fb_dev)
+TEST_F(HWC10Device, buffer_for_render)
 {
-    EXPECT_CALL(*mock_fbdev, display_size())
-        .Times(1);
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    using namespace testing;
+    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
 
-    auto size = device.display_size();
-    EXPECT_EQ(test_size, size);
-}
-
-TEST_F(HWC10Device, hwc10_gets_format_from_fb_dev)
-{
-    EXPECT_CALL(*mock_fbdev, display_format())
-        .Times(1);
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
-
-    auto pf = device.display_format();
-    EXPECT_EQ(test_pf, pf);
-}
-
-TEST_F(HWC10Device, hwc10_gets_numfb_from_fb_dev)
-{
-    EXPECT_CALL(*mock_fbdev, number_of_framebuffers_available())
-        .Times(1);
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
-
-    auto numfb = device.number_of_framebuffers_available();
-    EXPECT_EQ(test_numfb, numfb);
-}
-
-TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
-{
-    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(*mock_fbdev, set_next_frontbuffer(mock_buffer))
-        .Times(1);
-
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
-    device.set_next_frontbuffer(mock_buffer);
+    EXPECT_EQ(mock_buffer, device.buffer_for_render());
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_sync)
@@ -113,7 +83,7 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .Times(1);
 
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
 
     device.commit_frame(dpy, sur);
 
@@ -122,14 +92,11 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
     EXPECT_EQ(dpy, mock_device->display0_set_content.dpy);
     EXPECT_EQ(sur, mock_device->display0_set_content.sur);
     EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
-    EXPECT_EQ(0u, mock_device->display0_set_content.flags);
-    EXPECT_EQ(0u, mock_device->display0_set_content.numHwLayers);
-
-    EXPECT_EQ(dpy, mock_device->display0_prepare_content.dpy);
-    EXPECT_EQ(sur, mock_device->display0_prepare_content.sur);
-    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(0u, mock_device->display0_prepare_content.flags);
-    EXPECT_EQ(0u, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_device->display0_set_content.flags);
+    EXPECT_EQ(1u, mock_device->display0_set_content.numHwLayers);
+    ASSERT_NE(nullptr, mock_device->display0_set_content.hwLayers);
+    EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->set_layerlist[0].compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_async)
@@ -149,7 +116,7 @@ TEST_F(HWC10Device, hwc10_commit_frame_async)
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .Times(0);
 
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
     device.sync_to_display(false);
 
     device.commit_frame(dpy, sur);
@@ -165,7 +132,7 @@ TEST_F(HWC10Device, hwc10_prepare_frame_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
 
     EXPECT_THROW({
         device.commit_frame(dpy, sur);
@@ -182,9 +149,24 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
 
     EXPECT_THROW({
         device.commit_frame(dpy, sur);
     }, std::runtime_error);
+}
+
+TEST_F(HWC10Device, determine_attributes_uses_fb)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_fbdev, display_size())
+        .Times(1)
+        .WillOnce(Return(test_size));
+    EXPECT_CALL(*mock_fbdev, display_format())
+        .Times(1)
+        .WillOnce(Return(test_pf));
+
+    mga::HWC10Device device(mock_device, mock_fb_bundle, mock_fbdev, mock_vsync);
+    EXPECT_EQ(test_size, device.display_size());
+    EXPECT_EQ(test_pf, device.display_format());
 }

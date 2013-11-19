@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/threaded_snapshot_strategy.h"
-#include "mir/shell/pixel_buffer.h"
+#include "src/server/shell/threaded_snapshot_strategy.h"
+#include "src/server/shell/pixel_buffer.h"
 #include "mir/shell/surface_buffer_access.h"
 #include "mir/graphics/buffer.h"
 

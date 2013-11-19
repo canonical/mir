@@ -8,7 +8,6 @@ set(
   protobuf_message_processor.cpp
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
-  global_event_sender.cpp
   published_socket_connector.cpp
   protobuf_session_creator.cpp
   socket_session.cpp
@@ -16,6 +15,7 @@ set(
   socket_messenger.cpp
   event_sender.cpp
   surface.cpp
+  unauthorized_display_changer.cpp
 
   default_configuration.cpp
 

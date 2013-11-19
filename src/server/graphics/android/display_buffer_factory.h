@@ -16,30 +16,46 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_ANDROID_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_HWC_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_
 
 #include "android_display_buffer_factory.h"
+#include "hardware/hwcomposer.h"
+#include "hardware/fb.h"
 
 namespace mir
 {
 namespace graphics
 {
+class DisplayReport;
 namespace android
 {
+class DisplayResourceFactory;
 
 class DisplayBufferFactory : public AndroidDisplayBufferFactory
 {
 public:
+    DisplayBufferFactory(
+        std::shared_ptr<DisplayResourceFactory> const& res_factory,
+        std::shared_ptr<DisplayReport> const& display_report,
+        bool should_use_fb_fallback);
+
+    std::shared_ptr<DisplayDevice> create_display_device();
     std::unique_ptr<DisplayBuffer> create_display_buffer(
-        std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
-        std::shared_ptr<DisplaySupportProvider> const& hwc_device,
-        EGLDisplay egl_display,
-        EGLContext egl_context_shared);
+        std::shared_ptr<DisplayDevice> const& display_device,
+        EGLDisplay, EGLConfig, EGLContext);
+
+private:
+    std::shared_ptr<DisplayResourceFactory> const res_factory;
+    std::shared_ptr<DisplayReport> const display_report;
+    bool force_backup_display;
+
+    std::shared_ptr<hwc_composer_device_1> hwc_native;
+    std::shared_ptr<framebuffer_device_t> fb_native;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */

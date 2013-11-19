@@ -32,26 +32,28 @@ class DisplayReport;
 
 namespace android
 {
-class DisplaySupportProvider;
+class DisplayDevice;
+class FBSwapper;
+class GraphicBufferAllocator;
 
 class DisplayResourceFactory
 {
 public:
     virtual ~DisplayResourceFactory() = default;
 
-    virtual std::shared_ptr<DisplaySupportProvider> create_fb_device() const = 0;
+    virtual std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const = 0;
+    virtual std::shared_ptr<framebuffer_device_t> create_fb_native_device() const = 0;
 
-    virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_1(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
+    virtual std::shared_ptr<ANativeWindow> create_native_window(
+        std::shared_ptr<DisplayDevice> const& device) const = 0;
 
-    virtual std::shared_ptr<DisplaySupportProvider> create_hwc_1_0(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
-
-    virtual std::shared_ptr<graphics::Display> create_display(
-        std::shared_ptr<DisplaySupportProvider> const& support_provider,
-        std::shared_ptr<graphics::DisplayReport> const& report) const = 0;
+    virtual std::shared_ptr<DisplayDevice> create_fb_device(
+        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;
+    virtual std::shared_ptr<DisplayDevice> create_hwc11_device(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const = 0;
+    virtual std::shared_ptr<DisplayDevice> create_hwc10_device(
+        std::shared_ptr<hwc_composer_device_1> const& hwc_native_device,
+        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;
 
 protected:
     DisplayResourceFactory() = default;

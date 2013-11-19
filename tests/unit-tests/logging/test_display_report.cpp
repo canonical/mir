@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com> 
  */
 
-#include "mir/logging/display_report.h"
+#include "src/server/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir_test_doubles/mock_egl.h"
 
@@ -93,7 +93,8 @@ std::string egl_string_mapping [] =
     STRMACRO(EGL_NON_CONFORMANT_CONFIG),
     STRMACRO(EGL_TRANSPARENT_RGB),
     STRMACRO(EGL_RGB_BUFFER),
-    STRMACRO(EGL_LUMINANCE_BUFFER)
+    STRMACRO(EGL_LUMINANCE_BUFFER),
+    STRMACRO(EGL_FRAMEBUFFER_TARGET_ANDROID)
 };
 #undef STRMACRO
 

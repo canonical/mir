@@ -16,17 +16,16 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/surfaces/buffer_stream.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/session_mediator_report.h"
-#include "mir/frontend/session_mediator.h"
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/session_mediator.h"
+#include "src/server/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/surfaces/surface.h"
+#include "src/server/surfaces/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
@@ -39,6 +38,7 @@
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/event_sink.h"
@@ -146,7 +146,7 @@ public:
 
 int const StubbedSession::testing_client_input_fd{11};
 
-class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
 public:
     MockGraphicBufferAllocator()
@@ -155,13 +155,7 @@ public:
             .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>();
-    }
-
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
-    ~MockGraphicBufferAllocator() noexcept {}
 };
 
 class MockPlatform : public mg::Platform
@@ -194,11 +188,11 @@ struct SessionMediatorTest : public ::testing::Test
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
           graphics_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
+          surface_pixel_formats{geom::PixelFormat::argb_8888, geom::PixelFormat::xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_changer,
-                   buffer_allocator, report, 
+                   surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           stubbed_session{std::make_shared<StubbedSession>()},
@@ -214,7 +208,7 @@ struct SessionMediatorTest : public ::testing::Test
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
-    std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
+    std::vector<geom::PixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;
@@ -361,7 +355,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         .WillOnce(Return(mt::fake_shared(config)));
     mf::SessionMediator mediator(
         shell, graphics_platform, mock_display,
-        buffer_allocator, report, 
+        surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache);
 
@@ -616,8 +610,9 @@ TEST_F(SessionMediatorTest, display_config_request)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
  
     mf::SessionMediator session_mediator{
-            shell, graphics_platform, mock_display_selector,
-            buffer_allocator, report, std::make_shared<mtd::NullEventSink>(), resource_cache};
+        shell, graphics_platform, mock_display_selector,
+        surface_pixel_formats, report,
+        std::make_shared<mtd::NullEventSink>(), resource_cache};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 

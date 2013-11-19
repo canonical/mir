@@ -16,11 +16,12 @@ add_library(
 # Don't treat missing-field-initializers as an error, since
 # the LTTng macros contain code that triggers this (but it's
 # harmless; it concerns a padding field)
-SET_TARGET_PROPERTIES(
-  mirclientlttngstatic
+set_target_properties(mirclientlttngstatic PROPERTIES
+  COMPILE_FLAGS "-Wno-error=missing-field-initializers -Wno-error=unused-function"
+)
 
-  PROPERTIES
-  COMPILE_FLAGS "-Wno-error=missing-field-initializers"
+set_target_properties(mirclientlttng PROPERTIES
+  COMPILE_FLAGS "-Wno-error=unused-function"
 )
 
 target_link_libraries(

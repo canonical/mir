@@ -16,7 +16,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/broadcasting_session_event_sink.h"
+#include "broadcasting_session_event_sink.h"
 
 namespace msh = mir::shell;
 

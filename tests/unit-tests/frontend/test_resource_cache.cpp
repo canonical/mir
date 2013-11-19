@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/resource_cache.h"
 
 #include <thread>
 #include <atomic>

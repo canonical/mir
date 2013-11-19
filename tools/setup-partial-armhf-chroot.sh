@@ -44,22 +44,22 @@ pushd ${1} > /dev/null
 
     declare -a PACKAGES_ARMHF=(
         google-mock
-        libboost1.53-dev
-        libboost-chrono1.53-dev
-        libboost-chrono1.53-dev
-        libboost-date-time1.53-dev
-        libboost-filesystem1.53-dev
-        libboost-program-options1.53-dev
-        libboost-chrono1.53.0
-        libboost-date-time1.53.0
-        libboost-filesystem1.53.0
-        libboost-system1.53.0
-        libboost-system1.53-dev
-        libboost-thread1.53-dev
-        libboost-thread1.53.0
-        libboost-regex1.53-dev
-        libboost-regex1.53.0
-        libboost-program-options1.53.0
+        libboost1.54-dev
+        libboost-chrono1.54-dev
+        libboost-chrono1.54-dev
+        libboost-date-time1.54-dev
+        libboost-filesystem1.54-dev
+        libboost-program-options1.54-dev
+        libboost-chrono1.54.0
+        libboost-date-time1.54.0
+        libboost-filesystem1.54.0
+        libboost-system1.54.0
+        libboost-system1.54-dev
+        libboost-thread1.54-dev
+        libboost-thread1.54.0
+        libboost-regex1.54-dev
+        libboost-regex1.54.0
+        libboost-program-options1.54.0
         libhardware2
         libhardware-dev
         libhybris-common1
@@ -89,7 +89,7 @@ pushd ${1} > /dev/null
         libxkbcommon0
         libxkbcommon-dev
         libumockdev-dev
-        liblttng-ust0
+        liblttng-ust2
         liburcu1
         libuuid1
         liblttng-ust-dev

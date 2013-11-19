@@ -17,11 +17,13 @@
  */
 
 #include "mir/graphics/null_display_report.h"
-#include "src/server/graphics/android/android_platform.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
+#include "src/server/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/stub_display_buffer_factory.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
@@ -41,6 +43,7 @@ protected:
     {
         using namespace testing;
 
+        stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>();
         stub_display_report = std::make_shared<mg::NullDisplayReport>();
         stride = geom::Stride(300*4);
 
@@ -69,6 +72,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
+    std::shared_ptr<mtd::StubDisplayBufferFactory> stub_db_factory;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
@@ -79,7 +83,9 @@ protected:
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
-    auto platform = mg::create_platform(std::make_shared<mo::ProgramOption>(), stub_display_report);
+    using namespace ::testing;
+
+    mga::AndroidPlatform platform(stub_db_factory, stub_display_report);
 
     auto mock_packer = std::make_shared<mtd::MockPacker>();
     int offset = 0;
@@ -93,9 +99,16 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
         EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
+
+    EXPECT_CALL(*mock_buffer, stride())
+        .WillOnce(Return(stride));
     EXPECT_CALL(*mock_packer, pack_stride(stride))
         .Times(1);
 
-    platform->fill_ipc_package(mock_packer, mock_buffer);
+    EXPECT_CALL(*mock_buffer, size())
+        .WillOnce(Return(mir::geometry::Size{123, 456}));
+    EXPECT_CALL(*mock_packer, pack_size(_))
+        .Times(1);
 
+    platform.fill_ipc_package(mock_packer, mock_buffer);
 }

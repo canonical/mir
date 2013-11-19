@@ -20,8 +20,9 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SURFACE_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_SURFACE_BUILDER_H_
 
-#include "mir/shell/surface_builder.h"
-#include "mir/surfaces/surface.h"
+#include "src/server/surfaces/surface_builder.h"
+#include "src/server/surfaces/surface.h"
+#include "mir/surfaces/surfaces_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
@@ -34,7 +35,7 @@ namespace test
 namespace doubles
 {
 
-class StubSurfaceBuilder : public shell::SurfaceBuilder
+class StubSurfaceBuilder : public surfaces::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
@@ -43,20 +44,25 @@ public:
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
+    std::weak_ptr<surfaces::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
     {
         auto state = std::make_shared<MockSurfaceState>();
         dummy_surface = std::make_shared<surfaces::Surface>(
-            state, buffer_stream, std::shared_ptr<input::InputChannel>());
+            state, buffer_stream,
+            std::shared_ptr<input::InputChannel>(),
+            report);
+
         return dummy_surface;
     }
 
-    void destroy_surface(std::weak_ptr<surfaces::Surface> const& )
+    void destroy_surface(std::weak_ptr<surfaces::BasicSurface> const& )
     {
     }
 private:
-    std::shared_ptr<surfaces::BufferStream> const buffer_stream;
-    std::shared_ptr<surfaces::Surface>  dummy_surface;
+    std::shared_ptr<compositor::BufferStream> const buffer_stream;
+    std::shared_ptr<surfaces::BasicSurface>  dummy_surface;
+    std::shared_ptr<surfaces::SurfacesReport> report = std::make_shared<surfaces::NullSurfacesReport>();
+
 };
 }
 }

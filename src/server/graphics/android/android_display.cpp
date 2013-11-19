@@ -24,11 +24,14 @@
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "android_display_buffer_factory.h"
-#include "display_support_provider.h"
+#include "display_device.h"
+#include "android_format_conversion-inl.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <system/window.h>
+#include <algorithm>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
@@ -37,6 +40,13 @@ namespace geom=mir::geometry;
 
 namespace
 {
+
+static EGLint const required_egl_config_attr [] =
+{
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
 
 static EGLint const default_egl_context_attr[] =
 {
@@ -50,6 +60,34 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_HEIGHT, 1,
     EGL_NONE
 };
+
+/* the minimum requirement is to have EGL_WINDOW_BIT and EGL_OPENGL_ES2_BIT, and to select a config
+   whose pixel format matches that of the framebuffer. */
+static EGLConfig select_egl_config_with_format(EGLDisplay egl_display, geom::PixelFormat display_format)
+{
+    int required_visual_id = mga::to_android_format(display_format);
+    int num_potential_configs;
+    EGLint num_match_configs;
+
+    eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
+    std::vector<EGLConfig> config_slots(num_potential_configs);
+
+    eglChooseConfig(egl_display, required_egl_config_attr, config_slots.data(), num_potential_configs, &num_match_configs);
+    config_slots.resize(num_match_configs);
+
+    auto const pegl_config = std::find_if(begin(config_slots), end(config_slots),
+        [&](EGLConfig& current) -> bool
+        {
+            int visual_id;
+            eglGetConfigAttrib(egl_display, current, EGL_NATIVE_VISUAL_ID, &visual_id);
+            return (visual_id == required_visual_id);
+        });
+
+    if (pegl_config == end(config_slots))
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config for use with framebuffer"));
+
+    return *pegl_config;
+}
 
 EGLDisplay create_and_initialize_display()
 {
@@ -91,7 +129,8 @@ public:
     {
         if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
         }
     }
 
@@ -108,13 +147,12 @@ private:
 
 }
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
-                                    std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
-                                    std::shared_ptr<DisplaySupportProvider> const& display_provider,
+mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
                                     std::shared_ptr<DisplayReport> const& display_report)
-    : native_window{native_win},
-      egl_display{create_and_initialize_display()},
-      egl_config{native_window->android_display_egl_config(egl_display)},
+    : db_factory{db_factory},
+      display_device(db_factory->create_display_device()),
+      egl_display(create_and_initialize_display()),
+      egl_config(select_egl_config_with_format(egl_display, display_device->display_format())),
       egl_context_shared{egl_display,
                          eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
                                           default_egl_context_attr)},
@@ -122,15 +160,17 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
                         eglCreatePbufferSurface(egl_display, egl_config,
                                                 dummy_pbuffer_attribs)},
       display_buffer{db_factory->create_display_buffer(
-          native_window, display_provider, egl_display, egl_context_shared)},
-      display_provider(display_provider),
+          display_device, egl_display, egl_config, egl_context_shared)},
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
 
     /* Make the shared context current */
     if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+    }
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
@@ -158,7 +198,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         // TODO: Properly support multiple outputs
-        display_provider->mode(output.power_mode);
+        display_device->mode(output.power_mode);
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }

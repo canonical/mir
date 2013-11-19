@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 
-#include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/buffer_stream.h"
 
 #include <gmock/gmock.h>
 
@@ -29,7 +29,7 @@ namespace test
 {
 namespace doubles
 {
-struct MockBufferStream : public surfaces::BufferStream
+struct MockBufferStream : public compositor::BufferStream
 {
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD1(lock_compositor_buffer,
@@ -38,6 +38,7 @@ struct MockBufferStream : public surfaces::BufferStream
 
     MOCK_METHOD0(get_stream_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(stream_size, geometry::Size());
+    MOCK_METHOD1(resize, void(geometry::Size const&));
     MOCK_METHOD0(force_client_completion, void());
     MOCK_METHOD1(allow_framedropping, void(bool));
     MOCK_METHOD0(force_requests_to_complete, void());

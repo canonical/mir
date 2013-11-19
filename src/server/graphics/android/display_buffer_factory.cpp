@@ -17,109 +17,85 @@
  */
 
 #include "display_buffer_factory.h"
-#include "android_framebuffer_window_query.h"
-#include "display_support_provider.h"
+#include "display_resource_factory.h"
+#include "display_buffer.h"
+#include "display_device.h"
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 
+#include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <vector>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-namespace
+mga::DisplayBufferFactory::DisplayBufferFactory(
+    std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    bool should_use_fb_fallback)
+    : res_factory(res_factory),
+      display_report(display_report),
+      force_backup_display(should_use_fb_fallback)
 {
-
-EGLContext create_context(mga::AndroidFramebufferWindowQuery& native_window,
-                          EGLDisplay egl_display,
-                          EGLContext egl_context_shared)
-{
-    static EGLint const default_egl_context_attr[] =
+    if (!force_backup_display)
     {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-
-    auto egl_config = native_window.android_display_egl_config(egl_display);
-    return eglCreateContext(egl_display, egl_config, egl_context_shared,
-                            default_egl_context_attr);
-}
-
-EGLSurface create_surface(mga::AndroidFramebufferWindowQuery& native_window,
-                          EGLDisplay egl_display)
-{
-    auto egl_config = native_window.android_display_egl_config(egl_display);
-    auto native_win_type = native_window.android_native_window_type();
-
-    return eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
-}
-
-class GPUDisplayBuffer : public mg::DisplayBuffer
-{
-public:
-    GPUDisplayBuffer(std::shared_ptr<mga::AndroidFramebufferWindowQuery> const& native_window,
-                     EGLDisplay egl_display,
-                     EGLContext egl_context_shared,
-                     std::shared_ptr<mga::DisplaySupportProvider> const& support_provider)
-        : native_window{native_window},
-          support_provider{support_provider},
-          egl_display{egl_display},
-          egl_context{egl_display, create_context(*native_window, egl_display, egl_context_shared)},
-          egl_surface{egl_display, create_surface(*native_window, egl_display)},
-          blanked(false)
-    {
-    }
-
-    geom::Rectangle view_area() const
-    {
-        return {geom::Point{}, support_provider->display_size()};
-    }
-
-    void make_current()
-    {
-        if (eglMakeCurrent(egl_display, egl_surface,
-                           egl_surface, egl_context) == EGL_FALSE)
+        try
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+            hwc_native = res_factory->create_hwc_native_device();
+        } catch (...)
+        {
+            force_backup_display = true;
+        }
+
+        //HWC 1.2 not supported yet. make an attempt to use backup display
+        if (hwc_native && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
+        {
+            force_backup_display = true;
         }
     }
 
-    void release_current()
+    if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
-        eglMakeCurrent(egl_display, EGL_NO_SURFACE,
-                       EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        fb_native = res_factory->create_fb_native_device();
+    }
+}
+
+std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_device()
+{
+    std::shared_ptr<mga::DisplayDevice> device; 
+    if (force_backup_display)
+    {
+        device = res_factory->create_fb_device(fb_native);
+        display_report->report_gpu_composition_in_use();
+    }
+    else
+    {
+        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
+        {
+            device = res_factory->create_hwc11_device(hwc_native);
+            display_report->report_hwc_composition_in_use(1,1);
+        }
+        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+        {
+            device = res_factory->create_hwc10_device(hwc_native, fb_native);
+            display_report->report_hwc_composition_in_use(1,0);
+        }
     }
 
-    void post_update()
-    {
-        support_provider->commit_frame(egl_display, egl_surface);
-    }
-
-    bool can_bypass() const override
-    {
-        return false;
-    }
-    
-protected:
-    std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
-    std::shared_ptr<mga::DisplaySupportProvider> const support_provider;
-    EGLDisplay const egl_display;
-    mg::EGLContextStore const egl_context;
-    mg::EGLSurfaceStore const egl_surface;
-    bool blanked;
-};
-
+    return device;
 }
 
 std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
-    std::shared_ptr<AndroidFramebufferWindowQuery> const& native_window,
-    std::shared_ptr<DisplaySupportProvider> const& hwc_device,
-    EGLDisplay egl_display,
-    EGLContext egl_context_shared)
+    std::shared_ptr<DisplayDevice> const& display_device,
+    EGLDisplay display, EGLConfig config, EGLContext context)
 {
-    auto raw = new GPUDisplayBuffer(native_window, egl_display, egl_context_shared, hwc_device);
-    return std::unique_ptr<mg::DisplayBuffer>(raw);
+    auto native_window = res_factory->create_native_window(display_device);
+    return std::unique_ptr<mg::DisplayBuffer>(
+        new DisplayBuffer(display_device, native_window, display, config, context)); 
 }

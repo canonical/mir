@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/graphics_display_layout.h"
+#include "src/server/shell/graphics_display_layout.h"
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_configuration.h"

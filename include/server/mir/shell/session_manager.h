@@ -29,31 +29,24 @@
 
 namespace mir
 {
-
-namespace frontend
-{
-class EventSink;
-}
 /// Management of sessions and surfaces
 namespace shell
 {
 class SurfaceFactory;
 class SessionContainer;
-class FocusSequence;
 class FocusSetter;
-class Session;
-class InputRegistrar;
 class SnapshotStrategy;
 class SessionEventSink;
 class SessionListener;
-struct SurfaceCreationParameters;
 
+// TODO make private to shell
+// This first needs unity-mir to be updated to use FocusController
+// and that first needs -c 1175 of development-branch to land on lp:mir
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
                             std::shared_ptr<SessionContainer> const& app_container,
-                            std::shared_ptr<FocusSequence> const& focus_sequence,
                             std::shared_ptr<FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
@@ -70,7 +63,7 @@ public:
     void focus_next();
     std::weak_ptr<Session> focussed_application() const;
     void set_focus_to(std::shared_ptr<Session> const& focus);
-    
+
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
 protected:
@@ -80,7 +73,6 @@ protected:
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<SessionContainer> const app_container;
-    std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;

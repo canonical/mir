@@ -45,9 +45,11 @@ list(APPEND MIRSERVER_ARCHIVES
   miroptions
   mircompositor
   mirfrontend
+  mirgraphics
   mirplatform
   mirinput
   mirsharedinput
+  mirsharedgeometry
   mirsharedlogging
   mirsurfaces
   mirtime
@@ -89,7 +91,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 9)
+set(MIRSERVER_ABI 11)
 
 set_target_properties(
   mirserver
