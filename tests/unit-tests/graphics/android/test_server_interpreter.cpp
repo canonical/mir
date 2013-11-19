@@ -176,14 +176,11 @@ TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
     }, std::runtime_error);
 }
 
-#if 0
 TEST_F(ServerRenderWindowTest, driver_swapinterval_request)
 {
-    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
-
-    EXPECT_CALL(*mock_fb_bundle, sync_to_display(false))
+    EXPECT_CALL(*mock_fb_bundle, wait_for_consumed_buffer(false))
         .Times(1);
 
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
     render_window.sync_to_display(false);
 }
-#endif
