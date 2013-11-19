@@ -71,7 +71,8 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
 
-    //with hwc 1.0 only, set() goes and calls eglSwapBuffers
+    //set() may affect EGL state by calling eglSwapBuffers.
+    //HWC 1.0 is the only version of HWC that can do this.
     rc = hwc_device->set(hwc_device.get(), 1, &display_list);
     if (rc != 0)
     {
