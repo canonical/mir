@@ -46,10 +46,6 @@ public:
     void emit_device_changed(std::string const& device_path);
 
     UMockdevTestbed *testbed;
-private:
-	// Work around umockdev bug when calling umockdev_testbed_uevent
-	// https://github.com/martinpitt/umockdev/issues/29
-    udev_monitor *workaround;
 };
 
 }
