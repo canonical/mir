@@ -23,6 +23,11 @@
 
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
+
 
 namespace mtf = mir::mir_test_framework;
 
@@ -46,4 +51,44 @@ void mtf::UdevEnvironment::add_standard_drm_devices()
     umockdev_testbed_add_from_string(testbed,
                                      buffer.str().c_str(),
                                      NULL);
+}
+
+std::string mtf::UdevEnvironment::add_device(char const* subsystem,
+                                             char const* name,
+                                             char const* parent,
+                                             std::initializer_list<char const*> attributes,
+                                             std::initializer_list<char const*> properties)
+{
+    std::vector<char const*> attrib(attributes);
+    std::vector<char const*> props(properties);
+
+    attrib.push_back(nullptr);
+    props.push_back(nullptr);
+
+    gchar* syspath =  umockdev_testbed_add_devicev(testbed,
+                                                   subsystem,
+                                                   name,
+                                                   parent,
+                                                   const_cast<gchar**>(attrib.data()),
+                                                   const_cast<gchar**>(props.data()));
+
+    if (syspath == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create mock udev device"));
+
+    umockdev_testbed_uevent(testbed, syspath, "add");
+
+    std::string retval(syspath);
+    g_free(syspath);
+    return retval;
+}
+
+void mtf::UdevEnvironment::remove_device(std::string const& device_path)
+{
+    umockdev_testbed_uevent(testbed, device_path.c_str(), "remove");
+    umockdev_testbed_remove_device(testbed, device_path.c_str());
+}
+
+void mtf::UdevEnvironment::emit_device_changed(std::string const& device_path)
+{
+    umockdev_testbed_uevent(testbed, device_path.c_str(), "change");
 }

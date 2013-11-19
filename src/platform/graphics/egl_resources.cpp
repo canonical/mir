@@ -36,7 +36,16 @@ mg::EGLContextStore::EGLContextStore(EGLDisplay egl_display, EGLContext egl_cont
 
 mg::EGLContextStore::~EGLContextStore() noexcept
 {
-    eglDestroyContext(egl_display_, egl_context_);
+    if (egl_context_ != EGL_NO_CONTEXT)
+        eglDestroyContext(egl_display_, egl_context_);
+}
+
+mg::EGLContextStore::EGLContextStore(EGLContextStore&& other)
+    : egl_display_{other.egl_display_},
+      egl_context_{other.egl_context_}
+{
+    other.egl_display_ = EGL_NO_DISPLAY;
+    other.egl_context_ = EGL_NO_CONTEXT;
 }
 
 mg::EGLContextStore::operator EGLContext() const
@@ -48,16 +57,31 @@ mg::EGLContextStore::operator EGLContext() const
  * EGLSurfaceStore *
  *******************/
 
-mg::EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface)
-        : egl_display_{egl_display}, egl_surface_{egl_surface}
+mg::EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface,
+                                     enum AllowNoSurface allow_no_surface)
+    : egl_display_{egl_display}, egl_surface_{egl_surface}
 {
-    if (egl_surface_ == EGL_NO_SURFACE)
+    if (egl_surface_ == EGL_NO_SURFACE && !allow_no_surface)
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not create egl surface\n"));
+}
+
+mg::EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface)
+    : EGLSurfaceStore(egl_display, egl_surface, DisallowNoSurface)
+{
+}
+
+mg::EGLSurfaceStore::EGLSurfaceStore(EGLSurfaceStore&& other)
+    : egl_display_{other.egl_display_},
+      egl_surface_{other.egl_surface_}
+{
+    other.egl_display_ = EGL_NO_DISPLAY;
+    other.egl_surface_ = EGL_NO_SURFACE;
 }
 
 mg::EGLSurfaceStore::~EGLSurfaceStore() noexcept
 {
-    eglDestroySurface(egl_display_, egl_surface_);
+    if (egl_surface_ != EGL_NO_SURFACE)
+        eglDestroySurface(egl_display_, egl_surface_);
 }
 
 mg::EGLSurfaceStore::operator EGLSurface() const

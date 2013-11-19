@@ -46,7 +46,6 @@ list(APPEND MIRSERVER_ARCHIVES
   mircompositor
   mirfrontend
   mirgraphics
-  mirplatform
   mirinput
   mirsharedinput
   mirsharedgeometry
@@ -54,11 +53,13 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsurfaces
   mirtime
   mirlttng
+  mirnestedgraphics
+  miroffscreengraphics
 )
 
 list(APPEND MIRSERVER_LINKS
   mirprotobuf
-  mirnestedgraphics
+  mirplatform
   mirclient
   3rd_party
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

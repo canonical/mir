@@ -30,6 +30,8 @@ class EGLContextStore
 {
 public:
     EGLContextStore(EGLDisplay egl_display, EGLContext egl_context);
+    EGLContextStore(EGLContextStore&&);
+
     ~EGLContextStore() noexcept;
 
     operator EGLContext() const;
@@ -38,14 +40,18 @@ private:
     EGLContextStore(EGLContextStore const&) = delete;
     EGLContextStore& operator=(EGLContextStore const&) = delete;
 
-    EGLDisplay const egl_display_;
-    EGLContext const egl_context_;
+    EGLDisplay egl_display_;
+    EGLContext egl_context_;
 };
 
 class EGLSurfaceStore
 {
 public:
+    enum AllowNoSurface { DisallowNoSurface, AllowNoSurface };
+    EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface,
+                    enum AllowNoSurface allow_no_surface);
     EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface);
+    EGLSurfaceStore(EGLSurfaceStore&&);
 
     ~EGLSurfaceStore() noexcept;
 
@@ -55,8 +61,8 @@ private:
     EGLSurfaceStore(EGLSurfaceStore const&) = delete;
     EGLSurfaceStore& operator=(EGLSurfaceStore const&) = delete;
 
-    EGLDisplay const egl_display_;
-    EGLSurface const egl_surface_;
+    EGLDisplay egl_display_;
+    EGLSurface egl_surface_;
 };
 
 }
