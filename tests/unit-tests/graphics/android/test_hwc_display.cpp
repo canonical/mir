@@ -68,7 +68,7 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_submits_right_egl_parameters)
+TEST_F(AndroidDisplayBufferTest, test_post_update)
 {
     using namespace testing;
 

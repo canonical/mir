@@ -56,8 +56,11 @@ void mga::DisplayBuffer::release_current()
 
 void mga::DisplayBuffer::post_update()
 {
-    //display_device->commit_frame(
-    //    gl_context.display(), gl_context.surface());
+    display_device->prepare_composition();
+    display_device->gpu_render(gl_context.display(), gl_context.surface());
+
+    auto last_rendered = fb_bundle->last_rendered_buffer();
+    display_device->post(*last_rendered);
 }
 
 bool mga::DisplayBuffer::can_bypass() const
