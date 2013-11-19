@@ -41,9 +41,15 @@ namespace geom=mir::geometry;
 
 namespace
 {
-struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
 
+struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
+    MockGraphicBufferAllocator()
+    {
+        using namespace testing;
+        ON_CALL(*this, alloc_buffer_platform(_,_,_))
+            .WillByDefault(Return(nullptr));
+    }
     MOCK_METHOD3(alloc_buffer_platform,
         std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
 };
@@ -77,7 +83,7 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
             std::shared_ptr<hwc_composer_device_1> const&, std::shared_ptr<framebuffer_device_t> const&));
 };
 
-class DisplayBufferCreation : public ::testing::Test
+class OutputBuilder : public ::testing::Test
 {
 public:
     void SetUp()
@@ -88,7 +94,7 @@ public:
             .WillByDefault(Return(hw_access_mock.mock_hwc_device)); 
         ON_CALL(*mock_resource_factory, create_fb_native_device())
             .WillByDefault(Return(mt::fake_shared(fb_hal_mock)));
-        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+        mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -100,7 +106,7 @@ public:
 };
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_10_success)
+TEST_F(OutputBuilder, hwc_version_10_success)
 {
     using namespace testing;
 
@@ -120,7 +126,7 @@ TEST_F(DisplayBufferCreation, hwc_version_10_success)
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
+TEST_F(OutputBuilder, hwc_version_10_failure_uses_gpu)
 {
     using namespace testing;
 
@@ -141,7 +147,7 @@ TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_11_success)
+TEST_F(OutputBuilder, hwc_version_11_success)
 {
     using namespace testing;
 
@@ -159,7 +165,7 @@ TEST_F(DisplayBufferCreation, hwc_version_11_success)
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
+TEST_F(OutputBuilder, hwc_version_11_hwc_failure)
 {
     using namespace testing;
 
@@ -180,7 +186,7 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_11_hwc_and_fb_failure_fatal)
+TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
 {
     using namespace testing;
 
@@ -200,7 +206,7 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_and_fb_failure_fatal)
 }
 
 //we don't support hwc 1.2 quite yet. for the time being, at least try the fb backup
-TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
+TEST_F(OutputBuilder, hwc_version_12_attempts_fb_backup)
 {
     using namespace testing;
 
@@ -220,7 +226,7 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, db_creation)
+TEST_F(OutputBuilder, db_creation)
 {
     using namespace testing;
     mga::GLContext gl_context(mga::to_mir_format(mock_egl.fake_visual_id), *mock_display_report);

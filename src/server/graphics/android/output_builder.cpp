@@ -40,7 +40,6 @@ mga::OutputBuilder::OutputBuilder(
       display_report(display_report),
       force_backup_display(should_use_fb_fallback)
 {
-    printf("za.\n");
     if (!force_backup_display)
     {
         try
@@ -61,15 +60,11 @@ mga::OutputBuilder::OutputBuilder(
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
         fb_native = res_factory->create_fb_native_device();
-        printf("zu\n");
         framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native);
-        printf("zo\n");
     }
     else
     {
-        printf("zu\n");
         framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, hwc_native);
-        printf("zo\n");
     }
 }
 
