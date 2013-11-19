@@ -18,6 +18,8 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+
+#include "mir/geometry/pixel_format.h"
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>

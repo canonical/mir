@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/stub_display_device.h"
@@ -85,11 +86,14 @@ public:
         mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
         ON_CALL(*mock_resource_factory, create_hwc_native_device())
             .WillByDefault(Return(hw_access_mock.mock_hwc_device)); 
+        ON_CALL(*mock_resource_factory, create_fb_native_device())
+            .WillByDefault(Return(mt::fake_shared(fb_hal_mock)));
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    testing::NiceMock<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     testing::NiceMock<MockGraphicBufferAllocator> mock_buffer_allocator;
