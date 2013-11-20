@@ -21,10 +21,10 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
-#include "src/server/surfaces/session_container.h"
+#include "src/server/scene/session_container.h"
 #include "mir/shell/session.h"
-#include "src/server/surfaces/surface_controller.h"
-#include "src/server/surfaces/surface_stack_model.h"
+#include "src/server/scene/surface_controller.h"
+#include "src/server/scene/surface_stack_model.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -54,7 +54,7 @@ namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -574,7 +574,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     launch_client_process(*client_config);
 }
 
-TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
+TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 {
     using namespace ::testing;
     
@@ -672,7 +672,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         [&](mtf::InputTestingServerConfiguration& server)
         {
             // We send one event and then hide the surface on top before sending the next. 
-            // So we expect each of the two surfaces to receive one even
+            // So we expect each of the two scene to receive one even
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
             // We use a fence to ensure we do not hide the client
             // before event dispatch occurs

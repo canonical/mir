@@ -21,7 +21,7 @@
 
 #include "android_window_handle_repository.h"
 
-#include "mir/surfaces/input_registrar.h"
+#include "mir/scene/input_registrar.h"
 
 #include <utils/StrongPointer.h>
 
@@ -46,7 +46,7 @@ namespace android
 class InputConfiguration;
 class InputTargeter;
 
-class InputRegistrar : public surfaces::InputRegistrar, public WindowHandleRepository
+class InputRegistrar : public scene::InputRegistrar, public WindowHandleRepository
 {
 public:
     explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);

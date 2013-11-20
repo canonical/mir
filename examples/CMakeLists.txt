@@ -110,8 +110,8 @@ set(RENDER_SURFACES_SOURCES
     image_renderer.cpp
     server_configuration.cpp
 )
-add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
-target_link_libraries(mir_demo_standalone_render_surfaces
+add_executable(mir_demo_standalone_render_scene ${RENDER_SURFACES_SOURCES})
+target_link_libraries(mir_demo_standalone_render_scene
     mirserver
     mirshell
     mirsharedgeometry

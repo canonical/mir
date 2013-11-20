@@ -41,7 +41,7 @@ public:
 private:
     std::mutex guard;
     typedef std::unordered_map<int, MirSurface*> SurfaceMap;
-    SurfaceMap surfaces;
+    SurfaceMap scene;
 };
 
 }

@@ -61,7 +61,7 @@ struct StubInputTargets : public mi::InputTargets
 
 }
 
-TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
+TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_scene)
 {
     using namespace ::testing;
     std::shared_ptr<mi::InputChannel> t1, t2;

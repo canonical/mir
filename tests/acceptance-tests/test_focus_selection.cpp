@@ -18,10 +18,10 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "src/server/surfaces/session_container.h"
+#include "src/server/scene/session_container.h"
 #include "src/server/shell/consuming_placement_strategy.h"
 #include "src/server/shell/organising_surface_factory.h"
-#include "src/server/surfaces/session_manager.h"
+#include "src/server/scene/session_manager.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
 
@@ -116,7 +116,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
     launch_client_process(client);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_created)
+TEST_F(BespokeDisplayServerTestFixture, scene_receive_input_focus_when_created)
 {
     struct ServerConfig : TestingServerConfiguration
     {

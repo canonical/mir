@@ -20,12 +20,12 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
-#include "src/server/surfaces/application_session.h"
+#include "src/server/scene/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "src/server/surfaces/basic_surface.h"
+#include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
@@ -52,7 +52,7 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
@@ -97,7 +97,7 @@ public:
         using namespace ::testing;
 
         mock_surface = std::make_shared<mtd::MockFrontendSurface>();
-        mock_surfaces[mf::SurfaceId{1}] = mock_surface;
+        mock_scene[mf::SurfaceId{1}] = mock_surface;
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), geom::PixelFormat());
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
@@ -110,7 +110,7 @@ public:
 
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
-        return mock_surfaces.at(surface);
+        return mock_scene.at(surface);
     }
 
     mf::SurfaceId create_surface(msh::SurfaceCreationParameters const& /* params */) override
@@ -118,14 +118,14 @@ public:
         using namespace ::testing;
         auto id = mf::SurfaceId{last_surface_id};
         if (last_surface_id != 1) {
-            mock_surfaces[id] = std::make_shared<mtd::MockFrontendSurface>();
+            mock_scene[id] = std::make_shared<mtd::MockFrontendSurface>();
 
-            EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
-            EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-            EXPECT_CALL(*mock_surfaces[id], advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
+            EXPECT_CALL(*mock_scene[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
+            EXPECT_CALL(*mock_scene[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
+            EXPECT_CALL(*mock_scene[id], advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
 
-            EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
-            EXPECT_CALL(*mock_surfaces[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
+            EXPECT_CALL(*mock_scene[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
+            EXPECT_CALL(*mock_scene[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
         }
         last_surface_id++;
         return id;
@@ -133,12 +133,12 @@ public:
 
     void destroy_surface(mf::SurfaceId surface) override
     {
-        mock_surfaces.erase(surface);
+        mock_scene.erase(surface);
     }
 
     mtd::StubSurfaceBuilder surface_builder;
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
-    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
+    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_scene;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     static int const testing_client_input_fd;
     int last_surface_id;
@@ -450,7 +450,7 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buffers)
+TEST_F(SessionMediatorTest, session_with_multiple_scene_only_sends_needed_buffers)
 {
     using namespace testing;
 
@@ -537,7 +537,7 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_surfaces)
+TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_scene)
 {
     using namespace testing;
 
@@ -553,7 +553,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_
     /*
      * Note that the surface created by the first create_surface() call is
      * the pre-created stubbed_session->mock_surface. Further create_surface()
-     * invocations create new surfaces in stubbed_session->mock_surfaces[].
+     * invocations create new scene in stubbed_session->mock_scene[].
      */
     EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
         .WillOnce(Return(stub_buffer1));
@@ -561,14 +561,14 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     auto refcount = stub_buffer1.use_count();
 
-    /* Creating a new surface should not affect other surfaces' buffers */
+    /* Creating a new surface should not affect other scene' buffers */
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     EXPECT_EQ(refcount, stub_buffer1.use_count());
 
     mp::SurfaceId buffer_request{surface_response.id()};
     mp::Buffer buffer_response;
 
-    /* Getting the next buffer of a surface should not affect other surfaces' buffers */
+    /* Getting the next buffer of a surface should not affect other scene' buffers */
     mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
     EXPECT_EQ(refcount, stub_buffer1.use_count());
 

@@ -202,12 +202,12 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 
             mir_connection_release(connection);
         }
-    } client_creates_surfaces;
+    } client_creates_scene;
 
-    launch_client_process(client_creates_surfaces);
+    launch_client_process(client_creates_scene);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
+TEST_F(DefaultDisplayServerTestFixture, scene_have_distinct_ids)
 {
     struct Client : ClientConfigCommon
     {
@@ -247,12 +247,12 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
 
             mir_connection_release(connection);
         }
-    } client_creates_surfaces;
+    } client_creates_scene;
 
-    launch_client_process(client_creates_surfaces);
+    launch_client_process(client_creates_scene);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
+TEST_F(DefaultDisplayServerTestFixture, creates_multiple_scene_async)
 {
     struct Client : ClientConfigCommon
     {
@@ -300,8 +300,8 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
 
             mir_connection_release(connection);
         }
-    } client_creates_surfaces;
+    } client_creates_scene;
 
-    launch_client_process(client_creates_surfaces);
+    launch_client_process(client_creates_scene);
 }
 

@@ -28,7 +28,7 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 
 auto mir::DefaultServerConfiguration::the_connector_report()
     -> std::shared_ptr<mf::ConnectorReport>

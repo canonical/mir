@@ -63,15 +63,15 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
 
 struct FakeScene : mc::Scene
 {
-    FakeScene(std::vector<mc::CompositingCriteria*> surfaces) :
-        surfaces(surfaces)
+    FakeScene(std::vector<mc::CompositingCriteria*> scene) :
+        scene(scene)
     {
     }
 
     // Ugly...should we use delegation?
     void for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
     {
-        for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+        for (auto it = scene.begin(); it != scene.end(); it++)
         {
             mc::CompositingCriteria &info = **it;
             if (filter(info)) renderable_operator(info, stub_stream);
@@ -81,7 +81,7 @@ struct FakeScene : mc::Scene
     void reverse_for_each_if(mc::FilterForScene &filter,
                              mc::OperatorForScene &op)
     {
-        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        for (auto it = scene.rbegin(); it != scene.rend(); ++it)
         {
             mc::CompositingCriteria &criteria = **it;
             if (filter(criteria))
@@ -93,14 +93,14 @@ struct FakeScene : mc::Scene
 
     void change(const std::vector<mc::CompositingCriteria*> &surfs)
     {
-        surfaces = surfs;
+        scene = surfs;
     }
 
     void lock() {}
     void unlock() {}
 
     mtd::MockBufferStream stub_stream;
-    std::vector<mc::CompositingCriteria*> surfaces;
+    std::vector<mc::CompositingCriteria*> scene;
 };
 
 struct WrappingRenderer : mc::Renderer

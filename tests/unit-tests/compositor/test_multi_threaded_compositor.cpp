@@ -370,7 +370,7 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 
     compositor.stop();  // Pause the compositor so we don't race
 
-    // Now trigger many surfaces changes close together
+    // Now trigger many scene changes close together
     for (int i = 0; i < 10; i++)
         scene->emit_change_event();
 

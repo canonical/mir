@@ -30,7 +30,7 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 
 mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher)
     : input_dispatcher(input_dispatcher)

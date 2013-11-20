@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/null_session_listener.h"
-#include "src/server/surfaces/application_session.h"
+#include "src/server/scene/application_session.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mtf = mir_test_framework;
 
