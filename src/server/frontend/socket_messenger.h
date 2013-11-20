@@ -35,6 +35,7 @@ public:
     SocketMessenger(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
     void send(std::string const& body);
+    void send_async(std::string const& body);
     void send(std::string const& body, FdSets const& fd_set);
 
     void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size); 

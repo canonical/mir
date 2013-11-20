@@ -33,6 +33,7 @@ class MessageSender
 {
 public:
     virtual void send(std::string const& body) = 0;
+    virtual void send_async(std::string const& body) { (void)body; }
     virtual void send(std::string const& body, FdSets const& fds) = 0;
 
 protected:
