@@ -247,6 +247,11 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             redraw(surface, canvas);
         }
     }
+    else if (event->type == mir_event_type_surface)
+    {
+        if (event->surface.attrib == mir_surface_attrib_size)
+            redraw(surface, canvas);
+    }
 }
 
 static const MirDisplayOutput *find_active_output(
