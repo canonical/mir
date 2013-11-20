@@ -123,7 +123,7 @@ private:
     mir::protobuf::SurfaceSetting configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
-    int attrib_cache[mir_surface_attrib_enum_max_];
+    int attrib_cache[mir_surface_attribs];
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
