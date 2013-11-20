@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_APPLICATION_MANAGER_H_
-#define MIR_SURFACES_APPLICATION_MANAGER_H_
+#ifndef MIR_SCENE_APPLICATION_MANAGER_H_
+#define MIR_SCENE_APPLICATION_MANAGER_H_
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
@@ -88,4 +88,4 @@ private:
 }
 }
 
-#endif // MIR_SURFACES_APPLICATION_MANAGER_H_
+#endif // MIR_SCENE_APPLICATION_MANAGER_H_

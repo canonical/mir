@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SURFACES_SURFACESTACK_H_
-#define MIR_SURFACES_SURFACESTACK_H_
+#ifndef MIR_SCENE_SCENETACK_H_
+#define MIR_SCENE_SCENETACK_H_
 
 #include "surface_stack_model.h"
 
@@ -56,7 +56,7 @@ namespace scene
 class SurfaceFactory;
 class InputRegistrar;
 class BasicSurface;
-class SurfacesReport;
+class SceneReport;
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
@@ -64,7 +64,7 @@ public:
     explicit SurfaceStack(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<InputRegistrar> const& input_registrar,
-        std::shared_ptr<SurfacesReport> const& report);
+        std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
@@ -95,7 +95,7 @@ private:
     std::recursive_mutex guard;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
-    std::shared_ptr<SurfacesReport> const report;
+    std::shared_ptr<SceneReport> const report;
 
     typedef std::vector<std::shared_ptr<BasicSurface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
@@ -107,4 +107,4 @@ private:
 }
 }
 
-#endif /* MIR_SURFACES_SURFACESTACK_H_ */
+#endif /* MIR_SCENE_SCENETACK_H_ */

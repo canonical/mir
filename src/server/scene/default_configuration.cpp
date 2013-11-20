@@ -125,20 +125,20 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
         });
 }
 
-std::shared_ptr<ms::SurfacesReport>
+std::shared_ptr<ms::SceneReport>
 mir::DefaultServerConfiguration::the_scene_report()
 {
-    return scene_report([this]() -> std::shared_ptr<ms::SurfacesReport>
+    return scene_report([this]() -> std::shared_ptr<ms::SceneReport>
     {
         auto opt = the_options()->get(scene_report_opt, off_opt_value);
 
         if (opt == log_opt_value)
         {
-            return std::make_shared<ml::SurfacesReport>(the_logger());
+            return std::make_shared<ml::SceneReport>(the_logger());
         }
         else if (opt == off_opt_value)
         {
-            return std::make_shared<ms::NullSurfacesReport>();
+            return std::make_shared<ms::NullSceneReport>();
         }
         else
         {

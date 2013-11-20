@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SURFACES_SURFACES_REPORT_H_
-#define MIR_SURFACES_SURFACES_REPORT_H_
+#ifndef MIR_SCENE_SCENE_REPORT_H_
+#define MIR_SCENE_SCENE_REPORT_H_
 
 #include <memory>
 
@@ -28,7 +28,7 @@ namespace scene
 {
 class BasicSurface;
 
-class SurfacesReport
+class SceneReport
 {
 public:
     virtual void surface_created(BasicSurface* const surface) = 0;
@@ -38,13 +38,13 @@ public:
     virtual void surface_deleted(BasicSurface* const surface) = 0;
 
 protected:
-    SurfacesReport() = default;
-    virtual ~SurfacesReport() = default;
-    SurfacesReport(SurfacesReport const&) = delete;
-    SurfacesReport& operator=(SurfacesReport const&) = delete;
+    SceneReport() = default;
+    virtual ~SceneReport() = default;
+    SceneReport(SceneReport const&) = delete;
+    SceneReport& operator=(SceneReport const&) = delete;
 };
 
-class NullSurfacesReport : public SurfacesReport
+class NullSceneReport : public SceneReport
 {
 public:
     virtual void surface_created(BasicSurface* const /*surface*/) override;
@@ -57,4 +57,4 @@ public:
 }
 
 
-#endif /* MIR_SURFACES_SURFACES_REPORT_H_ */
+#endif /* MIR_SCENE_SCENE_REPORT_H_ */

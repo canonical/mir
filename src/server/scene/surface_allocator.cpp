@@ -33,7 +33,7 @@ namespace mi=mir::input;
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<BufferStreamFactory> const& stream_factory,
     std::shared_ptr<input::InputChannelFactory> const& input_factory,
-    std::shared_ptr<SurfacesReport> const& report) :
+    std::shared_ptr<SceneReport> const& report) :
     buffer_stream_factory(stream_factory),
     input_factory(input_factory),
     report(report)

@@ -103,7 +103,7 @@ public:
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
     std::shared_ptr<ms::BasicSurface> dummy_surface;
-    std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
+    std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
 };
 
 class MockSurfaceBuilder : public ms::SurfaceBuilder

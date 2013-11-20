@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_FACTORY_H_
-#define MIR_SURFACES_SURFACE_FACTORY_H_
+#ifndef MIR_SCENE_SURFACE_FACTORY_H_
+#define MIR_SCENE_SURFACE_FACTORY_H_
 
 #include "mir/shell/surface_creation_parameters.h"
 #include <memory>
@@ -45,4 +45,4 @@ private:
 }
 }
 
-#endif /* MIR_SURFACES_SURFACE_FACTORY_H_ */
+#endif /* MIR_SCENE_SURFACE_FACTORY_H_ */

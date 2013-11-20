@@ -27,22 +27,22 @@ namespace ms = mir::scene;
 namespace ml = mir::logging;
 namespace ms = mir::scene;
 
-void ms::NullSurfacesReport::surface_created(BasicSurface* const /*surface*/) {}
-void ms::NullSurfacesReport::surface_added(BasicSurface* const /*surface*/) {}
-void ms::NullSurfacesReport::surface_removed(BasicSurface* const /*surface*/) {}
-void ms::NullSurfacesReport::surface_deleted(BasicSurface* const /*surface*/) {}
+void ms::NullSceneReport::surface_created(BasicSurface* const /*surface*/) {}
+void ms::NullSceneReport::surface_added(BasicSurface* const /*surface*/) {}
+void ms::NullSceneReport::surface_removed(BasicSurface* const /*surface*/) {}
+void ms::NullSceneReport::surface_deleted(BasicSurface* const /*surface*/) {}
 
 namespace
 {
 char const* const component = "scene";
 }
 
-ml::SurfacesReport::SurfacesReport(std::shared_ptr<Logger> const& logger) :
+ml::SceneReport::SceneReport(std::shared_ptr<Logger> const& logger) :
     logger(logger)
 {
 }
 
-void ml::SurfacesReport::surface_created(ms::BasicSurface* const surface)
+void ml::SceneReport::surface_created(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
     scene[surface] = surface->name();
@@ -53,7 +53,7 @@ void ml::SurfacesReport::surface_created(ms::BasicSurface* const surface)
     logger->log<Logger::informational>(ss.str(), component);
 }
 
-void ml::SurfacesReport::surface_added(ms::BasicSurface* const surface)
+void ml::SceneReport::surface_added(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -76,7 +76,7 @@ void ml::SurfacesReport::surface_added(ms::BasicSurface* const surface)
     logger->log<Logger::informational>(ss.str(), component);
 }
 
-void ml::SurfacesReport::surface_removed(ms::BasicSurface* const surface)
+void ml::SceneReport::surface_removed(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -99,7 +99,7 @@ void ml::SurfacesReport::surface_removed(ms::BasicSurface* const surface)
     logger->log<Logger::informational>(ss.str(), component);
 }
 
-void ml::SurfacesReport::surface_deleted(ms::BasicSurface* const surface)
+void ml::SceneReport::surface_deleted(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 

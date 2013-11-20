@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
-#define MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#ifndef MIR_SCENE_SURFACE_STACK_MODEL_H_
+#define MIR_SCENE_SURFACE_STACK_MODEL_H_
 
 #include "mir/scene/depth_id.h"
 
@@ -54,4 +54,4 @@ protected:
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#endif // MIR_SCENE_SURFACE_STACK_MODEL_H_

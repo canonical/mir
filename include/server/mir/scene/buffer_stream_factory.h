@@ -18,8 +18,8 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
-#define MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
+#ifndef MIR_SCENE_BUFFER_STREAM_FACTORY_H_
+#define MIR_SCENE_BUFFER_STREAM_FACTORY_H_
 
 #include <memory>
 
@@ -47,4 +47,4 @@ protected:
 }
 }
 
-#endif // MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
+#endif // MIR_SCENE_BUFFER_STREAM_FACTORY_H_

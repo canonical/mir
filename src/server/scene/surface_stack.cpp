@@ -52,7 +52,7 @@ namespace geom = mir::geometry;
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<InputRegistrar> const& input_registrar,
-    std::shared_ptr<SurfacesReport> const& report) :
+    std::shared_ptr<SceneReport> const& report) :
     surface_factory{surface_factory},
     input_registrar{input_registrar},
     report{report},

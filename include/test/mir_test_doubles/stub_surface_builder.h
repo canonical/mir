@@ -61,7 +61,7 @@ public:
 private:
     std::shared_ptr<compositor::BufferStream> const buffer_stream;
     std::shared_ptr<scene::BasicSurface>  dummy_surface;
-    std::shared_ptr<scene::SurfacesReport> report = std::make_shared<scene::NullSurfacesReport>();
+    std::shared_ptr<scene::SceneReport> report = std::make_shared<scene::NullSceneReport>();
 
 };
 }

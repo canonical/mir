@@ -182,7 +182,7 @@ struct SurfaceCreation : public ::testing::Test
     geom::Stride stride;
     geom::Size size;
     geom::Rectangle rect;
-    std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
+    std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
 };
 
 }

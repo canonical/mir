@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SURFACES_APPLICATION_SESSION_H_
-#define MIR_SURFACES_APPLICATION_SESSION_H_
+#ifndef MIR_SCENE_APPLICATION_SESSION_H_
+#define MIR_SCENE_APPLICATION_SESSION_H_
 
 #include "mir/shell/session.h"
 
@@ -95,4 +95,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_SURFACES_APPLICATION_SESSION_H_
+#endif // MIR_SCENE_APPLICATION_SESSION_H_

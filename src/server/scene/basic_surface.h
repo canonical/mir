@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BASIC_SURFACE_H_
-#define MIR_SURFACES_BASIC_SURFACE_H_
+#ifndef MIR_SCENE_BASIC_SURFACE_H_
+#define MIR_SCENE_BASIC_SURFACE_H_
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/rectangle.h"
@@ -90,4 +90,4 @@ private:
 }
 }
 
-#endif // MIR_SURFACES_BASIC_SURFACE_H_
+#endif // MIR_SCENE_BASIC_SURFACE_H_

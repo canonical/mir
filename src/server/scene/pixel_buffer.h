@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SURFACES_PIXEL_BUFFER_H_
-#define MIR_SURFACES_PIXEL_BUFFER_H_
+#ifndef MIR_SCENE_PIXEL_BUFFER_H_
+#define MIR_SCENE_PIXEL_BUFFER_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/dimensions.h"
@@ -74,4 +74,4 @@ protected:
 }
 }
 
-#endif /* MIR_SURFACES_PIXEL_BUFFER_H_ */
+#endif /* MIR_SCENE_PIXEL_BUFFER_H_ */

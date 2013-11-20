@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_INFO_H_
-#define MIR_SURFACES_SURFACE_INFO_H_
+#ifndef MIR_SCENE_SURFACE_INFO_H_
+#define MIR_SCENE_SURFACE_INFO_H_
 
 #include "mir/geometry/rectangle.h"
 
@@ -49,4 +49,4 @@ protected:
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_INFO_H_ */
+#endif /* MIR_SCENE_SURFACE_INFO_H_ */

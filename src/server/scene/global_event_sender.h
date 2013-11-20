@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_GLOBAL_EVENT_SENDER_H_
-#define MIR_SURFACES_GLOBAL_EVENT_SENDER_H_
+#ifndef MIR_SCENE_GLOBAL_EVENT_SENDER_H_
+#define MIR_SCENE_GLOBAL_EVENT_SENDER_H_
 
 #include "mir/frontend/event_sink.h"
 #include <memory>
@@ -43,4 +43,4 @@ private:
 }
 }
 
-#endif /* MIR_SURFACES_GLOBAL_EVENT_SENDER_H_ */
+#endif /* MIR_SCENE_GLOBAL_EVENT_SENDER_H_ */

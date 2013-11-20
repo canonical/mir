@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STATE_H_
-#define MIR_SURFACES_SURFACE_STATE_H_
+#ifndef MIR_SCENE_SURFACE_STATE_H_
+#define MIR_SCENE_SURFACE_STATE_H_
 
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/input/surface.h"
@@ -40,4 +40,4 @@ protected:
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_STATE_H_ */
+#endif /* MIR_SCENE_SURFACE_STATE_H_ */

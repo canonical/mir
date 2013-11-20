@@ -84,7 +84,7 @@ class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
 class InputRegistrar;
-class SurfacesReport;
+class SceneReport;
 }
 namespace graphics
 {
@@ -210,7 +210,7 @@ public:
      * dependencies of scene on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
-    virtual std::shared_ptr<scene::SurfacesReport>      the_scene_report();
+    virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
     /** @} */
 
 
@@ -266,7 +266,7 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<scene::SurfaceStack> surface_stack;
-    CachedPtr<scene::SurfacesReport> scene_report;
+    CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SurfaceFactory> scene_surface_factory;

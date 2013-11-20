@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BROADCASTING_SESSION_EVENT_SINK_H_
-#define MIR_SURFACES_BROADCASTING_SESSION_EVENT_SINK_H_
+#ifndef MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
+#define MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
 
 #include "session_event_sink.h"
 #include "session_event_handler_register.h"
@@ -54,4 +54,4 @@ private:
 }
 }
 
-#endif /* MIR_SURFACES_BROADCASTING_SESSION_EVENT_SINK_H_ */
+#endif /* MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_ */

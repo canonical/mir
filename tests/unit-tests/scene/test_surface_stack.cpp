@@ -190,7 +190,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::Surface> stub_surface2;
     std::shared_ptr<ms::Surface> stub_surface3;
 
-    std::shared_ptr<ms::SurfacesReport> const report = std::make_shared<ms::NullSurfacesReport>();
+    std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
 };
 
 }

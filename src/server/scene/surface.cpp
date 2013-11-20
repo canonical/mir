@@ -40,7 +40,7 @@ ms::Surface::Surface(
     std::shared_ptr<SurfaceState> const& state,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
-    std::shared_ptr<SurfacesReport> const& report) :
+    std::shared_ptr<SceneReport> const& report) :
     surface_state(state),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),

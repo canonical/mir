@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_SOURCE_H_
-#define MIR_SURFACES_SURFACE_SOURCE_H_
+#ifndef MIR_SCENE_SURFACE_SOURCE_H_
+#define MIR_SCENE_SURFACE_SOURCE_H_
 
 #include "mir/shell/surface_factory.h"
 
@@ -61,4 +61,4 @@ private:
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_SOURCE_H_
+#endif // MIR_SCENE_SURFACE_SOURCE_H_

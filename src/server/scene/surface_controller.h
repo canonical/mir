@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
-#define MIR_SURFACES_SURFACE_CONTROLLER_H_
+#ifndef MIR_SCENE_SURFACE_CONTROLLER_H_
+#define MIR_SCENE_SURFACE_CONTROLLER_H_
 
 #include "surface_builder.h"
 #include "mir/shell/surface_controller.h"
@@ -53,4 +53,4 @@ private:
 }
 
 
-#endif /* MIR_SURFACES_SURFACE_CONTROLLER_H_ */
+#endif /* MIR_SCENE_SURFACE_CONTROLLER_H_ */

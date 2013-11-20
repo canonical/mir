@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SESSION_EVENT_HANDLER_REGISTER_H_
-#define MIR_SURFACES_SESSION_EVENT_HANDLER_REGISTER_H_
+#ifndef MIR_SCENE_SESSION_EVENT_HANDLER_REGISTER_H_
+#define MIR_SCENE_SESSION_EVENT_HANDLER_REGISTER_H_
 
 #include <functional>
 #include <memory>
@@ -49,4 +49,4 @@ protected:
 }
 }
 
-#endif /* MIR_SURFACES_SESSION_EVENT_HANDLER_REGISTER_H_ */
+#endif /* MIR_SCENE_SESSION_EVENT_HANDLER_REGISTER_H_ */

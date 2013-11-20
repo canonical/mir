@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SESSION_CONTAINER_H_
-#define MIR_SURFACES_SESSION_CONTAINER_H_
+#ifndef MIR_SCENE_SESSION_CONTAINER_H_
+#define MIR_SCENE_SESSION_CONTAINER_H_
 
 #include <vector>
 #include <memory>
@@ -53,4 +53,4 @@ protected:
 }
 
 
-#endif // MIR_SURFACES_SESSION_CONTAINER_H_
+#endif // MIR_SCENE_SESSION_CONTAINER_H_

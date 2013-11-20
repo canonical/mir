@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SURFACES_GL_PIXEL_BUFFER_H_
-#define MIR_SURFACES_GL_PIXEL_BUFFER_H_
+#ifndef MIR_SCENE_GL_PIXEL_BUFFER_H_
+#define MIR_SCENE_GL_PIXEL_BUFFER_H_
 
 #include "pixel_buffer.h"
 
@@ -65,4 +65,4 @@ private:
 }
 }
 
-#endif /* MIR_SURFACES_GL_PIXEL_BUFFER_H_ */
+#endif /* MIR_SCENE_GL_PIXEL_BUFFER_H_ */

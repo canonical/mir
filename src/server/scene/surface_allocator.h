@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_ALLOCATOR_H_
-#define MIR_SURFACES_SURFACE_ALLOCATOR_H_
+#ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
+#define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
 #include "surface_factory.h"
 
@@ -30,24 +30,24 @@ class InputChannelFactory;
 namespace scene
 {
 class BufferStreamFactory;
-class SurfacesReport;
+class SceneReport;
 
 class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
-                     std::shared_ptr<SurfacesReport> const& report);
+                     std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
-    std::shared_ptr<SurfacesReport> const report;
+    std::shared_ptr<SceneReport> const report;
 };
 
 }
 }
 
-#endif /* MIR_SURFACES_SURFACE_ALLOCATOR_H_ */
+#endif /* MIR_SCENE_SURFACE_ALLOCATOR_H_ */

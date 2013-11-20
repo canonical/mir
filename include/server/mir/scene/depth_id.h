@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SURFACES_DEPTH_ID_H_
-#define MIR_SURFACES_DEPTH_ID_H_
+#ifndef MIR_SCENE_DEPTH_ID_H_
+#define MIR_SCENE_DEPTH_ID_H_
 
 #include "mir/int_wrapper.h"
 
@@ -31,4 +31,4 @@ typedef IntWrapper<detail::DepthIdIdTag> DepthId;
 }
 } // namespace mir
 
-#endif // MIR_SURFACES_DEPTH_ID_H_
+#endif // MIR_SCENE_DEPTH_ID_H_

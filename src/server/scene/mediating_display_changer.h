@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_MEDIATING_DISPLAY_CHANGER_H_
-#define MIR_SURFACES_MEDIATING_DISPLAY_CHANGER_H_
+#ifndef MIR_SCENE_MEDIATING_DISPLAY_CHANGER_H_
+#define MIR_SCENE_MEDIATING_DISPLAY_CHANGER_H_
 
 #include "mir/frontend/display_changer.h"
 #include "mir/display_changer.h"
@@ -86,4 +86,4 @@ private:
 }
 }
 
-#endif /* MIR_SURFACES_MEDIATING_DISPLAY_CHANGER_H_ */
+#endif /* MIR_SCENE_MEDIATING_DISPLAY_CHANGER_H_ */

@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SNAPSHOT_STRATEGY_H_
-#define MIR_SURFACES_SNAPSHOT_STRATEGY_H_
+#ifndef MIR_SCENE_SNAPSHOT_STRATEGY_H_
+#define MIR_SCENE_SNAPSHOT_STRATEGY_H_
 
 #include "mir/shell/snapshot.h"
 
@@ -50,4 +50,4 @@ protected:
 }
 }
 
-#endif /* MIR_SURFACES_SNAPSHOT_STRATEGY_H_ */
+#endif /* MIR_SCENE_SNAPSHOT_STRATEGY_H_ */

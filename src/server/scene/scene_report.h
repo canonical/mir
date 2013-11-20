@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_LOGGING_SURFACES_REPORT_H_
-#define MIR_LOGGING_SURFACES_REPORT_H_
+#ifndef MIR_LOGGING_SCENE_REPORT_H_
+#define MIR_LOGGING_SCENE_REPORT_H_
 
 #include "mir/scene/scene_report.h"
 
@@ -32,10 +32,10 @@ namespace logging
 {
 class Logger;
 
-class SurfacesReport : public scene::SurfacesReport
+class SceneReport : public scene::SceneReport
 {
 public:
-    SurfacesReport(std::shared_ptr<Logger> const& log);
+    SceneReport(std::shared_ptr<Logger> const& log);
 
     void surface_created(scene::BasicSurface* const surface);
     void surface_added(scene::BasicSurface* const surface);
@@ -53,4 +53,4 @@ private:
 
 
 
-#endif /* MIR_LOGGING_SURFACES_REPORT_H_ */
+#endif /* MIR_LOGGING_SCENE_REPORT_H_ */

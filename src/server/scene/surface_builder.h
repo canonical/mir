@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SURFACES_SURFACE_BUILDER_H_
-#define MIR_SURFACES_SURFACE_BUILDER_H_
+#ifndef MIR_SCENE_SURFACE_BUILDER_H_
+#define MIR_SCENE_SURFACE_BUILDER_H_
 
 #include <memory>
 
@@ -50,4 +50,4 @@ protected:
 }
 
 
-#endif /* MIR_SURFACES_SURFACE_BUILDER_H_ */
+#endif /* MIR_SCENE_SURFACE_BUILDER_H_ */

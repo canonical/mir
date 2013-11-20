@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
-#define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
+#ifndef MIR_SCENE_SURFACE_DATA_STORAGE_H_
+#define MIR_SCENE_SURFACE_DATA_STORAGE_H_
 
 #include "surface_state.h"
 
@@ -76,4 +76,4 @@ private:
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_DATA_STORAGE_H_ */
+#endif /* MIR_SCENE_SURFACE_DATA_STORAGE_H_ */

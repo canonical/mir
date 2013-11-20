@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SURFACES_SURFACE_H_
-#define MIR_SURFACES_SURFACE_H_
+#ifndef MIR_SCENE_SURFACE_H_
+#define MIR_SCENE_SURFACE_H_
 
 #include "basic_surface.h"
 
@@ -26,7 +26,7 @@ namespace mir
 namespace scene
 {
 class SurfaceState;
-class SurfacesReport;
+class SceneReport;
 
 class Surface : public BasicSurface
 {
@@ -34,7 +34,7 @@ public:
     Surface(std::shared_ptr<SurfaceState> const& surface_state,
             std::shared_ptr<compositor::BufferStream> const& buffer_stream,
             std::shared_ptr<input::InputChannel> const& input_channel,
-            std::shared_ptr<SurfacesReport> const& report);
+            std::shared_ptr<SceneReport> const& report);
 
     ~Surface();
 
@@ -73,9 +73,9 @@ private:
     std::shared_ptr<SurfaceState> surface_state;
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
-    std::shared_ptr<SurfacesReport> const report;
+    std::shared_ptr<SceneReport> const report;
     bool surface_in_startup;
 };
 }
 }
-#endif /* MIR_SURFACES_SURFACE_H_ */
+#endif /* MIR_SCENE_SURFACE_H_ */

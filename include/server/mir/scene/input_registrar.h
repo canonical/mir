@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SURFACES_INPUT_REGISTRAR_H_
-#define MIR_SURFACES_INPUT_REGISTRAR_H_
+#ifndef MIR_SCENE_INPUT_REGISTRAR_H_
+#define MIR_SCENE_INPUT_REGISTRAR_H_
 
 #include "mir/input/input_reception_mode.h"
 
@@ -56,4 +56,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_SURFACES_INPUT_REGISTRAR_H_
+#endif // MIR_SCENE_INPUT_REGISTRAR_H_
