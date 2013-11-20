@@ -553,7 +553,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_
     /*
      * Note that the surface created by the first create_surface() call is
      * the pre-created stubbed_session->mock_surface. Further create_surface()
-     * invocations create new scene in stubbed_session->mock_scene[].
+     * invocations create new surfaces in stubbed_session->mock_scene[].
      */
     EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
         .WillOnce(Return(stub_buffer1));

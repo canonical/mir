@@ -610,7 +610,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
 {
-    int const n_scene = 13;
+    int const n_surfaces = 13;
 
     struct ClientConfig : ClientConfigCommon
     {
@@ -681,7 +681,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
         int n_surfaces;
         std::set<MirSurface *> surfaces;
         size_t old_surface_count;
-    } client_config(n_scene);
+    } client_config(n_surfaces);
 
     launch_client_process(client_config);
 }

@@ -147,7 +147,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     app_session.destroy_surface(id3);
 }
 
-TEST(ApplicationSession, session_visbility_propagates_to_scene)
+TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 

@@ -59,7 +59,7 @@ namespace me = mir::examples;
 
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
-///render_surfaces shows the use of mir to render some moving scene
+///render_surfaces shows the use of mir to render some moving surfaces
 ///\section main main()
 /// The main() function uses a RenderSurfacesServerConfiguration to initialize and run mir.
 /// \snippet render_surfaces.cpp main_tag
@@ -71,7 +71,7 @@ namespace me = mir::examples;
 /// and a bespoke display buffer compositor
 /// \snippet render_surfaces.cpp RenderSurfacesDisplayBufferCompositor_tag
 ///\section Utilities Utility classes
-/// For smooth animation we need to track time and move scene accordingly
+/// For smooth animation we need to track time and move surfaces accordingly
 ///\subsection StopWatch StopWatch
 /// \snippet render_surfaces.cpp StopWatch_tag
 ///\subsection Moveable Moveable
