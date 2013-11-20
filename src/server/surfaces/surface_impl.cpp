@@ -162,6 +162,13 @@ int ms::SurfaceImpl::configure(MirSurfaceAttrib attrib, int value)
         allow_framedropping(allow_dropping);
         result = value;
         break;
+    case mir_surface_attrib_size:
+    {
+        resize({value >> 16, value & 0xffff});
+        auto const& newsize = size();
+        result = newsize.width.as_int() << 16 | newsize.height.as_int();
+        break;
+    }
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -247,6 +254,9 @@ void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& contr
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
+
+    int packed = size.width.as_int() << 16 | size.height.as_int();
+    notify_change(mir_surface_attrib_size, packed);
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
