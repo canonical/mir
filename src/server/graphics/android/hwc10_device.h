@@ -18,8 +18,11 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
+
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
+#include "hardware/gralloc.h"
+#include "hardware/fb.h"
 
 namespace mir
 {
@@ -27,15 +30,14 @@ namespace graphics
 {
 namespace android
 {
-class DisplayDevice;
 class FramebufferBundle;
 
 class HWC10Device : public HWCCommonDevice
 {
 public:
     HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                std::shared_ptr<framebuffer_device_t> const& fb_device,
                 std::shared_ptr<FramebufferBundle> const& fb_bundle,
-                std::shared_ptr<DisplayDevice> const& fbdev,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     geometry::Size display_size() const; 
@@ -46,10 +48,10 @@ public:
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
+    std::shared_ptr<framebuffer_device_t> const fb_device;
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     LayerList layer_list;
 
-    std::shared_ptr<DisplayDevice> const fb_device;
     bool wait_for_vsync;
 };
 

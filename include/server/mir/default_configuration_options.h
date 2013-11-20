@@ -41,6 +41,7 @@ public:
     static char const* const standalone_opt;
     static char const* const frontend_threads;
     static char const* const name_opt;
+    static char const* const offscreen_opt;
 
     static char const* const glog;
     static char const* const glog_stderrthreshold;

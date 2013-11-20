@@ -49,6 +49,7 @@ public:
     std::shared_ptr<InternalClient> create_internal_client();
     void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                           std::shared_ptr<graphics::Buffer> const& buffer) const;
+    EGLNativeDisplayType egl_native_display() const;
 
 private:
     std::shared_ptr<Display> create_fb_backup_display();

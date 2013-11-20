@@ -109,6 +109,14 @@ typedef enum {
     mir_motion_button_forward   = 1 << 4
 } MirMotionButton;
 
+typedef enum {
+   mir_motion_tool_type_unknown = 0,
+   mir_motion_tool_type_finger  = 1,
+   mir_motion_tool_type_stylus  = 2,
+   mir_motion_tool_type_mouse   = 3,
+   mir_motion_tool_type_eraser  = 4
+} MirMotionToolType;
+
 typedef struct
 {
     MirEventType type;
@@ -164,8 +172,8 @@ typedef struct
         float orientation;
         float vscroll;
         float hscroll;
+        MirMotionToolType tool_type;
 
-        int unused0;
         int unused1;
         int unused2;
         int unused3;

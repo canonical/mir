@@ -24,7 +24,6 @@
 #include "kms_output.h"
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
-#include "video_devices.h"
 #include "overlapping_output_grouping.h"
 
 #include "mir/graphics/display_report.h"
@@ -76,12 +75,11 @@ private:
 }
 
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
-                            std::shared_ptr<VideoDevices> const& video_devices,
                             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                             std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
-      video_devices(video_devices),
       listener(listener),
+      monitor(mgg::UdevContext()),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
       current_display_configuration{platform->drm.fd}
@@ -89,6 +87,9 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
     platform->vt->set_graphics_mode();
 
     shared_egl.setup(platform->gbm);
+
+    monitor.filter_by_subsystem_and_type("drm", "drm_minor");
+    monitor.enable();
 
     initial_conf_policy->apply_to(current_display_configuration);
 
@@ -186,9 +187,16 @@ void mgg::GBMDisplay::register_configuration_change_handler(
     EventHandlerRegister& handlers,
     DisplayConfigurationChangeHandler const& conf_change_handler)
 {
-    video_devices->register_change_handler(
-        handlers,
-        conf_change_handler);
+    handlers.register_fd_handler(
+        {monitor.fd()},
+        [conf_change_handler, this](int)
+        {
+            monitor.process_events([conf_change_handler]
+                                   (UdevMonitor::EventType, UdevDevice const&)
+                                   {
+                                        conf_change_handler();
+                                   });
+        });
 }
 
 void mgg::GBMDisplay::register_pause_resume_handlers(

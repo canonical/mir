@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
+#include "gl_context.h"
 #include <system/window.h>
 
 namespace mir
@@ -36,7 +37,7 @@ class DisplayBuffer : public graphics::DisplayBuffer
 public:
     DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_device,
                   std::shared_ptr<ANativeWindow> const& native_window,
-                  EGLDisplay connection, EGLConfig config, EGLContext shared_context);
+                  GLContext const& shared_gl_context);
 
     geometry::Rectangle view_area() const;
     void make_current();
@@ -47,10 +48,7 @@ public:
 private:
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
-
-    EGLDisplay const egl_display;
-    EGLContextStore const egl_context;
-    EGLSurfaceStore const egl_surface;
+    GLContext gl_context;
 };
 
 }

@@ -16,37 +16,32 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_VIDEO_DEVICES_H_
-#define MIR_GRAPHICS_GBM_VIDEO_DEVICES_H_
-
-#include <functional>
+#ifndef MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_
+#define MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_
 
 namespace mir
 {
 namespace graphics
 {
-class EventHandlerRegister;
-
-namespace gbm
+namespace offscreen
 {
 
-class VideoDevices
+class GLExtensionsBase
 {
 public:
-    virtual ~VideoDevices() = default;
+    GLExtensionsBase(char const* extensions);
 
-    virtual void register_change_handler(
-        EventHandlerRegister& handlers,
-        std::function<void()> const& change_handler) = 0;
+    bool support(char const* ext) const;
 
-protected:
-    VideoDevices() = default;
-    VideoDevices(VideoDevices const&) = delete;
-    VideoDevices& operator=(VideoDevices const&) = delete;
+private:
+    GLExtensionsBase(GLExtensionsBase const&) = delete;
+    GLExtensionsBase& operator=(GLExtensionsBase const&) = delete;
+
+    char const* const extensions;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_VIDEO_DEVICES_H__ */
+#endif /* MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_ */

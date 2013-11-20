@@ -21,6 +21,7 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/geometry/displacement.h"
+#include "mir/geometry/size.h"
 
 #include <memory>
 
@@ -62,8 +63,11 @@ private:
     std::shared_ptr<graphics::Display> display;
     std::shared_ptr<compositor::Compositor> compositor;
 
-    geometry::Displacement relative_click;  // Click location in window space
-    geometry::Point click;                  // Click location in screen space
+    geometry::Point click;
+    geometry::Point old_pos;
+    geometry::Point old_cursor;
+    geometry::Size old_size;
+    float old_pinch_diam;
     int max_fingers;  // Maximum number of fingers touched during gesture
 };
 
