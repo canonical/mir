@@ -197,12 +197,18 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
 
 static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
+    (void)surface;
+    (void)context;
+
     if (event->type == mir_event_type_surface &&
         event->surface.attrib == mir_surface_attrib_size)
     {
+        /*
+         * As we already have a rendering thread (main) it would be unsafe
+         * to redraw from this event thread. So just signal to main...
+         * For further thoughts see https://bugs.launchpad.net/mir/+bug/1194384
+         */
         pthread_cond_signal(&wakeup);
-        (void)surface;
-        (void)context;
     }
 }
 
