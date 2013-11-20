@@ -31,12 +31,14 @@ Note: for this to work you need to have Mir and all its dependencies (which
 include lightdm, Mesa and the Xorg drivers). The easiest way is to run Ubuntu
 13.10 or later.
 
-If you have installed unity-system-compositor it will have created a file in
-/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf to run XMir. If you
-have build from source, to run X sessions under Mir, with Mir acting as the
-system compositor, create the file
-/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf to look to look like
-this:
+If you are running Ubuntu 13.10, additionally install unity-system-compositor.
+If you are running Ubuntu 14.04 or later, instead install ubuntu-desktop-mir.
+These packages will install dependencies you need and will create a file in
+/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf.
+
+If you have instead built from source, to set up the system compositor, create
+/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf yourself and make
+it look like this:
 
     [SeatDefaults]
     type=unity

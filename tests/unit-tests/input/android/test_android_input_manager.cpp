@@ -19,6 +19,7 @@
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
+#include "src/server/input/android/android_input_channel.h"
 
 #include "mir/input/input_channel.h"
 
@@ -155,6 +156,5 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
     mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 
     auto package = manager.make_input_channel();
-    EXPECT_GT(package->client_fd(), 0);
-    EXPECT_GT(package->server_fd(), 0);
+    EXPECT_NE(nullptr, std::dynamic_pointer_cast<mia::AndroidInputChannel>(package));
 }

@@ -20,10 +20,9 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/egl_resources.h"
 #include "android_display_configuration.h"
+#include "gl_context.h"
 
-#include <EGL/egl.h>
 #include <memory>
 
 namespace mir
@@ -46,7 +45,6 @@ class AndroidDisplay : public Display
 public:
     explicit AndroidDisplay(std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
                             std::shared_ptr<DisplayReport> const& display_report);
-    ~AndroidDisplay();
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
@@ -73,10 +71,7 @@ private:
     std::shared_ptr<AndroidDisplayBufferFactory> const db_factory;
     std::shared_ptr<DisplayDevice> const display_device;
 
-    EGLDisplay const egl_display;
-    EGLConfig const egl_config;
-    EGLContextStore const egl_context_shared;
-    EGLSurfaceStore const egl_surface_dummy;
+    GLContext gl_context;
 
     //we only have a primary display at the moment
     std::unique_ptr<DisplayBuffer> const display_buffer;

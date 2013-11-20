@@ -57,6 +57,11 @@ class NullPlatform : public graphics::Platform
     void fill_ipc_package(graphics::BufferIPCPacker*, graphics::Buffer const*) const
     {
     }
+
+    EGLNativeDisplayType egl_native_display() const
+    {
+        return EGLNativeDisplayType();
+    }
 };
 }
 }

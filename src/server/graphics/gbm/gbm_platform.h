@@ -53,6 +53,8 @@ public:
 
     void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const;
 
+    EGLNativeDisplayType egl_native_display() const;
+
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);
 

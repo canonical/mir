@@ -9,6 +9,7 @@ list(APPEND UNIT_TEST_SOURCES
 )
 
 add_subdirectory(nested/)
+add_subdirectory(offscreen/)
 
 add_subdirectory(egl_mock/)
 if (MIR_PLATFORM STREQUAL "android")

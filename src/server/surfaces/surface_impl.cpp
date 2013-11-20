@@ -182,7 +182,7 @@ bool ms::SurfaceImpl::set_type(MirSurfaceType t)
 {
     bool valid = false;
 
-    if (t >= 0 && t < mir_surface_type_enum_max_)
+    if (t >= 0 && t < mir_surface_types)
     {
         type_value = t;
         valid = true;
@@ -201,7 +201,7 @@ bool ms::SurfaceImpl::set_state(MirSurfaceState s)
     bool valid = false;
 
     if (s > mir_surface_state_unknown &&
-        s < mir_surface_state_enum_max_)
+        s < mir_surface_states)
     {
         state_value = s;
         valid = true;

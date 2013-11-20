@@ -54,7 +54,7 @@ struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
 
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
         std::shared_ptr<graphics::android::DisplayDevice> const&,
-        EGLDisplay, EGLConfig, EGLContext)
+        graphics::android::GLContext const&)
     {
         return std::unique_ptr<graphics::DisplayBuffer>(
                 new StubDisplayBuffer(geometry::Rectangle{{0,0},sz}));

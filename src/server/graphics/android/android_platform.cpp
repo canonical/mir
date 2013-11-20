@@ -91,6 +91,11 @@ void mga::AndroidPlatform::fill_ipc_package(BufferIPCPacker* packer, graphics::B
     packer->pack_size(buffer->size());
 }
 
+EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const
+{
+    return EGL_DEFAULT_DISPLAY;
+}
+
 void mga::AndroidPlatform::initialize(std::shared_ptr<NestedContext> const&)
 {
 }

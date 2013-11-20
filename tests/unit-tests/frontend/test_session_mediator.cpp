@@ -179,6 +179,7 @@ class MockPlatform : public mg::Platform
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
     MOCK_CONST_METHOD2(fill_ipc_package, void(mg::BufferIPCPacker*, mg::Buffer const*));
+    MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
 };
 
 struct SessionMediatorTest : public ::testing::Test

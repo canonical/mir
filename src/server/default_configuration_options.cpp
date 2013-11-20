@@ -79,6 +79,7 @@ char const* const mir::ConfigurationOptions::host_socket_opt             = "host
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
 char const* const mir::ConfigurationOptions::frontend_threads            = "ipc-thread-pool";
 char const* const mir::ConfigurationOptions::name_opt                    = "name";
+char const* const mir::ConfigurationOptions::offscreen_opt               = "offscreen";
 
 char const* const mir::ConfigurationOptions::glog                 = "glog";
 char const* const mir::ConfigurationOptions::glog_stderrthreshold = "glog-stderrthreshold";
@@ -154,6 +155,8 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
+        (offscreen_opt,
+            "Render to offscreen buffers instead of the real outputs.")
         ("vt", po::value<int>(),
             "VT to run on or 0 to use current. [int:default=0]");
 }
