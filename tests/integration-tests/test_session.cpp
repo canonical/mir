@@ -19,8 +19,8 @@
 #include "mir/default_server_configuration.h"
 #include "src/server/input/null_input_configuration.h"
 #include "mir/compositor/compositor.h"
-#include "mir/shell/application_session.h"
-#include "src/server/shell/pixel_buffer.h"
+#include "src/server/surfaces/application_session.h"
+#include "src/server/surfaces/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -39,6 +39,7 @@
 
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
@@ -109,9 +110,9 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     }
 
 
-    std::shared_ptr<msh::PixelBuffer> the_shell_pixel_buffer() override
+    std::shared_ptr<ms::PixelBuffer> the_pixel_buffer() override
     {
-        struct StubPixelBuffer : public msh::PixelBuffer
+        struct StubPixelBuffer : public ms::PixelBuffer
         {
             void fill_from(mg::Buffer&) {}
             void const* as_argb_8888() { return nullptr; }
@@ -119,7 +120,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             geom::Stride stride() const { return geom::Stride(); }
         };
 
-        return shell_pixel_buffer(
+        return pixel_buffer(
             []
             {
                 return std::make_shared<StubPixelBuffer>();
@@ -159,14 +160,14 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
 }
 
-TEST(ShellSessionTest, stress_test_take_snapshot)
+TEST(ApplicationSession, stress_test_take_snapshot)
 {
     TestServerConfiguration conf;
 
-    msh::ApplicationSession session{
+    ms::ApplicationSession session{
         conf.the_shell_surface_factory(),
         "stress",
-        conf.the_shell_snapshot_strategy(),
+        conf.the_snapshot_strategy(),
         std::make_shared<msh::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };

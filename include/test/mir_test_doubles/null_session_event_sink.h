@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_SESSION_EVENT_SINK_H_
 #define MIR_TEST_DOUBLES_NULL_SESSION_EVENT_SINK_H_
 
-#include "src/server/shell/session_event_sink.h"
+#include "src/server/surfaces/session_event_sink.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullSessionEventSink : public shell::SessionEventSink
+class NullSessionEventSink : public surfaces::SessionEventSink
 {
 public:
     void handle_focus_change(std::shared_ptr<shell::Session> const&) {}

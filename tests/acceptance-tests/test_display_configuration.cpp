@@ -19,7 +19,7 @@
 
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/event_handler_register.h"
-#include "src/server/shell/global_event_sender.h"
+#include "src/server/surfaces/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"

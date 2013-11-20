@@ -16,10 +16,10 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/shell/session_manager.h"
+#include "src/server/surfaces/session_manager.h"
 #include "mir/shell/session.h"
 #include "mir/shell/focus_setter.h"
-#include "src/server/shell/default_session_container.h"
+#include "src/server/surfaces/default_session_container.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/surfaces/basic_surface.h"
@@ -61,11 +61,11 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
     }
 
     mtd::MockSurfaceFactory surface_factory;
-    msh::DefaultSessionContainer container;
+    ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
     msh::NullSessionListener session_listener;
-    msh::SessionManager session_manager;
+    ms::SessionManager session_manager;
 };
 
 }

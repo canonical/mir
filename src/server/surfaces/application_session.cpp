@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/shell/application_session.h"
+#include "application_session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
@@ -31,11 +31,12 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 
-msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<SurfaceFactory> const& surface_factory,
+ms::ApplicationSession::ApplicationSession(
+    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<msh::SessionListener> const& session_listener,
@@ -50,7 +51,7 @@ msh::ApplicationSession::ApplicationSession(
     assert(surface_factory);
 }
 
-msh::ApplicationSession::~ApplicationSession()
+ms::ApplicationSession::~ApplicationSession()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto const& pair_id_surface : surfaces)
@@ -59,12 +60,12 @@ msh::ApplicationSession::~ApplicationSession()
     }
 }
 
-mf::SurfaceId msh::ApplicationSession::next_id()
+mf::SurfaceId ms::ApplicationSession::next_id()
 {
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
+mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
 {
     auto const id = next_id();
     auto surf = surface_factory->create_surface(this, params, id, event_sink);
@@ -77,7 +78,7 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreation
     return id;
 }
 
-msh::ApplicationSession::Surfaces::const_iterator msh::ApplicationSession::checked_find(mf::SurfaceId id) const
+ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked_find(mf::SurfaceId id) const
 {
     auto p = surfaces.find(id);
     if (p == surfaces.end())
@@ -87,19 +88,19 @@ msh::ApplicationSession::Surfaces::const_iterator msh::ApplicationSession::check
     return p;
 }
 
-std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId id) const
+std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     return checked_find(id)->second;
 }
 
-void msh::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
+void ms::ApplicationSession::take_snapshot(msh::SnapshotCallback const& snapshot_taken)
 {
     snapshot_strategy->take_snapshot_of(default_surface(), snapshot_taken);
 }
 
-std::shared_ptr<msh::Surface> msh::ApplicationSession::default_surface() const
+std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
@@ -109,7 +110,7 @@ std::shared_ptr<msh::Surface> msh::ApplicationSession::default_surface() const
         return std::shared_ptr<msh::Surface>();
 }
 
-void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
+void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
@@ -119,12 +120,12 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     surfaces.erase(p);
 }
 
-std::string msh::ApplicationSession::name() const
+std::string ms::ApplicationSession::name() const
 {
     return session_name;
 }
 
-void msh::ApplicationSession::force_requests_to_complete()
+void ms::ApplicationSession::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
@@ -133,7 +134,7 @@ void msh::ApplicationSession::force_requests_to_complete()
     }
 }
 
-void msh::ApplicationSession::hide()
+void ms::ApplicationSession::hide()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
@@ -142,7 +143,7 @@ void msh::ApplicationSession::hide()
     }
 }
 
-void msh::ApplicationSession::show()
+void ms::ApplicationSession::show()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
@@ -151,7 +152,7 @@ void msh::ApplicationSession::show()
     }
 }
 
-int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
+int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
                                                MirSurfaceAttrib attrib,
                                                int requested_value)
 {
@@ -161,12 +162,12 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
     return surf->configure(attrib, requested_value);
 }
 
-void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
+void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
     event_sink->handle_display_config_change(info);
 }
 
-void msh::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
+void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
 }

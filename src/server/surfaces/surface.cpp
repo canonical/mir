@@ -37,7 +37,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    std::shared_ptr<ms::SurfaceState> const& state,
+    std::shared_ptr<SurfaceState> const& state,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<SurfacesReport> const& report) :
