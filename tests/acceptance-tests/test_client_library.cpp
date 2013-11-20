@@ -608,7 +608,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
+TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
 
