@@ -436,7 +436,7 @@ TEST_F(SurfaceCreation, input_fds)
 }
 
 /* todo: this test appears just for render_scene example apparently */
-TEST_F(SurfaceCreation, flag_for_render_makes_scene_valid)
+TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
 {
     EXPECT_CALL(*mock_basic_state, frame_posted())
         .Times(1);

@@ -65,8 +65,8 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
     std::lock_guard<std::recursive_mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
-        auto scene = layer.second;
-        for (auto it = scene.begin(); it != scene.end(); ++it)
+        auto surfaces = layer.second;
+        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             mc::CompositingCriteria& info = *((*it)->compositing_criteria());
             mc::BufferStream& stream = *((*it)->buffer_stream());
@@ -83,8 +83,8 @@ void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
          layer != layers_by_depth.rend();
          ++layer)
     {
-        auto scene = layer->second;
-        for (auto it = scene.rbegin(); it != scene.rend(); ++it)
+        auto surfaces = layer->second;
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
             mc::CompositingCriteria& info = *((*it)->compositing_criteria());
             mc::BufferStream& stream = *((*it)->buffer_stream());
@@ -127,12 +127,12 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surfac
 
         for (auto &layer : layers_by_depth)
         {
-            auto &scene = layer.second;
-            auto const p = std::find(scene.begin(), scene.end(), surface.lock());
+            auto &surfaces = layer.second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
 
-            if (p != scene.end())
+            if (p != surfaces.end())
             {
-                scene.erase(p);
+                surfaces.erase(p);
                 found_surface = true;
                 break;
             }
@@ -172,13 +172,13 @@ void ms::SurfaceStack::raise(std::weak_ptr<BasicSurface> const& s)
         std::unique_lock<std::recursive_mutex> ul(guard);
         for (auto &layer : layers_by_depth)
         {
-            auto &scene = layer.second;
-            auto const p = std::find(scene.begin(), scene.end(), surface);
+            auto &surfaces = layer.second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
 
-            if (p != scene.end())
+            if (p != surfaces.end())
             {
-                scene.erase(p);
-                scene.push_back(surface);
+                surfaces.erase(p);
+                surfaces.push_back(surface);
 
                 ul.unlock();
                 emit_change_notification();

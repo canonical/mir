@@ -53,8 +53,8 @@ ms::ApplicationSession::ApplicationSession(
 
 ms::ApplicationSession::~ApplicationSession()
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
-    for (auto const& pair_id_surface : scene)
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
     }
@@ -70,8 +70,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationP
     auto const id = next_id();
     auto surf = surface_factory->create_surface(this, params, id, event_sink);
 
-    std::unique_lock<std::mutex> lock(scene_mutex);
-    scene[id] = surf;
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    surfaces[id] = surf;
     
     session_listener->surface_created(*this, surf);
     
@@ -80,8 +80,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationP
 
 ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked_find(mf::SurfaceId id) const
 {
-    auto p = scene.find(id);
-    if (p == scene.end())
+    auto p = surfaces.find(id);
+    if (p == surfaces.end())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
     }
@@ -90,7 +90,7 @@ ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked
 
 std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId id) const
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     return checked_find(id)->second;
 }
@@ -102,22 +102,22 @@ void ms::ApplicationSession::take_snapshot(msh::SnapshotCallback const& snapshot
 
 std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
 
-    if (scene.size())
-        return scene.begin()->second;
+    if (surfaces.size())
+        return surfaces.begin()->second;
     else
         return std::shared_ptr<msh::Surface>();
 }
 
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
     
     session_listener->destroying_surface(*this, p->second);
 
-    scene.erase(p);
+    surfaces.erase(p);
 }
 
 std::string ms::ApplicationSession::name() const
@@ -127,8 +127,8 @@ std::string ms::ApplicationSession::name() const
 
 void ms::ApplicationSession::force_requests_to_complete()
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
-    for (auto& id_s : scene)
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    for (auto& id_s : surfaces)
     {
         id_s.second->force_requests_to_complete();
     }
@@ -136,8 +136,8 @@ void ms::ApplicationSession::force_requests_to_complete()
 
 void ms::ApplicationSession::hide()
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
-    for (auto& id_s : scene)
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    for (auto& id_s : surfaces)
     {
         id_s.second->hide();
     }
@@ -145,8 +145,8 @@ void ms::ApplicationSession::hide()
 
 void ms::ApplicationSession::show()
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
-    for (auto& id_s : scene)
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+    for (auto& id_s : surfaces)
     {
         id_s.second->show();
     }
@@ -156,7 +156,7 @@ int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
                                                MirSurfaceAttrib attrib,
                                                int requested_value)
 {
-    std::unique_lock<std::mutex> lock(scene_mutex);
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
     return surf->configure(attrib, requested_value);

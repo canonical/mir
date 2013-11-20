@@ -46,7 +46,7 @@ private:
     std::shared_ptr<Logger> const logger;
 
     std::mutex mutex;
-    std::map<scene::BasicSurface*, std::string> scene;
+    std::map<scene::BasicSurface*, std::string> surfaces;
 };
 }
 }

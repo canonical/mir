@@ -97,7 +97,7 @@ public:
         using namespace ::testing;
 
         mock_surface = std::make_shared<mtd::MockFrontendSurface>();
-        mock_scene[mf::SurfaceId{1}] = mock_surface;
+        mock_surfaces[mf::SurfaceId{1}] = mock_surface;
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), geom::PixelFormat());
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
@@ -110,7 +110,7 @@ public:
 
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
-        return mock_scene.at(surface);
+        return mock_surfaces.at(surface);
     }
 
     mf::SurfaceId create_surface(msh::SurfaceCreationParameters const& /* params */) override
@@ -118,14 +118,14 @@ public:
         using namespace ::testing;
         auto id = mf::SurfaceId{last_surface_id};
         if (last_surface_id != 1) {
-            mock_scene[id] = std::make_shared<mtd::MockFrontendSurface>();
+            mock_surfaces[id] = std::make_shared<mtd::MockFrontendSurface>();
 
-            EXPECT_CALL(*mock_scene[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
-            EXPECT_CALL(*mock_scene[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-            EXPECT_CALL(*mock_scene[id], advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
+            EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
+            EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
+            EXPECT_CALL(*mock_surfaces[id], advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
 
-            EXPECT_CALL(*mock_scene[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
-            EXPECT_CALL(*mock_scene[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
+            EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
+            EXPECT_CALL(*mock_surfaces[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
         }
         last_surface_id++;
         return id;
@@ -133,12 +133,12 @@ public:
 
     void destroy_surface(mf::SurfaceId surface) override
     {
-        mock_scene.erase(surface);
+        mock_surfaces.erase(surface);
     }
 
     mtd::StubSurfaceBuilder surface_builder;
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
-    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_scene;
+    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     static int const testing_client_input_fd;
     int last_surface_id;
@@ -450,7 +450,7 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, session_with_multiple_scene_only_sends_needed_buffers)
+TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buffers)
 {
     using namespace testing;
 
@@ -561,14 +561,14 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     auto refcount = stub_buffer1.use_count();
 
-    /* Creating a new surface should not affect other scene' buffers */
+    /* Creating a new surface should not affect other surfaces' buffers */
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     EXPECT_EQ(refcount, stub_buffer1.use_count());
 
     mp::SurfaceId buffer_request{surface_response.id()};
     mp::Buffer buffer_response;
 
-    /* Getting the next buffer of a surface should not affect other scene' buffers */
+    /* Getting the next buffer of a surface should not affect other surfaces' buffers */
     mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
     EXPECT_EQ(refcount, stub_buffer1.use_count());
 

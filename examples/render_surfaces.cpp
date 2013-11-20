@@ -57,27 +57,27 @@ namespace geom = mir::geometry;
 namespace mt = mir::tools;
 namespace me = mir::examples;
 
-///\page render_scene-example render_scene.cpp: A simple program using the mir library.
+///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
-///render_scene shows the use of mir to render some moving scene
+///render_surfaces shows the use of mir to render some moving scene
 ///\section main main()
 /// The main() function uses a RenderSurfacesServerConfiguration to initialize and run mir.
-/// \snippet render_scene.cpp main_tag
+/// \snippet render_surfaces.cpp main_tag
 ///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
 /// The configuration stubs out client connectivity and input.
-/// \snippet render_scene.cpp RenderSurfacesServerConfiguration_stubs_tag
+/// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_stubs_tag
 /// it also provides a bespoke buffer initializer
-/// \snippet render_scene.cpp RenderResourcesBufferInitializer_tag
+/// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
 /// and a bespoke display buffer compositor
-/// \snippet render_scene.cpp RenderSurfacesDisplayBufferCompositor_tag
+/// \snippet render_surfaces.cpp RenderSurfacesDisplayBufferCompositor_tag
 ///\section Utilities Utility classes
 /// For smooth animation we need to track time and move scene accordingly
 ///\subsection StopWatch StopWatch
-/// \snippet render_scene.cpp StopWatch_tag
+/// \snippet render_surfaces.cpp StopWatch_tag
 ///\subsection Moveable Moveable
-/// \snippet render_scene.cpp Moveable_tag
+/// \snippet render_surfaces.cpp Moveable_tag
 
-///\example render_scene.cpp A simple program using the mir library.
+///\example render_surfaces.cpp A simple program using the mir library.
 
 namespace
 {
@@ -134,7 +134,7 @@ void animate_cursor()
     }
 }
 
-char const* const scene_to_render = "scene-to-render";
+char const* const surfaces_to_render = "surfaces-to-render";
 char const* const display_cursor     = "display-cursor";
 
 ///\internal [StopWatch_tag]
@@ -180,7 +180,7 @@ private:
 ///\internal [StopWatch_tag]
 
 ///\internal [Moveable_tag]
-// Adapter to support movement of scene.
+// Adapter to support movement of surfaces.
 class Moveable
 {
 public:
@@ -258,7 +258,7 @@ public:
         namespace po = boost::program_options;
 
         add_options()
-            (scene_to_render, po::value<int>(),  "Number of scene to render"
+            (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
                                                     " [int:default=5]")
             (display_cursor, po::value<bool>(), "Display test cursor. (If input is "
                                                 "disabled it gets animated.) "
@@ -308,7 +308,7 @@ public:
     ///\internal [RenderResourcesBufferInitializer_tag]
 
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
-    // Decorate the DefaultDisplayBufferCompositor in order to move scene.
+    // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
     std::shared_ptr<mc::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
     {
         class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -380,11 +380,11 @@ public:
     }
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
 
-    // New function to initialize moveables with scene
-    void create_scene()
+    // New function to initialize moveables with surfaces
+    void create_surfaces()
     {
-        moveables.resize(the_options()->get(scene_to_render, 5));
-        std::cout << "Rendering " << moveables.size() << " scene" << std::endl;
+        moveables.resize(the_options()->get(surfaces_to_render, 5));
+        std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
         auto const surface_factory = the_scene_surface_factory();
@@ -469,7 +469,7 @@ try
 
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
-        conf.create_scene();
+        conf.create_surfaces();
 
         cursor = conf.the_cursor();
 

@@ -45,7 +45,7 @@ ml::SceneReport::SceneReport(std::shared_ptr<Logger> const& logger) :
 void ml::SceneReport::surface_created(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    scene[surface] = surface->name();
+    surfaces[surface] = surface->name();
 
     std::stringstream ss;
     ss << "surface_created(" << surface << " [\"" << surface->name() << "\"])";
@@ -57,12 +57,12 @@ void ml::SceneReport::surface_added(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto const i = scene.find(surface);
+    auto const i = surfaces.find(surface);
 
     std::stringstream ss;
     ss << "surface_added(" << surface << " [\"" << surface->name() << "\"])";
 
-    if (i == scene.end())
+    if (i == surfaces.end())
     {
         ss << " - ERROR not reported to surface_created()";
     }
@@ -71,7 +71,7 @@ void ml::SceneReport::surface_added(ms::BasicSurface* const surface)
         ss << " - WARNING name changed from " << i->second;
     }
 
-    ss << " - INFO surface count=" << scene.size();
+    ss << " - INFO surface count=" << surfaces.size();
 
     logger->log<Logger::informational>(ss.str(), component);
 }
@@ -80,12 +80,12 @@ void ml::SceneReport::surface_removed(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto const i = scene.find(surface);
+    auto const i = surfaces.find(surface);
 
     std::stringstream ss;
     ss << "surface_removed(" << surface << " [\"" << surface->name() << "\"])";
 
-    if (i == scene.end())
+    if (i == surfaces.end())
     {
         ss << " - ERROR not reported to surface_created()";
     }
@@ -94,7 +94,7 @@ void ml::SceneReport::surface_removed(ms::BasicSurface* const surface)
         ss << " - WARNING name changed from " << i->second;
     }
 
-    ss << " - INFO surface count=" << scene.size();
+    ss << " - INFO surface count=" << surfaces.size();
 
     logger->log<Logger::informational>(ss.str(), component);
 }
@@ -103,12 +103,12 @@ void ml::SceneReport::surface_deleted(ms::BasicSurface* const surface)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto const i = scene.find(surface);
+    auto const i = surfaces.find(surface);
 
     std::stringstream ss;
     ss << "surface_deleted(" << surface << " [\"" << surface->name() << "\"])";
 
-    if (i == scene.end())
+    if (i == surfaces.end())
     {
         ss << " - ERROR not reported to surface_created()";
     }
@@ -117,10 +117,10 @@ void ml::SceneReport::surface_deleted(ms::BasicSurface* const surface)
         ss << " - WARNING name changed from " << i->second;
     }
 
-    if (i != scene.end())
-        scene.erase(i);
+    if (i != surfaces.end())
+        surfaces.erase(i);
 
-    ss << " - INFO surface count=" << scene.size() << std::endl;
+    ss << " - INFO surface count=" << surfaces.size() << std::endl;
 
     logger->log<Logger::informational>(ss.str(), component);
 }

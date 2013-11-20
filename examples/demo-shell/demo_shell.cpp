@@ -50,8 +50,8 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
         namespace po = boost::program_options;
 
         add_options()
-            ("fullscreen-scene", po::value<bool>(),
-                "Make all scene fullscreen [bool:default=false]");
+            ("fullscreen-surfaces", po::value<bool>(),
+                "Make all surfaces fullscreen [bool:default=false]");
     }
 
     std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
@@ -59,7 +59,7 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
         return shell_placement_strategy(
             [this]() -> std::shared_ptr<msh::PlacementStrategy>
             {
-                if (the_options()->is_set("fullscreen-scene"))
+                if (the_options()->is_set("fullscreen-surfaces"))
                     return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
                 else
                     return DefaultServerConfiguration::the_shell_placement_strategy();

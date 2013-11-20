@@ -30,8 +30,8 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     int const& surface_id, std::function<void(MirSurface*)> exec)
 {
     std::unique_lock<std::mutex> lk(guard);
-    SurfaceMap::iterator it = scene.find(surface_id);
-    if (it != scene.end())
+    SurfaceMap::iterator it = surfaces.find(surface_id);
+    if (it != surfaces.end())
     {
         MirSurface *surface = it->second;
         exec(surface);
@@ -50,11 +50,11 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
 void mcl::ConnectionSurfaceMap::insert(int const& surface_id, MirSurface* surface)
 {
     std::unique_lock<std::mutex> lk(guard);
-    scene[surface_id] = surface; 
+    surfaces[surface_id] = surface; 
 }
 
 void mcl::ConnectionSurfaceMap::erase(int surface_id)
 {
     std::unique_lock<std::mutex> lk(guard);
-    scene.erase(surface_id); 
+    surfaces.erase(surface_id); 
 }

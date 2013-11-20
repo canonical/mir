@@ -338,7 +338,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_NE(saved_resources.end(), result);
 }
 
-TEST_F(GLRenderer, disables_blending_for_rgbx_scene)
+TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
     using namespace std::placeholders;
 

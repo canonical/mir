@@ -672,7 +672,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         [&](mtf::InputTestingServerConfiguration& server)
         {
             // We send one event and then hide the surface on top before sending the next. 
-            // So we expect each of the two scene to receive one even
+            // So we expect each of the two surfaces to receive one even
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
             // We use a fence to ensure we do not hide the client
             // before event dispatch occurs

@@ -106,7 +106,7 @@ public:
          * queue. And we need to ensure that we render all of them so that
          * none linger in the queue indefinitely (seen as input lag). So while
          * there's no API support for finding out queue lengths, assume the
-         * worst and schedule enough frames to ensure all scene' queues
+         * worst and schedule enough frames to ensure all surfaces' queues
          * are fully drained.
          */
         frames_scheduled = max_client_buffers;

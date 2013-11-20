@@ -164,7 +164,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 /**
  * Get the list of possible formats that a surface can be created with.
  *   \param [in] connection         The connection
- *   \param [out] formats           List of valid formats to create scene with 
+ *   \param [out] formats           List of valid formats to create surfaces with 
  *   \param [in]  formats_size      size of formats list
  *   \param [out] num_valid_formats number of valid formats returned in formats
  */ 

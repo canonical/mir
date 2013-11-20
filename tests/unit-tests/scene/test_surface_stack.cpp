@@ -407,7 +407,7 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
     stack.destroy_surface(surface);
 }
 
-TEST_F(SurfaceStack, scene_are_emitted_by_layer)
+TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace ::testing;
 
@@ -444,7 +444,7 @@ TEST_F(SurfaceStack, scene_are_emitted_by_layer)
     stack.for_each_if(filter, renderable_operator);
 }
 
-TEST_F(SurfaceStack, input_registrar_is_notified_of_scene)
+TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
 {
     using namespace ::testing;
 

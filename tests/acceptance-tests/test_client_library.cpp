@@ -614,28 +614,28 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
 
     struct ClientConfig : ClientConfigCommon
     {
-        ClientConfig(int n_scene) : n_scene(n_scene)
+        ClientConfig(int n_surfaces) : n_surfaces(n_surfaces)
         {
         }
 
         void surface_created(MirSurface * new_surface)
         {
-            scene.insert(new_surface);
+            surfaces.insert(new_surface);
         }
 
         void surface_released(MirSurface * surface)
         {
-            scene.erase(surface);
+            surfaces.erase(surface);
         }
 
         MirSurface * any_surface()
         {
-            return *scene.begin();
+            return *surfaces.begin();
         }
 
         size_t current_surface_count()
         {
-            return scene.size();
+            return surfaces.size();
         }
 
         void exec()
@@ -646,7 +646,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
-            for (int i = 0; i != n_scene; ++i)
+            for (int i = 0; i != n_surfaces; ++i)
             {
                 old_surface_count = current_surface_count();
 
@@ -663,7 +663,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
 
                 ASSERT_EQ(old_surface_count + 1, current_surface_count());
             }
-            for (int i = 0; i != n_scene; ++i)
+            for (int i = 0; i != n_surfaces; ++i)
             {
                 old_surface_count = current_surface_count();
 
@@ -678,8 +678,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_scene)
             mir_connection_release(connection);
         }
 
-        int n_scene;
-        std::set<MirSurface *> scene;
+        int n_surfaces;
+        std::set<MirSurface *> surfaces;
         size_t old_surface_count;
     } client_config(n_scene);
 

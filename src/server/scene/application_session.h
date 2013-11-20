@@ -88,8 +88,8 @@ private:
 
     typedef std::map<frontend::SurfaceId, std::shared_ptr<shell::Surface>> Surfaces;
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
-    std::mutex mutable scene_mutex;
-    Surfaces scene;
+    std::mutex mutable surfaces_mutex;
+    Surfaces surfaces;
 };
 
 }

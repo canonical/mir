@@ -108,7 +108,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     session_manager.close_session(session);
 }
 
-TEST_F(SessionManagerSetup, closing_session_removes_scene)
+TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
 

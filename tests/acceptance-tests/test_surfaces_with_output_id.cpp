@@ -121,7 +121,7 @@ struct RectangleCompare
 
 using SurfacesWithOutputId = BespokeDisplayServerTestFixture;
 
-TEST_F(SurfacesWithOutputId, fullscreen_scene_are_placed_at_top_left_of_correct_output)
+TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_correct_output)
 {
     mt::CrossProcessAction client_connect_and_create_surface;
     mt::CrossProcessAction client_release_surface_and_disconnect;
@@ -204,7 +204,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_scene_are_placed_at_top_left_of_correct_
         void exec()
         {
             MirConnection* connection;
-            std::vector<MirSurface*> scene;
+            std::vector<MirSurface*> surfaces;
 
             connect_and_create_surface.exec([&]
             {
@@ -229,7 +229,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_scene_are_placed_at_top_left_of_correct_
                         output.output_id
                     };
 
-                    scene.push_back(
+                    surfaces.push_back(
                         mir_connection_create_surface_sync(connection, &request_params));
                 }
 
@@ -238,7 +238,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_scene_are_placed_at_top_left_of_correct_
 
             release_surface_and_disconnect.exec([&]
             {
-                for (auto surface : scene)
+                for (auto surface : surfaces)
                     mir_surface_release_sync(surface);
                 mir_connection_release(connection);
             });
@@ -259,7 +259,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_scene_are_placed_at_top_left_of_correct_
     });
 }
 
-TEST_F(SurfacesWithOutputId, non_fullscreen_scene_are_not_accepted)
+TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 {
     mt::CrossProcessAction client_connect_and_create_scene;
     mt::CrossProcessAction client_disconnect;

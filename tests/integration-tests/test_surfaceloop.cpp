@@ -473,12 +473,12 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
 
             mir_connection_release(connection);
         }
-    } client_creates_scene;
+    } client_creates_surfaces;
 
-    launch_client_process(client_creates_scene);
+    launch_client_process(client_creates_surfaces);
 }
 
-TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_scene)
+TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_surfaces)
 {
     struct ServerConfig : BufferCounterConfig
     {
@@ -517,7 +517,7 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
 
             mir_connection_release(connection);
         }
-    } client_creates_scene;
+    } client_creates_surfaces;
 
-    launch_client_process(client_creates_scene);
+    launch_client_process(client_creates_surfaces);
 }

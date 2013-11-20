@@ -140,7 +140,7 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
      * Bypass is generally only beneficial to hardware buffers where the
      * blitting happens on the GPU. For software buffers it is slower to blit
      * individual pixels from CPU to GPU memory, so don't do it.
-     * Also try to avoid allocating scanout buffers for small scene that
+     * Also try to avoid allocating scanout buffers for small surfaces that
      * are unlikely to ever be fullscreen.
      *
      * TODO: Be more intelligent about when to apply GBM_BO_USE_SCANOUT. That

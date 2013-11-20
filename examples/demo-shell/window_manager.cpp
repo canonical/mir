@@ -177,7 +177,7 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         if (app)
         {
-            // FIXME: We need to be able to select individual scene in
+            // FIXME: We need to be able to select individual surfaces in
             //        future and not just the "default" one.
             std::shared_ptr<msh::Surface> surf = app->default_surface();
 
