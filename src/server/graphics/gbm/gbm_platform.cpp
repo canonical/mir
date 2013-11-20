@@ -132,8 +132,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
-                                        std::shared_ptr<Buffer> const& buffer) const
+void mgg::GBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)

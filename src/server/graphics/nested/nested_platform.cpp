@@ -128,8 +128,7 @@ std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client(
     return native_platform->create_internal_client();
 }
 
-void mgn::NestedPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
-                                        std::shared_ptr<Buffer> const& buffer) const
+void mgn::NestedPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     native_platform->fill_ipc_package(packer, buffer);
 }
