@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/shell/session_manager.h"
-#include "mir/shell/application_session.h"
+#include "session_manager.h"
+#include "application_session.h"
 #include "session_container.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_setter.h"
@@ -31,13 +31,14 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 
-msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
-    std::shared_ptr<msh::SessionContainer> const& container,
+ms::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<SessionContainer> const& container,
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
-    std::shared_ptr<msh::SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<msh::SessionEventSink> const& session_event_sink,
+    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
+    std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<msh::SessionListener> const& session_listener) :
     surface_factory(surface_factory),
     app_container(container),
@@ -52,7 +53,7 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& 
     assert(session_listener);
 }
 
-msh::SessionManager::~SessionManager()
+ms::SessionManager::~SessionManager()
 {
     /*
      * Close all open sessions. We need to do this manually here
@@ -63,7 +64,7 @@ msh::SessionManager::~SessionManager()
      */
     std::vector<std::shared_ptr<msh::Session>> sessions;
 
-    app_container->for_each([&](std::shared_ptr<Session> const& session)
+    app_container->for_each([&](std::shared_ptr<msh::Session> const& session)
     {
         sessions.push_back(session);
     });
@@ -72,11 +73,11 @@ msh::SessionManager::~SessionManager()
         close_session(session);
 }
 
-std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const& name,
+std::shared_ptr<mf::Session> ms::SessionManager::open_session(std::string const& name,
                                                 std::shared_ptr<mf::EventSink> const& sender)
 {
     std::shared_ptr<msh::Session> new_session =
-        std::make_shared<msh::ApplicationSession>(
+        std::make_shared<ApplicationSession>(
             surface_factory, name, snapshot_strategy, session_listener, sender);
 
     app_container->insert_session(new_session);
@@ -88,7 +89,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
     return new_session;
 }
 
-inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<Session> const& shell_session)
+inline void ms::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<msh::Session> const& shell_session)
 {
     auto old_focus = focus_application.lock();
 
@@ -107,15 +108,15 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
     }
 }
 
-void msh::SessionManager::set_focus_to(std::shared_ptr<Session> const& shell_session)
+void ms::SessionManager::set_focus_to(std::shared_ptr<msh::Session> const& shell_session)
 {
     std::unique_lock<std::mutex> lg(mutex);
     set_focus_to_locked(lg, shell_session);
 }
 
-void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
+void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
 
     session_event_sink->handle_session_stopping(shell_session);
     session_listener->stopping(shell_session);
@@ -126,7 +127,7 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
     set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<msh::Session>()));
 }
 
-void msh::SessionManager::focus_next()
+void ms::SessionManager::focus_next()
 {
     std::unique_lock<std::mutex> lock(mutex);
     auto focus = focus_application.lock();
@@ -141,7 +142,7 @@ void msh::SessionManager::focus_next()
     set_focus_to_locked(lock, focus);
 }
 
-std::weak_ptr<msh::Session> msh::SessionManager::focussed_application() const
+std::weak_ptr<msh::Session> ms::SessionManager::focussed_application() const
 {
     return focus_application;
 }
@@ -149,21 +150,20 @@ std::weak_ptr<msh::Session> msh::SessionManager::focussed_application() const
 // TODO: We use this to work around the lack of a SessionMediator-like object for internal clients.
 // we could have an internal client mediator which acts as a factory for internal clients, taking responsibility
 // for invoking handle_surface_created.
-mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
+mf::SurfaceId ms::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
     msh::SurfaceCreationParameters const& params)
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
     auto id = shell_session->create_surface(params);
-    
+
     handle_surface_created(session);
 
     return id;
 }
 
-void msh::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
+void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
 
     set_focus_to(shell_session);
 }
-                                                 

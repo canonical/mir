@@ -16,30 +16,29 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_EVENT_HANDLER_REGISTER_H_
-#define MIR_SHELL_SESSION_EVENT_HANDLER_REGISTER_H_
+#ifndef MIR_SURFACES_SESSION_EVENT_HANDLER_REGISTER_H_
+#define MIR_SURFACES_SESSION_EVENT_HANDLER_REGISTER_H_
 
 #include <functional>
 #include <memory>
 
 namespace mir
 {
-namespace shell
+namespace shell { class Session; }
+
+namespace surfaces
 {
-
-class Session;
-
 class SessionEventHandlerRegister
 {
 public:
     virtual ~SessionEventHandlerRegister() = default;
 
     virtual void register_focus_change_handler(
-        std::function<void(std::shared_ptr<Session> const& session)> const& handler) = 0;
+        std::function<void(std::shared_ptr<shell::Session> const& session)> const& handler) = 0;
     virtual void register_no_focus_handler(
         std::function<void()> const& handler) = 0;
     virtual void register_session_stopping_handler(
-        std::function<void(std::shared_ptr<Session> const& session)> const& handler) = 0;
+        std::function<void(std::shared_ptr<shell::Session> const& session)> const& handler) = 0;
 
 protected:
     SessionEventHandlerRegister() = default;
@@ -50,4 +49,4 @@ protected:
 }
 }
 
-#endif /* MIR_SHELL_SESSION_EVENT_HANDLER_REGISTER_H_ */
+#endif /* MIR_SURFACES_SESSION_EVENT_HANDLER_REGISTER_H_ */

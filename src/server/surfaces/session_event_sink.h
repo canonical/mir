@@ -16,26 +16,25 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_EVENT_SINK_H_
-#define MIR_SHELL_SESSION_EVENT_SINK_H_
+#ifndef MIR_SURFACES_SESSION_EVENT_SINK_H_
+#define MIR_SURFACES_SESSION_EVENT_SINK_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace shell
+namespace shell { class Session; }
+
+namespace surfaces
 {
-
-class Session;
-
 class SessionEventSink
 {
 public:
     virtual ~SessionEventSink() = default;
 
-    virtual void handle_focus_change(std::shared_ptr<Session> const& session) = 0;
+    virtual void handle_focus_change(std::shared_ptr<shell::Session> const& session) = 0;
     virtual void handle_no_focus() = 0;
-    virtual void handle_session_stopping(std::shared_ptr<Session> const& session) = 0;
+    virtual void handle_session_stopping(std::shared_ptr<shell::Session> const& session) = 0;
 
 protected:
     SessionEventSink() = default;
@@ -46,4 +45,4 @@ protected:
 }
 }
 
-#endif /* MIR_SHELL_SESSION_EVENT_SINK_H_ */
+#endif /* MIR_SURFACES_SESSION_EVENT_SINK_H_ */

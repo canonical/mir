@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_GL_PIXEL_BUFFER_H_
-#define MIR_SHELL_GL_PIXEL_BUFFER_H_
+#ifndef MIR_SURFACES_GL_PIXEL_BUFFER_H_
+#define MIR_SURFACES_GL_PIXEL_BUFFER_H_
 
 #include "pixel_buffer.h"
 
@@ -34,7 +34,7 @@ class Buffer;
 class GLContext;
 }
 
-namespace shell
+namespace surfaces
 {
 /** Extracts the pixels from a graphics::Buffer using GL facilities. */
 class GLPixelBuffer : public PixelBuffer
@@ -65,4 +65,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_GL_PIXEL_BUFFER_H_ */
+#endif /* MIR_SURFACES_GL_PIXEL_BUFFER_H_ */

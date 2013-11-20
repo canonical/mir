@@ -16,15 +16,15 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "src/server/surfaces/session_manager.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/shell/session_manager.h"
-#include "src/server/shell/default_session_container.h"
+#include "src/server/surfaces/default_session_container.h"
 #include "mir/shell/session.h"
 #include "src/server/surfaces/surface_impl.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "src/server/shell/session_event_sink.h"
+#include "src/server/surfaces/session_event_sink.h"
 #include "src/server/surfaces/basic_surface.h"
 
 #include "mir_test/fake_shared.h"
@@ -51,7 +51,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-struct MockSessionContainer : public msh::SessionContainer
+struct MockSessionContainer : public ms::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
@@ -62,7 +62,7 @@ struct MockSessionContainer : public msh::SessionContainer
     ~MockSessionContainer() noexcept {}
 };
 
-struct MockSessionEventSink : public msh::SessionEventSink
+struct MockSessionEventSink : public ms::SessionEventSink
 {
     MOCK_METHOD1(handle_focus_change, void(std::shared_ptr<msh::Session> const& session));
     MOCK_METHOD0(handle_no_focus, void());
@@ -90,7 +90,7 @@ struct SessionManagerSetup : public testing::Test
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     msh::NullSessionListener session_listener;
 
-    msh::SessionManager session_manager;
+    ms::SessionManager session_manager;
 };
 
 }
@@ -189,7 +189,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     mtd::MockSessionListener session_listener;
 
-    msh::SessionManager session_manager;
+    ms::SessionManager session_manager;
 };
 }
 
@@ -228,7 +228,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     MockSessionEventSink session_event_sink;
 
-    msh::SessionManager session_manager;
+    ms::SessionManager session_manager;
 };
 
 }

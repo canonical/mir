@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/shell/threaded_snapshot_strategy.h"
-#include "src/server/shell/pixel_buffer.h"
+#include "src/server/surfaces/threaded_snapshot_strategy.h"
+#include "src/server/surfaces/pixel_buffer.h"
 #include "mir/shell/surface_buffer_access.h"
 #include "mir/graphics/buffer.h"
 
@@ -32,6 +32,7 @@
 #include <atomic>
 
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -51,7 +52,7 @@ public:
     mtd::StubBuffer buffer;
 };
 
-class MockPixelBuffer : public msh::PixelBuffer
+class MockPixelBuffer : public ms::PixelBuffer
 {
 public:
     ~MockPixelBuffer() noexcept {}
@@ -81,7 +82,7 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
     EXPECT_CALL(pixel_buffer, stride())
         .WillOnce(Return(stride));
 
-    msh::ThreadedSnapshotStrategy strategy{mt::fake_shared(pixel_buffer)};
+    ms::ThreadedSnapshotStrategy strategy{mt::fake_shared(pixel_buffer)};
 
     std::atomic<bool> snapshot_taken{false};
 

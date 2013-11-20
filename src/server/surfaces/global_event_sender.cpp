@@ -21,24 +21,25 @@
 #include "mir/shell/session.h"
 
 namespace mg=mir::graphics;
+namespace ms=mir::surfaces;
 namespace msh=mir::shell;
 
-msh::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
+ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
     : sessions(session_container)
 {
 }
 
-void msh::GlobalEventSender::handle_event(MirEvent const&)
+void ms::GlobalEventSender::handle_event(MirEvent const&)
 { 
     //TODO, no driving test cases, although messages like 'server shutdown' could go here
 }
 
-void msh::GlobalEventSender::handle_lifecycle_event(MirLifecycleState)
+void ms::GlobalEventSender::handle_lifecycle_event(MirLifecycleState)
 {
     // Lifecycle events are per application session, never global
 }
 
-void msh::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
+void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
     sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)
     {

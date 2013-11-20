@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_THREADED_SNAPSHOT_STRATEGY_H_
-#define MIR_SHELL_THREADED_SNAPSHOT_STRATEGY_H_
+#ifndef MIR_SURFACES_THREADED_SNAPSHOT_STRATEGY_H_
+#define MIR_SURFACES_THREADED_SNAPSHOT_STRATEGY_H_
 
 #include "snapshot_strategy.h"
 
@@ -27,9 +27,8 @@
 
 namespace mir
 {
-namespace shell
+namespace surfaces
 {
-
 class PixelBuffer;
 class SnapshottingFunctor;
 
@@ -40,8 +39,8 @@ public:
     ~ThreadedSnapshotStrategy() noexcept;
 
     void take_snapshot_of(
-        std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
-        SnapshotCallback const& snapshot_taken);
+        std::shared_ptr<shell::SurfaceBufferAccess> const& surface_buffer_access,
+        shell::SnapshotCallback const& snapshot_taken);
 
 private:
     std::shared_ptr<PixelBuffer> const pixels;
@@ -52,4 +51,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_THREADED_SNAPSHOT_STRATEGY_H_ */
+#endif /* MIR_SURFACES_THREADED_SNAPSHOT_STRATEGY_H_ */

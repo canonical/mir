@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/shell/application_session.h"
-#include "src/server/shell/default_session_container.h"
+#include "src/server/surfaces/application_session.h"
+#include "src/server/surfaces/default_session_container.h"
 #include "mir_test_doubles/stub_shell_session.h"
 
 #include <gmock/gmock.h>
@@ -25,13 +25,14 @@
 #include <string>
 
 namespace mf = mir::frontend;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 TEST(DefaultSessionContainer, for_each)
 {
     using namespace ::testing;
-    msh::DefaultSessionContainer container;
+    ms::DefaultSessionContainer container;
     
     auto session1 = std::make_shared<mtd::StubShellSession>();
     auto session2 = std::make_shared<mtd::StubShellSession>();
@@ -58,7 +59,7 @@ TEST(DefaultSessionContainer, for_each)
 TEST(DefaultSessionContainer, successor_of)
 {
     using namespace ::testing;
-    msh::DefaultSessionContainer container;
+    ms::DefaultSessionContainer container;
     
     auto session1 = std::make_shared<mtd::StubShellSession>();
     auto session2 = std::make_shared<mtd::StubShellSession>();
@@ -79,7 +80,7 @@ TEST(DefaultSessionContainer, successor_of)
 TEST(DefaultSessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
-    msh::DefaultSessionContainer container;
+    ms::DefaultSessionContainer container;
 
     EXPECT_THROW({
         container.remove_session(std::make_shared<mtd::StubShellSession>());

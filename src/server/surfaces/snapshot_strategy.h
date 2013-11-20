@@ -13,34 +13,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_GLOBAL_EVENT_SENDER_H_
-#define MIR_SHELL_GLOBAL_EVENT_SENDER_H_
+#ifndef MIR_SURFACES_SNAPSHOT_STRATEGY_H_
+#define MIR_SURFACES_SNAPSHOT_STRATEGY_H_
 
-#include "mir/frontend/event_sink.h"
+#include "mir/shell/snapshot.h"
+
 #include <memory>
 
 namespace mir
 {
 namespace shell
 {
-class SessionContainer;
+class SurfaceBufferAccess;
+}
 
-class GlobalEventSender : public frontend::EventSink
+namespace surfaces
+{
+class SnapshotStrategy
 {
 public:
-    GlobalEventSender(std::shared_ptr<SessionContainer> const&);
+    virtual ~SnapshotStrategy() = default;
 
-    void handle_event(MirEvent const& e);
-    void handle_lifecycle_event(MirLifecycleState state);
-    void handle_display_config_change(graphics::DisplayConfiguration const& config);
+    virtual void take_snapshot_of(
+        std::shared_ptr<shell::SurfaceBufferAccess> const& surface_buffer_access,
+        shell::SnapshotCallback const& snapshot_taken) = 0;
 
-private:
-    std::shared_ptr<SessionContainer> const sessions;
+protected:
+    SnapshotStrategy() = default;
+    SnapshotStrategy(SnapshotStrategy const&) = delete;
+    SnapshotStrategy& operator=(SnapshotStrategy const&) = delete;
 };
+
 }
 }
 
-#endif /* MIR_SHELL_GLOBAL_EVENT_SENDER_H_ */
+#endif /* MIR_SURFACES_SNAPSHOT_STRATEGY_H_ */

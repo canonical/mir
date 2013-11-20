@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_DEFAULT_SESSION_CONTAINER_H_
-#define MIR_SHELL_DEFAULT_SESSION_CONTAINER_H_
+#ifndef MIR_SURFACES_DEFAULT_SESSION_CONTAINER_H_
+#define MIR_SURFACES_DEFAULT_SESSION_CONTAINER_H_
 
 #include <vector>
 #include <memory>
@@ -27,21 +27,19 @@
 
 namespace mir
 {
-namespace shell
+namespace surfaces
 {
-class Session;
-
 class DefaultSessionContainer : public SessionContainer
 {
 public:
-    void insert_session(std::shared_ptr<Session> const& session);
-    void remove_session(std::shared_ptr<Session> const& session);
-    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
+    void insert_session(std::shared_ptr<shell::Session> const& session);
+    void remove_session(std::shared_ptr<shell::Session> const& session);
+    void for_each(std::function<void(std::shared_ptr<shell::Session> const&)> f) const;
 
-    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& session) const;
+    std::shared_ptr<shell::Session> successor_of(std::shared_ptr<shell::Session> const& session) const;
 
 private:
-    std::vector<std::shared_ptr<Session>> apps;
+    std::vector<std::shared_ptr<shell::Session>> apps;
     mutable std::mutex guard;
 };
 
@@ -49,4 +47,4 @@ private:
 }
 
 
-#endif // MIR_SHELL_DEFAULT_SESSION_CONTAINER_H_
+#endif // MIR_SURFACES_DEFAULT_SESSION_CONTAINER_H_

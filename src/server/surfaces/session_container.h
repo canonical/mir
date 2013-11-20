@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_CONTAINER_H_
-#define MIR_SHELL_SESSION_CONTAINER_H_
+#ifndef MIR_SURFACES_SESSION_CONTAINER_H_
+#define MIR_SURFACES_SESSION_CONTAINER_H_
 
 #include <vector>
 #include <memory>
@@ -25,22 +25,21 @@
 
 namespace mir
 {
-namespace shell
+namespace shell { class Session; }
+
+namespace surfaces
 {
-
-class Session;
-
 class SessionContainer
 {
 public:
-    virtual void insert_session(std::shared_ptr<Session> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<Session> const& session) = 0;
+    virtual void insert_session(std::shared_ptr<shell::Session> const& session) = 0;
+    virtual void remove_session(std::shared_ptr<shell::Session> const& session) = 0;
 
-    virtual void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
+    virtual void for_each(std::function<void(std::shared_ptr<shell::Session> const&)> f) const = 0;
 
     // For convenience the successor of the null session is defined as the last session
     // which would be passed to the for_each callback
-    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const = 0;
+    virtual std::shared_ptr<shell::Session> successor_of(std::shared_ptr<shell::Session> const&) const = 0;
 
 protected:
     SessionContainer() = default;
@@ -54,4 +53,4 @@ protected:
 }
 
 
-#endif // MIR_SHELL_SESSION_CONTAINER_H_
+#endif // MIR_SURFACES_SESSION_CONTAINER_H_

@@ -50,10 +50,10 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
 
     bool nonrectangular = has_alpha(params.pixel_format);
-    auto state = std::make_shared<ms::SurfaceData>(params.name,
+    auto state = std::make_shared<SurfaceData>(params.name,
                                                     actual_size,
                                                     change_callback,
                                                     nonrectangular);
     auto input_channel = input_factory->make_input_channel();
-    return std::make_shared<ms::Surface>(state, buffer_stream, input_channel, report);
+    return std::make_shared<Surface>(state, buffer_stream, input_channel, report);
 }

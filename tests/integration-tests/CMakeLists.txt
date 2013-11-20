@@ -9,6 +9,8 @@ set(
   test_surface_first_frame_sync.cpp
   test_swapinterval.cpp
   test_server_client_types.cpp
+  test_session_manager.cpp
+  test_session.cpp
 )
 
 add_subdirectory(client/)
