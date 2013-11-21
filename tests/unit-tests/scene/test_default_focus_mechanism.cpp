@@ -27,7 +27,6 @@
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_shell_session.h"
-#include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface_controller.h"
