@@ -111,8 +111,19 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 void ms::Surface::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
 {
+    // TODO this doesn't really seem the place for the following logic. Vis:
+    // TODO
+    // TODO   o buffer.reset()    implicitly returns the buffer and then
+    // TODO   o flag_for_render() notifies the compositor of available work
+    // TODO
+    // TODO This should happen before securing the new client buffer to avoid
+    // TODO unnecessary waits for the new buffer.
+    // TODO
+    // TODO Logically we should "assert(buffer.use_count() == 1);" but
+    // TODO that breaks tests that repeatedly give out the same buffer
     if (buffer)
     {
+//      assert(buffer.use_count() == 1);
         buffer.reset();
         flag_for_render();
     }
