@@ -238,7 +238,7 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
 TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
-    auto mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+    auto mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
     ON_CALL(*mock_display_device, display_format())
         .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     Sequence seq;

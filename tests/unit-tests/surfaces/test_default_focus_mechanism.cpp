@@ -51,7 +51,7 @@ TEST(DefaultFocusMechanism, raises_default_surface)
     using namespace ::testing;
     
     NiceMock<mtd::MockShellSession> app1;
-    mtd::MockSurface mock_surface(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
+    NiceMock<mtd::MockSurface> mock_surface(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;
         EXPECT_CALL(app1, default_surface()).Times(1)
@@ -71,8 +71,8 @@ TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
     using namespace ::testing;
 
     NiceMock<mtd::MockShellSession> app1, app2;
-    mtd::MockSurface mock_surface1(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
-    mtd::MockSurface mock_surface2(&app2, std::make_shared<mtd::StubSurfaceBuilder>());
+    NiceMock<mtd::MockSurface> mock_surface1(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
+    NiceMock<mtd::MockSurface> mock_surface2(&app2, std::make_shared<mtd::StubSurfaceBuilder>());
     
     ON_CALL(app1, default_surface()).WillByDefault(Return(mt::fake_shared(mock_surface1)));
     ON_CALL(app2, default_surface()).WillByDefault(Return(mt::fake_shared(mock_surface2)));
@@ -97,7 +97,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
     using namespace ::testing;
     
     NiceMock<mtd::MockShellSession> app1;
-    mtd::MockSurface mock_surface(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
+    NiceMock<mtd::MockSurface> mock_surface(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;
         EXPECT_CALL(app1, default_surface()).Times(1)
@@ -106,7 +106,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
             .WillOnce(Return(std::shared_ptr<msh::Surface>()));
     }
 
-    mtd::MockInputTargeter targeter;
+    NiceMock<mtd::MockInputTargeter> targeter;
     
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), std::make_shared<mtd::StubSurfaceController>());
     

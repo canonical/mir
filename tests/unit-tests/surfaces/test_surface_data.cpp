@@ -58,7 +58,7 @@ struct SurfaceDataTest : public testing::Test
     geom::Size size;
     geom::Rectangle rect;
 
-    MockCallback mock_callback;
+    testing::NiceMock<MockCallback> mock_callback;
     std::function<void()> null_change_cb;
     std::function<void()> mock_change_cb;
 };

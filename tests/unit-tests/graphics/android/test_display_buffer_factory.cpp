@@ -77,7 +77,7 @@ public:
         mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
         ON_CALL(*mock_resource_factory, create_hwc_native_device())
             .WillByDefault(Return(hw_access_mock.mock_hwc_device)); 
-        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+        mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;

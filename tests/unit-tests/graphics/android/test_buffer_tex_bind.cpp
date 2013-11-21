@@ -38,24 +38,17 @@ public:
     {
         using namespace testing;
 
-        mock_native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
         size = geom::Size{300, 220};
         pf = geom::PixelFormat::abgr_8888;
         extensions = std::make_shared<mg::EGLExtensions>();
-
-        mock_egl.silence_uninteresting();
     };
-    virtual void TearDown()
-    {
-        buffer.reset();
-    }
 
     geom::Size size;
     geom::PixelFormat pf;
 
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mg::EGLExtensions> extensions;
-    std::shared_ptr<mga::Buffer> buffer;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
 };
 

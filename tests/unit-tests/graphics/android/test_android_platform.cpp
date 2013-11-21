@@ -61,7 +61,7 @@ protected:
         }
 
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        mock_buffer = std::make_shared<mtd::MockBuffer>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
         ON_CALL(*native_buffer, handle())
             .WillByDefault(Return(native_buffer_handle.get()));

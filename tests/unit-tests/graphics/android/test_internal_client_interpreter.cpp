@@ -47,9 +47,9 @@ struct InternalClientWindow : public ::testing::Test
     {
         using namespace testing;
         sz = geom::Size{4, 23};
-        mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
-        mock_surface = std::make_shared<MockInternalSurface>();
-        mock_buffer = std::make_shared<mtd::MockBuffer>();
+        mock_cache = std::make_shared<NiceMock<mtd::MockInterpreterResourceCache>>();
+        mock_surface = std::make_shared<NiceMock<MockInternalSurface>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
 
         ON_CALL(*mock_surface, advance_client_buffer())

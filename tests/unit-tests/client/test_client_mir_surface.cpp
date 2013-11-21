@@ -310,7 +310,7 @@ struct MirClientSurfaceTest : public testing::Test
 
         test_server->comm->start();
 
-        mock_buffer_factory = std::make_shared<mt::MockClientBufferFactory>();
+        mock_buffer_factory = std::make_shared<testing::NiceMock<mt::MockClientBufferFactory>>();
 
         input_platform = std::make_shared<mt::StubClientInputPlatform>();
 

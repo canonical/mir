@@ -122,45 +122,6 @@ mtd::MockEGL::~MockEGL()
     global_mock_egl = NULL;
 }
 
-void mtd::MockEGL::silence_uninteresting()
-{
-    using namespace testing;
-    EXPECT_CALL(*this, eglGetCurrentDisplay())
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglGetDisplay(_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglGetDisplay(_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglInitialize(_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglGetConfigs(_,_,_, _))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglGetConfigAttrib(_,_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglChooseConfig(_,_,_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglCreatePbufferSurface(_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglCreateContext(_,_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglMakeCurrent(_,_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglDestroyContext(_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglDestroySurface(_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglTerminate(_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglSwapBuffers(_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglCreateImageKHR(_,_,_,_,_))
-        .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglDestroyImageKHR(_,_))
-        .Times(AtLeast(0));
-}
-
 #define CHECK_GLOBAL_MOCK(rettype)         \
     if (!global_mock_egl)                  \
     {                                      \

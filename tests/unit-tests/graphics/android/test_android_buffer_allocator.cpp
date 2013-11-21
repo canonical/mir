@@ -42,7 +42,7 @@ struct AndroidGraphicBufferAllocatorTest : public ::testing::Test
 
     std::shared_ptr<mg::BufferInitializer> const null_buffer_initializer;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
