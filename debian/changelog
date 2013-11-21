@@ -1,3 +1,9 @@
+mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
+
+  * Prepare for release 0.1.2 (TODO)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 21 Nov 2013 11:17:36 +0800
+
 mir (0.1.1+14.04.20131120-0ubuntu1) trusty; urgency=low
 
   [ Daniel van Vugt ]
