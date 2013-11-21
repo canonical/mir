@@ -55,6 +55,7 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
     expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
     expected_layer.hints = 0;
     expected_layer.flags = 0;

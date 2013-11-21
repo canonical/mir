@@ -59,6 +59,8 @@ mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int 
     visibleRegionScreen.numRects=1;
     visibleRegionScreen.rects= &visible_rect;
     handle = buffer_handle;
+
+    memset(&reserved, 0, sizeof(reserved));
 }
 
 mga::FramebufferLayer::FramebufferLayer()
