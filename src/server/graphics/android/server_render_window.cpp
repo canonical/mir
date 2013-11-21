@@ -20,7 +20,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "server_render_window.h"
-#include "display_device.h"
+#include "framebuffer_bundle.h"
 #include "buffer.h"
 #include "android_format_conversion-inl.h"
 #include "interpreter_resource_cache.h"
@@ -34,17 +34,17 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(
-    std::shared_ptr<mga::DisplayDevice> const& display_poster,
+    std::shared_ptr<mga::FramebufferBundle> const& fb_bundle,
     std::shared_ptr<InterpreterResourceCache> const& cache)
-    : poster(display_poster),
+    : fb_bundle(fb_bundle),
       resource_cache(cache),
-      format(mga::to_android_format(poster->display_format()))
+      format(mga::to_android_format(fb_bundle->fb_format()))
 {
 }
 
 mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
-    auto buffer = poster->buffer_for_render();
+    auto buffer = fb_bundle->buffer_for_render();
     auto handle = buffer->native_buffer_handle();
     resource_cache->store_buffer(buffer, handle);
     return handle.get();
@@ -68,11 +68,11 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
         case NATIVE_WINDOW_WIDTH:
-            size = poster->display_size();
+            size = fb_bundle->fb_size();
             return size.width.as_uint32_t();
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
         case NATIVE_WINDOW_HEIGHT:
-            size = poster->display_size();
+            size = fb_bundle->fb_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
             return format;
@@ -87,5 +87,5 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
 
 void mga::ServerRenderWindow::sync_to_display(bool sync)
 {
-    poster->sync_to_display(sync);
+    fb_bundle->wait_for_consumed_buffer(sync);
 }

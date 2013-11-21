@@ -34,7 +34,7 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 namespace

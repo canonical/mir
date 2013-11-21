@@ -32,7 +32,7 @@ public:
     NullInputConfiguration() = default;
     virtual ~NullInputConfiguration() = default;
 
-    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    std::shared_ptr<scene::InputRegistrar> the_input_registrar();
     std::shared_ptr<shell::InputTargeter> the_input_targeter();
     std::shared_ptr<InputManager> the_input_manager();
     

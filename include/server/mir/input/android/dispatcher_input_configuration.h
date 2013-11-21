@@ -90,7 +90,7 @@ public:
                               std::shared_ptr<input::InputReport> const& input_report);
     virtual ~DispatcherInputConfiguration();
 
-    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    std::shared_ptr<scene::InputRegistrar> the_input_registrar();
     std::shared_ptr<shell::InputTargeter> the_input_targeter();
     std::shared_ptr<input::InputManager> the_input_manager();
 

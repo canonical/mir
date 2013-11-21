@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "src/server/surfaces/surface_impl.h"
+#include "src/server/scene/surface_impl.h"
 
 #include "mir/shell/surface_creation_parameters.h"
 #include "null_event_sink.h"
@@ -36,10 +36,10 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public surfaces::SurfaceImpl
+struct MockSurface : public scene::SurfaceImpl
 {
-    MockSurface(shell::Session* session, std::shared_ptr<surfaces::SurfaceBuilder> const& builder) :
-        surfaces::SurfaceImpl(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(),
+    MockSurface(shell::Session* session, std::shared_ptr<scene::SurfaceBuilder> const& builder) :
+        scene::SurfaceImpl(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(),
             frontend::SurfaceId{}, std::make_shared<NullEventSink>())
     {
     }

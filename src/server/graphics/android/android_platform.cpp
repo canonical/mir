@@ -23,7 +23,7 @@
 #include "resource_factory.h"
 #include "android_display.h"
 #include "internal_client.h"
-#include "display_buffer_factory.h"
+#include "output_builder.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -41,9 +41,9 @@ namespace mf=mir::frontend;
 namespace mo = mir::options;
 
 mga::AndroidPlatform::AndroidPlatform(
-    std::shared_ptr<mga::AndroidDisplayBufferFactory> const& display_buffer_factory,
+    std::shared_ptr<mga::DisplayBuilder> const& display_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
-    : display_buffer_factory(display_buffer_factory),
+    : display_builder(display_builder),
       display_report(display_report)
 {
 }
@@ -63,7 +63,7 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_bu
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
 {
-    return std::make_shared<mga::AndroidDisplay>(display_buffer_factory, display_report);
+    return std::make_shared<mga::AndroidDisplay>(display_builder, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
@@ -110,11 +110,11 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     //todo: could parse an option here
     auto should_use_fb_fallback = false;
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(fb_allocator);
-    auto display_buffer_factory = std::make_shared<mga::DisplayBufferFactory>(
-        display_resource_factory, display_report, should_use_fb_fallback);
-    return std::make_shared<mga::AndroidPlatform>(display_buffer_factory, display_report);
+    auto display_builder = std::make_shared<mga::OutputBuilder>(
+        fb_allocator, display_resource_factory, display_report, should_use_fb_fallback);
+    return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
@@ -122,8 +122,8 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
     auto should_use_fb_fallback = false;
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(fb_allocator);
-    auto display_buffer_factory = std::make_shared<mga::DisplayBufferFactory>(
-        display_resource_factory, display_report, should_use_fb_fallback);
-    return std::make_shared<mga::AndroidPlatform>(display_buffer_factory, display_report);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
+    auto display_builder = std::make_shared<mga::OutputBuilder>(
+        fb_allocator, display_resource_factory, display_report, should_use_fb_fallback);
+    return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }

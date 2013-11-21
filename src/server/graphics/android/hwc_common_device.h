@@ -22,6 +22,7 @@
 #include "display_device.h"
 #include <hardware/hwcomposer.h>
 
+#include <memory>
 #include <mutex>
 #include <condition_variable>
 

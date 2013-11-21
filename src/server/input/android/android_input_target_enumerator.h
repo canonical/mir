@@ -35,7 +35,7 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace surfaces
+namespace scene
 {
 class InputRegitrar;
 }
