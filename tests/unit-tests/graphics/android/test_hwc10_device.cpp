@@ -75,7 +75,7 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
     using namespace testing;
 
     EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x4);
-    EGLSurface sur = reinterpret_cast<EGLSurface>(0x4);
+    EGLSurface sur = reinterpret_cast<EGLSurface>(0x3);
 
     InSequence inseq;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
@@ -91,8 +91,6 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
 
     device.commit_frame(dpy, sur);
 
-    Mock::VerifyAndClearExpectations(mock_hwc_device.get());
-
     EXPECT_EQ(dpy, mock_hwc_device->display0_set_content.dpy);
     EXPECT_EQ(sur, mock_hwc_device->display0_set_content.sur);
     EXPECT_EQ(-1, mock_hwc_device->display0_set_content.retireFenceFd);
@@ -107,8 +105,8 @@ TEST_F(HWC10Device, hwc10_commit_frame_async)
 {
     using namespace testing;
 
-    EGLDisplay dpy = nullptr;
-    EGLSurface sur = nullptr;
+    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x4);
+    EGLSurface sur = reinterpret_cast<EGLSurface>(0x5);
 
     InSequence inseq;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
