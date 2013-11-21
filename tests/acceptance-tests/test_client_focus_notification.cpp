@@ -136,7 +136,7 @@ ACTION_P(SignalFence, fence)
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
+TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
     

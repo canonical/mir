@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
 
-#include "mir/surfaces/input_registrar.h"
+#include "mir/scene/input_registrar.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockInputRegistrar : public surfaces::InputRegistrar
+struct MockInputRegistrar : public scene::InputRegistrar
 {
     virtual ~MockInputRegistrar() noexcept(true) {}
     MOCK_METHOD3(input_channel_opened, void(std::shared_ptr<input::InputChannel> const&,

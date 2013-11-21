@@ -41,7 +41,7 @@
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 

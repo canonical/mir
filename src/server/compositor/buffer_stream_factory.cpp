@@ -32,7 +32,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 
 mc::BufferStreamFactory::BufferStreamFactory(
     const std::shared_ptr<mg::GraphicBufferAllocator> &gralloc)

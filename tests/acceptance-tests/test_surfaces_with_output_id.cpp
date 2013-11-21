@@ -261,7 +261,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
 TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 {
-    mt::CrossProcessAction client_connect_and_create_surfaces;
+    mt::CrossProcessAction client_connect_and_create_scene;
     mt::CrossProcessAction client_disconnect;
 
     struct ServerConfig : TestingServerConfiguration

@@ -23,7 +23,7 @@
 #include "graphics_display_layout.h"
 #include "organising_surface_factory.h"
 
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
@@ -34,7 +34,7 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         [this]()
         {
             return std::make_shared<msh::OrganisingSurfaceFactory>(
-                the_surfaces_surface_factory(),
+                the_scene_surface_factory(),
                 the_shell_placement_strategy());
         });
 }

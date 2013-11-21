@@ -20,12 +20,12 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
-#include "src/server/surfaces/application_session.h"
+#include "src/server/scene/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "src/server/surfaces/basic_surface.h"
+#include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
@@ -52,7 +52,7 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
@@ -537,7 +537,7 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_surfaces)
+TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_scene)
 {
     using namespace testing;
 

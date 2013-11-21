@@ -19,8 +19,8 @@
 #include "mir/default_server_configuration.h"
 #include "src/server/input/null_input_configuration.h"
 #include "mir/compositor/compositor.h"
-#include "src/server/surfaces/application_session.h"
-#include "src/server/surfaces/pixel_buffer.h"
+#include "src/server/scene/application_session.h"
+#include "src/server/scene/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -39,7 +39,7 @@
 
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;

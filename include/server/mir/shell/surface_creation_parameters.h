@@ -24,7 +24,7 @@
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/surfaces/depth_id.h"
+#include "mir/scene/depth_id.h"
 #include "mir/input/input_reception_mode.h"
 
 #include <memory>
@@ -51,7 +51,7 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
     
-    SurfaceCreationParameters& of_depth(surfaces::DepthId const& new_depth);
+    SurfaceCreationParameters& of_depth(scene::DepthId const& new_depth);
     
     SurfaceCreationParameters& with_input_mode(input::InputReceptionMode const& new_mode);
 
@@ -62,7 +62,7 @@ struct SurfaceCreationParameters
     geometry::Point top_left;
     graphics::BufferUsage buffer_usage;
     geometry::PixelFormat pixel_format;
-    surfaces::DepthId depth;
+    scene::DepthId depth;
     input::InputReceptionMode input_mode;
     graphics::DisplayConfigurationOutputId output_id;
 };
