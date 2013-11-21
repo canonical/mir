@@ -42,6 +42,8 @@ protected:
     {
         using namespace testing;
 
+        dpy = reinterpret_cast<EGLDisplay>(0x4);
+        surf = reinterpret_cast<EGLSurface>(0x4);
         mock_native_buffer = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
         mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();

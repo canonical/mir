@@ -74,8 +74,8 @@ TEST_F(HWC10Device, hwc10_commit_frame_sync)
 {
     using namespace testing;
 
-    EGLDisplay dpy;
-    EGLSurface sur;
+    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x4);
+    EGLSurface sur = reinterpret_cast<EGLSurface>(0x4);
 
     InSequence inseq;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
