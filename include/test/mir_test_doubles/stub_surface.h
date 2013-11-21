@@ -46,9 +46,8 @@ public:
         return geometry::PixelFormat();
     }
 
-    std::shared_ptr<graphics::Buffer> advance_client_buffer()
+    void swap_buffers(std::shared_ptr<graphics::Buffer>&)
     {
-        return std::shared_ptr<graphics::Buffer>();
     }
 
     virtual int configure(MirSurfaceAttrib, int)
