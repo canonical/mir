@@ -1,8 +1,56 @@
-mir (0.1.1-0ubuntu1) UNRELEASED; urgency=low
+mir (0.1.1+14.04.20131120-0ubuntu1) trusty; urgency=low
 
-  * Bump version to 0.1.1
+  [ Daniel van Vugt ]
+  * New upstream release 0.1.1
+    - Add unit tests for V/H scroll events.
+    - surfaces: avoid publishing some internal headers, tidy up default
+      configuration, integrate surfaces report.
+    - client: Add mir_connection_drm_set_gbm_device()
+    - graphics: avoid publishing some internal headers.
+    - Fixed: unity-system-compositor FTBFS on trusty against new Mir
+      (libmirserver9) (LP: #1244192)
+    - compositor: avoid publishing some internal headers.
+    - shell: Add set_lifecycle_state() to the Session interface.
+    - frontend: avoid publishing some internal headers
+    - logging: avoid publishing some internal headers.
+    - Allow specifying the nested server name by passing --name= or setting
+      MIR_SERVER_NAME=.
+    - graphics,gbm: Inform the EGL platform about the used gbm device when
+      using the native GBM platform
+    - examples: Restore GL state after initializing buffers, fixing crashes 
+      observed in render_surfaces (LP: #1234563)
+    - Continue refactoring the mir android display classes.
+    - shell: Hoist focus control functions needed by unity-mir into
+      FocusController interface
+    - client: Remove the timeout for detecting server crashes
+    - Avoid a race condition that could lead to spurious failures of server
+      shutdown tests (LP: #1245336)
+    - test_client_input.cpp: Bump reception time-out in client test fixture.
+      (LP: #1227683)
+    - Ensure StubBufferAllocator returns buffers with the properties requested,
+      and not the same old hardcoded constants.
+    - Update docs and scripting for trusty.
+    - compositor: Make DefaultDisplayBufferCompositorFactory private to the
+      compositor component.
+    - Ignore warnings clang treats as errors, about unused functions being
+      generated from macros in <lttng/tracepoint.h> (LP: #1246590)
+    - Add resize() support to BufferBundle. This is the first step and lowest
+      level of surface resize support.
+    - Clean up constants relating to SwitchingBundle.
+    - Fix the armhf chroot setup script to point to the right library, so
+      cross compiling can work again (LP: #1246975)
+    - shell: avoid publishing some internal headers.
+    - input: avoid publishing some internal headers.
+  * Bump timeouts used in socket testing. It seems 100ms isn't always
+    enough, which leads to spurious test failures (LP: #1252144) (LP:
+    #1252144)
+  * Fix uninitialized variable causing random drm_auth_magic test
+    failures. (LP: #1252144). (LP: #1252144)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 30 Oct 2013 11:46:13 +0800
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1165
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 20 Nov 2013 07:36:15 +0000
 
 mir (0.1.0+14.04.20131030-0ubuntu1) trusty; urgency=low
 
@@ -18,6 +66,9 @@ mir (0.1.0+14.04.20131030-0ubuntu1) trusty; urgency=low
     the clients to fail. Furthermore, the clients seem able to detect
     server crashes without the timeout, rendering it needless anyway.
     (LP: #1245958)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1161
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 30 Oct 2013 18:37:21 +0000
 
@@ -120,7 +171,7 @@ mir (0.1.0+14.04.20131028-0ubuntu1) trusty; urgency=low
     #1244192)
 
   [ Ubuntu daily release ]
-  * Automatic snapshot from revision 1160
+  * Automatic snapshot from revision 1161
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Oct 2013 02:04:31 +0000
 
