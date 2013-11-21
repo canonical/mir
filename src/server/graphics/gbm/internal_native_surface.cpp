@@ -39,8 +39,7 @@ int mgg::InternalNativeSurface::advance_buffer_static(
 
 int mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
 {
-    current_buffer.reset();
-    current_buffer = surface->advance_client_buffer();
+    surface->swap_buffers(current_buffer);
 
     auto buffer_package = current_buffer->native_buffer_handle();
     memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));

@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 
+#include "gmock_set_arg.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -46,7 +47,7 @@ class MockInternalSurface : public mg::InternalSurface
 public:
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD1(swap_buffers, void(std::shared_ptr<mg::Buffer>&));
 };
 
 struct InternalNativeSurface : public testing::Test
@@ -89,9 +90,9 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
     
     EXPECT_CALL(*buffer, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(*mock_surface, advance_client_buffer())
+    EXPECT_CALL(*mock_surface, swap_buffers(_))
         .Times(1)
-        .WillOnce(Return(buffer));
+        .WillOnce(SetArg<0>(buffer));
  
     MirBufferPackage buffer_package;
     memset(&buffer_package, 0, sizeof(MirBufferPackage));
@@ -118,10 +119,10 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
         .WillOnce(Return(test_buffer_package)); 
     EXPECT_CALL(*stub_buffer2, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(*mock_surface, advance_client_buffer())
+    EXPECT_CALL(*mock_surface, swap_buffers(_))
         .Times(2)
-        .WillOnce(Return(stub_buffer1))
-        .WillOnce(Return(stub_buffer2));
+        .WillOnce(SetArg<0>(stub_buffer1))
+        .WillOnce(SetArg<0>(stub_buffer2));
 
     auto use_count_1 = stub_buffer1.use_count(); 
     auto use_count_2 = stub_buffer2.use_count();
