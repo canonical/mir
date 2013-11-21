@@ -17,13 +17,7 @@
  */
 
 #include "src/server/graphics/android/resource_factory.h"
-#include "src/server/graphics/android/graphic_buffer_allocator.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir_test_doubles/mock_display_device.h"
-#include "mir_test_doubles/mock_display_report.h"
-
 #include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -32,49 +26,10 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
-namespace mt=mir::test;
-namespace geom=mir::geometry;
 
-namespace
+struct ResourceFactoryTest  : public ::testing::Test
 {
-
-class MockAndroidGraphicBufferAllocator : public mga::GraphicBufferAllocator
-{
-public:
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
-
-    ~MockAndroidGraphicBufferAllocator() noexcept {}
-};
-}
-
-class ResourceFactoryTest  : public ::testing::Test
-{
-public:
-    void SetUp()
-    {
-        using namespace testing;
-        mock_buffer_allocator = std::make_shared<NiceMock<MockAndroidGraphicBufferAllocator>>();
-        mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
-        mock_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
-        fake_fb_num = 2;
-
-        ON_CALL(*mock_display_device, display_format())
-            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*mock_display_device, display_size())
-            .WillByDefault(Return(geom::Size{2, 3}));
-
-        ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
-            .WillByDefault(Return(std::shared_ptr<mg::Buffer>()));
-    }
-
-    std::shared_ptr<mtd::MockDisplayReport> mock_report;
-    std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
-    std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
-    unsigned int fake_fb_num;
     mtd::HardwareAccessMock hw_access_mock;
-    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
@@ -83,7 +38,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory;
     factory.create_fb_native_device();
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
@@ -91,7 +46,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
 {
     using namespace testing;
-    mga::ResourceFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory;
 
     /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -118,7 +73,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory;
     factory.create_hwc_native_device();
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
@@ -135,7 +90,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation_failures)
         .WillOnce(Return(-1))
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    mga::ResourceFactory factory(mock_buffer_allocator);
+    mga::ResourceFactory factory;
 
     EXPECT_THROW({ 
         factory.create_hwc_native_device();

@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "framebuffer_bundle.h"
 #include "display_buffer.h"
 #include "display_device.h"
 
@@ -26,10 +27,13 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::DisplayBuffer::DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_device,
+mga::DisplayBuffer::DisplayBuffer(
+    std::shared_ptr<FramebufferBundle> const& fb_bundle,
+    std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context)
-    : display_device{display_device},
+    : fb_bundle{fb_bundle},
+      display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
 {
@@ -37,7 +41,7 @@ mga::DisplayBuffer::DisplayBuffer(std::shared_ptr<DisplayDevice> const& display_
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
 {
-    return {geom::Point{}, display_device->display_size()};
+    return {geom::Point{}, fb_bundle->fb_size()};
 }
 
 void mga::DisplayBuffer::make_current()
@@ -52,8 +56,11 @@ void mga::DisplayBuffer::release_current()
 
 void mga::DisplayBuffer::post_update()
 {
-    display_device->commit_frame(
-        gl_context.display(), gl_context.surface());
+    display_device->prepare_composition();
+    display_device->gpu_render(gl_context.display(), gl_context.surface());
+
+    auto last_rendered = fb_bundle->last_rendered_buffer();
+    display_device->post(*last_rendered);
 }
 
 bool mga::DisplayBuffer::can_bypass() const

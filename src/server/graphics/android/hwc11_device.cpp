@@ -35,34 +35,15 @@ namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<FramebufferBundle> const& fb_bundle,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      fb_bundle(fb_bundle),
       layer_list({mga::CompositionLayer{true}, mga::FramebufferLayer{}}),
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
 }
 
-geom::Size mga::HWC11Device::display_size() const
+void mga::HWC11Device::prepare_composition()
 {
-    return fb_bundle->fb_size();
-}
-
-geom::PixelFormat mga::HWC11Device::display_format() const
-{
-    return fb_bundle->fb_format();
-}
-
-std::shared_ptr<mg::Buffer> mga::HWC11Device::buffer_for_render()
-{
-    return fb_bundle->buffer_for_render();
-}
-
-void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
-{
-    auto lg = lock_unblanked();
-  
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
     hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
@@ -71,17 +52,24 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
+}
 
+void mga::HWC11Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
+{
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
     }
+}
 
-    /* update gles rendered surface */
-    auto buffer = fb_bundle->last_rendered_buffer();
-    auto native_buffer = buffer->native_buffer_handle();
+void mga::HWC11Device::post(mg::Buffer const& buffer)
+{
+    auto lg = lock_unblanked();
+
+    auto native_buffer = buffer.native_buffer_handle();
     layer_list.set_fb_target(native_buffer);
 
+    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
     if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
@@ -95,9 +83,4 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 
     last_display_fence = std::make_shared<mga::SyncFence>(
         sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
-}
-
-void mga::HWC11Device::sync_to_display(bool)
-{
-    //TODO return error code, running not synced to vsync is not supported
 }

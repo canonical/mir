@@ -16,30 +16,27 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "display_buffer_factory.h"
+#include "output_builder.h"
 #include "display_resource_factory.h"
 #include "display_buffer.h"
 #include "display_device.h"
+#include "framebuffers.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 
-#include <EGL/eglext.h>
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-#include <vector>
-#include <algorithm>
-
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-mga::DisplayBufferFactory::DisplayBufferFactory(
+mga::OutputBuilder::OutputBuilder(
+    std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     bool should_use_fb_fallback)
-    : res_factory(res_factory),
+    : buffer_allocator(buffer_allocator),
+      res_factory(res_factory),
       display_report(display_report),
       force_backup_display(should_use_fb_fallback)
 {
@@ -63,10 +60,20 @@ mga::DisplayBufferFactory::DisplayBufferFactory(
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
         fb_native = res_factory->create_fb_native_device();
+        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native);
+    }
+    else
+    {
+        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, hwc_native);
     }
 }
 
-std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_device()
+geom::PixelFormat mga::OutputBuilder::display_format()
+{
+    return framebuffers->fb_format();
+}
+
+std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
 {
     std::shared_ptr<mga::DisplayDevice> device; 
     if (force_backup_display)
@@ -91,11 +98,11 @@ std::shared_ptr<mga::DisplayDevice> mga::DisplayBufferFactory::create_display_de
     return device;
 }
 
-std::unique_ptr<mg::DisplayBuffer> mga::DisplayBufferFactory::create_display_buffer(
+std::unique_ptr<mg::DisplayBuffer> mga::OutputBuilder::create_display_buffer(
     std::shared_ptr<DisplayDevice> const& display_device,
     GLContext const& gl_context)
 {
-    auto native_window = res_factory->create_native_window(display_device);
+    auto native_window = res_factory->create_native_window(framebuffers);
     return std::unique_ptr<mg::DisplayBuffer>(
-        new DisplayBuffer(display_device, native_window, gl_context)); 
+        new DisplayBuffer(framebuffers, display_device, native_window, gl_context)); 
 }

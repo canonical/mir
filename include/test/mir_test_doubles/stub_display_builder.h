@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/server/graphics/android/android_display_buffer_factory.h"
+#include "src/server/graphics/android/display_builder.h"
 #include "stub_display_buffer.h"
 #include "stub_display_device.h"
 #include <gmock/gmock.h>
@@ -30,26 +30,31 @@ namespace test
 {
 namespace doubles
 {
-struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBufferFactory
+struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 {
-    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
+    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
         : stub_dev(stub_dev), sz(sz)
     {
     }
 
-    StubDisplayBufferFactory()
-        : StubDisplayBufferFactory(std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
+    StubDisplayBuilder()
+        : StubDisplayBuilder(std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
     {
     }
 
-    StubDisplayBufferFactory(geometry::Size sz)
-        : StubDisplayBufferFactory(std::make_shared<StubDisplayDevice>(), sz)
+    StubDisplayBuilder(geometry::Size sz)
+        : StubDisplayBuilder(std::make_shared<StubDisplayDevice>(), sz)
     {
     }
 
-    StubDisplayBufferFactory(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
+    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
         : stub_dev(stub_dev), sz(geometry::Size{0,0})
     {
+    }
+
+    geometry::PixelFormat display_format()
+    {
+        return geometry::PixelFormat::abgr_8888;
     }
 
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
@@ -72,4 +77,4 @@ struct StubDisplayBufferFactory : public graphics::android::AndroidDisplayBuffer
 }
 } // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_ */

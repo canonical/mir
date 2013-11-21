@@ -16,15 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/display_buffer_factory.h"
+#include "src/server/graphics/android/output_builder.h"
 #include "src/server/graphics/android/gl_context.h"
 #include "src/server/graphics/android/android_format_conversion-inl.h"
 #include "src/server/graphics/android/resource_factory.h"
+#include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_hw.h"
+#include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/stub_display_device.h"
@@ -39,6 +41,19 @@ namespace geom=mir::geometry;
 
 namespace
 {
+
+struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
+{
+    MockGraphicBufferAllocator()
+    {
+        using namespace testing;
+        ON_CALL(*this, alloc_buffer_platform(_,_,_))
+            .WillByDefault(Return(nullptr));
+    }
+    MOCK_METHOD3(alloc_buffer_platform,
+        std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
+};
+
 struct MockResourceFactory: public mga::DisplayResourceFactory
 {
     ~MockResourceFactory() noexcept {}
@@ -57,7 +72,7 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
 
     MOCK_CONST_METHOD1(create_native_window,
-        std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplayDevice> const&));
+        std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::FramebufferBundle> const&));
 
     MOCK_CONST_METHOD1(create_fb_device,
         std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<framebuffer_device_t> const&));
@@ -68,7 +83,7 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
             std::shared_ptr<hwc_composer_device_1> const&, std::shared_ptr<framebuffer_device_t> const&));
 };
 
-class DisplayBufferCreation : public ::testing::Test
+class OutputBuilder : public ::testing::Test
 {
 public:
     void SetUp()
@@ -77,17 +92,21 @@ public:
         mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
         ON_CALL(*mock_resource_factory, create_hwc_native_device())
             .WillByDefault(Return(hw_access_mock.mock_hwc_device)); 
-        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+        ON_CALL(*mock_resource_factory, create_fb_native_device())
+            .WillByDefault(Return(mt::fake_shared(fb_hal_mock)));
+        mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    testing::NiceMock<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
+    testing::NiceMock<MockGraphicBufferAllocator> mock_buffer_allocator;
 };
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_10_success)
+TEST_F(OutputBuilder, hwc_version_10_success)
 {
     using namespace testing;
 
@@ -102,11 +121,12 @@ TEST_F(DisplayBufferCreation, hwc_version_10_success)
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
+TEST_F(OutputBuilder, hwc_version_10_failure_uses_gpu)
 {
     using namespace testing;
 
@@ -122,11 +142,12 @@ TEST_F(DisplayBufferCreation, hwc_version_10_failure_uses_gpu)
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_11_success)
+TEST_F(OutputBuilder, hwc_version_11_success)
 {
     using namespace testing;
 
@@ -139,11 +160,12 @@ TEST_F(DisplayBufferCreation, hwc_version_11_success)
     EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
+TEST_F(OutputBuilder, hwc_version_11_hwc_failure)
 {
     using namespace testing;
 
@@ -159,11 +181,12 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_failure)
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, hwc_version_11_hwc_and_fb_failure_fatal)
+TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
 {
     using namespace testing;
 
@@ -177,12 +200,13 @@ TEST_F(DisplayBufferCreation, hwc_version_11_hwc_and_fb_failure_fatal)
         .WillOnce(Throw(std::runtime_error("")));
 
     EXPECT_THROW({
-        mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+        mga::OutputBuilder factory(
+            mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     }, std::runtime_error);
 }
 
 //we don't support hwc 1.2 quite yet. for the time being, at least try the fb backup
-TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
+TEST_F(OutputBuilder, hwc_version_12_attempts_fb_backup)
 {
     using namespace testing;
 
@@ -197,11 +221,12 @@ TEST_F(DisplayBufferCreation, hwc_version_12_attempts_fb_backup)
     EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     factory.create_display_device();
 }
 
-TEST_F(DisplayBufferCreation, db_creation)
+TEST_F(OutputBuilder, db_creation)
 {
     using namespace testing;
     mga::GLContext gl_context(mga::to_mir_format(mock_egl.fake_visual_id), *mock_display_report);
@@ -210,6 +235,7 @@ TEST_F(DisplayBufferCreation, db_creation)
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
-    mga::DisplayBufferFactory factory(mock_resource_factory, mock_display_report, false);
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
     factory.create_display_buffer(mt::fake_shared(stub_device), gl_context);
 }

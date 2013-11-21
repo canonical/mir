@@ -31,13 +31,13 @@ namespace android
 {
 class GraphicBufferAllocator;
 class FramebufferFactory;
-class AndroidDisplayBufferFactory;
+class DisplayBuilder;
 
 class AndroidPlatform : public Platform, public NativePlatform
 {
 public:
     AndroidPlatform(
-        std::shared_ptr<AndroidDisplayBufferFactory> const& display_buffer_factory,
+        std::shared_ptr<DisplayBuilder> const& display_builder,
         std::shared_ptr<DisplayReport> const& display_report);
 
     /* From Platform */
@@ -59,7 +59,7 @@ private:
     virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
         const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
-    std::shared_ptr<AndroidDisplayBufferFactory> const display_buffer_factory;
+    std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
 };
 

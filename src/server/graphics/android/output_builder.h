@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
+#define MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 
-#include "android_display_buffer_factory.h"
+#include "display_builder.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
 
@@ -30,24 +30,31 @@ namespace graphics
 class DisplayReport;
 namespace android
 {
+class FramebufferBundle;
 class DisplayResourceFactory;
+class GraphicBufferAllocator;
 
-class DisplayBufferFactory : public AndroidDisplayBufferFactory
+class OutputBuilder : public DisplayBuilder
 {
 public:
-    DisplayBufferFactory(
+    OutputBuilder(
+        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
         std::shared_ptr<DisplayReport> const& display_report,
         bool should_use_fb_fallback);
 
+    geometry::PixelFormat display_format();
     std::shared_ptr<DisplayDevice> create_display_device();
-    std::unique_ptr<DisplayBuffer> create_display_buffer(
+    std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,
         GLContext const& gl_context);
 
 private:
+    std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<DisplayReport> const display_report;
+
+    std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;
 
     std::shared_ptr<hwc_composer_device_1> hwc_native;
@@ -58,4 +65,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_ */

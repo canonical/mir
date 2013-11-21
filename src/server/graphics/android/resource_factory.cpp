@@ -21,7 +21,6 @@
 #include "buffer.h"
 #include "resource_factory.h"
 #include "fb_device.h"
-#include "framebuffers.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "interpreter_cache.h"
@@ -30,7 +29,6 @@
 #include "hwc_layerlist.h"
 #include "hwc_vsync.h"
 #include "android_display.h"
-#include "display_buffer_factory.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -38,11 +36,6 @@
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
-
-mga::ResourceFactory::ResourceFactory(std::shared_ptr<mga::GraphicBufferAllocator> const& allocator)
-    : buffer_allocator(allocator)
-{
-}
 
 std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_device() const
 {
@@ -81,26 +74,24 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
 }
 
 std::shared_ptr<ANativeWindow> mga::ResourceFactory::create_native_window(
-    std::shared_ptr<mga::DisplayDevice> const& device) const
+    std::shared_ptr<mga::FramebufferBundle> const& fb_bundle) const
 {
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<ServerRenderWindow>(device, cache);
+    auto interpreter = std::make_shared<ServerRenderWindow>(fb_bundle, cache);
     return std::make_shared<MirNativeWindow>(interpreter); 
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
-    auto framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native_device);
-    return std::make_shared<mga::FBDevice>(fb_native_device, framebuffers);
+    return std::make_shared<mga::FBDevice>(fb_native_device);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc11_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    auto framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, hwc_native_device);
-    return std::make_shared<mga::HWC11Device>(hwc_native_device, framebuffers, syncer);
+    return std::make_shared<mga::HWC11Device>(hwc_native_device, syncer);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(
@@ -108,6 +99,5 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    auto framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native_device);
-    return std::make_shared<mga::HWC10Device>(hwc_native_device, fb_native_device, framebuffers, syncer);
+    return std::make_shared<mga::HWC10Device>(hwc_native_device, fb_native_device, syncer);
 }
