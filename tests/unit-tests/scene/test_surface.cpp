@@ -441,13 +441,3 @@ TEST_F(SurfaceCreation, input_fds)
     ms::Surface input_surf(mock_basic_state, mock_buffer_stream,mt::fake_shared(channel), report);
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
 }
-
-/* todo: this test appears just for render_surfaces example apparently */
-TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
-{
-    EXPECT_CALL(*mock_basic_state, frame_posted())
-        .Times(1);
-
-    ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-    surf.flag_for_render();
-}
