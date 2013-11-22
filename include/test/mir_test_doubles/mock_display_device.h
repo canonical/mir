@@ -22,7 +22,7 @@
 #include "mir/graphics/buffer.h"
 #include "src/server/graphics/android/display_device.h"
 #include <gmock/gmock.h>
- 
+
 namespace mir
 {
 namespace test

@@ -77,18 +77,18 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
 
     //note: mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off
     //      are all treated like mir_power_mode_off
-    if ((mode_request == mir_power_mode_suspend) || 
+    if ((mode_request == mir_power_mode_suspend) ||
         (mode_request == mir_power_mode_standby))
     {
         mode_request = mir_power_mode_off;
     }
 
-    if ((mode_request == mir_power_mode_on) && 
+    if ((mode_request == mir_power_mode_on) &&
         (current_mode == mir_power_mode_off))
     {
         err = turn_screen_on();
     }
-    else if ((mode_request == mir_power_mode_off) && 
+    else if ((mode_request == mir_power_mode_off) &&
              (current_mode == mir_power_mode_on))
     {
         err = turn_screen_off();
@@ -96,15 +96,15 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
 
     if (err)
     {
-        std::string blanking_status_msg = "Could not " + 
+        std::string blanking_status_msg = "Could not " +
             ((mode_request == mir_power_mode_off) ? std::string("blank") : std::string("unblank")) + " display";
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error(blanking_status_msg)) <<
             boost::errinfo_errno(-err));
     }
-   
-    current_mode = mode_request; 
+
+    current_mode = mode_request;
     blanked_cond.notify_all();
 }
 

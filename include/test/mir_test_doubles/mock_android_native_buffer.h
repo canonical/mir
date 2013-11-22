@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_ANDROID_NATIVE_BUFFER_H_
 
 #include "mir/graphics/android/native_buffer.h"
-#include <gmock/gmock.h> 
+#include <gmock/gmock.h>
 
 namespace mir
 {

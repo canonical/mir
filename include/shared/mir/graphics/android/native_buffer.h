@@ -27,7 +27,7 @@ namespace mir
 namespace graphics
 {
 
-class NativeBuffer 
+class NativeBuffer
 {
 public:
     virtual ~NativeBuffer() = default;
@@ -37,7 +37,7 @@ public:
     virtual android::NativeFence copy_fence() const = 0;
 
     virtual void wait_for_content() = 0;
-    virtual void update_fence(android::NativeFence& fence) = 0; 
+    virtual void update_fence(android::NativeFence& fence) = 0;
 
 protected:
     NativeBuffer() = default;

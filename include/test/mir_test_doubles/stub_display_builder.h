@@ -64,7 +64,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
         return std::unique_ptr<graphics::DisplayBuffer>(
                 new StubDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
-    
+
     std::shared_ptr<graphics::android::DisplayDevice> create_display_device()
     {
         return stub_dev;

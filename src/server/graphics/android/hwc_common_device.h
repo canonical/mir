@@ -65,7 +65,7 @@ private:
 
     std::mutex blanked_mutex;
     std::condition_variable blanked_cond;
-    MirPowerMode current_mode; 
+    MirPowerMode current_mode;
 };
 
 }

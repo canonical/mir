@@ -55,7 +55,7 @@ geom::PixelFormat determine_hwc11_fb_format()
     {
         int visual_id;
         eglGetConfigAttrib(egl_display, fb_egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
-        fb_format = mga::to_mir_format(visual_id); 
+        fb_format = mga::to_mir_format(visual_id);
     }
     else
     {
@@ -76,7 +76,7 @@ geom::Size determine_hwc11_size(
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
     if (rc != 0)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config")); 
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
     }
     static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
                                         HWC_DISPLAY_HEIGHT,
@@ -94,7 +94,7 @@ mga::Framebuffers::Framebuffers(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<hwc_composer_device_1> const& hwc)
     : format(determine_hwc11_fb_format()),
-      size(determine_hwc11_size(hwc)) 
+      size(determine_hwc11_size(hwc))
 {
     for(auto i = 0u; i < 2; i++)
     {
@@ -106,7 +106,7 @@ mga::Framebuffers::Framebuffers(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<framebuffer_device_t> const& fb)
     : format{mga::to_mir_format(fb->format)},
-      size({fb->width, fb->height}) 
+      size({fb->width, fb->height})
 {
     //guarantee always 2 fb's allocated
     auto fb_num = static_cast<unsigned int>(fb->numFramebuffers);
@@ -154,5 +154,5 @@ std::shared_ptr<mg::Buffer> mga::Framebuffers::last_rendered_buffer()
 
 void mga::Framebuffers::wait_for_consumed_buffer(bool)
 {
-    //TODO: change swapping so buffer_for_render() does not wait 
+    //TODO: change swapping so buffer_for_render() does not wait
 }

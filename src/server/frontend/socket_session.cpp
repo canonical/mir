@@ -66,7 +66,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
         connected_sessions->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
-  
+
     unsigned char high_byte = message.sbumpc();
     unsigned char low_byte = message.sbumpc();
     size_t const body_size = (high_byte << 8) + low_byte;

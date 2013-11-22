@@ -52,7 +52,7 @@ public:
     virtual void move_cursor(geometry::Point destination) = 0;
     virtual void clear_cursor() = 0;
     virtual bool has_cursor() const = 0;
-    
+
     virtual void set_power_mode(MirPowerMode mode) = 0;
 
 protected:

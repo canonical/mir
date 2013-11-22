@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SOCKET_MESSENGER_H_ 
-#define MIR_FRONTEND_SOCKET_MESSENGER_H_ 
+#ifndef MIR_FRONTEND_SOCKET_MESSENGER_H_
+#define MIR_FRONTEND_SOCKET_MESSENGER_H_
 #include "message_sender.h"
 #include "message_receiver.h"
 #include <mutex>
@@ -37,19 +37,19 @@ public:
     void send(std::string const& body);
     void send(std::string const& body, FdSets const& fd_set);
 
-    void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size); 
+    void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size);
     pid_t client_pid();
 
 private:
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
-    
+
     std::mutex message_lock;
     std::vector<char> whole_message;
-    
+
     void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<int32_t> const& fds);
 };
 }
 }
 }
 
-#endif /* MIR_FRONTEND_SOCKET_MESSENGER_H_ */ 
+#endif /* MIR_FRONTEND_SOCKET_MESSENGER_H_ */

@@ -47,7 +47,7 @@ private:
 
     std::shared_ptr<MessageSender> const sender;
 };
- 
+
 }
 }
 }

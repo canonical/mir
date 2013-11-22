@@ -101,7 +101,7 @@ private:
     std::function<void(int)> handler;
 };
 
-/* 
+/*
  * We need to define an empty constructor and destructor in the .cpp file,
  * so that we can use unique_ptr to hold SignalHandler. Otherwise, users
  * of AsioMainLoop end up creating default constructors and destructors
