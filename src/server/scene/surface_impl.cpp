@@ -106,7 +106,7 @@ mir::geometry::PixelFormat ms::SurfaceImpl::pixel_format() const
 
 void ms::SurfaceImpl::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
 {
-    return surface->swap_buffers(buffer);
+    surface->swap_buffers(buffer);
 }
 
 void ms::SurfaceImpl::allow_framedropping(bool allow)
