@@ -113,19 +113,7 @@ void ms::Surface::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
 {
     bool const posting{buffer};
 
-    // TODO this doesn't really seem the place for the following logic. Vis:
-    // TODO
-    // TODO   o buffer.reset()                implicitly returns the buffer and then
-    // TODO   o surface_state->frame_posted() notifies the compositor of available work
-    // TODO
-    // TODO This should happen before securing the new client buffer to avoid
-    // TODO unnecessary waits for the new buffer.
-    // TODO
-    // TODO Logically we should "assert(buffer.use_count() <= 1);" but
-    // TODO that breaks tests that repeatedly give out the same buffer
-//  assert(buffer.use_count() <= 1);
-    buffer.reset();
-    buffer = surface_buffer_stream->secure_client_buffer();
+    surface_buffer_stream->swap_client_buffers(buffer);
 
     if (posting)
     {
