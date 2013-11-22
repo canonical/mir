@@ -111,7 +111,7 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 void ms::Surface::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
 {
-    bool const posting{buffer};
+    bool const posting{!!buffer};
 
     surface_buffer_stream->swap_client_buffers(buffer);
 
