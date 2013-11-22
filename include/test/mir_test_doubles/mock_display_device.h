@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_
 
+#include "mir/graphics/buffer.h"
 #include "src/server/graphics/android/display_device.h"
 #include <gmock/gmock.h>
  
@@ -32,12 +33,10 @@ class MockDisplayDevice : public graphics::android::DisplayDevice
 {
 public:
     ~MockDisplayDevice() noexcept {}
-    MOCK_CONST_METHOD0(display_size, geometry::Size());
-    MOCK_CONST_METHOD0(display_format, geometry::PixelFormat());
-    MOCK_METHOD0(buffer_for_render, std::shared_ptr<graphics::Buffer>());
-    MOCK_METHOD1(sync_to_display, void(bool));
     MOCK_METHOD1(mode, void(MirPowerMode));
-    MOCK_METHOD2(commit_frame, void(EGLDisplay, EGLSurface));
+    MOCK_METHOD0(prepare_composition, void());
+    MOCK_METHOD2(gpu_render, void(EGLDisplay, EGLSurface));
+    MOCK_METHOD1(post, void(graphics::Buffer const&));
 };
 }
 }

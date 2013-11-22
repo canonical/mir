@@ -151,3 +151,8 @@ std::shared_ptr<mg::Buffer> mga::Framebuffers::last_rendered_buffer()
     std::unique_lock<std::mutex> lk(queue_lock);
     return queue.back();
 }
+
+void mga::Framebuffers::wait_for_consumed_buffer(bool)
+{
+    //TODO: change swapping so buffer_for_render() does not wait 
+}

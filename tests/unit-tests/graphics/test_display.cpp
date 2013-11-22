@@ -31,7 +31,6 @@
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "src/server/graphics/android/android_platform.h"
-#include "mir_test_doubles/stub_display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_display_device.h"
 #endif

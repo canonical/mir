@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
+#include "display_buffer.h"
 #include "mir/graphics/display.h"
 #include "android_display_configuration.h"
 #include "gl_context.h"
@@ -31,22 +32,21 @@ namespace graphics
 {
 
 class DisplayReport;
-class DisplayBuffer;
 
 namespace android
 {
 class DisplayDevice;
 
-class AndroidDisplayBufferFactory;
+class DisplayBuilder;
 class DisplaySupportProvider;
 
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay(std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
+    explicit AndroidDisplay(std::shared_ptr<DisplayBuilder> const& display_builder,
                             std::shared_ptr<DisplayReport> const& display_report);
 
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
     void configure(DisplayConfiguration const&);
@@ -67,16 +67,11 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
-    //to allocate new displays on hotplug
-    std::shared_ptr<AndroidDisplayBufferFactory> const db_factory;
-    std::shared_ptr<DisplayDevice> const display_device;
-
+    std::shared_ptr<DisplayBuilder> const display_builder;
     GLContext gl_context;
-
+    std::shared_ptr<DisplayDevice> const display_device;
     //we only have a primary display at the moment
-    std::unique_ptr<DisplayBuffer> const display_buffer;
-
-    
+    std::unique_ptr<graphics::DisplayBuffer> const display_buffer; 
     AndroidDisplayConfiguration current_configuration;
 };
 

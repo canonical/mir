@@ -30,70 +30,49 @@
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
+
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<framebuffer_device_t> const& fb_device,
-                              std::shared_ptr<FramebufferBundle> const& fb_bundle,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       fb_device(fb_device),
-      fb_bundle(fb_bundle),
-      layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}}),
-      wait_for_vsync(true)
+      layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}})
 {
 }
 
-geom::Size mga::HWC10Device::display_size() const
+void mga::HWC10Device::prepare_composition()
 {
-    return {fb_device->width, fb_device->height};
-} 
-
-geom::PixelFormat mga::HWC10Device::display_format() const
-{
-    return to_mir_format(fb_device->format);
+    auto display_list = layer_list.native_list();
+    if (hwc_device->prepare(hwc_device.get(), 1, &display_list) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+    }
 }
 
-std::shared_ptr<mg::Buffer> mga::HWC10Device::buffer_for_render()
+void mga::HWC10Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
-    return fb_bundle->buffer_for_render();
-}
-
-void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
-{
-    auto lg = lock_unblanked();
-
     auto display_list = layer_list.native_list();
     display_list->dpy = dpy;
     display_list->sur = sur;
 
-    auto rc = hwc_device->prepare(hwc_device.get(), 1, &display_list);
-    if (rc != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-    }
-
     //set() may affect EGL state by calling eglSwapBuffers.
     //HWC 1.0 is the only version of HWC that can do this.
-    rc = hwc_device->set(hwc_device.get(), 1, &display_list);
-    if (rc != 0)
+    if (hwc_device->set(hwc_device.get(), 1, &display_list) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
+}
 
-    auto buffer = fb_bundle->last_rendered_buffer();
-    auto native_buffer = buffer->native_buffer_handle();
+void mga::HWC10Device::post(mg::Buffer const& buffer)
+{
+    auto lg = lock_unblanked();
+
+    auto native_buffer = buffer.native_buffer_handle();
     native_buffer->wait_for_content();
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
 
-    if (wait_for_vsync)
-    {
-        coordinator->wait_for_vsync();
-    }
-}
-
-void mga::HWC10Device::sync_to_display(bool sync)
-{
-    wait_for_vsync = sync;
+    coordinator->wait_for_vsync();
 }

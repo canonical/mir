@@ -18,10 +18,10 @@
 
 #include "src/server/graphics/android/server_render_window.h"
 
-#include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
+#include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
@@ -45,9 +45,9 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer1 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_buffer2 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>();
-        mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
+        mock_fb_bundle = std::make_shared<NiceMock<mtd::MockFBBundle>>();
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
-        ON_CALL(*mock_display_device, display_format())
+        ON_CALL(*mock_fb_bundle, fb_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     }
 
@@ -55,7 +55,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer2;
     std::shared_ptr<mtd::MockBuffer> mock_buffer3;
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
-    std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
+    std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 }
 
@@ -63,11 +63,11 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 {
     using namespace testing;
 
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
-    EXPECT_CALL(*mock_display_device, buffer_for_render())
+    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
@@ -89,9 +89,9 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     int fake_fence = 488;
     auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
  
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
-    EXPECT_CALL(*mock_display_device, buffer_for_render())
+    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
@@ -99,7 +99,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
         .WillOnce(Return(stub_buffer));
 
     render_window.driver_requests_buffer();
-    testing::Mock::VerifyAndClearExpectations(mock_display_device.get());
+    testing::Mock::VerifyAndClearExpectations(mock_fb_bundle.get());
 
     std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
     EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer->anwb(), fake_fence))
@@ -109,18 +109,18 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
         .WillOnce(Return(mock_buffer1));
 
     render_window.driver_returns_buffer(stub_buffer->anwb(), fake_fence);
-    testing::Mock::VerifyAndClearExpectations(mock_display_device.get());
+    testing::Mock::VerifyAndClearExpectations(mock_fb_bundle.get());
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
     using namespace testing; 
 
-    EXPECT_CALL(*mock_display_device, display_format())
+    EXPECT_CALL(*mock_fb_bundle, fb_format())
         .Times(1)
         .WillOnce(Return(geom::PixelFormat::abgr_8888));
 
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT));
 }
@@ -129,7 +129,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 {
     using namespace testing;
 
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     render_window.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
     auto rc_format = render_window.driver_requests_info(NATIVE_WINDOW_FORMAT);
@@ -140,11 +140,11 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_se
 {
     using namespace testing;
     geom::Size test_size{4, 5};
-    EXPECT_CALL(*mock_display_device, display_size())
+    EXPECT_CALL(*mock_fb_bundle, fb_size())
         .Times(4)
         .WillRepeatedly(Return(test_size));
 
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     unsigned int rc_width = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
     unsigned int rc_height = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
@@ -161,7 +161,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
 {
     using namespace testing;
 
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     EXPECT_EQ(0, render_window.driver_requests_info(NATIVE_WINDOW_TRANSFORM_HINT));
 }
@@ -169,7 +169,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
 TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
 {
     using namespace testing;
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     EXPECT_THROW({
         render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_RUNNING_BEHIND);
@@ -178,10 +178,9 @@ TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
 
 TEST_F(ServerRenderWindowTest, driver_swapinterval_request)
 {
-    mga::ServerRenderWindow render_window(mock_display_device, mock_cache);
-
-    EXPECT_CALL(*mock_display_device, sync_to_display(false))
+    EXPECT_CALL(*mock_fb_bundle, wait_for_consumed_buffer(false))
         .Times(1);
 
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
     render_window.sync_to_display(false);
 }

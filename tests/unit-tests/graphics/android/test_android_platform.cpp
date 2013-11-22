@@ -23,7 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test_doubles/stub_display_buffer_factory.h"
+#include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
@@ -43,7 +43,7 @@ protected:
     {
         using namespace testing;
 
-        stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>();
+        stub_display_builder = std::make_shared<mtd::StubDisplayBuilder>();
         stub_display_report = std::make_shared<mg::NullDisplayReport>();
         stride = geom::Stride(300*4);
 
@@ -72,7 +72,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
-    std::shared_ptr<mtd::StubDisplayBufferFactory> stub_db_factory;
+    std::shared_ptr<mtd::StubDisplayBuilder> stub_display_builder;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
@@ -85,7 +85,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
     using namespace ::testing;
 
-    mga::AndroidPlatform platform(stub_db_factory, stub_display_report);
+    mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
 
     mtd::MockPacker mock_packer;
     int offset = 0;
@@ -116,7 +116,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
     mga::AndroidPlatform platform(
-        std::make_shared<mtd::StubDisplayBufferFactory>(),
+        std::make_shared<mtd::StubDisplayBuilder>(),
         std::make_shared<mg::NullDisplayReport>());
 
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());

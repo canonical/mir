@@ -32,10 +32,8 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::FBDevice::FBDevice(
-    std::shared_ptr<framebuffer_device_t> const& fbdev,
-    std::shared_ptr<FramebufferBundle> const& bundle)
-    : fb_device(fbdev),
-      fb_bundle(bundle)
+    std::shared_ptr<framebuffer_device_t> const& fbdev)
+    : fb_device(fbdev)
 {
     if (fb_device->setSwapInterval)
     {
@@ -43,51 +41,22 @@ mga::FBDevice::FBDevice(
     }
 }
 
-void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const&)
+void mga::FBDevice::prepare_composition()
 {
 }
 
-geom::Size mga::FBDevice::display_size() const
-{
-    return {fb_device->width, fb_device->height};
-} 
-
-geom::PixelFormat mga::FBDevice::display_format() const
-{
-    return to_mir_format(fb_device->format);
-}
-
-std::shared_ptr<mg::Buffer> mga::FBDevice::buffer_for_render()
-{
-    return fb_bundle->buffer_for_render();
-}
-
-void mga::FBDevice::sync_to_display(bool sync)
-{
-    if (!fb_device->setSwapInterval)
-        return;
-
-    if (sync)
-    {
-        fb_device->setSwapInterval(fb_device.get(), 1);
-    }
-    else
-    {
-        fb_device->setSwapInterval(fb_device.get(), 0);
-    }
-}
-
-void mga::FBDevice::commit_frame(EGLDisplay dpy, EGLSurface sur)
+void mga::FBDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
     }
+}
 
-    auto buffer = fb_bundle->last_rendered_buffer();
-    auto native_buffer = buffer->native_buffer_handle();
+void mga::FBDevice::post(mg::Buffer const& buffer)
+{
+    auto native_buffer = buffer.native_buffer_handle();
     native_buffer->wait_for_content();
-
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
