@@ -41,6 +41,7 @@
 #include <stdexcept>
 #include <thread>
 #include <atomic>
+#include <unistd.h>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -728,6 +729,10 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
     int const expected_call_count{10};
     std::atomic<int> call_count{0};
 
+    ml.register_signal_handler(
+        {SIGALRM},
+        [&ml](int) {ml.stop(); FAIL() << "Timeout waiting for change events";});
+
     display->register_configuration_change_handler(
         ml,
         [&call_count, &ml]()
@@ -745,6 +750,8 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
                 std::this_thread::sleep_for(std::chrono::microseconds{500});
             }
         }};
+
+    alarm(1);
 
     ml.run();
 
