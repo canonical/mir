@@ -1,8 +1,74 @@
 mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
 
-  * Prepare for release 0.1.2 (TODO)
+  [ Kevin Gunn ]
+  * New upstream release 0.1.2
+    - graphics: android: improve interface for mga::DisplayDevice so its
+      just concerned with rendering and posting.
+    - surfaces: rename "surfaces" component to "scene".
+    - Merge changes from Ubuntu (lp:mir) r1166 that make sense to keep.
+    - surfaces, shell: Migrate Session data model from shell to surfaces.
+    - graphics: change fill_ipc_package() to use real pointers.
+    - mir_client_library.h: Fix typo "do and locking" should be "do any
+      locking".
+    - API enumerations cleanup: Remove slightly misleading *_enum_max_
+      values, and replace them with more accurate plural forms.
+    - test_android_communication_package: Do not expect opened fd to be >0,
+      we may have closed stdin making this a valid value (LP: #1247718).
+    - Update docs about running Mir on the desktop to mention new package
+      ubuntu -desktop -mir.
+    - offscreen: Add a display that renders its output to offscreen buffers
+    - graphics: android: fix regression for hwc1.0 devices introduced in r1228
+      (LP: #1252433). Fixes: https://bugs.launchpad.net/bugs/1252433.
+    - OffscreenPlatform provides the services that the offscreen display
+      needs from the Platform.
+    - graphics: android: consolidate the GLContexts classes in use.
+    - Fix uninitialized variable causing random drm_auth_magic test
+      failures. (LP: #1252144). Fixes: https://bugs.launchpad.net/bugs/1252144.
+    - Add a fullyish functional Udev wrapper. This currently sits in
+      graphics/gbm, but will be moved to the top -level when input device
+      detection migrates.
+    - Add resizing support to example code; demo -shell and clients. Fixes:
+      https://bugs.launchpad.net/bugs/1227744.
+    - eglapp: Clarify messages about pixel formats (LP: #1168304). Fixes:
+      https://bugs.launchpad.net/bugs/1168304.
+    - Adds support to the MirMotionEvent under pointer_coordinates called
+      tool_type. This will allow clients to tell what type of tool is
+      being used, from mouse/finger/etc. 
+      Fixes: https://bugs.launchpad.net/bugs/1252498.
+    - client,frontend: Report the real available surface pixel formats to
+      clients. Fixes: https://bugs.launchpad.net/bugs/1240833.
+    - graphics: android: 1) change hwc1.1 to make use of sync fences during
+      the compositor's gl renderloop. Note that we no longer wait for
+      the render to complete, we pass this responsibility 
+      to the driver and the kernel. 2) support nexus 10. 
+      Fixes: https://bugs.launchpad.net/bugs/1252173.
+    - shell: don't publish SurfacesContainer - it can be private to shell.
+    - gbm: Don't mess up the VT mode on setup failure Only restore the
+      previous VT mode during shutdown if it was VT_AUTO. VT_PROCESS mode is
+      always bound to the calling process, so "restoring" VT_PROCESS will not
+      work; it will just bind the notification signals to our process
+      again. Not "restoring" VT_PROCESS also ensures we don't mess 
+      up the VT state of the  previous controlling process, in 
+      case it had set VT_PROCESS and we fail during setup. 
+      This could happen, for example, when trying to start Mir
+      from inside an X session.
+    - Fix a crash due to a failed eglMakeCurrent() call when in nested mode.
+    - shell: unit -mir uses shell::FocusSetter - make the header public again
+    - Add resize support to client surfaces (mir::client::MirSurface).
+    - graphics: android: support 'old aka 2012' nexus 7 hwc (nvidia tegra3
+      SoC) better. (LP: #1231917)
+    - Add resize support to *ClientBuffer classes. Now always get dimensions
+      from the latest buffer package.
+    - android: support driver hooks for the Mali T604 (present in nexus 10)
+      The exynos driver needed some function hooks implemented. This change
+      implements those hooks and gets the TestClientIPCRender test to
+      pass. This test sends buffers over IPC to a client, 
+      and the client then establishes an egl context, 
+      renders to the buffer, and checks the buffer content
+      back on the server side.
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 21 Nov 2013 11:17:36 +0800
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Fri, 22 Nov 2013 12:34:52 -0600
 
 mir (0.1.1+14.04.20131120-0ubuntu1) trusty; urgency=low
 
