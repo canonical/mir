@@ -20,7 +20,7 @@
 
 #include "native_gbm_platform.h"
 
-#include "gbm_buffer_allocator.h"
+#include "buffer_allocator.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
@@ -45,7 +45,7 @@ void mgg::NativeGBMPlatform::initialize(
 std::shared_ptr<mg::GraphicBufferAllocator> mgg::NativeGBMPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return std::make_shared<mgg::GBMBufferAllocator>(gbm.device, buffer_initializer);
+    return std::make_shared<mgg::BufferAllocator>(gbm.device, buffer_initializer);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package()

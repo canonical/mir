@@ -15,7 +15,7 @@ add_library(
   mirplatformgraphics SHARED
 
   gbm_platform.cpp
-  gbm_buffer_allocator.cpp
+  buffer_allocator.cpp
   gbm_buffer.cpp
   gbm_cursor.cpp
   gbm_display_helpers.cpp
