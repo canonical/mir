@@ -1,3 +1,5 @@
 usr/bin/mir_stress
+usr/bin/mir-acceptance-tests
+usr/bin/mir-integration-tests
 usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
