@@ -35,6 +35,7 @@ add_library(
   overlapping_output_grouping.cpp
   native_gbm_platform.cpp
   anonymous_shm_file.cpp
+  shm_buffer.cpp
 )
 
 target_link_libraries(
