@@ -34,6 +34,7 @@ add_library(
   udev_wrapper.cpp
   overlapping_output_grouping.cpp
   native_gbm_platform.cpp
+  anonymous_shm_file.cpp
 )
 
 target_link_libraries(

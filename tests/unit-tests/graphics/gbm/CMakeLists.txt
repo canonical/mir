@@ -15,6 +15,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_cursor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_native_gbm_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_anonymous_shm_file.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
