@@ -69,8 +69,6 @@ public:
     void resize(geometry::Size const& size);
 
 private:
-    void flag_for_render();
-
     std::shared_ptr<SurfaceState> surface_state;
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
