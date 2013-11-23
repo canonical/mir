@@ -41,9 +41,10 @@ class TemporaryEnvironmentValue
 {
 public:
     TemporaryEnvironmentValue(char const* name, char const* value)
-        : name{name}
+        : name{name},
+          has_old_value{getenv(name) != nullptr},
+          old_value{has_old_value ? getenv(name) : ""}
     {
-        old_value = getenv(name);
         if (value)
             setenv(name, value, overwrite);
         else
@@ -52,13 +53,17 @@ public:
 
     ~TemporaryEnvironmentValue()
     {
-        setenv(name.c_str(), old_value.c_str(), overwrite);
+        if (has_old_value)
+            setenv(name.c_str(), old_value.c_str(), overwrite);
+        else
+            unsetenv(name.c_str());
     }
 
 private:
     static int const overwrite = 1;
     std::string const name;
-    std::string old_value;
+    bool const has_old_value;
+    std::string const old_value;
 };
 
 class TemporaryDirectory
