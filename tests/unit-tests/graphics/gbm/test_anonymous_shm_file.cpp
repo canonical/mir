@@ -61,8 +61,9 @@ private:
     std::string old_value;
 };
 
-struct TemporaryDirectory
+class TemporaryDirectory
 {
+public:
     TemporaryDirectory()
     {
         char tmpl[] = "/tmp/mir-test-dir-XXXXXX";
@@ -71,24 +72,29 @@ struct TemporaryDirectory
             BOOST_THROW_EXCEPTION(
                 std::runtime_error("Couldn't create temporary test directory"));
         }
-        path = tmpl;
+        path_ = tmpl;
     }
 
     ~TemporaryDirectory()
     {
-        rmdir(path.c_str());
+        rmdir(path());
     }
 
+    char const* path() const
+    {
+        return path_.c_str();
+    }
 
-    std::string path;
+private:
+    std::string path_;
 };
 
 class PathWatcher
 {
 public:
-    PathWatcher(std::string const& path)
+    PathWatcher(const char* path)
         : inotify_fd{inotify_init1(IN_NONBLOCK)},
-          watch_fd{inotify_add_watch(inotify_fd, path.c_str(),
+          watch_fd{inotify_add_watch(inotify_fd, path,
                                      IN_CREATE | IN_DELETE)}
     {
         /* TODO: RAII fd */
@@ -99,6 +105,7 @@ public:
         }
         if (watch_fd < 0)
         {
+            close(inotify_fd);
             BOOST_THROW_EXCEPTION(
                 std::runtime_error("Couldn't create watch fd"));
         }
@@ -110,16 +117,16 @@ public:
         close(inotify_fd);
     }
 
-    void process_events()
+    void process_events() const
     {
         while (process_events_step()) continue;
     }
 
-    MOCK_METHOD1(file_created, void(char const*));
-    MOCK_METHOD1(file_deleted, void(char const*));
+    MOCK_CONST_METHOD1(file_created, void(char const*));
+    MOCK_CONST_METHOD1(file_deleted, void(char const*));
     
 private:
-    bool process_events_step()
+    bool process_events_step() const
     {
         size_t const max_path_size = 1024;
         size_t const buffer_size = sizeof(struct inotify_event) + max_path_size;
@@ -172,9 +179,9 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_xdg_runtime_dir)
 {
     using namespace testing;
     
-    TemporaryDirectory temp_dir;
-    TemporaryEnvironmentValue env{"XDG_RUNTIME_DIR", temp_dir.path.c_str()};
-    PathWatcher path_watcher{temp_dir.path};
+    TemporaryDirectory const temp_dir;
+    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    PathWatcher const path_watcher{temp_dir.path()};
     size_t const file_size{100};
 
     InSequence s;
@@ -190,8 +197,8 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_tmp_dir)
 {
     using namespace testing;
     
-    TemporaryEnvironmentValue env{"XDG_RUNTIME_DIR", nullptr};
-    PathWatcher path_watcher{"/tmp"};
+    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", nullptr};
+    PathWatcher const path_watcher{"/tmp"};
     size_t const file_size{100};
 
     InSequence s;
@@ -207,8 +214,8 @@ TEST(AnonymousShmFile, has_correct_size)
 {
     using namespace testing;
     
-    TemporaryDirectory temp_dir;
-    TemporaryEnvironmentValue env{"XDG_RUNTIME_DIR", temp_dir.path.c_str()};
+    TemporaryDirectory const temp_dir;
+    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
     mgg::AnonymousShmFile shm_file{file_size};
@@ -223,8 +230,8 @@ TEST(AnonymousShmFile, writing_to_mapping_writes_to_file)
 {
     using namespace testing;
     
-    TemporaryDirectory temp_dir;
-    TemporaryEnvironmentValue env{"XDG_RUNTIME_DIR", temp_dir.path.c_str()};
+    TemporaryDirectory const temp_dir;
+    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
     mgg::AnonymousShmFile shm_file{file_size};
@@ -238,7 +245,8 @@ TEST(AnonymousShmFile, writing_to_mapping_writes_to_file)
 
     std::vector<unsigned char> buffer(file_size);
 
-    read(shm_file.fd(), buffer.data(), file_size);
+    EXPECT_EQ(static_cast<ssize_t>(file_size),
+              read(shm_file.fd(), buffer.data(), file_size));
 
     for (size_t i = 0; i < file_size; i++)
     {
