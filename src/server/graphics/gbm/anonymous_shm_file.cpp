@@ -34,63 +34,92 @@ namespace mgg = mir::graphics::gbm;
 namespace
 {
 
-int create_anonymous_file(size_t size)
+mgg::detail::FdHandle create_anonymous_file(size_t size)
 {
     char const* const tmpl = "/mir-buffer-XXXXXX";
     char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
     char const* const target_dir = runtime_dir ? runtime_dir : "/tmp";
-    int fd = -1;
 
     /* We need a mutable array for mkostemp */
     std::vector<char> path(target_dir, target_dir + strlen(target_dir));
     path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
     path.push_back('\0');
 
-    try
-    {
-        /* TODO: RAII fd */
-        fd = mkostemp(path.data(), O_CLOEXEC);
-        if (fd < 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create temporary file"));
-        if (unlink(path.data()) < 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
-        if (ftruncate(fd, size) < 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
-    }
-    catch (...)
-    {
-        if (fd >= 0)
-            close(fd);
-        throw;
-    }
+    mgg::detail::FdHandle fd{mkostemp(path.data(), O_CLOEXEC)};
+    if (unlink(path.data()) < 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
+    if (ftruncate(fd, size) < 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
 
     return fd;
 }
 
 }
 
-mgg::AnonymousShmFile::AnonymousShmFile(size_t size)
-    : fd_{create_anonymous_file(size)},
-      size{size},
-      mapping{MAP_FAILED}
+/*************
+ * FdHandle *
+ *************/
+
+mgg::detail::FdHandle::FdHandle(int fd)
+    : fd{fd}
 {
+    if (fd < 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create file"));
 }
 
-mgg::AnonymousShmFile::~AnonymousShmFile() noexcept
+mgg::detail::FdHandle::FdHandle(FdHandle&& other)
+    : fd{other.fd}
 {
-    if (mapping != MAP_FAILED)
-        munmap(mapping, size);
-    close(fd_);
+    other.fd = -1;
+}
+
+mgg::detail::FdHandle::~FdHandle() noexcept
+{
+    if (fd >= 0)
+        close(fd);
+}
+
+mgg::detail::FdHandle::operator int() const
+{
+    return fd;
+}
+
+/*************
+ * MapHandle *
+ *************/
+
+mgg::detail::MapHandle::MapHandle(int fd, size_t size)
+    : size{size},
+      mapping{mmap(nullptr, size, PROT_READ|PROT_WRITE,
+                   MAP_SHARED, fd, 0)}
+{
+    if (mapping == MAP_FAILED)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to map file"));
+}
+
+mgg::detail::MapHandle::~MapHandle() noexcept
+{
+    munmap(mapping, size);
+}
+
+mgg::detail::MapHandle::operator void*() const
+{
+    return mapping;
+
+}
+
+/********************
+ * AnonymousShmFile *
+ ********************/
+
+mgg::AnonymousShmFile::AnonymousShmFile(size_t size)
+    : fd_{create_anonymous_file(size)},
+      mapping{fd_, size}
+{
 }
 
 void* mgg::AnonymousShmFile::map()
 {
-    if (mapping == MAP_FAILED)
-    {
-        mapping = mmap(nullptr, size, PROT_READ|PROT_WRITE,
-                       MAP_SHARED, fd_, 0);
-    }
-
     return mapping;
 }
 

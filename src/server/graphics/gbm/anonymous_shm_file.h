@@ -29,19 +29,50 @@ namespace graphics
 namespace gbm
 {
 
+namespace detail
+{
+class FdHandle
+{
+public:
+    FdHandle(int fd);
+    FdHandle(FdHandle&&);
+    ~FdHandle() noexcept;
+
+    operator int() const;
+
+private:
+    FdHandle(FdHandle const&) = delete;
+    FdHandle& operator=(FdHandle const&) = delete;
+    int fd;
+};
+
+class MapHandle
+{
+public:
+    MapHandle(int fd, size_t size);
+    ~MapHandle() noexcept;
+
+    operator void*() const;
+
+private:
+    MapHandle(MapHandle const&) = delete;
+    MapHandle& operator=(MapHandle const&) = delete;
+    size_t const size;
+    void* const mapping;
+};
+}
+
 class AnonymousShmFile : public ShmFile
 {
 public:
     AnonymousShmFile(size_t size);
-    ~AnonymousShmFile() noexcept;
 
     void* map();
     int fd() const;
 
 private:
-    int const fd_;
-    size_t const size;
-    void* mapping;
+    detail::FdHandle const fd_;
+    detail::MapHandle const mapping;
 };
 
 }
