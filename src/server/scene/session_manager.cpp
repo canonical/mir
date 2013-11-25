@@ -81,7 +81,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(std::string const&
             surface_factory, name, snapshot_strategy, session_listener, sender);
 
     app_container->insert_session(new_session);
-    
+
     session_listener->starting(new_session);
 
     set_focus_to(new_session);

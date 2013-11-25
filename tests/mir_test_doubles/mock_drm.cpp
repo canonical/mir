@@ -396,10 +396,10 @@ char* drmGetBusid(int fd)
     return global_mock->drmGetBusid(fd);
 }
 
-// We need to wrap open as we sometimes open() the DRM device 
+// We need to wrap open as we sometimes open() the DRM device
 // We need to explicitly mark this as C because we don't match the
 // libc header; we only care about the three-parameter version
-extern "C" 
+extern "C"
 {
 int open(char const* path, int flags, mode_t mode)
 {

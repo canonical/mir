@@ -67,7 +67,7 @@ public:
                 modes.push_back(mode);
             }
 
-            size_t mode_index = modes.size() - 1; 
+            size_t mode_index = modes.size() - 1;
             geometry::Size physical_size{};
             geometry::Point top_left{};
             graphics::DisplayConfigurationOutput output{

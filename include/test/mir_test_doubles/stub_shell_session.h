@@ -66,7 +66,7 @@ struct StubShellSession : public shell::Session
     void take_snapshot(shell::SnapshotCallback const&) override
     {
     }
-    
+
     std::shared_ptr<shell::Surface> default_surface() const override
     {
         return std::shared_ptr<shell::Surface>();

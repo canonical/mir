@@ -137,13 +137,13 @@ void mgg::GBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* b
     for(auto i=0; i<native_handle->data_items; i++)
     {
         packer->pack_data(native_handle->data[i]);
-    }    
+    }
     for(auto i=0; i<native_handle->fd_items; i++)
     {
         packer->pack_fd(native_handle->fd[i]);
     }
 
-    packer->pack_stride(buffer->stride()); 
+    packer->pack_stride(buffer->stride());
     packer->pack_flags(native_handle->flags);
     packer->pack_size(buffer->size());
 }
@@ -156,7 +156,7 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
 {
     if (!internal_native_display)
-        internal_native_display = std::make_shared<mgg::InternalNativeDisplay>(get_ipc_package()); 
+        internal_native_display = std::make_shared<mgg::InternalNativeDisplay>(get_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgg::InternalClient>(internal_native_display);
 }

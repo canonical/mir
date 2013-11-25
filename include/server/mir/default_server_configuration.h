@@ -35,7 +35,6 @@ class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
-class OverlayRenderer;
 class RendererFactory;
 }
 namespace frontend
@@ -152,7 +151,6 @@ public:
      * configurable interfaces for modifying compositor
      *  @{ */
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
-    virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
     /** @} */
 
     /** @name compositor configuration - dependencies
@@ -279,7 +277,6 @@ protected:
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
-    CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;

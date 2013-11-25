@@ -39,15 +39,15 @@ struct FBDevice : public ::testing::Test
     virtual void SetUp()
     {
         using namespace testing;
-        
+
         width = 413;
         height = 516;
         fbnum = 4;
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
+        fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
-        native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
+        native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
     }
@@ -63,7 +63,7 @@ struct FBDevice : public ::testing::Test
 TEST_F(FBDevice, render)
 {
     using namespace testing;
-    int bad = 0xdfefefe; 
+    int bad = 0xdfefefe;
     EGLDisplay dpy = static_cast<EGLDisplay>(&bad);
     EGLSurface surf = static_cast<EGLSurface>(&bad);
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))

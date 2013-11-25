@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace graphics 
+namespace graphics
 {
 namespace android
 {

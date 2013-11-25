@@ -39,7 +39,7 @@ struct MockFrontendSurface : public frontend::Surface
 
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_METHOD1(swap_buffers, void(std::shared_ptr<graphics::Buffer>&));
 
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());

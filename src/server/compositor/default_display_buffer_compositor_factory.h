@@ -27,7 +27,6 @@ namespace mir
 namespace compositor
 {
 class RendererFactory;
-class OverlayRenderer;
 class Scene;
 
 // TODO this is ideally an implementation class. It is only in a public header
@@ -37,15 +36,13 @@ class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFact
 public:
     DefaultDisplayBufferCompositorFactory(
         std::shared_ptr<Scene> const& scene,
-        std::shared_ptr<RendererFactory> const& renderer_factory,
-        std::shared_ptr<OverlayRenderer> const& overlay_renderer);
+        std::shared_ptr<RendererFactory> const& renderer_factory);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<RendererFactory> const renderer_factory;
-    std::shared_ptr<OverlayRenderer> const overlay_renderer;
 };
 
 }

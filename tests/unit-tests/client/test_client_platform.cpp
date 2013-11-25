@@ -44,7 +44,7 @@ TEST_F(ClientPlatformTest, platform_name)
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
-    
+
 #ifdef ANDROID
     auto type = mir_platform_type_android;
 #else

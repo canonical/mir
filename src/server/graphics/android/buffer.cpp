@@ -123,7 +123,7 @@ std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
             content_lock.unlock();
         });
 
-    //lock remains in effect until the native handle is released 
+    //lock remains in effect until the native handle is released
     lk.release();
     return native_resource;
 }

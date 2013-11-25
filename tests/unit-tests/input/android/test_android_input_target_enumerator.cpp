@@ -49,13 +49,13 @@ struct StubInputTargets : public mi::InputTargets
         : targets(target_list.begin(), target_list.end())
     {
     }
-    
+
     void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback) override
     {
         for (auto target : targets)
             callback(target);
     }
-    
+
     std::vector<std::shared_ptr<mi::InputChannel>> targets;
 };
 
@@ -76,7 +76,7 @@ TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
     EXPECT_CALL(repository, handle_for_channel(
         std::const_pointer_cast<mi::InputChannel const>(t1)))
         .InSequence(seq2)
-        .WillOnce(Return(stub_window_handle1)); 
+        .WillOnce(Return(stub_window_handle1));
     EXPECT_CALL(repository, handle_for_channel(
         std::const_pointer_cast<mi::InputChannel const>(t2)))
         .InSequence(seq2)

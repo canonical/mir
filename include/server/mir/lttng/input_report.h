@@ -32,14 +32,14 @@ class InputReport : public input::InputReport
 public:
     InputReport() = default;
     virtual ~InputReport() noexcept(true) = default;
-    
+
     void received_event_from_kernel(int64_t when, int type, int code, int value);
 
     void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time);
     void published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time);
 
     void received_event_finished_signal(int src_fd, uint32_t seq_id);
-    
+
 private:
     ServerTracepointProvider tp_provider;
 };

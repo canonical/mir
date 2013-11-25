@@ -56,12 +56,12 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
 
 geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
 {
-    return buffer_bundle->properties().format; 
+    return buffer_bundle->properties().format;
 }
 
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
-    return buffer_bundle->properties().size; 
+    return buffer_bundle->properties().size;
 }
 
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)

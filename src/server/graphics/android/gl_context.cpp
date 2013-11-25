@@ -115,7 +115,7 @@ mga::GLContext::GLContext(geom::PixelFormat display_format, mg::DisplayReport& r
                   eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr)},
       egl_surface{egl_display,
                     eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
-{    
+{
     report.report_egl_configuration(egl_display, egl_config);
 }
 

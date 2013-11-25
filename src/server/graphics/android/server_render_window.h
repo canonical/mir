@@ -34,7 +34,7 @@ namespace android
 
 class FramebufferBundle;
 class InterpreterResourceCache;
-class ServerRenderWindow : public AndroidDriverInterpreter 
+class ServerRenderWindow : public AndroidDriverInterpreter
 {
 public:
     ServerRenderWindow(std::shared_ptr<FramebufferBundle> const& fb_bundle,
@@ -50,7 +50,7 @@ private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
     int format;
-}; 
+};
 
 }
 }

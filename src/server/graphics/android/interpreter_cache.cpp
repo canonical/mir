@@ -34,7 +34,7 @@ void mga::InterpreterCache::store_buffer(std::shared_ptr<mg::Buffer>const& buffe
 
 std::shared_ptr<mg::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer* returned_handle)
 {
-    auto buffer_it = buffers_in_driver.find(returned_handle); 
+    auto buffer_it = buffers_in_driver.find(returned_handle);
     auto native_it = native_buffers.find(returned_handle);
 
     if ((buffer_it == buffers_in_driver.end()) ||

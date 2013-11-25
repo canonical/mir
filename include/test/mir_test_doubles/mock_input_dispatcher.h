@@ -45,7 +45,7 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD2(transferTouchFocus, bool(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputChannel> const&));
     MOCK_METHOD3(registerInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
     MOCK_METHOD1(unregisterInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&));
-    
+
     MOCK_METHOD1(setKeyboardFocus, void(droidinput::sp<droidinput::InputWindowHandle> const&));
     MOCK_METHOD1(notifyWindowRemoved, void(droidinput::sp<droidinput::InputWindowHandle> const&));
 

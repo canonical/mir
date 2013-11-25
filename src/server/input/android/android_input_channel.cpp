@@ -27,7 +27,7 @@ namespace droidinput = android;
 
 mia::AndroidInputChannel::AndroidInputChannel()
 {
-    
+
     droidinput::InputChannel::openInputFdPair(s_fd, c_fd);
 }
 
