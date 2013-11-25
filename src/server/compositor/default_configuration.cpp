@@ -24,7 +24,7 @@
 #include "gl_renderer_factory.h"
 
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 
 std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_stream_factory()

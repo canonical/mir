@@ -20,6 +20,8 @@
 #ifndef MIR_GRAPHICS_PLATFORM_H_
 #define MIR_GRAPHICS_PLATFORM_H_
 
+#include "basic_platform.h"
+
 #include <memory>
 
 namespace mir
@@ -57,7 +59,7 @@ class GraphicBufferAllocator;
  * Interface to platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class Platform
+class Platform : public BasicPlatform
 {
 public:
     Platform() = default;
@@ -97,8 +99,7 @@ public:
      * \param [in] packer the object providing the packing functionality
      * \param [in] buffer the buffer to fill the IPC package for
      */
-    virtual void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
-                                  std::shared_ptr<graphics::Buffer> const& buffer) const = 0;
+    virtual void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const = 0;
 
     /**
      * Creates the in-process client support object.

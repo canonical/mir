@@ -51,13 +51,14 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package(); 
     std::shared_ptr<InternalClient> create_internal_client();
 
-    void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
-                          std::shared_ptr<Buffer> const& buffer) const;
+    void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const;
+
+    EGLNativeDisplayType egl_native_display() const;
 
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);
 
-    helpers::UdevHelper udev;
+    std::shared_ptr<UdevContext> udev;
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
 

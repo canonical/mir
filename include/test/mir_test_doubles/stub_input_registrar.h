@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
 
-#include "mir/surfaces/input_registrar.h"
+#include "mir/scene/input_registrar.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-struct StubInputRegistrar : public surfaces::InputRegistrar
+struct StubInputRegistrar : public scene::InputRegistrar
 {
     void input_channel_opened(std::shared_ptr<input::InputChannel> const&,
                               std::shared_ptr<input::Surface> const&,

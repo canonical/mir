@@ -16,11 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
-#include "mir/shell/application_session.h"
+#include "src/server/scene/application_session.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
@@ -32,6 +31,7 @@
 #include "mir_test_doubles/stub_shell.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 
@@ -47,31 +47,17 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
-{
-public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>();
-    }
-
-    virtual std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
-    }
-};
-
 struct SessionMediatorAndroidTest : public ::testing::Test
 {
     SessionMediatorAndroidTest()
         : shell{std::make_shared<mtd::StubShell>()},
           graphics_platform{std::make_shared<mtd::NullPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
+          surface_pixel_formats{geom::PixelFormat::argb_8888, geom::PixelFormat::xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, display_changer,
-                   buffer_allocator, report,
+                   surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
@@ -81,7 +67,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<mtd::NullPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
+    std::vector<geom::PixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

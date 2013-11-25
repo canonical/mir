@@ -39,8 +39,7 @@ auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
     private:
         virtual std::shared_ptr<mg::Buffer> advance_client_buffer()
         {
-            bool unused;
-            return surface->advance_client_buffer(unused);
+            return surface->advance_client_buffer();
         }
         virtual mir::geometry::Size size() const { return surface->size(); }
         virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
@@ -49,18 +48,4 @@ auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
     };
 
     return std::make_shared<ForwardingInternalSurface>(surface);
-}
-
-mf::ClientTrackingSurface::ClientTrackingSurface()
-    : client_tracker(std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size))
-{
-}
-
-std::shared_ptr<mg::Buffer> mf::ClientTrackingSurface::advance_client_buffer(bool& need_full_ipc)
-{
-    auto buffer = advance_client_buffer();
-    auto id = buffer->id();
-    need_full_ipc = !client_tracker->client_has(id);
-    client_tracker->add(id);
-    return buffer;
 }

@@ -16,11 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
-#include "mir/shell/application_session.h"
+#include "src/server/scene/application_session.h"
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
@@ -49,27 +48,13 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
-{
-public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>();
-    }
-
-    virtual std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
-    }
-};
-
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
-        return std::shared_ptr<StubGraphicBufferAllocator>();
+        return std::shared_ptr<mg::GraphicBufferAllocator>();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
@@ -81,11 +66,11 @@ struct SessionMediatorGBMTest : public ::testing::Test
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
+          surface_pixel_formats{geom::PixelFormat::argb_8888, geom::PixelFormat::xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, display_changer,
-                   buffer_allocator, report,
+                   surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
@@ -95,7 +80,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
+    std::vector<geom::PixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

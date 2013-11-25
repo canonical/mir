@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_SNAPSHOT_H_
-#define MIR_SHELL_SNAPSHOT_H_
+#ifndef MIR_SCENE_SNAPSHOT_H_
+#define MIR_SCENE_SNAPSHOT_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/dimensions.h"
@@ -41,4 +41,4 @@ typedef std::function<void(Snapshot const&)> SnapshotCallback;
 }
 }
 
-#endif /* MIR_SHELL_SNAPSHOT_H_ */
+#endif /* MIR_SCENE_SNAPSHOT_H_ */

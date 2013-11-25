@@ -22,37 +22,13 @@
 #include "connector_report.h"
 #include "display_report.h"
 #include "session_mediator_report.h"
-#include "surfaces_report.h"
 
 #include "mir/graphics/null_display_report.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
-namespace ms = mir::surfaces;
-
-std::shared_ptr<ms::SurfacesReport>
-mir::DefaultServerConfiguration::the_surfaces_report()
-{
-    return surfaces_report([this]() -> std::shared_ptr<ms::SurfacesReport>
-    {
-        auto opt = the_options()->get(surfaces_report_opt, off_opt_value);
-
-        if (opt == log_opt_value)
-        {
-            return std::make_shared<ml::SurfacesReport>(the_logger());
-        }
-        else if (opt == off_opt_value)
-        {
-            return std::make_shared<ms::NullSurfacesReport>();
-        }
-        else
-        {
-            throw AbnormalExit(std::string("Invalid ") + surfaces_report_opt + " option: " + opt +
-                " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
-        }
-    });
-}
+namespace ms = mir::scene;
 
 auto mir::DefaultServerConfiguration::the_connector_report()
     -> std::shared_ptr<mf::ConnectorReport>

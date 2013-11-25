@@ -37,50 +37,12 @@ namespace
 
 namespace
 {
-struct ClientConfigCommon : TestingClientConfiguration
-{
-    ClientConfigCommon() :
-        connection(0),
-        surface(0)
-    {
-    }
-    static void connection_callback(MirConnection* connection, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connection = connection;
-    }
-    static void create_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_created(surface);
-    }
-    static void release_surface_callback(MirSurface* surface, void* context)
-    {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_released(surface);
-    }
-    virtual void connected(MirConnection* new_connection)
-    {
-        connection = new_connection;
-    }
-    virtual void surface_created(MirSurface* new_surface)
-    {
-        surface = new_surface;
-    }
-    virtual void surface_released(MirSurface* /* released_surface */)
-    {
-        surface = nullptr;
-    }
-    MirConnection* connection;
-    MirSurface* surface;
-};
-
 struct MockEventObserver
 {
     MOCK_METHOD1(see, void(MirEvent const*));
 };
 
-struct EventObservingClient : ClientConfigCommon
+struct EventObservingClient : mtf::TestingClientConfiguration
 {
     EventObservingClient()
         : observer(std::make_shared<MockEventObserver>())
@@ -95,26 +57,28 @@ struct EventObservingClient : ClientConfigCommon
  
     virtual void expect_events(mt::WaitCondition* /* all_events_received */) = 0;
 
-    void surface_created(MirSurface *surface_) override
+    static void surface_created(MirSurface *surface_, void *ctx)
     {
+        auto client = static_cast<EventObservingClient*>(ctx);
+
+        client->surface = surface_;
         // We need to set the event delegate from the surface_created
         // callback so we can block the reading of new events
         // until we are ready
         MirEventDelegate const event_delegate =
             {
                 handle_event,
-                this
+                client
             };
-        surface = surface_;
-        mir_surface_set_event_handler(surface, &event_delegate);
+        mir_surface_set_event_handler(surface_, &event_delegate);
     }
 
     void exec()
     {
         mt::WaitCondition all_events_received;
         expect_events(&all_events_received);
-        mir_wait_for(mir_connect(mir_test_socket,
-            __PRETTY_FUNCTION__, connection_callback, this));
+        connection = mir_connect_sync(mir_test_socket,
+            __PRETTY_FUNCTION__);
         ASSERT_TRUE(connection != NULL);
         MirSurfaceParameters const request_params =
             {
@@ -124,7 +88,7 @@ struct EventObservingClient : ClientConfigCommon
                 mir_buffer_usage_hardware,
                 mir_display_output_id_invalid
             };
-        mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
+        mir_wait_for(mir_connection_create_surface(connection, &request_params, surface_created, this));
         all_events_received.wait_for_at_most_seconds(60);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
@@ -136,6 +100,9 @@ struct EventObservingClient : ClientConfigCommon
     std::shared_ptr<MockEventObserver> observer;
     static int const surface_width = 100;
     static int const surface_height = 100;
+    
+    MirConnection *connection;
+    MirSurface *surface;
 };
 
 }
@@ -169,7 +136,7 @@ ACTION_P(SignalFence, fence)
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
+TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
     

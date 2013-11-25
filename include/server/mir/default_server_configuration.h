@@ -55,37 +55,36 @@ class DisplayChanger;
 namespace shell
 {
 class SurfaceFactory;
-class SurfaceBuilder;
 class SurfaceController;
 class InputTargeter;
-class SessionContainer;
 class FocusSetter;
-class FocusSequence;
 class PlacementStrategy;
 class SessionListener;
 class FocusController;
-class SessionManager;
-class PixelBuffer;
-class SnapshotStrategy;
 class DisplayLayout;
 class SurfaceConfigurator;
-class MediatingDisplayChanger;
-class SessionEventSink;
-class SessionEventHandlerRegister;
-class BroadcastingSessionEventSink;
 }
 namespace time
 {
 class TimeSource;
 }
-namespace surfaces
+namespace scene
 {
+class BroadcastingSessionEventSink;
 class BufferStreamFactory;
+class MediatingDisplayChanger;
+class PixelBuffer;
+class SessionContainer;
+class SessionEventSink;
+class SessionEventHandlerRegister;
+class SessionManager;
+class SnapshotStrategy;
+class SurfaceBuilder;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
 class InputRegistrar;
-class SurfacesReport;
+class SceneReport;
 }
 namespace graphics
 {
@@ -186,40 +185,32 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
-    virtual std::shared_ptr<shell::SessionContainer>    the_shell_session_container();
+    virtual std::shared_ptr<shell::SurfaceFactory>      the_scene_surface_factory();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
-    virtual std::shared_ptr<shell::FocusSequence>       the_shell_focus_sequence();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
-    virtual std::shared_ptr<shell::PixelBuffer>         the_shell_pixel_buffer();
-    virtual std::shared_ptr<shell::SnapshotStrategy>    the_shell_snapshot_strategy();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
-    virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
-    virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
     virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
 
-    /** @name shell configuration - dependencies
-     * dependencies of shell on the rest of the Mir
+    /** @name internal scene configuration
+     * builder functions used in the default implementation.
+     * The interfaces returned are not published, so the functions are only useful in tests
      *  @{ */
-    virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
-    virtual std::shared_ptr<surfaces::SurfaceController>     the_surface_controller();
-
+    virtual std::shared_ptr<scene::PixelBuffer>       the_pixel_buffer();
+    virtual std::shared_ptr<scene::SnapshotStrategy>  the_snapshot_strategy();
+    virtual std::shared_ptr<scene::SessionContainer>  the_session_container();
+    virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
+    virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
+    virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     /** @} */
 
-
-    /** @name surfaces configuration - customization
-     * configurable interfaces for modifying surfaces
+    /** @name scene configuration - dependencies
+     * dependencies of scene on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
-    virtual std::shared_ptr<surfaces::SurfacesReport>    the_surfaces_report();
-    /** @} */
-
-    /** @name surfaces configuration - dependencies
-     * dependencies of surfaces on the rest of the Mir
-     *  @{ */
-    virtual std::shared_ptr<surfaces::BufferStreamFactory> the_buffer_stream_factory();
+    virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
+    virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
     /** @} */
 
 
@@ -227,7 +218,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
-    virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    virtual std::shared_ptr<scene::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
@@ -241,20 +232,15 @@ public:
 
     virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
-    virtual std::shared_ptr<shell::SessionManager> the_session_manager();
-
 protected:
     using DefaultConfigurationOptions::the_options;
     using DefaultConfigurationOptions::add_options;
     using DefaultConfigurationOptions::parse_options;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
-    virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
-    virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
+    virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
     CachedPtr<frontend::Connector>   connector;
-    CachedPtr<shell::SessionManager> session_manager;
-
 
     CachedPtr<input::InputConfiguration> input_configuration;
 
@@ -262,7 +248,7 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::InputRegion>     input_region;
-    CachedPtr<surfaces::InputRegistrar> input_registrar;
+    CachedPtr<scene::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
@@ -279,17 +265,17 @@ protected:
     CachedPtr<frontend::SessionCreator>    session_creator;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
-    CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<surfaces::SurfacesReport> surfaces_report;
+    CachedPtr<scene::SurfaceStack> surface_stack;
+    CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
-    CachedPtr<shell::SessionContainer>  shell_session_container;
+    CachedPtr<shell::SurfaceFactory> scene_surface_factory;
+    CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
-    CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<shell::SessionListener> shell_session_listener;
-    CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
-    CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
+    CachedPtr<scene::PixelBuffer>       pixel_buffer;
+    CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
@@ -297,26 +283,35 @@ protected:
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
-    CachedPtr<input::NestedInputRelay> nested_input_relay;
-    CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
-    CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
+    CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
 
 private:
     std::shared_ptr<input::EventFilter> const default_filter;
-
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
-    std::shared_ptr<input::NestedInputRelay> the_nested_input_relay();
+
+    // The following caches and factory functions are internal to the
+    // default implementations of corresponding the Mir components
+    CachedPtr<scene::BroadcastingSessionEventSink> broadcasting_session_event_sink;
+    CachedPtr<input::NestedInputRelay> nested_input_relay;
+    CachedPtr<scene::SurfaceController> surface_controller;
+    CachedPtr<scene::SessionManager> session_manager;
+
+    std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
+    std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
+    std::shared_ptr<scene::SessionManager>       the_session_manager();
+    std::shared_ptr<scene::SurfaceBuilder>       the_surface_builder();
+    std::shared_ptr<scene::SurfaceController>    the_surface_controller();
+    std::function<void()> force_threads_to_unblock_callback();
 };
 }
 

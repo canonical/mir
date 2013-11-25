@@ -139,7 +139,7 @@ TEST_F(GBMGraphicsPlatform, fails_if_no_resources)
 /* ipc packaging tests */
 TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
 {
-    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
+    mtd::MockBuffer mock_buffer;
     mir::geometry::Stride dummy_stride(4390);
 
     auto native_handle = std::make_shared<MirBufferPackage>();
@@ -151,30 +151,34 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
         native_handle->data[i] = i; 
     }
 
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
         .WillOnce(testing::Return(native_handle));
-    EXPECT_CALL(*mock_buffer, stride())
+    EXPECT_CALL(mock_buffer, stride())
         .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
+    EXPECT_CALL(mock_buffer, size())
+        .WillOnce(testing::Return(mir::geometry::Size{123, 456}));
 
     auto platform = create_platform();
 
-    auto mock_packer = std::make_shared<mtd::MockPacker>();
+    mtd::MockPacker mock_packer;
     for(auto i=0; i < native_handle->fd_items; i++)
     {
-        EXPECT_CALL(*mock_packer, pack_fd(native_handle->fd[i]))
+        EXPECT_CALL(mock_packer, pack_fd(native_handle->fd[i]))
             .Times(1);
     } 
     for(auto i=0; i < native_handle->data_items; i++)
     {
-        EXPECT_CALL(*mock_packer, pack_data(native_handle->data[i]))
+        EXPECT_CALL(mock_packer, pack_data(native_handle->data[i]))
             .Times(1);
     }
-    EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
+    EXPECT_CALL(mock_packer, pack_stride(dummy_stride))
         .Times(1);
-    EXPECT_CALL(*mock_packer, pack_flags(testing::_))
+    EXPECT_CALL(mock_packer, pack_flags(testing::_))
+        .Times(1);
+    EXPECT_CALL(mock_packer, pack_size(testing::_))
         .Times(1);
 
-    platform->fill_ipc_package(mock_packer, mock_buffer);
+    platform->fill_ipc_package(&mock_packer, &mock_buffer);
 }
 
 TEST_F(GBMGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
@@ -219,6 +223,12 @@ TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal
         EXPECT_EQ(MIR_MESA_TRUE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
     }
     EXPECT_EQ(MIR_MESA_FALSE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
+}
+
+TEST_F(GBMGraphicsPlatform, egl_native_display_is_gbm_device)
+{
+    auto platform = create_platform();
+    EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
 }
 
 namespace

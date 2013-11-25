@@ -47,8 +47,8 @@ public:
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
-    void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
-                          std::shared_ptr<Buffer> const& Buffer) const;
+    void fill_ipc_package(BufferIPCPacker* packer, Buffer const* Buffer) const;
+    EGLNativeDisplayType egl_native_display() const;
 
 private:
     std::shared_ptr<NativePlatform> const native_platform;

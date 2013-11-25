@@ -18,7 +18,6 @@
 #define _UI_POINTER_CONTROLLER_H
 
 #include <androidfw/Input.h>
-#include <std/BitSet.h>
 #include <std/Mutex.h>
 #include <std/RefBase.h>
 #include <std/String8.h>
@@ -104,8 +103,7 @@ public:
      * For spotCoords, pressure != 0 indicates that the spot's location is being
      * pressed (not hovering).
      */
-    virtual void setSpots(const PointerCoords* spotCoords, const uint32_t* spotIdToIndex,
-            BitSet32 spotIdBits) = 0;
+    virtual void setSpots(const PointerCoords* spotCoords, uint32_t spotCount) = 0;
 
     /* Removes all spots. */
     virtual void clearSpots() = 0;
@@ -139,8 +137,7 @@ public:
     virtual void unfade(Transition transition);
 
     virtual void setPresentation(Presentation presentation);
-    virtual void setSpots(const PointerCoords* spotCoords,
-            const uint32_t* spotIdToIndex, BitSet32 spotIdBits);
+    virtual void setSpots(const PointerCoords* spotCoords, uint32_t spotCount);
     virtual void clearSpots();
 
     void setDisplaySize(int32_t width, int32_t height);

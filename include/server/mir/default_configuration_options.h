@@ -35,12 +35,13 @@ public:
     static char const* const display_report_opt;
     static char const* const legacy_input_report_opt;
     static char const* const connector_report_opt;
-    static char const* const surfaces_report_opt;
+    static char const* const scene_report_opt;
     static char const* const input_report_opt;
     static char const* const host_socket_opt;
     static char const* const standalone_opt;
     static char const* const frontend_threads;
     static char const* const name_opt;
+    static char const* const offscreen_opt;
 
     static char const* const glog;
     static char const* const glog_stderrthreshold;

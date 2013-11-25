@@ -31,7 +31,7 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 
 mia::InputTargeter::InputTargeter(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher,
                                   std::shared_ptr<mia::WindowHandleRepository> const& repository) :

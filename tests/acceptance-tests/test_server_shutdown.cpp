@@ -37,7 +37,7 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
 namespace
@@ -52,7 +52,7 @@ public:
                                    mc::CompositingCriteria const&, mc::BufferStream&)
     {
         /* 
-         * Do nothing, so that the Renderable's buffers are not consumed
+         * Do nothing, so that the surface's buffers are not consumed
          * by the server, thus causing the client to block when asking for
          * the second buffer (assuming double-buffering).
          */
@@ -238,7 +238,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
         {
             return DefaultServerConfiguration::the_input_targeter();
         }
-        std::shared_ptr<mir::surfaces::InputRegistrar> the_input_registrar() override
+        std::shared_ptr<mir::scene::InputRegistrar> the_input_registrar() override
         {
             return DefaultServerConfiguration::the_input_registrar();
         }

@@ -50,7 +50,7 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 

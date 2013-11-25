@@ -22,10 +22,12 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <unordered_map>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 namespace mir
 {
@@ -42,11 +44,12 @@ class GraphicBufferAllocator;
 /// processes and the core of the mir system.
 namespace frontend
 {
+class ClientBufferTracker;
 class Shell;
 class Session;
+class Surface;
 class ResourceCache;
 class SessionMediatorReport;
-class ClientBufferTracker;
 class EventSink;
 class DisplayChanger;
 
@@ -58,7 +61,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::vector<geometry::PixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
@@ -113,11 +116,11 @@ private:
                               std::shared_ptr<graphics::Buffer> const& graphics_buffer,
                               bool need_full_ipc);
 
+    std::tuple<std::shared_ptr<graphics::Buffer>, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
-    // TODO this is a dubious dependency - to get supported_pixel_formats
-    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
+    std::vector<geometry::PixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
@@ -125,6 +128,7 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
 
     std::unordered_map<SurfaceId,std::shared_ptr<graphics::Buffer>> client_buffer_resource;
+    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

@@ -33,17 +33,12 @@ namespace android
 class FBDevice : public DisplayDevice 
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
 
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
-
-    void set_next_frontbuffer(std::shared_ptr<graphics::Buffer> const& buffer);
-    void sync_to_display(bool sync); 
     void mode(MirPowerMode mode);
-
-    void commit_frame(EGLDisplay dpy, EGLSurface sur);
+    void prepare_composition();
+    void gpu_render(EGLDisplay dpy, EGLSurface sur); 
+    void post(Buffer const& buffer);
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;

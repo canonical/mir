@@ -19,6 +19,7 @@
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/graphics/android/internal_client_window.h"
 #include "src/server/graphics/android/interpreter_cache.h"
+#include "src/server/graphics/android/internal_client.h"
 #include "src/server/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -26,11 +27,11 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/internal_client.h"
 #include "mir/graphics/internal_surface.h"
-#include "src/server/surfaces/surface_stack.h"
-#include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surfaces_report.h"
-#include "src/server/surfaces/surface_allocator.h"
-#include "src/server/shell/surface_source.h"
+#include "src/server/scene/surface_stack.h"
+#include "src/server/scene/surface_controller.h"
+#include "mir/scene/scene_report.h"
+#include "src/server/scene/surface_allocator.h"
+#include "src/server/scene/surface_source.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/surface_id.h"
@@ -50,7 +51,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
-namespace ms=mir::surfaces;
+namespace ms=mir::scene;
 namespace msh=mir::shell;
 namespace mf=mir::frontend;
 namespace mi=mir::input;
@@ -92,18 +93,17 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
-    auto surfaces_report = std::make_shared<ms::NullSurfacesReport>();
-    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surfaces_report);
-    auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar, surfaces_report);
+    auto scene_report = std::make_shared<ms::NullSceneReport>();
+    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, scene_report);
+    auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar, scene_report);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
-    auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, std::make_shared<mtd::NullSurfaceConfigurator>());
+    auto surface_source = std::make_shared<ms::SurfaceSource>(surface_controller, std::make_shared<mtd::NullSurfaceConfigurator>());
     auto mir_surface = as_internal_surface(
         surface_source->create_surface(nullptr, params, id, std::shared_ptr<mf::EventSink>()));
 
     auto options = std::shared_ptr<mo::ProgramOption>(); 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 
-    auto platform = mg::create_platform(options, report);
-    auto internal_client = platform->create_internal_client();
+    auto internal_client = std::make_shared<mga::InternalClient>();
 
     int major, minor, n;
     EGLContext egl_context;
@@ -139,4 +139,9 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     glClear(GL_COLOR_BUFFER_BIT);
     rc = eglSwapBuffers(egl_display, egl_surface);
     EXPECT_EQ(EGL_TRUE, rc);
+
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroySurface(egl_display, egl_surface);
+    eglDestroyContext(egl_display, egl_context);
+    eglTerminate(egl_display);
 }

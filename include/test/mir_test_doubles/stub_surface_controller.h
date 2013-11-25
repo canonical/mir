@@ -31,7 +31,7 @@ namespace doubles
 
 struct StubSurfaceController : public shell::SurfaceController
 {
-    void raise(std::weak_ptr<surfaces::Surface> const&) override
+    void raise(std::weak_ptr<scene::BasicSurface> const&) override
     {
     }
 };

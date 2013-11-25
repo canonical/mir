@@ -12,7 +12,8 @@ add_library(
   buffer.cpp
   android_display.cpp
   android_display_configuration.cpp
-  display_buffer_factory.cpp
+  display_buffer.cpp
+  output_builder.cpp
   hwc_layerlist.cpp
   hwc10_device.cpp
   hwc11_device.cpp
@@ -21,11 +22,12 @@ add_library(
   android_alloc_adaptor.cpp
   server_render_window.cpp
   resource_factory.cpp
-  fb_simple_swapper.cpp
+  framebuffers.cpp
   fb_device.cpp
   internal_client_window.cpp
   interpreter_cache.cpp
   internal_client.cpp
+  gl_context.cpp
 )
 
 target_link_libraries(

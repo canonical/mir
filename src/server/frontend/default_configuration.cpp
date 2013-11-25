@@ -19,7 +19,6 @@
 #include "mir/default_server_configuration.h"
 
 #include "resource_cache.h"
-#include "global_event_sender.h"
 #include "protobuf_ipc_factory.h"
 #include "protobuf_session_creator.h"
 #include "published_socket_connector.h"
@@ -27,8 +26,7 @@
 #include "unauthorized_display_changer.h"
 
 #include "mir/options/option.h"
-#include "mir/shell/session_container.h"
-#include "mir/shell/session.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -36,8 +34,6 @@ namespace msh = mir::shell;
 
 namespace
 {
-char const* const no_server_socket_opt        = "no-file";
-
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
@@ -84,7 +80,7 @@ private:
             shell,
             graphics_platform,
             changer,
-            buffer_allocator,
+            buffer_allocator->supported_pixel_formats(),
             sm_report,
             sink,
             resource_cache());
@@ -121,21 +117,15 @@ mir::DefaultServerConfiguration::the_connector()
         {
             auto const threads = the_options()->get(frontend_threads,
                                                     default_ipc_threads);
-            auto shell_sessions = the_shell_session_container();
-            auto const& force_requests_to_complete = [shell_sessions]
-            {
-                shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-                {
-                    session->force_requests_to_complete();
-                });
-            };
+
+            auto const& force_threads_to_unblock = force_threads_to_unblock_callback();
 
             if (the_options()->is_set(no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_session_creator(),
                     threads,
-                    force_requests_to_complete,
+                    force_threads_to_unblock,
                     the_connector_report());
             }
             else
@@ -144,19 +134,9 @@ mir::DefaultServerConfiguration::the_connector()
                     the_socket_file(),
                     the_session_creator(),
                     threads,
-                    force_requests_to_complete,
+                    force_threads_to_unblock,
                     the_connector_report());
             }
-        });
-}
-
-std::shared_ptr<mf::EventSink>
-mir::DefaultServerConfiguration::the_global_event_sink()
-{
-    return global_event_sink(
-        [this]()
-        {
-            return std::make_shared<mf::GlobalEventSender>(the_shell_session_container());
         });
 }
 

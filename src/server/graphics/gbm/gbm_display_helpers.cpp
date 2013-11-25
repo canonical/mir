@@ -19,6 +19,8 @@
 #include "gbm_display_helpers.h"
 #include "drm_close_threadsafe.h"
 
+#include "udev_wrapper.h"
+
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -26,35 +28,16 @@
 #include <sstream>
 #include <stdexcept>
 #include <xf86drm.h>
-#include <libudev.h>
 #include <fcntl.h>
 
 namespace mgg = mir::graphics::gbm;
 namespace mggh = mir::graphics::gbm::helpers;
 
-/**************
- * UdevHelper *
- **************/
-
-mggh::UdevHelper::UdevHelper()
-{
-    ctx = udev_new();
-
-    if (!ctx)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create udev context"));
-}
-
-mggh::UdevHelper::~UdevHelper() noexcept
-{
-    udev_unref(ctx);
-}
-
 /*************
  * DRMHelper *
  *************/
 
-void mggh::DRMHelper::setup(UdevHelper const& udev)
+void mggh::DRMHelper::setup(std::shared_ptr<UdevContext> const& udev)
 {
     fd = open_drm_device(udev);
 
@@ -163,33 +146,23 @@ void mggh::DRMHelper::set_master() const
     }
 }
 
-int mggh::DRMHelper::is_appropriate_device(UdevHelper const& udev, udev_device* drm_device)
+int mggh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& drm_device)
 {
-    udev_enumerate* children = udev_enumerate_new(udev.ctx);
-    udev_enumerate_add_match_parent(children, drm_device);
+    mgg::UdevEnumerator children(udev);
+    children.match_parent(drm_device);
 
-    char const* devtype = udev_device_get_devtype(drm_device);
+    char const* devtype = drm_device.devtype();
     if (!devtype || strcmp(devtype, "drm_minor"))
         return EINVAL;
 
-    if (!udev_enumerate_scan_devices(children))
+    children.scan_devices();
+    for (auto& device : children)
     {
-        udev_list_entry *devices, *device;
-        devices = udev_enumerate_get_list_entry(children);
-        udev_list_entry_foreach(device, devices) 
-        {
-            char const* sys_path = udev_list_entry_get_name(device);
-
-            // For some reason udev regards the device as a parent of itself
-            // If there are any other children, they should be outputs.
-            if (strcmp(sys_path, udev_device_get_syspath(drm_device)))
-            {
-                udev_enumerate_unref(children);
-                return 0;
-            }
-        }
+        // For some reason udev regards the device as a parent of itself
+        // If there are any other children, they should be outputs.
+        if (device != drm_device)
+            return 0;
     }
-    udev_enumerate_unref(children);
 
     return ENOMEDIUM;
 }
@@ -208,51 +181,29 @@ int mggh::DRMHelper::count_connections(int fd)
     return n_connected;
 }
 
-int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
+int mggh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
 {    
     int tmp_fd = -1;
-    int error;
+    int error = ENODEV; //Default error is "there are no DRM devices"
 
-    // TODO: Wrap this up in a nice class
-    udev_enumerate* enumerator = udev_enumerate_new(udev.ctx);
-    udev_enumerate_add_match_subsystem(enumerator, "drm");
-    udev_enumerate_add_match_sysname(enumerator, "card[0-9]");
+    UdevEnumerator devices(udev);
+    devices.match_subsystem("drm");
+    devices.match_sysname("card[0-9]*");
 
-    udev_list_entry *devices, *device;
+    devices.scan_devices();
 
-    if ((error = udev_enumerate_scan_devices(enumerator)))
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to enumerate udev devices")) << boost::errinfo_errno(-error));
-
-    devices = udev_enumerate_get_list_entry(enumerator);
-    udev_list_entry_foreach(device, devices)
+    for(auto& device : devices)
     {
-        char const* sys_path = udev_list_entry_get_name(device);
-        udev_device* dev = udev_device_new_from_syspath(udev.ctx, sys_path);
-
-        // Devices can disappear on us.
-        if (!dev)
+        if ((error = is_appropriate_device(udev, device)))
             continue;
-
-        if ((error = is_appropriate_device(udev, dev)))
-        {
-            udev_device_unref(dev);
-            continue;
-        }
-
-        char const* dev_path = udev_device_get_devnode(dev);
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
-        tmp_fd = open(dev_path, O_RDWR, O_CLOEXEC);
+        tmp_fd = open(device.devnode(), O_RDWR, O_CLOEXEC);
         if (tmp_fd < 0)
         {
             error = errno;
-            udev_device_unref(dev);
             continue;
         }
-
-        udev_device_unref(dev);
 
         // Check that the drm device is usable by setting the interface version we use (1.4)
         drmSetVersion sv;
@@ -275,7 +226,6 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
         close(tmp_fd);
         tmp_fd = -1;
     }
-    udev_enumerate_unref(enumerator);
 
     if (tmp_fd < 0)
     {

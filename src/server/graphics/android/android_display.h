@@ -19,11 +19,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
+#include "display_buffer.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/egl_resources.h"
 #include "android_display_configuration.h"
+#include "gl_context.h"
 
-#include <EGL/egl.h>
 #include <memory>
 
 namespace mir
@@ -32,25 +32,21 @@ namespace graphics
 {
 
 class DisplayReport;
-class DisplayBuffer;
 
 namespace android
 {
 class DisplayDevice;
 
-class AndroidDisplayBufferFactory;
+class DisplayBuilder;
 class DisplaySupportProvider;
 
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay(std::shared_ptr<ANativeWindow> const&,
-                            std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
-                            std::shared_ptr<DisplayDevice> const& display_device,
+    explicit AndroidDisplay(std::shared_ptr<DisplayBuilder> const& display_builder,
                             std::shared_ptr<DisplayReport> const& display_report);
-    ~AndroidDisplay();
 
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
     void configure(DisplayConfiguration const&);
@@ -71,15 +67,11 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
-    std::shared_ptr<ANativeWindow> const native_window;
+    std::shared_ptr<DisplayBuilder> const display_builder;
+    GLContext gl_context;
     std::shared_ptr<DisplayDevice> const display_device;
-
-    EGLDisplay egl_display;
-    EGLConfig egl_config;
-    EGLContextStore const egl_context_shared;
-    EGLSurfaceStore const egl_surface_dummy;
-    std::unique_ptr<DisplayBuffer> display_buffer;
-    
+    //we only have a primary display at the moment
+    std::unique_ptr<graphics::DisplayBuffer> const display_buffer; 
     AndroidDisplayConfiguration current_configuration;
 };
 

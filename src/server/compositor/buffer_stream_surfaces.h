@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
-#define MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
+#ifndef MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_
+#define MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -47,6 +47,7 @@ public:
 
     geometry::PixelFormat get_stream_pixel_format();
     geometry::Size stream_size();
+    void resize(geometry::Size const& size) override;
     void allow_framedropping(bool);
     void force_requests_to_complete();
 
@@ -61,4 +62,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_ */

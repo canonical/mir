@@ -27,6 +27,13 @@
 
 namespace mir
 {
+namespace input
+{
+namespace receiver
+{
+class InputReceiverReport;
+}
+}
 namespace client
 {
 
@@ -50,6 +57,7 @@ public:
 
     virtual std::string the_socket_file();
     virtual std::shared_ptr<rpc::RpcReport> the_rpc_report();
+    virtual std::shared_ptr<input::receiver::InputReceiverReport> the_input_receiver_report();
 
 protected:
     CachedPtr<rpc::MirBasicRpcChannel> rpc_channel;
@@ -61,6 +69,7 @@ protected:
     CachedPtr<LifecycleControl> lifecycle_control;
 
     CachedPtr<rpc::RpcReport> rpc_report;
+    CachedPtr<input::receiver::InputReceiverReport> input_receiver_report;
 
 private:
     std::string const socket_file;

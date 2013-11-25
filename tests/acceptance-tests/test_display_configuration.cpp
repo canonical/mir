@@ -18,9 +18,8 @@
  */
 
 #include "mir/frontend/session_authorizer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/event_handler_register.h"
-#include "src/server/frontend/global_event_sender.h"
+#include "src/server/scene/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"
@@ -31,6 +30,7 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/pipe.h"
 #include "mir_test/cross_process_action.h"
@@ -131,27 +131,13 @@ private:
     std::atomic<bool> handler_called;
 };
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
-{
-public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return {};
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return {};
-    }
-};
-
 class StubPlatform : public mtd::NullPlatform
 {
 public:
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
     {
-        return std::make_shared<StubGraphicBufferAllocator>();
+        return std::make_shared<mtd::StubBufferAllocator>();
     }
 
     std::shared_ptr<mg::Display> create_display(

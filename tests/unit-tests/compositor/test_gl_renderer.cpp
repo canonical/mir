@@ -46,8 +46,6 @@ namespace mg=mir::graphics;
 namespace
 {
 
-const GLint stub_bad_shader = 0;
-const GLint stub_bad_program = 0;
 const GLint stub_v_shader = 1;
 const GLint stub_f_shader = 2;
 const GLint stub_program = 1;
@@ -61,7 +59,6 @@ const GLint screen_to_gl_coords_uniform_location = 5;
 const GLint tex_uniform_location = 6;
 const std::string stub_info_log = "something failed!";
 const size_t stub_info_log_length = stub_info_log.size();
-const size_t stub_info_log_buffer_length = stub_info_log_length + 1;
 
 void ExpectShaderCompileFailure(const GLint shader, mtd::MockGL &mock_gl)
 {
@@ -284,7 +281,7 @@ public:
 
 }
 
-TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
+TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 

@@ -7,7 +7,7 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(lttng/)
-add_subdirectory(surfaces/)
+add_subdirectory(scene/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
@@ -46,18 +46,20 @@ list(APPEND MIRSERVER_ARCHIVES
   mircompositor
   mirfrontend
   mirgraphics
-  mirplatform
   mirinput
   mirsharedinput
+  mirsharedgeometry
   mirsharedlogging
-  mirsurfaces
+  mirscene
   mirtime
   mirlttng
+  mirnestedgraphics
+  miroffscreengraphics
 )
 
 list(APPEND MIRSERVER_LINKS
   mirprotobuf
-  mirnestedgraphics
+  mirplatform
   mirclient
   3rd_party
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
@@ -90,7 +92,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 10)
+set(MIRSERVER_ABI 11)
 
 set_target_properties(
   mirserver

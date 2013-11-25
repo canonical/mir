@@ -76,7 +76,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
-    surfaces::DepthId const& new_depth)
+    scene::DepthId const& new_depth)
 {
     depth = new_depth;
     

@@ -24,7 +24,7 @@ input-report            | log,lttng
 legacy-input-report     | log
 msg-processor-report    | log,lttng
 session-mediator-report | log
-surfaces-report         | log
+scene-report            | log
 
 For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the
@@ -40,6 +40,7 @@ underscores. The available reports and handlers for the client are:
 Report              | Handlers
 ------------------- | --------
 rpc-report          | log,lttng
+input-receiver      | log
 
 For example, to enable the logging RPC report, one should set the
 `MIR_CLIENT_RPC_REPORT=log` environment variable.

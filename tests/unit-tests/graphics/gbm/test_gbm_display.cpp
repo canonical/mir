@@ -30,7 +30,6 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir_test_doubles/null_video_devices.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -40,6 +39,8 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
+#include <thread>
+#include <atomic>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -69,15 +70,17 @@ public:
                       std::function<bool()> const&));
 };
 
-class MockVideoDevices : public mgg::VideoDevices
+class MockEventRegister : public mg::EventHandlerRegister
 {
 public:
-    ~MockVideoDevices() noexcept(true) {}
-
-    MOCK_METHOD2(register_change_handler,
-                 void(mg::EventHandlerRegister&,
-                      std::function<void()> const&));
+    MOCK_METHOD2(register_signal_handler,
+                 void(std::initializer_list<int>,
+                 std::function<void(int)> const&));
+    MOCK_METHOD2(register_fd_handler,
+                 void(std::initializer_list<int>,
+                 std::function<void(int)> const&));
 };
+
 
 class GBMDisplayTest : public ::testing::Test
 {
@@ -124,7 +127,6 @@ public:
     {
         return std::make_shared<mgg::GBMDisplay>(
             platform,
-            std::make_shared<mtd::NullVideoDevices>(),
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
             null_report);
     }
@@ -513,7 +515,6 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
 
     auto display = std::make_shared<mgg::GBMDisplay>(
                         create_platform(),
-                        std::make_shared<mtd::NullVideoDevices>(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
 }
@@ -684,7 +685,6 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
                         std::make_shared<mtd::NullVirtualTerminal>());
     auto display = std::make_shared<mgg::GBMDisplay>(
                         platform,
-                        std::make_shared<mtd::NullVideoDevices>(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
 
@@ -701,17 +701,54 @@ TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
 
-    auto mock_video_devices = std::make_shared<MockVideoDevices>();
+    auto display = std::make_shared<mgg::GBMDisplay>(
+                        create_platform(),
+                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        null_report);
+    MockEventRegister mock_register;
+
+    EXPECT_CALL(mock_register, register_fd_handler(_,_));
+
+    display->register_configuration_change_handler(mock_register, []{});
+}
+
+TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
+{
+    using namespace testing;
 
     auto display = std::make_shared<mgg::GBMDisplay>(
                         create_platform(),
-                        mock_video_devices,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         null_report);
 
+    auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+
     mir::AsioMainLoop ml;
 
-    EXPECT_CALL(*mock_video_devices, register_change_handler(Ref(ml),_));
+    int const expected_call_count{10};
+    std::atomic<int> call_count{0};
 
-    display->register_configuration_change_handler(ml, []{});
+    display->register_configuration_change_handler(
+        ml,
+        [&call_count, &ml]()
+        {
+            if (++call_count == expected_call_count)
+                ml.stop();
+        });
+
+    std::thread t{
+        [this, syspath]
+        {
+            for (int i = 0; i < expected_call_count; ++i)
+            {
+                fake_devices.emit_device_changed(syspath);
+                std::this_thread::sleep_for(std::chrono::microseconds{500});
+            }
+        }};
+
+    ml.run();
+
+    t.join();
+
+    EXPECT_EQ(expected_call_count, call_count);
 }

@@ -21,6 +21,8 @@
 
 #include <hardware/hwcomposer.h>
 #include <gmock/gmock.h>
+#include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -59,17 +61,37 @@ public:
 
         hwc_display_contents_1_t* primary_display = *in;
         memcpy(out, primary_display, sizeof(hwc_display_contents_1_t));
-
         return 0;
-
     }
+
+    void hwc_set_return_fence(int fence)
+    {
+        fb_fence = fence; 
+    }
+
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
         return save_args(&display0_prepare_content, displays);
     }
 
-    int save_last_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
+    int save_last_set_arguments(
+        struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
+        hwc_display_contents_1_t* primary_display = *displays;
+        if (!primary_display)
+            return -1;
+
+        for(auto i = 0u; i < primary_display->numHwLayers; i++)
+        {
+            set_layerlist.push_back(primary_display->hwLayers[i]);
+            set_layerlist.back().visibleRegionScreen = {0, nullptr};
+        }
+
+        if (primary_display->hwLayers)
+        {
+            primary_display->hwLayers[1].releaseFenceFd = fb_fence;
+        }
+
         return save_args(&display0_set_content, displays);
     }
 
@@ -120,7 +142,9 @@ public:
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
 
     hwc_display_contents_1_t display0_set_content;
+    std::vector<hwc_layer_1> set_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
+    int fb_fence;
 };
 
 }

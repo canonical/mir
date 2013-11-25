@@ -19,13 +19,13 @@
 
 #include <androidfw/Input.h>
 #include <androidfw/InputTransport.h>
+#include <androidfw/IntSet.h>
 #include <std/KeyedVector.h>
 #include <std/Vector.h>
 #include <std/Timers.h>
 #include <std/RefBase.h>
 #include <std/String8.h>
 #include <std/Looper.h>
-#include <std/BitSet.h>
 #include <std/atomic.h>
 #include <std/Condition.h>
 #include <std/Thread.h>
@@ -169,7 +169,7 @@ struct InputTarget {
 
     // The subset of pointer ids to include in motion events dispatched to this input target
     // if FLAG_SPLIT is set.
-    BitSet32 pointerIds;
+    IntSet pointerIds;
 };
 
 
@@ -953,7 +953,7 @@ private:
     struct TouchedWindow {
         sp<InputWindowHandle> windowHandle;
         int32_t targetFlags;
-        BitSet32 pointerIds;        // zero unless target flag FLAG_SPLIT is set
+        IntSet pointerIds;        // empty unless target flag FLAG_SPLIT is set
     };
     struct TouchState {
         bool down;
@@ -967,7 +967,7 @@ private:
         void reset();
         void copyFrom(const TouchState& other);
         void addOrUpdateWindow(const sp<InputWindowHandle>& windowHandle,
-                int32_t targetFlags, BitSet32 pointerIds);
+                int32_t targetFlags, const IntSet &pointerIds);
         void removeWindow(const sp<InputWindowHandle>& windowHandle);
         void filterNonAsIsTouchWindows();
         sp<InputWindowHandle> getFirstForegroundWindowHandle() const;
@@ -1033,7 +1033,7 @@ private:
             bool* outConflictingPointerActions);
 
     void addWindowTargetLocked(const sp<InputWindowHandle>& windowHandle,
-            int32_t targetFlags, BitSet32 pointerIds, Vector<InputTarget>& inputTargets);
+            int32_t targetFlags, const IntSet &pointerIds, Vector<InputTarget>& inputTargets);
     void addMonitoringTargetsLocked(Vector<InputTarget>& inputTargets);
 
     bool checkInjectionPermission(const sp<InputWindowHandle>& windowHandle,
@@ -1072,7 +1072,7 @@ private:
             const CancelationOptions& options);
 
     // Splitting motion events across windows.
-    MotionEntry* splitMotionEvent(const MotionEntry* originalMotionEntry, BitSet32 pointerIds);
+    MotionEntry* splitMotionEvent(const MotionEntry* originalMotionEntry, const IntSet &pointerIds);
 
     // Reset and drop everything the dispatcher is doing.
     void resetAndDropEverythingLocked(const char* reason);

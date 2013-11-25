@@ -24,9 +24,9 @@
 
 namespace mir
 {
-namespace surfaces 
+namespace scene 
 {
-class Surface;
+class BasicSurface;
 }
 
 namespace shell
@@ -35,7 +35,7 @@ namespace shell
 class SurfaceController
 {
 public:
-    virtual void raise(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+    virtual void raise(std::weak_ptr<scene::BasicSurface> const& surface) = 0;
 
 protected:
     SurfaceController() = default;

@@ -27,8 +27,8 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/shell/surface_builder.h"
-#include "mir/surfaces/surface.h"
+#include "mir/shell/surface_factory.h"
+#include "mir/shell/surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 
@@ -49,7 +49,7 @@
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mi = mir::input;
@@ -185,13 +185,13 @@ class Moveable
 {
 public:
     Moveable() {}
-    Moveable(ms::Surface& s, const geom::Size& display_size,
+    Moveable(std::shared_ptr<msh::Surface> const& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
-        : surface(&s), display_size(display_size),
-          x{static_cast<float>(s.top_left().x.as_uint32_t())},
-          y{static_cast<float>(s.top_left().y.as_uint32_t())},
-          w{static_cast<float>(s.size().width.as_uint32_t())},
-          h{static_cast<float>(s.size().height.as_uint32_t())},
+        : surface(s), display_size(display_size),
+          x{static_cast<float>(s->top_left().x.as_uint32_t())},
+          y{static_cast<float>(s->top_left().y.as_uint32_t())},
+          w{static_cast<float>(s->size().width.as_uint32_t())},
+          h{static_cast<float>(s->size().height.as_uint32_t())},
           dx{dx},
           dy{dy},
           rotation_axis{rotation_axis},
@@ -233,7 +233,7 @@ public:
     }
 
 private:
-    ms::Surface* surface;
+    std::shared_ptr<msh::Surface> surface;
     geom::Size display_size;
     float x;
     float y;
@@ -387,7 +387,7 @@ public:
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
-        auto const surface_builder = the_surface_builder();
+        auto const surface_factory = the_scene_surface_factory();
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
         display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
@@ -406,18 +406,20 @@ public:
         int i = 0;
         for (auto& m : moveables)
         {
-            std::shared_ptr<ms::Surface> s = surface_builder->create_surface(
+            auto const s = surface_factory->create_surface(
                     nullptr,
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
-                                   .of_buffer_usage(mg::BufferUsage::hardware)
-                    ).lock();
+                                   .of_buffer_usage(mg::BufferUsage::hardware),
+                    mf::SurfaceId(), {});
 
             /*
-             * Let the system know that the surface is suitable for rendering
-             * (i.e., that it contains buffers with valid contents).
+             * We call advance_client_buffer() twice so that the surface is
+             * considers the first buffer to be posted.
+             * (TODO There must be a better way!)
              */
-            s->flag_for_render();
+            s->advance_client_buffer();
+            s->advance_client_buffer();
 
             /*
              * Place each surface at a different starting location and give it a
@@ -427,7 +429,7 @@ public:
             uint32_t const y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_side / 2.0;
 
             s->move_to({x, y});
-            m = Moveable(*s, display_size,
+            m = Moveable(s, display_size,
                     cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
                     sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,
                     glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},

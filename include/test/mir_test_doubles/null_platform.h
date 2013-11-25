@@ -54,9 +54,13 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<graphics::InternalClient>();
     }
 
-    void fill_ipc_package(std::shared_ptr<graphics::BufferIPCPacker> const&,
-                          std::shared_ptr<graphics::Buffer> const&) const
+    void fill_ipc_package(graphics::BufferIPCPacker*, graphics::Buffer const*) const
     {
+    }
+
+    EGLNativeDisplayType egl_native_display() const
+    {
+        return EGLNativeDisplayType();
     }
 };
 }

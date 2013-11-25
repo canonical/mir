@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/null_session_listener.h"
-#include "mir/shell/application_session.h"
+#include "src/server/scene/application_session.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mtf = mir_test_framework;
 
@@ -46,8 +47,8 @@ class StubSessionListener : public msh::NullSessionListener
 {
     void stopping(std::shared_ptr<msh::Session> const& session)
     {
-        std::shared_ptr<msh::ApplicationSession> app_session(
-            std::static_pointer_cast<msh::ApplicationSession>(session)
+        std::shared_ptr<ms::ApplicationSession> app_session(
+            std::static_pointer_cast<ms::ApplicationSession>(session)
             );
 
         app_session->set_lifecycle_state(mir_lifecycle_state_will_suspend);

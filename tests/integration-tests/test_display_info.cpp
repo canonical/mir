@@ -19,15 +19,13 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/buffer.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/session_mediator.h"
-#include "src/server/frontend/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_display_changer.h"
@@ -85,19 +83,17 @@ private:
     mtd::NullDisplayBuffer display_buffer;
 };
 
-mtd::StubDisplayConfig StubChanger::stub_display_config;
+mtd::StubDisplayConfig StubChanger::stub_display_config{
+    2,
+    { geom::PixelFormat::xrgb_8888 }
+};
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
 public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
+    std::vector<geom::PixelFormat> supported_pixel_formats() override
     {
         return pixel_formats;
     }
@@ -106,9 +102,9 @@ public:
 };
 
 std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
-    geom::PixelFormat::bgr_888,
-    geom::PixelFormat::abgr_8888,
-    geom::PixelFormat::xbgr_8888
+    geom::PixelFormat::argb_8888,
+    geom::PixelFormat::xbgr_8888,
+    geom::PixelFormat::bgr_888
 };
 
 class StubPlatform : public mtd::NullPlatform
@@ -133,9 +129,9 @@ public:
 
 }
 
-/* TODO: this test currently checks the same format list against both the surface formats
-         and display formats. Improve test to return different format lists for both concepts */ 
-TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
+using AvailableSurfaceFormatsTest = BespokeDisplayServerTestFixture;
+
+TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
@@ -178,7 +174,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(formats[i]));
+                          static_cast<geom::PixelFormat>(formats[i])) << "i=" << i;
             }
 
             mir_connection_release(connection);

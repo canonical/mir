@@ -24,7 +24,6 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_ipc_packer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 #include "src/server/input/null_input_configuration.h"
@@ -34,6 +33,10 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
+#ifdef ANDROID
+#include "mir_test_doubles/mock_android_native_buffer.h"
+#endif
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -49,7 +52,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -83,6 +86,8 @@ public:
         native_buffer->data[0] = 0xDEADBEEF;
         native_buffer->fd_items = 1;
         native_buffer->fd[0] = fd;
+        native_buffer->width = properties.size.width.as_int();
+        native_buffer->height = properties.size.height.as_int();
 
         native_buffer->flags = 0;
         if (properties.size.width.as_int() >= 800 &&
@@ -91,10 +96,13 @@ public:
         {
             native_buffer->flags |= mir_buffer_flag_can_scanout;
         }
-        return native_buffer;
 #else
-        return std::shared_ptr<mg::NativeBuffer>();
+        auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        auto anwb = native_buffer->anwb();
+        anwb->width = properties.size.width.as_int();
+        anwb->height = properties.size.width.as_int();
 #endif
+        return native_buffer;
     }
 
     ~StubFDBuffer() noexcept
@@ -106,17 +114,12 @@ private:
     const mg::BufferProperties properties;
 };
 
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
  public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        return std::unique_ptr<mg::Buffer>(new StubFDBuffer(properties));
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
+        return std::make_shared<StubFDBuffer>(properties);
     }
 };
 
@@ -175,8 +178,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& packer,
-                          std::shared_ptr<mg::Buffer> const& buffer) const override
+    void fill_ipc_package(mg::BufferIPCPacker* packer, mg::Buffer const* buffer) const override
     {
 #ifndef ANDROID
         auto native_handle = buffer->native_buffer_handle();
@@ -189,12 +191,10 @@ class StubGraphicPlatform : public mtd::NullPlatform
             packer->pack_fd(native_handle->fd[i]);
         }
 
-        packer->pack_stride(buffer->stride());
         packer->pack_flags(native_handle->flags);
-#else
-        (void)packer;
-        (void)buffer;
 #endif
+        packer->pack_stride(buffer->stride());
+        packer->pack_size(buffer->size());
     }
 
     std::shared_ptr<mg::Display> create_display(

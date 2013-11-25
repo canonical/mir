@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 
-#include "src/server/surfaces/surface_state.h"
+#include "src/server/scene/surface_state.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockSurfaceState : public surfaces::SurfaceState
+class MockSurfaceState : public scene::SurfaceState
 {
 public:
     MockSurfaceState()
@@ -52,6 +52,7 @@ public:
     MOCK_CONST_METHOD0(name, std::string const&());
     MOCK_METHOD2(apply_rotation, void(float, glm::vec3 const&));
     MOCK_METHOD1(move_to, void(geometry::Point));
+    MOCK_METHOD1(resize, void(geometry::Size const&));
     MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
     MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
     MOCK_CONST_METHOD0(alpha, float());

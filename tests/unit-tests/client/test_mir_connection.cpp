@@ -267,6 +267,17 @@ void fill_display_configuration(mp::ConnectParameters const*, mp::Connection* re
     }
 }
 
+std::vector<MirPixelFormat> const supported_surface_formats{
+    mir_pixel_format_argb_8888,
+    mir_pixel_format_bgr_888
+};
+
+void fill_surface_pixel_formats(mp::ConnectParameters const*, mp::Connection* response)
+{
+    for (auto pf : supported_surface_formats)
+        response->add_surface_pixel_format(static_cast<uint32_t>(pf));
+}
+
 }
 
 TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
@@ -416,7 +427,7 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_configuration));
+        .WillOnce(Invoke(fill_surface_pixel_formats));
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
@@ -425,12 +436,12 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
     unsigned int valid_formats = 0;
     MirPixelFormat formats[formats_size];
 
-    connection->possible_pixel_formats(&formats[0], formats_size, valid_formats);
+    connection->available_surface_formats(&formats[0], formats_size, valid_formats);
 
-    ASSERT_EQ(2u, valid_formats);
+    ASSERT_EQ(supported_surface_formats.size(), valid_formats);
     for (auto i=0u; i < valid_formats; i++)
     {
-        EXPECT_EQ(supported_output_formats[i], formats[i]);
+        EXPECT_EQ(supported_surface_formats[i], formats[i]) << "i=" << i;
     }
 }
 

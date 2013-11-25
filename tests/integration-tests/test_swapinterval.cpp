@@ -24,7 +24,7 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/surfaces/buffer_stream_factory.h"
+#include "mir/scene/buffer_stream_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -41,7 +41,7 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -61,6 +61,7 @@ public:
     std::shared_ptr<mg::Buffer> lock_snapshot_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }
+    void resize(geom::Size const&) override {}
     void force_requests_to_complete() {}
     void allow_framedropping(bool)
     {

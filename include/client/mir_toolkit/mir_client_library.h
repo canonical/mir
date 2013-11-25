@@ -207,7 +207,7 @@ MirSurface *mir_connection_create_surface_sync(
 /**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
- *            and locking appropriate to protect your data accessed in the
+ *            any locking appropriate to protect your data accessed in the
  *            callback. There is also a chance that different events will be
  *            called back in different threads, for the same surface,
  *            simultaneously.
