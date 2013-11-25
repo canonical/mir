@@ -18,12 +18,12 @@
 
 #include "null_input_configuration.h"
 
-#include "mir/surfaces/input_registrar.h"
+#include "mir/scene/input_registrar.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_manager.h"
 
 namespace mi = mir::input;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 namespace

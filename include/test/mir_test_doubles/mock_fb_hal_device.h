@@ -34,11 +34,6 @@ namespace doubles
 class MockFBHalDevice : public framebuffer_device_t
 {
 public:
-    MockFBHalDevice()
-    {
-        post = hook_post;
-    }
-
     MockFBHalDevice(unsigned int const width, unsigned int const height,
                     int const pf, int const numfbs)
         : framebuffer_device_t({
@@ -61,6 +56,11 @@ public:
     {
         post = hook_post;
         setSwapInterval = hook_setSwapInterval; 
+    }
+
+    MockFBHalDevice()
+        : MockFBHalDevice(1,1,1,1)
+    {
     }
 
     static int hook_post(struct framebuffer_device_t* mock_fb, buffer_handle_t handle)

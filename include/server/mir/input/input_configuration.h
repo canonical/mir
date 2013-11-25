@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace surfaces
+namespace scene
 {
 class InputRegistrar;
 }
@@ -41,7 +41,7 @@ class InputConfiguration
 public:
     virtual ~InputConfiguration() {}
 
-    virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar() = 0;
+    virtual std::shared_ptr<scene::InputRegistrar> the_input_registrar() = 0;
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
     

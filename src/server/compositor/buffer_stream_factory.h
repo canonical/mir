@@ -21,7 +21,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
-#include "mir/surfaces/buffer_stream_factory.h"
+#include "mir/scene/buffer_stream_factory.h"
 
 #include <memory>
 
@@ -34,7 +34,7 @@ class GraphicBufferAllocator;
 namespace compositor
 {
 
-class BufferStreamFactory : public surfaces::BufferStreamFactory
+class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
 

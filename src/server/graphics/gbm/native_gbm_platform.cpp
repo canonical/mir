@@ -85,9 +85,7 @@ std::shared_ptr<mg::InternalClient> mgg::NativeGBMPlatform::create_internal_clie
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_internal_client is not implemented yet!"));
 }
 
-void mgg::NativeGBMPlatform::fill_ipc_package(
-    std::shared_ptr<mg::BufferIPCPacker> const& packer,
-    std::shared_ptr<mg::Buffer> const& buffer) const
+void mgg::NativeGBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)

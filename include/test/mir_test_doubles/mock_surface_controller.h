@@ -33,7 +33,7 @@ namespace doubles
 
 struct MockSurfaceController : public shell::SurfaceController
 {
-    MOCK_METHOD1(raise, void(std::weak_ptr<surfaces::BasicSurface> const&));
+    MOCK_METHOD1(raise, void(std::weak_ptr<scene::BasicSurface> const&));
 };
 
 }

@@ -32,12 +32,12 @@ namespace graphics
 namespace android
 {
 
-class DisplayDevice;
+class FramebufferBundle;
 class InterpreterResourceCache;
 class ServerRenderWindow : public AndroidDriverInterpreter 
 {
 public:
-    ServerRenderWindow(std::shared_ptr<DisplayDevice> const& display_poster,
+    ServerRenderWindow(std::shared_ptr<FramebufferBundle> const& fb_bundle,
                        std::shared_ptr<InterpreterResourceCache> const&);
 
     graphics::NativeBuffer* driver_requests_buffer();
@@ -47,9 +47,8 @@ public:
     void sync_to_display(bool sync);
 
 private:
-    std::shared_ptr<DisplayDevice> const poster;
+    std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
-
     int format;
 }; 
 

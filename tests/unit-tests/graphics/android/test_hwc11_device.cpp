@@ -44,17 +44,12 @@ protected:
 
         mock_native_buffer = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
         mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
-        mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
 
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mock_native_buffer));
-        ON_CALL(*mock_fb_bundle, last_rendered_buffer())
-            .WillByDefault(Return(mock_buffer));
     }
-
-    std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
@@ -64,62 +59,24 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-TEST_F(HWC11Device, test_hwc_commit_order)
+TEST_F(HWC11Device, test_hwc_prepare)
 {
     using namespace testing;
-    int hwc_return_fence = 94;
-    mock_device->hwc_set_return_fence(hwc_return_fence);
-
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
-
-    InSequence seq;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
-        .Times(1);
-    EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
-        .Times(1);
 
-    device.commit_frame(dpy, surf);
-
+    mga::HWC11Device device(mock_device, mock_vsync);
+    device.prepare_composition();
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
-    //set
-    EXPECT_EQ(2, mock_device->display0_set_content.numHwLayers);
-    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->set_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
-    EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[1].compositionType);
-    EXPECT_EQ(0, mock_device->set_layerlist[1].flags);
 }
 
-TEST_F(HWC11Device, buffer_for_render)
+TEST_F(HWC11Device, test_hwc_render)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
-        .Times(1)
-        .WillOnce(Return(mock_buffer));
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
-    EXPECT_EQ(mock_buffer, device.buffer_for_render());
-}
-
-TEST_F(HWC11Device, test_hwc_commit_failure)
-{
-    using namespace testing;
-
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
-
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_THROW({
-        device.commit_frame(dpy, surf);
-    }, std::runtime_error);
+    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
+        .Times(1);
+    mga::HWC11Device device(mock_device, mock_vsync);
+    device.gpu_render(dpy, surf);
 }
 
 TEST_F(HWC11Device, test_hwc_swapbuffers_failure)
@@ -129,9 +86,49 @@ TEST_F(HWC11Device, test_hwc_swapbuffers_failure)
         .Times(1)
         .WillOnce(Return(EGL_FALSE));
 
-    mga::HWC11Device device(mock_device, mock_fb_bundle, mock_vsync);
+    mga::HWC11Device device(mock_device, mock_vsync);
 
     EXPECT_THROW({
-        device.commit_frame(dpy, surf);
+        device.gpu_render(dpy, surf);
+    }, std::runtime_error);
+}
+
+TEST_F(HWC11Device, test_hwc_commit)
+{
+    using namespace testing;
+    int hwc_return_fence = 94;
+    mock_device->hwc_set_return_fence(hwc_return_fence);
+
+    mga::HWC11Device device(mock_device, mock_vsync);
+
+    InSequence seq;
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
+        .Times(1);
+
+    device.post(*mock_buffer);
+
+    //set
+    EXPECT_EQ(2, mock_device->display0_set_content.numHwLayers);
+    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
+    EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->set_layerlist[0].compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
+    EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[1].compositionType);
+    EXPECT_EQ(0, mock_device->set_layerlist[1].flags);
+}
+
+TEST_F(HWC11Device, test_hwc_commit_failure)
+{
+    using namespace testing;
+
+    mga::HWC11Device device(mock_device, mock_vsync);
+
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        device.post(*mock_buffer);
     }, std::runtime_error);
 }

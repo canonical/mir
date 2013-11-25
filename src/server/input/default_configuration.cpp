@@ -30,7 +30,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace ml = mir::logging;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()

@@ -52,7 +52,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -178,8 +178,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& packer,
-                          std::shared_ptr<mg::Buffer> const& buffer) const override
+    void fill_ipc_package(mg::BufferIPCPacker* packer, mg::Buffer const* buffer) const override
     {
 #ifndef ANDROID
         auto native_handle = buffer->native_buffer_handle();

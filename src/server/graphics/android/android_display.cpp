@@ -23,7 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
-#include "android_display_buffer_factory.h"
+#include "display_builder.h"
 #include "display_device.h"
 #include "mir/geometry/rectangle.h"
 
@@ -31,12 +31,12 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::AndroidDisplayBufferFactory> const& db_factory,
+mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& display_builder,
                                     std::shared_ptr<DisplayReport> const& display_report)
-    : db_factory{db_factory},
-      display_device(db_factory->create_display_device()),
-      gl_context{display_device->display_format(), *display_report},
-      display_buffer{db_factory->create_display_buffer(display_device, gl_context)},
+    : display_builder{display_builder},
+      gl_context{display_builder->display_format(), *display_report},
+      display_device(display_builder->create_display_device()),
+      display_buffer{display_builder->create_display_buffer(display_device, gl_context)},
       current_configuration{display_buffer->view_area().size}
 {
     display_report->report_successful_setup_of_native_resources();
@@ -97,5 +97,4 @@ std::unique_ptr<mg::GLContext> mga::AndroidDisplay::create_gl_context()
 {
     return std::unique_ptr<mg::GLContext>{
         new mga::GLContext(gl_context, mga::create_dummy_pbuffer_surface)};
-
 }

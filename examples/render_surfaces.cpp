@@ -49,7 +49,7 @@
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mi = mir::input;
@@ -387,7 +387,7 @@ public:
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
-        auto const surface_factory = the_surfaces_surface_factory();
+        auto const surface_factory = the_scene_surface_factory();
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
         display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)

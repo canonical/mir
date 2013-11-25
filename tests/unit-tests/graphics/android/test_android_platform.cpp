@@ -23,7 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test_doubles/stub_display_buffer_factory.h"
+#include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
@@ -43,7 +43,7 @@ protected:
     {
         using namespace testing;
 
-        stub_db_factory = std::make_shared<mtd::StubDisplayBufferFactory>();
+        stub_display_builder = std::make_shared<mtd::StubDisplayBuilder>();
         stub_display_report = std::make_shared<mg::NullDisplayReport>();
         stride = geom::Stride(300*4);
 
@@ -72,7 +72,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
-    std::shared_ptr<mtd::StubDisplayBufferFactory> stub_db_factory;
+    std::shared_ptr<mtd::StubDisplayBuilder> stub_display_builder;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
@@ -85,38 +85,38 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
     using namespace ::testing;
 
-    mga::AndroidPlatform platform(stub_db_factory, stub_display_report);
+    mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
 
-    auto mock_packer = std::make_shared<mtd::MockPacker>();
+    mtd::MockPacker mock_packer;
     int offset = 0;
     for(auto i=0u; i<num_fds; i++)
     {
-        EXPECT_CALL(*mock_packer, pack_fd(native_buffer_handle->data[offset++]))
+        EXPECT_CALL(mock_packer, pack_fd(native_buffer_handle->data[offset++]))
             .Times(1);
     } 
     for(auto i=0u; i<num_ints; i++)
     {
-        EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
+        EXPECT_CALL(mock_packer, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(*mock_packer, pack_stride(stride))
+    EXPECT_CALL(mock_packer, pack_stride(stride))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())
         .WillOnce(Return(mir::geometry::Size{123, 456}));
-    EXPECT_CALL(*mock_packer, pack_size(_))
+    EXPECT_CALL(mock_packer, pack_size(_))
         .Times(1);
 
-    platform.fill_ipc_package(mock_packer, mock_buffer);
+    platform.fill_ipc_package(&mock_packer, mock_buffer.get());
 }
 
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
     mga::AndroidPlatform platform(
-        std::make_shared<mtd::StubDisplayBufferFactory>(),
+        std::make_shared<mtd::StubDisplayBuilder>(),
         std::make_shared<mg::NullDisplayReport>());
 
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());

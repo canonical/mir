@@ -7,7 +7,7 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(lttng/)
-add_subdirectory(surfaces/)
+add_subdirectory(scene/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
@@ -50,7 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedinput
   mirsharedgeometry
   mirsharedlogging
-  mirsurfaces
+  mirscene
   mirtime
   mirlttng
   mirnestedgraphics
