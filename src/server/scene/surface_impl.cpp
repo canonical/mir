@@ -281,7 +281,6 @@ void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& contr
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
-
     notify_change(mir_surface_attrib_size, pack_size(size));
 }
 
