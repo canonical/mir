@@ -4,7 +4,6 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
     - graphics: android: improve interface for mga::DisplayDevice so its
       just concerned with rendering and posting.
     - surfaces: rename "surfaces" component to "scene".
-    - Merge changes from Ubuntu (lp:mir) r1166 that make sense to keep.
     - surfaces, shell: Migrate Session data model from shell to surfaces.
     - graphics: change fill_ipc_package() to use real pointers.
     - mir_client_library.h: Fix typo "do and locking" should be "do any
@@ -14,7 +13,7 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
     - test_android_communication_package: Do not expect opened fd to be >0,
       we may have closed stdin making this a valid value (LP: #1247718).
     - Update docs about running Mir on the desktop to mention new package
-      ubuntu -desktop -mir.
+      ubuntu-desktop-mir.
     - offscreen: Add a display that renders its output to offscreen buffers
     - graphics: android: fix regression for hwc1.0 devices introduced in r1228
       (LP: #1252433).
@@ -24,9 +23,9 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
     - Fix uninitialized variable causing random drm_auth_magic test
       failures. (LP: #1252144).
     - Add a fullyish functional Udev wrapper. This currently sits in
-      graphics/gbm, but will be moved to the top -level when input device
+      graphics/gbm, but will be moved to the top-level when input device
       detection migrates.
-    - Add resizing support to example code; demo -shell and clients.
+    - Add resizing support to example code; demo-shell and clients.
     - eglapp: Clarify messages about pixel formats (LP: #1168304).
     - Adds support to the MirMotionEvent under pointer_coordinates called
       tool_type. This will allow clients to tell what type of tool is
@@ -39,28 +38,15 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
       kernel. 2) support nexus 10. (LP: #1252173) (LP: #1203268)
     - shell: don't publish SurfacesContainer - it can be private to shell.
     - gbm: Don't mess up the VT mode on setup failure Only restore the
-      previous VT mode during shutdown if it was VT_AUTO. VT_PROCESS mode is
-      always bound to the calling process, so "restoring" VT_PROCESS will not
-      work; it will just bind the notification signals to our process
-      again. Not "restoring" VT_PROCESS also ensures we don't mess
-      up the VT state of the previous controlling process, in
-      case it had set VT_PROCESS and we fail during setup.
-      This could happen, for example, when trying to start Mir
-      from inside an X session.
+      previous VT mode during shutdown if it was VT_AUTO.
     - Fix a crash due to a failed eglMakeCurrent() call when in nested mode.
-    - shell: unit -mir uses shell::FocusSetter - make the header public again
+    - shell: unity-mir uses shell::FocusSetter - make the header public again
     - Add resize support to client surfaces (mir::client::MirSurface).
     - graphics: android: support 'old aka 2012' nexus 7 hwc (nvidia tegra3
       SoC) better. (LP: #1231917)
     - Add resize support to *ClientBuffer classes. Now always get dimensions
       from the latest buffer package.
     - android: support driver hooks for the Mali T604 (present in nexus 10)
-      The exynos driver needed some function hooks implemented. This change
-      implements those hooks and gets the TestClientIPCRender test to
-      pass. This test sends buffers over IPC to a client,
-      and the client then establishes an egl context,
-      renders to the buffer, and checks the buffer content
-      back on the server side.
     - Add width and height to the protocol Buffer messages, in preparation
       for resizable surfaces.
     - surfaces, shell, logging, tests: don't publish headers
@@ -76,7 +62,7 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
       functionality in to the session container.
     - Ensure the session mediator releases acquired buffer resources before
       attempting to acquire a new buffer on behalf of the client. This fixes
-      performance regression LP: #1249210.
+      performance regression (LP: #1249210).
     - Some cleanups to test_client_input.cpp.
     - Factor out a bunch of "ClientConfigCommon".
     - Small cleanup to session container test to increase encapsulation.
@@ -84,14 +70,12 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
       only publish interfaces and putting the data model into surfaces.
     - graphics: android: HWC1.1 use EGL to get further information about
       the framebuffer pixel format.
-    - Fix FTBS using use_debflags=ON (building for android -armhf).
+    - Fix FTBS using use_debflags=ON (building for android-armhf).
       (LP: #1248014)
     - Add a client input receiver report.
     - doc: doxygen 1.8.4 complains about an obsolete config so ran "doxygen
       u Doxyfile.in".
-    - Implement resize() for the server -side Surface classes. This is fine
-      for server owned surfaces, but won't be fully functional with clients
-      till they get support for resize() too.
+    - Implement resize() for the server-side Surface classes.
     - android: clean up mga::DisplayBuffer and mga::DisplayBufferFactory
     - Add resize() support to BufferStream, in preparation for resizable
       surfaces.
@@ -103,7 +87,7 @@ mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
     - Bumping ABI on server to libmirserver11.
     - Don't mention "Renderable". That interface hasn't existed for quite
       some time now.
-    - android -input: Assign more unique touch ids
+    - android-input: Assign more unique touch ids
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Fri, 22 Nov 2013 12:34:52 -0600
 
