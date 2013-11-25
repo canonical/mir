@@ -38,7 +38,7 @@ namespace mir_test_framework
 class InputTestingClientConfiguration : public mir_test_framework::TestingClientConfiguration
 {
 public:
-    InputTestingClientConfiguration(std::string const& client_name, mir_test_framework::CrossProcessSync const& input_cb_setup_fence);
+    InputTestingClientConfiguration(std::string const& client_name, CrossProcessSync const& input_cb_setup_fence);
     virtual ~InputTestingClientConfiguration() = default;
 
     void exec();
@@ -60,7 +60,7 @@ public:
     static int const surface_height = 100;
 private:
     std::string const client_name;
-    mir_test_framework::CrossProcessSync input_cb_setup_fence;
+    CrossProcessSync input_cb_setup_fence;
 };
 
 }
