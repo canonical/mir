@@ -75,7 +75,7 @@ geom::PixelFormat mga::OutputBuilder::display_format()
 
 std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
 {
-    std::shared_ptr<mga::DisplayDevice> device; 
+    std::shared_ptr<mga::DisplayDevice> device;
     if (force_backup_display)
     {
         device = res_factory->create_fb_device(fb_native);
@@ -104,5 +104,5 @@ std::unique_ptr<mg::DisplayBuffer> mga::OutputBuilder::create_display_buffer(
 {
     auto native_window = res_factory->create_native_window(framebuffers);
     return std::unique_ptr<mg::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, display_device, native_window, gl_context)); 
+        new DisplayBuffer(framebuffers, display_device, native_window, gl_context));
 }

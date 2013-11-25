@@ -72,15 +72,15 @@ public:
     virtual void reverse_for_each_if(compositor::FilterForScene& filter,
                                      compositor::OperatorForScene& op);
     virtual void set_change_callback(std::function<void()> const& f);
-    
+
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
-    // From SurfaceStackModel 
+    // From SurfaceStackModel
     virtual std::weak_ptr<BasicSurface> create_surface(const shell::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface);
-    
+
     virtual void raise(std::weak_ptr<BasicSurface> const& surface);
 
     virtual void lock();

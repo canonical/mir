@@ -159,7 +159,7 @@ public:
     {
         f(display_buffer);
     }
- 
+
     std::shared_ptr<mg::DisplayConfiguration> configuration() override
     {
         return std::make_shared<StubDisplayConfiguration>(rect);

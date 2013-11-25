@@ -106,7 +106,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 geom::Point{0, 0},
                 1,
                 0,
-                mir_power_mode_on    
+                mir_power_mode_on
             });
         outputs.push_back(
             {
@@ -125,7 +125,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 geom::Point{100, 50},
                 0,
                 0,
-                mir_power_mode_on    
+                mir_power_mode_on
             });
     }
 

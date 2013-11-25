@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com> 
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 #ifndef MIR_FRONTEND_MESSAGE_RECEIVER_H_
 #define MIR_FRONTEND_MESSAGE_RECEIVER_H_
@@ -32,7 +32,7 @@ class MessageReceiver
 public:
     //receive message from the socket. 'handler' will be called when 'buffer' has been filled with exactly 'size'
     typedef std::function<void(boost::system::error_code const&, size_t)> MirReadHandler;
-    virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size) = 0; 
+    virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size) = 0;
     virtual pid_t client_pid() = 0;
 
 protected:

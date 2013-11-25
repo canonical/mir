@@ -23,7 +23,7 @@ mga::HWCVsync::HWCVsync()
     : vsync_occurred(false)
 {
 }
-    
+
 void mga::HWCVsync::wait_for_vsync()
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);

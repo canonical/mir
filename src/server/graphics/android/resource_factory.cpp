@@ -45,7 +45,7 @@ std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_dev
     auto rc = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
     if ((rc != 0) || (module == nullptr) || (framebuffer_open(module, &fbdev_raw) != 0) )
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display"));
     }
 
     return std::shared_ptr<framebuffer_device_t>(fbdev_raw,
@@ -65,7 +65,7 @@ std::shared_ptr<hwc_composer_device_1> mga::ResourceFactory::create_hwc_native_d
        module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw)) ||
        (hwc_device_raw == nullptr))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error opening hwc hal")); 
+        BOOST_THROW_EXCEPTION(std::runtime_error("error opening hwc hal"));
     }
 
     return std::shared_ptr<hwc_composer_device_1>(
@@ -78,7 +78,7 @@ std::shared_ptr<ANativeWindow> mga::ResourceFactory::create_native_window(
 {
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<ServerRenderWindow>(fb_bundle, cache);
-    return std::make_shared<MirNativeWindow>(interpreter); 
+    return std::make_shared<MirNativeWindow>(interpreter);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(

@@ -38,7 +38,7 @@ struct MockSessionListener : public shell::SessionListener
     MOCK_METHOD1(stopping, void(std::shared_ptr<shell::Session> const&));
     MOCK_METHOD1(focused, void(std::shared_ptr<shell::Session> const&));
     MOCK_METHOD0(unfocused, void());
-    
+
     MOCK_METHOD2(surface_created, void(shell::Session&, std::shared_ptr<shell::Surface> const&));
     MOCK_METHOD2(destroying_surface, void(shell::Session&, std::shared_ptr<shell::Surface> const&));
 };

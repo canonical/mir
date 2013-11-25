@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    int render_operations_fd; 
+    int render_operations_fd;
 };
 
 class StubStreamFactory : public ms::BufferStreamFactory
@@ -85,7 +85,7 @@ public:
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }
 private:
-    int render_operations_fd; 
+    int render_operations_fd;
 };
 
 }
@@ -186,7 +186,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
 
             //swapinterval 2 not supported
             EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, 2));
-            EXPECT_EQ(1, mir_surface_get_swapinterval(surface)); 
+            EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
 
             set_flag(swapinterval_set);
             wait_for(do_client_finish);

@@ -92,10 +92,10 @@ TEST_F(ResourceFactoryTest, hwc_allocation_failures)
 
     mga::ResourceFactory factory;
 
-    EXPECT_THROW({ 
+    EXPECT_THROW({
         factory.create_hwc_native_device();
     }, std::runtime_error);
-    EXPECT_THROW({ 
+    EXPECT_THROW({
         factory.create_hwc_native_device();
     }, std::runtime_error);
 

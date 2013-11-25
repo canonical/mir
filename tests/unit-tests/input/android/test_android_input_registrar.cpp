@@ -51,7 +51,7 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     void SetUp() override
     {
         test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
-        
+
         dispatcher = new mtd::MockInputDispatcher();
     }
     void TearDown() override
@@ -93,7 +93,7 @@ MATCHER_P(WindowHandleFor, channel, "")
 }
 
 TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
-{    
+{
     using namespace ::testing;
 
     auto channel = std::make_shared<mtd::StubInputChannel>(test_input_fd);
@@ -103,7 +103,7 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
         .WillOnce(Return(droidinput::OK));
 
     mia::InputRegistrar registrar(dispatcher);
-    
+
     registrar.input_channel_opened(channel, surface, mi::InputReceptionMode::normal);
     EXPECT_THROW({
             // We can't open a surface twice
@@ -122,7 +122,7 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_closed_behavior)
         .WillOnce(Return(droidinput::OK));
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
     mia::InputRegistrar registrar(dispatcher);
-    
+
     EXPECT_THROW({
             // We can't close a surface which hasn't been opened
             registrar.input_channel_closed(channel);
@@ -146,6 +146,6 @@ TEST_F(AndroidInputRegistrarFdSetup, monitor_flag_is_passed_to_dispatcher)
         .WillOnce(Return(droidinput::OK));
 
     mia::InputRegistrar registrar(dispatcher);
-    
+
     registrar.input_channel_opened(channel, surface, mi::InputReceptionMode::receives_all_input);
 }

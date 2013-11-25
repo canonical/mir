@@ -50,7 +50,7 @@ struct InternalClientWindow : public ::testing::Test
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         mock_surface = std::make_shared<MockInternalSurface>();
         mock_buffer = std::make_shared<mtd::MockBuffer>();
-        stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>(); 
+        stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
         ON_CALL(*mock_surface, advance_client_buffer())
             .WillByDefault(Return(mock_buffer));
@@ -83,7 +83,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_buffer = interpreter.driver_requests_buffer();
     ASSERT_NE(nullptr, test_buffer);
-    EXPECT_EQ(stub_native_buffer.get(), test_buffer); 
+    EXPECT_EQ(stub_native_buffer.get(), test_buffer);
 }
 
 TEST_F(InternalClientWindow, driver_returns_buffer)
@@ -108,15 +108,15 @@ TEST_F(InternalClientWindow, size_test)
     using namespace testing;
     EXPECT_CALL(*mock_surface, size())
         .Times(2)
-        .WillOnce(Return(sz)) 
-        .WillOnce(Return(sz)); 
+        .WillOnce(Return(sz))
+        .WillOnce(Return(sz));
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
 
     unsigned int rc_width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
     unsigned int rc_height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
 
-    EXPECT_EQ(sz.width.as_uint32_t(), rc_width); 
-    EXPECT_EQ(sz.height.as_uint32_t(), rc_height); 
+    EXPECT_EQ(sz.width.as_uint32_t(), rc_width);
+    EXPECT_EQ(sz.height.as_uint32_t(), rc_height);
 }
 
 TEST_F(InternalClientWindow, driver_default_format)
@@ -128,7 +128,7 @@ TEST_F(InternalClientWindow, driver_default_format)
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
 
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format);
 }
 
 TEST_F(InternalClientWindow, driver_sets_format)
@@ -141,5 +141,5 @@ TEST_F(InternalClientWindow, driver_sets_format)
 
     interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBA_8888);
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format);
 }

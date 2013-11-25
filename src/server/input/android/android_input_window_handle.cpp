@@ -76,7 +76,7 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->frameTop = surface_position.y.as_uint32_t();
     mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
     mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
-    
+
     mInfo->touchableRegionLeft = mInfo->frameLeft;
     mInfo->touchableRegionTop = mInfo->frameTop;
     mInfo->touchableRegionRight = mInfo->frameRight;

@@ -36,7 +36,7 @@ class InputTargeter
 {
 public:
     virtual ~InputTargeter() = default;
-    
+
     virtual void focus_changed(std::shared_ptr<input::InputChannel const> const& focus_channel) = 0;
     virtual void focus_cleared() = 0;
 

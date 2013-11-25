@@ -90,7 +90,7 @@ mir::DefaultServerConfiguration::the_input_report()
         [this]() -> std::shared_ptr<mi::InputReport>
         {
             auto opt = the_options()->get(input_report_opt, off_opt_value);
-            
+
             if (opt == log_opt_value)
             {
                 return std::make_shared<ml::InputReport>(the_logger());

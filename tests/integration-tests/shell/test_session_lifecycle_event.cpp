@@ -87,10 +87,10 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
 
             EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_state_will_suspend))).Times(1);
             mir_connection_release(connection);
-            
+
             handler.reset();
         }
-    
+
         std::shared_ptr<MockStateHandler> handler;
     } client_config;
 

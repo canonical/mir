@@ -82,7 +82,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
         void exec() override
         {
             using namespace ::testing;
-            
+
             EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_focus, _)).Times(AnyNumber());
             EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_focus, _)).Times(AnyNumber());
 

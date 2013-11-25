@@ -68,7 +68,7 @@ TEST(AsioMainLoopTest, multiple_signals_handled)
            handled_signals.push_back(sig);
            ++num_handled_signals;
         });
-                    
+
 
     std::thread signal_sending_thread(
         [&ml, num_signals_to_send, &signals, &num_handled_signals]

@@ -74,13 +74,13 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 {
     const xkb_keysym_t *syms;
     uint32_t num_syms = xkb_key_get_syms(state, xkb_scan_code, &syms);
-    
+
     if (num_syms == 1)
     {
         return syms[0];
     }
 
-    return XKB_KEY_NoSymbol;    
+    return XKB_KEY_NoSymbol;
 }
 
 }
@@ -96,13 +96,13 @@ void mircv::XKBMapper::update_state_and_map_event(MirKeyEvent &key_ev)
         direction = XKB_KEY_DOWN;
     else // mir_key_action_multiple does not correspond to a physical keypress
         update_state = false;
-    
+
     if (key_ev.repeat_count > 0)
         update_state = false;
-    
+
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code);
     if (update_state)
         xkb_state_update_key(state.get(), xkb_scan_code, direction);
-    
+
     key_ev.key_code = keysym_for_scan_code(state.get(), xkb_scan_code);
 }

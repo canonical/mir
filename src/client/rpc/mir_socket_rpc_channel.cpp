@@ -415,7 +415,7 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
             {
                 rpc_report->event_parsing_failed(event);
             }
-        } 
+        }
     }
 }
 
