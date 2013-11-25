@@ -42,6 +42,28 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
+namespace
+{
+int pack_size(geom::Size const& size)
+{
+    int w = size.width.as_int();
+    int h = size.height.as_int();
+
+    if (w > 0xffff || h > 0xffff)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface dimensions too large "
+                                               "for packing."));
+    }
+
+    return (w << 16) | h;
+}
+
+geom::Size unpack_size(int packed)
+{
+    return {(int)((unsigned int)packed >> 16), packed & 0xffff};
+}
+}
+
 ms::SurfaceImpl::SurfaceImpl(
     msh::Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
@@ -164,9 +186,8 @@ int ms::SurfaceImpl::configure(MirSurfaceAttrib attrib, int value)
         break;
     case mir_surface_attrib_size:
     {
-        resize({value >> 16, value & 0xffff});
-        auto const& newsize = size();
-        result = newsize.width.as_int() << 16 | newsize.height.as_int();
+        resize(unpack_size(value));
+        result = pack_size(size());
         break;
     }
     default:
@@ -255,8 +276,7 @@ void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
 
-    int packed = size.width.as_int() << 16 | size.height.as_int();
-    notify_change(mir_surface_attrib_size, packed);
+    notify_change(mir_surface_attrib_size, pack_size(size));
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
