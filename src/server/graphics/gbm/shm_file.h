@@ -34,7 +34,7 @@ class ShmFile
 public:
     virtual ~ShmFile() = default;
 
-    virtual void* map() = 0;
+    virtual void* base_ptr() const = 0;
     virtual int fd() const = 0;
 
 protected:

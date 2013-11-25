@@ -118,7 +118,7 @@ mgg::AnonymousShmFile::AnonymousShmFile(size_t size)
 {
 }
 
-void* mgg::AnonymousShmFile::map()
+void* mgg::AnonymousShmFile::base_ptr() const
 {
     return mapping;
 }

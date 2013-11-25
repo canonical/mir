@@ -34,8 +34,7 @@ namespace
 
 struct StubShmFile : public mgg::ShmFile
 {
-    void* map() { return fake_mapping; }
-    void unmap(void*) {}
+    void* base_ptr() const { return fake_mapping; }
     int fd() const { return fake_fd; }
 
     void* const fake_mapping = reinterpret_cast<void*>(0x12345678);

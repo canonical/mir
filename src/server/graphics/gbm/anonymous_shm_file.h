@@ -67,7 +67,7 @@ class AnonymousShmFile : public ShmFile
 public:
     AnonymousShmFile(size_t size);
 
-    void* map();
+    void* base_ptr() const;
     int fd() const;
 
 private:

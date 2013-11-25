@@ -231,7 +231,7 @@ TEST(AnonymousShmFile, has_correct_size)
     EXPECT_EQ(static_cast<off_t>(file_size), stat.st_size);
 }
 
-TEST(AnonymousShmFile, writing_to_mapping_writes_to_file)
+TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
 {
     using namespace testing;
     
@@ -241,11 +241,11 @@ TEST(AnonymousShmFile, writing_to_mapping_writes_to_file)
 
     mgg::AnonymousShmFile shm_file{file_size};
 
-    auto map = reinterpret_cast<uint8_t*>(shm_file.map());
+    auto base_ptr = reinterpret_cast<uint8_t*>(shm_file.base_ptr());
 
     for (size_t i = 0; i < file_size; i++)
     {
-        map[i] = i;
+        base_ptr[i] = i;
     }
 
     std::vector<unsigned char> buffer(file_size);
@@ -255,6 +255,6 @@ TEST(AnonymousShmFile, writing_to_mapping_writes_to_file)
 
     for (size_t i = 0; i < file_size; i++)
     {
-        EXPECT_EQ(map[i], buffer[i]) << "i=" << i;
+        EXPECT_EQ(base_ptr[i], buffer[i]) << "i=" << i;
     }
 }
