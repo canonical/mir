@@ -53,6 +53,12 @@ int pack_size(geom::Size const& size)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Surface dimensions too large "
                                                "for packing."));
+        /*
+         * It's not a realistic case worth thinking about too much. But if we
+         * wanted to make it a valid one we could just return 0 and let the
+         * client query the buffer dimensions (as they can already). Or
+         * alternatively, extend/change the protocol to handle more bits.
+         */
     }
 
     return (w << 16) | h;
