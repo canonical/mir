@@ -30,7 +30,7 @@ ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const
 }
 
 void ms::GlobalEventSender::handle_event(MirEvent const&)
-{ 
+{
     //TODO, no driving test cases, although messages like 'server shutdown' could go here
 }
 

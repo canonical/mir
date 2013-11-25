@@ -66,29 +66,6 @@ public:
 };
 }
 
-TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_bundle, client_acquire())
-        .Times(1);
-    EXPECT_CALL(*mock_bundle, client_release(_))
-        .Times(1);
-
-    mc::TemporaryClientBuffer proxy_buffer(mock_bundle);
-}
-
-TEST_F(TemporaryBuffersTest, client_buffer_handles_bundle_destruction)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_bundle, client_acquire())
-        .Times(1);
-    EXPECT_CALL(*mock_bundle, client_release(_))
-        .Times(0);
-
-    mc::TemporaryClientBuffer proxy_buffer(mock_bundle);
-    mock_bundle.reset();
-}
-
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;

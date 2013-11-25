@@ -50,7 +50,7 @@ class NullRenderer : public mc::Renderer
 public:
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
-        /* 
+        /*
          * Do nothing, so that the surface's buffers are not consumed
          * by the server, thus causing the client to block when asking for
          * the second buffer (assuming double-buffering).
@@ -166,7 +166,7 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             next_buffer_done.set();
             server_done.wait();
 
-            /* 
+            /*
              * TODO: Releasing the connection to a shut down server blocks
              * the client. We should handle unexpected server shutdown more
              * gracefully on the client side.

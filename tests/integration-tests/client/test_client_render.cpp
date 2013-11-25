@@ -143,12 +143,12 @@ struct TestClient
         auto native_display = mir_connection_get_egl_native_display(connection);
         auto egl_display = eglGetDisplay(native_display);
         eglInitialize(egl_display, &major, &minor);
-        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n); 
+        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
-        auto mir_surface = create_mir_surface(connection, egl_display, egl_config); 
+        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);
         auto native_window = static_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface)); 
-    
+            mir_surface_get_egl_native_window(mir_surface));
+
         egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
         context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
         eglMakeCurrent(egl_display, egl_surface, egl_surface, context);

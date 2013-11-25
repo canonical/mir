@@ -41,7 +41,7 @@ class InputRegistrar
 {
 public:
     virtual ~InputRegistrar() = default;
-    
+
     virtual void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
                                       std::shared_ptr<input::Surface> const& info,
                                       input::InputReceptionMode input_mode) = 0;

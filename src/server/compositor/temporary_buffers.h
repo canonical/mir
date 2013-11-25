@@ -48,16 +48,6 @@ protected:
     std::shared_ptr<mg::Buffer> const buffer;
 };
 
-class TemporaryClientBuffer : public TemporaryBuffer
-{
-public:
-    explicit TemporaryClientBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper);
-    ~TemporaryClientBuffer();
-
-private:
-    std::weak_ptr<BufferBundle> const allocating_swapper;
-};
-
 class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:

@@ -46,7 +46,7 @@ glm::mat4 const& ms::SurfaceData::transformation() const
     std::unique_lock<std::mutex> lk(guard);
 
     auto surface_size = surface_rect.size;
-    auto surface_top_left = surface_rect.top_left; 
+    auto surface_top_left = surface_rect.top_left;
     if (transformation_dirty || transformation_size != surface_size)
     {
         const glm::vec3 top_left_vec{surface_top_left.x.as_int(),
@@ -183,7 +183,7 @@ bool ms::SurfaceData::contains(geom::Point const& point) const
         if (rectangle.contains(point))
         {
             return true;
-        } 
+        }
     }
     return false;
 }

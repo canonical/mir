@@ -68,7 +68,7 @@ protected:
     }
 };
 
-struct StubInputFactory : public mi::InputChannelFactory 
+struct StubInputFactory : public mi::InputChannelFactory
 {
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
@@ -83,7 +83,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto pf  = geom::PixelFormat::abgr_8888;
     msh::SurfaceCreationParameters params;
     params.name = std::string("test");
-    params.size = size; 
+    params.size = size;
     params.pixel_format = pf;
     params.buffer_usage = mg::BufferUsage::hardware;
     auto id = mf::SurfaceId{4458};
@@ -101,8 +101,8 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto mir_surface = as_internal_surface(
         surface_source->create_surface(nullptr, params, id, std::shared_ptr<mf::EventSink>()));
 
-    auto options = std::shared_ptr<mo::ProgramOption>(); 
-    auto report = std::shared_ptr<mg::NullDisplayReport>(); 
+    auto options = std::shared_ptr<mo::ProgramOption>();
+    auto report = std::shared_ptr<mg::NullDisplayReport>();
     auto internal_client = std::make_shared<mga::InternalClient>();
 
     int major, minor, n;

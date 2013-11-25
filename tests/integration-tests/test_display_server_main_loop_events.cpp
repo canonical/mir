@@ -339,7 +339,7 @@ public:
 private:
     std::shared_ptr<mtd::MockServerStatusListener> mock_server_status_listener;
 };
-  
+
 }
 
 TEST(DisplayServerMainLoopEvents, display_server_shuts_down_properly_on_sigint)

@@ -150,5 +150,5 @@ void ml::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig conf
         eglGetConfigAttrib(disp, config, i.val, &value);
         logger->log<Logger::informational>(
             "    [" + i.name + "] : " + std::to_string(value), component());
-    } 
+    }
 }
