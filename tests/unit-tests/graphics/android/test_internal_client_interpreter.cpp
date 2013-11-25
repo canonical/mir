@@ -23,6 +23,7 @@
 #include "mir/graphics/internal_surface.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
+#include "gmock_set_arg.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -38,7 +39,7 @@ class MockInternalSurface : public mg::InternalSurface
 public:
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD1(swap_buffers, void(std::shared_ptr<mg::Buffer>&));
 };
 
 struct InternalClientWindow : public ::testing::Test
@@ -52,8 +53,8 @@ struct InternalClientWindow : public ::testing::Test
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         stub_native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
-        ON_CALL(*mock_surface, advance_client_buffer())
-            .WillByDefault(Return(mock_buffer));
+        ON_CALL(*mock_surface, swap_buffers(_))
+            .WillByDefault(SetArg<0>(mock_buffer));
         ON_CALL(*mock_surface, pixel_format())
             .WillByDefault(Return(mir_pixel_format_abgr_8888));
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -72,7 +73,7 @@ struct InternalClientWindow : public ::testing::Test
 TEST_F(InternalClientWindow, driver_requests_buffer)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_surface, advance_client_buffer())
+    EXPECT_CALL(*mock_surface, swap_buffers(_))
         .Times(1);
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);
