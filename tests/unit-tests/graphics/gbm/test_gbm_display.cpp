@@ -755,6 +755,8 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
 
     ml.run();
 
+    alarm(0);
+
     t.join();
 
     EXPECT_EQ(expected_call_count, call_count);
