@@ -16,15 +16,13 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 199309L  /* for clock_gettime() */
-#include <time.h>
-
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <pthread.h>
+#define __USE_BSD 1  /* for usleep() */
+#include <unistd.h>  /* sleep() */
 #include <string.h>
 
 #define BYTES_PER_PIXEL(f) ((f) == mir_pixel_format_bgr_888 ? 3 : 4)
@@ -43,15 +41,11 @@ static const Color *const background = &blue;
 
 static volatile sig_atomic_t running = 1;
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t wakeup = PTHREAD_COND_INITIALIZER;
-
 static void shutdown(int signum)
 {
     if (running)
     {
         running = 0;
-        pthread_cond_signal(&wakeup);
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -195,23 +189,6 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
     mir_surface_swap_buffers_sync(surface);
 }
 
-static void on_event(MirSurface* surface, MirEvent const* event, void* context)
-{
-    (void)surface;
-    (void)context;
-
-    if (event->type == mir_event_type_surface &&
-        event->surface.attrib == mir_surface_attrib_size)
-    {
-        /*
-         * As we already have a rendering thread (main) it would be unsafe
-         * to redraw from this event thread. So just signal to main...
-         * For further thoughts see https://bugs.launchpad.net/mir/+bug/1194384
-         */
-        pthread_cond_signal(&wakeup);
-    }
-}
-
 int main(int argc, char *argv[])
 {
     MirConnection *conn;
@@ -288,52 +265,30 @@ int main(int argc, char *argv[])
         if (canvas.vaddr != NULL)
         {
             int t = 0;
-            MirEventDelegate delegate;
-            struct timespec deadline;
 
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
-
-            delegate.callback = &on_event;
-            delegate.context = NULL;
-            mir_surface_set_event_handler(surf, &delegate);
-
-            clear_region(&canvas, background);
-            clock_gettime(CLOCK_REALTIME, &deadline);
         
-            pthread_mutex_lock(&mutex);
             while (running)
             {
+                static const int width = 8;
+                static const int space = 1;
+                const int grid = width + 2 * space;
+                const int row = parm.width / grid;
+                const int square = row * row;
+                const int x = (t % row) * grid + space;
+                const int y = (t / row) * grid + space;
+
+                if (t % square == 0)
+                    clear_region(&canvas, background);
+
+                t = (t + 1) % square;
+
+                draw_box(&canvas, x, y, width, foreground);
+
                 redraw(surf, &canvas);
-
-                if (pthread_cond_timedwait(&wakeup, &mutex, &deadline))
-                {
-                    static const int width = 8;
-                    static const int space = 1;
-                    const int grid = width + 2 * space;
-                    const int row = parm.width / grid;
-                    const int square = row * row;
-                    const int x = (t % row) * grid + space;
-                    const int y = (t / row) * grid + space;
-                    struct timespec now;
-
-                    if (t % square == 0)
-                        clear_region(&canvas, background);
-
-                    t = (t + 1) % square;
-
-                    draw_box(&canvas, x, y, width, foreground);
-
-                    clock_gettime(CLOCK_REALTIME, &now);
-                    deadline.tv_sec = now.tv_sec;
-                    deadline.tv_nsec = now.tv_nsec + (sleep_usec * 1000);
-                    if (deadline.tv_nsec < now.tv_nsec)
-                        deadline.tv_sec++;
-                }
+                usleep(sleep_usec);
             }
-            pthread_mutex_unlock(&mutex);
-
-            mir_surface_set_event_handler(surf, NULL);
 
             free(canvas.vaddr);
         }

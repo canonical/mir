@@ -52,36 +52,6 @@ void mfd::SocketMessenger::send(std::string const& body)
     send(body, mf::FdSets());
 }
 
-static void write_handler(const boost::system::error_code& ec,
-                          std::size_t bytes_transferred)
-{
-    (void)ec;
-    (void)bytes_transferred;
-}
-
-void mfd::SocketMessenger::send_async(std::string const& body)
-{
-    const size_t size = body.size();
-    const unsigned char header_bytes[2] =
-    {
-        static_cast<unsigned char>((size >> 8) & 0xff),
-        static_cast<unsigned char>((size >> 0) & 0xff)
-    };
-    
-    std::unique_lock<std::mutex> lg(message_lock);
-
-    whole_message.resize(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
-
-    // TODO: This should be asynchronous, but we are not making sure
-    // that a potential call to send_fds is executed _after_ this
-    // function has completed (if it would be executed asynchronously.
-    // NOTE: we rely on this synchronous behavior as per the comment in
-    // mf::SessionMediator::create_surface
-    ba::async_write(*socket, ba::buffer(whole_message), write_handler);
-}
-
 void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
 {
     const size_t size = body.size();
