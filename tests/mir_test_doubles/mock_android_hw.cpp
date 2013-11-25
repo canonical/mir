@@ -58,7 +58,7 @@ int mtd::HardwareModuleStub::hw_close(struct hw_device_t*)
 mtd::FailingHardwareModuleStub::FailingHardwareModuleStub()
 {
     gr_methods.open = hw_open;
-    methods = &gr_methods; 
+    methods = &gr_methods;
 }
 
 int mtd::FailingHardwareModuleStub::hw_open(const struct hw_module_t*, const char*, struct hw_device_t**)

@@ -257,7 +257,7 @@ void mgg::UdevMonitor::process_events(std::function<void(mgg::UdevMonitor::Event
     do
     {
         dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
-        if (dev != nullptr) 
+        if (dev != nullptr)
             handler(action_to_event_type(udev_device_get_action(dev)), UdevDevice(dev));
     } while (dev != nullptr);
 }

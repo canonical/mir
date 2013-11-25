@@ -27,7 +27,7 @@ mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurfac
 {
     surface_advance_buffer = advance_buffer_static;
     surface_get_parameters = get_parameters_static;
-    surface_set_swapinterval = set_swapinterval_static; 
+    surface_set_swapinterval = set_swapinterval_static;
 }
 
 int mgg::InternalNativeSurface::advance_buffer_static(

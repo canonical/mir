@@ -86,7 +86,7 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
     auto drm_fd = gbm_device_get_fd(device);
 
-    auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &prime_fd);    
+    auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &prime_fd);
 
     if (ret)
     {

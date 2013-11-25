@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockInputSurface : public input::Surface 
+class MockInputSurface : public input::Surface
 {
 public:
     MockInputSurface()

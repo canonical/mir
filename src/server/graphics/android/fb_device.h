@@ -22,7 +22,7 @@
 #include "display_device.h"
 #include <hardware/gralloc.h>
 #include <hardware/fb.h>
- 
+
 namespace mir
 {
 namespace graphics
@@ -30,14 +30,14 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplayDevice 
+class FBDevice : public DisplayDevice
 {
 public:
     FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
 
     void mode(MirPowerMode mode);
     void prepare_composition();
-    void gpu_render(EGLDisplay dpy, EGLSurface sur); 
+    void gpu_render(EGLDisplay dpy, EGLSurface sur);
     void post(Buffer const& buffer);
 
 private:

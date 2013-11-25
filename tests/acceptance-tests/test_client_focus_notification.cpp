@@ -54,7 +54,7 @@ struct EventObservingClient : mtf::TestingClientConfiguration
         auto client = static_cast<EventObservingClient *>(context);
         client->observer->see(ev);
     }
- 
+
     virtual void expect_events(mt::WaitCondition* /* all_events_received */) = 0;
 
     static void surface_created(MirSurface *surface_, void *ctx)
@@ -93,14 +93,14 @@ struct EventObservingClient : mtf::TestingClientConfiguration
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
 
-        // The ClientConfig is not destroyed before the testing process 
+        // The ClientConfig is not destroyed before the testing process
         // exits.
         observer.reset();
     }
     std::shared_ptr<MockEventObserver> observer;
     static int const surface_width = 100;
     static int const surface_height = 100;
-    
+
     MirConnection *connection;
     MirSurface *surface;
 };
@@ -139,7 +139,7 @@ ACTION_P(SignalFence, fence)
 TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
-    
+
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
@@ -198,7 +198,7 @@ TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_lo
                     .Times(1).WillOnce(mt::WakeUp(all_events_received));
             EXPECT_CALL(*observer, see(Pointee(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused))))
-                    .Times(1);  
+                    .Times(1);
         }
     } client_two_config(ready_for_second_client);
 

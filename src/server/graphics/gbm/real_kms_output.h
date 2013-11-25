@@ -54,7 +54,7 @@ public:
     void move_cursor(geometry::Point destination);
     void clear_cursor();
     bool has_cursor() const;
-    
+
     void set_power_mode(MirPowerMode mode);
 
 private:
@@ -75,7 +75,7 @@ private:
 
     MirPowerMode power_mode;
     int dpms_enum_id;
-    
+
     std::mutex power_mutex;
 };
 

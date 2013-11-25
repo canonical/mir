@@ -96,9 +96,9 @@ TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
     EXPECT_CALL(*mock_fb_bundle, fb_size())
         .Times(AnyNumber())
         .WillRepeatedly(Return(fake_display_size));
- 
+
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-    
+
     auto view_area = db.view_area();
 
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};

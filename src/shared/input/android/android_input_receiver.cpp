@@ -43,7 +43,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
 
 mircva::InputReceiver::InputReceiver(int fd,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report)
-  : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
+  : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)),
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
@@ -70,7 +70,7 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
     // of XKBMapper per device id (or modify XKBMapper semantics)
     if (ev.type != mir_event_type_key)
         return;
-    
+
     xkb_mapper->update_state_and_map_event(ev.key);
 }
 
@@ -89,7 +89,7 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
         map_key_event(xkb_mapper, ev);
 
         input_consumer->sendFinishedSignal(event_sequence_id, true);
-        
+
         report->received_event(ev);
 
         return true;
@@ -107,7 +107,7 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         looper->addFd(fd(), fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
         fd_added = true;
     }
-    
+
     if(try_next_event(ev))
         return true;
 

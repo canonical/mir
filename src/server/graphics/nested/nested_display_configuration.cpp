@@ -85,7 +85,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
         });
 }
 
-void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used, 
+void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index, MirPowerMode power_mode)
 {
     for (auto mir_output = display_config->outputs;

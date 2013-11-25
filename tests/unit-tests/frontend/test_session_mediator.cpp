@@ -523,7 +523,7 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
         .Times(2)
         .WillOnce(SetArg<0>(stub_buffer1))
         .WillOnce(SetArg<0>(stub_buffer2));
- 
+
     auto refcount = stub_buffer1.use_count();
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     EXPECT_EQ(refcount+1, stub_buffer1.use_count());
@@ -584,7 +584,7 @@ TEST_F(SessionMediatorTest, display_config_request)
 
     bool used0 = false, used1 = true;
     geom::Point pt0{44,22}, pt1{3,2};
-    size_t mode_index0 = 1, mode_index1 = 3; 
+    size_t mode_index0 = 1, mode_index1 = 3;
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
     NiceMock<MockConfig> mock_display_config;
@@ -594,10 +594,10 @@ TEST_F(SessionMediatorTest, display_config_request)
     Sequence seq;
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config))); 
+        .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config))); 
+        .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0,  mir_power_mode_on))
         .InSequence(seq);
     EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1, mir_power_mode_off))
@@ -607,7 +607,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
- 
+
     mf::SessionMediator session_mediator{
         shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
@@ -616,7 +616,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mp::DisplayConfiguration configuration_response;
-    mp::DisplayConfiguration configuration; 
+    mp::DisplayConfiguration configuration;
     auto disp0 = configuration.add_display_output();
     disp0->set_output_id(id0.as_value());
     disp0->set_used(used0);

@@ -132,7 +132,7 @@ struct StubInputChannel : public mi::InputChannel
           c_fd(client_fd)
     {
     }
-    
+
     int client_fd() const
     {
         return c_fd;
@@ -142,14 +142,14 @@ struct StubInputChannel : public mi::InputChannel
         return s_fd;
     }
 
-    int const s_fd;    
+    int const s_fd;
     int const c_fd;
 };
 
 struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
     MOCK_METHOD2(create_surface, std::shared_ptr<ms::BasicSurface>(msh::SurfaceCreationParameters const&,
-                                                              std::function<void()> const&)); 
+                                                              std::function<void()> const&));
 };
 
 struct StubBufferStreamFactory : public ms::BufferStreamFactory

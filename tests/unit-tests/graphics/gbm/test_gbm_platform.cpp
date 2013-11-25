@@ -147,8 +147,8 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     native_handle->fd_items = 2;
     for(auto i=0; i<mir_buffer_package_max; i++)
     {
-        native_handle->fd[i] = i; 
-        native_handle->data[i] = i; 
+        native_handle->fd[i] = i;
+        native_handle->data[i] = i;
     }
 
     EXPECT_CALL(mock_buffer, native_buffer_handle())
@@ -165,7 +165,7 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     {
         EXPECT_CALL(mock_packer, pack_fd(native_handle->fd[i]))
             .Times(1);
-    } 
+    }
     for(auto i=0; i < native_handle->data_items; i++)
     {
         EXPECT_CALL(mock_packer, pack_data(native_handle->data[i]))

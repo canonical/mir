@@ -77,7 +77,7 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
         case NATIVE_WINDOW_FORMAT:
             return format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
-            return 0; 
+            return 0;
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
             return 1;
         default:

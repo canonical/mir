@@ -34,7 +34,7 @@ class HWCVsync : public HWCVsyncCoordinator
 {
 public:
     HWCVsync();
-    
+
     void wait_for_vsync();
     void notify_vsync();
 private:

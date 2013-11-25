@@ -30,7 +30,7 @@ struct Rectangle;
 namespace compositor
 {
 
-class CompositingCriteria 
+class CompositingCriteria
 {
 public:
     virtual float alpha() const = 0;

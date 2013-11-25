@@ -122,9 +122,9 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 
         buffer_stream.swap_client_buffers(client_buffer);
         auto comp2 = buffer_stream.lock_compositor_buffer(2);
-    
+
         EXPECT_NE(comp1->id(), comp2->id());
-    
+
         comp1.reset();
         comp2.reset();
     }

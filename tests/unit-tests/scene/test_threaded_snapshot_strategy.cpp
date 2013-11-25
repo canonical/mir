@@ -91,9 +91,9 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
     strategy.take_snapshot_of(
         mt::fake_shared(buffer_access),
         [&](msh::Snapshot const& s)
-        { 
+        {
             snapshot = s;
-            snapshot_taken = true; 
+            snapshot_taken = true;
         });
 
     while (!snapshot_taken)
