@@ -1,4 +1,4 @@
-project(mir-integration-tests)
+project(mir_integration_tests)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
@@ -39,12 +39,12 @@ if(MIR_PLATFORM STREQUAL "gbm")
 endif()
 
 add_executable(
-  mir-integration-tests
+  mir_integration_tests
   ${INTEGRATION_TESTS_SRCS})
-uses_android_input(mir-integration-tests)
+uses_android_input(mir_integration_tests)
 
 target_link_libraries(
-  mir-integration-tests
+  mir_integration_tests
 
   mir-test
   mir-test-framework
@@ -70,11 +70,11 @@ if (MIR_PLATFORM STREQUAL "android")
     #don't discover the test, we'll run it later on a phone
 else()
     if(MIR_ENABLE_INTEGRATION_TESTS)
-    mir_discover_tests(mir-integration-tests)
+    mir_discover_tests(mir_integration_tests)
   endif()
 endif()
 
 install(
-    TARGETS mir-integration-tests
+    TARGETS mir_integration_tests
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
