@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
+#include "gmock_set_arg.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -167,8 +168,8 @@ struct SurfaceCreation : public ::testing::Test
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
         mock_basic_state = std::make_shared<mtd::MockSurfaceState>();
 
-        ON_CALL(*mock_buffer_stream, secure_client_buffer())
-            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
+        ON_CALL(*mock_buffer_stream, swap_client_buffers(_))
+            .WillByDefault(SetArg<0>(std::make_shared<mtd::StubBuffer>()));
         ON_CALL(*mock_basic_state, size())
             .WillByDefault(Return(rect.size));
         ON_CALL(*mock_basic_state, position())
@@ -238,9 +239,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     auto graphics_resource = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
         .Times(1)
-        .WillOnce(Return(graphics_resource));
+        .WillOnce(SetArg<0>(graphics_resource));
 
     std::shared_ptr<mg::Buffer> result;
     surf.swap_buffers(result);
@@ -255,9 +256,9 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
 
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
         .Times(1)
-        .WillOnce(Return(stub_buffer));
+        .WillOnce(SetArg<0>(stub_buffer));
 
     std::shared_ptr<mg::Buffer> result;
     surf.swap_buffers(result);
