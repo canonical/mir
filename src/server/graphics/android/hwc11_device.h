@@ -43,7 +43,7 @@ public:
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     void prepare_composition();
-    void gpu_render(EGLDisplay dpy, EGLSurface sur); 
+    void gpu_render(EGLDisplay dpy, EGLSurface sur);
     void post(Buffer const& buffer);
 
 private:

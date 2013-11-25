@@ -31,7 +31,7 @@ class InputReport
 {
 public:
     virtual ~InputReport() = default;
-    
+
     virtual void received_event_from_kernel(int64_t when, int type, int code, int value) = 0;
 
     virtual void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time) = 0;
@@ -39,7 +39,7 @@ public:
     virtual void published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time) = 0;
 
     virtual void received_event_finished_signal(int src_fd, uint32_t seq_id) = 0;
-    
+
 protected:
     InputReport() = default;
     InputReport(InputReport const&) = delete;

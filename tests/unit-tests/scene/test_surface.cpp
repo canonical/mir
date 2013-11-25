@@ -54,7 +54,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
     using namespace geom;
     msh::SurfaceCreationParameters params;
-    
+
     geom::Point const default_point{geom::X{0}, geom::Y{0}};
 
     EXPECT_EQ(std::string(), params.name);
@@ -399,7 +399,7 @@ TEST_F(SurfaceCreation, hide_and_show)
         .Times(1);
     surf.set_hidden(true);
     testing::Mock::VerifyAndClearExpectations(mock_basic_state.get());
-    
+
     EXPECT_CALL(*mock_basic_state, set_hidden(false))
         .Times(1);
     surf.set_hidden(false);
@@ -416,7 +416,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         .Times(0);
     surf.swap_buffers(buffer);
     testing::Mock::VerifyAndClearExpectations(mock_basic_state.get());
-    
+
     EXPECT_CALL(*mock_basic_state, frame_posted())
         .Times(3);
     surf.swap_buffers(buffer);
@@ -428,7 +428,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 TEST_F(SurfaceCreation, input_fds)
 {
     using namespace testing;
-    
+
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     EXPECT_THROW({
             surf.client_input_fd();

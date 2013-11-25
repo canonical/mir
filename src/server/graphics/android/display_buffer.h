@@ -46,7 +46,7 @@ public:
     void release_current();
     void post_update();
     bool can_bypass() const override;
-    
+
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;

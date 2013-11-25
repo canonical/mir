@@ -149,7 +149,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
-            return changer; 
+            return changer;
         }
 
         std::shared_ptr<StubChanger> changer;
@@ -165,7 +165,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
             MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             unsigned int const format_storage_size = 4;
-            MirPixelFormat formats[format_storage_size]; 
+            MirPixelFormat formats[format_storage_size];
             unsigned int returned_format_size = 0;
             mir_connection_get_available_surface_formats(connection,
                 formats, format_storage_size, &returned_format_size);

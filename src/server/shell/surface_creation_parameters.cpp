@@ -55,7 +55,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geometry::Point const& new_top_left)
 {
     top_left = new_top_left;
-    
+
     return *this;
 }
 
@@ -79,14 +79,14 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
     scene::DepthId const& new_depth)
 {
     depth = new_depth;
-    
+
     return *this;
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_input_mode(input::InputReceptionMode const& new_mode)
 {
     input_mode = new_mode;
-    
+
     return *this;
 }
 
@@ -102,7 +102,7 @@ bool msh::operator==(
     const SurfaceCreationParameters& lhs,
     const msh::SurfaceCreationParameters& rhs)
 {
-    return lhs.name == rhs.name && 
+    return lhs.name == rhs.name &&
         lhs.size == rhs.size &&
         lhs.top_left == rhs.top_left &&
         lhs.buffer_usage == rhs.buffer_usage &&

@@ -370,7 +370,7 @@ void MirConnection::available_surface_formats(
         for (auto i = 0u; i < valid_formats; i++)
         {
             formats[i] = static_cast<MirPixelFormat>(connect_result.surface_pixel_format(i));
-        }      
+        }
     }
 }
 
@@ -458,11 +458,11 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     {
         auto output = config->outputs[i];
         auto display_request = request.add_display_output();
-        display_request->set_output_id(output.output_id); 
-        display_request->set_used(output.used); 
-        display_request->set_current_mode(output.current_mode); 
-        display_request->set_position_x(output.position_x); 
-        display_request->set_position_y(output.position_y); 
+        display_request->set_output_id(output.output_id);
+        display_request->set_used(output.used);
+        display_request->set_current_mode(output.current_mode);
+        display_request->set_position_x(output.position_x);
+        display_request->set_position_y(output.position_y);
         display_request->set_power_mode(output.power_mode);
     }
 

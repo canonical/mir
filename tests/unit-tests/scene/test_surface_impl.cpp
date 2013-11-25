@@ -78,7 +78,7 @@ public:
     {
         auto state = std::make_shared<mtd::MockSurfaceState>();
         dummy_surface = std::make_shared<ms::Surface>(
-            state, 
+            state,
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);
@@ -202,7 +202,7 @@ TEST_F(SurfaceImpl, destroy)
                           nullptr,
                           mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
                           msh::a_surface(), stub_id, stub_sender);
-        
+
         Mock::VerifyAndClearExpectations(&test);
         EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
         Mock::VerifyAndClearExpectations(&test);
@@ -300,7 +300,7 @@ TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
     using namespace testing;
 
     MockEventSink sink;
-    
+
     {
         InSequence seq;
         EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
@@ -321,9 +321,9 @@ TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
 TEST_F(SurfaceImpl, configurator_selects_attribute_values)
 {
     using namespace testing;
-    
+
     mtd::MockSurfaceConfigurator configurator;
-    
+
     EXPECT_CALL(configurator, select_attribute_value(_, mir_surface_attrib_state, mir_surface_state_restored)).Times(1)
         .WillOnce(Return(mir_surface_state_minimized));
     EXPECT_CALL(configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized)).Times(1);
@@ -344,10 +344,10 @@ TEST_F(SurfaceImpl, take_input_focus)
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
-    
+
     mtd::MockInputTargeter targeter;
     EXPECT_CALL(targeter, focus_changed(_)).Times(1);
-    
+
     test.take_input_focus(mt::fake_shared(targeter));
 }
 
@@ -379,7 +379,7 @@ TEST_F(SurfaceImpl, raise)
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
-    
+
     EXPECT_CALL(surface_controller, raise(_)).Times(1);
 
     test.raise(mt::fake_shared(surface_controller));

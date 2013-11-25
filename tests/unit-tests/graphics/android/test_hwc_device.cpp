@@ -69,7 +69,7 @@ protected:
     {
         using namespace testing;
 
-        mock_fbdev = std::make_shared<mtd::MockFBHalDevice>(); 
+        mock_fbdev = std::make_shared<mtd::MockFBHalDevice>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }

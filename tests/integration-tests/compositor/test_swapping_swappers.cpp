@@ -90,7 +90,7 @@ TEST_F(SwapperSwappingStress, swapper)
                         std::this_thread::yield();
                         switching_bundle->allow_framedropping(false);
                         std::this_thread::yield();
-                    } 
+                    }
                 });
 
     f.wait();
@@ -135,7 +135,7 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                         std::this_thread::yield();
                         switching_bundle->allow_framedropping(false);
                         std::this_thread::yield();
-                    } 
+                    }
                 });
 
     f.wait();

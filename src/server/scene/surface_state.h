@@ -29,10 +29,10 @@ namespace scene
 {
 
 class SurfaceState : public compositor::CompositingCriteria, public input::Surface,
-                     public MutableSurfaceState 
+                     public MutableSurfaceState
 {
 protected:
-    SurfaceState() = default; 
+    SurfaceState() = default;
     virtual ~SurfaceState() = default;
     SurfaceState(const SurfaceState&) = delete;
     SurfaceState& operator=(const SurfaceState& ) = delete;

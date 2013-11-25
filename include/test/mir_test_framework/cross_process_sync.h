@@ -45,7 +45,7 @@ class CrossProcessSync
     // Throws std::runtime_error if not successful.
     unsigned int wait_for_signal_ready_for(const std::chrono::milliseconds& duration);
     unsigned int wait_for_signal_ready_for();
-  
+
     void signal_ready();
     unsigned int wait_for_signal_ready();
 

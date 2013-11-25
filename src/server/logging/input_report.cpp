@@ -92,7 +92,7 @@ void mlil::initialize(std::shared_ptr<Logger> const& logger)
 }
 
 
-ml::InputReport::InputReport(const std::shared_ptr<Logger>& logger) 
+ml::InputReport::InputReport(const std::shared_ptr<Logger>& logger)
     : logger(logger)
 {
 }
@@ -106,7 +106,7 @@ const char* ml::InputReport::component()
 void ml::InputReport::received_event_from_kernel(int64_t when, int type, int code, int value)
 {
     std::stringstream ss;
-    
+
     ss << "Received event (when, type, code, value) from kernel: "
        << "(" << when << "ns, " << type << ", " << code << ", " << value << ")";
     logger->log<Logger::informational>(ss.str(), component());
@@ -116,7 +116,7 @@ void ml::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t 
 {
     std::stringstream ss;
 
-    ss << "Published key event (seq_id, event_time) to fd " << dest_fd << ": (" 
+    ss << "Published key event (seq_id, event_time) to fd " << dest_fd << ": ("
         << seq_id << ", " << event_time << ")";
     logger->log<Logger::informational>(ss.str(), component());
 }
@@ -125,7 +125,7 @@ void ml::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64
 {
     std::stringstream ss;
 
-    ss << "Published motion event (seq_id, event_time) to fd " << dest_fd << ": (" 
+    ss << "Published motion event (seq_id, event_time) to fd " << dest_fd << ": ("
         << seq_id << ", " << event_time << ")";
     logger->log<Logger::informational>(ss.str(), component());
 }
@@ -133,7 +133,7 @@ void ml::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64
 void ml::InputReport::received_event_finished_signal(int src_fd, uint32_t seq_id)
 {
     std::stringstream ss;
-    
+
     ss << "Received event finished (seq_id) from fd " << src_fd << ": " << seq_id;
     logger->log<Logger::informational>(ss.str(), component());
 }

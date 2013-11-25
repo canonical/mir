@@ -113,7 +113,7 @@ void ms::SurfaceImpl::allow_framedropping(bool allow)
 {
     surface->allow_framedropping(allow);
 }
- 
+
 void ms::SurfaceImpl::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {

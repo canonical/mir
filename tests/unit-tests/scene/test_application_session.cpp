@@ -64,7 +64,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     ON_CALL(surface_factory, create_surface(_,_,_,_)).WillByDefault(Return(mock_surface));
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
-    
+
     mtd::MockSessionListener listener;
     EXPECT_CALL(listener, surface_created(_, _)).Times(1);
     EXPECT_CALL(listener, destroying_surface(_, _)).Times(1);
@@ -91,7 +91,7 @@ TEST(ApplicationSession, listener_notified_of_surface_destruction_on_session_des
     ON_CALL(surface_factory, create_surface(_,_,_,_)).WillByDefault(Return(mock_surface));
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
-    
+
     mtd::MockSessionListener listener;
     EXPECT_CALL(listener, surface_created(_, _)).Times(1);
     EXPECT_CALL(listener, destroying_surface(_, _)).Times(1);
@@ -126,7 +126,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     ms::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
-                                        
+
 
     msh::SurfaceCreationParameters params;
     auto id1 = app_session.create_surface(params);

@@ -153,7 +153,7 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
     mgg::UdevDevice dev_two(ctx, path_two);
 
     EXPECT_TRUE(dev_one != dev_two);
-    EXPECT_TRUE(dev_two != dev_one);    
+    EXPECT_TRUE(dev_two != dev_one);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
@@ -319,7 +319,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
                     changed_event_received = true;
             });
 
-    EXPECT_TRUE(changed_event_received);    
+    EXPECT_TRUE(changed_event_received);
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
@@ -358,7 +358,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
     ASSERT_GT(poll(&fds, 1, 0), 0);
 
-    EXPECT_TRUE(fds.revents & POLLIN);    
+    EXPECT_TRUE(fds.revents & POLLIN);
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
@@ -376,7 +376,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
     fds.events = POLLIN;
 
     ASSERT_GT(poll(&fds, 1, 0), 0);
-    ASSERT_TRUE(fds.revents & POLLIN);    
+    ASSERT_TRUE(fds.revents & POLLIN);
 
     monitor.process_events([](mgg::UdevMonitor::EventType, mgg::UdevDevice const&){});
 

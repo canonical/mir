@@ -31,7 +31,7 @@ void mir::frontend::SessionMediator::drm_auth_magic(
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        
+
         auto session = weak_session.lock();
 
         if (session.get() == nullptr)
