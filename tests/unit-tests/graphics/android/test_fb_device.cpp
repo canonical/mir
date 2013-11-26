@@ -45,7 +45,7 @@ struct FBDevice : public ::testing::Test
         fbnum = 4;
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum);
+        fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(width, height, format, fbnum);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -113,17 +113,20 @@ TEST_F(FBDevice, set_swapinterval_with_null_hook)
 
 TEST_F(FBDevice, screen_on_off)
 {
+    fb_hal_mock->setSwapInterval = nullptr;
+    using namespace testing;
     //constructor turns on
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(1))
-        .InSequence(seq)
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(0))
-        .InSequence(seq)
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(0))
-        .InSequence(seq)
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(0))
-        .InSequence(seq)
-    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(1))
-        .InSequence(seq)
+    Sequence seq;
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,1))
+        .InSequence(seq);
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
+        .InSequence(seq);
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
+        .InSequence(seq);
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,0))
+        .InSequence(seq);
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(_,1))
+        .InSequence(seq);
  
     mga::FBDevice fbdev(fb_hal_mock);
     fbdev.mode(mir_power_mode_standby);

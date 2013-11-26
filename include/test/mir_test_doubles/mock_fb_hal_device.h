@@ -56,6 +56,7 @@ public:
     {
         post = hook_post;
         setSwapInterval = hook_setSwapInterval;
+        enableScreen = hook_enableScreen;
     }
 
     MockFBHalDevice()

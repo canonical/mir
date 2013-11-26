@@ -39,6 +39,8 @@ mga::FBDevice::FBDevice(
     {
         fb_device->setSwapInterval(fb_device.get(), 1);
     }
+
+    mode(mir_power_mode_on);
 }
 
 void mga::FBDevice::prepare_composition()
@@ -65,6 +67,14 @@ void mga::FBDevice::post(mg::Buffer const& buffer)
 
 void mga::FBDevice::mode(MirPowerMode mode)
 {
-    // TODO: Implement
-    (void) mode;
+    int enable = 0;
+    if (mode == mir_power_mode_on)
+    {
+        enable = 1;
+    }
+    
+    if (fb_device->enableScreen)
+    {
+        fb_device->enableScreen(fb_device.get(), enable);
+    }
 }
