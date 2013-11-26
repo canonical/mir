@@ -30,7 +30,7 @@ pushd ${BUILD_DIR} > /dev/null
 
     for x in bin/mir_acceptance_tests \
              bin/mir_integration_tests \
-             bin/unit-tests \
+             bin/mir_unit_tests \
              lib/libmirclient.so.* \
              lib/libmirprotobuf.so.* \
              lib/libmirplatform.so \
@@ -43,7 +43,7 @@ pushd ${BUILD_DIR} > /dev/null
     echo "cd ${RUN_DIR};
         export GTEST_OUTPUT=xml:./;
         export LD_LIBRARY_PATH=.;
-        ./unit-tests;
+        ./mir_unit_tests;
         ./mir_integration_tests;
         ./mir_acceptance_tests;
         exit;
@@ -51,6 +51,6 @@ pushd ${BUILD_DIR} > /dev/null
 
     adb pull "${RUN_DIR}/mir_acceptance_tests.xml"
     adb pull "${RUN_DIR}/mir_integration_tests.xml"
-    adb pull "${RUN_DIR}/unit-tests.xml"
+    adb pull "${RUN_DIR}/mir_unit_tests.xml"
 
 popd ${BUILD_DIR} > /dev/null 
