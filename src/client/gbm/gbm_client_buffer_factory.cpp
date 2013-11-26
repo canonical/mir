@@ -24,8 +24,8 @@ namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
 
 mclg::GBMClientBufferFactory::GBMClientBufferFactory(
-        std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : drm_fd_handler{drm_fd_handler}
+    std::shared_ptr<BufferFileOps> const& buffer_file_ops)
+    : buffer_file_ops{buffer_file_ops}
 {
 }
 
@@ -33,7 +33,7 @@ std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferFactory::create_buffer(s
 {
     (void)size; // TODO: remove this unused parameter
     return std::make_shared<mclg::GBMClientBuffer>(
-        drm_fd_handler,
+        buffer_file_ops,
         package,
         geometry::Size{package->width, package->height},
         pf);
