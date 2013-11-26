@@ -63,8 +63,8 @@ TEST_F(HWC10Device, hwc10_render_frame)
 
     int fake_dpy = 0;
     int fake_sur = 0;
-    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(&fake_dpy);
-    EGLSurface sur = reinterpret_cast<EGLSurface>(&fake_sur);
+    EGLDisplay dpy = &fake_dpy;
+    EGLSurface sur = &fake_sur;
 
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
@@ -104,8 +104,8 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
 
     int fake_dpy = 0;
     int fake_sur = 0;
-    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(&fake_dpy);
-    EGLSurface sur = reinterpret_cast<EGLSurface>(&fake_sur);
+    EGLDisplay dpy = &fake_dpy;
+    EGLSurface sur = &fake_sur;
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), _, _))
         .Times(1)
         .WillOnce(Return(-1));
