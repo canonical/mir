@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
 
 #include "drm_mode_resources.h"
-#include "udev_wrapper.h"
+#include <mir/udev_wrapper.h>
 
 #include <cstddef>
 #include <memory>

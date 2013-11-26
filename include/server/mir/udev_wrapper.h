@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_UDEV_WRAPPER_H_
-#define MIR_GRAPHICS_GBM_UDEV_WRAPPER_H_
+#ifndef MIR_UDEV_WRAPPER_H_
+#define MIR_UDEV_WRAPPER_H_
 
 #include <memory>
 #include <libudev.h>
@@ -25,11 +25,6 @@
 
 namespace mir
 {
-namespace graphics
-{
-namespace gbm
-{
-
 
 class UdevDevice;
 class UdevEnumerator;
@@ -144,6 +139,4 @@ private:
 };
 
 }
-}
-}
-#endif // MIR_GRAPHICS_GBM_UDEV_WRAPPER_H_
+#endif // MIR_UDEV_WRAPPER_H_

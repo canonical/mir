@@ -19,7 +19,7 @@
 #include "gbm_display_helpers.h"
 #include "drm_close_threadsafe.h"
 
-#include "udev_wrapper.h"
+#include <mir/udev_wrapper.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -148,7 +148,7 @@ void mggh::DRMHelper::set_master() const
 
 int mggh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& drm_device)
 {
-    mgg::UdevEnumerator children(udev);
+    UdevEnumerator children(udev);
     children.match_parent(drm_device);
 
     char const* devtype = drm_device.devtype();
