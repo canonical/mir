@@ -21,6 +21,8 @@
 #include "gbm_buffer.h"
 #include "gbm_platform.h"
 #include "buffer_texture_binder.h"
+#include "anonymous_shm_file.h"
+#include "shm_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
@@ -119,11 +121,25 @@ mgg::BufferAllocator::BufferAllocator(
     bypass_env = env ? env[0] != '0' : true;
 }
 
-std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
+std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(
+    BufferProperties const& buffer_properties)
+{
+    std::shared_ptr<mg::Buffer> buffer;
+
+    if (buffer_properties.usage == BufferUsage::software)
+        buffer = alloc_software_buffer(buffer_properties);
+    else
+        buffer = alloc_hardware_buffer(buffer_properties);
+
+    return buffer;
+}
+
+std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_hardware_buffer(
+    BufferProperties const& buffer_properties)
 {
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
-    uint32_t gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
+    uint32_t const gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
 
     if (!is_pixel_format_supported(buffer_properties.format) ||
         gbm_format == mgg::invalid_gbm_format)
@@ -131,10 +147,6 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(BufferProperties 
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
     }
-
-    /* Create the GBM buffer object */
-    if (buffer_properties.usage == BufferUsage::software)
-        bo_flags |= GBM_BO_USE_WRITE;
 
     /*
      * Bypass is generally only beneficial to hardware buffers where the
@@ -149,7 +161,6 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(BufferProperties 
      *       mir_surface_state_fullscreen later when it's fully wired up.
      */
     if (bypass_env &&
-        buffer_properties.usage == BufferUsage::hardware &&
         buffer_properties.size.width.as_uint32_t() >= 800 &&
         buffer_properties.size.height.as_uint32_t() >= 600)
     {
@@ -172,7 +183,35 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(BufferProperties 
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::shared_ptr<mg::Buffer> buffer{new GBMBuffer{bo, bo_flags, std::move(texture_binder)}};
+    auto const buffer =
+        std::make_shared<GBMBuffer>(bo, bo_flags, std::move(texture_binder));
+
+    (*buffer_initializer)(*buffer);
+
+    return buffer;
+}
+
+std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
+    BufferProperties const& buffer_properties)
+{
+    if (!is_pixel_format_supported(buffer_properties.format))
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Trying to create SHM buffer with unsupported pixel format"));
+    }
+
+    auto const stride = geom::Stride{
+        geom::bytes_per_pixel(buffer_properties.format) *
+        buffer_properties.size.width.as_uint32_t()};
+    size_t const size_in_bytes = 
+        stride.as_int() * buffer_properties.size.height.as_int();
+    auto const shm_file =
+        std::make_shared<mgg::AnonymousShmFile>(size_in_bytes);
+
+    auto const buffer =
+        std::make_shared<ShmBuffer>(shm_file, buffer_properties.size,
+                                    buffer_properties.format);
 
     (*buffer_initializer)(*buffer);
 
