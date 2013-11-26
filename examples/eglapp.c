@@ -95,7 +95,7 @@ void mir_eglapp_swap_buffers(void)
 
     /*
      * Querying the surface (actually the current buffer) dimensions here is
-     * the only truely safe way to be sure that the dimensions we think we
+     * the only truly safe way to be sure that the dimensions we think we
      * have are those of the buffer being rendered to. But this should be
      * improved in future; https://bugs.launchpad.net/mir/+bug/1194384
      */
@@ -120,14 +120,10 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
     {
         /*
          * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
-         * It is unsafe to set the width and height used by glViewport from
-         * here because we're in a different thread to the GL rendering.
-         * And of course, we can't call GL directly from here because the
-         * GL context is thread-specific.
-         * Even if we did force the GL context to become current for this
-         * thread, we would still be racing against the rendering thread so
-         * could not reliably guarantee that the viewport dimensions would get
-         * updated in time. See LP: #1194384.
+         * It is unsafe to set the width and height here because we're in a
+         * different thread to that doing the rendering. So we either need
+         * support for event queuing (directing them to another thread) or
+         * full single-threaded callbacks. (LP: #1194384).
          */
         printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
     }
