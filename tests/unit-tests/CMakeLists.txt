@@ -1,4 +1,7 @@
+project(mir_unit_tests)
+
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 
 set(
@@ -23,11 +26,11 @@ add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(draw/)
 
-add_executable(unit-tests ${UNIT_TEST_SOURCES})
-uses_android_input(unit-tests)
+add_executable(mir_unit_tests ${UNIT_TEST_SOURCES})
+uses_android_input(mir_unit_tests)
 
 target_link_libraries(
-  unit-tests
+  mir_unit_tests
 
   mirclient
   mirserver
@@ -53,12 +56,17 @@ target_link_libraries(
 
 if (MIR_PLATFORM STREQUAL "gbm")
   target_link_libraries(
-    unit-tests
+    mir_unit_tests
 
     ${UMOCKDEV_LIBRARIES}
   )
   # Umockdev uses glib, which uses the deprecated "register" allocation specifier
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
-endif()  
+endif()
 
-mir_discover_tests(unit-tests LD_PRELOAD=libumockdev-preload.so.0)
+mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0)
+
+install(
+    TARGETS mir_unit_tests
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
