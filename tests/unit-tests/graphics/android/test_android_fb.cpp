@@ -238,7 +238,7 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
 TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
-    auto mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+    auto mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
     Sequence seq;
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
         .InSequence(seq);

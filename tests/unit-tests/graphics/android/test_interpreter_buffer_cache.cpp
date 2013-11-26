@@ -34,7 +34,7 @@ struct InterpreterResourceTest : public ::testing::Test
         stub_buffer1 = std::make_shared<mtd::StubBuffer>();
         stub_buffer2 = std::make_shared<mtd::StubBuffer>();
         stub_buffer3 = std::make_shared<mtd::StubBuffer>();
-        native_buffer1 = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        native_buffer1 = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
         native_buffer2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_buffer3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
     }

@@ -43,7 +43,7 @@ class SyncSwTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_fops = std::make_shared<MockFileOps>();
+        mock_fops = std::make_shared<testing::NiceMock<MockFileOps>>();
     }
 
     int dummy_fd = 3;

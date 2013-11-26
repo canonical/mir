@@ -46,7 +46,7 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer2 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_fb_bundle = std::make_shared<NiceMock<mtd::MockFBBundle>>();
-        mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
+        mock_cache = std::make_shared<NiceMock<mtd::MockInterpreterResourceCache>>();
         ON_CALL(*mock_fb_bundle, fb_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     }

@@ -87,7 +87,7 @@ public:
             set_layerlist.back().visibleRegionScreen = {0, nullptr};
         }
 
-        if (primary_display->hwLayers)
+        if (primary_display->numHwLayers >= 2)
         {
             primary_display->hwLayers[1].releaseFenceFd = fb_fence;
         }
