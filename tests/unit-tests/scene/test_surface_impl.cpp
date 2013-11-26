@@ -40,7 +40,6 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
-#include <cstring>
 #include <stdexcept>
 #include "gmock_set_arg.h"
 #include <gmock/gmock.h>
@@ -71,7 +70,6 @@ class StubSurfaceBuilder : public ms::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        mock_surface_state(std::make_shared<mtd::MockSurfaceState>()),
         stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
         dummy_surface()
     {
@@ -79,8 +77,9 @@ public:
 
     std::weak_ptr<ms::BasicSurface> create_surface(msh::Session*, msh::SurfaceCreationParameters const& )
     {
+        auto state = std::make_shared<mtd::MockSurfaceState>();
         dummy_surface = std::make_shared<ms::Surface>(
-            mock_surface_state, 
+            state,
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);
@@ -101,8 +100,6 @@ public:
     {
         return stub_buffer_stream_;
     }
-
-    std::shared_ptr<mtd::MockSurfaceState> mock_surface_state;
 
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
@@ -297,37 +294,6 @@ TEST_F(SurfaceImpl, states)
               surf.configure(mir_surface_attrib_state,
                              mir_surface_state_fullscreen));
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
-}
-
-TEST_F(SurfaceImpl, emits_resize_events)
-{
-    using namespace testing;
-
-    auto sink = std::make_shared<MockEventSink>();
-    ms::SurfaceImpl surf(
-        nullptr,
-        mt::fake_shared(surface_builder),
-        std::make_shared<mtd::NullSurfaceConfigurator>(),
-        msh::a_surface(),
-        stub_id,
-        sink);
-
-    geom::Size new_size{0x123, 0x456};
-
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_surface;
-    e.surface.id = stub_id.as_value();
-    e.surface.attrib = mir_surface_attrib_size;
-    e.surface.value = 0x01230456;
-
-    EXPECT_CALL(*sink, handle_event(Ref(e)))
-        .Times(1);
-
-    EXPECT_CALL(*surface_builder.mock_surface_state, resize(Ref(new_size)))
-        .Times(1);
-
-    surf.resize(new_size);
 }
 
 TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
