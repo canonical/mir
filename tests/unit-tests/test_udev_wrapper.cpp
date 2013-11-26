@@ -125,8 +125,8 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
     mir::UdevContext ctx;
-    auto same_one = ctx.device_from_syspath(sysfs_path);
-    auto same_two = ctx.device_from_syspath(sysfs_path);
+    std::shared_ptr<mir::UdevDevice> same_one = ctx.device_from_syspath(sysfs_path);
+    std::shared_ptr<mir::UdevDevice> same_two = ctx.device_from_syspath(sysfs_path);
 
     EXPECT_TRUE(*same_one == *same_two);
     EXPECT_TRUE(*same_two == *same_one);

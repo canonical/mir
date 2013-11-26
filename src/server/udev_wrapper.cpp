@@ -25,55 +25,69 @@
 //    UdevDevice
 /////////////////////
 
-mir::UdevDevice::UdevDevice(udev_device *dev)
+namespace
+{
+class UdevDeviceImpl : public mir::UdevDevice
+{
+public:
+    UdevDeviceImpl(udev_device *dev);
+    virtual ~UdevDeviceImpl() noexcept;
+    virtual bool operator==(mir::UdevDevice const& rhs) const override;
+    virtual bool operator!=(mir::UdevDevice const& rhs) const override;
+
+    virtual char const * subsystem() const override;
+    virtual char const * devtype() const override;
+    virtual char const * devpath() const override;
+    virtual char const * devnode() const override;
+
+    udev_device* const dev;
+};
+
+UdevDeviceImpl::UdevDeviceImpl(udev_device *dev)
     : dev(dev)
 {
     if (!dev)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
+	BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
 
     udev_ref(udev_device_get_udev(dev));
 }
 
-mir::UdevDevice::~UdevDevice() noexcept
+UdevDeviceImpl::~UdevDeviceImpl() noexcept
 {
     udev_unref(udev_device_get_udev(dev));
     udev_device_unref(dev);
 }
 
-bool mir::UdevDevice::operator==(UdevDevice const& rhs) const
+bool UdevDeviceImpl::operator==(UdevDevice const& rhs) const
 {
     // The device path is unique
-    return !strcmp(devpath(), rhs.devpath());
+    return strcmp(devpath(), rhs.devpath()) == 0;
 }
 
-bool mir::UdevDevice::operator!=(UdevDevice const& rhs) const
+bool UdevDeviceImpl::operator!=(UdevDevice const& rhs) const
 {
     return !(*this == rhs);
 }
 
-char const* mir::UdevDevice::subsystem() const
+char const * UdevDeviceImpl::subsystem() const
 {
     return udev_device_get_subsystem(dev);
 }
 
-char const* mir::UdevDevice::devtype() const
+char const * UdevDeviceImpl::devtype() const
 {
     return udev_device_get_devtype(dev);
 }
 
-char const* mir::UdevDevice::devpath() const
+char const * UdevDeviceImpl::devpath() const
 {
     return udev_device_get_devpath(dev);
 }
 
-char const* mir::UdevDevice::devnode() const
+char const * UdevDeviceImpl::devnode() const
 {
     return udev_device_get_devnode(dev);
 }
-
-udev_device const* mir::UdevDevice::device() const
-{
-    return dev;
 }
 
 ////////////////////////
@@ -164,8 +178,7 @@ void mir::UdevEnumerator::match_subsystem(std::string const& subsystem)
 
 void mir::UdevEnumerator::match_parent(mir::UdevDevice const& parent)
 {
-    // Need to const_cast<> as this increases the udev_device's reference count
-    udev_enumerate_add_match_parent(enumerator, const_cast<udev_device *>(parent.device()));
+    udev_enumerate_add_match_parent(enumerator, dynamic_cast<UdevDeviceImpl const&>(parent).dev);
 }
 
 void mir::UdevEnumerator::match_sysname(std::string const& sysname)
@@ -204,7 +217,7 @@ mir::UdevContext::~UdevContext() noexcept
 
 std::shared_ptr<mir::UdevDevice> mir::UdevContext::device_from_syspath(std::string const& syspath)
 {
-    return std::make_shared<mir::UdevDevice>(udev_device_new_from_syspath(context, syspath.c_str()));
+    return std::make_shared<UdevDeviceImpl>(udev_device_new_from_syspath(context, syspath.c_str()));
 }
 
 udev* mir::UdevContext::ctx() const
@@ -256,7 +269,7 @@ void mir::UdevMonitor::process_events(std::function<void(mir::UdevMonitor::Event
     {
         dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
         if (dev != nullptr)
-            handler(action_to_event_type(udev_device_get_action(dev)), UdevDevice(dev));
+            handler(action_to_event_type(udev_device_get_action(dev)), UdevDeviceImpl(dev));
     } while (dev != nullptr);
 }
 

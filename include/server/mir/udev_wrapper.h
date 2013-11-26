@@ -49,23 +49,15 @@ private:
 class UdevDevice
 {
 public:
-    UdevDevice(udev_device *dev);
-    ~UdevDevice() noexcept;
+    virtual ~UdevDevice() noexcept {}
 
-    UdevDevice(UdevDevice const&) = delete;
-    UdevDevice& operator=(UdevDevice const&) = delete;
+    virtual bool operator==(UdevDevice const& rhs) const = 0;
+    virtual bool operator!=(UdevDevice const& rhs) const = 0;
 
-    bool operator==(UdevDevice const& rhs) const;
-    bool operator!=(UdevDevice const& rhs) const;
-
-    char const* subsystem() const;
-    char const* devtype() const;
-    char const* devpath() const;
-    char const* devnode() const;
-
-    udev_device const* device() const;
-private:
-    udev_device* const dev;
+    virtual char const * subsystem() const = 0;
+    virtual char const * devtype() const = 0;
+    virtual char const * devpath() const = 0;
+    virtual char const * devnode() const = 0;
 };
 
 class UdevEnumerator
