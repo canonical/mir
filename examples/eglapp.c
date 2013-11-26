@@ -116,8 +116,7 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
     {
         running = 0;
     }
-    else if (ev->type == mir_event_type_surface &&
-             ev->surface.attrib == mir_surface_attrib_size)
+    else if (ev->type == mir_event_type_resize)
     {
         /*
          * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
@@ -130,9 +129,7 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          * could not reliably guarantee that the viewport dimensions would get
          * updated in time. See LP: #1194384.
          */
-        int w = ev->surface.value >> 16;
-        int h = ev->surface.value & 0xffff;
-        printf("Resized to %dx%d\n", w, h);
+        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
     }
 }
 

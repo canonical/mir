@@ -42,34 +42,6 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
-namespace
-{
-int pack_size(geom::Size const& size)
-{
-    int w = size.width.as_int();
-    int h = size.height.as_int();
-
-    if (w > 0xffff || h > 0xffff)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface dimensions too large "
-                                               "for packing."));
-        /*
-         * It's not a realistic case worth thinking about too much. But if we
-         * wanted to make it a valid one we could just return 0 and let the
-         * client query the buffer dimensions (as they can already). Or
-         * alternatively, extend/change the protocol to handle more bits.
-         */
-    }
-
-    return (w << 16) | h;
-}
-
-geom::Size unpack_size(int packed)
-{
-    return {(int)((unsigned int)packed >> 16), packed & 0xffff};
-}
-}
-
 ms::SurfaceImpl::SurfaceImpl(
     msh::Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
@@ -190,12 +162,6 @@ int ms::SurfaceImpl::configure(MirSurfaceAttrib attrib, int value)
         allow_framedropping(allow_dropping);
         result = value;
         break;
-    case mir_surface_attrib_size:
-    {
-        resize(unpack_size(value));
-        result = pack_size(size());
-        break;
-    }
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -281,7 +247,15 @@ void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& contr
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
-    notify_change(mir_surface_attrib_size, pack_size(size));
+
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = id.as_value();
+    e.resize.width = size.width.as_int();
+    e.resize.height = size.height.as_int();
+
+    event_sink->handle_event(e);
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
