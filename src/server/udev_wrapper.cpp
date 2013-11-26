@@ -25,11 +25,6 @@
 //    UdevDevice
 /////////////////////
 
-mir::UdevDevice::UdevDevice(UdevContext const& ctx, std::string const& syspath)
-    : UdevDevice(udev_device_new_from_syspath(ctx.ctx(), syspath.c_str()))
-{
-}
-
 mir::UdevDevice::UdevDevice(udev_device *dev)
     : dev(dev)
 {
@@ -94,7 +89,7 @@ mir::UdevEnumerator::iterator::iterator (std::shared_ptr<UdevContext> const& ctx
     entry(entry)
 {
     if (entry)
-        current = std::make_shared<UdevDevice>(*ctx, udev_list_entry_get_name(entry));
+        current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
 }
 
 void mir::UdevEnumerator::iterator::increment()
@@ -104,7 +99,7 @@ void mir::UdevEnumerator::iterator::increment()
     {
         try
         {
-            current = std::make_shared<UdevDevice>(*ctx, udev_list_entry_get_name(entry));
+            current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
         }
         catch (std::runtime_error)
         {
@@ -205,6 +200,11 @@ mir::UdevContext::UdevContext()
 mir::UdevContext::~UdevContext() noexcept
 {
     udev_unref(context);
+}
+
+std::shared_ptr<mir::UdevDevice> mir::UdevContext::device_from_syspath(std::string const& syspath)
+{
+    return std::make_shared<mir::UdevDevice>(udev_device_new_from_syspath(context, syspath.c_str()));
 }
 
 udev* mir::UdevContext::ctx() const

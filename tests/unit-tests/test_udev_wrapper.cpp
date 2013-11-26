@@ -86,34 +86,38 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevType)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    mir::UdevDevice dev(mir::UdevContext(), sysfs_path);
-    ASSERT_STREQ("drm_minor", dev.devtype());
+    mir::UdevContext ctx;
+    auto dev = ctx.device_from_syspath(sysfs_path);
+    ASSERT_STREQ("drm_minor", dev->devtype());
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mir::UdevDevice dev(mir::UdevContext(), sysfs_path);
-    ASSERT_STREQ("/devices/card0", dev.devpath());
+    mir::UdevContext ctx;
+    auto dev = ctx.device_from_syspath(sysfs_path);
+    ASSERT_STREQ("/devices/card0", dev->devpath());
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVNAME", "/dev/dri/card0"});
 
-    mir::UdevDevice card0(mir::UdevContext(), sysfs_path);
+    mir::UdevContext ctx;
+    auto dev = ctx.device_from_syspath(sysfs_path);
 
-    ASSERT_STREQ("/dev/dri/card0", card0.devnode());
+    ASSERT_STREQ("/dev/dri/card0", dev->devnode());
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mir::UdevDevice dev(mir::UdevContext(), sysfs_path);
+    mir::UdevContext ctx;
+    auto dev = ctx.device_from_syspath(sysfs_path);
 
-    EXPECT_TRUE(dev == dev);
+    EXPECT_TRUE(*dev == *dev);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
@@ -121,11 +125,11 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
     mir::UdevContext ctx;
-    mir::UdevDevice same_one(ctx, sysfs_path);
-    mir::UdevDevice same_two(ctx, sysfs_path);
+    auto same_one = ctx.device_from_syspath(sysfs_path);
+    auto same_two = ctx.device_from_syspath(sysfs_path);
 
-    EXPECT_TRUE(same_one == same_two);
-    EXPECT_TRUE(same_two == same_one);
+    EXPECT_TRUE(*same_one == *same_two);
+    EXPECT_TRUE(*same_two == *same_one);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
@@ -134,11 +138,11 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
     auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
 
     mir::UdevContext ctx;
-    mir::UdevDevice dev_one(ctx, path_one);
-    mir::UdevDevice dev_two(ctx, path_two);
+    auto dev_one = ctx.device_from_syspath(path_one);
+    auto dev_two = ctx.device_from_syspath(path_two);
 
-    EXPECT_FALSE(dev_one == dev_two);
-    EXPECT_FALSE(dev_two == dev_one);
+    EXPECT_FALSE(*dev_one == *dev_two);
+    EXPECT_FALSE(*dev_two == *dev_one);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
@@ -147,11 +151,11 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
     auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
 
     mir::UdevContext ctx;
-    mir::UdevDevice dev_one(ctx, path_one);
-    mir::UdevDevice dev_two(ctx, path_two);
+    auto dev_one = ctx.device_from_syspath(path_one);
+    auto dev_two = ctx.device_from_syspath(path_two);
 
-    EXPECT_TRUE(dev_one != dev_two);
-    EXPECT_TRUE(dev_two != dev_one);
+    EXPECT_TRUE(*dev_one != *dev_two);
+    EXPECT_TRUE(*dev_two != *dev_one);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
@@ -159,11 +163,11 @@ TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
     mir::UdevContext ctx;
-    mir::UdevDevice same_one(ctx, sysfs_path);
-    mir::UdevDevice same_two(ctx, sysfs_path);
+    auto same_one = ctx.device_from_syspath(sysfs_path);
+    auto same_two = ctx.device_from_syspath(sysfs_path);
 
-    EXPECT_FALSE(same_one != same_two);
-    EXPECT_FALSE(same_two != same_one);
+    EXPECT_FALSE(*same_one != *same_two);
+    EXPECT_FALSE(*same_two != *same_one);
 }
 
 TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
@@ -178,9 +182,9 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
     auto ctx = std::make_shared<mir::UdevContext>();
 
     mir::UdevEnumerator devices(ctx);
-    mir::UdevDevice drm_device(*ctx, card0_syspath);
+    auto drm_device = ctx->device_from_syspath(card0_syspath);
 
-    devices.match_parent(drm_device);
+    devices.match_parent(*drm_device);
     devices.scan_devices();
 
     int child_count = 0;
@@ -330,13 +334,13 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
     monitor.enable();
 
     auto sysfs_path = udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    mir::UdevDevice device(ctx, sysfs_path);
+    auto device = ctx.device_from_syspath(sysfs_path);
 
     monitor.process_events(
-        [&event_handler_called, &device](mir::UdevMonitor::EventType, mir::UdevDevice const& dev)
+        [&event_handler_called, device](mir::UdevMonitor::EventType, mir::UdevDevice const& dev)
             {
                 event_handler_called = true;
-                EXPECT_EQ(device, dev);
+                EXPECT_EQ(*device, dev);
             });
 
     ASSERT_TRUE(event_handler_called);
@@ -393,14 +397,14 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
     monitor.enable();
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mir::UdevDevice minor_device(ctx, test_sysfspath);
+    auto minor_device = ctx.device_from_syspath(test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
-    monitor.process_events([&event_received, &minor_device]
+    monitor.process_events([&event_received, minor_device]
         (mir::UdevMonitor::EventType, mir::UdevDevice const& dev)
             {
-                EXPECT_EQ(dev, minor_device);
+                EXPECT_EQ(dev, *minor_device);
                 event_received = true;
             });
 
@@ -420,17 +424,17 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
     monitor.enable();
 
     auto drm_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mir::UdevDevice drm_device(ctx, drm_sysfspath);
+    auto drm_device = ctx.device_from_syspath(drm_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
     auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", NULL, {}, {"DEVTYPE", "hid"});
-    mir::UdevDevice usb_device(ctx, usb_sysfspath);
+    auto usb_device = ctx.device_from_syspath(usb_sysfspath);
 
-    monitor.process_events([&drm_event_recieved, &drm_device, &usb_event_received, &usb_device]
+    monitor.process_events([&drm_event_recieved, drm_device, &usb_event_received, usb_device]
         (mir::UdevMonitor::EventType, mir::UdevDevice const& dev)
             {
-                if (dev == drm_device)
+                if (dev == *drm_device)
                     drm_event_recieved = true;
-                if (dev == usb_device)
+                if (dev == *usb_device)
                     usb_event_received = true;
             });
 
@@ -450,14 +454,14 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mir::UdevDevice minor_device(ctx, test_sysfspath);
+    auto minor_device = ctx.device_from_syspath(test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
-    monitor.process_events([&event_received, &minor_device]
+    monitor.process_events([&event_received, minor_device]
         (mir::UdevMonitor::EventType, mir::UdevDevice const& dev)
             {
-                EXPECT_EQ(dev, minor_device);
+                EXPECT_EQ(dev, *minor_device);
                 event_received = true;
             });
 

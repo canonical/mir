@@ -38,6 +38,8 @@ public:
     UdevContext(UdevContext const&) = delete;
     UdevContext& operator=(UdevContext const&) = delete;
 
+    std::shared_ptr<UdevDevice> device_from_syspath(std::string const& syspath);
+
     udev* ctx() const;
 
 private:
@@ -47,7 +49,6 @@ private:
 class UdevDevice
 {
 public:
-    UdevDevice(UdevContext const& ctx, std::string const& syspath);
     UdevDevice(udev_device *dev);
     ~UdevDevice() noexcept;
 
@@ -79,7 +80,7 @@ public:
     void match_parent(UdevDevice const& parent);
     void match_sysname(std::string const& sysname);
 
-        class iterator :
+    class iterator :
         public std::iterator<std::input_iterator_tag, UdevDevice>
     {
     public:
