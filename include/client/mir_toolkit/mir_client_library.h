@@ -66,10 +66,10 @@ MirConnection *mir_connect_sync(char const *server, char const *app_name);
 /**
  * Test for a valid connection
  * \param [in] connection  The connection
- * \return                 A non-zero value if the supplied connection is
- *                         valid, 0 otherwise
+ * \return                 True if the supplied connection is valid, or
+ *                         false otherwise.
  */
-int mir_connection_is_valid(MirConnection *connection);
+MirBool mir_connection_is_valid(MirConnection *connection);
 
 /**
  * Retrieve a text description of the last error. The returned string is owned
@@ -227,10 +227,10 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
 /**
  * Test for a valid surface
  *   \param [in] surface  The surface
- *   \return              A non-zero value if the supplied surface is valid,
- *                        0 otherwise
+ *   \return              True if the supplied surface is valid, or
+ *                        false otherwise.
  */
-int mir_surface_is_valid(MirSurface *surface);
+MirBool mir_surface_is_valid(MirSurface *surface);
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
