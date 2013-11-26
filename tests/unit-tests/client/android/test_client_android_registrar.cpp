@@ -205,7 +205,7 @@ protected:
     {
         using namespace testing;
 
-        mock_module = std::make_shared<MockRegistrarDevice>();
+        mock_module = std::make_shared<NiceMock<MockRegistrarDevice>>();
 
         width = 41;
         height = 43;

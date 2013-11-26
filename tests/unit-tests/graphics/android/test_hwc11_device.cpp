@@ -42,6 +42,8 @@ protected:
     {
         using namespace testing;
 
+        dpy = mock_egl.fake_egl_display;
+        surf = mock_egl.fake_egl_surface;
         mock_native_buffer = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
         mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();

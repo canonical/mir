@@ -61,8 +61,10 @@ TEST_F(HWC10Device, hwc10_render_frame)
 {
     using namespace testing;
 
-    EGLDisplay dpy;
-    EGLSurface sur;
+    int fake_dpy = 0;
+    int fake_sur = 0;
+    EGLDisplay dpy = &fake_dpy;
+    EGLSurface sur = &fake_sur;
 
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
@@ -70,8 +72,6 @@ TEST_F(HWC10Device, hwc10_render_frame)
     mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     device.gpu_render(dpy, sur);
-
-    Mock::VerifyAndClearExpectations(mock_hwc_device.get());
 
     EXPECT_EQ(dpy, mock_hwc_device->display0_set_content.dpy);
     EXPECT_EQ(sur, mock_hwc_device->display0_set_content.sur);
@@ -102,8 +102,10 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
 {
     using namespace testing;
 
-    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x1234);
-    EGLSurface sur = reinterpret_cast<EGLSurface>(0x4455);
+    int fake_dpy = 0;
+    int fake_sur = 0;
+    EGLDisplay dpy = &fake_dpy;
+    EGLSurface sur = &fake_sur;
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), _, _))
         .Times(1)
         .WillOnce(Return(-1));

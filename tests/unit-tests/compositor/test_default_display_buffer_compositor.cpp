@@ -136,7 +136,7 @@ TEST(DefaultDisplayBufferCompositor, render)
 
     StubRendererFactory renderer_factory;
     MockScene scene;
-    mtd::MockDisplayBuffer display_buffer;
+    NiceMock<mtd::MockDisplayBuffer> display_buffer;
 
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,_,_)).Times(0);
 

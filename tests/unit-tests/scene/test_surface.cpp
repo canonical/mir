@@ -166,7 +166,7 @@ struct SurfaceCreation : public ::testing::Test
         rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-        mock_basic_state = std::make_shared<mtd::MockSurfaceState>();
+        mock_basic_state = std::make_shared<testing::NiceMock<mtd::MockSurfaceState>>();
 
         ON_CALL(*mock_buffer_stream, swap_client_buffers(_))
             .WillByDefault(SetArg<0>(std::make_shared<mtd::StubBuffer>()));
