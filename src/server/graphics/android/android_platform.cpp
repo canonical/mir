@@ -77,7 +77,7 @@ void mga::AndroidPlatform::fill_ipc_package(BufferIPCPacker* packer, graphics::B
     auto buffer_handle = native_buffer->handle();
 
     int offset = 0;
-    
+
     for(auto i=0; i<buffer_handle->numFds; i++)
     {
         packer->pack_fd(buffer_handle->data[offset++]);

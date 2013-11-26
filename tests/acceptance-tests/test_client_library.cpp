@@ -576,7 +576,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
             {
                 parm.width = size.width;
                 parm.height = size.height;
-    
+
                 surface = mir_connection_create_surface_sync(connection, &parm);
                 ASSERT_TRUE(surface != NULL);
                 ASSERT_TRUE(mir_surface_is_valid(surface));
@@ -881,7 +881,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             for (auto i=0u; i < configuration->num_outputs; i++)
             {
                 MirDisplayOutput* disp = &configuration->outputs[i];
-                ASSERT_NE(nullptr, disp); 
+                ASSERT_NE(nullptr, disp);
                 EXPECT_GE(disp->num_modes, disp->current_mode);
                 EXPECT_GE(disp->num_output_formats, disp->current_output_format);
             }

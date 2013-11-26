@@ -266,7 +266,7 @@ int mir_surface_get_id(MirSurface * surface)
 
 int mir_debug_surface_id(MirSurface * surface)
 {
-    return surface->id();    
+    return surface->id();
 }
 
 int mir_surface_is_valid(MirSurface* surface)

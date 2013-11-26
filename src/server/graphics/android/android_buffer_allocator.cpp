@@ -106,5 +106,5 @@ mga::BufferUsage mga::AndroidGraphicBufferAllocator::convert_from_compositor_usa
         case mg::BufferUsage::hardware:
         default:
             return mga::BufferUsage::use_hardware;
-    } 
+    }
 }

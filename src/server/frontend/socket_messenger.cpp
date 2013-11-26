@@ -39,9 +39,9 @@ pid_t mfd::SocketMessenger::client_pid()
 {
     struct ucred cr;
     socklen_t cl = sizeof(cr);
-    
+
     auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
-    
+
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
     return cr.pid;
@@ -60,7 +60,7 @@ void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
         static_cast<unsigned char>((size >> 8) & 0xff),
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
-    
+
     std::unique_lock<std::mutex> lg(message_lock);
 
     whole_message.resize(sizeof header_bytes + size);
@@ -126,4 +126,4 @@ void mfd::SocketMessenger::async_receive_msg(
          buffer,
          boost::asio::transfer_exactly(size),
          handler);
-} 
+}

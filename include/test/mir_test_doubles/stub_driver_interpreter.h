@@ -49,7 +49,7 @@ public:
     void driver_returns_buffer(ANativeWindowBuffer*, int)
     {
     }
-    void dispatch_driver_request_format(int) 
+    void dispatch_driver_request_format(int)
     {
     }
     int driver_requests_info(int index) const

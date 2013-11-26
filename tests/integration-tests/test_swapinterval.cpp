@@ -56,7 +56,8 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    void swap_client_buffers(std::shared_ptr<mg::Buffer>& buffer) { buffer = std::make_shared<mtd::StubBuffer>(); }
+    void release_client_buffer(std::shared_ptr<mg::Buffer>& buffer) { buffer.reset(); }
     std::shared_ptr<mg::Buffer> lock_compositor_buffer(unsigned long) { return std::make_shared<mtd::StubBuffer>(); }
     std::shared_ptr<mg::Buffer> lock_snapshot_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    int render_operations_fd; 
+    int render_operations_fd;
 };
 
 class StubStreamFactory : public ms::BufferStreamFactory
@@ -85,7 +86,7 @@ public:
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }
 private:
-    int render_operations_fd; 
+    int render_operations_fd;
 };
 
 }
@@ -186,7 +187,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
 
             //swapinterval 2 not supported
             EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, 2));
-            EXPECT_EQ(1, mir_surface_get_swapinterval(surface)); 
+            EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
 
             set_flag(swapinterval_set);
             wait_for(do_client_finish);

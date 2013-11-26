@@ -414,12 +414,15 @@ public:
                     mf::SurfaceId(), {});
 
             /*
-             * We call advance_client_buffer() twice so that the surface is
+             * We call swap_buffers() twice so that the surface is
              * considers the first buffer to be posted.
              * (TODO There must be a better way!)
              */
-            s->advance_client_buffer();
-            s->advance_client_buffer();
+            {
+                std::shared_ptr<mg::Buffer> tmp;
+                s->swap_buffers(tmp);
+                s->swap_buffers(tmp);
+            }
 
             /*
              * Place each surface at a different starting location and give it a

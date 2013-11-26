@@ -120,15 +120,12 @@ mf::SessionMediator::advance_buffer(SurfaceId surf_id, Surface& surface)
 {
     auto& tracker = client_buffer_tracker[surf_id];
     if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
-    
-    client_buffer_resource[surf_id].reset();
 
-    auto client_buffer = surface.advance_client_buffer();
+    auto& client_buffer = client_buffer_resource[surf_id];
+    surface.swap_buffers(client_buffer);
     auto id = client_buffer->id();
     auto need_full_ipc = !tracker->client_has(id);
     tracker->add(id);
-
-    client_buffer_resource[surf_id] = client_buffer;
 
     return std::tie(client_buffer, need_full_ipc);
 }

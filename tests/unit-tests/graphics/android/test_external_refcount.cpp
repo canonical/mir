@@ -36,7 +36,7 @@ TEST(AndroidRefcount, driver_hooks)
                 buffer->mir_dereference();
             });
 
-        driver_reference = buffer.get(); 
+        driver_reference = buffer.get();
         driver_reference->common.incRef(&driver_reference->common);
         //Mir loses its reference, driver still has a ref
     }
@@ -59,7 +59,7 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
                 {
                     buffer->mir_dereference();
                 });
-            driver_reference = tmp; 
+            driver_reference = tmp;
             driver_reference->common.incRef(&driver_reference->common);
         }
 
@@ -78,7 +78,7 @@ TEST(AndroidAndroidNativeBuffer, wait_for_fence)
 
     auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
     mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
-    buffer.wait_for_content(); 
+    buffer.wait_for_content();
 }
 
 TEST(AndroidAndroidNativeBuffer, update_fence)
@@ -90,5 +90,5 @@ TEST(AndroidAndroidNativeBuffer, update_fence)
 
     auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
     mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
-    buffer.update_fence(fake_fd); 
+    buffer.update_fence(fake_fd);
 }

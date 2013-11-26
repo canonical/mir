@@ -32,7 +32,7 @@ class NullInputReport : public InputReport
 public:
     NullInputReport() = default;
     virtual ~NullInputReport() noexcept(true) = default;
-    
+
     void received_event_from_kernel(int64_t when, int type, int code, int value);
 
     void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time);

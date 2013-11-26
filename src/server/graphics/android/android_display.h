@@ -71,7 +71,7 @@ private:
     GLContext gl_context;
     std::shared_ptr<DisplayDevice> const display_device;
     //we only have a primary display at the moment
-    std::unique_ptr<graphics::DisplayBuffer> const display_buffer; 
+    std::unique_ptr<graphics::DisplayBuffer> const display_buffer;
     AndroidDisplayConfiguration current_configuration;
 };
 

@@ -44,6 +44,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface.h"
 
+#include "gmock_set_arg.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -102,7 +103,7 @@ public:
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-        EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
+        EXPECT_CALL(*mock_surface, swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer));
 
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
         EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -122,7 +123,7 @@ public:
 
             EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-            EXPECT_CALL(*mock_surfaces[id], advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
+            EXPECT_CALL(*mock_surfaces[id], swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer));
 
             EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
             EXPECT_CALL(*mock_surfaces[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -518,11 +519,11 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mp::Buffer buffer_response;
     mp::SurfaceParameters surface_request;
 
-    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_))
         .Times(2)
-        .WillOnce(Return(stub_buffer1))
-        .WillOnce(Return(stub_buffer2));
- 
+        .WillOnce(SetArg<0>(stub_buffer1))
+        .WillOnce(SetArg<0>(stub_buffer2));
+
     auto refcount = stub_buffer1.use_count();
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     EXPECT_EQ(refcount+1, stub_buffer1.use_count());
@@ -555,8 +556,8 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_
      * the pre-created stubbed_session->mock_surface. Further create_surface()
      * invocations create new surfaces in stubbed_session->mock_surfaces[].
      */
-    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
-        .WillOnce(Return(stub_buffer1));
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_))
+        .WillOnce(SetArg<0>(stub_buffer1));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     auto refcount = stub_buffer1.use_count();
@@ -583,7 +584,7 @@ TEST_F(SessionMediatorTest, display_config_request)
 
     bool used0 = false, used1 = true;
     geom::Point pt0{44,22}, pt1{3,2};
-    size_t mode_index0 = 1, mode_index1 = 3; 
+    size_t mode_index0 = 1, mode_index1 = 3;
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
     NiceMock<MockConfig> mock_display_config;
@@ -593,10 +594,10 @@ TEST_F(SessionMediatorTest, display_config_request)
     Sequence seq;
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config))); 
+        .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config))); 
+        .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0,  mir_power_mode_on))
         .InSequence(seq);
     EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1, mir_power_mode_off))
@@ -606,7 +607,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
- 
+
     mf::SessionMediator session_mediator{
         shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
@@ -615,7 +616,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mp::DisplayConfiguration configuration_response;
-    mp::DisplayConfiguration configuration; 
+    mp::DisplayConfiguration configuration;
     auto disp0 = configuration.add_display_output();
     disp0->set_output_id(id0.as_value());
     disp0->set_used(used0);

@@ -30,7 +30,7 @@ namespace android
 {
 class SyncFileOps;
 }
-} 
+}
 namespace client
 {
 namespace android

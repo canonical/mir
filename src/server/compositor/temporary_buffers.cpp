@@ -28,18 +28,6 @@ mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buf
 {
 }
 
-mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper)
-    : TemporaryBuffer(buffer_swapper->client_acquire()),
-      allocating_swapper(buffer_swapper)
-{
-}
-
-mc::TemporaryClientBuffer::~TemporaryClientBuffer()
-{
-    if (auto swapper = allocating_swapper.lock())
-        swapper->client_release(buffer);
-}
-
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
     std::shared_ptr<BufferBundle> const& bun, unsigned long frameno)
     : TemporaryBuffer(bun->compositor_acquire(frameno)),

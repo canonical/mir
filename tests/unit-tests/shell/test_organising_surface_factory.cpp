@@ -64,7 +64,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     using namespace ::testing;
 
     msh::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
-    
+
     mtd::StubShellSession session;
     EXPECT_CALL(*underlying_surface_factory, create_surface(_, _, _, _)).Times(1);
 

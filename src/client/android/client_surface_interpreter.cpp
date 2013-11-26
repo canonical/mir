@@ -29,7 +29,7 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
  :  surface(surface),
     driver_pixel_format(-1),
     sync_ops(std::make_shared<mga::RealSyncFileOps>())
-    
+
 {
 }
 

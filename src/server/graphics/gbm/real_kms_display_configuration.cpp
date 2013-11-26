@@ -229,7 +229,7 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     else
     {
         auto& output = *iter;
-        
+
         output.modes = modes;
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;

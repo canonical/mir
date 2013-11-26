@@ -84,7 +84,7 @@ public:
     void match_parent(UdevDevice const& parent);
     void match_sysname(std::string const& sysname);
 
-        class iterator : 
+        class iterator :
         public std::iterator<std::input_iterator_tag, UdevDevice>
     {
     public:

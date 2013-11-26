@@ -153,7 +153,7 @@ std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_
     //TODO: this is awkward on both android and gbm...
     auto gbm_window = new GBMNativeSurface(*client_surface);
     auto egl_native_window = new EGLNativeWindowType;
-    *egl_native_window = gbm_window; 
+    *egl_native_window = gbm_window;
     NativeWindowDeleter deleter(gbm_window);
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
@@ -169,8 +169,8 @@ std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native
 
 MirPlatformType mclg::GBMClientPlatform::platform_type() const
 {
-    return mir_platform_type_gbm; 
-} 
+    return mir_platform_type_gbm;
+}
 
 MirNativeBuffer* mclg::GBMClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {

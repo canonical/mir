@@ -32,7 +32,7 @@ public:
     AndroidDisplayConfiguration(geometry::Size const& display_size);
     AndroidDisplayConfiguration(AndroidDisplayConfiguration const& other);
     AndroidDisplayConfiguration& operator=(AndroidDisplayConfiguration const& other);
-    
+
     virtual ~AndroidDisplayConfiguration() = default;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const;

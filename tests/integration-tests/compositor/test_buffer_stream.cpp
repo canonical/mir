@@ -67,9 +67,10 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
-    auto client1 = buffer_stream.secure_client_buffer();
+    std::shared_ptr<mg::Buffer> client1;
+    buffer_stream.swap_client_buffers(client1);
     auto client1_id = client1->id();
-    client1.reset();
+    buffer_stream.swap_client_buffers(client1);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(1);
     auto comp2 = buffer_stream.lock_compositor_buffer(1);
@@ -79,7 +80,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 
     comp1.reset();
 
-    buffer_stream.secure_client_buffer().reset();
+    buffer_stream.swap_client_buffers(client1);
     auto comp3 = buffer_stream.lock_compositor_buffer(2);
 
     EXPECT_NE(client1_id, comp3->id());
@@ -94,8 +95,9 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 
 TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
-    for (int i = 0; i < nbuffers - 1; i++)
-        buffer_stream.secure_client_buffer().reset();
+    std::shared_ptr<mg::Buffer> client_buffer;
+    for (int i = 0; i !=  nbuffers; i++)
+        buffer_stream.swap_client_buffers(client_buffer);
 
     auto first_monitor = buffer_stream.lock_compositor_buffer(1);
     auto first_compositor_id = first_monitor->id();
@@ -110,16 +112,19 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
+    std::shared_ptr<mg::Buffer> client_buffer;
+    buffer_stream.swap_client_buffers(client_buffer);
+
     if (nbuffers > 1)
     {
-        buffer_stream.secure_client_buffer().reset();
+        buffer_stream.swap_client_buffers(client_buffer);
         auto comp1 = buffer_stream.lock_compositor_buffer(1);
 
-        buffer_stream.secure_client_buffer().reset();
+        buffer_stream.swap_client_buffers(client_buffer);
         auto comp2 = buffer_stream.lock_compositor_buffer(2);
-    
+
         EXPECT_NE(comp1->id(), comp2->id());
-    
+
         comp1.reset();
         comp2.reset();
     }
@@ -129,9 +134,9 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 {
     auto old_size = buffer_stream.stream_size();
 
-    auto client1 = buffer_stream.secure_client_buffer();
-    EXPECT_EQ(old_size, client1->size());
-    client1.reset();
+    std::shared_ptr<mg::Buffer> client;
+    buffer_stream.swap_client_buffers(client);
+    EXPECT_EQ(old_size, client->size());
 
     geom::Size const new_size
     {
@@ -141,23 +146,22 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
     buffer_stream.resize(new_size);
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
-    auto client2 = buffer_stream.secure_client_buffer();
-    EXPECT_EQ(new_size, client2->size());
-    client2.reset();
+    buffer_stream.swap_client_buffers(client);
+    EXPECT_EQ(new_size, client->size());
 
     buffer_stream.resize(old_size);
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
-    auto client3 = buffer_stream.secure_client_buffer();
-    EXPECT_EQ(old_size, client3->size());
-    client3.reset();
+    buffer_stream.swap_client_buffers(client);
+    EXPECT_EQ(old_size, client->size());
 }
 
 TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 {
     auto old_size = buffer_stream.stream_size();
 
-    buffer_stream.secure_client_buffer().reset();
+    std::shared_ptr<mg::Buffer> client;
+    buffer_stream.swap_client_buffers(client);
 
     geom::Size const new_size
     {
@@ -167,7 +171,8 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     buffer_stream.resize(new_size);
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
-    buffer_stream.secure_client_buffer().reset();
+    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers(client);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(1);
     EXPECT_EQ(old_size, comp1->size());
@@ -177,7 +182,7 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     EXPECT_EQ(new_size, comp2->size());
     comp2.reset();
 
-    buffer_stream.secure_client_buffer().reset();
+    buffer_stream.swap_client_buffers(client);
 
     auto comp3 = buffer_stream.lock_compositor_buffer(3);
     EXPECT_EQ(new_size, comp3->size());
@@ -187,12 +192,14 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
     // No new client frames since resize(old_size), so compositor gets new_size
+    buffer_stream.release_client_buffer(client);
     auto comp4 = buffer_stream.lock_compositor_buffer(4);
     EXPECT_EQ(new_size, comp4->size());
     comp4.reset();
 
     // Generate a new frame, which should be back to old_size now
-    buffer_stream.secure_client_buffer().reset();
+    buffer_stream.swap_client_buffers(client);
+    buffer_stream.release_client_buffer(client);
     auto comp5 = buffer_stream.lock_compositor_buffer(5);
     EXPECT_EQ(old_size, comp5->size());
     comp5.reset();
@@ -200,8 +207,9 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
-    buffer_stream.secure_client_buffer().reset();
-    auto client1 = buffer_stream.secure_client_buffer();
+    std::shared_ptr<mg::Buffer> client;
+    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers(client);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(123);
     auto comp2 = buffer_stream.lock_compositor_buffer(123);
@@ -220,9 +228,10 @@ namespace
 
 void client_loop(int nframes, mc::BufferStream& stream)
 {
+    std::shared_ptr<mg::Buffer> out_buffer;
     for (int f = 0; f < nframes; f++)
     {
-        auto out_buffer = stream.secure_client_buffer();
+        stream.swap_client_buffers(out_buffer);
         ASSERT_NE(nullptr, out_buffer);
         std::this_thread::yield();
     }
