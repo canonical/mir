@@ -61,7 +61,7 @@ void mga::SyncFence::merge_with(NativeFence& merge_fd)
         //our fence was invalid, adopt the other fence
         fence_fd = merge_fd;
     }
-    else 
+    else
     {
         //both fences were valid, must merge
         struct sync_merge_data data { merge_fd, "mirfence", infinite_timeout };
@@ -71,7 +71,7 @@ void mga::SyncFence::merge_with(NativeFence& merge_fd)
         fence_fd = data.fence;
     }
 
-    merge_fd = -1; 
+    merge_fd = -1;
 }
 
 mga::NativeFence mga::SyncFence::copy_native_handle() const

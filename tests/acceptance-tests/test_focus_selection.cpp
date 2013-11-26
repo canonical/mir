@@ -136,7 +136,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
             if (!expected)
             {
-                
+
                 EXPECT_CALL(*targeter, focus_cleared()).Times(AtLeast(0));
 
                 {

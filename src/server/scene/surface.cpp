@@ -44,8 +44,7 @@ ms::Surface::Surface(
     surface_state(state),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
-    report(report),
-    surface_in_startup(true)
+    report(report)
 {
     report->surface_created(this);
 }
@@ -110,20 +109,16 @@ geom::PixelFormat ms::Surface::pixel_format() const
     return surface_buffer_stream->get_stream_pixel_format();
 }
 
-std::shared_ptr<mg::Buffer> ms::Surface::advance_client_buffer()
+void ms::Surface::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
 {
-    if (surface_in_startup)
-    {
-        surface_in_startup = false;
-    }
-    else
-    {
-        // TODO There is something crazy about assuming that giving out any buffer
-        // TODO after the first implies that previous buffers have been rendered.
-        flag_for_render();
-    }
+    bool const posting{!!buffer};
 
-    return surface_buffer_stream->secure_client_buffer();
+    surface_buffer_stream->swap_client_buffers(buffer);
+
+    if (posting)
+    {
+        surface_state->frame_posted();
+    }
 }
 
 void ms::Surface::allow_framedropping(bool allow)
@@ -134,12 +129,6 @@ void ms::Surface::allow_framedropping(bool allow)
 std::shared_ptr<mg::Buffer> ms::Surface::snapshot_buffer() const
 {
     return surface_buffer_stream->lock_snapshot_buffer();
-}
-
-//TODO: this is just used in example code, could be private
-void ms::Surface::flag_for_render()
-{
-    surface_state->frame_posted();
 }
 
 bool ms::Surface::supports_input() const

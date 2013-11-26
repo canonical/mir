@@ -40,7 +40,8 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface>
 
 mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
-    auto buffer = surface->advance_client_buffer();
+    std::shared_ptr<graphics::Buffer> buffer;
+    surface->swap_buffers(buffer);
     auto handle = buffer->native_buffer_handle();
     resource_cache->store_buffer(buffer, handle);
     return handle.get();
@@ -74,7 +75,7 @@ int mga::InternalClientWindow::driver_requests_info(int key) const
         case NATIVE_WINDOW_FORMAT:
             return format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
-            return 0; 
+            return 0;
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
             return 1;
         default:

@@ -66,7 +66,7 @@ struct ClientPidTestFixture : BespokeDisplayServerTestFixture
         shared_region->client_pid = 0;
     }
 
-    struct SharedRegion 
+    struct SharedRegion
     {
         sem_t client_pid_set;
         pid_t client_pid;
@@ -84,7 +84,7 @@ struct ClientPidTestFixture : BespokeDisplayServerTestFixture
             sem_post(&client_pid_set);
         }
     };
-    
+
     SharedRegion* shared_region;
 };
 
@@ -113,7 +113,7 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
             EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid)).Times(1)
                 .WillOnce(Return(true));
         }
-        
+
         std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
         {
             return mt::fake_shared(mock_authorizer);
@@ -123,7 +123,7 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
         MockSessionAuthorizer mock_authorizer;
     } server_config(shared_region);
     launch_server_process(server_config);
-    
+
 
     struct ClientConfiguration : ConnectingClient
     {
@@ -142,7 +142,7 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
 
         ClientPidTestFixture::SharedRegion* shared_region;
     } client_config(shared_region);
-    launch_client_process(client_config);    
+    launch_client_process(client_config);
 }
 
 TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
@@ -164,7 +164,7 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
             EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid)).Times(1)
                 .WillOnce(Return(false));
         }
-        
+
         std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
         {
             return mt::fake_shared(mock_authorizer);
@@ -174,7 +174,7 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
         MockSessionAuthorizer mock_authorizer;
     } server_config(shared_region);
     launch_server_process(server_config);
-    
+
 
     struct ClientConfiguration : ConnectingClient
     {
@@ -214,5 +214,5 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
 
         ClientPidTestFixture::SharedRegion* shared_region;
     } client_config(shared_region);
-    launch_client_process(client_config);    
+    launch_client_process(client_config);
 }

@@ -77,7 +77,7 @@ public:
 #ifdef ANDROID
         auto platform = mg::create_platform(
             std::make_shared<mir::options::ProgramOption>(),
-            report); 
+            report);
 #else
         auto platform = std::make_shared<mg::gbm::GBMPlatform>(report,
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());

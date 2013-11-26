@@ -53,7 +53,7 @@ TEST(GlobalEventSender, sender)
 
     EXPECT_CALL(mock_storage, for_each(_))
         .Times(1)
-        .WillOnce(SaveArg<0>(&called_fn)); 
+        .WillOnce(SaveArg<0>(&called_fn));
 
     ms::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
 

@@ -39,7 +39,7 @@ public:
                       std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
                       EGLNativeDisplayContainer& display_container);
 
-    MirPlatformType platform_type() const; 
+    MirPlatformType platform_type() const;
     std::shared_ptr<ClientBufferFactory> create_buffer_factory();
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface);
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();

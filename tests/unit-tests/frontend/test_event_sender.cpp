@@ -34,7 +34,7 @@ namespace mf=mir::frontend;
 namespace mfd=mf::detail;
 namespace geom=mir::geometry;
 
-namespace 
+namespace
 {
 struct MockMsgSender : public mfd::MessageSender
 {

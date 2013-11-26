@@ -35,7 +35,7 @@ class GraphicBufferAllocator;
 namespace compositor
 {
 
-class SwitchingBundle : public BufferBundle 
+class SwitchingBundle : public BufferBundle
 {
 public:
     enum {min_buffers = 1, max_buffers = 5};

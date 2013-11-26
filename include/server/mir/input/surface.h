@@ -27,7 +27,7 @@ namespace mir
 {
 namespace input
 {
-class Surface 
+class Surface
 {
 public:
     virtual std::string const& name() const = 0;
@@ -36,7 +36,7 @@ public:
     virtual bool contains(geometry::Point const& point) const = 0;
 
 protected:
-    Surface() = default; 
+    Surface() = default;
     virtual ~Surface() = default;
     Surface(const Surface&) = delete;
     Surface& operator=(const Surface& ) = delete;

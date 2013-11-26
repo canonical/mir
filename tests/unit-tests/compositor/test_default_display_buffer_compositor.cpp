@@ -18,7 +18,6 @@
 
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "src/server/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
 #include "src/server/compositor/renderer.h"
 #include "src/server/compositor/renderer_factory.h"
@@ -52,13 +51,6 @@ struct MockScene : mc::Scene
     MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
-};
-
-struct MockOverlayRenderer : public mc::OverlayRenderer
-{
-    MOCK_METHOD2(render, void(geom::Rectangle const&, std::function<void(std::shared_ptr<void> const&)>));
-
-    ~MockOverlayRenderer() noexcept {}
 };
 
 struct FakeScene : mc::Scene
@@ -144,7 +136,6 @@ TEST(DefaultDisplayBufferCompositor, render)
 
     StubRendererFactory renderer_factory;
     MockScene scene;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
 
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,_,_)).Times(0);
@@ -167,32 +158,7 @@ TEST(DefaultDisplayBufferCompositor, render)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
-}
-
-TEST(DefaultDisplayBufferCompositor, render_overlay)
-{
-    using namespace testing;
-
-    StubRendererFactory renderer_factory;
-    NiceMock<MockScene> scene;
-    NiceMock<mtd::MockDisplayBuffer> display_buffer;
-    MockOverlayRenderer overlay_renderer;
-
-    ON_CALL(display_buffer, view_area())
-        .WillByDefault(Return(geom::Rectangle()));
-
-    EXPECT_CALL(overlay_renderer, render(_, _)).Times(1);
-
-    mc::DefaultDisplayBufferCompositorFactory factory(
-        mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -205,7 +171,6 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 
     StubRendererFactory renderer_factory;
     mtd::NullDisplayBuffer display_buffer;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     NiceMock<mtd::MockCompositingCriteria> mock_criteria1, mock_criteria2, mock_criteria3;
 
@@ -237,8 +202,7 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -250,7 +214,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     geom::Rectangle screen{{0, 0}, {1366, 768}};
 
@@ -286,8 +249,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -299,7 +261,6 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     geom::Rectangle screen{{0, 0}, {1366, 768}};
 
@@ -335,8 +296,7 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -348,7 +308,6 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     geom::Rectangle screen{{0, 0}, {1366, 768}};
 
@@ -384,8 +343,7 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -397,7 +355,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     geom::Rectangle screen{{0, 0}, {1366, 768}};
 
@@ -433,8 +390,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -446,7 +402,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     geom::Rectangle screen{{0, 0}, {1366, 768}};
 
@@ -482,8 +437,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -533,7 +487,6 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    NiceMock<MockOverlayRenderer> overlay_renderer;
 
     geom::Rectangle screen{{0, 0}, {1366, 768}};
 
@@ -563,8 +516,7 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
-        mt::fake_shared(overlay_renderer));
+        mt::fake_shared(renderer_factory));
 
     auto comp = factory.create_compositor_for(display_buffer);
 

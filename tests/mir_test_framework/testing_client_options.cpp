@@ -54,7 +54,7 @@ class StubClientBuffer : public mcl::ClientBuffer
     {
         return geom::PixelFormat::abgr_8888;
     }
-    
+
     uint32_t age() const
     {
         return 0;

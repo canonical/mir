@@ -20,7 +20,6 @@
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
-#include "overlay_renderer.h"
 #include "gl_renderer_factory.h"
 
 namespace mc = mir::compositor;
@@ -43,7 +42,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
         [this]()
         {
             return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_scene(), the_renderer_factory(), the_overlay_renderer());
+                the_scene(), the_renderer_factory());
         });
 }
 
@@ -56,22 +55,6 @@ mir::DefaultServerConfiguration::the_compositor()
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
                                                                  the_scene(),
                                                                  the_display_buffer_compositor_factory());
-        });
-}
-
-std::shared_ptr<mc::OverlayRenderer>
-mir::DefaultServerConfiguration::the_overlay_renderer()
-{
-    struct NullOverlayRenderer : public mc::OverlayRenderer
-    {
-        virtual void render(
-            geometry::Rectangle const&,
-            std::function<void(std::shared_ptr<void> const&)>) {}
-    };
-    return overlay_renderer(
-        [this]()
-        {
-            return std::make_shared<NullOverlayRenderer>();
         });
 }
 

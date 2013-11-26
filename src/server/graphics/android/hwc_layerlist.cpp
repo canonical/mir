@@ -28,14 +28,14 @@ namespace geom=mir::geometry;
 
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
 {
-    memcpy(this, &layer, sizeof(HWCLayer)); 
+    memcpy(this, &layer, sizeof(HWCLayer));
     this->visibleRegionScreen = {1, &this->visible_rect};
-    return *this;     
+    return *this;
 }
 
 mga::HWCLayer::HWCLayer(HWCLayer const& layer)
 {
-    memcpy(this, &layer, sizeof(HWCLayer)); 
+    memcpy(this, &layer, sizeof(HWCLayer));
     this->visibleRegionScreen = {1, &this->visible_rect};
 }
 
@@ -94,7 +94,7 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
     auto i = 0u;
     for(auto& layer : layer_list)
     {
-        hwc_representation->hwLayers[i++] = layer;        
+        hwc_representation->hwLayers[i++] = layer;
     }
     hwc_representation->numHwLayers = layer_list.size();
     hwc_representation->retireFenceFd = -1;
@@ -104,7 +104,7 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
     //these fields are deprecated in hwc1.1 and later.
     hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
     hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
-    
+
 }
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
@@ -121,7 +121,7 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
 mga::NativeFence mga::LayerList::framebuffer_fence()
 {
     auto fb_position = hwc_representation->numHwLayers - 1;
-    return hwc_representation->hwLayers[fb_position].releaseFenceFd; 
+    return hwc_representation->hwLayers[fb_position].releaseFenceFd;
 }
 
 hwc_display_contents_1_t* mga::LayerList::native_list() const

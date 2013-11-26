@@ -30,7 +30,7 @@ class HWCVsyncCoordinator
 {
 public:
     virtual ~HWCVsyncCoordinator() = default;
-    
+
     virtual void wait_for_vsync() = 0;
     virtual void notify_vsync() = 0;
 

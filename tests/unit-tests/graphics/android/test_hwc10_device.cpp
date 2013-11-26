@@ -44,7 +44,7 @@ protected:
         int fbnum = 558;
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
-            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum); 
+            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
     }

@@ -80,7 +80,7 @@ void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds
     int rc = -1;
 
     if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
-    {         
+    {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("Error while polling pipe to become writable"))
             << boost::errinfo_errno(errno));

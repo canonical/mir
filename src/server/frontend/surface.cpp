@@ -37,9 +37,9 @@ auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
         ForwardingInternalSurface(std::shared_ptr<Surface> const& surface) : surface(surface) {}
 
     private:
-        virtual std::shared_ptr<mg::Buffer> advance_client_buffer()
+        void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
         {
-            return surface->advance_client_buffer();
+            surface->swap_buffers(buffer);
         }
         virtual mir::geometry::Size size() const { return surface->size(); }
         virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }

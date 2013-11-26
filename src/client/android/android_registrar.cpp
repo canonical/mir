@@ -75,7 +75,7 @@ std::shared_ptr<const native_handle_t> mcla::AndroidRegistrarGralloc::register_b
     std::shared_ptr<MirBufferPackage> const& package) const
 {
     int native_handle_header_size = sizeof(native_handle_t);
-    int total_size = sizeof(int) * 
+    int total_size = sizeof(int) *
                      (package->fd_items + package->data_items + native_handle_header_size);
     native_handle_t* handle = static_cast<native_handle_t*>(::operator new(total_size));
     handle->version = native_handle_header_size;

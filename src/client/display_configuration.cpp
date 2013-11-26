@@ -48,8 +48,8 @@ mcl::DisplayOutput::DisplayOutput(size_t num_modes_, size_t num_formats)
 {
     num_modes = num_modes_;
     modes = new MirDisplayMode[num_modes];
-   
-    num_output_formats = num_formats; 
+
+    num_output_formats = num_formats;
     output_formats = new MirPixelFormat[num_formats];
 }
 
@@ -77,8 +77,8 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     for (auto i = 0u; i < output.num_modes; i++)
     {
         auto mode = msg.mode(i);
-        output.modes[i].horizontal_resolution = mode.horizontal_resolution(); 
-        output.modes[i].vertical_resolution = mode.vertical_resolution(); 
+        output.modes[i].horizontal_resolution = mode.horizontal_resolution();
+        output.modes[i].vertical_resolution = mode.vertical_resolution();
         output.modes[i].refresh_rate = mode.refresh_rate();
     }
     output.preferred_mode = msg.preferred_mode();
@@ -161,7 +161,7 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
     {
         auto new_info = &new_config->outputs[i];
         MirDisplayOutput* output = outputs[i].get();
-        std::memcpy(new_info, output, sizeof(MirDisplayOutput)); 
+        std::memcpy(new_info, output, sizeof(MirDisplayOutput));
 
         new_info->output_formats = new MirPixelFormat[new_info->num_output_formats];
         auto format_size = sizeof(MirPixelFormat) * new_info->num_output_formats;

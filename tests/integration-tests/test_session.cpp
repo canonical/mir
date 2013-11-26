@@ -181,10 +181,11 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     std::thread client_thread{
         [&session]
         {
+            std::shared_ptr<mg::Buffer> buffer;
             for (int i = 0; i < 500; ++i)
             {
                 auto surface = session.default_surface();
-                surface->advance_client_buffer();
+                surface->swap_buffers(buffer);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};

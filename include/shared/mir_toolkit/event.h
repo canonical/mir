@@ -141,7 +141,7 @@ typedef struct
 
     int32_t device_id;
     int32_t source_id;
-    /* 
+    /*
      * TODO(racarr): We would like to store this as a MirMotionAction but the android input stack
      * encodes some non enumerable values in it. It's convenient to keep things
      * this way for now until we can drop SF/Hybris support in QtUbuntu.

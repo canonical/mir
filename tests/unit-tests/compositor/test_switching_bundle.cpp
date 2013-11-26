@@ -810,7 +810,7 @@ TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
                 auto client = bundle.client_acquire();
                 ASSERT_EQ(expect_size, client->size());
                 bundle.client_release(client);
-    
+
                 auto compositor = bundle.compositor_acquire(frameno++);
                 ASSERT_EQ(expect_size, compositor->size());
                 bundle.compositor_release(compositor);
@@ -851,7 +851,7 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
 
         width = width0;
         height = height0;
-    
+
         for (int consume = 0; consume < nbuffers; ++consume)
         {
             geom::Size expect_size{width, height};
