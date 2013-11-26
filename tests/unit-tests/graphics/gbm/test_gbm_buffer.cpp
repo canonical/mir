@@ -25,7 +25,7 @@
 
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/gbm_buffer.h"
-#include "src/server/graphics/gbm/gbm_buffer_allocator.h"
+#include "src/server/graphics/gbm/buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
@@ -76,7 +76,7 @@ protected:
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, null_init));
+        allocator.reset(new mgg::BufferAllocator(platform->gbm.device, null_init));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -85,7 +85,7 @@ protected:
     ::testing::NiceMock<mtd::MockGL>  mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
     std::shared_ptr<mg::NullBufferInitializer> null_init;
-    std::unique_ptr<mgg::GBMBufferAllocator> allocator;
+    std::unique_ptr<mgg::BufferAllocator> allocator;
 
     // Defaults
     geom::PixelFormat pf;

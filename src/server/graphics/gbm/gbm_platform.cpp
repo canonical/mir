@@ -17,7 +17,7 @@
  */
 
 #include "gbm_platform.h"
-#include "gbm_buffer_allocator.h"
+#include "buffer_allocator.h"
 #include "gbm_display.h"
 #include "internal_client.h"
 #include "internal_native_display.h"
@@ -114,8 +114,7 @@ mgg::GBMPlatform::~GBMPlatform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
-    return std::make_shared<mgg::GBMBufferAllocator>(gbm.device,
-                                                     buffer_initializer);
+    return std::make_shared<mgg::BufferAllocator>(gbm.device, buffer_initializer);
 }
 
 std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(

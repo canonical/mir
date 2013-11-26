@@ -18,7 +18,7 @@
 
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/server/graphics/gbm/gbm_buffer_allocator.h"
+#include "src/server/graphics/gbm/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -66,7 +66,7 @@ protected:
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, mock_buffer_initializer));
+        allocator.reset(new mgg::BufferAllocator(platform->gbm.device, mock_buffer_initializer));
     }
 
     // Defaults
@@ -81,7 +81,7 @@ protected:
     ::testing::NiceMock<mtd::MockGL> mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
-    std::unique_ptr<mgg::GBMBufferAllocator> allocator;
+    std::unique_ptr<mgg::BufferAllocator> allocator;
     mtf::UdevEnvironment fake_devices;
 };
 
@@ -150,8 +150,8 @@ TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
                                           mg::BufferUsage::hardware);
 
     setenv("MIR_BYPASS", "0", 1);
-    mgg::GBMBufferAllocator alloc(platform->gbm.device,
-                                  mock_buffer_initializer);
+    mgg::BufferAllocator alloc(platform->gbm.device,
+                               mock_buffer_initializer);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->can_bypass());
@@ -256,7 +256,7 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     using namespace testing;
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, null_buffer_initializer));
+    allocator.reset(new mgg::BufferAllocator(platform->gbm.device, null_buffer_initializer));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);
