@@ -110,3 +110,24 @@ TEST_F(FBDevice, set_swapinterval_with_null_hook)
     fb_hal_mock->setSwapInterval = nullptr;
     mga::FBDevice fbdev(fb_hal_mock);
 }
+
+TEST_F(FBDevice, screen_on_off)
+{
+    //constructor turns on
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(1))
+        .InSequence(seq)
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(0))
+        .InSequence(seq)
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(0))
+        .InSequence(seq)
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(0))
+        .InSequence(seq)
+    EXPECT_CALL(*fb_hal_mock, enableScreen_interface(1))
+        .InSequence(seq)
+ 
+    mga::FBDevice fbdev(fb_hal_mock);
+    fbdev.mode(mir_power_mode_standby);
+    fbdev.mode(mir_power_mode_suspend);
+    fbdev.mode(mir_power_mode_off);
+    fbdev.mode(mir_power_mode_on);
+}
