@@ -729,16 +729,16 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
     std::condition_variable done;
 
     int const expected_call_count{10};
-    std::atomic<int> call_count{0};
-    auto finished = [&call_count]() { return call_count == expected_call_count; };
+    int call_count{0};
+    std::mutex m;
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml, &done, &finished]()
+        [&call_count, &ml, &done, &m]()
         {
-            if (!finished()) {
-                ++call_count;
-            } else {
+            std::unique_lock<std::mutex> lock(m);
+            if (++call_count == expected_call_count)
+            {
                 ml.stop();
                 done.notify_all();
             }
@@ -755,11 +755,10 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
         }};
 
     std::thread watchdog{
-        [this, &done, &finished, &ml]
+        [this, &done, &m, &ml, &call_count]
         {
-            std::mutex m;
             std::unique_lock<std::mutex> lock(m);
-            if (!done.wait_for (lock, std::chrono::seconds{1}, finished))
+            if (!done.wait_for (lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
                 ADD_FAILURE() << "Timeout waiting for change events";
             ml.stop();
         }
