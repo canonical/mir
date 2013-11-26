@@ -253,7 +253,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
          * mir_event_type_resize will arrive in a different thread to that of
          * mir_event_type_motion, so we cannot safely redraw from this thread.
          * Either the callbacks will need to become thread-safe, or we'd have
-         * to employ some non-trivial event queueing and inter-thread signals,
+         * to employ some non-trivial event queuing and inter-thread signals,
          * which I think is beyond the scope of this example code.
          *
          *    redraw(surface, canvas);
