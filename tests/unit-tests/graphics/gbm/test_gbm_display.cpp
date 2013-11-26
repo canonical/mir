@@ -41,7 +41,8 @@
 #include <stdexcept>
 #include <thread>
 #include <atomic>
-#include <unistd.h>
+#include <mutex>
+#include <condition_variable>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -725,20 +726,22 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
     auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
     mir::AsioMainLoop ml;
+    std::condition_variable done;
 
     int const expected_call_count{10};
     std::atomic<int> call_count{0};
-
-    ml.register_signal_handler(
-        {SIGALRM},
-        [&ml](int) {ml.stop(); FAIL() << "Timeout waiting for change events";});
+    auto finished = [&call_count]() { return call_count == expected_call_count; };
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml]()
+        [&call_count, &ml, &done, &finished]()
         {
-            if (++call_count == expected_call_count)
+            if (!finished()) {
+                ++call_count;
+            } else {
                 ml.stop();
+                done.notify_all();
+            }
         });
 
     std::thread t{
@@ -751,13 +754,21 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
             }
         }};
 
-    alarm(1);
+    std::thread watchdog{
+        [this, &done, &finished, &ml]
+        {
+            std::mutex m;
+            std::unique_lock<std::mutex> lock(m);
+            if (!done.wait_for (lock, std::chrono::seconds{1}, finished))
+                ADD_FAILURE() << "Timeout waiting for change events";
+            ml.stop();
+        }
+    };
 
     ml.run();
 
-    alarm(0);
-
     t.join();
+    watchdog.join();
 
     EXPECT_EQ(expected_call_count, call_count);
 }
