@@ -41,8 +41,8 @@ public:
 
     MOCK_CONST_METHOD1(equals, bool(UdevDevice const& rhs));
 
-    virtual bool operator==(UdevDevice const& rhs) override { return equals(rhs); }
-    virtual bool operator!=(UdevDevice const& rhs) override { return !equals(rhs); }
+    virtual bool operator==(UdevDevice const& rhs) const override { return equals(rhs); }
+    virtual bool operator!=(UdevDevice const& rhs) const override { return !equals(rhs); }
 };
 
 }
