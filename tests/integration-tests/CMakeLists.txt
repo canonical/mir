@@ -67,9 +67,9 @@ target_link_libraries(
 )
 
 if (MIR_PLATFORM STREQUAL "android")
-    #don't discover the test, we'll run it later on a phone
+  #don't discover the test, we'll run it later on a phone
 else()
-    if(MIR_ENABLE_INTEGRATION_TESTS)
+  if(MIR_ENABLE_INTEGRATION_TESTS)
     mir_discover_tests(mir_integration_tests)
   endif()
 endif()
