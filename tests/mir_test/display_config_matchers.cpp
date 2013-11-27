@@ -154,8 +154,7 @@ public:
             std::vector<MirPixelFormat> pixel_formats;
             for (size_t n = 0; n < client_output.num_output_formats; n++)
             {
-                pixel_formats.push_back(
-                    static_cast<MirPixelFormat>(client_output.output_formats[n]));
+                pixel_formats.push_back(client_output.output_formats[n]);
             }
             display_output.pixel_formats = pixel_formats;
 

@@ -174,7 +174,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<MirPixelFormat>(formats[i])) << "i=" << i;
+                          formats[i]) << "i=" << i;
             }
 
             mir_connection_release(connection);
