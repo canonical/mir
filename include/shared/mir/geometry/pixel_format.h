@@ -24,14 +24,4 @@
 #include <cstddef>
 #include <mir_toolkit/common.h>
 
-namespace mir
-{
-namespace geometry
-{
-// XXX temporary
-typedef MirPixelFormat PixelFormat;
-
-}
-}
-
 #endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */

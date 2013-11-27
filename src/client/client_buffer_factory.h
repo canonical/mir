@@ -46,7 +46,7 @@ public:
      * \param [in] pf the buffer's pixel format
      */
     virtual std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& package,
-                                                        geometry::Size size, geometry::PixelFormat pf) = 0;
+                                                        geometry::Size size, MirPixelFormat pf) = 0;
 
 protected:
     ClientBufferFactory() = default;

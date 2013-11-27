@@ -52,7 +52,7 @@ private:
     std::shared_ptr<SyncFence> last_display_fence;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
-    geometry::PixelFormat fb_format;
+    MirPixelFormat fb_format;
 };
 
 }

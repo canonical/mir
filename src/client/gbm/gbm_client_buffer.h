@@ -41,14 +41,14 @@ public:
     GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
                     std::shared_ptr<MirBufferPackage> const& buffer_package,
                     geometry::Size size,
-                    geometry::PixelFormat pf);
+                    MirPixelFormat pf);
 
     virtual ~GBMClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
     geometry::Stride stride() const;
-    geometry::PixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
@@ -57,7 +57,7 @@ private:
     const std::shared_ptr<DRMFDHandler> drm_fd_handler;
     const std::shared_ptr<MirBufferPackage> creation_package;
     const geometry::Rectangle rect;
-    const geometry::PixelFormat buffer_pf;
+    const MirPixelFormat buffer_pf;
 };
 
 }

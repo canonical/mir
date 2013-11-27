@@ -59,7 +59,7 @@ protected:
     ANativeWindowBuffer *anwb;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;
     std::shared_ptr<mg::EGLExtensions> extensions;

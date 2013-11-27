@@ -205,7 +205,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_id()->set_value(13);
         response->set_width(test_width);
         response->set_height(test_height);
-        surface_pf = geom::PixelFormat(request->pixel_format());
+        surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
 
@@ -291,7 +291,7 @@ private:
     std::shared_ptr<mg::Buffer> client_buffer;
     std::shared_ptr<mg::Buffer> last_posted;
     std::mutex buffer_mutex;
-    geom::PixelFormat surface_pf;
+    MirPixelFormat surface_pf;
 };
 
 }

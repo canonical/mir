@@ -60,7 +60,7 @@ public:
 
     geom::Size const buffer_size;
     geom::Stride const buffer_stride;
-    geom::PixelFormat const buffer_pixel_format;
+    MirPixelFormat const buffer_pixel_format;
     std::shared_ptr<mtd::MockBuffer> const mock_buffer;
     std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
 };
@@ -116,7 +116,7 @@ TEST_F(TemporaryBuffersTest, base_test_pixel_format)
     EXPECT_CALL(*mock_buffer, pixel_format())
         .Times(1);
 
-    geom::PixelFormat pixel_format;
+    MirPixelFormat pixel_format;
     pixel_format = proxy_buffer.pixel_format();
     EXPECT_EQ(buffer_pixel_format, pixel_format);
 }

@@ -55,7 +55,7 @@ protected:
     geom::Height height;
     geom::Width width;
     geom::Stride stride;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     std::shared_ptr<mcla::AndroidClientBuffer> buffer;
     std::shared_ptr<mtd::MockAndroidRegistrar> mock_android_registrar;
 };

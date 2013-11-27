@@ -33,7 +33,7 @@ namespace geom=mir::geometry;
 
 namespace
 {
-geom::PixelFormat determine_hwc11_fb_format()
+MirPixelFormat determine_hwc11_fb_format()
 {
     static EGLint const fb_egl_config_attr [] =
     {
@@ -50,7 +50,7 @@ geom::PixelFormat determine_hwc11_fb_format()
     eglInitialize(egl_display, &major, &minor);
     eglChooseConfig(egl_display, fb_egl_config_attr, &fb_egl_config, 1, &matching_configs);
 
-    geom::PixelFormat fb_format;
+    MirPixelFormat fb_format;
     if (matching_configs)
     {
         int visual_id;
@@ -117,7 +117,7 @@ mga::Framebuffers::Framebuffers(
     }
 }
 
-geom::PixelFormat mga::Framebuffers::fb_format()
+MirPixelFormat mga::Framebuffers::fb_format()
 {
     return format;
 }

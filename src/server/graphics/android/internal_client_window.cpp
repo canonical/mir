@@ -35,7 +35,7 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface>
     : surface(surface),
       resource_cache(cache)
 {
-    format = mga::to_android_format(geometry::PixelFormat(surface->pixel_format()));
+    format = mga::to_android_format(MirPixelFormat(surface->pixel_format()));
 }
 
 mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()

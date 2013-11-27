@@ -45,7 +45,7 @@ public:
     };
 
     geom::Size size;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mg::EGLExtensions> extensions;

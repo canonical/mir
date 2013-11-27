@@ -89,7 +89,7 @@ struct DisplayConfigurationOutput
     /** The type of the output. */
     DisplayConfigurationOutputType type;
     /** The pixel formats supported by the output */
-    std::vector<geometry::PixelFormat> pixel_formats;
+    std::vector<MirPixelFormat> pixel_formats;
     /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
     /** The index in the 'modes' vector of the preferred output mode. */

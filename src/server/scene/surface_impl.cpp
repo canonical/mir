@@ -99,7 +99,7 @@ std::string ms::SurfaceImpl::name() const
     return surface->name();
 }
 
-mir::geometry::PixelFormat ms::SurfaceImpl::pixel_format() const
+MirPixelFormat ms::SurfaceImpl::pixel_format() const
 {
     return surface->pixel_format();
 }

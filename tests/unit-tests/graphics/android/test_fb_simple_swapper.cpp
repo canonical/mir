@@ -40,7 +40,7 @@ namespace
 struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
     MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(
-        geom::Size, geom::PixelFormat, mga::BufferUsage use));
+        geom::Size, MirPixelFormat, mga::BufferUsage use));
 };
 
 static int const display_width = 180;

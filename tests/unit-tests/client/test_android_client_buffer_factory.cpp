@@ -46,7 +46,7 @@ struct MirBufferFactoryTest : public testing::Test
     }
     geom::Width width;
     geom::Height height;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
 
     std::shared_ptr<mtd::MockAndroidRegistrar> mock_registrar;

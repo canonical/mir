@@ -114,7 +114,7 @@ protected:
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     geom::Size size;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     mg::BufferUsage usage;
     mg::BufferProperties buffer_properties;
 };

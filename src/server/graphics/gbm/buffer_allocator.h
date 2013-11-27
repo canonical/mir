@@ -47,10 +47,10 @@ public:
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
 
-    std::vector<geometry::PixelFormat> supported_pixel_formats();
+    std::vector<MirPixelFormat> supported_pixel_formats();
 
 private:
-    bool is_pixel_format_supported(geometry::PixelFormat format);
+    bool is_pixel_format_supported(MirPixelFormat format);
 
     gbm_device* const device;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;

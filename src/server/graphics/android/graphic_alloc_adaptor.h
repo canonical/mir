@@ -37,7 +37,7 @@ class GraphicAllocAdaptor
 {
 public:
     virtual std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size size,
-        geometry::PixelFormat, BufferUsage usage) = 0;
+        MirPixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;
     virtual ~GraphicAllocAdaptor() {}

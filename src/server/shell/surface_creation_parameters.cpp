@@ -68,7 +68,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
-    geom::PixelFormat new_pixel_format)
+    MirPixelFormat new_pixel_format)
 {
     pixel_format = new_pixel_format;
 

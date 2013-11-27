@@ -93,15 +93,15 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
 public:
-    std::vector<geom::PixelFormat> supported_pixel_formats() override
+    std::vector<MirPixelFormat> supported_pixel_formats() override
     {
         return pixel_formats;
     }
 
-    static std::vector<geom::PixelFormat> const pixel_formats;
+    static std::vector<MirPixelFormat> const pixel_formats;
 };
 
-std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
+std::vector<MirPixelFormat> const StubGraphicBufferAllocator::pixel_formats{
     mir_pixel_format_argb_8888,
     mir_pixel_format_xbgr_8888,
     mir_pixel_format_bgr_888
@@ -174,7 +174,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(formats[i])) << "i=" << i;
+                          static_cast<MirPixelFormat>(formats[i])) << "i=" << i;
             }
 
             mir_connection_release(connection);

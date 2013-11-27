@@ -29,7 +29,7 @@ namespace graphics
 namespace android
 {
 
-inline static int to_android_format(geometry::PixelFormat format)
+inline static int to_android_format(MirPixelFormat format)
 {
     switch(format)
     {
@@ -48,7 +48,7 @@ inline static int to_android_format(geometry::PixelFormat format)
     }
 }
 
-inline static mir::geometry::PixelFormat to_mir_format(int format)
+inline static MirPixelFormat to_mir_format(int format)
 {
     switch(format)
     {

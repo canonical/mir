@@ -49,7 +49,7 @@ namespace
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 geom::Size const size{640, 480};
-geom::PixelFormat const format{mir_pixel_format_abgr_8888};
+MirPixelFormat const format{mir_pixel_format_abgr_8888};
 mg::BufferUsage const usage{mg::BufferUsage::hardware};
 mg::BufferProperties const buffer_properties{size, format, usage};
 

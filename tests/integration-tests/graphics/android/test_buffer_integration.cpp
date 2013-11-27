@@ -50,7 +50,7 @@ protected:
 
     std::shared_ptr<mg::BufferInitializer> null_buffer_initializer;
     geom::Size size;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
     mtd::TestGrallocMapper sw_renderer;
 };

@@ -56,7 +56,7 @@ public:
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
     mga::BufferUsage usage;
     int const fb_usage_flags;

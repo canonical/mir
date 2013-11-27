@@ -88,7 +88,7 @@ protected:
     std::unique_ptr<mgg::BufferAllocator> allocator;
 
     // Defaults
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
     geom::Stride stride;
     mg::BufferUsage usage;

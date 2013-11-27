@@ -39,7 +39,7 @@ class GraphicBufferAllocator
 {
 public:
     virtual std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
-        geometry::Size sz, geometry::PixelFormat pf, BufferUsage use) = 0;
+        geometry::Size sz, MirPixelFormat pf, BufferUsage use) = 0;
 
 protected:
     GraphicBufferAllocator() = default;

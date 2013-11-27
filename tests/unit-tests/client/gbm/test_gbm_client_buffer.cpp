@@ -51,7 +51,7 @@ struct MirGBMBufferTest : public testing::Test
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
 
     std::shared_ptr<testing::NiceMock<mclg::MockDRMFDHandler>> drm_fd_handler;

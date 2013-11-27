@@ -39,8 +39,8 @@ struct GBMNativeBuffer : MirNativeBuffer
     struct gbm_bo *bo;
 };
 
-geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
-uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
+MirPixelFormat gbm_format_to_mir_format(uint32_t format);
+uint32_t mir_format_to_gbm_format(MirPixelFormat format);
 enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
 
 class BufferTextureBinder;
@@ -60,7 +60,7 @@ public:
 
     virtual geometry::Stride stride() const;
 
-    virtual geometry::PixelFormat pixel_format() const;
+    virtual MirPixelFormat pixel_format() const;
 
     virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 

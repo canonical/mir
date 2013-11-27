@@ -80,7 +80,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::vector<geom::PixelFormat> const surface_pixel_formats;
+    std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

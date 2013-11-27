@@ -49,7 +49,7 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& of_buffer_usage(graphics::BufferUsage new_buffer_usage);
 
-    SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
+    SurfaceCreationParameters& of_pixel_format(MirPixelFormat new_pixel_format);
 
     SurfaceCreationParameters& of_depth(scene::DepthId const& new_depth);
 
@@ -61,7 +61,7 @@ struct SurfaceCreationParameters
     geometry::Size size;
     geometry::Point top_left;
     graphics::BufferUsage buffer_usage;
-    geometry::PixelFormat pixel_format;
+    MirPixelFormat pixel_format;
     scene::DepthId depth;
     input::InputReceptionMode input_mode;
     graphics::DisplayConfigurationOutputId output_id;

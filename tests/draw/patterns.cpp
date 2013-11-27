@@ -20,7 +20,6 @@
 #include "mir_test/draw/patterns.h"
 
 namespace mtd=mir::test::draw;
-namespace geom=mir::geometry;
 
 mtd::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
  : color_value(color_value)

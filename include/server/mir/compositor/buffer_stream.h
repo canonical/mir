@@ -46,7 +46,7 @@ public:
     virtual std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(unsigned long frameno) = 0;
     virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
-    virtual geometry::PixelFormat get_stream_pixel_format() = 0;
+    virtual MirPixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void resize(geometry::Size const& size) = 0;
     virtual void allow_framedropping(bool) = 0;

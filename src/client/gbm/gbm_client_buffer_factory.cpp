@@ -29,7 +29,7 @@ mclg::GBMClientBufferFactory::GBMClientBufferFactory(
 {
 }
 
-std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geometry::Size size, geometry::PixelFormat pf)
+std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geometry::Size size, MirPixelFormat pf)
 {
     (void)size; // TODO: remove this unused parameter
     return std::make_shared<mclg::GBMClientBuffer>(

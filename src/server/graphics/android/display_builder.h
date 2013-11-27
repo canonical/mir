@@ -37,7 +37,7 @@ class DisplayBuilder
 public:
     virtual ~DisplayBuilder() = default;
 
-    virtual geometry::PixelFormat display_format() = 0;
+    virtual MirPixelFormat display_format() = 0;
     virtual std::shared_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,

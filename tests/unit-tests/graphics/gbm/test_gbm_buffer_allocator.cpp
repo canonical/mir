@@ -71,7 +71,7 @@ protected:
 
     // Defaults
     geom::Size size;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     mg::BufferUsage usage;
     mg::BufferProperties buffer_properties;
 

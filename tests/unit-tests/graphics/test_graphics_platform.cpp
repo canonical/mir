@@ -126,7 +126,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     ASSERT_NE(0u, supported_pixel_formats.size());
 
     geom::Size size{320, 240};
-    geom::PixelFormat const pf{supported_pixel_formats[0]};
+    MirPixelFormat const pf{supported_pixel_formats[0]};
     mg::BufferUsage usage{mg::BufferUsage::hardware};
     mg::BufferProperties buffer_properties{size, pf, usage};
 

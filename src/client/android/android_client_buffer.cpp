@@ -29,7 +29,7 @@ namespace mga=mir::graphics::android;
 
 mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
                                                std::shared_ptr<const native_handle_t> const& handle,
-                                               geom::Size size, geom::PixelFormat pf, geometry::Stride stride)
+                                               geom::Size size, MirPixelFormat pf, geometry::Stride stride)
  : buffer_registrar(registrar),
    native_handle(handle),
    buffer_pf(pf), buffer_stride{stride}, buffer_size(size)
@@ -82,7 +82,7 @@ geom::Stride mcla::AndroidClientBuffer::stride() const
     return buffer_stride;
 }
 
-geom::PixelFormat mcla::AndroidClientBuffer::pixel_format() const
+MirPixelFormat mcla::AndroidClientBuffer::pixel_format() const
 {
     return buffer_pf;
 }

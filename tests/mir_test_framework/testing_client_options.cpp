@@ -50,7 +50,7 @@ class StubClientBuffer : public mcl::ClientBuffer
         return geom::Stride{};
     }
 
-    geom::PixelFormat pixel_format() const
+    MirPixelFormat pixel_format() const
     {
         return mir_pixel_format_abgr_8888;
     }
@@ -74,7 +74,7 @@ class StubClientBuffer : public mcl::ClientBuffer
 struct StubClientBufferFactory : public mcl::ClientBufferFactory
 {
     std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const&,
-                                                     geom::Size, geom::PixelFormat)
+                                                     geom::Size, MirPixelFormat)
     {
         return std::make_shared<StubClientBuffer>();
     }

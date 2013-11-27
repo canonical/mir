@@ -43,7 +43,7 @@ public:
         std::shared_ptr<DisplayReport> const& display_report,
         bool should_use_fb_fallback);
 
-    geometry::PixelFormat display_format();
+    MirPixelFormat display_format();
     std::shared_ptr<DisplayDevice> create_display_device();
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,

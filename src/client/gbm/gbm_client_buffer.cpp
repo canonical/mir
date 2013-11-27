@@ -75,7 +75,7 @@ struct GBMMemoryRegion : mcl::MemoryRegion
 {
     GBMMemoryRegion(std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
                     int prime_fd, geom::Size const& size_param,
-                    geom::Stride stride_param, geom::PixelFormat format_param)
+                    geom::Stride stride_param, MirPixelFormat format_param)
         : drm_fd_handler{drm_fd_handler},
           gem_handle{drm_fd_handler, prime_fd},
           size_in_bytes{size_param.height.as_uint32_t() * stride_param.as_uint32_t()}
@@ -125,7 +125,7 @@ struct GBMMemoryRegion : mcl::MemoryRegion
 mclg::GBMClientBuffer::GBMClientBuffer(
         std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
         std::shared_ptr<MirBufferPackage> const& package,
-        geom::Size size, geom::PixelFormat pf)
+        geom::Size size, MirPixelFormat pf)
     : drm_fd_handler{drm_fd_handler},
       creation_package(std::move(package)),
       rect({geom::Point{0, 0}, size}),
@@ -161,7 +161,7 @@ geom::Stride mclg::GBMClientBuffer::stride() const
     return geom::Stride{creation_package->stride};
 }
 
-geom::PixelFormat mclg::GBMClientBuffer::pixel_format() const
+MirPixelFormat mclg::GBMClientBuffer::pixel_format() const
 {
     return buffer_pf;
 }

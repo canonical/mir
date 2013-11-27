@@ -46,7 +46,7 @@ struct MemoryRegion
     geometry::Width width;
     geometry::Height height;
     geometry::Stride stride;
-    geometry::PixelFormat format;
+    MirPixelFormat format;
     std::shared_ptr<char> vaddr;
 };
 
@@ -57,7 +57,7 @@ public:
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual MirPixelFormat pixel_format() const = 0;
     virtual uint32_t age() const = 0;
     virtual void increment_age() = 0;
     virtual void mark_as_submitted() = 0;

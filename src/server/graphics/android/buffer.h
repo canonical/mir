@@ -49,7 +49,7 @@ public:
 
     geometry::Size size() const;
     geometry::Stride stride() const;
-    geometry::PixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
     void bind_to_texture();
     bool can_bypass() const override;
 

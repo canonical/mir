@@ -32,9 +32,9 @@
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
-geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
+MirPixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
 {
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
 
     switch (format)
     {
@@ -54,7 +54,7 @@ geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
     return pf;
 }
 
-uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
+uint32_t mgg::mir_format_to_gbm_format(MirPixelFormat format)
 {
     uint32_t gbm_pf;
 
@@ -113,7 +113,7 @@ geom::Stride mgg::GBMBuffer::stride() const
     return geom::Stride(gbm_bo_get_stride(gbm_handle.get()));
 }
 
-geom::PixelFormat mgg::GBMBuffer::pixel_format() const
+MirPixelFormat mgg::GBMBuffer::pixel_format() const
 {
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }

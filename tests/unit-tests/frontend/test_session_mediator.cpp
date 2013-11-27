@@ -99,10 +99,10 @@ public:
 
         mock_surface = std::make_shared<mtd::MockFrontendSurface>();
         mock_surfaces[mf::SurfaceId{1}] = mock_surface;
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), geom::PixelFormat());
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), MirPixelFormat());
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
-        EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
+        EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
         EXPECT_CALL(*mock_surface, swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer));
 
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
@@ -122,7 +122,7 @@ public:
             mock_surfaces[id] = std::make_shared<mtd::MockFrontendSurface>();
 
             EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
-            EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
+            EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
             EXPECT_CALL(*mock_surfaces[id], swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer));
 
             EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
@@ -153,10 +153,10 @@ public:
     MockGraphicBufferAllocator()
     {
         ON_CALL(*this, supported_pixel_formats())
-            .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
+            .WillByDefault(testing::Return(std::vector<MirPixelFormat>()));
     }
 
-    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
 
 class MockPlatform : public mg::Platform
@@ -209,7 +209,7 @@ struct SessionMediatorTest : public ::testing::Test
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
-    std::vector<geom::PixelFormat> const surface_pixel_formats;
+    std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

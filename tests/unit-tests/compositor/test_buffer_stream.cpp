@@ -62,7 +62,7 @@ TEST_F(BufferStreamTest, size_query)
 
 TEST_F(BufferStreamTest, pixel_format_query)
 {
-    geom::PixelFormat format{mir_pixel_format_abgr_8888};
+    MirPixelFormat format{mir_pixel_format_abgr_8888};
     mg::BufferProperties properties {geom::Size{4, 5}, format, mg::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)

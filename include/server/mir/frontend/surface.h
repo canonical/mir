@@ -55,7 +55,7 @@ public:
     virtual void force_requests_to_complete() = 0;
 
     virtual geometry::Size size() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual MirPixelFormat pixel_format() const = 0;
 
     virtual void swap_buffers(std::shared_ptr<graphics::Buffer>&) = 0;
 

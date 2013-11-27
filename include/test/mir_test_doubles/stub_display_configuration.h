@@ -51,7 +51,7 @@ public:
     }
 
     StubDisplayConfig(unsigned int num_displays,
-                      std::vector<geometry::PixelFormat> const& pfs)
+                      std::vector<MirPixelFormat> const& pfs)
     {
         /* construct a non-trivial dummy display config to send */
         int mode_index = 0;
@@ -105,7 +105,7 @@ public:
                 graphics::DisplayConfigurationOutputId{id},
                 graphics::DisplayConfigurationCardId{0},
                 graphics::DisplayConfigurationOutputType::vga,
-                std::vector<geometry::PixelFormat>{mir_pixel_format_abgr_8888},
+                std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
                 0, geometry::Size{}, true, true, rect.top_left, 0, 0, mir_power_mode_on
             };

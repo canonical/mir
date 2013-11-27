@@ -40,7 +40,7 @@ public:
     virtual BufferID id() const = 0;
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual MirPixelFormat pixel_format() const = 0;
     virtual void bind_to_texture() = 0;
     virtual bool can_bypass() const = 0;
 

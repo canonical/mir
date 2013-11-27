@@ -49,7 +49,7 @@ protected:
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
     }
 
-    geom::PixelFormat test_pf;
+    MirPixelFormat test_pf;
     geom::Size test_size;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;
