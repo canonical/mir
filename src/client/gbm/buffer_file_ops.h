@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_DRM_FD_HANDLER_
-#define MIR_CLIENT_GBM_DRM_FD_HANDLER_
+#ifndef MIR_CLIENT_GBM_BUFFER_FILE_OPS_
+#define MIR_CLIENT_GBM_BUFFER_FILE_OPS_
 
 #include <sys/types.h>
 
@@ -28,25 +28,23 @@ namespace client
 namespace gbm
 {
 
-class DRMFDHandler
+class BufferFileOps
 {
 public:
-    virtual ~DRMFDHandler() {}
+    virtual ~BufferFileOps() = default;
 
-    virtual int ioctl(unsigned long request, void* arg) = 0;
-    virtual int primeFDToHandle(int prime_fd, uint32_t *handle) = 0;
-    virtual int close(int fd) = 0;
-    virtual void* map(size_t size, off_t offset) = 0;
-    virtual void unmap(void* addr, size_t size) = 0;
+    virtual int close(int fd) const = 0;
+    virtual void* map(int fd, off_t offset, size_t size) const = 0;
+    virtual void unmap(void* addr, size_t size) const = 0;
 
 protected:
-    DRMFDHandler() = default;
-    DRMFDHandler(const DRMFDHandler&) = delete;
-    DRMFDHandler& operator=(const DRMFDHandler&) = delete;
+    BufferFileOps() = default;
+    BufferFileOps(BufferFileOps const&) = delete;
+    BufferFileOps& operator=(BufferFileOps const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_CLIENT_GBM_DRM_FD_HANDLER_ */
+#endif /* MIR_CLIENT_GBM_BUFFER_FILE_OPS_ */

@@ -127,8 +127,6 @@ TEST_F(GBMBufferAllocatorTest, small_buffers_dont_bypass)
 TEST_F(GBMBufferAllocatorTest, software_buffers_dont_bypass)
 {
     using namespace testing;
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     const mg::BufferProperties properties(geom::Size{1920, 1200},
                                           geom::PixelFormat::argb_8888,
@@ -201,8 +199,7 @@ TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
 
     mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_WRITE|GBM_BO_USE_RENDERING)));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
 
     allocator->alloc_buffer(properties);
 }

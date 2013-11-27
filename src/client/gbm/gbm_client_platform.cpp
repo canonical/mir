@@ -20,7 +20,7 @@
 #include "gbm_client_platform.h"
 #include "gbm_client_buffer_factory.h"
 #include "mesa_native_display_container.h"
-#include "drm_fd_handler.h"
+#include "buffer_file_ops.h"
 #include "gbm_native_surface.h"
 #include "../mir_connection.h"
 #include "../client_buffer_factory.h"
@@ -37,24 +37,9 @@ namespace geom=mir::geometry;
 namespace
 {
 
-class RealDRMFDHandler : public mclg::DRMFDHandler
+struct RealBufferFileOps : public mclg::BufferFileOps
 {
-public:
-    RealDRMFDHandler(int drm_fd) : drm_fd{drm_fd}
-    {
-    }
-
-    int ioctl(unsigned long request, void* arg)
-    {
-        return drmIoctl(drm_fd, request, arg);
-    }
-
-    int primeFDToHandle(int prime_fd, uint32_t *handle)
-    {
-        return drmPrimeFDToHandle(drm_fd, prime_fd, handle);
-    }
-
-    int close(int fd)
+    int close(int fd) const
     {
         while (::close(fd) == -1)
         {
@@ -65,19 +50,16 @@ public:
         return 0;
     }
 
-    void* map(size_t size, off_t offset)
+    void* map(int fd, off_t offset, size_t size) const
     {
-        return mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    drm_fd, offset);
+        return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                    fd, offset);
     }
 
-    void unmap(void* addr, size_t size)
+    void unmap(void* addr, size_t size) const
     {
         munmap(addr, size);
     }
-
-private:
-    int drm_fd;
 };
 
 struct NativeDisplayDeleter
@@ -101,33 +83,24 @@ struct NativeDisplayDeleter
 std::shared_ptr<mcl::ClientPlatform>
 mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
-    MirPlatformPackage platform_package;
-
-    memset(&platform_package, 0, sizeof(platform_package));
-    context->populate(platform_package);
-
-    int drm_fd = -1;
-
-    if (platform_package.fd_items > 0)
-        drm_fd = platform_package.fd[0];
-
-    auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
-    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler, mcl::EGLNativeDisplayContainer::instance());
+    auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
+    return std::make_shared<mclg::GBMClientPlatform>(
+        context, buffer_file_ops, mcl::EGLNativeDisplayContainer::instance());
 }
 
 mclg::GBMClientPlatform::GBMClientPlatform(
         ClientContext* const context,
-        std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
+        std::shared_ptr<BufferFileOps> const& buffer_file_ops,
         mcl::EGLNativeDisplayContainer& display_container)
     : context{context},
-      drm_fd_handler{drm_fd_handler},
+      buffer_file_ops{buffer_file_ops},
       display_container(display_container)
 {
 }
 
 std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer_factory()
 {
-    return std::make_shared<mclg::GBMClientBufferFactory>(drm_fd_handler);
+    return std::make_shared<mclg::GBMClientBufferFactory>(buffer_file_ops);
 }
 
 namespace

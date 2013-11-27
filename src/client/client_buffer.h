@@ -54,6 +54,7 @@ class ClientBuffer
 {
 public:
     virtual ~ClientBuffer() = default;
+
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
@@ -62,6 +63,11 @@ public:
     virtual void increment_age() = 0;
     virtual void mark_as_submitted() = 0;
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const = 0;
+
+protected:
+    ClientBuffer() = default;
+    ClientBuffer(ClientBuffer const&) = delete;
+    ClientBuffer& operator=(ClientBuffer const&) = delete;
 };
 
 }

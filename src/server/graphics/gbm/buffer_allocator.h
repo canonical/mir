@@ -42,7 +42,7 @@ class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
     BufferAllocator(gbm_device* device,
-                    const std::shared_ptr<BufferInitializer>& buffer_initializer);
+                    std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -51,6 +51,10 @@ public:
 
 private:
     bool is_pixel_format_supported(geometry::PixelFormat format);
+    std::shared_ptr<Buffer> alloc_hardware_buffer(
+        graphics::BufferProperties const& buffer_properties);
+    std::shared_ptr<Buffer> alloc_software_buffer(
+        graphics::BufferProperties const& buffer_properties);
 
     gbm_device* const device;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
