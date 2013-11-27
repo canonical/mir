@@ -51,17 +51,16 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
 
 void mc::BufferStreamSurfaces::swap_client_buffers(std::shared_ptr<mg::Buffer>& buffer)
 {
-    release_client_buffer(buffer);
+    if (buffer)
+    {
+        release_client_buffer(buffer.get());
+    }
     buffer = buffer_bundle->client_acquire();
 }
 
-void mc::BufferStreamSurfaces::release_client_buffer(std::shared_ptr<mg::Buffer>& buffer)
+void mc::BufferStreamSurfaces::release_client_buffer(mg::Buffer* buffer)
 {
-    if (buffer)
-    {
-        buffer_bundle->client_release(buffer.get());
-        buffer.reset();
-    }
+    buffer_bundle->client_release(buffer);
 }
 
 geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()

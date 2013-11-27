@@ -134,7 +134,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
         .Times(1);
 
     buffer_stream.swap_client_buffers(buffer);
-    buffer_stream.release_client_buffer(buffer);
+    buffer_stream.release_client_buffer(buffer.get());
 }
 
 TEST_F(BufferStreamTest, allow_framedropping_device)

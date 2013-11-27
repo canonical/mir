@@ -192,14 +192,14 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
     // No new client frames since resize(old_size), so compositor gets new_size
-    buffer_stream.release_client_buffer(client);
+    buffer_stream.release_client_buffer(client.get()); client.reset();
     auto comp4 = buffer_stream.lock_compositor_buffer(4);
     EXPECT_EQ(new_size, comp4->size());
     comp4.reset();
 
     // Generate a new frame, which should be back to old_size now
     buffer_stream.swap_client_buffers(client);
-    buffer_stream.release_client_buffer(client);
+    buffer_stream.release_client_buffer(client.get()); client.reset();
     auto comp5 = buffer_stream.lock_compositor_buffer(5);
     EXPECT_EQ(old_size, comp5->size());
     comp5.reset();

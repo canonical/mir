@@ -41,9 +41,8 @@ public:
     {
         buffer = stub_client_buffer;
     }
-    void release_client_buffer(std::shared_ptr<graphics::Buffer>& buffer) override
+    void release_client_buffer(graphics::Buffer* /*buffer*/) override
     {
-        buffer.reset();
     }
     std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long) override
     {
