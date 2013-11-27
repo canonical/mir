@@ -33,7 +33,7 @@ mgg::ShmBuffer::ShmBuffer(
     : shm_file{shm_file},
       size_{size},
       pixel_format_{pixel_format},
-      stride_{geom::bytes_per_pixel(pixel_format_) * size_.width.as_uint32_t()},
+      stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
       pixels{shm_file->base_ptr()}
 {
 }

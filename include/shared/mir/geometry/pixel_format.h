@@ -31,17 +31,6 @@ namespace geometry
 // XXX temporary
 typedef MirPixelFormat PixelFormat;
 
-static inline size_t bytes_per_pixel(PixelFormat fmt)
-{
-    return (fmt == mir_pixel_format_bgr_888) ? 3 : 4;
-}
-
-static inline bool has_alpha(PixelFormat fmt)
-{
-    return (fmt == mir_pixel_format_abgr_8888) ||
-           (fmt == mir_pixel_format_argb_8888);
-}
-
 }
 }
 

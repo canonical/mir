@@ -30,6 +30,12 @@ namespace ms=mir::scene;
 namespace msh=mir::shell;
 namespace mi=mir::input;
 
+static inline bool has_alpha(MirPixelFormat fmt)
+{
+    return (fmt == mir_pixel_format_abgr_8888) ||
+           (fmt == mir_pixel_format_argb_8888);
+}
+
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<BufferStreamFactory> const& stream_factory,
     std::shared_ptr<input::InputChannelFactory> const& input_factory,
@@ -49,7 +55,7 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
     auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
 
-    bool nonrectangular = geom::has_alpha(params.pixel_format);
+    bool nonrectangular = has_alpha(params.pixel_format);
     auto state = std::make_shared<SurfaceData>(params.name,
                                                     actual_size,
                                                     change_callback,

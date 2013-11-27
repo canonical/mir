@@ -112,7 +112,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
     using namespace testing;
 
     geom::Stride expected_stride{anwb->stride *
-                                 geom::bytes_per_pixel(pf)};
+                                 MIR_BYTES_PER_PIXEL(pf)};
     mga::Buffer buffer(mock_native_buffer, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

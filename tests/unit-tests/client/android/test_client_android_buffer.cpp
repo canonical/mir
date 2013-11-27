@@ -139,7 +139,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
 {
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     int32_t const expected_stride_in_pixels =
-        static_cast<int32_t>(stride.as_uint32_t() / geom::bytes_per_pixel(pf));
+        static_cast<int32_t>(stride.as_uint32_t() / MIR_BYTES_PER_PIXEL(pf));
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
     auto native_handle = buffer.native_buffer_handle();
     ASSERT_NE(nullptr, native_handle);

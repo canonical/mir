@@ -107,6 +107,9 @@ typedef enum MirPixelFormat
     mir_pixel_formats
 } MirPixelFormat;
 
+/* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
+#define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
+
 /**@}*/
 
 #endif

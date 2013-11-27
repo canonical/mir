@@ -60,7 +60,7 @@ geom::Stride mga::Buffer::stride() const
 {
     ANativeWindowBuffer *anwb = native_buffer->anwb();
     return geom::Stride{anwb->stride *
-                        geom::bytes_per_pixel(pixel_format())};
+                        MIR_BYTES_PER_PIXEL(pixel_format())};
 }
 
 geom::PixelFormat mga::Buffer::pixel_format() const
