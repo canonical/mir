@@ -48,7 +48,7 @@ public:
 
         alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device);
 
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
         usage = mga::BufferUsage::use_hardware;
     }
@@ -197,7 +197,7 @@ TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_xbgr_8888)
 {
-    auto native_handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::xbgr_8888, usage);
+    auto native_handle = alloc_adaptor->alloc_buffer(size, mir_pixel_format_xbgr_8888, usage);
     auto anwb = native_handle->anwb();
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, anwb->format);
 }

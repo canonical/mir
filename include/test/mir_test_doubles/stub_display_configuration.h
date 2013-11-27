@@ -43,9 +43,9 @@ public:
     StubDisplayConfig(unsigned int num_displays)
         : StubDisplayConfig(num_displays,
                             {
-                                geometry::PixelFormat::bgr_888,
-                                geometry::PixelFormat::abgr_8888,
-                                geometry::PixelFormat::xbgr_8888
+                                mir_pixel_format_bgr_888,
+                                mir_pixel_format_abgr_8888,
+                                mir_pixel_format_xbgr_8888
                             })
     {
     }
@@ -105,7 +105,7 @@ public:
                 graphics::DisplayConfigurationOutputId{id},
                 graphics::DisplayConfigurationCardId{0},
                 graphics::DisplayConfigurationOutputType::vga,
-                std::vector<geometry::PixelFormat>{geometry::PixelFormat::abgr_8888},
+                std::vector<geometry::PixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
                 0, geometry::Size{}, true, true, rect.top_left, 0, 0, mir_power_mode_on
             };

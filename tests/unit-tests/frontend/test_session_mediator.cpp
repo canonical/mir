@@ -189,7 +189,7 @@ struct SessionMediatorTest : public ::testing::Test
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
           graphics_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          surface_pixel_formats{geom::PixelFormat::argb_8888, geom::PixelFormat::xrgb_8888},
+          surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_changer,

@@ -85,7 +85,7 @@ private:
 
 mtd::StubDisplayConfig StubChanger::stub_display_config{
     2,
-    { geom::PixelFormat::xrgb_8888 }
+    { mir_pixel_format_xrgb_8888 }
 };
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
@@ -102,9 +102,9 @@ public:
 };
 
 std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
-    geom::PixelFormat::argb_8888,
-    geom::PixelFormat::xbgr_8888,
-    geom::PixelFormat::bgr_888
+    mir_pixel_format_argb_8888,
+    mir_pixel_format_xbgr_8888,
+    mir_pixel_format_bgr_888
 };
 
 class StubPlatform : public mtd::NullPlatform

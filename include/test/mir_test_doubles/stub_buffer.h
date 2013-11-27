@@ -40,7 +40,7 @@ class StubBuffer : public graphics::BufferBasic
 public:
     StubBuffer()
         : buf_size{0, 0},
-          buf_pixel_format{geometry::PixelFormat::abgr_8888}
+          buf_pixel_format{mir_pixel_format_abgr_8888}
     {
     }
 

@@ -22,30 +22,24 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <mir_toolkit/common.h>
 
 namespace mir
 {
 namespace geometry
 {
-enum class PixelFormat : uint32_t
-{
-    invalid,
-    abgr_8888,
-    xbgr_8888,
-    argb_8888,
-    xrgb_8888,
-    bgr_888
-};
+// XXX temporary
+typedef MirPixelFormat PixelFormat;
 
 static inline size_t bytes_per_pixel(PixelFormat fmt)
 {
-    return (fmt == PixelFormat::bgr_888) ? 3 : 4;
+    return (fmt == mir_pixel_format_bgr_888) ? 3 : 4;
 }
 
 static inline bool has_alpha(PixelFormat fmt)
 {
-    return (fmt == PixelFormat::abgr_8888) ||
-           (fmt == PixelFormat::argb_8888);
+    return (fmt == mir_pixel_format_abgr_8888) ||
+           (fmt == mir_pixel_format_argb_8888);
 }
 
 }

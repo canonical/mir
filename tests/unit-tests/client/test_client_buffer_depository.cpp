@@ -81,7 +81,7 @@ struct MirBufferDepositoryTest : public testing::Test
     {
         width = geom::Width(12);
         height =geom::Height(14);
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{width, height};
 
         package = std::make_shared<MirBufferPackage>();

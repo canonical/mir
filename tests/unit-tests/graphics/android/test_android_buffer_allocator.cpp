@@ -62,15 +62,15 @@ TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_contain_common
 
     auto abgr_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::abgr_8888);
+                                      mir_pixel_format_abgr_8888);
 
     auto xbgr_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::xbgr_8888);
+                                      mir_pixel_format_xbgr_8888);
 
     auto bgr_888_count = std::count(supported_pixel_formats.begin(),
                                     supported_pixel_formats.end(),
-                                    geom::PixelFormat::bgr_888);
+                                    mir_pixel_format_bgr_888);
 
     EXPECT_EQ(1, abgr_8888_count);
     EXPECT_EQ(1, xbgr_8888_count);
@@ -83,7 +83,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_have_sane_defa
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, supported_pixel_formats[0]);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, supported_pixel_formats[0]);
 }
 
 TEST_F(AndroidGraphicBufferAllocatorTest, alloc_buffer_calls_initializer)
@@ -93,7 +93,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, alloc_buffer_calls_initializer)
     auto buffer_initializer = std::make_shared<mtd::MockBufferInitializer>();
 
     mg::BufferProperties properties{geom::Size{2, 2},
-                                    geom::PixelFormat::abgr_8888,
+                                    mir_pixel_format_abgr_8888,
                                     mg::BufferUsage::hardware};
     mga::AndroidGraphicBufferAllocator allocator{buffer_initializer};
     EXPECT_CALL(*buffer_initializer, operator_call(_))
@@ -110,7 +110,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, alloc_buffer_platform_calls_initialize
 
     mga::AndroidGraphicBufferAllocator allocator{buffer_initializer};
     auto size = geom::Size{2, 2};
-    auto pf = geom::PixelFormat::abgr_8888;
+    auto pf = mir_pixel_format_abgr_8888;
 
     EXPECT_CALL(*buffer_initializer, operator_call(_))
         .Times(1);

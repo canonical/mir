@@ -43,7 +43,7 @@ protected:
         width = geom::Width(248);
         size = geom::Size{width, height};
         stride = geom::Stride{66};
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
 
         mock_android_registrar = std::make_shared<NiceMock<mtd::MockAndroidRegistrar>>();
 

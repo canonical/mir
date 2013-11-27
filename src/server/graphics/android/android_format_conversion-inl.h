@@ -33,15 +33,15 @@ inline static int to_android_format(geometry::PixelFormat format)
 {
     switch(format)
     {
-        case geometry::PixelFormat::abgr_8888:
+        case mir_pixel_format_abgr_8888:
             return HAL_PIXEL_FORMAT_RGBA_8888;
-        case geometry::PixelFormat::xbgr_8888:
+        case mir_pixel_format_xbgr_8888:
             return HAL_PIXEL_FORMAT_RGBX_8888;
-        case geometry::PixelFormat::argb_8888:
+        case mir_pixel_format_argb_8888:
             return HAL_PIXEL_FORMAT_BGRA_8888;
-        case geometry::PixelFormat::xrgb_8888:
+        case mir_pixel_format_xrgb_8888:
             return HAL_PIXEL_FORMAT_BGRA_8888;
-        case geometry::PixelFormat::bgr_888:
+        case mir_pixel_format_bgr_888:
             return HAL_PIXEL_FORMAT_RGB_888;
         default:
             return 0;
@@ -53,15 +53,15 @@ inline static mir::geometry::PixelFormat to_mir_format(int format)
     switch(format)
     {
         case HAL_PIXEL_FORMAT_RGBA_8888:
-            return geometry::PixelFormat::abgr_8888;
+            return mir_pixel_format_abgr_8888;
         case HAL_PIXEL_FORMAT_RGBX_8888:
-            return geometry::PixelFormat::xbgr_8888;
+            return mir_pixel_format_xbgr_8888;
         case HAL_PIXEL_FORMAT_BGRA_8888:
-            return geometry::PixelFormat::argb_8888;
+            return mir_pixel_format_argb_8888;
         case HAL_PIXEL_FORMAT_RGB_888:
-            return geometry::PixelFormat::bgr_888;
+            return mir_pixel_format_bgr_888;
         default:
-            return geometry::PixelFormat::invalid;
+            return mir_pixel_format_invalid;
     }
 }
 

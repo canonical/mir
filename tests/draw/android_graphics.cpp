@@ -107,7 +107,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_h
     RegionDeleter del(module, package->handle);
 
     region->vaddr = (char*) vaddr;
-    region->stride = package->stride * geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    region->stride = package->stride * geom::bytes_per_pixel(mir_pixel_format_abgr_8888);
     region->width = package->width;
     region->height = package->height;
     region->pixel_format = mir_pixel_format_abgr_8888;

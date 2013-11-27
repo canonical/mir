@@ -49,7 +49,7 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
     auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
 
-    bool nonrectangular = has_alpha(params.pixel_format);
+    bool nonrectangular = geom::has_alpha(params.pixel_format);
     auto state = std::make_shared<SurfaceData>(params.name,
                                                     actual_size,
                                                     change_callback,

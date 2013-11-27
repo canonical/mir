@@ -482,7 +482,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_all();
 
-    EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
+    EXPECT_EQ(pf, mir_pixel_format_abgr_8888);
 }
 
 

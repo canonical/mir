@@ -54,7 +54,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 
     geometry::PixelFormat display_format()
     {
-        return geometry::PixelFormat::abgr_8888;
+        return mir_pixel_format_abgr_8888;
     }
 
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(

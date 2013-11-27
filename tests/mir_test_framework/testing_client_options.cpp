@@ -52,7 +52,7 @@ class StubClientBuffer : public mcl::ClientBuffer
 
     geom::PixelFormat pixel_format() const
     {
-        return geom::PixelFormat::abgr_8888;
+        return mir_pixel_format_abgr_8888;
     }
 
     uint32_t age() const

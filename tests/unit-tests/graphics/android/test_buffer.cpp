@@ -51,7 +51,7 @@ protected:
         anwb->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         default_use = mga::BufferUsage::use_hardware;
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
         extensions = std::make_shared<mg::EGLExtensions>();
     }
@@ -80,7 +80,7 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
     using namespace testing;
 
     mga::Buffer buffer(mock_native_buffer, extensions);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
+    EXPECT_EQ(mir_pixel_format_abgr_8888, buffer.pixel_format());
 }
 
 TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)

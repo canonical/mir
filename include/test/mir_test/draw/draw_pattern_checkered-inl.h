@@ -32,7 +32,7 @@ void DrawPatternCheckered<Rows,Cols>::draw(MirGraphicsRegion const& region) cons
     if (region.pixel_format != mir_pixel_format_abgr_8888)
         throw(std::runtime_error("cannot draw region, incorrect format"));
 
-    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = geom::bytes_per_pixel(mir_pixel_format_abgr_8888);
     for(int i=0; i < region.width; i++)
     {
         for(int j=0; j<region.height; j++)
@@ -51,7 +51,7 @@ bool DrawPatternCheckered<Rows, Cols>::check(MirGraphicsRegion const& region) co
     if (region.pixel_format != mir_pixel_format_abgr_8888)
         throw(std::runtime_error("cannot check region, incorrect format"));
 
-    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = geom::bytes_per_pixel(mir_pixel_format_abgr_8888);
     for(int i=0; i< region.width; i++)
     {
         for(int j=0; j<region.height; j++)

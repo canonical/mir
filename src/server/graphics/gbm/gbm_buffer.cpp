@@ -40,14 +40,14 @@ geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
     {
     case GBM_BO_FORMAT_ARGB8888:
     case GBM_FORMAT_ARGB8888:
-        pf = geom::PixelFormat::argb_8888;
+        pf = mir_pixel_format_argb_8888;
         break;
     case GBM_BO_FORMAT_XRGB8888:
     case GBM_FORMAT_XRGB8888:
-        pf = geom::PixelFormat::xrgb_8888;
+        pf = mir_pixel_format_xrgb_8888;
         break;
     default:
-        pf = geom::PixelFormat::invalid;
+        pf = mir_pixel_format_invalid;
         break;
     }
 
@@ -60,10 +60,10 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 
     switch (format)
     {
-    case geom::PixelFormat::argb_8888:
+    case mir_pixel_format_argb_8888:
         gbm_pf = GBM_FORMAT_ARGB8888;
         break;
-    case geom::PixelFormat::xrgb_8888:
+    case mir_pixel_format_xrgb_8888:
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:

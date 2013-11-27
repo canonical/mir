@@ -45,7 +45,7 @@ struct ShmBufferTest : public testing::Test
 {
     ShmBufferTest()
         : size{150,340},
-          pixel_format{geom::PixelFormat::bgr_888},
+          pixel_format{mir_pixel_format_bgr_888},
           stub_shm_file{std::make_shared<StubShmFile>()},
           shm_buffer{stub_shm_file, size, pixel_format}
     {

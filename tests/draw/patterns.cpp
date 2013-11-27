@@ -32,7 +32,7 @@ void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot draw region, incorrect format"));
 
-    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = geom::bytes_per_pixel(mir_pixel_format_abgr_8888);
     for(auto i = 0; i < region.height; i++)
     {
         for(auto j = 0; j < region.width; j++)
@@ -48,7 +48,7 @@ bool mtd::DrawPatternSolid::check(MirGraphicsRegion const& region) const
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot check region, incorrect format"));
 
-    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = geom::bytes_per_pixel(mir_pixel_format_abgr_8888);
     for(auto i = 0; i < region.height; i++)
     {
         for(auto j = 0; j < region.width; j++)

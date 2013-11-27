@@ -56,7 +56,7 @@ protected:
         fake_devices.add_standard_drm_devices();
 
         size = geom::Size{300, 200};
-        pf = geom::PixelFormat::argb_8888;
+        pf = mir_pixel_format_argb_8888;
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         usage = mg::BufferUsage::hardware;
         buffer_properties = mg::BufferProperties{size, pf, usage};

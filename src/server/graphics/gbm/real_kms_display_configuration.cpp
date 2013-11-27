@@ -185,8 +185,8 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     size_t current_mode_index{std::numeric_limits<size_t>::max()};
     size_t preferred_mode_index{std::numeric_limits<size_t>::max()};
     std::vector<DisplayConfigurationMode> modes;
-    std::vector<geom::PixelFormat> formats {geom::PixelFormat::argb_8888,
-                                            geom::PixelFormat::xrgb_8888};
+    std::vector<geom::PixelFormat> formats {mir_pixel_format_argb_8888,
+                                            mir_pixel_format_xrgb_8888};
 
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 

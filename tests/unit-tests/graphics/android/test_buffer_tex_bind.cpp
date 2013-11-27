@@ -40,7 +40,7 @@ public:
 
         mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
         size = geom::Size{300, 220};
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         extensions = std::make_shared<mg::EGLExtensions>();
     };
 

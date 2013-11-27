@@ -192,7 +192,7 @@ struct StubServerGenerator : public mt::StubServerTool
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
         auto size = geom::Size{test_width, test_height};
-        surface_pf = geom::PixelFormat::abgr_8888;
+        surface_pf = mir_pixel_format_abgr_8888;
         last_posted = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
         client_buffer = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
     }
@@ -260,10 +260,10 @@ struct StubServerGenerator : public mt::StubServerTool
 
     uint32_t red_value_for_surface()
     {
-        if ((surface_pf == geom::PixelFormat::abgr_8888) || (surface_pf == geom::PixelFormat::xbgr_8888))
+        if ((surface_pf == mir_pixel_format_abgr_8888) || (surface_pf == mir_pixel_format_xbgr_8888))
             return 0xFF0000FF;
 
-        if ((surface_pf == geom::PixelFormat::argb_8888) || (surface_pf == geom::PixelFormat::xrgb_8888))
+        if ((surface_pf == mir_pixel_format_argb_8888) || (surface_pf == mir_pixel_format_xrgb_8888))
             return 0xFFFF0000;
 
         return 0x0;

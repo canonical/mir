@@ -61,7 +61,7 @@ geom::PixelFormat determine_hwc11_fb_format()
     {
         //we couldn't figure out the fb format via egl. In this case, we
         //assume abgr_8888. HWC api really should provide this information directly.
-        fb_format = geom::PixelFormat::abgr_8888;
+        fb_format = mir_pixel_format_abgr_8888;
     }
 
     eglTerminate(egl_display);

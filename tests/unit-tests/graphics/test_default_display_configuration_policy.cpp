@@ -41,7 +41,7 @@ public:
                 card_id,
                 mg::DisplayConfigurationOutputType::vga,
                 {
-                    geom::PixelFormat::abgr_8888
+                    mir_pixel_format_abgr_8888
                 },
                 {
                     {geom::Size{123, 111}, 59.9},
@@ -81,7 +81,7 @@ public:
                 card_id,
                 mg::DisplayConfigurationOutputType::vga,
                 {
-                    geom::PixelFormat::abgr_8888
+                    mir_pixel_format_abgr_8888
                 },
                 {
                     {geom::Size{523, 555}, 60.0},
@@ -102,7 +102,7 @@ public:
                 card_id,
                 mg::DisplayConfigurationOutputType::vga,
                 {
-                    geom::PixelFormat::abgr_8888
+                    mir_pixel_format_abgr_8888
                 },
                 {},
                 0,

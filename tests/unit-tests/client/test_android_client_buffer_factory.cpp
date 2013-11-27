@@ -36,7 +36,7 @@ struct MirBufferFactoryTest : public testing::Test
         width = geom::Width(12);
         height =geom::Height(14);
         size = geom::Size{width, height};
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
 
         mock_registrar = std::make_shared<mtd::MockAndroidRegistrar>();
 

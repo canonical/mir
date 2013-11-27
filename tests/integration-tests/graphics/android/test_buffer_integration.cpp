@@ -43,7 +43,7 @@ protected:
     virtual void SetUp()
     {
         size = geom::Size{334, 122};
-        pf  = geom::PixelFormat::abgr_8888;
+        pf  = mir_pixel_format_abgr_8888;
         buffer_properties = mg::BufferProperties{size, pf, mg::BufferUsage::software};
         null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     }

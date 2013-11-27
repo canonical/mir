@@ -45,7 +45,7 @@ public:
     TemporaryBuffersTest()
         : buffer_size{1024, 768},
           buffer_stride{1024},
-          buffer_pixel_format{geom::PixelFormat::abgr_8888},
+          buffer_pixel_format{mir_pixel_format_abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(
                           buffer_size, buffer_stride, buffer_pixel_format)},
           mock_bundle{std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()}
