@@ -1,8 +1,95 @@
 mir (0.1.2-0ubuntu1) UNRELEASED; urgency=low
 
-  * Prepare for release 0.1.2 (TODO)
+  * New upstream release 0.1.2
+    - graphics: android: improve interface for mga::DisplayDevice so its
+      just concerned with rendering and posting.
+    - surfaces: rename "surfaces" component to "scene".
+    - surfaces, shell: Migrate Session data model from shell to surfaces.
+    - graphics: change fill_ipc_package() to use real pointers.
+    - mir_client_library.h: Fix typo "do and locking" should be "do any
+      locking".
+    - API enumerations cleanup: Remove slightly misleading *_enum_max_
+      values, and replace them with more accurate plural forms.
+    - test_android_communication_package: Do not expect opened fd to be >0,
+      we may have closed stdin making this a valid value (LP: #1247718).
+    - Update docs about running Mir on the desktop to mention new package
+      ubuntu-desktop-mir.
+    - offscreen: Add a display that renders its output to offscreen buffers
+    - graphics: android: fix regression for hwc1.0 devices introduced in r1228
+      (LP: #1252433).
+    - OffscreenPlatform provides the services that the offscreen display
+      needs from the Platform.
+    - graphics: android: consolidate the GLContexts classes in use.
+    - Fix uninitialized variable causing random drm_auth_magic test
+      failures. (LP: #1252144).
+    - Add a fullyish functional Udev wrapper. This currently sits in
+      graphics/gbm, but will be moved to the top-level when input device
+      detection migrates.
+    - Add resizing support to example code; demo-shell and clients.
+    - eglapp: Clarify messages about pixel formats (LP: #1168304).
+    - Adds support to the MirMotionEvent under pointer_coordinates called
+      tool_type. This will allow clients to tell what type of tool is
+      being used, from mouse/finger/etc. (LP: #1252498)
+    - client,frontend: Report the real available surface pixel formats to
+      clients. (LP: #1240833)
+    - graphics: android: 1) change hwc1.1 to make use of sync fences during
+      the compositor's gl renderloop. Note that we no longer wait for the
+      render to complete, we pass this responsibility to the driver and the
+      kernel. 2) support nexus 10. (LP: #1252173) (LP: #1203268)
+    - shell: don't publish SurfacesContainer - it can be private to shell.
+    - gbm: Don't mess up the VT mode on setup failure Only restore the
+      previous VT mode during shutdown if it was VT_AUTO.
+    - Fix a crash due to a failed eglMakeCurrent() call when in nested mode.
+    - shell: unity-mir uses shell::FocusSetter - make the header public again
+    - Add resize support to client surfaces (mir::client::MirSurface).
+    - graphics: android: support 'old aka 2012' nexus 7 hwc (nvidia tegra3
+      SoC) better. (LP: #1231917)
+    - Add resize support to *ClientBuffer classes. Now always get dimensions
+      from the latest buffer package.
+    - android: support driver hooks for the Mali T604 (present in nexus 10)
+    - Add width and height to the protocol Buffer messages, in preparation
+      for resizable surfaces.
+    - surfaces, shell, logging, tests: don't publish headers
+      that can be private to surfaces. surfaces/basic_surface.h,
+      surfaces/surface_controller.h and shell/surface_builder.h
+    - examples: Restore GL framebuffer binding when destroying the render
+      target
+    - examples, surfaces, shell: remove render_surfaces dependency on
+      BasicSurface
+    - geometry: remove implementation of streaming operators from headers
+      (LP: #1247820)
+    - Eliminate the registration order focus sequence, folding it's
+      functionality in to the session container.
+    - Ensure the session mediator releases acquired buffer resources before
+      attempting to acquire a new buffer on behalf of the client. This fixes
+      performance regression (LP: #1249210).
+    - Some cleanups to test_client_input.cpp.
+    - Factor out a bunch of "ClientConfigCommon".
+    - Small cleanup to session container test to increase encapsulation.
+    - shell, surfaces: Another step in "fixing" the surfaces hierarchies -
+      only publish interfaces and putting the data model into surfaces.
+    - graphics: android: HWC1.1 use EGL to get further information about
+      the framebuffer pixel format.
+    - Fix FTBS using use_debflags=ON (building for android-armhf).
+      (LP: #1248014)
+    - Add a client input receiver report.
+    - doc: doxygen 1.8.4 complains about an obsolete config so ran "doxygen
+      u Doxyfile.in".
+    - Implement resize() for the server-side Surface classes.
+    - android: clean up mga::DisplayBuffer and mga::DisplayBufferFactory
+    - Add resize() support to BufferStream, in preparation for resizable
+      surfaces.
+    - Merge metadata changes from the newly reconstructed lp:mir
+    - tests: Deduplicate mg::GraphicBufferAllocator stubs.
+    - examples: Remove spurious use of mir/shell/surface.h.
+    - frontend: remove ClientTrackingSurface from the Surface class
+      hierarchy
+    - Bumping ABI on server to libmirserver11.
+    - Don't mention "Renderable". That interface hasn't existed for quite
+      some time now.
+    - android-input: Assign more unique touch ids
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 21 Nov 2013 11:17:36 +0800
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Fri, 22 Nov 2013 12:34:52 -0600
 
 mir (0.1.1+14.04.20131120-0ubuntu1) trusty; urgency=low
 
