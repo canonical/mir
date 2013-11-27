@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir_test/draw/patterns.h"
 
 namespace mtd=mir::test::draw;

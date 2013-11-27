@@ -22,7 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <unordered_map>
 #include <memory>

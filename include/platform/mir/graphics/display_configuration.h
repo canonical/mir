@@ -22,7 +22,6 @@
 #include "mir/int_wrapper.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
-#include "mir/geometry/pixel_format.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>

@@ -21,7 +21,7 @@
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <vector>
 

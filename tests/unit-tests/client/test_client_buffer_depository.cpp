@@ -20,7 +20,7 @@
 #include "src/client/client_buffer_depository.h"
 #include "src/client/client_buffer_factory.h"
 #include "src/client/aging_buffer.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 
 #include <gtest/gtest.h>

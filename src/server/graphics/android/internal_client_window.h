@@ -21,7 +21,7 @@
 
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include <memory>
 
 namespace mir

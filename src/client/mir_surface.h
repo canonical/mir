@@ -20,7 +20,6 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"

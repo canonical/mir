@@ -21,7 +21,7 @@
 
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include <functional>
 
 namespace mir

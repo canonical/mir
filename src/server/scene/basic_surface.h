@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_properties.h"
 

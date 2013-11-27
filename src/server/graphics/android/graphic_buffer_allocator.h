@@ -23,7 +23,7 @@
 #include "buffer_usage.h"
 
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <memory>
 

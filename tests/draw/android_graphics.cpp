@@ -18,7 +18,7 @@
 
 
 #include "mir_test/draw/android_graphics.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <fstream>
 #include <stdexcept>

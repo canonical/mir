@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include <system/graphics.h>
 
 namespace mir

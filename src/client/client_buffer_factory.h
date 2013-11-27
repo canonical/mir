@@ -23,7 +23,7 @@
 #include <memory>
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 
 namespace mir

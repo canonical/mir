@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_
 #define MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"

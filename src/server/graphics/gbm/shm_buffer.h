@@ -23,7 +23,7 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
