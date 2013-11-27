@@ -67,3 +67,39 @@ TEST(TestEventSender, display_send)
 
     sender.handle_display_config_change(config);
 }
+
+TEST(TestEventSender, sends_noninput_events)
+{
+    using namespace testing;
+
+    auto msg_sender = std::make_shared<MockMsgSender>();
+    mfd::EventSender event_sender(msg_sender);
+
+    MirEvent event;
+    memset(&event, 0, sizeof event);
+
+    EXPECT_CALL(*msg_sender, send(_))
+        .Times(2);
+    event.type = mir_event_type_surface;
+    event_sender.handle_event(event);
+    event.type = mir_event_type_resize;
+    event_sender.handle_event(event);
+}
+
+TEST(TestEventSender, never_sends_input_events)
+{
+    using namespace testing;
+
+    auto msg_sender = std::make_shared<MockMsgSender>();
+    mfd::EventSender event_sender(msg_sender);
+
+    MirEvent event;
+    memset(&event, 0, sizeof event);
+
+    EXPECT_CALL(*msg_sender, send(_))
+        .Times(0);
+    event.type = mir_event_type_key;
+    event_sender.handle_event(event);
+    event.type = mir_event_type_motion;
+    event_sender.handle_event(event);
+}
