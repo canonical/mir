@@ -28,9 +28,9 @@ pushd ${BUILD_DIR} > /dev/null
     adb wait-for-device
     adb shell mkdir -p ${RUN_DIR}
 
-    for x in bin/acceptance-tests \
-             bin/integration-tests \
-             bin/unit-tests \
+    for x in bin/mir_acceptance_tests \
+             bin/mir_integration_tests \
+             bin/mir_unit_tests \
              lib/libmirclient.so.* \
              lib/libmirprotobuf.so.* \
              lib/libmirplatform.so \
@@ -43,14 +43,14 @@ pushd ${BUILD_DIR} > /dev/null
     echo "cd ${RUN_DIR};
         export GTEST_OUTPUT=xml:./;
         export LD_LIBRARY_PATH=.;
-        ./unit-tests;
-        ./integration-tests;
-        ./acceptance-tests;
+        ./mir_unit_tests;
+        ./mir_integration_tests;
+        ./mir_acceptance_tests;
         exit;
         exit" | adb shell
 
-    adb pull "${RUN_DIR}/acceptance-tests.xml"
-    adb pull "${RUN_DIR}/integration-tests.xml"
-    adb pull "${RUN_DIR}/unit-tests.xml"
+    adb pull "${RUN_DIR}/mir_acceptance_tests.xml"
+    adb pull "${RUN_DIR}/mir_integration_tests.xml"
+    adb pull "${RUN_DIR}/mir_unit_tests.xml"
 
 popd ${BUILD_DIR} > /dev/null 

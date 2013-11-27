@@ -28,15 +28,15 @@ list(APPEND SOURCES
 )
 
 add_executable(
-  acceptance-tests
+  mir_acceptance_tests
 
   ${SOURCES}
 )
-uses_android_input(acceptance-tests)
+uses_android_input(mir_acceptance_tests)
 
 
 target_link_libraries(
-  acceptance-tests
+  mir_acceptance_tests
 
   mirserver
   mirclient
@@ -56,4 +56,15 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-mir_discover_tests(acceptance-tests)
+if (MIR_PLATFORM STREQUAL "android")
+    #don't discover the test, we'll run it later on a phone
+else()
+    if(MIR_ENABLE_ACCEPTANCE_TESTS)
+    mir_discover_tests(mir_acceptance_tests)
+  endif()
+endif()
+
+install(
+    TARGETS mir_acceptance_tests
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
