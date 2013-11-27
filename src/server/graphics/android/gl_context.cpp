@@ -26,7 +26,6 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
 
 namespace
 {

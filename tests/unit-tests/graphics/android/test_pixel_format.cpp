@@ -21,7 +21,6 @@
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
 
 TEST(PixelFormatConversion, conversion_to_android_test)
 {
