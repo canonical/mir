@@ -68,11 +68,9 @@ TEST(TestEventSender, display_send)
     sender.handle_display_config_change(config);
 }
 
-TEST(TestEventSender, sends_all_but_input_events)
+TEST(TestEventSender, sends_noninput_events)
 {
     using namespace testing;
-
-    InSequence seq;
 
     auto msg_sender = std::make_shared<MockMsgSender>();
     mfd::EventSender event_sender(msg_sender);
@@ -86,6 +84,17 @@ TEST(TestEventSender, sends_all_but_input_events)
     event_sender.handle_event(event);
     event.type = mir_event_type_resize;
     event_sender.handle_event(event);
+}
+
+TEST(TestEventSender, never_sends_input_events)
+{
+    using namespace testing;
+
+    auto msg_sender = std::make_shared<MockMsgSender>();
+    mfd::EventSender event_sender(msg_sender);
+
+    MirEvent event;
+    memset(&event, 0, sizeof event);
 
     EXPECT_CALL(*msg_sender, send(_))
         .Times(0);
