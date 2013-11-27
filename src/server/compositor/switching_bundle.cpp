@@ -250,11 +250,11 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     return ret;
 }
 
-void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
+void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (nclients <= 0 || ring[first_client].buf != released_buffer)
+    if (nclients <= 0 || ring[first_client].buf.get() != released_buffer)
     {
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));

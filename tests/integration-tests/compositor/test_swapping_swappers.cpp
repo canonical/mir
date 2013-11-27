@@ -64,7 +64,7 @@ TEST_F(SwapperSwappingStress, swapper)
                     {
                         auto b = switching_bundle->client_acquire();
                         std::this_thread::yield();
-                        switching_bundle->client_release(b);
+                        switching_bundle->client_release(b.get());
                     }
                     client_thread_done = true;
                 });
@@ -109,7 +109,7 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                     {
                         auto b = switching_bundle->client_acquire();
                         std::this_thread::yield();
-                        switching_bundle->client_release(b);
+                        switching_bundle->client_release(b.get());
                     }
                     client_thread_done = true;
                 });

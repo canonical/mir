@@ -59,7 +59,7 @@ void mc::BufferStreamSurfaces::release_client_buffer(std::shared_ptr<mg::Buffer>
 {
     if (buffer)
     {
-        buffer_bundle->client_release(buffer);
+        buffer_bundle->client_release(buffer.get());
         buffer.reset();
     }
 }
