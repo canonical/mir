@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+#ifndef MIR_PLATFORM_GBM_BUFFER_ALLOCATOR_H_
+#define MIR_PLATFORM_GBM_BUFFER_ALLOCATOR_H_
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
@@ -38,11 +38,11 @@ struct EGLExtensions;
 
 namespace gbm
 {
-class GBMBufferAllocator: public graphics::GraphicBufferAllocator
+class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    GBMBufferAllocator(gbm_device* device,
-                       const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    BufferAllocator(gbm_device* device,
+                    const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -63,4 +63,4 @@ private:
 }
 }
 
-#endif // MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+#endif // MIR_PLATFORM_GBM_BUFFER_ALLOCATOR_H_

@@ -17,7 +17,7 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "gbm_buffer_allocator.h"
+#include "buffer_allocator.h"
 #include "gbm_buffer.h"
 #include "gbm_platform.h"
 #include "buffer_texture_binder.h"
@@ -106,12 +106,12 @@ struct GBMBODeleter
 
 }
 
-mgg::GBMBufferAllocator::GBMBufferAllocator(
-        gbm_device* device,
-        const std::shared_ptr<BufferInitializer>& buffer_initializer)
-        : device(device),
-          buffer_initializer(buffer_initializer),
-          egl_extensions(std::make_shared<mg::EGLExtensions>())
+mgg::BufferAllocator::BufferAllocator(
+    gbm_device* device,
+    const std::shared_ptr<BufferInitializer>& buffer_initializer)
+    : device(device),
+      buffer_initializer(buffer_initializer),
+      egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
     assert(buffer_initializer.get() != 0);
 
@@ -119,7 +119,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
     bypass_env = env ? env[0] != '0' : true;
 }
 
-std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
+std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
 {
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
@@ -179,7 +179,7 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
     return buffer;
 }
 
-std::vector<geom::PixelFormat> mgg::GBMBufferAllocator::supported_pixel_formats()
+std::vector<geom::PixelFormat> mgg::BufferAllocator::supported_pixel_formats()
 {
     static std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::argb_8888,
@@ -189,7 +189,7 @@ std::vector<geom::PixelFormat> mgg::GBMBufferAllocator::supported_pixel_formats(
     return pixel_formats;
 }
 
-bool mgg::GBMBufferAllocator::is_pixel_format_supported(geom::PixelFormat format)
+bool mgg::BufferAllocator::is_pixel_format_supported(geom::PixelFormat format)
 {
     auto formats = supported_pixel_formats();
 

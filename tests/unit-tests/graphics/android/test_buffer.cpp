@@ -42,7 +42,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
 
         anwb = mock_native_buffer->anwb();
         anwb->width = 44;
