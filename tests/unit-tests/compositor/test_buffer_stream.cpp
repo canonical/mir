@@ -132,9 +132,12 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
         .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
+    EXPECT_CALL(*mock_bundle, client_acquire())
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
 
     buffer_stream.swap_client_buffers(buffer);
-    buffer_stream.release_client_buffer(buffer.get());
+    buffer_stream.swap_client_buffers(buffer);
 }
 
 TEST_F(BufferStreamTest, allow_framedropping_device)

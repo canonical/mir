@@ -40,7 +40,6 @@ public:
     ~BufferStreamSurfaces();
 
     void swap_client_buffers(std::shared_ptr<graphics::Buffer>& buffer) override;
-    void release_client_buffer(graphics::Buffer* buffer) override;
 
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(unsigned long frameno) override;
