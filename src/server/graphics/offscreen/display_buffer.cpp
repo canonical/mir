@@ -33,12 +33,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-EGLint const default_egl_context_attr[] =
-{
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-
 class GLExtensions : public mgo::GLExtensionsBase
 {
 public:
