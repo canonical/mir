@@ -55,7 +55,7 @@ void mc::BufferStreamSurfaces::swap_client_buffers(mg::Buffer*& buffer)
     {
         buffer_bundle->client_release(buffer);
     }
-    buffer = buffer_bundle->client_acquire().get();
+    buffer = buffer_bundle->client_acquire();
 }
 
 geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()

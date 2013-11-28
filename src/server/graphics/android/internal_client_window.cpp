@@ -61,11 +61,10 @@ void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* key, 
     }
 
     auto handle = it->second.handle;
-    handle->update_fence(fence_fd);
-
     buffer = it->second.buffer;
     lookup.erase(it);
 
+    handle->update_fence(fence_fd);
     surface->swap_buffers(buffer);
 }
 

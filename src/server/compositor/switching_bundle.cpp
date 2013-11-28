@@ -177,7 +177,7 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
     return ring[slot].buf;
 }
 
-std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
+mg::Buffer* mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
 
@@ -247,7 +247,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         ring[client].buf = ret;
     }
 
-    return ret;
+    return ret.get();
 }
 
 void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)

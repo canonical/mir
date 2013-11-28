@@ -53,7 +53,7 @@ public:
         using namespace testing;
 
         ON_CALL(*mock_bundle, client_acquire())
-            .WillByDefault(Return(mock_buffer));
+            .WillByDefault(Return(mock_buffer.get()));
         ON_CALL(*mock_bundle, compositor_acquire(_))
             .WillByDefault(Return(mock_buffer));
     }

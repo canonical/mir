@@ -46,7 +46,7 @@ public:
 
     graphics::BufferProperties properties() const;
 
-    std::shared_ptr<graphics::Buffer> client_acquire();
+    graphics::Buffer* client_acquire();
     void client_release(graphics::Buffer* buffer);
     std::shared_ptr<graphics::Buffer>
         compositor_acquire(unsigned long frameno) override;
