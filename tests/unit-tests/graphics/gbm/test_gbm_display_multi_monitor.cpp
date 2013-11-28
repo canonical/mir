@@ -19,7 +19,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
-#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/gbm_platform.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"

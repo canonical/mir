@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/gbm/internal_native_surface.h"
+#include "src/platform/graphics/gbm/internal_native_surface.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/internal_surface.h"

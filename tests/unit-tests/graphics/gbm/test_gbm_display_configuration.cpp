@@ -20,9 +20,9 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
-#include "src/server/graphics/gbm/gbm_platform.h"
-#include "src/server/graphics/gbm/gbm_display.h"
-#include "src/server/graphics/gbm/kms_display_configuration.h"
+#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/gbm_display.h"
+#include "src/platform/graphics/gbm/kms_display_configuration.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"

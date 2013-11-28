@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/internal_client.h"
+#include "src/platform/graphics/android/internal_client.h"
 #include "mir/graphics/internal_surface.h"
 
 #include <system/window.h>

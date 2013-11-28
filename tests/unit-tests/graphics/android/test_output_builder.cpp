@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/output_builder.h"
-#include "src/server/graphics/android/gl_context.h"
-#include "src/server/graphics/android/android_format_conversion-inl.h"
-#include "src/server/graphics/android/resource_factory.h"
-#include "src/server/graphics/android/graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/output_builder.h"
+#include "src/platform/graphics/android/gl_context.h"
+#include "src/platform/graphics/android/android_format_conversion-inl.h"
+#include "src/platform/graphics/android/resource_factory.h"
+#include "src/platform/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
