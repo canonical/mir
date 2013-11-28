@@ -36,8 +36,7 @@ EGLNativeWindowType mga::InternalClient::egl_native_window(std::shared_ptr<Inter
 {
     if (!client_windows[surface])
     {
-        auto cache = std::make_shared<mga::InterpreterCache>();
-        auto interpreter = std::make_shared<mga::InternalClientWindow>(surface, cache);
+        auto interpreter = std::make_shared<mga::InternalClientWindow>(surface);
         client_windows[surface] = std::make_shared<mga::MirNativeWindow>(interpreter);
     }
 

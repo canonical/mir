@@ -30,28 +30,51 @@ namespace mg=mir::graphics;
 namespace mga=mg::android;
 namespace geom=mir::geometry;
 
-mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface> const& surface,
-                                                std::shared_ptr<InterpreterResourceCache> const& cache)
+mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface> const& surface)
     : surface(surface),
-      resource_cache(cache)
+      buffer(nullptr)
 {
     format = mga::to_android_format(geometry::PixelFormat(surface->pixel_format()));
 }
 
 mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
-    std::shared_ptr<graphics::Buffer> buffer;
-    surface->swap_buffers(buffer);
+    if (!buffer)
+    {
+        surface->swap_buffers(buffer);
+    }
+
     auto handle = buffer->native_buffer_handle();
-    resource_cache->store_buffer(buffer, handle);
+    native_buffers[handle->anwb()] = handle;
+    buffers_in_driver[handle->anwb()] = buffer;
+
+    buffer = nullptr;
+
     return handle.get();
 }
 
-void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* key, int fence_fd)
 {
-    resource_cache->update_native_fence(buffer, fence_fd);
-    resource_cache->retrieve_buffer(buffer);
-    /* here, the mc::TemporaryBuffer will destruct, triggering buffer advance */
+    auto native_it = native_buffers.find(key);
+    if (native_it == native_buffers.end())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
+    }
+
+    auto handle = native_it->second;
+    handle->update_fence(fence_fd);
+    native_buffers.erase(native_it);
+
+    auto buffer_it = buffers_in_driver.find(key);
+    if (buffer_it == buffers_in_driver.end())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
+    }
+
+    buffer = buffer_it->second;
+    buffers_in_driver.erase(buffer_it);
+
+    surface->swap_buffers(buffer);
 }
 
 void mga::InternalClientWindow::dispatch_driver_request_format(int request_format)
