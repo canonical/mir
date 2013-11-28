@@ -49,8 +49,12 @@ public:
 private:
     std::shared_ptr<InternalSurface> const surface;
     graphics::Buffer* buffer;
-    std::unordered_map<ANativeWindowBuffer*, graphics::Buffer*> buffers_in_driver;
-    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<graphics::NativeBuffer>> native_buffers;
+    struct Item
+    {
+        graphics::Buffer* buffer;
+        std::shared_ptr<graphics::NativeBuffer> handle;
+    };
+    std::unordered_map<ANativeWindowBuffer*, Item> lookup;
     int format;
 };
 }

@@ -45,8 +45,7 @@ mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
     }
 
     auto handle = buffer->native_buffer_handle();
-    native_buffers[handle->anwb()] = handle;
-    buffers_in_driver[handle->anwb()] = buffer;
+    lookup[handle->anwb()] = {buffer, handle};
 
     buffer = nullptr;
 
@@ -55,24 +54,17 @@ mg::NativeBuffer* mga::InternalClientWindow::driver_requests_buffer()
 
 void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* key, int fence_fd)
 {
-    auto native_it = native_buffers.find(key);
-    if (native_it == native_buffers.end())
+    auto it = lookup.find(key);
+    if (it == lookup.end())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
     }
 
-    auto handle = native_it->second;
+    auto handle = it->second.handle;
     handle->update_fence(fence_fd);
-    native_buffers.erase(native_it);
 
-    auto buffer_it = buffers_in_driver.find(key);
-    if (buffer_it == buffers_in_driver.end())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
-    }
-
-    buffer = buffer_it->second;
-    buffers_in_driver.erase(buffer_it);
+    buffer = it->second.buffer;
+    lookup.erase(it);
 
     surface->swap_buffers(buffer);
 }
