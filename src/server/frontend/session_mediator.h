@@ -113,10 +113,10 @@ public:
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
-                              std::shared_ptr<graphics::Buffer> const& graphics_buffer,
+                              graphics::Buffer* graphics_buffer,
                               bool need_full_ipc);
 
-    std::tuple<std::shared_ptr<graphics::Buffer>, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
+    std::tuple<graphics::Buffer*, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
@@ -127,7 +127,7 @@ private:
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::unordered_map<SurfaceId,std::shared_ptr<graphics::Buffer>> client_buffer_resource;
+    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 
     std::mutex session_mutex;

@@ -124,7 +124,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    std::shared_ptr<mg::Buffer> buffer;
+    mg::Buffer* buffer{nullptr};
 
     InSequence seq;
     EXPECT_CALL(*mock_bundle, client_acquire())

@@ -104,7 +104,7 @@ mir::geometry::PixelFormat ms::SurfaceImpl::pixel_format() const
     return surface->pixel_format();
 }
 
-void ms::SurfaceImpl::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
+void ms::SurfaceImpl::swap_buffers(graphics::Buffer*& buffer)
 {
     surface->swap_buffers(buffer);
 }

@@ -169,7 +169,7 @@ struct SurfaceCreation : public ::testing::Test
         mock_basic_state = std::make_shared<testing::NiceMock<mtd::MockSurfaceState>>();
 
         ON_CALL(*mock_buffer_stream, swap_client_buffers(_))
-            .WillByDefault(SetArg<0>(std::make_shared<mtd::StubBuffer>()));
+            .WillByDefault(SetArg<0>(&stub_buffer));
         ON_CALL(*mock_basic_state, size())
             .WillByDefault(Return(rect.size));
         ON_CALL(*mock_basic_state, position())
@@ -184,6 +184,7 @@ struct SurfaceCreation : public ::testing::Test
     geom::Size size;
     geom::Rectangle rect;
     std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
+    mtd::StubBuffer stub_buffer;
 };
 
 }
@@ -237,33 +238,33 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
 {
     using namespace testing;
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-    auto graphics_resource = std::make_shared<mtd::StubBuffer>();
+    mtd::StubBuffer graphics_resource;
 
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
         .Times(1)
-        .WillOnce(SetArg<0>(graphics_resource));
+        .WillOnce(SetArg<0>(&graphics_resource));
 
-    std::shared_ptr<mg::Buffer> result;
+    mg::Buffer* result{nullptr};
     surf.swap_buffers(result);
 
-    EXPECT_EQ(graphics_resource, result);
+    EXPECT_EQ(&graphics_resource, result);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 {
     using namespace testing;
 
-    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+    mtd::StubBuffer stub_buffer;
 
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
         .Times(1)
-        .WillOnce(SetArg<0>(stub_buffer));
+        .WillOnce(SetArg<0>(&stub_buffer));
 
-    std::shared_ptr<mg::Buffer> result;
+    mg::Buffer* result{nullptr};
     surf.swap_buffers(result);
 
-    EXPECT_EQ(stub_buffer, result);
+    EXPECT_EQ(&stub_buffer, result);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -411,7 +412,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
 
-    std::shared_ptr<mg::Buffer> buffer;
+    mg::Buffer* buffer{nullptr};
 
     EXPECT_CALL(*mock_basic_state, frame_posted())
         .Times(0);

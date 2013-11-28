@@ -50,7 +50,7 @@ public:
     geometry::PixelFormat pixel_format() const;
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer);
+    void swap_buffers(graphics::Buffer*& buffer);
     void force_requests_to_complete();
 
     bool supports_input() const;

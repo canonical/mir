@@ -49,13 +49,13 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
     return std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle);
 }
 
-void mc::BufferStreamSurfaces::swap_client_buffers(std::shared_ptr<mg::Buffer>& buffer)
+void mc::BufferStreamSurfaces::swap_client_buffers(mg::Buffer*& buffer)
 {
     if (buffer)
     {
-        buffer_bundle->client_release(buffer.get());
+        buffer_bundle->client_release(buffer);
     }
-    buffer = buffer_bundle->client_acquire();
+    buffer = buffer_bundle->client_acquire().get();
 }
 
 geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
