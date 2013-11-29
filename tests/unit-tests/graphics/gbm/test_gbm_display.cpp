@@ -728,7 +728,9 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
     mir::AsioMainLoop ml;
     std::condition_variable done;
 
-    int const expected_call_count{10};
+    int const device_add_count{1};
+    int const device_change_count{10};
+    int const expected_call_count{device_add_count + device_change_count};
     int call_count{0};
     std::mutex m;
 
@@ -747,7 +749,7 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
     std::thread t{
         [this, syspath]
         {
-            for (int i = 0; i < expected_call_count; ++i)
+            for (int i = 0; i < device_change_count; ++i)
             {
                 fake_devices.emit_device_changed(syspath);
                 std::this_thread::sleep_for(std::chrono::microseconds{500});
