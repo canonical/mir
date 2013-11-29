@@ -22,7 +22,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "surface_state.h"
 #include "surface_stack.h"
-#include "surface_factory.h"
+#include "basic_surface_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
@@ -50,7 +50,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(
-    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
     std::shared_ptr<InputRegistrar> const& input_registrar,
     std::shared_ptr<SceneReport> const& report) :
     surface_factory{surface_factory},
