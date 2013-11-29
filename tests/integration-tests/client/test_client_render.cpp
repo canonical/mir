@@ -20,9 +20,9 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "src/server/graphics/android/buffer.h"
+#include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test/draw/android_graphics.h"

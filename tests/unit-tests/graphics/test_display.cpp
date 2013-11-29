@@ -27,10 +27,10 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/gbm_platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
-#include "src/server/graphics/android/android_platform.h"
+#include "src/platform/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_display_device.h"
 #endif
