@@ -34,12 +34,11 @@ class StubBufferStream : public compositor::BufferStream
 public:
     StubBufferStream()
     {
-        stub_client_buffer = std::make_shared<StubBuffer>();
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
     void swap_client_buffers(graphics::Buffer*& buffer) override
     {
-        buffer = stub_client_buffer.get();
+        buffer = &stub_client_buffer;
     }
     std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long) override
     {
@@ -73,7 +72,7 @@ public:
     {
     }
 
-    std::shared_ptr<graphics::Buffer> stub_client_buffer;
+    StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
 };
 
