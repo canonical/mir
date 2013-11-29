@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_framework/udev_environment.h"
-#include "src/server/graphics/gbm/udev_wrapper.h"
+#include "src/platform/graphics/gbm/udev_wrapper.h"
 
 #include <gtest/gtest.h>
 #include <memory>

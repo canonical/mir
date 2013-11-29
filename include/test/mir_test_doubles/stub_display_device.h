@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
 
-#include "src/server/graphics/android/display_device.h"
+#include "src/platform/graphics/android/display_device.h"
 
 namespace mir
 {

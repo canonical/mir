@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/server/graphics/android/display_builder.h"
+#include "src/platform/graphics/android/display_builder.h"
 #include "stub_display_buffer.h"
 #include "stub_display_device.h"
 #include <gmock/gmock.h>

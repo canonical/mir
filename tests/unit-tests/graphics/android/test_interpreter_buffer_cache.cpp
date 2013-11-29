@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/interpreter_cache.h"
+#include "src/platform/graphics/android/interpreter_cache.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
