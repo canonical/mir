@@ -507,7 +507,6 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
     using namespace testing;
 
     mtd::StubBuffer stub_buffer1;
-
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
@@ -524,19 +523,28 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
         .WillOnce(SetArg<0>(&stub_buffer1));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    mp::SurfaceId our_surface{surface_response.id()};
 
     Mock::VerifyAndClearExpectations(stubbed_session->mock_surface.get());
-    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_)).Times(0);
 
-    /* Creating a new surface should not affect other surfaces' buffers */
+    /* Creating a new surface should not affect our surfaces' buffers */
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_)).Times(0);
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
 
-    mp::SurfaceId buffer_request{surface_response.id()};
+    mp::SurfaceId new_surface{surface_response.id()};
     mp::Buffer buffer_response;
 
-    /* Getting the next buffer of a surface should not affect other surfaces' buffers */
-    mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    /* Getting the next buffer of new surface should not affect our surfaces' buffers */
+    mediator.next_buffer(nullptr, &new_surface, &buffer_response, null_callback.get());
 
+    Mock::VerifyAndClearExpectations(stubbed_session->mock_surface.get());
+
+    /* Getting the next buffer of our surface should post the original */
+    mg::Buffer* expected_buffer = &stub_buffer1;
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(Eq(expected_buffer)))
+        .WillOnce(SetArg<0>(&stub_buffer1));
+
+    mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
