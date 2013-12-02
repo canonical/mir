@@ -502,7 +502,7 @@ TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buf
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, buffer_resource_for_surface_held_over_operations_on_other_scene)
+TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surfaces)
 {
     using namespace testing;
 
