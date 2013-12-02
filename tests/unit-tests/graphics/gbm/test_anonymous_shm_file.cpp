@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/graphics/gbm/anonymous_shm_file.h"
+#include "src/platform/graphics/gbm/anonymous_shm_file.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

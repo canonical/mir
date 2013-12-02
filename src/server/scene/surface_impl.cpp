@@ -247,6 +247,15 @@ void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& contr
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
+
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = id.as_value();
+    e.resize.width = size.width.as_int();
+    e.resize.height = size.height.as_int();
+
+    event_sink->handle_event(e);
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)

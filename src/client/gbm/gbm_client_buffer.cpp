@@ -18,15 +18,13 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "gbm_client_buffer.h"
-#include "drm_fd_handler.h"
+#include "buffer_file_ops.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 
-#include <xf86drm.h>
-#include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
 
@@ -37,71 +35,29 @@ namespace geom=mir::geometry;
 namespace
 {
 
-struct GEMHandle
-{
-    GEMHandle(std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-              int prime_fd)
-        : drm_fd_handler{drm_fd_handler}
-    {
-        int ret = drm_fd_handler->primeFDToHandle(prime_fd, &handle);
-        if (ret)
-        {
-            std::string msg("Failed to import PRIME fd for DRM buffer");
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error(msg)) << boost::errinfo_errno(errno));
-        }
-    }
-
-    ~GEMHandle()
-    {
-        struct drm_gem_close arg;
-        arg.handle = handle;
-        // TODO (@raof): Error reporting? I do not believe it should be possible for this to fail,
-        //               so if it does we should probably flag it.
-        drm_fd_handler->ioctl(DRM_IOCTL_GEM_CLOSE, &arg);
-    }
-
-    std::shared_ptr<mclg::DRMFDHandler> const drm_fd_handler;
-    uint32_t handle;
-};
-
 struct NullDeleter
 {
     void operator()(char *) const {}
 };
 
-struct GBMMemoryRegion : mcl::MemoryRegion
+struct ShmMemoryRegion : mcl::MemoryRegion
 {
-    GBMMemoryRegion(std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-                    int prime_fd, geom::Size const& size_param,
+    ShmMemoryRegion(std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
+                    int buffer_fd, geom::Size const& size_param,
                     geom::Stride stride_param, MirPixelFormat format_param)
-        : drm_fd_handler{drm_fd_handler},
-          gem_handle{drm_fd_handler, prime_fd},
+        : buffer_file_ops{buffer_file_ops},
           size_in_bytes{size_param.height.as_uint32_t() * stride_param.as_uint32_t()}
     {
+        static off_t const map_offset = 0;
         width = size_param.width;
         height = size_param.height;
         stride = stride_param;
         format = format_param;
 
-        struct drm_mode_map_dumb map_dumb;
-        memset(&map_dumb, 0, sizeof(map_dumb));
-        map_dumb.handle = gem_handle.handle;
-
-        int ret = drm_fd_handler->ioctl(DRM_IOCTL_MODE_MAP_DUMB, &map_dumb);
-        if (ret)
-        {
-            std::string msg("Failed to map dumb DRM buffer");
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error(msg)) << boost::errinfo_errno(errno));
-        }
-
-        void* map = drm_fd_handler->map(size_in_bytes, map_dumb.offset);
+        void* map = buffer_file_ops->map(buffer_fd, map_offset, size_in_bytes);
         if (map == MAP_FAILED)
         {
-            std::string msg("Failed to mmap DRM buffer");
+            std::string msg("Failed to mmap buffer");
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
                     std::runtime_error(msg)) << boost::errinfo_errno(errno));
@@ -110,24 +66,23 @@ struct GBMMemoryRegion : mcl::MemoryRegion
         vaddr = std::shared_ptr<char>(static_cast<char*>(map), NullDeleter());
     }
 
-    ~GBMMemoryRegion()
+    ~ShmMemoryRegion()
     {
-        drm_fd_handler->unmap(vaddr.get(), size_in_bytes);
+        buffer_file_ops->unmap(vaddr.get(), size_in_bytes);
     }
 
-    std::shared_ptr<mclg::DRMFDHandler> const drm_fd_handler;
-    GEMHandle const gem_handle;
+    std::shared_ptr<mclg::BufferFileOps> const buffer_file_ops;
     size_t const size_in_bytes;
 };
 
 }
 
 mclg::GBMClientBuffer::GBMClientBuffer(
-        std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-        std::shared_ptr<MirBufferPackage> const& package,
-        geom::Size size, MirPixelFormat pf)
-    : drm_fd_handler{drm_fd_handler},
-      creation_package(std::move(package)),
+    std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
+    std::shared_ptr<MirBufferPackage> const& package,
+    geom::Size size, MirPixelFormat pf)
+    : buffer_file_ops{buffer_file_ops},
+      creation_package{package},
       rect({geom::Point{0, 0}, size}),
       buffer_pf{pf}
 {
@@ -137,15 +92,15 @@ mclg::GBMClientBuffer::~GBMClientBuffer() noexcept
 {
     // TODO (@raof): Error reporting? It should not be possible for this to fail; if it does,
     //               something's seriously wrong.
-    drm_fd_handler->close(creation_package->fd[0]);
+    buffer_file_ops->close(creation_package->fd[0]);
 }
 
 std::shared_ptr<mcl::MemoryRegion> mclg::GBMClientBuffer::secure_for_cpu_write()
 {
-    const int prime_fd = creation_package->fd[0];
+    int const buffer_fd = creation_package->fd[0];
 
-    return std::make_shared<GBMMemoryRegion>(drm_fd_handler,
-                                             prime_fd,
+    return std::make_shared<ShmMemoryRegion>(buffer_file_ops,
+                                             buffer_fd,
                                              size(),
                                              stride(),
                                              pixel_format());

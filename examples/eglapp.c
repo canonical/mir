@@ -93,8 +93,12 @@ void mir_eglapp_swap_buffers(void)
         lastcount = count;
     }
 
-    /* This is one way to handle window resizing. But in future it would be
-       better to have resize events coming from the server */
+    /*
+     * Querying the surface (actually the current buffer) dimensions here is
+     * the only truly safe way to be sure that the dimensions we think we
+     * have are those of the buffer being rendered to. But this should be
+     * improved in future; https://bugs.launchpad.net/mir/+bug/1194384
+     */
     if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width) &&
         eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height))
     {
@@ -102,7 +106,7 @@ void mir_eglapp_swap_buffers(void)
     }
 }
 
-static void mir_eglapp_handle_input(MirSurface* surface, MirEvent const* ev, void* context)
+static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
 {
     (void) surface;
     (void) context;
@@ -111,6 +115,17 @@ static void mir_eglapp_handle_input(MirSurface* surface, MirEvent const* ev, voi
         ev->key.action == mir_key_action_up)
     {
         running = 0;
+    }
+    else if (ev->type == mir_event_type_resize)
+    {
+        /*
+         * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
+         * It is unsafe to set the width and height here because we're in a
+         * different thread to that doing the rendering. So we either need
+         * support for event queuing (directing them to another thread) or
+         * full single-threaded callbacks. (LP: #1194384).
+         */
+        printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
     }
 }
 
@@ -155,7 +170,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     };
     MirEventDelegate delegate = 
     {
-        mir_eglapp_handle_input,
+        mir_eglapp_handle_event,
         NULL
     };
     EGLConfig eglconfig;

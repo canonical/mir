@@ -16,9 +16,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/server/graphics/gbm/buffer_allocator.h"
+#include "src/platform/graphics/gbm/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -127,8 +127,6 @@ TEST_F(GBMBufferAllocatorTest, small_buffers_dont_bypass)
 TEST_F(GBMBufferAllocatorTest, software_buffers_dont_bypass)
 {
     using namespace testing;
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     const mg::BufferProperties properties(geom::Size{1920, 1200},
                                           mir_pixel_format_argb_8888,
@@ -201,8 +199,7 @@ TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
 
     mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_WRITE|GBM_BO_USE_RENDERING)));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
 
     allocator->alloc_buffer(properties);
 }

@@ -23,9 +23,9 @@
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "src/server/graphics/gbm/gbm_platform.h"
-#include "src/server/graphics/gbm/gbm_buffer.h"
-#include "src/server/graphics/gbm/buffer_allocator.h"
+#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/gbm_buffer.h"
+#include "src/platform/graphics/gbm/buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/null_virtual_terminal.h"

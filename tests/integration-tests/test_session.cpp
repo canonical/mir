@@ -87,14 +87,12 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubRenderer : public mc::Renderer
         {
-            void clear(unsigned long) override {}
-            void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mc::CompositingCriteria const&, mc::BufferStream& stream)
+            void clear() const override
             {
-                stream.lock_compositor_buffer(0);
             }
-
-            void ensure_no_live_buffers_bound() {}
+            void render(mc::CompositingCriteria const&, mg::Buffer&) const override
+            {
+            }
         };
 
         struct StubRendererFactory : public mc::RendererFactory

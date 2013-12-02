@@ -32,17 +32,17 @@ class ClientBuffer;
 namespace gbm
 {
 
-class DRMFDHandler;
+class BufferFileOps;
 
 class GBMClientBufferFactory : public ClientBufferFactory
 {
 public:
-    explicit GBMClientBufferFactory(std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
+    explicit GBMClientBufferFactory(std::shared_ptr<BufferFileOps> const& buffer_file_ops);
 
     std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& package,
                                                 geometry::Size size, MirPixelFormat pf);
 private:
-    std::shared_ptr<DRMFDHandler> drm_fd_handler;
+    std::shared_ptr<BufferFileOps> const buffer_file_ops;
 };
 
 }

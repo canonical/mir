@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/graphics/gbm/shm_buffer.h"
-#include "src/server/graphics/gbm/shm_file.h"
+#include "src/platform/graphics/gbm/shm_buffer.h"
+#include "src/platform/graphics/gbm/shm_file.h"
 
 #include "mir_test_doubles/mock_gl.h"
 

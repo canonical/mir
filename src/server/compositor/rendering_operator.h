@@ -32,14 +32,18 @@ namespace compositor
 class RenderingOperator : public OperatorForScene
 {
 public:
-    explicit RenderingOperator(Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
-    ~RenderingOperator();
+    explicit RenderingOperator(
+        Renderer& renderer,
+        std::function<void(std::shared_ptr<void> const&)> save_resource,
+        unsigned long frameno);
+    ~RenderingOperator() = default;
 
     void operator()(CompositingCriteria const& info, BufferStream&);
 
 private:
     Renderer& renderer;
     std::function<void(std::shared_ptr<void> const&)> save_resource;
+    unsigned long const frameno;
 };
 
 }

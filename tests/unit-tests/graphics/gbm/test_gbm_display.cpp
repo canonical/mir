@@ -16,9 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/server/graphics/gbm/gbm_platform.h"
-#include "src/server/graphics/gbm/gbm_display.h"
-#include "src/server/graphics/gbm/virtual_terminal.h"
+#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/gbm_display.h"
+#include "src/platform/graphics/gbm/virtual_terminal.h"
 #include "src/server/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
@@ -41,6 +41,8 @@
 #include <stdexcept>
 #include <thread>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -724,31 +726,50 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
     auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
     mir::AsioMainLoop ml;
+    std::condition_variable done;
 
-    int const expected_call_count{10};
-    std::atomic<int> call_count{0};
+    int const device_add_count{1};
+    int const device_change_count{10};
+    int const expected_call_count{device_add_count + device_change_count};
+    int call_count{0};
+    std::mutex m;
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml]()
+        [&call_count, &ml, &done, &m]()
         {
+            std::unique_lock<std::mutex> lock(m);
             if (++call_count == expected_call_count)
+            {
                 ml.stop();
+                done.notify_all();
+            }
         });
 
     std::thread t{
         [this, syspath]
         {
-            for (int i = 0; i < expected_call_count; ++i)
+            for (int i = 0; i < device_change_count; ++i)
             {
                 fake_devices.emit_device_changed(syspath);
                 std::this_thread::sleep_for(std::chrono::microseconds{500});
             }
         }};
 
+    std::thread watchdog{
+        [this, &done, &m, &ml, &call_count]
+        {
+            std::unique_lock<std::mutex> lock(m);
+            if (!done.wait_for (lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
+                ADD_FAILURE() << "Timeout waiting for change events";
+            ml.stop();
+        }
+    };
+
     ml.run();
 
     t.join();
+    watchdog.join();
 
     EXPECT_EQ(expected_call_count, call_count);
 }

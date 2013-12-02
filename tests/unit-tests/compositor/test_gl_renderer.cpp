@@ -285,17 +285,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 
-    mtd::MockBufferStream stream;
     mtd::MockCompositingCriteria criteria;
-    mtd::MockBuffer gr;
-
-    int save_count = 0;
-    std::vector<std::shared_ptr<void>> saved_resources;
-    auto saving_lambda = [&] (std::shared_ptr<void> const& saved_resource)
-    {
-        save_count++;
-        saved_resources.push_back(saved_resource);
-    };
+    mtd::MockBuffer mock_buffer;
 
     InSequence seq;
 
@@ -318,10 +309,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(stream, lock_compositor_buffer(_))
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(gr)));
-    EXPECT_CALL(gr, bind_to_texture());
+    EXPECT_CALL(mock_buffer, bind_to_texture());
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
@@ -331,37 +319,22 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(saving_lambda, criteria, stream);
-
-    EXPECT_EQ(1, save_count);
-    auto result = std::find(saved_resources.begin(), saved_resources.end(), mt::fake_shared(gr));
-    EXPECT_NE(saved_resources.end(), result);
+    renderer->render(criteria, mock_buffer);
 }
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    using namespace std::placeholders;
-
-    mtd::MockBufferStream stream;
     mtd::MockCompositingCriteria criteria;
-    mtd::MockBuffer gr;
-
-    int save_count = 0;
-    std::vector<std::shared_ptr<void>> saved_resources;
-    auto saving_lambda = [&] (std::shared_ptr<void> const& saved_resource)
-    {
-        save_count++;
-        saved_resources.push_back(saved_resource);
-    };
+    mtd::MockBuffer mock_buffer;
 
     InSequence seq;
-
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
     EXPECT_CALL(criteria, alpha())
         .WillOnce(Return(1.0f));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
+
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
     EXPECT_CALL(criteria, transformation())
@@ -376,10 +349,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(stream, lock_compositor_buffer(_))
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(gr)));
-    EXPECT_CALL(gr, bind_to_texture());
+    EXPECT_CALL(mock_buffer, bind_to_texture());
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
@@ -389,9 +359,5 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(saving_lambda, criteria, stream);
-
-    EXPECT_EQ(1, save_count);
-    auto result = std::find(saved_resources.begin(), saved_resources.end(), mt::fake_shared(gr));
-    EXPECT_NE(saved_resources.end(), result);
+    renderer->render(criteria, mock_buffer);
 }

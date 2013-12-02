@@ -33,17 +33,17 @@ namespace client
 namespace gbm
 {
 
-class DRMFDHandler;
+class BufferFileOps;
 
 class GBMClientBuffer : public AgingBuffer
 {
 public:
-    GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
+    GBMClientBuffer(std::shared_ptr<BufferFileOps> const& buffer_file_ops,
                     std::shared_ptr<MirBufferPackage> const& buffer_package,
                     geometry::Size size,
                     MirPixelFormat pf);
 
-    virtual ~GBMClientBuffer() noexcept;
+    ~GBMClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
@@ -51,13 +51,11 @@ public:
     MirPixelFormat pixel_format() const;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
-    GBMClientBuffer(const GBMClientBuffer&) = delete;
-    GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
 private:
-    const std::shared_ptr<DRMFDHandler> drm_fd_handler;
-    const std::shared_ptr<MirBufferPackage> creation_package;
-    const geometry::Rectangle rect;
-    const MirPixelFormat buffer_pf;
+    std::shared_ptr<BufferFileOps> const buffer_file_ops;
+    std::shared_ptr<MirBufferPackage> const creation_package;
+    geometry::Rectangle const rect;
+    MirPixelFormat const buffer_pf;
 };
 
 }

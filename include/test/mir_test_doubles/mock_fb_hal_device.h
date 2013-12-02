@@ -56,6 +56,7 @@ public:
     {
         post = hook_post;
         setSwapInterval = hook_setSwapInterval;
+        enableScreen = hook_enableScreen;
     }
 
     MockFBHalDevice()
@@ -75,6 +76,14 @@ public:
         return mocker->setSwapInterval_interface(mock_fb, interval);
     }
 
+    static int hook_enableScreen(struct framebuffer_device_t* mock_fb, int enable)
+    {
+        MockFBHalDevice* mocker = static_cast<MockFBHalDevice*>(mock_fb);
+        return mocker->enableScreen_interface(mock_fb, enable);
+    }
+
+
+    MOCK_METHOD2(enableScreen_interface, int(struct framebuffer_device_t*, int));
     MOCK_METHOD2(post_interface, int(struct framebuffer_device_t*, buffer_handle_t));
     MOCK_METHOD2(setSwapInterval_interface, int(struct framebuffer_device_t*, int));
 

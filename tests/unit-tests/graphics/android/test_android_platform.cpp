@@ -19,7 +19,7 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
-#include "src/server/graphics/android/android_platform.h"
+#include "src/platform/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
