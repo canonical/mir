@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc_layerlist.h"
+#include "src/platform/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "hwc_struct_helper-inl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
@@ -39,7 +39,7 @@ public:
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
-        native_handle_2 = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
     }
 
     int width;
@@ -55,6 +55,7 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
     expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
     expected_layer.hints = 0;
     expected_layer.flags = 0;

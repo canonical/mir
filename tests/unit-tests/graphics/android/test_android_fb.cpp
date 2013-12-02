@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/logging/logger.h"
-#include "src/server/graphics/android/android_display.h"
+#include "src/platform/graphics/android/android_display.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -238,7 +238,7 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
 TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
-    auto mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+    auto mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
     Sequence seq;
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
         .InSequence(seq);

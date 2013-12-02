@@ -12,6 +12,6 @@ fi
 cmake --build ${BUILD_DIR}
 
 GTEST_OUTPUT=xml:./
-${BUILD_DIR}/bin/acceptance-tests
-${BUILD_DIR}/bin/integration-tests
-${BUILD_DIR}/bin/unit-tests
+${BUILD_DIR}/bin/mir_acceptance_tests
+${BUILD_DIR}/bin/mir_integration_tests
+${BUILD_DIR}/bin/mir_unit_tests

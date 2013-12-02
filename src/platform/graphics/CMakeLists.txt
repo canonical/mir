@@ -13,16 +13,24 @@ set(
 )
 
 add_library(
-  mirplatform SHARED
+  mirplatformgraphicsshared STATIC
 
   ${GRAPHICS_SOURCES}
 )
 
 target_link_libraries(
-  mirplatform
+  mirplatformgraphicsshared
   mirsharedgeometry
 
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
 )
 
-install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (MIR_PLATFORM STREQUAL "android")
+  include_directories(${LIBHARDWARE_INCLUDE_DIRS})
+  add_subdirectory(android/)
+endif()
+
+if (MIR_PLATFORM STREQUAL "gbm")
+  add_subdirectory(gbm/)
+endif()
+

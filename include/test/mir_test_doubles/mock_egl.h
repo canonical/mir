@@ -58,7 +58,6 @@ class MockEGL
 public:
     MockEGL();
     ~MockEGL();
-    void silence_uninteresting();
 
     typedef void (*generic_function_pointer_t)(void);
 

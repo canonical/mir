@@ -19,14 +19,14 @@
 #ifndef MIR_COMPOSITOR_RENDERER_H_
 #define MIR_COMPOSITOR_RENDERER_H_
 
-#include <memory>
-#include <functional>
-
 namespace mir
 {
+namespace graphics
+{
+class Buffer;
+}
 namespace compositor
 {
-class BufferStream;
 class CompositingCriteria;
 
 class Renderer
@@ -34,9 +34,8 @@ class Renderer
 public:
     virtual ~Renderer() = default;
 
-    virtual void clear(unsigned long frameno) = 0;
-    virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                                           CompositingCriteria const& info, BufferStream& stream) = 0;
+    virtual void clear() const = 0;
+    virtual void render(CompositingCriteria const& info, graphics::Buffer& buffer) const = 0;
 
 protected:
     Renderer() = default;

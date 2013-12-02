@@ -33,7 +33,6 @@ set(
   default_server_configuration.cpp
   asio_main_loop.cpp
   shared_library.cpp
-  udev_wrapper.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)

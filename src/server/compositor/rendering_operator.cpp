@@ -17,22 +17,23 @@
  */
 
 #include "rendering_operator.h"
+#include "mir/compositor/buffer_stream.h"
 
 namespace mc=mir::compositor;
 
 mc::RenderingOperator::RenderingOperator(
     Renderer& renderer,
-    std::function<void(std::shared_ptr<void> const&)> save_resource) :
+    std::function<void(std::shared_ptr<void> const&)> save_resource,
+    unsigned long frameno) :
     renderer(renderer),
-    save_resource(save_resource)
-{
-}
-
-mc::RenderingOperator::~RenderingOperator()
+    save_resource(save_resource),
+    frameno(frameno)
 {
 }
 
 void mc::RenderingOperator::operator()(CompositingCriteria const& info, BufferStream& stream)
 {
-    renderer.render(save_resource, info, stream);
+    auto compositor_buffer = stream.lock_compositor_buffer(frameno);
+    renderer.render(info, *compositor_buffer);
+    save_resource(compositor_buffer);
 }

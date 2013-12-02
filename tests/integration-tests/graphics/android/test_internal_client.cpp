@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/internal_client_window.h"
-#include "src/server/graphics/android/interpreter_cache.h"
-#include "src/server/graphics/android/internal_client.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/internal_client_window.h"
+#include "src/platform/graphics/android/interpreter_cache.h"
+#include "src/platform/graphics/android/internal_client.h"
 #include "src/server/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"

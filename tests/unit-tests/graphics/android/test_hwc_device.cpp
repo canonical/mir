@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc10_device.h"
-#include "src/server/graphics/android/hwc11_device.h"
-#include "src/server/graphics/android/hwc_layerlist.h"
-#include "src/server/graphics/android/hwc_vsync_coordinator.h"
+#include "src/platform/graphics/android/hwc10_device.h"
+#include "src/platform/graphics/android/hwc11_device.h"
+#include "src/platform/graphics/android/hwc_layerlist.h"
+#include "src/platform/graphics/android/hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_buffer.h"
