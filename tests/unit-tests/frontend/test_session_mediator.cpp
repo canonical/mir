@@ -506,7 +506,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
 {
     using namespace testing;
 
-    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer buffer;
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
@@ -520,7 +520,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
      * invocations create new surfaces in stubbed_session->mock_surfaces[].
      */
     EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_))
-        .WillOnce(SetArg<0>(&stub_buffer1));
+        .WillOnce(SetArg<0>(&buffer));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     mp::SurfaceId our_surface{surface_response.id()};
@@ -540,9 +540,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
     Mock::VerifyAndClearExpectations(stubbed_session->mock_surface.get());
 
     /* Getting the next buffer of our surface should post the original */
-    mg::Buffer* expected_buffer = &stub_buffer1;
-    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(Eq(expected_buffer)))
-        .WillOnce(SetArg<0>(&stub_buffer1));
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(Eq(&buffer))).Times(1);
 
     mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
