@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/internal_client_window.h"
+#include "src/platform/graphics/android/internal_client_window.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test_doubles/mock_fence.h"

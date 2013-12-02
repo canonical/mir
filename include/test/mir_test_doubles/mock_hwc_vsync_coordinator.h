@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_
 #define MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_
 
-#include "src/server/graphics/android/hwc_vsync_coordinator.h"
+#include "src/platform/graphics/android/hwc_vsync_coordinator.h"
 
 #include <gmock/gmock.h>
 
