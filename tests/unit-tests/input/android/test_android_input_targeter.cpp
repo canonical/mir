@@ -57,7 +57,7 @@ TEST(AndroidInputTargeterSetup, on_focus_cleared)
 
     mtd::MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
-    
+
     targeter.focus_cleared();
 }
 
@@ -77,7 +77,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
         .Times(1)
         .WillOnce(Return(stub_window_handle));
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
-    
+
     targeter.focus_changed(stub_channel);
 }
 

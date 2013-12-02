@@ -30,16 +30,16 @@ class EGLNativeDisplayContainer;
 namespace gbm
 {
 
-class DRMFDHandler;
+class BufferFileOps;
 
 class GBMClientPlatform : public ClientPlatform
 {
 public:
     GBMClientPlatform(ClientContext* const context,
-                      std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
+                      std::shared_ptr<BufferFileOps> const& buffer_file_ops,
                       EGLNativeDisplayContainer& display_container);
 
-    MirPlatformType platform_type() const; 
+    MirPlatformType platform_type() const;
     std::shared_ptr<ClientBufferFactory> create_buffer_factory();
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface);
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
@@ -47,7 +47,7 @@ public:
 
 private:
     ClientContext* const context;
-    std::shared_ptr<DRMFDHandler> const drm_fd_handler;
+    std::shared_ptr<BufferFileOps> const buffer_file_ops;
     EGLNativeDisplayContainer& display_container;
 };
 

@@ -58,7 +58,7 @@ struct SurfaceDataTest : public testing::Test
     geom::Size size;
     geom::Rectangle rect;
 
-    MockCallback mock_callback;
+    testing::NiceMock<MockCallback> mock_callback;
     std::function<void()> null_change_cb;
     std::function<void()> mock_change_cb;
 };
@@ -66,7 +66,7 @@ struct SurfaceDataTest : public testing::Test
 }
 
 TEST_F(SurfaceDataTest, basics)
-{ 
+{
     ms::SurfaceData data{name, rect, null_change_cb, false};
     EXPECT_EQ(name, data.name());
     EXPECT_EQ(rect.size, data.size());
@@ -75,7 +75,7 @@ TEST_F(SurfaceDataTest, basics)
 }
 
 TEST_F(SurfaceDataTest, update_position)
-{ 
+{
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
@@ -88,7 +88,7 @@ TEST_F(SurfaceDataTest, update_position)
 }
 
 TEST_F(SurfaceDataTest, update_size)
-{ 
+{
     geom::Size const new_size{34, 56};
 
     EXPECT_CALL(mock_callback, call())

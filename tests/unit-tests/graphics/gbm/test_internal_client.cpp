@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/gbm/internal_client.h"
+#include "src/platform/graphics/gbm/internal_client.h"
 #include "mir/graphics/internal_surface.h"
 #include "mir_toolkit/mesa/native_display.h"
-#include "src/server/graphics/gbm/internal_native_surface.h"
+#include "src/platform/graphics/gbm/internal_native_surface.h"
 
 #include <gtest/gtest.h>
 
@@ -42,9 +42,8 @@ public:
         return MirPixelFormat();
     }
 
-    std::shared_ptr<mg::Buffer> advance_client_buffer()
+    void swap_buffers(std::shared_ptr<mg::Buffer>&)
     {
-        return std::shared_ptr<mg::Buffer>();
     }
 };
 }

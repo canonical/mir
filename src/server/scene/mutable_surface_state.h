@@ -41,7 +41,7 @@ public:
         std::vector<geometry::Rectangle> const& input_rectangles) = 0;
 
 protected:
-    MutableSurfaceState() = default; 
+    MutableSurfaceState() = default;
     virtual ~MutableSurfaceState() noexcept = default;
     MutableSurfaceState(const MutableSurfaceState&) = delete;
     MutableSurfaceState& operator=(const MutableSurfaceState& ) = delete;

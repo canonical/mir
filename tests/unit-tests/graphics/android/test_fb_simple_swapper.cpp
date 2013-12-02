@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/framebuffers.h"
-#include "src/server/graphics/android/graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/framebuffers.h"
+#include "src/platform/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -59,7 +59,7 @@ public:
         buffer3 = std::make_shared<mtd::MockBuffer>();
         mock_allocator = std::make_shared<MockGraphicBufferAllocator>();
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fb_hal = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, fbnum); 
+        mock_fb_hal = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, fbnum);
         EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
             .Times(AtLeast(0))
             .WillOnce(Return(buffer1))
@@ -102,7 +102,7 @@ TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
     EXPECT_CALL(*mock_hwc_device, getDisplayAttributes_interface(mock_hwc_device.get(), HWC_DISPLAY_PRIMARY, hwc_configs,_,_))
         .Times(1)
         .WillOnce(Invoke(display_attribute_handler));
-   
+
     auto display_size = mir::geometry::Size{display_width, display_height};
     EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, _, mga::BufferUsage::use_framebuffer_gles))
         .Times(2)
@@ -141,7 +141,7 @@ TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
         .WillOnce(DoAll(SetArgPointee<3>(visual_id), Return(EGL_TRUE)));
     EXPECT_CALL(mock_egl, eglTerminate(fake_display))
         .InSequence(seq);
- 
+
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
     EXPECT_EQ(geom::PixelFormat::argb_8888, framebuffers.fb_format());
 }
@@ -178,7 +178,7 @@ TEST_F(PostingFBBundleTest, hwc_version_11_format_selection_failure)
         .WillOnce(DoAll(SetArgPointee<4>(0), Return(EGL_TRUE)));
     EXPECT_CALL(mock_egl, eglTerminate(fake_display))
         .InSequence(seq);
-    
+
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
 }
@@ -200,7 +200,7 @@ TEST_F(PostingFBBundleTest, bundle_from_fb)
 TEST_F(PostingFBBundleTest, determine_fbnum_always_reports_2_minimum)
 {
     using namespace testing;
-    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, 0); 
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, 0);
     EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
         .Times(2)
         .WillRepeatedly(Return(nullptr));
@@ -220,4 +220,4 @@ TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
     EXPECT_NE(first_buffer, framebuffers.last_rendered_buffer());
     first_buffer.reset();
     EXPECT_EQ(first_buffer_ptr, framebuffers.last_rendered_buffer().get());
-} 
+}

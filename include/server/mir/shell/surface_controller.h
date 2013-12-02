@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace scene 
+namespace scene
 {
 class BasicSurface;
 }

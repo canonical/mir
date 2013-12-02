@@ -46,7 +46,7 @@ public:
         testing_key_event_scan_code(13)
     {
     }
-                       
+
 
     // The input publisher does not care about event semantics so we only highlight
     // a few fields for transport verification
@@ -90,12 +90,12 @@ public:
             &filler_pointer_properties,
             &filler_pointer_coordinates);
     }
-    
+
     bool must_receive_handled_signal()
     {
         uint32_t seq;
         bool handled;
-        
+
         auto status = input_publisher->receiveFinishedSignal(&seq, &handled);
         return (status == droidinput::OK) && handled;
     }
@@ -104,7 +104,7 @@ public:
 
     int incrementing_seq_id;
     int32_t testing_key_event_scan_code;
-    
+
     // Some default values
     // device_id must be > 0 or input publisher will reject
     static const int32_t filler_device_id = 1;
@@ -127,7 +127,7 @@ public:
         close(server_fd);
         close(client_fd);
     }
-    
+
     void flush_channels()
     {
         fsync(server_fd);
@@ -146,7 +146,7 @@ std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(10
 TEST_F(AndroidInputReceiverSetup, receiever_takes_channel_fd)
 {
     mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
-    
+
     EXPECT_EQ(client_fd, receiver.fd());
 }
 
@@ -154,11 +154,11 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 {
     mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
-    
+
     producer.produce_a_key_event();
-    
+
     flush_channels();
-    
+
     MirEvent ev;
     EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
 
@@ -170,15 +170,15 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 {
     mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
-    
+
     producer.produce_a_key_event();
     flush_channels();
-    
+
     MirEvent ev;
     EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
-    
+
     flush_channels();
-    
+
     EXPECT_TRUE (producer.must_receive_handled_signal());
 }
 
@@ -186,14 +186,14 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 {
     mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
-    
+
     // Produce 3 motion events before client handles any.
     producer.produce_a_motion_event();
     producer.produce_a_motion_event();
     producer.produce_a_motion_event();
 
     flush_channels();
-    
+
     MirEvent ev;
     // Handle all three events as a batched event
     EXPECT_TRUE(receiver.next_event(next_event_timeout, ev));

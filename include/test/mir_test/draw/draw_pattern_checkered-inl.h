@@ -39,7 +39,7 @@ void DrawPatternCheckered<Rows,Cols>::draw(MirGraphicsRegion const& region) cons
         {
             int key_row = i % Rows;
             int key_col = j % Cols;
-            uint32_t *pixel = reinterpret_cast<uint32_t*>(&region.vaddr[j*region.stride + (i * bpp)]); 
+            uint32_t *pixel = reinterpret_cast<uint32_t*>(&region.vaddr[j*region.stride + (i * bpp)]);
             *pixel = color_pattern[key_row][key_col];
         }
     }
@@ -58,7 +58,7 @@ bool DrawPatternCheckered<Rows, Cols>::check(MirGraphicsRegion const& region) co
         {
             int key_row = i % Rows;
             int key_col = j % Cols;
-            uint32_t *pixel = reinterpret_cast<uint32_t*>(&region.vaddr[j*region.stride + (i * bpp)]); 
+            uint32_t *pixel = reinterpret_cast<uint32_t*>(&region.vaddr[j*region.stride + (i * bpp)]);
             if ( *pixel != color_pattern[key_row][key_col] )
             {
                 return false;

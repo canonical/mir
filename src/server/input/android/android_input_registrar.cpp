@@ -59,7 +59,7 @@ void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChann
 
         auto application_handle = new mia::InputApplicationHandle(surface);
         window_handle = new mia::InputWindowHandle(application_handle, channel, surface);
-    
+
         window_handles[channel] = window_handle;
     }
 

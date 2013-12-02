@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/graphics/gbm/internal_native_display.h"
+#include "src/platform/graphics/gbm/internal_native_display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 
@@ -76,9 +76,9 @@ MATCHER_P(PackageMatches, package, "")
 TEST_F(InternalNativeDisplay, display_get_platform_matches_construction_platform)
 {
     using namespace ::testing;
-    
-    mgg::InternalNativeDisplay native_display(platform_package); 
-    
+
+    mgg::InternalNativeDisplay native_display(platform_package);
+
     MirPlatformPackage test_package;
     memset(&test_package, 0, sizeof(MirPlatformPackage));
     native_display.display_get_platform(&native_display, &test_package);

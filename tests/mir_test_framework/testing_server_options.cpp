@@ -159,7 +159,7 @@ public:
     {
         f(display_buffer);
     }
- 
+
     std::shared_ptr<mg::DisplayConfiguration> configuration() override
     {
         return std::make_shared<StubDisplayConfiguration>(rect);
@@ -207,14 +207,13 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mc::Renderer
 {
 public:
-    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mc::CompositingCriteria const&, mc::BufferStream& stream)
+    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
-        // Need to acquire the texture to cycle buffers
-        stream.lock_compositor_buffer(0);
     }
 
-    void clear(unsigned long) override {}
+    void clear() const override
+    {
+    }
 };
 
 class StubRendererFactory : public mc::RendererFactory

@@ -155,7 +155,8 @@ bool me::WindowManager::handle(MirEvent const& event)
             display_off = !display_off;
 
             display->configure(*conf.get());
-            compositor->start();
+            if (!display_off)
+                compositor->start();
             return true;
         }
     }

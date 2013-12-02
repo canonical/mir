@@ -66,7 +66,7 @@ public:
 
     void hwc_set_return_fence(int fence)
     {
-        fb_fence = fence; 
+        fb_fence = fence;
     }
 
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
@@ -87,7 +87,7 @@ public:
             set_layerlist.back().visibleRegionScreen = {0, nullptr};
         }
 
-        if (primary_display->hwLayers)
+        if (primary_display->numHwLayers >= 2)
         {
             primary_display->hwLayers[1].releaseFenceFd = fb_fence;
         }

@@ -36,7 +36,7 @@ static int map_key(mircv::XKBMapper &mapper, MirKeyAction action, int scan_code)
     ev.action = action;
     ev.scan_code = scan_code;
     ev.repeat_count = 0;
-    
+
     mapper.update_state_and_map_event(ev);
     return ev.key_code;
 }
@@ -47,7 +47,7 @@ static int map_repeated_key(mircv::XKBMapper &mapper, MirKeyAction action, int s
     ev.action = action;
     ev.scan_code = scan_code;
     ev.repeat_count = 1;
-    
+
     mapper.update_state_and_map_event(ev);
     return ev.key_code;
 }
@@ -57,7 +57,7 @@ static int map_repeated_key(mircv::XKBMapper &mapper, MirKeyAction action, int s
 TEST(XKBMapper, maps_generic_us_english_keys)
 {
     mircv::XKBMapper mapper;
-    
+
     EXPECT_EQ(XKB_KEY_4, map_key(mapper, mir_key_action_down, KEY_4));
     EXPECT_EQ(XKB_KEY_Shift_L, map_key(mapper, mir_key_action_down, KEY_LEFTSHIFT));
     EXPECT_EQ(XKB_KEY_dollar, map_key(mapper, mir_key_action_down, KEY_4));

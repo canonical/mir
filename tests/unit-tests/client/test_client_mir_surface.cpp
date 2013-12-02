@@ -126,7 +126,7 @@ struct MockServerPackageGenerator : public StubServerTool
     int height_sent;
     int pf_sent;
     int stride_sent;
-    
+
     int input_fd;
 
     private:
@@ -214,8 +214,8 @@ struct StubClientPlatform : public mcl::ClientPlatform
 {
     MirPlatformType platform_type() const
     {
-        return mir_platform_type_android; 
-    } 
+        return mir_platform_type_android;
+    }
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::shared_ptr<MockClientBufferFactory>();
@@ -310,7 +310,7 @@ struct MirClientSurfaceTest : public testing::Test
 
         test_server->comm->start();
 
-        mock_buffer_factory = std::make_shared<mt::MockClientBufferFactory>();
+        mock_buffer_factory = std::make_shared<testing::NiceMock<mt::MockClientBufferFactory>>();
 
         input_platform = std::make_shared<mt::StubClientInputPlatform>();
 
@@ -497,7 +497,7 @@ static void null_event_callback(MirSurface*, MirEvent const*, void*)
 TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_specified)
 {
     using namespace ::testing;
-    
+
     auto mock_input_platform = std::make_shared<mt::MockClientInputPlatform>();
     auto mock_input_thread = std::make_shared<NiceMock<mt::MockInputReceiverThread>>();
     MirEventDelegate delegate = {null_event_callback, nullptr};

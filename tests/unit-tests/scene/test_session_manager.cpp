@@ -167,7 +167,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     session_manager.create_surface_for(session1, msh::a_surface());
 }
 
-namespace 
+namespace
 {
 
 struct SessionManagerSessionListenerSetup : public testing::Test

@@ -34,6 +34,12 @@
 extern "C" {
 #endif
 
+typedef enum MirBool
+{
+    mir_false = 0,
+    mir_true = 1
+} MirBool;
+
 /* Display server connection API */
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
@@ -157,7 +163,7 @@ enum { mir_platform_package_max = 32 };
 typedef enum MirPlatformType
 {
     mir_platform_type_gbm,
-    mir_platform_type_android    
+    mir_platform_type_android
 } MirPlatformType;
 
 typedef struct MirPlatformPackage
@@ -184,7 +190,7 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
-/** 
+/**
  * DEPRECATED. use MirDisplayConfiguration
  */
 enum { mir_supported_pixel_format_max = 32 };
@@ -192,7 +198,7 @@ typedef struct MirDisplayInfo
 {
     uint32_t width;
     uint32_t height;
-    
+
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
@@ -240,7 +246,7 @@ typedef struct MirDisplayOutput
     uint32_t num_modes;
     MirDisplayMode* modes;
     uint32_t preferred_mode;
-    uint32_t current_mode; 
+    uint32_t current_mode;
 
     uint32_t num_output_formats;
     MirPixelFormat* output_formats;
@@ -257,7 +263,7 @@ typedef struct MirDisplayOutput
 
     uint32_t physical_width_mm;
     uint32_t physical_height_mm;
-    
+
     MirPowerMode power_mode;
 } MirDisplayOutput;
 

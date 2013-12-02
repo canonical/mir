@@ -104,16 +104,16 @@ mir::geometry::PixelFormat ms::SurfaceImpl::pixel_format() const
     return surface->pixel_format();
 }
 
-std::shared_ptr<mg::Buffer> ms::SurfaceImpl::advance_client_buffer()
+void ms::SurfaceImpl::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
 {
-    return surface->advance_client_buffer();
+    surface->swap_buffers(buffer);
 }
 
 void ms::SurfaceImpl::allow_framedropping(bool allow)
 {
     surface->allow_framedropping(allow);
 }
- 
+
 void ms::SurfaceImpl::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
@@ -247,6 +247,15 @@ void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& contr
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);
+
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = id.as_value();
+    e.resize.width = size.width.as_int();
+    e.resize.height = size.height.as_int();
+
+    event_sink->handle_event(e);
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)

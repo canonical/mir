@@ -20,9 +20,9 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "src/server/graphics/android/buffer.h"
+#include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test/draw/android_graphics.h"
@@ -143,12 +143,12 @@ struct TestClient
         auto native_display = mir_connection_get_egl_native_display(connection);
         auto egl_display = eglGetDisplay(native_display);
         eglInitialize(egl_display, &major, &minor);
-        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n); 
+        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
-        auto mir_surface = create_mir_surface(connection, egl_display, egl_config); 
+        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);
         auto native_window = static_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface)); 
-    
+            mir_surface_get_egl_native_window(mir_surface));
+
         egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
         context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
         eglMakeCurrent(egl_display, egl_surface, egl_surface, context);
