@@ -239,7 +239,7 @@ void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& regio
     surface->set_input_region(region);
 }
 
-void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& controller)
+void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceRanker> const& controller)
 {
     controller->raise(surface);
 }

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SHELL_SURFACE_CONTROLLER_H_
-#define MIR_SHELL_SURFACE_CONTROLLER_H_
+#ifndef MIR_SHELL_SURFACE_RANKER_H_
+#define MIR_SHELL_SURFACE_RANKER_H_
 
 #include <memory>
 
@@ -32,19 +32,19 @@ class BasicSurface;
 namespace shell
 {
 
-class SurfaceController
+class SurfaceRanker
 {
 public:
     virtual void raise(std::weak_ptr<scene::BasicSurface> const& surface) = 0;
 
 protected:
-    SurfaceController() = default;
-    virtual ~SurfaceController() = default;
-    SurfaceController(SurfaceController const&) = delete;
-    SurfaceController& operator=(SurfaceController const&) = delete;
+    SurfaceRanker() = default;
+    virtual ~SurfaceRanker() = default;
+    SurfaceRanker(SurfaceRanker const&) = delete;
+    SurfaceRanker& operator=(SurfaceRanker const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_SHELL_SURFACE_CONTROLLER_H_ */
+#endif /* MIR_SHELL_SURFACE_RANKER_H_ */

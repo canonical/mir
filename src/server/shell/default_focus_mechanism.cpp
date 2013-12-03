@@ -27,7 +27,7 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTargeter> const& input_targeter,
-                                                  std::shared_ptr<msh::SurfaceController> const& surface_controller)
+                                                  std::shared_ptr<msh::SurfaceRanker> const& surface_controller)
   : input_targeter(input_targeter),
     surface_controller(surface_controller)
 {

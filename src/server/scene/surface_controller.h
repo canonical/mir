@@ -35,7 +35,7 @@ namespace scene
 class SurfaceStackModel;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public SurfaceBuilder, public shell::SurfaceController
+class SurfaceController : public SurfaceBuilder, public shell::SurfaceRanker
 {
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);

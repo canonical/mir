@@ -32,7 +32,7 @@ namespace mir
 namespace shell
 {
 class InputTargeter;
-class SurfaceController;
+class SurfaceRanker;
 
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
@@ -50,7 +50,7 @@ public:
 
     virtual void allow_framedropping(bool) = 0;
 
-    virtual void raise(std::shared_ptr<SurfaceController> const& controller) = 0;
+    virtual void raise(std::shared_ptr<SurfaceRanker> const& controller) = 0;
 
     virtual void resize(geometry::Size const& size) = 0;
     virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
