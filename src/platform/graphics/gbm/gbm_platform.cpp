@@ -18,7 +18,7 @@
 
 #include "gbm_platform.h"
 #include "buffer_allocator.h"
-#include "gbm_display.h"
+#include "display.h"
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
@@ -120,7 +120,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
 std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy)
 {
-    return std::make_shared<mgg::GBMDisplay>(
+    return std::make_shared<mgg::Display>(
         this->shared_from_this(),
         initial_conf_policy,
         listener);

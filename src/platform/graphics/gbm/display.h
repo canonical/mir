@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
-#define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include "real_kms_output_container.h"
@@ -50,13 +50,13 @@ class DisplayBuffer;
 class KMSOutput;
 class Cursor;
 
-class GBMDisplay : public Display
+class Display : public graphics::Display
 {
 public:
-    GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
+    Display(std::shared_ptr<GBMPlatform> const& platform,
                std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                std::shared_ptr<DisplayReport> const& listener);
-    ~GBMDisplay();
+    ~Display();
 
     geometry::Rectangle view_area() const;
     void for_each_display_buffer(
@@ -98,4 +98,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_GBM_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_H_ */

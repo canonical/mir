@@ -19,7 +19,7 @@ add_library(
   gbm_buffer.cpp
   cursor.cpp
   gbm_display_helpers.cpp
-  gbm_display.cpp
+  display.cpp
   real_kms_display_configuration.cpp
   drm_mode_resources.cpp
   display_buffer.cpp
