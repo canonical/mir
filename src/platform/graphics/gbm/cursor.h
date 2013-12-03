@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_GRAPHICS_GBM_GBM_CURSOR_H_
-#define MIR_GRAPHICS_GBM_GBM_CURSOR_H_
+#ifndef MIR_GRAPHICS_GBM_CURSOR_H_
+#define MIR_GRAPHICS_GBM_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
 
@@ -54,15 +54,15 @@ protected:
     CurrentConfiguration& operator=(CurrentConfiguration const&) = delete;
 };
 
-class GBMCursor : public Cursor
+class Cursor : public graphics::Cursor
 {
 public:
-    GBMCursor(
+    Cursor(
         gbm_device* device,
         KMSOutputContainer& output_container,
         std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
-    ~GBMCursor() noexcept;
+    ~Cursor() noexcept;
 
     void set_image(const void* raw_argb, geometry::Size size);
 
@@ -97,4 +97,4 @@ private:
 }
 
 
-#endif /* MIR_GRAPHICS_GBM_GBM_CURSOR_H_ */
+#endif /* MIR_GRAPHICS_GBM_CURSOR_H_ */

@@ -17,7 +17,7 @@
  */
 
 #include "gbm_display.h"
-#include "gbm_cursor.h"
+#include "cursor.h"
 #include "gbm_platform.h"
 #include "gbm_display_buffer.h"
 #include "kms_display_configuration.h"
@@ -250,7 +250,7 @@ void mgg::GBMDisplay::resume()
     if (cursor) cursor->show_at_last_known_position();
 }
 
-auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
+auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<graphics::Cursor>
 {
     if (!cursor)
     {
@@ -273,8 +273,8 @@ auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
             GBMDisplay& display;
         };
 
-        cursor = std::make_shared<GBMCursor>(platform->gbm.device, output_container,
-                                             std::make_shared<KMSCurrentConfiguration>(*this));
+        cursor = std::make_shared<Cursor>(platform->gbm.device, output_container,
+                                          std::make_shared<KMSCurrentConfiguration>(*this));
     }
 
     return cursor;
