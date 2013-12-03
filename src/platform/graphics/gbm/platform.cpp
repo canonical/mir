@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gbm_platform.h"
+#include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
 #include "internal_client.h"
@@ -91,10 +91,10 @@ struct RealVTFileOperations : public mgg::VTFileOperations
 
 }
 
-std::shared_ptr<mgg::InternalNativeDisplay> mgg::GBMPlatform::internal_native_display;
-bool mgg::GBMPlatform::internal_display_clients_present;
-mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
-                              std::shared_ptr<VirtualTerminal> const& vt)
+std::shared_ptr<mgg::InternalNativeDisplay> mgg::Platform::internal_native_display;
+bool mgg::Platform::internal_display_clients_present;
+mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
+                        std::shared_ptr<VirtualTerminal> const& vt)
     : udev{std::make_shared<UdevContext>()},
       listener{listener},
       vt{vt}
@@ -104,20 +104,20 @@ mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
     internal_display_clients_present = false;
 }
 
-mgg::GBMPlatform::~GBMPlatform()
+mgg::Platform::~Platform()
 {
     internal_native_display.reset();
     internal_display_clients_present = false;
 }
 
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mgg::Platform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
     return std::make_shared<mgg::BufferAllocator>(gbm.device, buffer_initializer);
 }
 
-std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
+std::shared_ptr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy)
 {
     return std::make_shared<mgg::Display>(
@@ -126,12 +126,12 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
         listener);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgg::Platform::get_ipc_package()
 {
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgg::GBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
+void mgg::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)
@@ -148,12 +148,12 @@ void mgg::GBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* b
     packer->pack_size(buffer->size());
 }
 
-void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
+void mgg::Platform::drm_auth_magic(drm_magic_t magic)
 {
     drm.auth_magic(magic);
 }
 
-std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mgg::Platform::create_internal_client()
 {
     if (!internal_native_display)
         internal_native_display = std::make_shared<mgg::InternalNativeDisplay>(get_ipc_package());
@@ -161,7 +161,7 @@ std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
     return std::make_shared<mgg::InternalClient>(internal_native_display);
 }
 
-EGLNativeDisplayType mgg::GBMPlatform::egl_native_display() const
+EGLNativeDisplayType mgg::Platform::egl_native_display() const
 {
     return gbm.device;
 }
@@ -170,11 +170,11 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
-    return std::make_shared<mgg::GBMPlatform>(report, vt);
+    return std::make_shared<mgg::Platform>(report, vt);
 }
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
-    return ((mgg::GBMPlatform::internal_display_clients_present) &&
-            (display == mgg::GBMPlatform::internal_native_display.get()));
+    return ((mgg::Platform::internal_display_clients_present) &&
+            (display == mgg::Platform::internal_native_display.get()));
 }

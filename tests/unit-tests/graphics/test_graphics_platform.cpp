@@ -26,7 +26,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "mir_test_doubles/mock_android_hw.h"
@@ -84,7 +84,7 @@ public:
 #ifdef ANDROID
         return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mg::NullDisplayReport>());
 #else
-        return std::make_shared<mg::gbm::GBMPlatform>(
+        return std::make_shared<mg::gbm::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif

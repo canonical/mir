@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/platform.h"
 #include "src/platform/graphics/gbm/display.h"
 #include "src/platform/graphics/gbm/virtual_terminal.h"
 #include "src/server/logging/display_report.h"
@@ -117,15 +117,15 @@ public:
         fake_devices.add_standard_drm_devices();
     }
 
-    std::shared_ptr<mgg::GBMPlatform> create_platform()
+    std::shared_ptr<mgg::Platform> create_platform()
     {
-        return std::make_shared<mgg::GBMPlatform>(
+        return std::make_shared<mgg::Platform>(
             null_report,
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
     std::shared_ptr<mgg::Display> create_display(
-        std::shared_ptr<mgg::GBMPlatform> const& platform)
+        std::shared_ptr<mgg::Platform> const& platform)
     {
         return std::make_shared<mgg::Display>(
             platform,
@@ -382,7 +382,7 @@ TEST_F(GBMDisplayTest, create_display_gbm_failure)
 
     EXPECT_THROW({
         auto platform = create_platform();
-    }, std::runtime_error) << "Expected c'tor of GBMPlatform to throw an exception";
+    }, std::runtime_error) << "Expected c'tor of Platform to throw an exception";
 }
 
 namespace
@@ -640,7 +640,7 @@ TEST_F(GBMDisplayTest, constructor_sets_vt_graphics_mode)
     EXPECT_CALL(*mock_vt, set_graphics_mode())
         .Times(1);
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_report, mock_vt);
+    auto platform = std::make_shared<mgg::Platform>(null_report, mock_vt);
 
     auto display = create_display(platform);
 }
@@ -682,7 +682,7 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
     EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(
+    auto platform = std::make_shared<mgg::Platform>(
                         mock_report,
                         std::make_shared<mtd::NullVirtualTerminal>());
     auto display = std::make_shared<mgg::Display>(

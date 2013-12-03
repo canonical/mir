@@ -18,7 +18,7 @@
 
 #include "display.h"
 #include "cursor.h"
-#include "gbm_platform.h"
+#include "platform.h"
 #include "display_buffer.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
@@ -74,7 +74,7 @@ private:
 
 }
 
-mgg::Display::Display(std::shared_ptr<GBMPlatform> const& platform,
+mgg::Display::Display(std::shared_ptr<Platform> const& platform,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),

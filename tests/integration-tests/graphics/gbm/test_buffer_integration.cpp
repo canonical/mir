@@ -16,7 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_properties.h"

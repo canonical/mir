@@ -17,7 +17,7 @@
  */
 
 #include "display_buffer.h"
-#include "gbm_platform.h"
+#include "platform.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
 #include "gbm_buffer.h"
@@ -95,7 +95,7 @@ void ensure_egl_image_extensions()
 }
 
 mgg::DisplayBuffer::DisplayBuffer(
-    std::shared_ptr<GBMPlatform> const& platform,
+    std::shared_ptr<Platform> const& platform,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMSurfaceUPtr surface_gbm_param,

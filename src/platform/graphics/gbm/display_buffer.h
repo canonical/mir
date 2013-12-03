@@ -36,14 +36,14 @@ class DisplayReport;
 namespace gbm
 {
 
-class GBMPlatform;
+class Platform;
 class BufferObject;
 class KMSOutput;
 
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
+    DisplayBuffer(std::shared_ptr<Platform> const& platform,
                   std::shared_ptr<DisplayReport> const& listener,
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMSurfaceUPtr surface_gbm,
@@ -67,7 +67,7 @@ private:
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
-    std::shared_ptr<GBMPlatform> const platform;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from GBMPlatform */
     helpers::DRMHelper& drm;

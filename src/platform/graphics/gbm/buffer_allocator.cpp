@@ -19,7 +19,7 @@
 
 #include "buffer_allocator.h"
 #include "gbm_buffer.h"
-#include "gbm_platform.h"
+#include "platform.h"
 #include "buffer_texture_binder.h"
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"

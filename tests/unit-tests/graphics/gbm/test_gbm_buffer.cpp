@@ -23,7 +23,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/platform.h"
 #include "src/platform/graphics/gbm/gbm_buffer.h"
 #include "src/platform/graphics/gbm/buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -73,8 +73,9 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
-                                                      std::make_shared<mtd::NullVirtualTerminal>());
+        platform = std::make_shared<mgg::Platform>(
+            std::make_shared<mg::NullDisplayReport>(),
+            std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
         allocator.reset(new mgg::BufferAllocator(platform->gbm.device, null_init));
     }
@@ -83,7 +84,7 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL>  mock_gl;
-    std::shared_ptr<mgg::GBMPlatform> platform;
+    std::shared_ptr<mgg::Platform> platform;
     std::shared_ptr<mg::NullBufferInitializer> null_init;
     std::unique_ptr<mgg::BufferAllocator> allocator;
 

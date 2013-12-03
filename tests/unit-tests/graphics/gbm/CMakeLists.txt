@@ -1,5 +1,5 @@
 list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp

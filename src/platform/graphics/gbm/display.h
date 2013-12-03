@@ -45,7 +45,7 @@ class EventHandlerRegister;
 namespace gbm
 {
 
-class GBMPlatform;
+class Platform;
 class DisplayBuffer;
 class KMSOutput;
 class Cursor;
@@ -53,7 +53,7 @@ class Cursor;
 class Display : public graphics::Display
 {
 public:
-    Display(std::shared_ptr<GBMPlatform> const& platform,
+    Display(std::shared_ptr<Platform> const& platform,
                std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                std::shared_ptr<DisplayReport> const& listener);
     ~Display();
@@ -84,7 +84,7 @@ private:
     void clear_connected_unused_outputs();
 
     std::mutex configuration_mutex;
-    std::shared_ptr<GBMPlatform> const platform;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     UdevMonitor monitor;
     helpers::EGLHelper shared_egl;

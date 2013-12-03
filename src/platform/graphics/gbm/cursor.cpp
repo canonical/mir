@@ -17,7 +17,7 @@
  */
 
 #include "cursor.h"
-#include "gbm_platform.h"
+#include "platform.h"
 #include "kms_output.h"
 #include "kms_output_container.h"
 #include "kms_display_configuration.h"
