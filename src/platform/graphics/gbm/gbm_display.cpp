@@ -19,7 +19,7 @@
 #include "gbm_display.h"
 #include "cursor.h"
 #include "gbm_platform.h"
-#include "gbm_display_buffer.h"
+#include "display_buffer.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
@@ -105,7 +105,8 @@ mgg::GBMDisplay::~GBMDisplay()
 {
 }
 
-void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f)
+void mgg::GBMDisplay::for_each_display_buffer(
+    std::function<void(graphics::DisplayBuffer&)> const& f)
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -128,7 +129,7 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
         std::lock_guard<std::mutex> lg{configuration_mutex};
 
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
-        std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
+        std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
         /* Reset the state of all outputs */
         kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
@@ -163,11 +164,13 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                 platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
                                                      bounding_rect.size.height.as_uint32_t());
 
-            std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener,
-                                                                      kms_outputs,
-                                                                      std::move(surface),
-                                                                      bounding_rect,
-                                                                      shared_egl.context()}};
+            std::unique_ptr<DisplayBuffer> db{
+                new DisplayBuffer{platform, listener,
+                                  kms_outputs,
+                                  std::move(surface),
+                                  bounding_rect,
+                                  shared_egl.context()}};
+
             display_buffers_new.push_back(std::move(db));
         });
 

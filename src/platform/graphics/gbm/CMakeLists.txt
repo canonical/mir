@@ -22,7 +22,7 @@ add_library(
   gbm_display.cpp
   real_kms_display_configuration.cpp
   drm_mode_resources.cpp
-  gbm_display_buffer.cpp
+  display_buffer.cpp
   real_kms_output.cpp
   real_kms_output_container.cpp
   kms_page_flipper.cpp

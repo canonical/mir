@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gbm_display_buffer.h"
+#include "display_buffer.h"
 #include "gbm_platform.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
@@ -94,12 +94,13 @@ void ensure_egl_image_extensions()
 
 }
 
-mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                                        std::shared_ptr<DisplayReport> const& listener,
-                                        std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                                        GBMSurfaceUPtr surface_gbm_param,
-                                        geom::Rectangle const& area,
-                                        EGLContext shared_context)
+mgg::DisplayBuffer::DisplayBuffer(
+    std::shared_ptr<GBMPlatform> const& platform,
+    std::shared_ptr<DisplayReport> const& listener,
+    std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+    GBMSurfaceUPtr surface_gbm_param,
+    geom::Rectangle const& area,
+    EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       platform(platform),
       listener(listener),
@@ -147,7 +148,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
         });
 }
 
-mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
+mgg::DisplayBuffer::~DisplayBuffer()
 {
     /*
      * There is no need to destroy last_flipped_bufobj manually.
@@ -157,22 +158,22 @@ mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
         last_flipped_bufobj->release();
 }
 
-geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
+geom::Rectangle mgg::DisplayBuffer::view_area() const
 {
     return area;
 }
 
-bool mgg::GBMDisplayBuffer::can_bypass() const
+bool mgg::DisplayBuffer::can_bypass() const
 {
     return true;
 }
 
-void mgg::GBMDisplayBuffer::post_update()
+void mgg::DisplayBuffer::post_update()
 {
     post_update(nullptr);
 }
 
-void mgg::GBMDisplayBuffer::post_update(
+void mgg::DisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
@@ -238,7 +239,7 @@ void mgg::GBMDisplayBuffer::post_update(
     last_flipped_bypass_buf = bypass_buf;
 }
 
-mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
+mgg::BufferObject* mgg::DisplayBuffer::get_front_buffer_object()
 {
     auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
     auto ret = get_buffer_object(front);
@@ -249,7 +250,7 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
     return ret;
 }
 
-mgg::BufferObject* mgg::GBMDisplayBuffer::get_buffer_object(
+mgg::BufferObject* mgg::DisplayBuffer::get_buffer_object(
     struct gbm_bo *bo)
 {
     if (!bo)
@@ -281,7 +282,7 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_buffer_object(
 }
 
 
-bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
+bool mgg::DisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
 {
     int page_flips_pending{0};
 
@@ -306,7 +307,7 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
     return true;
 }
 
-void mgg::GBMDisplayBuffer::make_current()
+void mgg::DisplayBuffer::make_current()
 {
     if (!egl.make_current())
     {
@@ -314,12 +315,12 @@ void mgg::GBMDisplayBuffer::make_current()
     }
 }
 
-void mgg::GBMDisplayBuffer::release_current()
+void mgg::DisplayBuffer::release_current()
 {
     egl.release_current();
 }
 
-void mgg::GBMDisplayBuffer::schedule_set_crtc()
+void mgg::DisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;
 }

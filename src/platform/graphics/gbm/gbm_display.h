@@ -46,8 +46,8 @@ namespace gbm
 {
 
 class GBMPlatform;
+class DisplayBuffer;
 class KMSOutput;
-class GBMDisplayBuffer;
 class Cursor;
 
 class GBMDisplay : public Display
@@ -59,7 +59,8 @@ public:
     ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+    void for_each_display_buffer(
+        std::function<void(graphics::DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
     void configure(DisplayConfiguration const& conf);
@@ -87,7 +88,7 @@ private:
     std::shared_ptr<DisplayReport> const listener;
     UdevMonitor monitor;
     helpers::EGLHelper shared_egl;
-    std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
+    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     RealKMSOutputContainer output_container;
     RealKMSDisplayConfiguration current_display_configuration;
     std::shared_ptr<Cursor> cursor;

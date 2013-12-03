@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_BUFFER_H_
-#define MIR_GRAPHICS_GBM_GBM_DISPLAY_BUFFER_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
 #include "gbm_display_helpers.h"
@@ -40,16 +40,16 @@ class GBMPlatform;
 class BufferObject;
 class KMSOutput;
 
-class GBMDisplayBuffer : public DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                     std::shared_ptr<DisplayReport> const& listener,
-                     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                     GBMSurfaceUPtr surface_gbm,
-                     geometry::Rectangle const& area,
-                     EGLContext shared_context);
-    ~GBMDisplayBuffer();
+    DisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
+                  std::shared_ptr<DisplayReport> const& listener,
+                  std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+                  GBMSurfaceUPtr surface_gbm,
+                  geometry::Rectangle const& area,
+                  EGLContext shared_context);
+    ~DisplayBuffer();
 
     geometry::Rectangle view_area() const;
     void make_current();
@@ -82,4 +82,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_GBM_DISPLAY_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_ */
