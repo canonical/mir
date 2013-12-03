@@ -20,7 +20,7 @@
 #include "basic_surface.h"
 #include "surface_builder.h"
 #include "mir/shell/surface_configurator.h"
-#include "mir/shell/surface_ranker.h"
+#include "surface_ranker.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"

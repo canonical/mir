@@ -21,7 +21,7 @@
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
 #include "surface_builder.h"
-#include "mir/shell/surface_ranker.h"
+#include "surface_ranker.h"
 
 namespace mir
 {

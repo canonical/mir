@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_CONTROLLER_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_CONTROLLER_H_
 
-#include "mir/shell/surface_ranker.h"
+#include "src/server/scene/surface_ranker.h"
 
 #include <gmock/gmock.h>
 
