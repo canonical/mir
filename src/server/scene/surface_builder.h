@@ -26,7 +26,6 @@ namespace mir
 {
 namespace shell
 {
-class Session;
 struct SurfaceCreationParameters;
 }
 

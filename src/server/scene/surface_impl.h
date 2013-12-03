@@ -33,7 +33,6 @@ namespace scene { class BasicSurface; }
 namespace shell
 {
 class InputTargeter;
-class Session;
 class SurfaceConfigurator;
 class SurfaceController;
 struct SurfaceCreationParameters;
