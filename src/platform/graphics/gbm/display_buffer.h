@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 #include <vector>
 #include <memory>

@@ -21,7 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 

@@ -18,7 +18,7 @@ add_library(
   buffer_allocator.cpp
   gbm_buffer.cpp
   cursor.cpp
-  gbm_display_helpers.cpp
+  display_helpers.cpp
   display.cpp
   real_kms_display_configuration.cpp
   drm_mode_resources.cpp

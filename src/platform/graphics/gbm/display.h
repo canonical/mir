@@ -22,7 +22,7 @@
 #include "mir/graphics/display.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 #include <mutex>
 
