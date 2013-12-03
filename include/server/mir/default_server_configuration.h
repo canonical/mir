@@ -54,7 +54,6 @@ class DisplayChanger;
 namespace shell
 {
 class SurfaceFactory;
-class SurfaceRanker;
 class InputTargeter;
 class FocusSetter;
 class PlacementStrategy;
@@ -81,6 +80,7 @@ class SnapshotStrategy;
 class SurfaceBuilder;
 class SurfaceStackModel;
 class SurfaceStack;
+class SurfaceRanker;
 class SurfaceController;
 class InputRegistrar;
 class SceneReport;
@@ -189,7 +189,7 @@ public:
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
-    virtual std::shared_ptr<shell::SurfaceRanker>   the_shell_surface_controller();
+    virtual std::shared_ptr<scene::SurfaceRanker>   the_shell_surface_controller();
     /** @} */
 
     /** @name internal scene configuration

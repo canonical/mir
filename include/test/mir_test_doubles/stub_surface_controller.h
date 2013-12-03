@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-struct StubSurfaceController : public shell::SurfaceRanker
+struct StubSurfaceController : public scene::SurfaceRanker
 {
     void raise(std::weak_ptr<scene::BasicSurface> const&) override
     {

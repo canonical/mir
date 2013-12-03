@@ -31,7 +31,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceController : public shell::SurfaceRanker
+struct MockSurfaceController : public scene::SurfaceRanker
 {
     MOCK_METHOD1(raise, void(std::weak_ptr<scene::BasicSurface> const&));
 };

@@ -108,7 +108,7 @@ mir::DefaultServerConfiguration::the_surface_controller()
         });
 }
 
-std::shared_ptr<msh::SurfaceRanker>
+std::shared_ptr<ms::SurfaceRanker>
 mir::DefaultServerConfiguration::the_shell_surface_controller()
 {
     return the_surface_controller();

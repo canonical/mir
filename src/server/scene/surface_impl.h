@@ -35,13 +35,13 @@ namespace shell
 class InputTargeter;
 class Session;
 class SurfaceConfigurator;
-class SurfaceRanker;
 struct SurfaceCreationParameters;
 }
 
 namespace scene
 {
 class SurfaceBuilder;
+class SurfaceRanker;
 
 class SurfaceImpl : public shell::Surface
 {
@@ -86,7 +86,7 @@ public:
 
     virtual void allow_framedropping(bool);
 
-    virtual void raise(std::shared_ptr<shell::SurfaceRanker> const& controller);
+    virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller);
 
     virtual void resize(geometry::Size const& size);
 
