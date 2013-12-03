@@ -21,7 +21,6 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
-#include "mir/shell/surface_controller.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
