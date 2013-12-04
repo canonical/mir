@@ -39,14 +39,7 @@ systemtap-sdt-dev,\
 android-platform-headers,\
 libglm-dev
 
-    #cleanup
-    for i in * ; do
-        if [[ -d ${i} ]]; then 
-            echo "removing directory: ./${i}"
-            rm -rf ./${i}
-        fi
-    done
-
+    
     fakeroot debootstrap --include=$BUILD_DEPENDS --arch=armhf --download-only --variant=buildd trusty .
 
     for I in var/cache/apt/archives/* ; do
