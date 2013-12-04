@@ -45,7 +45,7 @@ public:
         lock_compositor_buffer(unsigned long frameno) override;
     std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
-    geometry::PixelFormat get_stream_pixel_format() override;
+    MirPixelFormat get_stream_pixel_format() override;
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;

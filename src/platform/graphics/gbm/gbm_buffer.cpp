@@ -32,38 +32,38 @@
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
-geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
+MirPixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
 {
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
 
     switch (format)
     {
     case GBM_BO_FORMAT_ARGB8888:
     case GBM_FORMAT_ARGB8888:
-        pf = geom::PixelFormat::argb_8888;
+        pf = mir_pixel_format_argb_8888;
         break;
     case GBM_BO_FORMAT_XRGB8888:
     case GBM_FORMAT_XRGB8888:
-        pf = geom::PixelFormat::xrgb_8888;
+        pf = mir_pixel_format_xrgb_8888;
         break;
     default:
-        pf = geom::PixelFormat::invalid;
+        pf = mir_pixel_format_invalid;
         break;
     }
 
     return pf;
 }
 
-uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
+uint32_t mgg::mir_format_to_gbm_format(MirPixelFormat format)
 {
     uint32_t gbm_pf;
 
     switch (format)
     {
-    case geom::PixelFormat::argb_8888:
+    case mir_pixel_format_argb_8888:
         gbm_pf = GBM_FORMAT_ARGB8888;
         break;
-    case geom::PixelFormat::xrgb_8888:
+    case mir_pixel_format_xrgb_8888:
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:
@@ -113,7 +113,7 @@ geom::Stride mgg::GBMBuffer::stride() const
     return geom::Stride(gbm_bo_get_stride(gbm_handle.get()));
 }
 
-geom::PixelFormat mgg::GBMBuffer::pixel_format() const
+MirPixelFormat mgg::GBMBuffer::pixel_format() const
 {
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }

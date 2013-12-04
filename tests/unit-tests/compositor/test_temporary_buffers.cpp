@@ -45,7 +45,7 @@ public:
     TemporaryBuffersTest()
         : buffer_size{1024, 768},
           buffer_stride{1024},
-          buffer_pixel_format{geom::PixelFormat::abgr_8888},
+          buffer_pixel_format{mir_pixel_format_abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(
                           buffer_size, buffer_stride, buffer_pixel_format)},
           mock_bundle{std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()}
@@ -60,7 +60,7 @@ public:
 
     geom::Size const buffer_size;
     geom::Stride const buffer_stride;
-    geom::PixelFormat const buffer_pixel_format;
+    MirPixelFormat const buffer_pixel_format;
     std::shared_ptr<mtd::MockBuffer> const mock_buffer;
     std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
 };
@@ -116,7 +116,7 @@ TEST_F(TemporaryBuffersTest, base_test_pixel_format)
     EXPECT_CALL(*mock_buffer, pixel_format())
         .Times(1);
 
-    geom::PixelFormat pixel_format;
+    MirPixelFormat pixel_format;
     pixel_format = proxy_buffer.pixel_format();
     EXPECT_EQ(buffer_pixel_format, pixel_format);
 }

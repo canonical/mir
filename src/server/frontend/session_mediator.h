@@ -22,7 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <unordered_map>
 #include <memory>
@@ -61,7 +61,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
-        std::vector<geometry::PixelFormat> const& surface_pixel_formats,
+        std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
@@ -120,7 +120,7 @@ private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
-    std::vector<geometry::PixelFormat> const surface_pixel_formats;
+    std::vector<MirPixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;

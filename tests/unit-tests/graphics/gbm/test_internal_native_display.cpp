@@ -85,12 +85,3 @@ TEST_F(InternalNativeDisplay, display_get_platform_matches_construction_platform
     EXPECT_THAT(test_package, PackageMatches(platform_package));
 }
 
-TEST(MirServerMesaEGLNativeDisplayInvariants, pixel_format_formats_are_castable)
-{
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::invalid), mir_pixel_format_invalid);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::abgr_8888), mir_pixel_format_abgr_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::xbgr_8888), mir_pixel_format_xbgr_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::argb_8888), mir_pixel_format_argb_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::xrgb_8888), mir_pixel_format_xrgb_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::bgr_888), mir_pixel_format_bgr_888);
-}

@@ -16,11 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir_test/draw/patterns.h"
 
 namespace mtd=mir::test::draw;
-namespace geom=mir::geometry;
 
 mtd::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
  : color_value(color_value)
@@ -32,7 +31,7 @@ void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot draw region, incorrect format"));
 
-    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = MIR_BYTES_PER_PIXEL(mir_pixel_format_abgr_8888);
     for(auto i = 0; i < region.height; i++)
     {
         for(auto j = 0; j < region.width; j++)
@@ -48,7 +47,7 @@ bool mtd::DrawPatternSolid::check(MirGraphicsRegion const& region) const
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot check region, incorrect format"));
 
-    auto bpp = geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+    auto bpp = MIR_BYTES_PER_PIXEL(mir_pixel_format_abgr_8888);
     for(auto i = 0; i < region.height; i++)
     {
         for(auto j = 0; j < region.width; j++)

@@ -20,7 +20,7 @@
 #include "src/client/client_buffer_depository.h"
 #include "src/client/client_buffer_factory.h"
 #include "src/client/aging_buffer.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 
 #include <gtest/gtest.h>
@@ -51,7 +51,7 @@ struct MockBuffer : public mcl::AgingBuffer
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
 };
 
@@ -70,7 +70,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
 
     MOCK_METHOD3(create_buffer,
                  std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
-                                                    geom::Size, geom::PixelFormat));
+                                                    geom::Size, MirPixelFormat));
 
     std::shared_ptr<mcl::ClientBuffer> buffer;
 };
@@ -81,7 +81,7 @@ struct MirBufferDepositoryTest : public testing::Test
     {
         width = geom::Width(12);
         height =geom::Height(14);
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{width, height};
 
         package = std::make_shared<MirBufferPackage>();
@@ -89,7 +89,7 @@ struct MirBufferDepositoryTest : public testing::Test
     }
     geom::Width width;
     geom::Height height;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
 
     std::shared_ptr<MirBufferPackage> package;

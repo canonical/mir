@@ -40,7 +40,7 @@ public:
     explicit GBMClientBufferFactory(std::shared_ptr<BufferFileOps> const& buffer_file_ops);
 
     std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& package,
-                                                geometry::Size size, geometry::PixelFormat pf);
+                                                geometry::Size size, MirPixelFormat pf);
 private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
 };

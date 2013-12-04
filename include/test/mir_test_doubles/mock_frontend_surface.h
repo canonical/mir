@@ -42,7 +42,7 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_METHOD1(swap_buffers, void(graphics::Buffer*&));
 
     MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());

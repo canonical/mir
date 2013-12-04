@@ -202,7 +202,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
     }
 
     auto const stride = geom::Stride{
-        geom::bytes_per_pixel(buffer_properties.format) *
+        MIR_BYTES_PER_PIXEL(buffer_properties.format) *
         buffer_properties.size.width.as_uint32_t()};
     size_t const size_in_bytes = 
         stride.as_int() * buffer_properties.size.height.as_int();
@@ -218,17 +218,17 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
     return buffer;
 }
 
-std::vector<geom::PixelFormat> mgg::BufferAllocator::supported_pixel_formats()
+std::vector<MirPixelFormat> mgg::BufferAllocator::supported_pixel_formats()
 {
-    static std::vector<geom::PixelFormat> const pixel_formats{
-        geom::PixelFormat::argb_8888,
-        geom::PixelFormat::xrgb_8888
+    static std::vector<MirPixelFormat> const pixel_formats{
+        mir_pixel_format_argb_8888,
+        mir_pixel_format_xrgb_8888
     };
 
     return pixel_formats;
 }
 
-bool mgg::BufferAllocator::is_pixel_format_supported(geom::PixelFormat format)
+bool mgg::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
 {
     auto formats = supported_pixel_formats();
 

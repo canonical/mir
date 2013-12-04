@@ -42,7 +42,7 @@ struct SwitchingBundleTest : public ::testing::Test
         basic_properties =
         {
             geom::Size{3, 4},
-            geom::PixelFormat::abgr_8888,
+            mir_pixel_format_abgr_8888,
             mg::BufferUsage::hardware
         };
     }
@@ -55,7 +55,7 @@ struct SwitchingBundleTest : public ::testing::Test
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
     mg::BufferProperties properties{geom::Size{7, 8},
-                                    geom::PixelFormat::argb_8888,
+                                    mir_pixel_format_argb_8888,
                                     mg::BufferUsage::software};
 
     for (int nbuffers = mc::SwitchingBundle::min_buffers;

@@ -30,6 +30,12 @@ namespace ms=mir::scene;
 namespace msh=mir::shell;
 namespace mi=mir::input;
 
+static inline bool has_alpha(MirPixelFormat fmt)
+{
+    return (fmt == mir_pixel_format_abgr_8888) ||
+           (fmt == mir_pixel_format_argb_8888);
+}
+
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<BufferStreamFactory> const& stream_factory,
     std::shared_ptr<input::InputChannelFactory> const& input_factory,
