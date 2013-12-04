@@ -45,14 +45,14 @@ struct ShmBufferTest : public testing::Test
 {
     ShmBufferTest()
         : size{150,340},
-          pixel_format{geom::PixelFormat::bgr_888},
+          pixel_format{mir_pixel_format_bgr_888},
           stub_shm_file{std::make_shared<StubShmFile>()},
           shm_buffer{stub_shm_file, size, pixel_format}
     {
     }
 
     geom::Size const size;
-    geom::PixelFormat const pixel_format;
+    MirPixelFormat const pixel_format;
     std::shared_ptr<StubShmFile> const stub_shm_file;
     mgg::ShmBuffer shm_buffer;
     testing::NiceMock<mtd::MockGL> mock_gl;
@@ -62,7 +62,7 @@ struct ShmBufferTest : public testing::Test
 
 TEST_F(ShmBufferTest, has_correct_properties)
 {
-    size_t const bytes_per_pixel{geom::bytes_per_pixel(pixel_format)};
+    size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
 
     EXPECT_EQ(size, shm_buffer.size());
@@ -72,7 +72,7 @@ TEST_F(ShmBufferTest, has_correct_properties)
 
 TEST_F(ShmBufferTest, native_buffer_contains_correct_data)
 {
-    size_t const bytes_per_pixel{geom::bytes_per_pixel(pixel_format)};
+    size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
 
     auto native_buffer = shm_buffer.native_buffer_handle();

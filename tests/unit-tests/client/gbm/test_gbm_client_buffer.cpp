@@ -48,7 +48,7 @@ struct MirGBMBufferTest : public testing::Test
         width = geom::Width(12);
         height =geom::Height(14);
         stride = geom::Stride(66);
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{width, height};
         buffer_file_ops = std::make_shared<testing::NiceMock<MockBufferFileOps>>();
 
@@ -64,7 +64,7 @@ struct MirGBMBufferTest : public testing::Test
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
 
     std::shared_ptr<testing::NiceMock<MockBufferFileOps>> buffer_file_ops;

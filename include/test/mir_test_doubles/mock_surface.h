@@ -56,7 +56,7 @@ struct MockSurface : public scene::SurfaceImpl
 
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());

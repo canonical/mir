@@ -38,7 +38,7 @@ struct MockFBBundle : public graphics::android::FramebufferBundle
         ON_CALL(*this, last_rendered_buffer())
             .WillByDefault(Return(std::make_shared<StubBuffer>()));
     }
-    MOCK_METHOD0(fb_format, geometry::PixelFormat());
+    MOCK_METHOD0(fb_format, MirPixelFormat());
     MOCK_METHOD0(fb_size, geometry::Size());
     MOCK_METHOD0(buffer_for_render, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<graphics::Buffer>());

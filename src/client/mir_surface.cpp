@@ -159,10 +159,10 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 }
 
 /* todo: all these conversion functions are a bit of a kludge, probably
-         better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
+         better to have a more developed MirPixelFormat that can handle this */
+MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
-    return static_cast<geom::PixelFormat>(pf);
+    return static_cast<MirPixelFormat>(pf);
 }
 
 void MirSurface::process_incoming_buffer()

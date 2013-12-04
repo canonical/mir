@@ -66,7 +66,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
-          surface_pixel_formats{geom::PixelFormat::argb_8888, geom::PixelFormat::xrgb_8888},
+          surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, display_changer,
@@ -80,7 +80,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mf::DisplayChanger> const display_changer;
-    std::vector<geom::PixelFormat> const surface_pixel_formats;
+    std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;
