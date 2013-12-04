@@ -121,3 +121,18 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
 }
+
+TEST(NestedPlatformCreation, doesnt_access_display_hardware)
+{
+    using namespace testing;
+
+    mtd::HardwareAccessMock hwaccess;
+    mtd::MockDisplayReport stub_report;
+
+    EXPECT_CALL(hwaccess, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(0);
+    EXPECT_CALL(hwaccess, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(AtMost(1));
+
+    create_native_display(mt::fake_shared(stub_report));
+}
