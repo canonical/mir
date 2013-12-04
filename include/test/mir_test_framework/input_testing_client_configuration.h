@@ -35,7 +35,7 @@ namespace mir_test_framework
 /// A fixture to be used with InputTestingServerConfiguration for input acceptance testing scenarios.
 /// By default, the client will connect and a surface will be created.
 /// The framework ensures the server will not send events before client is ready through CrossProcessSync.
-class InputTestingClientConfiguration : public mir_test_framework::TestingClientConfiguration
+class InputTestingClientConfiguration : public TestingClientConfiguration
 {
 public:
     InputTestingClientConfiguration(std::string const& client_name, CrossProcessSync const& input_cb_setup_fence);
