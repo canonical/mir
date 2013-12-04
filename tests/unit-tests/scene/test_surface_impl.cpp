@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/surface_impl.h"
-#include "src/server/scene/surface.h"
+#include "src/server/scene/basic_surface.h"
 #include "mir/scene/scene_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/surface_stack_model.h"
@@ -79,7 +79,7 @@ public:
 
     std::weak_ptr<ms::BasicSurface> create_surface(msh::Session*, msh::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(
+        dummy_surface = std::make_shared<ms::BasicSurface>(
             mock_surface_state, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
