@@ -54,11 +54,11 @@ if( MIR_PLATFORM STREQUAL "gbm")
 set(
   CLIENT_SOURCES
 
-  gbm/gbm_client_platform.cpp
-  gbm/gbm_client_buffer_factory.cpp
-  gbm/gbm_client_buffer.cpp
+  gbm/client_platform.cpp
+  gbm/client_buffer_factory.cpp
+  gbm/client_buffer.cpp
   gbm/mesa_native_display_container.cpp
-  gbm/gbm_native_surface.cpp
+  gbm/native_surface.cpp
   ${CLIENT_SOURCES}
 )
 endif()

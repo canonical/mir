@@ -16,6 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_CLIENT_GBM_NATIVE_SURFACES_H_
+#define MIR_CLIENT_GBM_NATIVE_SURFACES_H_
+
 #include "mir_toolkit/mesa/native_display.h"
 #include "../mir_client_surface.h"
 
@@ -26,10 +29,10 @@ namespace client
 namespace gbm
 {
 
-class GBMNativeSurface : public MirMesaEGLNativeSurface
+class NativeSurface : public MirMesaEGLNativeSurface
 {
 public:
-    explicit GBMNativeSurface(ClientSurface&);
+    explicit NativeSurface(ClientSurface&);
 
     int advance_buffer(MirBufferPackage* buffer_package);
     int get_parameters(MirSurfaceParameters* surface_parameters);
@@ -42,3 +45,5 @@ private:
 }
 }
 }
+
+#endif /* MIR_CLIENT_GBM_NATIVE_SURFACE_H_ */

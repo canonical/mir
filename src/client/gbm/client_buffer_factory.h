@@ -17,30 +17,28 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_FACTORY_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_FACTORY_H_
+#ifndef MIR_CLIENT_GBM_CLIENT_BUFFER_FACTORY_H_
+#define MIR_CLIENT_GBM_CLIENT_BUFFER_FACTORY_H_
 
 #include "../client_buffer_factory.h"
-#include "gbm_client_buffer.h"
 
 namespace mir
 {
 namespace client
 {
-class ClientBuffer;
-
 namespace gbm
 {
 
 class BufferFileOps;
 
-class GBMClientBufferFactory : public ClientBufferFactory
+class ClientBufferFactory : public client::ClientBufferFactory
 {
 public:
-    explicit GBMClientBufferFactory(std::shared_ptr<BufferFileOps> const& buffer_file_ops);
+    explicit ClientBufferFactory(std::shared_ptr<BufferFileOps> const& buffer_file_ops);
 
-    std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& package,
-                                                geometry::Size size, MirPixelFormat pf);
+    std::shared_ptr<client::ClientBuffer> create_buffer(
+        std::shared_ptr<MirBufferPackage> const& package,
+        geometry::Size size, MirPixelFormat pf);
 private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
 };
@@ -48,4 +46,4 @@ private:
 }
 }
 }
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_FACTORY_H_ */
+#endif /* MIR_CLIENT_GBM_CLIENT_BUFFER_FACTORY_H_ */
