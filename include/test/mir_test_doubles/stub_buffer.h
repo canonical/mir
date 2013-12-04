@@ -40,7 +40,7 @@ class StubBuffer : public graphics::BufferBasic
 public:
     StubBuffer()
         : buf_size{0, 0},
-          buf_pixel_format{geometry::PixelFormat::abgr_8888}
+          buf_pixel_format{mir_pixel_format_abgr_8888}
     {
     }
 
@@ -54,7 +54,7 @@ public:
 
     virtual geometry::Stride stride() const { return geometry::Stride(); }
 
-    virtual geometry::PixelFormat pixel_format() const { return buf_pixel_format; }
+    virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
 
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
@@ -69,7 +69,7 @@ public:
     virtual bool can_bypass() const override { return false; }
 
     geometry::Size const buf_size;
-    geometry::PixelFormat const buf_pixel_format;
+    MirPixelFormat const buf_pixel_format;
 };
 }
 }

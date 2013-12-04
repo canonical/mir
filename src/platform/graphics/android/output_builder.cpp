@@ -68,7 +68,7 @@ mga::OutputBuilder::OutputBuilder(
     }
 }
 
-geom::PixelFormat mga::OutputBuilder::display_format()
+MirPixelFormat mga::OutputBuilder::display_format()
 {
     return framebuffers->fb_format();
 }

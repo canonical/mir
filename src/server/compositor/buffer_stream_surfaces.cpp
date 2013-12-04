@@ -64,7 +64,7 @@ void mc::BufferStreamSurfaces::release_client_buffer(std::shared_ptr<mg::Buffer>
     }
 }
 
-geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
+MirPixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
 {
     return buffer_bundle->properties().format;
 }

@@ -22,7 +22,6 @@
 #include "mir/int_wrapper.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
-#include "mir/geometry/pixel_format.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -89,7 +88,7 @@ struct DisplayConfigurationOutput
     /** The type of the output. */
     DisplayConfigurationOutputType type;
     /** The pixel formats supported by the output */
-    std::vector<geometry::PixelFormat> pixel_formats;
+    std::vector<MirPixelFormat> pixel_formats;
     /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
     /** The index in the 'modes' vector of the preferred output mode. */
