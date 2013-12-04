@@ -51,7 +51,7 @@ struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
             .WillByDefault(Return(nullptr));
     }
     MOCK_METHOD3(alloc_buffer_platform,
-        std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
+        std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat, mga::BufferUsage));
 };
 
 struct MockResourceFactory: public mga::DisplayResourceFactory

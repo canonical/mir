@@ -104,7 +104,7 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_state->size();
 }
 
-geom::PixelFormat ms::BasicSurface::pixel_format() const
+MirPixelFormat ms::BasicSurface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
 }

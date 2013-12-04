@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_properties.h"
 
@@ -69,7 +69,7 @@ public:
     virtual geometry::Point top_left() const;
     virtual geometry::Size size() const;
 
-    virtual geometry::PixelFormat pixel_format() const;
+    virtual MirPixelFormat pixel_format() const;
 
     virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     virtual void swap_buffers(std::shared_ptr<graphics::Buffer>&);

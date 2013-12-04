@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_FRAMEBUFFER_BUNDLE_H_
 #define MIR_GRAPHICS_ANDROID_FRAMEBUFFER_BUNDLE_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 #include <memory>
 
@@ -37,7 +37,7 @@ class FramebufferBundle{
 public:
     virtual ~FramebufferBundle() = default;
 
-    virtual geometry::PixelFormat fb_format() = 0;
+    virtual MirPixelFormat fb_format() = 0;
     virtual geometry::Size fb_size() = 0;
     virtual std::shared_ptr<Buffer> buffer_for_render() = 0;
     virtual std::shared_ptr<Buffer> last_rendered_buffer() = 0;

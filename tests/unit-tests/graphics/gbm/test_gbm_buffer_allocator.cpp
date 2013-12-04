@@ -56,7 +56,7 @@ protected:
         fake_devices.add_standard_drm_devices();
 
         size = geom::Size{300, 200};
-        pf = geom::PixelFormat::argb_8888;
+        pf = mir_pixel_format_argb_8888;
         usage = mg::BufferUsage::hardware;
         buffer_properties = mg::BufferProperties{size, pf, usage};
 
@@ -71,7 +71,7 @@ protected:
 
     // Defaults
     geom::Size size;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     mg::BufferUsage usage;
     mg::BufferProperties buffer_properties;
 
@@ -101,7 +101,7 @@ TEST_F(GBMBufferAllocatorTest, large_hardware_buffers_bypass)
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     const mg::BufferProperties properties(geom::Size{1280, 800},
-                                          geom::PixelFormat::argb_8888,
+                                          mir_pixel_format_argb_8888,
                                           mg::BufferUsage::hardware);
 
     auto buf = allocator->alloc_buffer(properties);
@@ -116,7 +116,7 @@ TEST_F(GBMBufferAllocatorTest, small_buffers_dont_bypass)
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     const mg::BufferProperties properties(geom::Size{100, 100},
-                                          geom::PixelFormat::argb_8888,
+                                          mir_pixel_format_argb_8888,
                                           mg::BufferUsage::hardware);
 
     auto buf = allocator->alloc_buffer(properties);
@@ -129,7 +129,7 @@ TEST_F(GBMBufferAllocatorTest, software_buffers_dont_bypass)
     using namespace testing;
 
     const mg::BufferProperties properties(geom::Size{1920, 1200},
-                                          geom::PixelFormat::argb_8888,
+                                          mir_pixel_format_argb_8888,
                                           mg::BufferUsage::software);
 
     auto buf = allocator->alloc_buffer(properties);
@@ -144,7 +144,7 @@ TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     const mg::BufferProperties properties(geom::Size{1280, 800},
-                                          geom::PixelFormat::argb_8888,
+                                          mir_pixel_format_argb_8888,
                                           mg::BufferUsage::hardware);
 
     setenv("MIR_BYPASS", "0", 1);
@@ -163,7 +163,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::argb_8888, usage});
+    allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_argb_8888, usage});
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
@@ -173,7 +173,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_XRGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::xrgb_8888, usage});
+    allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_xrgb_8888, usage});
 }
 
 MATCHER_P(has_flag_set, flag, "")
@@ -280,11 +280,11 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 
     auto argb_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::argb_8888);
+                                      mir_pixel_format_argb_8888);
 
     auto xrgb_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::xrgb_8888);
+                                      mir_pixel_format_xrgb_8888);
 
     EXPECT_EQ(1, argb_8888_count);
     EXPECT_EQ(1, xrgb_8888_count);
@@ -295,7 +295,7 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_firs
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
-    EXPECT_EQ(geom::PixelFormat::argb_8888, supported_pixel_formats[0]);
+    EXPECT_EQ(mir_pixel_format_argb_8888, supported_pixel_formats[0]);
 }
 
 TEST_F(GBMBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
@@ -306,6 +306,6 @@ TEST_F(GBMBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
 
     EXPECT_THROW({
-        allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::abgr_8888, usage});
+        allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_abgr_8888, usage});
     }, std::runtime_error);
 }

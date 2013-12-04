@@ -57,7 +57,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
-    std::vector<geom::PixelFormat> const& surface_pixel_formats,
+    std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
@@ -155,7 +155,7 @@ void mf::SessionMediator::create_surface(
             .of_name(request->surface_name())
             .of_size(request->width(), request->height())
             .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
             .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
 
         auto surface = session->get_surface(surf_id);

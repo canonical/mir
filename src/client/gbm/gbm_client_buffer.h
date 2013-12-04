@@ -41,21 +41,21 @@ public:
     GBMClientBuffer(std::shared_ptr<BufferFileOps> const& buffer_file_ops,
                     std::shared_ptr<MirBufferPackage> const& buffer_package,
                     geometry::Size size,
-                    geometry::PixelFormat pf);
+                    MirPixelFormat pf);
 
     ~GBMClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
     geometry::Stride stride() const;
-    geometry::PixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
 private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
     std::shared_ptr<MirBufferPackage> const creation_package;
     geometry::Rectangle const rect;
-    geometry::PixelFormat const buffer_pf;
+    MirPixelFormat const buffer_pf;
 };
 
 }

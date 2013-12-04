@@ -62,7 +62,7 @@ geom::Stride mc::TemporaryBuffer::stride() const
     return buffer->stride();
 }
 
-geom::PixelFormat mc::TemporaryBuffer::pixel_format() const
+MirPixelFormat mc::TemporaryBuffer::pixel_format() const
 {
     return buffer->pixel_format();
 }

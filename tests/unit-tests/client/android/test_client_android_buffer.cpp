@@ -43,7 +43,7 @@ protected:
         width = geom::Width(248);
         size = geom::Size{width, height};
         stride = geom::Stride{66};
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
 
         mock_android_registrar = std::make_shared<NiceMock<mtd::MockAndroidRegistrar>>();
 
@@ -55,7 +55,7 @@ protected:
     geom::Height height;
     geom::Width width;
     geom::Stride stride;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     std::shared_ptr<mcla::AndroidClientBuffer> buffer;
     std::shared_ptr<mtd::MockAndroidRegistrar> mock_android_registrar;
 };
@@ -139,7 +139,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_info)
 {
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     int32_t const expected_stride_in_pixels =
-        static_cast<int32_t>(stride.as_uint32_t() / geom::bytes_per_pixel(pf));
+        static_cast<int32_t>(stride.as_uint32_t() / MIR_BYTES_PER_PIXEL(pf));
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
     auto native_handle = buffer.native_buffer_handle();
     ASSERT_NE(nullptr, native_handle);

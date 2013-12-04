@@ -21,7 +21,7 @@
 
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include <functional>
 
 namespace mir
@@ -40,7 +40,7 @@ class GLContext : public graphics::GLContext
 {
 public:
     //For creating a gl context
-    GLContext(geometry::PixelFormat display_format, DisplayReport& report);
+    GLContext(MirPixelFormat display_format, DisplayReport& report);
 
     //For creating a gl context shared with another GLContext
     GLContext(GLContext const& shared_gl_context,

@@ -46,14 +46,14 @@ public:
     Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
                  std::shared_ptr<framebuffer_device_t> const& fb);
 
-    geometry::PixelFormat fb_format();
+    MirPixelFormat fb_format();
     geometry::Size fb_size();
     std::shared_ptr<Buffer> buffer_for_render();
     std::shared_ptr<Buffer> last_rendered_buffer();
     void wait_for_consumed_buffer(bool);
 
 private:
-    geometry::PixelFormat const format;
+    MirPixelFormat const format;
     geometry::Size const size;
 
     std::mutex queue_lock;

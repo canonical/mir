@@ -52,7 +52,7 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 }
 
 std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
-    geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
+    geometry::Size size, MirPixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
     auto stride = 0;
