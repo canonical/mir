@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_BUFFER_PROPERTIES_H_
 
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
@@ -49,13 +49,13 @@ struct BufferProperties
 {
     BufferProperties() :
         size(),
-        format(geometry::PixelFormat::invalid),
+        format(mir_pixel_format_invalid),
         usage(BufferUsage::undefined)
     {
     }
 
     BufferProperties(const geometry::Size& size,
-                     const geometry::PixelFormat& format,
+                     const MirPixelFormat& format,
                      BufferUsage usage) :
         size{size},
         format{format},
@@ -64,7 +64,7 @@ struct BufferProperties
     }
 
     geometry::Size size;
-    geometry::PixelFormat format;
+    MirPixelFormat format;
     BufferUsage usage;
 };
 

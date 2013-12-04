@@ -23,7 +23,7 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
@@ -39,12 +39,12 @@ class ShmBuffer : public BufferBasic
 public:
     ShmBuffer(std::shared_ptr<ShmFile> const& shm_file,
               geometry::Size const& size,
-              geometry::PixelFormat const& pixel_format);
+              MirPixelFormat const& pixel_format);
     ~ShmBuffer() noexcept;
 
     geometry::Size size() const;
     geometry::Stride stride() const;
-    geometry::PixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
     void bind_to_texture();
     bool can_bypass() const;
@@ -55,7 +55,7 @@ private:
 
     std::shared_ptr<ShmFile> const shm_file;
     geometry::Size const size_;
-    geometry::PixelFormat const pixel_format_;
+    MirPixelFormat const pixel_format_;
     geometry::Stride const stride_;
     void* const pixels;
 };

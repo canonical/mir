@@ -50,7 +50,7 @@ public:
     /**
      * The supported buffer pixel formats.
      */
-    virtual std::vector<geometry::PixelFormat> supported_pixel_formats() = 0;
+    virtual std::vector<MirPixelFormat> supported_pixel_formats() = 0;
 
 protected:
     GraphicBufferAllocator() = default;

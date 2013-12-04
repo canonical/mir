@@ -78,7 +78,7 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
-    geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
+    geom::Size sz, MirPixelFormat pf, mga::BufferUsage use)
 {
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
     auto buffer = std::make_shared<Buffer>(native_handle, egl_extensions);
@@ -86,12 +86,12 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_pla
     return buffer;
 }
 
-std::vector<geom::PixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_formats()
+std::vector<MirPixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_formats()
 {
-    static std::vector<geom::PixelFormat> const pixel_formats{
-        geom::PixelFormat::abgr_8888,
-        geom::PixelFormat::xbgr_8888,
-        geom::PixelFormat::bgr_888
+    static std::vector<MirPixelFormat> const pixel_formats{
+        mir_pixel_format_abgr_8888,
+        mir_pixel_format_xbgr_8888,
+        mir_pixel_format_bgr_888
     };
 
     return pixel_formats;

@@ -46,7 +46,7 @@ struct MyAgingBuffer : public mcl::AgingBuffer
         exit(1);
     }
 
-    geom::PixelFormat pixel_format() const
+    MirPixelFormat pixel_format() const
     {
         exit(1);
     }

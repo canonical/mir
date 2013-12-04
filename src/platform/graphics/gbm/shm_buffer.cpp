@@ -29,11 +29,11 @@ namespace geom = mir::geometry;
 mgg::ShmBuffer::ShmBuffer(
     std::shared_ptr<ShmFile> const& shm_file,
     geom::Size const& size,
-    geom::PixelFormat const& pixel_format)
+    MirPixelFormat const& pixel_format)
     : shm_file{shm_file},
       size_{size},
       pixel_format_{pixel_format},
-      stride_{geom::bytes_per_pixel(pixel_format_) * size_.width.as_uint32_t()},
+      stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
       pixels{shm_file->base_ptr()}
 {
 }
@@ -52,7 +52,7 @@ geom::Stride mgg::ShmBuffer::stride() const
     return stride_;
 }
 
-geom::PixelFormat mgg::ShmBuffer::pixel_format() const
+MirPixelFormat mgg::ShmBuffer::pixel_format() const
 {
     return pixel_format_;
 }

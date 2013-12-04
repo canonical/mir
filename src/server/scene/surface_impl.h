@@ -66,7 +66,7 @@ public:
     virtual geometry::Size size() const;
     virtual geometry::Point top_left() const;
 
-    virtual geometry::PixelFormat pixel_format() const;
+    virtual MirPixelFormat pixel_format() const;
 
     virtual void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec);

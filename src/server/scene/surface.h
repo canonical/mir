@@ -47,7 +47,7 @@ public:
     geometry::Point top_left() const;
     geometry::Size size() const;
 
-    geometry::PixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer);
