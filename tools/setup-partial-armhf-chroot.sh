@@ -20,7 +20,7 @@ download_and_extract_packages()
 
     for i in ${!PACKAGES}; do
 
-        PACKAGE_VERSION=`apt-cache show --no-all-versions ${i}:${ARCHITECTURE} | grep Version | cut -f2 -d\  | sed "s/ //g" | sed "s/:/%3a/"`
+        PACKAGE_VERSION=`apt-cache show --no-all-versions ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
         PACKAGE_FILENAME="${i}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
 
         if [ ! -f ${PACKAGE_FILENAME} ]; then
@@ -32,7 +32,7 @@ download_and_extract_packages()
 
         #quick sanity check
         if [ ! -f ${PACKAGE_FILENAME} ]; then
-            echo "error: did not download expected file (${PACKAGE_FILENAME}). script is malformed!"; exit 1        
+            echo "error: did not download expected file (${PACKAGE_FILENAME}. script is malformed!"; exit 1        
         fi
 
         echo "Extracting: ${PACKAGE_FILENAME}"
