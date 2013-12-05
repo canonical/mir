@@ -14,15 +14,15 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 add_library(
   mirplatformgraphics SHARED
 
-  gbm_platform.cpp
+  platform.cpp
   buffer_allocator.cpp
   gbm_buffer.cpp
-  gbm_cursor.cpp
-  gbm_display_helpers.cpp
-  gbm_display.cpp
+  cursor.cpp
+  display_helpers.cpp
+  display.cpp
   real_kms_display_configuration.cpp
   drm_mode_resources.cpp
-  gbm_display_buffer.cpp
+  display_buffer.cpp
   real_kms_output.cpp
   real_kms_output_container.cpp
   kms_page_flipper.cpp

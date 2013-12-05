@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/platform/graphics/gbm/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
@@ -63,8 +63,9 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
-        platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
-                                                      std::make_shared<mtd::NullVirtualTerminal>());
+        platform = std::make_shared<mgg::Platform>(
+            std::make_shared<mg::NullDisplayReport>(),
+            std::make_shared<mtd::NullVirtualTerminal>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
         allocator.reset(new mgg::BufferAllocator(platform->gbm.device, mock_buffer_initializer));
     }
@@ -79,7 +80,7 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-    std::shared_ptr<mgg::GBMPlatform> platform;
+    std::shared_ptr<mgg::Platform> platform;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgg::BufferAllocator> allocator;
     mtf::UdevEnvironment fake_devices;

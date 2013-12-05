@@ -16,13 +16,13 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
-#define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 #include <mutex>
 
@@ -45,21 +45,22 @@ class EventHandlerRegister;
 namespace gbm
 {
 
-class GBMPlatform;
+class Platform;
+class DisplayBuffer;
 class KMSOutput;
-class GBMDisplayBuffer;
-class GBMCursor;
+class Cursor;
 
-class GBMDisplay : public Display
+class Display : public graphics::Display
 {
 public:
-    GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
+    Display(std::shared_ptr<Platform> const& platform,
                std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                std::shared_ptr<DisplayReport> const& listener);
-    ~GBMDisplay();
+    ~Display();
 
     geometry::Rectangle view_area() const;
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+    void for_each_display_buffer(
+        std::function<void(graphics::DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
     void configure(DisplayConfiguration const& conf);
@@ -76,25 +77,25 @@ public:
     void pause();
     void resume();
 
-    std::weak_ptr<Cursor> the_cursor();
+    std::weak_ptr<graphics::Cursor> the_cursor();
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
     void clear_connected_unused_outputs();
 
     std::mutex configuration_mutex;
-    std::shared_ptr<GBMPlatform> const platform;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     UdevMonitor monitor;
     helpers::EGLHelper shared_egl;
-    std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
+    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     RealKMSOutputContainer output_container;
     RealKMSDisplayConfiguration current_display_configuration;
-    std::shared_ptr<GBMCursor> cursor;
+    std::shared_ptr<Cursor> cursor;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_GBM_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_H_ */

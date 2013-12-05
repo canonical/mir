@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
 #include "udev_wrapper.h"

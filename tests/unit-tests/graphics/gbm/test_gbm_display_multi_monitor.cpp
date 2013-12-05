@@ -19,7 +19,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
-#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/platform.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -126,9 +126,9 @@ public:
         fake_devices.add_standard_drm_devices();
     }
 
-    std::shared_ptr<mgg::GBMPlatform> create_platform()
+    std::shared_ptr<mgg::Platform> create_platform()
     {
-        return std::make_shared<mgg::GBMPlatform>(
+        return std::make_shared<mgg::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
