@@ -57,7 +57,7 @@ TEST(DefaultFocusMechanism, raises_default_surface)
             .WillOnce(Return(mt::fake_shared(mock_surface)));
     }
 
-    auto controller = std::make_shared<mtd::StubSurfaceController>();
+    auto controller = std::make_shared<mtd::StubSurfaceRanker>();
     EXPECT_CALL(mock_surface, raise(Eq(controller))).Times(1);
     mtd::StubInputTargeter targeter;
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), controller);
@@ -85,7 +85,7 @@ TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
     }
 
     msh::DefaultFocusMechanism focus_mechanism(std::make_shared<mtd::StubInputTargeter>(),
-                                                        std::make_shared<mtd::StubSurfaceController>());
+                                                        std::make_shared<mtd::StubSurfaceRanker>());
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app2));
@@ -107,7 +107,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
 
     NiceMock<mtd::MockInputTargeter> targeter;
     
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), std::make_shared<mtd::StubSurfaceController>());
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), std::make_shared<mtd::StubSurfaceRanker>());
 
     {
         InSequence seq;

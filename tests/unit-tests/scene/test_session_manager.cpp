@@ -84,7 +84,7 @@ struct SessionManagerSetup : public testing::Test
     }
 
     mtd::StubSurfaceBuilder surface_builder;
-    mtd::StubSurfaceController surface_controller;
+    mtd::StubSurfaceRanker surface_ranker;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub

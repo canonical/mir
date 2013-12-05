@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_CONTROLLER_H_
-#define MIR_TEST_DOUBLES_STUB_SURFACE_CONTROLLER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_RANKER_H_
+#define MIR_TEST_DOUBLES_STUB_SURFACE_RANKER_H_
 
 #include "src/server/scene/surface_ranker.h"
 
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-struct StubSurfaceController : public scene::SurfaceRanker
+struct StubSurfaceRanker : public scene::SurfaceRanker
 {
     void raise(std::weak_ptr<scene::BasicSurface> const&) override
     {
@@ -41,4 +41,4 @@ struct StubSurfaceController : public scene::SurfaceRanker
 }
 
 
-#endif /* MIR_TEST_DOUBLES_STUB_SURFACE_CONTROLLER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_SURFACE_RANKER_H_ */

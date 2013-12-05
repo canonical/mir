@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_CONTROLLER_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_CONTROLLER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_RANKER_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_RANKER_H_
 
 #include "src/server/scene/surface_ranker.h"
 
@@ -31,7 +31,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceController : public scene::SurfaceRanker
+struct MockSurfaceRanker : public scene::SurfaceRanker
 {
     MOCK_METHOD1(raise, void(std::weak_ptr<scene::BasicSurface> const&));
 };
@@ -41,4 +41,4 @@ struct MockSurfaceController : public scene::SurfaceRanker
 }
 
 
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_CONTROLLER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_RANKER_H_ */

@@ -138,7 +138,7 @@ struct SurfaceImpl : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
-    mtd::StubSurfaceController surface_controller;
+    mtd::StubSurfaceRanker surface_ranker;
 
     SurfaceImpl() :
         buffer_stream(std::make_shared<StubBufferStream>()),
@@ -415,13 +415,13 @@ TEST_F(SurfaceImpl, raise)
 {
     using namespace ::testing;
 
-    mtd::MockSurfaceController surface_controller;
+    mtd::MockSurfaceRanker surface_ranker;
     ms::SurfaceImpl test(
         nullptr,
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
 
-    EXPECT_CALL(surface_controller, raise(_)).Times(1);
+    EXPECT_CALL(surface_ranker, raise(_)).Times(1);
 
-    test.raise(mt::fake_shared(surface_controller));
+    test.raise(mt::fake_shared(surface_ranker));
 }
