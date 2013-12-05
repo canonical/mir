@@ -48,7 +48,7 @@ public:
         printf("zub+\n");
     }
 
-    std::weak_ptr<scene::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
+    std::weak_ptr<scene::BasicSurface> create_surface(shell::SurfaceCreationParameters const&)
     {
         return dummy_surface;
     }

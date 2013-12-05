@@ -27,7 +27,7 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 {
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(msh::Session*, shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(shell::SurfaceCreationParameters const& params)
 {
     return surface_stack->create_surface(params);
 }

@@ -22,7 +22,7 @@
 #define MIR_GRAPHICS_NATIVE_GBM_PLATFORM_H_
 
 #include "mir/graphics/native_platform.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 namespace mg = mir::graphics;
 

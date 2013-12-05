@@ -12,6 +12,7 @@ set(
   cross_process_sync.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
+  input_testing_client_configuration.cpp
   testing_process_manager.cpp
   testing_client_options.cpp
   display_server_test_fixture.cpp

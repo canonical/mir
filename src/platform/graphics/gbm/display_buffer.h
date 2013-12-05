@@ -16,11 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_BUFFER_H_
-#define MIR_GRAPHICS_GBM_GBM_DISPLAY_BUFFER_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 #include <vector>
 #include <memory>
@@ -36,20 +36,20 @@ class DisplayReport;
 namespace gbm
 {
 
-class GBMPlatform;
+class Platform;
 class BufferObject;
 class KMSOutput;
 
-class GBMDisplayBuffer : public DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                     std::shared_ptr<DisplayReport> const& listener,
-                     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                     GBMSurfaceUPtr surface_gbm,
-                     geometry::Rectangle const& area,
-                     EGLContext shared_context);
-    ~GBMDisplayBuffer();
+    DisplayBuffer(std::shared_ptr<Platform> const& platform,
+                  std::shared_ptr<DisplayReport> const& listener,
+                  std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+                  GBMSurfaceUPtr surface_gbm,
+                  geometry::Rectangle const& area,
+                  EGLContext shared_context);
+    ~DisplayBuffer();
 
     geometry::Rectangle view_area() const;
     void make_current();
@@ -67,7 +67,7 @@ private:
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
-    std::shared_ptr<GBMPlatform> const platform;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from GBMPlatform */
     helpers::DRMHelper& drm;
@@ -82,4 +82,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_GBM_DISPLAY_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_ */

@@ -18,7 +18,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "src/platform/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/gbm/platform.h"
 #include "src/platform/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -61,7 +61,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return std::make_shared<mgg::GBMPlatform>(
+        return std::make_shared<mgg::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
@@ -133,7 +133,7 @@ TEST_F(GBMGraphicsPlatform, fails_if_no_resources)
 
     EXPECT_THROW({
         auto platform = create_platform();
-    }, std::runtime_error) << "Expected that c'tor of GBMPlatform throws";
+    }, std::runtime_error) << "Expected that c'tor of Platform throws";
 }
 
 /* ipc packaging tests */

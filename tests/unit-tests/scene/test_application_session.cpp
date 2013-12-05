@@ -47,8 +47,7 @@ namespace
 {
 static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
-    auto builder = std::make_shared<mtd::StubSurfaceBuilder>();
-    return std::make_shared<mtd::MockSurface>(nullptr, builder);
+    return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 }
 }
 
