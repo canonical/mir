@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
@@ -52,7 +52,7 @@ private:
     std::shared_ptr<SyncFence> last_display_fence;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
-    geometry::PixelFormat fb_format;
+    MirPixelFormat fb_format;
 };
 
 }

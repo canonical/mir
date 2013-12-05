@@ -25,7 +25,7 @@ namespace geom = mir::geometry;
 
 msh::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), top_left(), buffer_usage(mg::BufferUsage::undefined),
-      pixel_format(geom::PixelFormat::invalid),
+      pixel_format(mir_pixel_format_invalid),
       depth{0}, input_mode(mi::InputReceptionMode::normal)
 {
 }
@@ -68,7 +68,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
-    geom::PixelFormat new_pixel_format)
+    MirPixelFormat new_pixel_format)
 {
     pixel_format = new_pixel_format;
 

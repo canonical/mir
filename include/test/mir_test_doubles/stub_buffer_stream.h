@@ -55,9 +55,9 @@ public:
         return stub_compositor_buffer;
     }
 
-    geometry::PixelFormat get_stream_pixel_format() override
+    MirPixelFormat get_stream_pixel_format() override
     {
-        return geometry::PixelFormat();
+        return MirPixelFormat();
     }
 
     geometry::Size stream_size() override

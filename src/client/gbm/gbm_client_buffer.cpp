@@ -44,7 +44,7 @@ struct ShmMemoryRegion : mcl::MemoryRegion
 {
     ShmMemoryRegion(std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
                     int buffer_fd, geom::Size const& size_param,
-                    geom::Stride stride_param, geom::PixelFormat format_param)
+                    geom::Stride stride_param, MirPixelFormat format_param)
         : buffer_file_ops{buffer_file_ops},
           size_in_bytes{size_param.height.as_uint32_t() * stride_param.as_uint32_t()}
     {
@@ -80,7 +80,7 @@ struct ShmMemoryRegion : mcl::MemoryRegion
 mclg::GBMClientBuffer::GBMClientBuffer(
     std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
     std::shared_ptr<MirBufferPackage> const& package,
-    geom::Size size, geom::PixelFormat pf)
+    geom::Size size, MirPixelFormat pf)
     : buffer_file_ops{buffer_file_ops},
       creation_package{package},
       rect({geom::Point{0, 0}, size}),
@@ -116,7 +116,7 @@ geom::Stride mclg::GBMClientBuffer::stride() const
     return geom::Stride{creation_package->stride};
 }
 
-geom::PixelFormat mclg::GBMClientBuffer::pixel_format() const
+MirPixelFormat mclg::GBMClientBuffer::pixel_format() const
 {
     return buffer_pf;
 }

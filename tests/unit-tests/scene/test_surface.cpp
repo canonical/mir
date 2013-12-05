@@ -63,7 +63,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(Height(0), params.size.height);
     EXPECT_EQ(default_point, params.top_left);
     EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
-    EXPECT_EQ(geom::PixelFormat::invalid, params.pixel_format);
+    EXPECT_EQ(mir_pixel_format_invalid, params.pixel_format);
 
     EXPECT_EQ(msh::a_surface(), params);
 }
@@ -73,7 +73,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     using namespace geom;
     Size const size{1024, 768};
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
-    geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
+    MirPixelFormat const format{mir_pixel_format_abgr_8888};
     std::string name{"surface"};
 
     auto params = msh::a_surface().of_name(name)
@@ -92,7 +92,7 @@ TEST(SurfaceCreationParametersTest, equality)
     using namespace geom;
     Size const size{1024, 768};
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
-    geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
+    MirPixelFormat const format{mir_pixel_format_abgr_8888};
 
     auto params0 = msh::a_surface().of_name("surface")
                                   .of_size(size)
@@ -118,8 +118,8 @@ TEST(SurfaceCreationParametersTest, inequality)
     std::vector<mg::BufferUsage> const usages{mg::BufferUsage::hardware,
                                               mg::BufferUsage::software};
 
-    std::vector<geom::PixelFormat> const formats{geom::PixelFormat::abgr_8888,
-                                                 geom::PixelFormat::bgr_888};
+    std::vector<MirPixelFormat> const formats{mir_pixel_format_abgr_8888,
+                                                 mir_pixel_format_bgr_888};
 
     std::vector<msh::SurfaceCreationParameters> params_vec;
 
@@ -166,13 +166,13 @@ struct SurfaceCreation : public ::testing::Test
         };
 
         surface_name = "test_surfaceA";
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{43, 420};
         rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-        auto stub_data = std::make_shared<ms::SurfaceData>( 
-            surface_name, rect, [](){}, false);
+        stub_data = std::make_shared<ms::SurfaceData>( 
+            surface_name, rect, change_notification, false);
 
         ON_CALL(*mock_buffer_stream, swap_client_buffers(_))
             .WillByDefault(SetArg<0>(std::make_shared<mtd::StubBuffer>()));
@@ -181,7 +181,7 @@ struct SurfaceCreation : public ::testing::Test
     std::shared_ptr<ms::SurfaceData> stub_data;
     std::string surface_name;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Stride stride;
     geom::Size size;
     geom::Rectangle rect;
@@ -374,11 +374,12 @@ TEST_F(SurfaceCreation, hidden_surfaces_should_not_be_rendered_in)
 
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
+    std::shared_ptr<mg::Buffer> no_buffer = nullptr;
     std::shared_ptr<mg::Buffer> stub_buffer = std::make_shared<mtd::StubBuffer>();
 
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
 
-    surf.swap_buffers(stub_buffer);
+    surf.swap_buffers(no_buffer);
     surf.swap_buffers(stub_buffer);
     surf.swap_buffers(stub_buffer);
     surf.swap_buffers(stub_buffer);

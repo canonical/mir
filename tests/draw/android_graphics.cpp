@@ -18,7 +18,7 @@
 
 
 #include "mir_test/draw/android_graphics.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <fstream>
 #include <stdexcept>
@@ -107,7 +107,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_h
     RegionDeleter del(module, package->handle);
 
     region->vaddr = (char*) vaddr;
-    region->stride = package->stride * geom::bytes_per_pixel(geom::PixelFormat::abgr_8888);
+   region->stride = package->stride * MIR_BYTES_PER_PIXEL(mir_pixel_format_abgr_8888);
     region->width = package->width;
     region->height = package->height;
     region->pixel_format = mir_pixel_format_abgr_8888;

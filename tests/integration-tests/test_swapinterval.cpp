@@ -60,7 +60,7 @@ public:
     void release_client_buffer(std::shared_ptr<mg::Buffer>& buffer) { buffer.reset(); }
     std::shared_ptr<mg::Buffer> lock_compositor_buffer(unsigned long) { return std::make_shared<mtd::StubBuffer>(); }
     std::shared_ptr<mg::Buffer> lock_snapshot_buffer() { return std::make_shared<mtd::StubBuffer>(); }
-    geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
+    MirPixelFormat get_stream_pixel_format() { return mir_pixel_format_abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }
     void resize(geom::Size const&) override {}
     void force_requests_to_complete() {}

@@ -37,11 +37,11 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<SurfaceData> const& state,
+    std::shared_ptr<SurfaceData> const& surface_data,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<SceneReport> const& report) :
-    surface_data(state),
+    surface_data(surface_data),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     report(report)
@@ -104,7 +104,7 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_data->size();
 }
 
-geom::PixelFormat ms::BasicSurface::pixel_format() const
+MirPixelFormat ms::BasicSurface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
 }
