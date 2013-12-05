@@ -40,6 +40,13 @@ namespace mga=mir::graphics::android;
 namespace mf=mir::frontend;
 namespace mo = mir::options;
 
+//TODO: remove this constructor once platform classes are sorted
+mga::AndroidPlatform::AndroidPlatform(
+    std::shared_ptr<mg::DisplayReport> const& display_report)
+    : AndroidPlatform(nullptr, display_report)
+{
+}
+
 mga::AndroidPlatform::AndroidPlatform(
     std::shared_ptr<mga::DisplayBuilder> const& display_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
@@ -119,11 +126,5 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
 {
-    auto should_use_fb_fallback = false;
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
-    auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report, should_use_fb_fallback);
-    return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
+    return std::make_shared<mga::AndroidPlatform>(display_report);
 }
