@@ -41,14 +41,16 @@ public:
     StubSurfaceBuilder() :
         buffer_stream(std::make_shared<StubBufferStream>()),
         stub_data(std::make_shared<scene::SurfaceData>( 
-            std::string("stub"), geometry::Rectangle{{},{}}, [](){}, false))
+            std::string("stub"), geometry::Rectangle{{},{}}, [](){}, false)),
+        dummy_surface(std::make_shared<scene::BasicSurface>(
+            stub_data, buffer_stream, std::shared_ptr<input::InputChannel>(), std::make_shared<scene::NullSceneReport>()))
     {
+        printf("zub+\n");
     }
 
     std::weak_ptr<scene::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
     {
-        return std::make_shared<scene::BasicSurface>(
-            stub_data, buffer_stream, std::shared_ptr<input::InputChannel>(), report);
+        return dummy_surface;
     }
 
     void destroy_surface(std::weak_ptr<scene::BasicSurface> const& )
@@ -58,8 +60,7 @@ private:
     std::shared_ptr<compositor::BufferStream> const buffer_stream;
     std::shared_ptr<scene::SurfaceData> const stub_data;
     std::shared_ptr<scene::BasicSurface>  dummy_surface;
-    std::shared_ptr<scene::SceneReport> report = std::make_shared<scene::NullSceneReport>();
-
+    std::shared_ptr<scene::SceneReport> report;
 };
 }
 }

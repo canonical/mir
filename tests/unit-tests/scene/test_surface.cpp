@@ -360,18 +360,6 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     surf.allow_framedropping(true);
 }
 
-TEST_F(SurfaceCreation, hidden_surfaces_should_not_be_rendered_in)
-{
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-
-    auto rect = geom::Rectangle{{0,0},{1200,1200}};
-    //a bit unintuitive. hopefully goes away when BasicSurface merges with CompositingCriteria
-    auto criteria = surf.compositing_criteria();
-    EXPECT_TRUE(criteria->should_be_rendered_in(rect));
-    surf.set_hidden(true);
-    EXPECT_FALSE(criteria->should_be_rendered_in(rect));
-}
-
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
     std::shared_ptr<mg::Buffer> no_buffer = nullptr;
