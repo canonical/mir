@@ -16,12 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
-#define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
+#ifndef MIR_GRAPHICS_GBM_PLATFORM_H_
+#define MIR_GRAPHICS_GBM_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "gbm_display_helpers.h"
+#include "display_helpers.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
@@ -34,19 +34,19 @@ namespace gbm
 
 class VirtualTerminal;
 class InternalNativeDisplay;
-class GBMPlatform : public Platform,
-                    public DRMAuthenticator,
-                    public std::enable_shared_from_this<GBMPlatform>
+class Platform : public graphics::Platform,
+                 public DRMAuthenticator,
+                 public std::enable_shared_from_this<Platform>
 {
 public:
-    explicit GBMPlatform(std::shared_ptr<DisplayReport> const& reporter,
-                         std::shared_ptr<VirtualTerminal> const& vt);
-    ~GBMPlatform();
+    explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
+                      std::shared_ptr<VirtualTerminal> const& vt);
+    ~Platform();
 
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
-    std::shared_ptr<Display> create_display(
+    std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
@@ -75,5 +75,4 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 }
 }
 }
-#endif /* MIR_GRAPHICS_GBM_GBM_PLATFORM_H_ */
-
+#endif /* MIR_GRAPHICS_GBM_PLATFORM_H_ */

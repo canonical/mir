@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/gbm/gbm_cursor.h"
+#include "src/platform/graphics/gbm/cursor.h"
 #include "src/platform/graphics/gbm/kms_output.h"
 #include "src/platform/graphics/gbm/kms_output_container.h"
 #include "src/platform/graphics/gbm/kms_display_configuration.h"
@@ -184,7 +184,7 @@ struct GBMCursorTest : public ::testing::Test
 
     testing::NiceMock<mtd::MockGBM> mock_gbm;
     StubKMSOutputContainer output_container;
-    mgg::GBMCursor cursor;
+    mgg::Cursor cursor;
 };
 
 }
@@ -197,7 +197,7 @@ TEST_F(GBMCursorTest, creates_cursor_bo_image)
                                         GBM_FORMAT_ARGB8888,
                                         GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE));
 
-    mgg::GBMCursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgg::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
                               std::make_shared<StubCurrentConfiguration>()};
 }
 
@@ -240,7 +240,7 @@ TEST_F(GBMCursorTest, forces_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[11], has_cursor()).Times(0);
 
-    mgg::GBMCursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgg::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
                               std::make_shared<StubCurrentConfiguration>()};
 
     output_container.verify_and_clear_expectations();
