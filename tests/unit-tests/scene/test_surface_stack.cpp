@@ -16,6 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_stack.h"
 #include "src/server/scene/basic_surface_factory.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
@@ -38,7 +39,6 @@
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/mock_compositing_criteria.h"
 
@@ -174,9 +174,11 @@ struct SurfaceStack : public ::testing::Test
         using namespace testing;
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
-        stub_surface1 = std::make_shared<ms::BasicSurface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
-        stub_surface2 = std::make_shared<ms::BasicSurface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
-        stub_surface3 = std::make_shared<ms::BasicSurface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        auto stub_data = std::make_shared<ms::SurfaceData>( 
+            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false);
+        stub_surface1 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface2 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface3 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
             .WillByDefault(Return(stub_surface1));
