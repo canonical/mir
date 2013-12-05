@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/client/gbm/gbm_native_surface.h"
+#include "src/client/gbm/native_surface.h"
 #include "src/client/client_buffer.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
@@ -78,7 +78,7 @@ public:
 
 TEST_F(GBMInterpreterTest, basic_parameters)
 {
-    mclg::GBMNativeSurface interpreter(mock_surface);
+    mclg::NativeSurface interpreter(mock_surface);
 
     MirSurfaceParameters params;
     interpreter.surface_get_parameters(&interpreter, &params);
@@ -96,7 +96,7 @@ TEST_F(GBMInterpreterTest, basic_advance)
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
 
-    mclg::GBMNativeSurface interpreter(mock_surface);
+    mclg::NativeSurface interpreter(mock_surface);
     interpreter.surface_advance_buffer(&interpreter, &buffer_package);
 }
 
@@ -110,14 +110,14 @@ TEST_F(GBMInterpreterTest, swapinterval_request)
     EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,1))
         .InSequence(seq);
 
-    mclg::GBMNativeSurface interpreter(mock_surface);
+    mclg::NativeSurface interpreter(mock_surface);
     interpreter.set_swapinterval(0);
     interpreter.set_swapinterval(1);
 }
 
 TEST_F(GBMInterpreterTest, swapinterval_unsupported_request)
 {
-    mclg::GBMNativeSurface interpreter(mock_surface);
+    mclg::NativeSurface interpreter(mock_surface);
     EXPECT_EQ(MIR_MESA_FALSE, interpreter.set_swapinterval(-1));
     EXPECT_EQ(MIR_MESA_TRUE, interpreter.set_swapinterval(0));
     EXPECT_EQ(MIR_MESA_TRUE, interpreter.set_swapinterval(1));

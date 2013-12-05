@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
+#ifndef MIR_CLIENT_GBM_CLIENT_PLATFORM_H_
+#define MIR_CLIENT_GBM_CLIENT_PLATFORM_H_
 
 #include "../client_platform.h"
 
@@ -32,12 +32,12 @@ namespace gbm
 
 class BufferFileOps;
 
-class GBMClientPlatform : public ClientPlatform
+class ClientPlatform : public client::ClientPlatform
 {
 public:
-    GBMClientPlatform(ClientContext* const context,
-                      std::shared_ptr<BufferFileOps> const& buffer_file_ops,
-                      EGLNativeDisplayContainer& display_container);
+    ClientPlatform(ClientContext* const context,
+                   std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+                   EGLNativeDisplayContainer& display_container);
 
     MirPlatformType platform_type() const;
     std::shared_ptr<ClientBufferFactory> create_buffer_factory();
@@ -55,4 +55,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_GBM_CLIENT_PLATFORM_H_ */

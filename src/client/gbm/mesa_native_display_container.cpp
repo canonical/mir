@@ -32,8 +32,8 @@ namespace
 extern "C"
 {
 
-static int gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
-                                         MirPlatformPackage* package)
+static int egl_display_get_platform(MirMesaEGLNativeDisplay* display,
+                                    MirPlatformPackage* package)
 {
     auto connection = static_cast<MirConnection*>(display->context);
     mir_connection_get_platform(connection, package);
@@ -78,7 +78,7 @@ MirEGLNativeDisplayType
 mclg::MesaNativeDisplayContainer::create(MirConnection* connection)
 {
     MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
-    display->display_get_platform = gbm_egl_display_get_platform;
+    display->display_get_platform = egl_display_get_platform;
     display->context = connection;
 
     std::lock_guard<std::mutex> lg(guard);

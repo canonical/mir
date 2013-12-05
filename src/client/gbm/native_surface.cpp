@@ -18,7 +18,7 @@
 
 #include <cstring>
 #include "../client_buffer.h"
-#include "gbm_native_surface.h"
+#include "native_surface.h"
 
 namespace mclg=mir::client::gbm;
 
@@ -27,20 +27,20 @@ namespace
 static int advance_buffer_static(MirMesaEGLNativeSurface* surface,
                                   MirBufferPackage* buffer_package)
 {
-    auto s = static_cast<mclg::GBMNativeSurface*>(surface);
+    auto s = static_cast<mclg::NativeSurface*>(surface);
     return s->advance_buffer(buffer_package);
 }
 
 static int get_parameters_static(MirMesaEGLNativeSurface* surface,
                                   MirSurfaceParameters* surface_parameters)
 {
-    auto s = static_cast<mclg::GBMNativeSurface*>(surface);
+    auto s = static_cast<mclg::NativeSurface*>(surface);
     return s->get_parameters(surface_parameters);
 }
 
 static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval)
 {
-    auto s = static_cast<mclg::GBMNativeSurface*>(surface);
+    auto s = static_cast<mclg::NativeSurface*>(surface);
     return s->set_swapinterval(interval);
 }
 
@@ -50,7 +50,7 @@ static void buffer_advanced_callback(MirSurface*  /* surface */,
 }
 }
 
-mclg::GBMNativeSurface::GBMNativeSurface(ClientSurface& surface)
+mclg::NativeSurface::NativeSurface(ClientSurface& surface)
     : surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
@@ -58,7 +58,7 @@ mclg::GBMNativeSurface::GBMNativeSurface(ClientSurface& surface)
     surface_set_swapinterval = set_swapinterval_static;
 }
 
-int mclg::GBMNativeSurface::advance_buffer(MirBufferPackage* buffer_package)
+int mclg::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
 {
     mir_wait_for(surface.next_buffer(buffer_advanced_callback, NULL));
     auto buffer = surface.get_current_buffer();
@@ -68,14 +68,14 @@ int mclg::GBMNativeSurface::advance_buffer(MirBufferPackage* buffer_package)
     return MIR_MESA_TRUE;
 }
 
-int mclg::GBMNativeSurface::get_parameters(MirSurfaceParameters* surface_parameters)
+int mclg::NativeSurface::get_parameters(MirSurfaceParameters* surface_parameters)
 {
     auto params = surface.get_parameters();
     memcpy(surface_parameters, &params, sizeof(MirSurfaceParameters));
     return MIR_MESA_TRUE;
 }
 
-int mclg::GBMNativeSurface::set_swapinterval(int interval)
+int mclg::NativeSurface::set_swapinterval(int interval)
 {
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;

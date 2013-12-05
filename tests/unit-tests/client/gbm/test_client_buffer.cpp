@@ -17,8 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/gbm/gbm_client_buffer.h"
-#include "src/client/gbm/gbm_client_buffer_factory.h"
+#include "src/client/gbm/client_buffer.h"
+#include "src/client/gbm/client_buffer_factory.h"
 #include "src/client/gbm/buffer_file_ops.h"
 
 #include <sys/mman.h>
@@ -79,7 +79,7 @@ TEST_F(MirGBMBufferTest, width_and_height)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(buffer_file_ops, package, size, pf);
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     EXPECT_EQ(buffer.size().height, height);
     EXPECT_EQ(buffer.size().width, width);
@@ -90,7 +90,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(buffer_file_ops, package, size, pf);
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     EXPECT_EQ(buffer.stride(), stride);
 }
@@ -99,7 +99,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(buffer_file_ops, package, size, pf);
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     auto package_return = buffer.native_buffer_handle();
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
@@ -123,7 +123,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_buffer_fd)
     EXPECT_CALL(*buffer_file_ops, close(package->fd[0]))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(buffer_file_ops, package, size, pf);
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     auto mem_region = buffer.secure_for_cpu_write();
     ASSERT_EQ(map_addr, mem_region->vaddr.get());
@@ -144,7 +144,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_failure)
     EXPECT_CALL(*buffer_file_ops, close(package->fd[0]))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(buffer_file_ops, package, size, pf);
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     EXPECT_THROW({
         auto mem_region = buffer.secure_for_cpu_write();
@@ -158,14 +158,14 @@ TEST_F(MirGBMBufferTest, buffer_fd_closed_on_buffer_destruction)
     EXPECT_CALL(*buffer_file_ops, close(package->fd[0]))
         .Times(1);
 
-    mclg::GBMClientBuffer buffer(buffer_file_ops, package, size, pf);
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 }
 
 TEST_F(MirGBMBufferTest, factory_gets_size_from_package)
 {
     using namespace testing;
 
-    mclg::GBMClientBufferFactory factory(buffer_file_ops);
+    mclg::ClientBufferFactory factory(buffer_file_ops);
 
     geom::Size unused_size{0, 0};
     auto buffer = factory.create_buffer(package, unused_size, pf);
