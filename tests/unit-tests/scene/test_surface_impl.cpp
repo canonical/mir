@@ -25,8 +25,8 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 
-#include "mir_test_doubles/stub_surface_controller.h"
-#include "mir_test_doubles/mock_surface_controller.h"
+#include "mir_test_doubles/stub_surface_ranker.h"
+#include "mir_test_doubles/mock_surface_ranker.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"

@@ -29,10 +29,9 @@
 #include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/stub_surface_controller.h"
+#include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
-#include "mir_test_doubles/stub_surface_controller.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -33,7 +33,7 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/stub_surface_controller.h"
+#include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_session_event_sink.h"

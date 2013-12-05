@@ -25,7 +25,7 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/stub_surface_controller.h"
+#include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
