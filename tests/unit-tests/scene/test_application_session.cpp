@@ -49,7 +49,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
     mtd::StubSurfaceBuilder surface_builder;
 
-    return std::make_shared<mtd::MockSurface>(nullptr, std::make_shared<mtd::StubSurfaceBuilder>());
+    return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 }
 }
 

@@ -21,7 +21,7 @@
 #define MIR_TEST_DOUBLES_STUB_SURFACE_BUILDER_H_
 
 #include "src/server/scene/surface_builder.h"
-#include "src/server/scene/surface.h"
+#include "src/server/scene/basic_surface.h"
 #include "mir/scene/scene_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 
@@ -44,10 +44,10 @@ public:
     {
     }
 
-    std::weak_ptr<scene::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
+    std::weak_ptr<scene::BasicSurface> create_surface(shell::SurfaceCreationParameters const&)
     {
         auto state = std::make_shared<MockSurfaceState>();
-        dummy_surface = std::make_shared<scene::Surface>(
+        dummy_surface = std::make_shared<scene::BasicSurface>(
             state, buffer_stream,
             std::shared_ptr<input::InputChannel>(),
             report);

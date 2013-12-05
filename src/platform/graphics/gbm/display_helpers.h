@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
-#define MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_
 
 #include "drm_mode_resources.h"
 #include "udev_wrapper.h"
@@ -128,4 +128,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_ */

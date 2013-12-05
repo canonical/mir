@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gbm_display.h"
-#include "gbm_cursor.h"
-#include "gbm_platform.h"
-#include "gbm_display_buffer.h"
+#include "display.h"
+#include "cursor.h"
+#include "platform.h"
+#include "display_buffer.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
@@ -74,9 +74,9 @@ private:
 
 }
 
-mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
-                            std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-                            std::shared_ptr<DisplayReport> const& listener)
+mgg::Display::Display(std::shared_ptr<Platform> const& platform,
+                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+                      std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
       monitor(mgg::UdevContext()),
@@ -101,11 +101,12 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
 // please don't remove this empty destructor, it's here for the
 // unique ptr!! if you accidentally remove it you will get a not
 // so relevant linker error about some missing headers
-mgg::GBMDisplay::~GBMDisplay()
+mgg::Display::~Display()
 {
 }
 
-void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f)
+void mgg::Display::for_each_display_buffer(
+    std::function<void(graphics::DisplayBuffer&)> const& f)
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -113,7 +114,7 @@ void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)
         f(*db_ptr);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
+std::shared_ptr<mg::DisplayConfiguration> mgg::Display::configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -122,13 +123,13 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
     return std::make_shared<mgg::RealKMSDisplayConfiguration>(current_display_configuration);
 }
 
-void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
+void mgg::Display::configure(mg::DisplayConfiguration const& conf)
 {
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
 
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
-        std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
+        std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
         /* Reset the state of all outputs */
         kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
@@ -163,11 +164,13 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                 platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
                                                      bounding_rect.size.height.as_uint32_t());
 
-            std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener,
-                                                                      kms_outputs,
-                                                                      std::move(surface),
-                                                                      bounding_rect,
-                                                                      shared_egl.context()}};
+            std::unique_ptr<DisplayBuffer> db{
+                new DisplayBuffer{platform, listener,
+                                  kms_outputs,
+                                  std::move(surface),
+                                  bounding_rect,
+                                  shared_egl.context()}};
+
             display_buffers_new.push_back(std::move(db));
         });
 
@@ -183,7 +186,7 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
     if (cursor) cursor->show_at_last_known_position();
 }
 
-void mgg::GBMDisplay::register_configuration_change_handler(
+void mgg::Display::register_configuration_change_handler(
     EventHandlerRegister& handlers,
     DisplayConfigurationChangeHandler const& conf_change_handler)
 {
@@ -199,7 +202,7 @@ void mgg::GBMDisplay::register_configuration_change_handler(
         });
 }
 
-void mgg::GBMDisplay::register_pause_resume_handlers(
+void mgg::Display::register_pause_resume_handlers(
     EventHandlerRegister& handlers,
     DisplayPauseHandler const& pause_handler,
     DisplayResumeHandler const& resume_handler)
@@ -207,7 +210,7 @@ void mgg::GBMDisplay::register_pause_resume_handlers(
     platform->vt->register_switch_handlers(handlers, pause_handler, resume_handler);
 }
 
-void mgg::GBMDisplay::pause()
+void mgg::Display::pause()
 {
     try
     {
@@ -221,7 +224,7 @@ void mgg::GBMDisplay::pause()
     }
 }
 
-void mgg::GBMDisplay::resume()
+void mgg::Display::resume()
 {
     try
     {
@@ -250,14 +253,14 @@ void mgg::GBMDisplay::resume()
     if (cursor) cursor->show_at_last_known_position();
 }
 
-auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
+auto mgg::Display::the_cursor() -> std::weak_ptr<graphics::Cursor>
 {
     if (!cursor)
     {
         class KMSCurrentConfiguration : public CurrentConfiguration
         {
         public:
-            KMSCurrentConfiguration(GBMDisplay& display)
+            KMSCurrentConfiguration(Display& display)
                 : display(display)
             {
             }
@@ -270,23 +273,23 @@ auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
             }
 
         private:
-            GBMDisplay& display;
+            Display& display;
         };
 
-        cursor = std::make_shared<GBMCursor>(platform->gbm.device, output_container,
-                                             std::make_shared<KMSCurrentConfiguration>(*this));
+        cursor = std::make_shared<Cursor>(platform->gbm.device, output_container,
+                                          std::make_shared<KMSCurrentConfiguration>(*this));
     }
 
     return cursor;
 }
 
-std::unique_ptr<mg::GLContext> mgg::GBMDisplay::create_gl_context()
+std::unique_ptr<mg::GLContext> mgg::Display::create_gl_context()
 {
     return std::unique_ptr<GBMGLContext>{
         new GBMGLContext{platform->gbm, shared_egl.context()}};
 }
 
-void mgg::GBMDisplay::clear_connected_unused_outputs()
+void mgg::Display::clear_connected_unused_outputs()
 {
     current_display_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {

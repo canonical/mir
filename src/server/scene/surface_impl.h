@@ -33,7 +33,6 @@ namespace scene { class BasicSurface; }
 namespace shell
 {
 class InputTargeter;
-class Session;
 class SurfaceConfigurator;
 struct SurfaceCreationParameters;
 }
@@ -47,7 +46,6 @@ class SurfaceImpl : public shell::Surface
 {
 public:
     SurfaceImpl(
-        shell::Session* session,
         std::shared_ptr<SurfaceBuilder> const& builder,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
         shell::SurfaceCreationParameters const& params,
