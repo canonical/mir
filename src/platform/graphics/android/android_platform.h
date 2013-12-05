@@ -40,9 +40,6 @@ public:
         std::shared_ptr<DisplayBuilder> const& display_builder,
         std::shared_ptr<DisplayReport> const& display_report);
 
-    AndroidPlatform(
-        std::shared_ptr<DisplayReport> const& display_report);
-
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<BufferInitializer> const& buffer_initializer);
