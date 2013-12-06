@@ -124,17 +124,20 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    std::shared_ptr<mg::Buffer> buffer;
+    mg::Buffer* buffer{nullptr};
 
     InSequence seq;
     EXPECT_CALL(*mock_bundle, client_acquire())
         .Times(1)
-        .WillOnce(Return(mock_buffer));
+        .WillOnce(Return(mock_buffer.get()));
     EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
+    EXPECT_CALL(*mock_bundle, client_acquire())
+        .Times(1)
+        .WillOnce(Return(mock_buffer.get()));
 
     buffer_stream.swap_client_buffers(buffer);
-    buffer_stream.release_client_buffer(buffer);
+    buffer_stream.swap_client_buffers(buffer);
 }
 
 TEST_F(BufferStreamTest, allow_framedropping_device)
