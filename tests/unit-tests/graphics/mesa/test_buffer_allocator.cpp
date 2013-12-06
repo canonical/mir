@@ -45,7 +45,7 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
 
-class GBMBufferAllocatorTest  : public ::testing::Test
+class MesaBufferAllocatorTest  : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -86,7 +86,7 @@ protected:
     mtf::UdevEnvironment fake_devices;
 };
 
-TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
+TEST_F(MesaBufferAllocatorTest, allocator_returns_non_null_buffer)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
@@ -95,7 +95,7 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
 }
 
-TEST_F(GBMBufferAllocatorTest, large_hardware_buffers_bypass)
+TEST_F(MesaBufferAllocatorTest, large_hardware_buffers_bypass)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
@@ -110,7 +110,7 @@ TEST_F(GBMBufferAllocatorTest, large_hardware_buffers_bypass)
     EXPECT_TRUE(buf->can_bypass());
 }
 
-TEST_F(GBMBufferAllocatorTest, small_buffers_dont_bypass)
+TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
@@ -125,7 +125,7 @@ TEST_F(GBMBufferAllocatorTest, small_buffers_dont_bypass)
     EXPECT_FALSE(buf->can_bypass());
 }
 
-TEST_F(GBMBufferAllocatorTest, software_buffers_dont_bypass)
+TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
 {
     using namespace testing;
 
@@ -138,7 +138,7 @@ TEST_F(GBMBufferAllocatorTest, software_buffers_dont_bypass)
     EXPECT_FALSE(buf->can_bypass());
 }
 
-TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
+TEST_F(MesaBufferAllocatorTest, bypass_disables_via_environment)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
@@ -157,7 +157,7 @@ TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
     unsetenv("MIR_BYPASS");
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
+TEST_F(MesaBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
 {
     using namespace testing;
 
@@ -167,7 +167,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
     allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_argb_8888, usage});
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
+TEST_F(MesaBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
 {
     using namespace testing;
 
@@ -182,7 +182,7 @@ MATCHER_P(has_flag_set, flag, "")
     return arg & flag;
 }
 
-TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer)
+TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer)
 {
     using namespace testing;
 
@@ -194,7 +194,7 @@ TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer)
     allocator->alloc_buffer(properties);
 }
 
-TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
+TEST_F(MesaBufferAllocatorTest, creates_software_rendering_buffer)
 {
     using namespace testing;
 
@@ -205,7 +205,7 @@ TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
     allocator->alloc_buffer(properties);
 }
 
-TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer_for_undefined_usage)
+TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer_for_undefined_usage)
 {
     using namespace testing;
 
@@ -217,7 +217,7 @@ TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer_for_undefined_u
     allocator->alloc_buffer(properties);
 }
 
-TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
+TEST_F(MesaBufferAllocatorTest, requests_correct_buffer_dimensions)
 {
     using namespace testing;
 
@@ -227,7 +227,7 @@ TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
     allocator->alloc_buffer(buffer_properties);
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
+TEST_F(MesaBufferAllocatorTest, correct_buffer_handle_is_destroyed)
 {
     using namespace testing;
     gbm_bo* bo{reinterpret_cast<gbm_bo*>(0xabcd)};
@@ -239,7 +239,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
     allocator->alloc_buffer(buffer_properties);
 }
 
-TEST_F(GBMBufferAllocatorTest, buffer_initializer_is_called)
+TEST_F(MesaBufferAllocatorTest, buffer_initializer_is_called)
 {
     using namespace testing;
 
@@ -249,7 +249,7 @@ TEST_F(GBMBufferAllocatorTest, buffer_initializer_is_called)
     allocator->alloc_buffer(buffer_properties);
 }
 
-TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
+TEST_F(MesaBufferAllocatorTest, null_buffer_initializer_does_not_crash)
 {
     using namespace testing;
 
@@ -261,7 +261,7 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     });
 }
 
-TEST_F(GBMBufferAllocatorTest, throws_on_buffer_creation_failure)
+TEST_F(MesaBufferAllocatorTest, throws_on_buffer_creation_failure)
 {
     using namespace testing;
 
@@ -275,7 +275,7 @@ TEST_F(GBMBufferAllocatorTest, throws_on_buffer_creation_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
+TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
@@ -291,7 +291,7 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
     EXPECT_EQ(1, xrgb_8888_count);
 }
 
-TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
+TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
 {
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
@@ -299,7 +299,7 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_firs
     EXPECT_EQ(mir_pixel_format_argb_8888, supported_pixel_formats[0]);
 }
 
-TEST_F(GBMBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
+TEST_F(MesaBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
 {
     using namespace testing;
 

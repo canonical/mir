@@ -18,13 +18,11 @@
  * Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GRAPHICS_NATIVE_GBM_PLATFORM_H_
-#define MIR_GRAPHICS_NATIVE_GBM_PLATFORM_H_
+#ifndef MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
+#define MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
 
 #include "mir/graphics/native_platform.h"
 #include "display_helpers.h"
-
-namespace mg = mir::graphics;
 
 namespace mir
 {
@@ -32,7 +30,7 @@ namespace graphics
 {
 namespace mesa
 {
-class NativeGBMPlatform : public mg::NativePlatform
+class NativePlatform : public graphics::NativePlatform
 {
 public:
     void initialize(std::shared_ptr<NestedContext> const& nested_context);
@@ -51,4 +49,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_NATIVE_GBM_PLATFORM_H_
+#endif // MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_

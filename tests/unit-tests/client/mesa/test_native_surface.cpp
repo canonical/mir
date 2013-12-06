@@ -55,7 +55,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
 
 }
 
-class GBMInterpreterTest : public ::testing::Test
+class MesaClientNativeSurfaceTest : public ::testing::Test
 {
 public:
     virtual void SetUp()
@@ -76,7 +76,7 @@ public:
     testing::NiceMock<mtd::MockClientSurface> mock_surface;
 };
 
-TEST_F(GBMInterpreterTest, basic_parameters)
+TEST_F(MesaClientNativeSurfaceTest, basic_parameters)
 {
     mclg::NativeSurface interpreter(mock_surface);
 
@@ -87,7 +87,7 @@ TEST_F(GBMInterpreterTest, basic_parameters)
     EXPECT_EQ(surf_params.pixel_format, params.pixel_format);
 }
 
-TEST_F(GBMInterpreterTest, basic_advance)
+TEST_F(MesaClientNativeSurfaceTest, basic_advance)
 {
     using namespace testing;
     MirBufferPackage buffer_package;
@@ -100,7 +100,7 @@ TEST_F(GBMInterpreterTest, basic_advance)
     interpreter.surface_advance_buffer(&interpreter, &buffer_package);
 }
 
-TEST_F(GBMInterpreterTest, swapinterval_request)
+TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
 {
     using namespace testing;
 
@@ -115,7 +115,7 @@ TEST_F(GBMInterpreterTest, swapinterval_request)
     interpreter.set_swapinterval(1);
 }
 
-TEST_F(GBMInterpreterTest, swapinterval_unsupported_request)
+TEST_F(MesaClientNativeSurfaceTest, swapinterval_unsupported_request)
 {
     mclg::NativeSurface interpreter(mock_surface);
     EXPECT_EQ(MIR_MESA_FALSE, interpreter.set_swapinterval(-1));

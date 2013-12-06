@@ -41,7 +41,7 @@ public:
     MOCK_CONST_METHOD2(unmap, void(void* addr, size_t size));
 };
 
-struct MirGBMBufferTest : public testing::Test
+struct MesaClientBufferTest : public testing::Test
 {
     void SetUp()
     {
@@ -75,7 +75,7 @@ struct MirGBMBufferTest : public testing::Test
 
 }
 
-TEST_F(MirGBMBufferTest, width_and_height)
+TEST_F(MesaClientBufferTest, width_and_height)
 {
     using namespace testing;
 
@@ -86,7 +86,7 @@ TEST_F(MirGBMBufferTest, width_and_height)
     EXPECT_EQ(buffer.pixel_format(), pf);
 }
 
-TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
+TEST_F(MesaClientBufferTest, buffer_returns_correct_stride)
 {
     using namespace testing;
 
@@ -95,7 +95,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
     EXPECT_EQ(buffer.stride(), stride);
 }
 
-TEST_F(MirGBMBufferTest, buffer_returns_set_package)
+TEST_F(MesaClientBufferTest, buffer_returns_set_package)
 {
     using namespace testing;
 
@@ -111,7 +111,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
         EXPECT_EQ(package_return->fd[i], package_copy->fd[i]);
 }
 
-TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_buffer_fd)
+TEST_F(MesaClientBufferTest, secure_for_cpu_write_maps_buffer_fd)
 {
     using namespace testing;
     void *map_addr{reinterpret_cast<void*>(0xabcdef)};
@@ -133,7 +133,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_buffer_fd)
     ASSERT_EQ(pf, mem_region->format);
 }
 
-TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_failure)
+TEST_F(MesaClientBufferTest, secure_for_cpu_write_throws_on_map_failure)
 {
     using namespace testing;
 
@@ -151,7 +151,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_failure)
     }, std::runtime_error);
 }
 
-TEST_F(MirGBMBufferTest, buffer_fd_closed_on_buffer_destruction)
+TEST_F(MesaClientBufferTest, buffer_fd_closed_on_buffer_destruction)
 {
     using namespace testing;
 
@@ -161,7 +161,7 @@ TEST_F(MirGBMBufferTest, buffer_fd_closed_on_buffer_destruction)
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 }
 
-TEST_F(MirGBMBufferTest, factory_gets_size_from_package)
+TEST_F(MesaClientBufferTest, factory_gets_size_from_package)
 {
     using namespace testing;
 

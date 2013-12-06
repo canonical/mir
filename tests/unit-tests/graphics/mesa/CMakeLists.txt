@@ -14,7 +14,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_udev_helper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_native_gbm_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_native_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_anonymous_shm_file.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
 )

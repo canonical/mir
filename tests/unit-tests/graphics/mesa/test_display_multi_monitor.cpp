@@ -93,10 +93,10 @@ public:
     }
 };
 
-class GBMDisplayMultiMonitorTest : public ::testing::Test
+class MesaDisplayMultiMonitorTest : public ::testing::Test
 {
 public:
-    GBMDisplayMultiMonitorTest()
+    MesaDisplayMultiMonitorTest()
     {
         using namespace testing;
 
@@ -220,7 +220,7 @@ public:
 
 }
 
-TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
+TEST_F(MesaDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
 {
     using namespace testing;
 
@@ -264,7 +264,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     auto display = create_display_cloned(create_platform());
 }
 
-TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
+TEST_F(MesaDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
 {
     using namespace testing;
 
@@ -311,7 +311,7 @@ ACTION_P(InvokePageFlipHandler, param)
 
 }
 
-TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
+TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
 {
     using namespace testing;
 
@@ -391,7 +391,7 @@ MATCHER_P(IsValidFB, fb_id_container, "") { return fb_id_container->check_fb_id(
 
 }
 
-TEST_F(GBMDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_side_by_side)
+TEST_F(MesaDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_side_by_side)
 {
     using namespace testing;
 
@@ -438,7 +438,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_sid
     auto display = create_display_side_by_side(create_platform());
 }
 
-TEST_F(GBMDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
+TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
 {
     using namespace testing;
 
@@ -490,7 +490,7 @@ TEST_F(GBMDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
     }
 }
 
-TEST_F(GBMDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
+TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
 {
     using namespace testing;
 

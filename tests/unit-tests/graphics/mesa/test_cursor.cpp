@@ -174,9 +174,9 @@ struct StubCurrentConfiguration : public mgm::CurrentConfiguration
     StubKMSDisplayConfiguration conf;
 };
 
-struct GBMCursorTest : public ::testing::Test
+struct MesaCursorTest : public ::testing::Test
 {
-    GBMCursorTest()
+    MesaCursorTest()
         : cursor{mock_gbm.fake_gbm.device, output_container,
                  std::make_shared<StubCurrentConfiguration>()}
     {
@@ -189,7 +189,7 @@ struct GBMCursorTest : public ::testing::Test
 
 }
 
-TEST_F(GBMCursorTest, creates_cursor_bo_image)
+TEST_F(MesaCursorTest, creates_cursor_bo_image)
 {
     size_t const cursor_side{64};
     EXPECT_CALL(mock_gbm, gbm_bo_create(mock_gbm.fake_gbm.device,
@@ -201,7 +201,7 @@ TEST_F(GBMCursorTest, creates_cursor_bo_image)
                               std::make_shared<StubCurrentConfiguration>()};
 }
 
-TEST_F(GBMCursorTest, set_cursor_writes_to_bo)
+TEST_F(MesaCursorTest, set_cursor_writes_to_bo)
 {
     using namespace testing;
 
@@ -215,7 +215,7 @@ TEST_F(GBMCursorTest, set_cursor_writes_to_bo)
     cursor.set_image(image, cursor_size);
 }
 
-TEST_F(GBMCursorTest, set_cursor_throws_on_incorrect_size)
+TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
 {
     using namespace testing;
 
@@ -228,7 +228,7 @@ TEST_F(GBMCursorTest, set_cursor_throws_on_incorrect_size)
     , std::logic_error);
 }
 
-TEST_F(GBMCursorTest, forces_cursor_state_on_construction)
+TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
 {
     using namespace testing;
 
@@ -247,7 +247,7 @@ TEST_F(GBMCursorTest, forces_cursor_state_on_construction)
 }
 
 
-TEST_F(GBMCursorTest, move_to_sets_clears_cursor_if_needed)
+TEST_F(MesaCursorTest, move_to_sets_clears_cursor_if_needed)
 {
     using namespace testing;
 
@@ -264,7 +264,7 @@ TEST_F(GBMCursorTest, move_to_sets_clears_cursor_if_needed)
     output_container.verify_and_clear_expectations();
 }
 
-TEST_F(GBMCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
+TEST_F(MesaCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
 {
     using namespace testing;
 
@@ -283,7 +283,7 @@ TEST_F(GBMCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
     output_container.verify_and_clear_expectations();
 }
 
-TEST_F(GBMCursorTest, move_to_moves_cursor_to_right_output)
+TEST_F(MesaCursorTest, move_to_moves_cursor_to_right_output)
 {
     using namespace testing;
 
@@ -320,7 +320,7 @@ TEST_F(GBMCursorTest, move_to_moves_cursor_to_right_output)
     output_container.verify_and_clear_expectations();
 }
 
-TEST_F(GBMCursorTest, shows_at_last_known_position)
+TEST_F(MesaCursorTest, shows_at_last_known_position)
 {
     using namespace testing;
 
@@ -339,7 +339,7 @@ TEST_F(GBMCursorTest, shows_at_last_known_position)
     output_container.verify_and_clear_expectations();
 }
 
-TEST_F(GBMCursorTest, hides_cursor_in_all_outputs)
+TEST_F(MesaCursorTest, hides_cursor_in_all_outputs)
 {
     using namespace testing;
 
@@ -351,7 +351,7 @@ TEST_F(GBMCursorTest, hides_cursor_in_all_outputs)
     output_container.verify_and_clear_expectations();
 }
 
-TEST_F(GBMCursorTest, clears_cursor_on_exit)
+TEST_F(MesaCursorTest, clears_cursor_on_exit)
 {
     using namespace testing;
 

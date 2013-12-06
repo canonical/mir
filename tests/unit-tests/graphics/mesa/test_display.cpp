@@ -84,10 +84,10 @@ public:
 };
 
 
-class GBMDisplayTest : public ::testing::Test
+class MesaDisplayTest : public ::testing::Test
 {
 public:
-    GBMDisplayTest() :
+    MesaDisplayTest() :
         mock_report{std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>()},
         null_report{std::make_shared<mg::NullDisplayReport>()}
     {
@@ -228,14 +228,14 @@ public:
 
 }
 
-TEST_F(GBMDisplayTest, create_display)
+TEST_F(MesaDisplayTest, create_display)
 {
     using namespace testing;
 
     auto const connector_id = get_connected_connector_id();
     auto const crtc_id = get_connected_crtc_id();
 
-    /* To display a gbm surface, the GBMDisplay should... */
+    /* To display a gbm surface, the MesaDisplay should... */
 
     /* Create a gbm surface to use as the frame buffer */
     EXPECT_CALL(mock_gbm, gbm_surface_create(mock_gbm.fake_gbm.device,_,_,_,_))
@@ -289,7 +289,7 @@ TEST_F(GBMDisplayTest, create_display)
     auto display = create_display(create_platform());
 }
 
-TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
+TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
 {
     using namespace testing;
 
@@ -326,7 +326,7 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
     auto display = create_display(create_platform());
 }
 
-TEST_F(GBMDisplayTest, create_display_drm_failure)
+TEST_F(MesaDisplayTest, create_display_drm_failure)
 {
     using namespace testing;
 
@@ -343,7 +343,7 @@ TEST_F(GBMDisplayTest, create_display_drm_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMDisplayTest, create_display_kms_failure)
+TEST_F(MesaDisplayTest, create_display_kms_failure)
 {
     using namespace testing;
 
@@ -366,7 +366,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
     }, std::runtime_error) << "Expected that c'tor of mgm::Display throws";
 }
 
-TEST_F(GBMDisplayTest, create_display_gbm_failure)
+TEST_F(MesaDisplayTest, create_display_gbm_failure)
 {
     using namespace testing;
 
@@ -404,7 +404,7 @@ ACTION_P(InvokePageFlipHandler, param)
 
 }
 
-TEST_F(GBMDisplayTest, post_update)
+TEST_F(MesaDisplayTest, post_update)
 {
     using namespace testing;
 
@@ -449,7 +449,7 @@ TEST_F(GBMDisplayTest, post_update)
     });
 }
 
-TEST_F(GBMDisplayTest, post_update_flip_failure)
+TEST_F(MesaDisplayTest, post_update_flip_failure)
 {
     using namespace testing;
 
@@ -488,7 +488,7 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_of_native_resources)
+TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_of_native_resources)
 {
     using namespace ::testing;
 
@@ -521,7 +521,7 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
                         mock_report);
 }
 
-TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_resources)
+TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_resources)
 {
     using namespace ::testing;
 
@@ -537,7 +537,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_res
     reporter->report_successful_setup_of_native_resources();
 }
 
-TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on_construction)
+TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_make_current_on_construction)
 {
     using namespace ::testing;
 
@@ -553,7 +553,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on
     reporter->report_successful_egl_make_current_on_construction();
 }
 
-TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_construction)
+TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_construction)
 {
     using namespace ::testing;
 
@@ -569,7 +569,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_
     reporter->report_successful_egl_buffer_swap_on_construction();
 }
 
-TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_on_construction)
+TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_on_construction)
 {
     using namespace ::testing;
 
@@ -585,7 +585,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_o
     reporter->report_successful_drm_mode_set_crtc_on_construction();
 }
 
-TEST_F(GBMDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
+TEST_F(MesaDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
 {
     using namespace ::testing;
 
@@ -600,7 +600,7 @@ TEST_F(GBMDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
     }, std::runtime_error);
 }
 
-TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
+TEST_F(MesaDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
 {
     using namespace ::testing;
 
@@ -615,7 +615,7 @@ TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
     }, std::runtime_error);
 }
 
-TEST_F(GBMDisplayTest, for_each_display_buffer_calls_callback)
+TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
 {
     using namespace ::testing;
 
@@ -631,7 +631,7 @@ TEST_F(GBMDisplayTest, for_each_display_buffer_calls_callback)
     EXPECT_NE(0, callback_count);
 }
 
-TEST_F(GBMDisplayTest, constructor_sets_vt_graphics_mode)
+TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
 {
     using namespace testing;
 
@@ -645,7 +645,7 @@ TEST_F(GBMDisplayTest, constructor_sets_vt_graphics_mode)
     auto display = create_display(platform);
 }
 
-TEST_F(GBMDisplayTest, pause_drops_drm_master)
+TEST_F(MesaDisplayTest, pause_drops_drm_master)
 {
     using namespace testing;
 
@@ -657,7 +657,7 @@ TEST_F(GBMDisplayTest, pause_drops_drm_master)
     display->pause();
 }
 
-TEST_F(GBMDisplayTest, resume_sets_drm_master)
+TEST_F(MesaDisplayTest, resume_sets_drm_master)
 {
     using namespace testing;
 
@@ -669,7 +669,7 @@ TEST_F(GBMDisplayTest, resume_sets_drm_master)
     display->resume();
 }
 
-TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
+TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
 {
     using namespace testing;
 
@@ -699,7 +699,7 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     }, std::runtime_error);
 }
 
-TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
+TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
 
@@ -714,7 +714,7 @@ TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
     display->register_configuration_change_handler(mock_register, []{});
 }
 
-TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
+TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 {
     using namespace testing;
 

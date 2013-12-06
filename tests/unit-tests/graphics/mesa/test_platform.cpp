@@ -49,7 +49,7 @@ namespace mtf = mir::mir_test_framework;
 namespace
 {
 
-class GBMGraphicsPlatform : public ::testing::Test
+class MesaGraphicsPlatform : public ::testing::Test
 {
 public:
     void SetUp()
@@ -72,7 +72,7 @@ public:
 };
 }
 
-TEST_F(GBMGraphicsPlatform, get_ipc_package)
+TEST_F(MesaGraphicsPlatform, get_ipc_package)
 {
     using namespace testing;
     const int auth_fd{66};
@@ -102,7 +102,7 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
     );
 }
 
-TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_error)
+TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_error)
 {
     using namespace ::testing;
 
@@ -120,7 +120,7 @@ TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
     FAIL() << "Expected an exception to be thrown.";
 }
 
-TEST_F(GBMGraphicsPlatform, fails_if_no_resources)
+TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
 {
     using namespace ::testing;
 
@@ -137,7 +137,7 @@ TEST_F(GBMGraphicsPlatform, fails_if_no_resources)
 }
 
 /* ipc packaging tests */
-TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
+TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
 {
     mtd::MockBuffer mock_buffer;
     mir::geometry::Stride dummy_stride(4390);
@@ -181,7 +181,7 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     platform->fill_ipc_package(&mock_packer, &mock_buffer);
 }
 
-TEST_F(GBMGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
+TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
 {
     using namespace testing;
 
@@ -195,7 +195,7 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
     authenticator->drm_auth_magic(magic);
 }
 
-TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
+TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
 {
     using namespace testing;
 
@@ -212,7 +212,7 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     }, std::runtime_error);
 }
 
-TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
+TEST_F(MesaGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
 {
     MirMesaEGLNativeDisplay* native_display = nullptr;
     EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
@@ -225,7 +225,7 @@ TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal
     EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
 }
 
-TEST_F(GBMGraphicsPlatform, egl_native_display_is_gbm_device)
+TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
 {
     auto platform = create_platform();
     EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
@@ -271,7 +271,7 @@ private:
  * 100% failure rate for this test (1000 out of 1000 repetitions) when testing
  * without the fix for the race condition we are testing for.
  */
-TEST_F(GBMGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_destruction)
+TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_destruction)
 {
     using namespace testing;
 

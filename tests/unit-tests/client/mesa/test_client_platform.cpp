@@ -31,7 +31,7 @@ namespace mclg = mir::client::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
+TEST(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;

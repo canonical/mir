@@ -62,10 +62,10 @@ mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode
     return mg::DisplayConfigurationMode{size, vrefresh_hz};
 }
 
-class GBMDisplayConfigurationTest : public ::testing::Test
+class MesaDisplayConfigurationTest : public ::testing::Test
 {
 public:
-    GBMDisplayConfigurationTest()
+    MesaDisplayConfigurationTest()
     {
         using namespace testing;
 
@@ -131,7 +131,7 @@ public:
 
 }
 
-TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
+TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
 {
     using namespace ::testing;
 
@@ -258,7 +258,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     EXPECT_EQ(expected_outputs.size(), output_count);
 }
 
-TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
+TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
 {
     uint32_t const crtc0_id{10};
     uint32_t const encoder0_id{20};
@@ -301,7 +301,7 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     });
 }
 
-TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
+TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
 {
     uint32_t const crtc0_id{10};
     uint32_t const encoder0_id{20};
@@ -340,7 +340,7 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     }, std::runtime_error);
 }
 
-TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
+TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 {
     using namespace ::testing;
 

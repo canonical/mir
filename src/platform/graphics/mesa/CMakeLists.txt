@@ -33,7 +33,7 @@ add_library(
   drm_close_threadsafe.cpp
   udev_wrapper.cpp
   overlapping_output_grouping.cpp
-  native_gbm_platform.cpp
+  native_platform.cpp
   anonymous_shm_file.cpp
   shm_buffer.cpp
 )

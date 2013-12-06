@@ -46,7 +46,7 @@ namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir::mir_test_framework;
 
-class GBMGraphicBufferBasic : public ::testing::Test
+class GBMBufferTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -98,7 +98,7 @@ protected:
     mtf::UdevEnvironment fake_devices;
 };
 
-TEST_F(GBMGraphicBufferBasic, dimensions_test)
+TEST_F(GBMBufferTest, dimensions_test)
 {
     using namespace testing;
 
@@ -109,7 +109,7 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
     ASSERT_EQ(size, buffer->size());
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
+TEST_F(GBMBufferTest, buffer_has_expected_pixel_format)
 {
     using namespace testing;
 
@@ -120,7 +120,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
     ASSERT_EQ(pf, buffer->pixel_format());
 }
 
-TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
+TEST_F(GBMBufferTest, stride_has_sane_value)
 {
     using namespace testing;
 
@@ -136,7 +136,7 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     ASSERT_LE(minimum, buffer->stride());
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_native_handle_has_correct_size)
+TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)
 {
     using namespace testing;
 
@@ -158,7 +158,7 @@ ACTION_P(SetGEMFlinkName, value)
     flink->name = value;
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_native_handle_contains_correct_data)
+TEST_F(GBMBufferTest, buffer_native_handle_contains_correct_data)
 {
     using namespace testing;
 
@@ -180,7 +180,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_native_handle_contains_correct_data)
     EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_creation_throws_on_prime_fd_failure)
+TEST_F(GBMBufferTest, buffer_creation_throws_on_prime_fd_failure)
 {
     using namespace testing;
 
@@ -193,7 +193,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_creation_throws_on_prime_fd_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_creation_failed)
+TEST_F(GBMBufferTest, bind_to_texture_egl_image_creation_failed)
 {
     using namespace testing;
 
@@ -206,7 +206,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_creation_failed)
     }, std::runtime_error);
 }
 
-TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
+TEST_F(GBMBufferTest, bind_to_texture_uses_egl_image)
 {
     using namespace testing;
 

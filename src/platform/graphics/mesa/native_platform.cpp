@@ -18,7 +18,7 @@
  * Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "native_gbm_platform.h"
+#include "native_platform.h"
 
 #include "buffer_allocator.h"
 #include "mir/graphics/buffer_ipc_packer.h"
@@ -32,7 +32,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-void mgm::NativeGBMPlatform::initialize(
+void mgm::NativePlatform::initialize(
     std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     nested_context = nested_context_arg;
@@ -42,13 +42,13 @@ void mgm::NativeGBMPlatform::initialize(
     nested_context->drm_set_gbm_device(gbm.device);
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativeGBMPlatform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::NativeGBMPlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 {
     struct NativeGBMPlatformIPCPackage : public mg::PlatformIPCPackage
     {
@@ -80,12 +80,12 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativeGBMPlatform::get_ipc_package(
     return std::make_shared<NativeGBMPlatformIPCPackage>(auth_fd);
 }
 
-std::shared_ptr<mg::InternalClient> mgm::NativeGBMPlatform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_internal_client is not implemented yet!"));
 }
 
-void mgm::NativeGBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
+void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)
@@ -102,5 +102,5 @@ void mgm::NativeGBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer co
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    return std::make_shared<mgm::NativeGBMPlatform>();
+    return std::make_shared<mgm::NativePlatform>();
 }
