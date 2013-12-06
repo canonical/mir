@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/platform/graphics/gbm/gbm_platform.h"
-#include "src/platform/graphics/gbm/gbm_display.h"
+#include "src/platform/graphics/gbm/platform.h"
+#include "src/platform/graphics/gbm/display.h"
 #include "src/platform/graphics/gbm/virtual_terminal.h"
 #include "src/server/logging/display_report.h"
 #include "mir/logging/logger.h"
@@ -117,17 +117,17 @@ public:
         fake_devices.add_standard_drm_devices();
     }
 
-    std::shared_ptr<mgg::GBMPlatform> create_platform()
+    std::shared_ptr<mgg::Platform> create_platform()
     {
-        return std::make_shared<mgg::GBMPlatform>(
+        return std::make_shared<mgg::Platform>(
             null_report,
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
-    std::shared_ptr<mgg::GBMDisplay> create_display(
-        std::shared_ptr<mgg::GBMPlatform> const& platform)
+    std::shared_ptr<mgg::Display> create_display(
+        std::shared_ptr<mgg::Platform> const& platform)
     {
-        return std::make_shared<mgg::GBMDisplay>(
+        return std::make_shared<mgg::Display>(
             platform,
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
             null_report);
@@ -363,7 +363,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_THROW({
         auto display = create_display(platform);
-    }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
+    }, std::runtime_error) << "Expected that c'tor of mgg::Display throws";
 }
 
 TEST_F(GBMDisplayTest, create_display_gbm_failure)
@@ -382,7 +382,7 @@ TEST_F(GBMDisplayTest, create_display_gbm_failure)
 
     EXPECT_THROW({
         auto platform = create_platform();
-    }, std::runtime_error) << "Expected c'tor of GBMPlatform to throw an exception";
+    }, std::runtime_error) << "Expected c'tor of Platform to throw an exception";
 }
 
 namespace
@@ -515,7 +515,7 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
         *mock_report,
         report_egl_configuration(mock_egl.fake_egl_display,mock_egl.fake_configs[0])).Times(Exactly(1));
 
-    auto display = std::make_shared<mgg::GBMDisplay>(
+    auto display = std::make_shared<mgg::Display>(
                         create_platform(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
@@ -640,7 +640,7 @@ TEST_F(GBMDisplayTest, constructor_sets_vt_graphics_mode)
     EXPECT_CALL(*mock_vt, set_graphics_mode())
         .Times(1);
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_report, mock_vt);
+    auto platform = std::make_shared<mgg::Platform>(null_report, mock_vt);
 
     auto display = create_display(platform);
 }
@@ -682,10 +682,10 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
     EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(
+    auto platform = std::make_shared<mgg::Platform>(
                         mock_report,
                         std::make_shared<mtd::NullVirtualTerminal>());
-    auto display = std::make_shared<mgg::GBMDisplay>(
+    auto display = std::make_shared<mgg::Display>(
                         platform,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         mock_report);
@@ -703,7 +703,7 @@ TEST_F(GBMDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
 
-    auto display = std::make_shared<mgg::GBMDisplay>(
+    auto display = std::make_shared<mgg::Display>(
                         create_platform(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         null_report);
@@ -718,7 +718,7 @@ TEST_F(GBMDisplayTest, drm_device_change_event_triggers_handler)
 {
     using namespace testing;
 
-    auto display = std::make_shared<mgg::GBMDisplay>(
+    auto display = std::make_shared<mgg::Display>(
                         create_platform(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         null_report);

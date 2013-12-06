@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
+#ifndef MIR_CLIENT_GBM_CLIENT_BUFFER_H_
+#define MIR_CLIENT_GBM_CLIENT_BUFFER_H_
 
 #include "../aging_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -35,15 +35,15 @@ namespace gbm
 
 class BufferFileOps;
 
-class GBMClientBuffer : public AgingBuffer
+class ClientBuffer : public AgingBuffer
 {
 public:
-    GBMClientBuffer(std::shared_ptr<BufferFileOps> const& buffer_file_ops,
-                    std::shared_ptr<MirBufferPackage> const& buffer_package,
-                    geometry::Size size,
-                    MirPixelFormat pf);
+    ClientBuffer(std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+                 std::shared_ptr<MirBufferPackage> const& buffer_package,
+                 geometry::Size size,
+                 MirPixelFormat pf);
 
-    ~GBMClientBuffer() noexcept;
+    ~ClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
@@ -61,4 +61,4 @@ private:
 }
 }
 }
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_ */
+#endif /* MIR_CLIENT_GBM_CLIENT_BUFFER_H_ */

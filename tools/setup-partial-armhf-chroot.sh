@@ -13,6 +13,33 @@ if [ ! -d ${1} ]; then
     mkdir -p ${1} 
 fi
 
+download_and_extract_packages()
+{
+    declare -a PACKAGES=$1[@]
+    local ARCHITECTURE=$2
+
+    for i in ${!PACKAGES}; do
+
+        PACKAGE_VERSION=`apt-cache show --no-all-versions ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
+        PACKAGE_FILENAME="${i}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
+
+        if [ ! -f ${PACKAGE_FILENAME} ]; then
+            echo "Downloading mir dependency: ${i}"
+            apt-get download "${i}:${ARCHITECTURE}"
+        else
+            echo "already downloaded: ${PACKAGE_FILENAME}"
+        fi
+
+        #quick sanity check
+        if [ ! -f ${PACKAGE_FILENAME} ]; then
+            echo "error: did not download expected file (${PACKAGE_FILENAME}. script is malformed!"; exit 1        
+        fi
+
+        echo "Extracting: ${PACKAGE_FILENAME}"
+        dpkg -x ${PACKAGE_FILENAME} . 
+    done
+}
+
 pushd ${1} > /dev/null
 
 # TODO: Parse the build-dependencies out of debian/control
@@ -39,7 +66,6 @@ systemtap-sdt-dev,\
 android-platform-headers,\
 libglm-dev
 
-    
     fakeroot debootstrap --include=$BUILD_DEPENDS --arch=armhf --download-only --variant=buildd trusty .
 
     for I in var/cache/apt/archives/* ; do
@@ -48,5 +74,4 @@ libglm-dev
 	    dpkg -x $I .
 	fi
     done
-
 popd > /dev/null 

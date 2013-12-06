@@ -17,22 +17,26 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "gbm_client_buffer_factory.h"
-#include "gbm_client_buffer.h"
+#include "client_buffer_factory.h"
+#include "client_buffer.h"
 
 namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
 
-mclg::GBMClientBufferFactory::GBMClientBufferFactory(
+mclg::ClientBufferFactory::ClientBufferFactory(
     std::shared_ptr<BufferFileOps> const& buffer_file_ops)
     : buffer_file_ops{buffer_file_ops}
 {
 }
 
-std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geometry::Size size, MirPixelFormat pf)
+std::shared_ptr<mcl::ClientBuffer>
+mclg::ClientBufferFactory::create_buffer(
+    std::shared_ptr<MirBufferPackage> const& package,
+    geometry::Size size,
+    MirPixelFormat pf)
 {
     (void)size; // TODO: remove this unused parameter
-    return std::make_shared<mclg::GBMClientBuffer>(
+    return std::make_shared<mclg::ClientBuffer>(
         buffer_file_ops,
         package,
         geometry::Size{package->width, package->height},

@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "gbm_client_buffer.h"
+#include "client_buffer.h"
 #include "buffer_file_ops.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -77,7 +77,7 @@ struct ShmMemoryRegion : mcl::MemoryRegion
 
 }
 
-mclg::GBMClientBuffer::GBMClientBuffer(
+mclg::ClientBuffer::ClientBuffer(
     std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
     std::shared_ptr<MirBufferPackage> const& package,
     geom::Size size, MirPixelFormat pf)
@@ -88,14 +88,14 @@ mclg::GBMClientBuffer::GBMClientBuffer(
 {
 }
 
-mclg::GBMClientBuffer::~GBMClientBuffer() noexcept
+mclg::ClientBuffer::~ClientBuffer() noexcept
 {
     // TODO (@raof): Error reporting? It should not be possible for this to fail; if it does,
     //               something's seriously wrong.
     buffer_file_ops->close(creation_package->fd[0]);
 }
 
-std::shared_ptr<mcl::MemoryRegion> mclg::GBMClientBuffer::secure_for_cpu_write()
+std::shared_ptr<mcl::MemoryRegion> mclg::ClientBuffer::secure_for_cpu_write()
 {
     int const buffer_fd = creation_package->fd[0];
 
@@ -106,22 +106,22 @@ std::shared_ptr<mcl::MemoryRegion> mclg::GBMClientBuffer::secure_for_cpu_write()
                                              pixel_format());
 }
 
-geom::Size mclg::GBMClientBuffer::size() const
+geom::Size mclg::ClientBuffer::size() const
 {
     return rect.size;
 }
 
-geom::Stride mclg::GBMClientBuffer::stride() const
+geom::Stride mclg::ClientBuffer::stride() const
 {
     return geom::Stride{creation_package->stride};
 }
 
-MirPixelFormat mclg::GBMClientBuffer::pixel_format() const
+MirPixelFormat mclg::ClientBuffer::pixel_format() const
 {
     return buffer_pf;
 }
 
-std::shared_ptr<MirNativeBuffer> mclg::GBMClientBuffer::native_buffer_handle() const
+std::shared_ptr<MirNativeBuffer> mclg::ClientBuffer::native_buffer_handle() const
 {
     creation_package->age = age();
     return creation_package;
