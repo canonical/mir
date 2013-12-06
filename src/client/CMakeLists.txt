@@ -50,15 +50,15 @@ set(
 )
 endif()
 
-if( MIR_PLATFORM STREQUAL "gbm")
+if( MIR_PLATFORM STREQUAL "mesa")
 set(
   CLIENT_SOURCES
 
-  gbm/client_platform.cpp
-  gbm/client_buffer_factory.cpp
-  gbm/client_buffer.cpp
-  gbm/mesa_native_display_container.cpp
-  gbm/native_surface.cpp
+  mesa/client_platform.cpp
+  mesa/client_buffer_factory.cpp
+  mesa/client_buffer.cpp
+  mesa/mesa_native_display_container.cpp
+  mesa/native_surface.cpp
   ${CLIENT_SOURCES}
 )
 endif()

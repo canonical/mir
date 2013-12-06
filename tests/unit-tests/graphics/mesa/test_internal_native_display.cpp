@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/platform/graphics/gbm/internal_native_display.h"
+#include "src/platform/graphics/mesa/internal_native_display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 

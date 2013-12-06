@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/gbm/overlapping_output_grouping.h"
+#include "src/platform/graphics/mesa/overlapping_output_grouping.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"

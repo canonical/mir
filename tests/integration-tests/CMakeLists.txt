@@ -24,7 +24,7 @@ if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_PLATFORM STREQUAL "gbm")
+if(MIR_PLATFORM STREQUAL "mesa")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
@@ -32,7 +32,7 @@ if(MIR_PLATFORM STREQUAL "gbm")
     ${GLESv2_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
   )
-  add_subdirectory(graphics/gbm)
+  add_subdirectory(graphics/mesa)
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 

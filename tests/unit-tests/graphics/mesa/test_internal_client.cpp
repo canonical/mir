@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/gbm/internal_client.h"
+#include "src/platform/graphics/mesa/internal_client.h"
 #include "mir/graphics/internal_surface.h"
 #include "mir_toolkit/mesa/native_display.h"
-#include "src/platform/graphics/gbm/internal_native_surface.h"
+#include "src/platform/graphics/mesa/internal_native_surface.h"
 
 #include <gtest/gtest.h>
 

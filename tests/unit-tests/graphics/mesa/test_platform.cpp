@@ -18,8 +18,8 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "src/platform/graphics/gbm/platform.h"
-#include "src/platform/graphics/gbm/internal_client.h"
+#include "src/platform/graphics/mesa/platform.h"
+#include "src/platform/graphics/mesa/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"

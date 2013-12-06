@@ -26,7 +26,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/platform/graphics/gbm/platform.h"
+#include "src/platform/graphics/mesa/platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "mir_test_doubles/mock_android_hw.h"

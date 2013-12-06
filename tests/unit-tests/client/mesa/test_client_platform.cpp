@@ -18,7 +18,7 @@
 
 #include "src/client/client_platform.h"
 #include "src/client/native_client_platform_factory.h"
-#include "src/client/gbm/mesa_native_display_container.h"
+#include "src/client/mesa/mesa_native_display_container.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 

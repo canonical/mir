@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/nested_context.h"
-#include "src/platform/graphics/gbm/native_gbm_platform.h"
+#include "src/platform/graphics/mesa/native_gbm_platform.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_drm.h"

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/client/gbm/native_surface.h"
+#include "src/client/mesa/native_surface.h"
 #include "src/client/client_buffer.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
