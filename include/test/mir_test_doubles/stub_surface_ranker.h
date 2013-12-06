@@ -17,34 +17,28 @@
  */
 
 
-#ifndef MIR_SHELL_SURFACE_CONTROLLER_H_
-#define MIR_SHELL_SURFACE_CONTROLLER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_RANKER_H_
+#define MIR_TEST_DOUBLES_STUB_SURFACE_RANKER_H_
 
-#include <memory>
+#include "src/server/scene/surface_ranker.h"
 
 namespace mir
 {
-namespace scene
+namespace test
 {
-class BasicSurface;
-}
-
-namespace shell
+namespace doubles
 {
 
-class SurfaceController
+struct StubSurfaceRanker : public scene::SurfaceRanker
 {
-public:
-    virtual void raise(std::weak_ptr<scene::BasicSurface> const& surface) = 0;
-
-protected:
-    SurfaceController() = default;
-    virtual ~SurfaceController() = default;
-    SurfaceController(SurfaceController const&) = delete;
-    SurfaceController& operator=(SurfaceController const&) = delete;
+    void raise(std::weak_ptr<scene::BasicSurface> const&) override
+    {
+    }
 };
+
+}
 }
 }
 
 
-#endif /* MIR_SHELL_SURFACE_CONTROLLER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_SURFACE_RANKER_H_ */

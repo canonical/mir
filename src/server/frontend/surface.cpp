@@ -37,7 +37,7 @@ auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
         ForwardingInternalSurface(std::shared_ptr<Surface> const& surface) : surface(surface) {}
 
     private:
-        void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
+        void swap_buffers(graphics::Buffer*& buffer)
         {
             surface->swap_buffers(buffer);
         }

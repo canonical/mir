@@ -48,7 +48,7 @@ private:
                                       MirSurfaceParameters* parameters);
 
     std::shared_ptr<InternalSurface> surface;
-    std::shared_ptr<graphics::Buffer> current_buffer;
+    graphics::Buffer* current_buffer;
 };
 
 }

@@ -47,7 +47,7 @@ class MockInternalSurface : public mg::InternalSurface
 public:
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-    MOCK_METHOD1(swap_buffers, void(std::shared_ptr<mg::Buffer>&));
+    MOCK_METHOD1(swap_buffers, void(mg::Buffer*&));
 };
 
 struct InternalNativeSurface : public testing::Test
@@ -75,7 +75,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
 {
     using namespace ::testing;
 
-    auto buffer = std::make_shared<mtd::MockBuffer>();
+    mtd::MockBuffer buffer;
 
     auto test_buffer_package = std::make_shared<MirBufferPackage>();
     test_buffer_package->data_items = 2;
@@ -88,11 +88,11 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
 
     mgm::InternalNativeSurface native_surface(mock_surface);
 
-    EXPECT_CALL(*buffer, native_buffer_handle())
+    EXPECT_CALL(buffer, native_buffer_handle())
         .WillOnce(Return(test_buffer_package));
     EXPECT_CALL(*mock_surface, swap_buffers(_))
         .Times(1)
-        .WillOnce(SetArg<0>(buffer));
+        .WillOnce(SetArg<0>(&buffer));
 
     MirBufferPackage buffer_package;
     memset(&buffer_package, 0, sizeof(MirBufferPackage));
@@ -105,35 +105,6 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
     EXPECT_EQ(test_buffer_package->fd[0], buffer_package.fd[0]);
     EXPECT_EQ(test_buffer_package->fd[1], buffer_package.fd[1]);
     EXPECT_EQ(test_buffer_package->stride, buffer_package.stride);
-}
-
-TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
-{
-    using namespace ::testing;
-    mgm::InternalNativeSurface native_surface(mock_surface);
-    auto stub_buffer1 = std::make_shared<mtd::MockBuffer>();
-    auto stub_buffer2 = std::make_shared<mtd::MockBuffer>();
-
-    auto test_buffer_package = std::make_shared<MirBufferPackage>();
-    EXPECT_CALL(*stub_buffer1, native_buffer_handle())
-        .WillOnce(Return(test_buffer_package));
-    EXPECT_CALL(*stub_buffer2, native_buffer_handle())
-        .WillOnce(Return(test_buffer_package));
-    EXPECT_CALL(*mock_surface, swap_buffers(_))
-        .Times(2)
-        .WillOnce(SetArg<0>(stub_buffer1))
-        .WillOnce(SetArg<0>(stub_buffer2));
-
-    auto use_count_1 = stub_buffer1.use_count();
-    auto use_count_2 = stub_buffer2.use_count();
-
-    MirBufferPackage buffer_package;
-    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
-    EXPECT_EQ(use_count_1 + 1, stub_buffer1.use_count());
-
-    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
-    EXPECT_EQ(use_count_1, stub_buffer1.use_count());
-    EXPECT_EQ(use_count_2 + 1, stub_buffer2.use_count());
 }
 
 TEST_F(InternalNativeSurface, surface_get_parameters)

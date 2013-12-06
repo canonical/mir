@@ -119,11 +119,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
 {
-    auto should_use_fb_fallback = false;
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
-    auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report, should_use_fb_fallback);
-    return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
+    //TODO: remove nullptr parameter once platform classes are sorted.
+    //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
+    return std::make_shared<mga::AndroidPlatform>(nullptr, display_report);
 }

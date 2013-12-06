@@ -42,7 +42,7 @@ public:
         return MirPixelFormat();
     }
 
-    void swap_buffers(std::shared_ptr<mg::Buffer>&)
+    void swap_buffers(mg::Buffer*&)
     {
     }
 };

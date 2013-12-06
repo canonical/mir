@@ -67,7 +67,7 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
-    std::shared_ptr<mg::Buffer> client1;
+    mg::Buffer* client1{nullptr};
     buffer_stream.swap_client_buffers(client1);
     auto client1_id = client1->id();
     buffer_stream.swap_client_buffers(client1);
@@ -95,7 +95,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 
 TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
-    std::shared_ptr<mg::Buffer> client_buffer;
+    mg::Buffer* client_buffer{nullptr};
     for (int i = 0; i !=  nbuffers; i++)
         buffer_stream.swap_client_buffers(client_buffer);
 
@@ -112,7 +112,7 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
-    std::shared_ptr<mg::Buffer> client_buffer;
+    mg::Buffer* client_buffer{nullptr};
     buffer_stream.swap_client_buffers(client_buffer);
 
     if (nbuffers > 1)
@@ -134,7 +134,7 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 {
     auto old_size = buffer_stream.stream_size();
 
-    std::shared_ptr<mg::Buffer> client;
+    mg::Buffer* client{nullptr};
     buffer_stream.swap_client_buffers(client);
     EXPECT_EQ(old_size, client->size());
 
@@ -160,7 +160,7 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 {
     auto old_size = buffer_stream.stream_size();
 
-    std::shared_ptr<mg::Buffer> client;
+    mg::Buffer* client{nullptr};
     buffer_stream.swap_client_buffers(client);
 
     geom::Size const new_size
@@ -191,15 +191,14 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     buffer_stream.resize(old_size);
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
-    // No new client frames since resize(old_size), so compositor gets new_size
-    buffer_stream.release_client_buffer(client);
+    // No client frames "drawn" since resize(old_size), so compositor gets new_size
+    buffer_stream.swap_client_buffers(client);
     auto comp4 = buffer_stream.lock_compositor_buffer(4);
     EXPECT_EQ(new_size, comp4->size());
     comp4.reset();
 
     // Generate a new frame, which should be back to old_size now
     buffer_stream.swap_client_buffers(client);
-    buffer_stream.release_client_buffer(client);
     auto comp5 = buffer_stream.lock_compositor_buffer(5);
     EXPECT_EQ(old_size, comp5->size());
     comp5.reset();
@@ -207,7 +206,7 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
-    std::shared_ptr<mg::Buffer> client;
+    mg::Buffer* client{nullptr};
     buffer_stream.swap_client_buffers(client);
     buffer_stream.swap_client_buffers(client);
 
@@ -228,7 +227,7 @@ namespace
 
 void client_loop(int nframes, mc::BufferStream& stream)
 {
-    std::shared_ptr<mg::Buffer> out_buffer;
+    mg::Buffer* out_buffer{nullptr};
     for (int f = 0; f < nframes; f++)
     {
         stream.swap_client_buffers(out_buffer);

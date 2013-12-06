@@ -23,7 +23,7 @@
 namespace mgm = mir::graphics::mesa;
 
 mgm::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurface> const& surface)
-    : surface(surface)
+    : surface(surface), current_buffer{nullptr}
 {
     surface_advance_buffer = advance_buffer_static;
     surface_get_parameters = get_parameters_static;

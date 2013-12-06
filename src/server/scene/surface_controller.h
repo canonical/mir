@@ -21,7 +21,7 @@
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
 #include "surface_builder.h"
-#include "mir/shell/surface_controller.h"
+#include "surface_ranker.h"
 
 namespace mir
 {
@@ -35,7 +35,7 @@ namespace scene
 class SurfaceStackModel;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public SurfaceBuilder, public shell::SurfaceController
+class SurfaceController : public SurfaceBuilder, public SurfaceRanker
 {
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
