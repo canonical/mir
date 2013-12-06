@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_H_
-#define MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_H_
+#ifndef MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_H_
+#define MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_H_
 
 #include "kms_output.h"
 #include "drm_mode_resources.h"
@@ -83,4 +83,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_H_ */
+#endif /* MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_H_ */

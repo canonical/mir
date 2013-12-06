@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_GRAPHICS_GBM_CURSOR_H_
-#define MIR_GRAPHICS_GBM_CURSOR_H_
+#ifndef MIR_GRAPHICS_MESA_CURSOR_H_
+#define MIR_GRAPHICS_MESA_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
 
@@ -97,4 +97,4 @@ private:
 }
 
 
-#endif /* MIR_GRAPHICS_GBM_CURSOR_H_ */
+#endif /* MIR_GRAPHICS_MESA_CURSOR_H_ */

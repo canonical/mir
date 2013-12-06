@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_NATIVE_SURFACES_H_
-#define MIR_CLIENT_GBM_NATIVE_SURFACES_H_
+#ifndef MIR_CLIENT_MESA_NATIVE_SURFACES_H_
+#define MIR_CLIENT_MESA_NATIVE_SURFACES_H_
 
 #include "mir_toolkit/mesa/native_display.h"
 #include "../mir_client_surface.h"
@@ -46,4 +46,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_GBM_NATIVE_SURFACE_H_ */
+#endif /* MIR_CLIENT_MESA_NATIVE_SURFACE_H_ */

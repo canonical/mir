@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_H_
+#ifndef MIR_GRAPHICS_MESA_KMS_OUTPUT_H_
+#define MIR_GRAPHICS_MESA_KMS_OUTPUT_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
@@ -65,4 +65,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_H_ */
+#endif /* MIR_GRAPHICS_MESA_KMS_OUTPUT_H_ */

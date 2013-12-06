@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 
 namespace mcl=mir::client;
-namespace mclg=mir::client::mesa;
+namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
 
 namespace
@@ -42,7 +42,7 @@ struct NullDeleter
 
 struct ShmMemoryRegion : mcl::MemoryRegion
 {
-    ShmMemoryRegion(std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
+    ShmMemoryRegion(std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops,
                     int buffer_fd, geom::Size const& size_param,
                     geom::Stride stride_param, MirPixelFormat format_param)
         : buffer_file_ops{buffer_file_ops},
@@ -71,14 +71,14 @@ struct ShmMemoryRegion : mcl::MemoryRegion
         buffer_file_ops->unmap(vaddr.get(), size_in_bytes);
     }
 
-    std::shared_ptr<mclg::BufferFileOps> const buffer_file_ops;
+    std::shared_ptr<mclm::BufferFileOps> const buffer_file_ops;
     size_t const size_in_bytes;
 };
 
 }
 
-mclg::ClientBuffer::ClientBuffer(
-    std::shared_ptr<mclg::BufferFileOps> const& buffer_file_ops,
+mclm::ClientBuffer::ClientBuffer(
+    std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops,
     std::shared_ptr<MirBufferPackage> const& package,
     geom::Size size, MirPixelFormat pf)
     : buffer_file_ops{buffer_file_ops},
@@ -88,14 +88,14 @@ mclg::ClientBuffer::ClientBuffer(
 {
 }
 
-mclg::ClientBuffer::~ClientBuffer() noexcept
+mclm::ClientBuffer::~ClientBuffer() noexcept
 {
     // TODO (@raof): Error reporting? It should not be possible for this to fail; if it does,
     //               something's seriously wrong.
     buffer_file_ops->close(creation_package->fd[0]);
 }
 
-std::shared_ptr<mcl::MemoryRegion> mclg::ClientBuffer::secure_for_cpu_write()
+std::shared_ptr<mcl::MemoryRegion> mclm::ClientBuffer::secure_for_cpu_write()
 {
     int const buffer_fd = creation_package->fd[0];
 
@@ -106,22 +106,22 @@ std::shared_ptr<mcl::MemoryRegion> mclg::ClientBuffer::secure_for_cpu_write()
                                              pixel_format());
 }
 
-geom::Size mclg::ClientBuffer::size() const
+geom::Size mclm::ClientBuffer::size() const
 {
     return rect.size;
 }
 
-geom::Stride mclg::ClientBuffer::stride() const
+geom::Stride mclm::ClientBuffer::stride() const
 {
     return geom::Stride{creation_package->stride};
 }
 
-MirPixelFormat mclg::ClientBuffer::pixel_format() const
+MirPixelFormat mclm::ClientBuffer::pixel_format() const
 {
     return buffer_pf;
 }
 
-std::shared_ptr<MirNativeBuffer> mclg::ClientBuffer::native_buffer_handle() const
+std::shared_ptr<MirNativeBuffer> mclm::ClientBuffer::native_buffer_handle() const
 {
     creation_package->age = age();
     return creation_package;

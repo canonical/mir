@@ -42,14 +42,14 @@ namespace mo = mir::options;
 namespace
 {
 
-struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
+struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 {
-    GBMPlatformIPCPackage(int drm_auth_fd)
+    MesaPlatformIPCPackage(int drm_auth_fd)
     {
         ipc_fds.push_back(drm_auth_fd);
     }
 
-    ~GBMPlatformIPCPackage()
+    ~MesaPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
             mgm::drm_close_threadsafe(ipc_fds[0]);
@@ -128,7 +128,7 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
 {
-    return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
+    return std::make_shared<MesaPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
 void mgm::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const

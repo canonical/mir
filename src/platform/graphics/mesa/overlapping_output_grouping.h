@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_OVERLAPPING_OUTPUT_GROUPING_H_
-#define MIR_GRAPHICS_GBM_OVERLAPPING_OUTPUT_GROUPING_H_
+#ifndef MIR_GRAPHICS_MESA_OVERLAPPING_OUTPUT_GROUPING_H_
+#define MIR_GRAPHICS_MESA_OVERLAPPING_OUTPUT_GROUPING_H_
 
 #include <vector>
 #include <functional>
@@ -69,4 +69,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_OVERLAPPING_OUTPUT_GROUPING_H_ */
+#endif /* MIR_GRAPHICS_MESA_OVERLAPPING_OUTPUT_GROUPING_H_ */

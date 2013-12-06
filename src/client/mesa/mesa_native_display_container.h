@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_MESA_NATIVE_DISPLAY_CONTAINER_H_
-#define MIR_CLIENT_GBM_MESA_NATIVE_DISPLAY_CONTAINER_H_
+#ifndef MIR_CLIENT_MESA_MESA_NATIVE_DISPLAY_CONTAINER_H_
+#define MIR_CLIENT_MESA_MESA_NATIVE_DISPLAY_CONTAINER_H_
 
 #include "../egl_native_display_container.h"
 
@@ -60,4 +60,4 @@ extern "C" int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_GBM_MESA_NATIVE_DISPLAY_CONTAINER_H_
+#endif // MIR_CLIENT_MESA_MESA_NATIVE_DISPLAY_CONTAINER_H_

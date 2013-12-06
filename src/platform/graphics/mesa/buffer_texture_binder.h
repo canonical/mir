@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_
-#define MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_
+#ifndef MIR_GRAPHICS_MESA_BUFFER_TEXTURE_BINDER_H_
+#define MIR_GRAPHICS_MESA_BUFFER_TEXTURE_BINDER_H_
 
 namespace mir
 {
@@ -43,4 +43,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_ */
+#endif /* MIR_GRAPHICS_MESA_BUFFER_TEXTURE_BINDER_H_ */

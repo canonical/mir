@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_BUFFER_FILE_OPS_
-#define MIR_CLIENT_GBM_BUFFER_FILE_OPS_
+#ifndef MIR_CLIENT_MESA_BUFFER_FILE_OPS_
+#define MIR_CLIENT_MESA_BUFFER_FILE_OPS_
 
 #include <sys/types.h>
 
@@ -47,4 +47,4 @@ protected:
 }
 }
 
-#endif /* MIR_CLIENT_GBM_BUFFER_FILE_OPS_ */
+#endif /* MIR_CLIENT_MESA_BUFFER_FILE_OPS_ */

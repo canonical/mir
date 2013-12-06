@@ -17,8 +17,8 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_CLIENT_BUFFER_FACTORY_H_
-#define MIR_CLIENT_GBM_CLIENT_BUFFER_FACTORY_H_
+#ifndef MIR_CLIENT_MESA_CLIENT_BUFFER_FACTORY_H_
+#define MIR_CLIENT_MESA_CLIENT_BUFFER_FACTORY_H_
 
 #include "../client_buffer_factory.h"
 
@@ -46,4 +46,4 @@ private:
 }
 }
 }
-#endif /* MIR_CLIENT_GBM_CLIENT_BUFFER_FACTORY_H_ */
+#endif /* MIR_CLIENT_MESA_CLIENT_BUFFER_FACTORY_H_ */

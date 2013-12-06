@@ -25,7 +25,7 @@
 #include <mutex>
 
 namespace mcl = mir::client;
-namespace mclg = mcl::mesa;
+namespace mclm = mcl::mesa;
 
 namespace
 {
@@ -50,15 +50,15 @@ int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display
 
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
-    static mclg::MesaNativeDisplayContainer default_display_container;
+    static mclm::MesaNativeDisplayContainer default_display_container;
     return default_display_container;
 }
 
-mclg::MesaNativeDisplayContainer::MesaNativeDisplayContainer()
+mclm::MesaNativeDisplayContainer::MesaNativeDisplayContainer()
 {
 }
 
-mclg::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
+mclm::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
 {
     std::lock_guard<std::mutex> lg(guard);
 
@@ -68,14 +68,14 @@ mclg::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
     }
 }
 
-bool mclg::MesaNativeDisplayContainer::validate(MirEGLNativeDisplayType display) const
+bool mclm::MesaNativeDisplayContainer::validate(MirEGLNativeDisplayType display) const
 {
     std::lock_guard<std::mutex> lg(guard);
     return (valid_displays.find(display) != valid_displays.end());
 }
 
 MirEGLNativeDisplayType
-mclg::MesaNativeDisplayContainer::create(MirConnection* connection)
+mclm::MesaNativeDisplayContainer::create(MirConnection* connection)
 {
     MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
     display->display_get_platform = egl_display_get_platform;
@@ -88,7 +88,7 @@ mclg::MesaNativeDisplayContainer::create(MirConnection* connection)
     return egl_display;
 }
 
-void mclg::MesaNativeDisplayContainer::release(MirEGLNativeDisplayType display)
+void mclm::MesaNativeDisplayContainer::release(MirEGLNativeDisplayType display)
 {
     std::lock_guard<std::mutex> lg(guard);
 

@@ -17,8 +17,8 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_BUFFER_H_
-#define MIR_GRAPHICS_GBM_GBM_BUFFER_H_
+#ifndef MIR_GRAPHICS_MESA_GBM_BUFFER_H_
+#define MIR_GRAPHICS_MESA_GBM_BUFFER_H_
 
 #include "mir/graphics/buffer_basic.h"
 
@@ -80,4 +80,4 @@ private:
 }
 
 
-#endif // MIR_GRAPHICS_GBM_GBM_BUFFER_H_
+#endif // MIR_GRAPHICS_MESA_GBM_BUFFER_H_

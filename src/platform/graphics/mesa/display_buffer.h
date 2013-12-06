@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
-#define MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_
+#ifndef MIR_GRAPHICS_MESA_DISPLAY_BUFFER_H_
+#define MIR_GRAPHICS_MESA_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
 #include "display_helpers.h"
@@ -69,7 +69,7 @@ private:
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
-    /* DRM helper from GBMPlatform */
+    /* DRM helper from mgm::Platform */
     helpers::DRMHelper& drm;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
     GBMSurfaceUPtr surface_gbm;
@@ -82,4 +82,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_DISPLAY_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_MESA_DISPLAY_BUFFER_H_ */

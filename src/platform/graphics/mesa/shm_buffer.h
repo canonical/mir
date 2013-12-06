@@ -17,8 +17,8 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_SHM_BUFFER_H_
-#define MIR_GRAPHICS_GBM_SHM_BUFFER_H_
+#ifndef MIR_GRAPHICS_MESA_SHM_BUFFER_H_
+#define MIR_GRAPHICS_MESA_SHM_BUFFER_H_
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/geometry/dimensions.h"
@@ -64,4 +64,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_SHM_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_MESA_SHM_BUFFER_H_ */

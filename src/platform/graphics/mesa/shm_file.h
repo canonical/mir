@@ -17,8 +17,8 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_SHM_FILE_H_
-#define MIR_GRAPHICS_GBM_SHM_FILE_H_
+#ifndef MIR_GRAPHICS_MESA_SHM_FILE_H_
+#define MIR_GRAPHICS_MESA_SHM_FILE_H_
 
 #include <cstddef>
 
@@ -47,4 +47,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_SHM_FILE_H_ */
+#endif /* MIR_GRAPHICS_MESA_SHM_FILE_H_ */

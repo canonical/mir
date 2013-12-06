@@ -60,9 +60,9 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-struct SessionMediatorGBMTest : public ::testing::Test
+struct SessionMediatorMesaTest : public ::testing::Test
 {
-    SessionMediatorGBMTest()
+    SessionMediatorMesaTest()
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
@@ -90,7 +90,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
 
 }
 
-TEST_F(SessionMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
+TEST_F(SessionMediatorMesaTest, drm_auth_magic_uses_drm_authenticator)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -112,7 +112,7 @@ TEST_F(SessionMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
     EXPECT_EQ(no_error, status.status_code());
 }
 
-TEST_F(SessionMediatorGBMTest, drm_auth_magic_sets_status_code_on_error)
+TEST_F(SessionMediatorMesaTest, drm_auth_magic_sets_status_code_on_error)
 {
     using namespace testing;
 

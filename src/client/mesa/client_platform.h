@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_CLIENT_PLATFORM_H_
+#ifndef MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
+#define MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 
 #include "../client_platform.h"
 
@@ -55,4 +55,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_MESA_CLIENT_PLATFORM_H_ */

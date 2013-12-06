@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_REAL_KMS_DISPLAY_CONFIGURATION_H_
-#define MIR_GRAPHICS_GBM_REAL_KMS_DISPLAY_CONFIGURATION_H_
+#ifndef MIR_GRAPHICS_MESA_REAL_KMS_DISPLAY_CONFIGURATION_H_
+#define MIR_GRAPHICS_MESA_REAL_KMS_DISPLAY_CONFIGURATION_H_
 
 #include "kms_display_configuration.h"
 
@@ -60,4 +60,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_REAL_KMS_DISPLAY_CONFIGURATION_H_ */
+#endif /* MIR_GRAPHICS_MESA_REAL_KMS_DISPLAY_CONFIGURATION_H_ */

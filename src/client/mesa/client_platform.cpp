@@ -30,13 +30,13 @@
 #include <unistd.h>
 
 namespace mcl=mir::client;
-namespace mclg=mir::client::mesa;
+namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
 
 namespace
 {
 
-struct RealBufferFileOps : public mclg::BufferFileOps
+struct RealBufferFileOps : public mclm::BufferFileOps
 {
     int close(int fd) const
     {
@@ -83,11 +83,11 @@ std::shared_ptr<mcl::ClientPlatform>
 mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
     auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
-    return std::make_shared<mclg::ClientPlatform>(
+    return std::make_shared<mclm::ClientPlatform>(
         context, buffer_file_ops, mcl::EGLNativeDisplayContainer::instance());
 }
 
-mclg::ClientPlatform::ClientPlatform(
+mclm::ClientPlatform::ClientPlatform(
         ClientContext* const context,
         std::shared_ptr<BufferFileOps> const& buffer_file_ops,
         mcl::EGLNativeDisplayContainer& display_container)
@@ -97,16 +97,16 @@ mclg::ClientPlatform::ClientPlatform(
 {
 }
 
-std::shared_ptr<mcl::ClientBufferFactory> mclg::ClientPlatform::create_buffer_factory()
+std::shared_ptr<mcl::ClientBufferFactory> mclm::ClientPlatform::create_buffer_factory()
 {
-    return std::make_shared<mclg::ClientBufferFactory>(buffer_file_ops);
+    return std::make_shared<mclm::ClientBufferFactory>(buffer_file_ops);
 }
 
 namespace
 {
 struct NativeWindowDeleter
 {
-    NativeWindowDeleter(mclg::NativeSurface* window)
+    NativeWindowDeleter(mclm::NativeSurface* window)
      : window(window) {}
 
     void operator()(EGLNativeWindowType* type)
@@ -116,11 +116,11 @@ struct NativeWindowDeleter
     }
 
 private:
-    mclg::NativeSurface* window;
+    mclm::NativeSurface* window;
 };
 }
 
-std::shared_ptr<EGLNativeWindowType> mclg::ClientPlatform::create_egl_native_window(ClientSurface* client_surface)
+std::shared_ptr<EGLNativeWindowType> mclm::ClientPlatform::create_egl_native_window(ClientSurface* client_surface)
 {
     //TODO: this is awkward on both android and gbm...
     auto native_window = new NativeSurface(*client_surface);
@@ -130,7 +130,7 @@ std::shared_ptr<EGLNativeWindowType> mclg::ClientPlatform::create_egl_native_win
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 
-std::shared_ptr<EGLNativeDisplayType> mclg::ClientPlatform::create_egl_native_display()
+std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_display()
 {
     MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
     *mir_native_display = display_container.create(context->mir_connection());
@@ -139,12 +139,12 @@ std::shared_ptr<EGLNativeDisplayType> mclg::ClientPlatform::create_egl_native_di
     return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
 }
 
-MirPlatformType mclg::ClientPlatform::platform_type() const
+MirPlatformType mclm::ClientPlatform::platform_type() const
 {
     return mir_platform_type_gbm;
 }
 
-MirNativeBuffer* mclg::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
+MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
     //MirNativeBuffer is type-compatible with the MirNativeBuffer
     return buf;

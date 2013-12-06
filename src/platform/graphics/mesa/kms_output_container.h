@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#ifndef MIR_GRAPHICS_MESA_KMS_OUTPUT_CONTAINER_H_
+#define MIR_GRAPHICS_MESA_KMS_OUTPUT_CONTAINER_H_
 
 #include <cstdint>
 #include <memory>
@@ -49,4 +49,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */
+#endif /* MIR_GRAPHICS_MESA_KMS_OUTPUT_CONTAINER_H_ */

@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_CLIENT_BUFFER_H_
-#define MIR_CLIENT_GBM_CLIENT_BUFFER_H_
+#ifndef MIR_CLIENT_MESA_CLIENT_BUFFER_H_
+#define MIR_CLIENT_MESA_CLIENT_BUFFER_H_
 
 #include "../aging_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -61,4 +61,4 @@ private:
 }
 }
 }
-#endif /* MIR_CLIENT_GBM_CLIENT_BUFFER_H_ */
+#endif /* MIR_CLIENT_MESA_CLIENT_BUFFER_H_ */

@@ -17,8 +17,8 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_INTERNAL_NATIVE_DISPLAY_H_
-#define MIR_GRAPHICS_GBM_INTERNAL_NATIVE_DISPLAY_H_
+#ifndef MIR_GRAPHICS_MESA_INTERNAL_NATIVE_DISPLAY_H_
+#define MIR_GRAPHICS_MESA_INTERNAL_NATIVE_DISPLAY_H_
 
 #include "mir_toolkit/mesa/native_display.h"
 #include <memory>
@@ -45,4 +45,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_GBM_INTERNAL_NATIVE_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_MESA_INTERNAL_NATIVE_DISPLAY_H_ */

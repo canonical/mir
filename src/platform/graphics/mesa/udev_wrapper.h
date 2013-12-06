@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_UDEV_WRAPPER_H_
-#define MIR_GRAPHICS_GBM_UDEV_WRAPPER_H_
+#ifndef MIR_GRAPHICS_MESA_UDEV_WRAPPER_H_
+#define MIR_GRAPHICS_MESA_UDEV_WRAPPER_H_
 
 #include <memory>
 #include <libudev.h>
@@ -146,4 +146,4 @@ private:
 }
 }
 }
-#endif // MIR_GRAPHICS_GBM_UDEV_WRAPPER_H_
+#endif // MIR_GRAPHICS_MESA_UDEV_WRAPPER_H_

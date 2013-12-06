@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_PLATFORM_H_
-#define MIR_GRAPHICS_GBM_PLATFORM_H_
+#ifndef MIR_GRAPHICS_MESA_PLATFORM_H_
+#define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/drm_authenticator.h"
@@ -75,4 +75,4 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 }
 }
 }
-#endif /* MIR_GRAPHICS_GBM_PLATFORM_H_ */
+#endif /* MIR_GRAPHICS_MESA_PLATFORM_H_ */

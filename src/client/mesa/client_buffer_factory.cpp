@@ -21,22 +21,22 @@
 #include "client_buffer.h"
 
 namespace mcl=mir::client;
-namespace mclg=mir::client::mesa;
+namespace mclm=mir::client::mesa;
 
-mclg::ClientBufferFactory::ClientBufferFactory(
+mclm::ClientBufferFactory::ClientBufferFactory(
     std::shared_ptr<BufferFileOps> const& buffer_file_ops)
     : buffer_file_ops{buffer_file_ops}
 {
 }
 
 std::shared_ptr<mcl::ClientBuffer>
-mclg::ClientBufferFactory::create_buffer(
+mclm::ClientBufferFactory::create_buffer(
     std::shared_ptr<MirBufferPackage> const& package,
     geometry::Size size,
     MirPixelFormat pf)
 {
     (void)size; // TODO: remove this unused parameter
-    return std::make_shared<mclg::ClientBuffer>(
+    return std::make_shared<mclm::ClientBuffer>(
         buffer_file_ops,
         package,
         geometry::Size{package->width, package->height},

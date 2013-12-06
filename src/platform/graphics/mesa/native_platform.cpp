@@ -50,9 +50,9 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_a
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 {
-    struct NativeGBMPlatformIPCPackage : public mg::PlatformIPCPackage
+    struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
     {
-        NativeGBMPlatformIPCPackage(int fd)
+        MesaNativePlatformIPCPackage(int fd)
         {
             ipc_fds.push_back(fd);
         }
@@ -77,12 +77,12 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 
     nested_context->drm_auth_magic(magic);
 
-    return std::make_shared<NativeGBMPlatformIPCPackage>(auth_fd);
+    return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
 }
 
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_internal_client is not implemented yet!"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("MesaNativePlatform::create_internal_client is not implemented yet!"));
 }
 
 void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
