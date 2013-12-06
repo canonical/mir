@@ -36,7 +36,7 @@ namespace graphics
 class BufferInitializer;
 struct EGLExtensions;
 
-namespace gbm
+namespace mesa
 {
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {

@@ -40,7 +40,7 @@
 #include <gbm.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
@@ -63,11 +63,11 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
-        platform = std::make_shared<mgg::Platform>(
+        platform = std::make_shared<mgm::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
-        allocator.reset(new mgg::BufferAllocator(platform->gbm.device, mock_buffer_initializer));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mock_buffer_initializer));
     }
 
     // Defaults
@@ -80,9 +80,9 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-    std::shared_ptr<mgg::Platform> platform;
+    std::shared_ptr<mgm::Platform> platform;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
-    std::unique_ptr<mgg::BufferAllocator> allocator;
+    std::unique_ptr<mgm::BufferAllocator> allocator;
     mtf::UdevEnvironment fake_devices;
 };
 
@@ -149,7 +149,7 @@ TEST_F(GBMBufferAllocatorTest, bypass_disables_via_environment)
                                           mg::BufferUsage::hardware);
 
     setenv("MIR_BYPASS", "0", 1);
-    mgg::BufferAllocator alloc(platform->gbm.device,
+    mgm::BufferAllocator alloc(platform->gbm.device,
                                mock_buffer_initializer);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
@@ -254,7 +254,7 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     using namespace testing;
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    allocator.reset(new mgg::BufferAllocator(platform->gbm.device, null_buffer_initializer));
+    allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_buffer_initializer));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);

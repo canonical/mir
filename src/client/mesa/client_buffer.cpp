@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 
 namespace mcl=mir::client;
-namespace mclg=mir::client::gbm;
+namespace mclg=mir::client::mesa;
 namespace geom=mir::geometry;
 
 namespace

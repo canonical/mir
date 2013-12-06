@@ -31,7 +31,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace gbm
+namespace mesa
 {
 
 struct GBMNativeBuffer : MirNativeBuffer

@@ -38,7 +38,7 @@
 #include <unordered_set>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
@@ -126,9 +126,9 @@ public:
         fake_devices.add_standard_drm_devices();
     }
 
-    std::shared_ptr<mgg::Platform> create_platform()
+    std::shared_ptr<mgm::Platform> create_platform()
     {
-        return std::make_shared<mgg::Platform>(
+        return std::make_shared<mgm::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }

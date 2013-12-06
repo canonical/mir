@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullVideoDevices : public graphics::gbm::VideoDevices
+class NullVideoDevices : public graphics::mesa::VideoDevices
 {
 public:
     void register_change_handler(

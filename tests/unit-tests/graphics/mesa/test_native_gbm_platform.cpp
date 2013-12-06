@@ -27,7 +27,7 @@
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -64,7 +64,7 @@ TEST_F(NativeGBMPlatformTest, auth_magic_is_delegated_to_nested_context)
 {
     using namespace testing;
 
-    mgg::NativeGBMPlatform native;
+    mgm::NativeGBMPlatform native;
 
     EXPECT_CALL(mock_nested_context, drm_auth_magic(_));
 
@@ -76,7 +76,7 @@ TEST_F(NativeGBMPlatformTest, sets_gbm_device_during_initialization)
 {
     using namespace testing;
 
-    mgg::NativeGBMPlatform native;
+    mgm::NativeGBMPlatform native;
 
     EXPECT_CALL(mock_nested_context, drm_set_gbm_device(mock_gbm.fake_gbm.device));
 

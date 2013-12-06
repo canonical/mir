@@ -27,7 +27,7 @@ namespace client
 class ClientBufferDepository;
 class EGLNativeDisplayContainer;
 
-namespace gbm
+namespace mesa
 {
 
 class BufferFileOps;

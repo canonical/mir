@@ -33,7 +33,7 @@ struct Rectangle;
 }
 namespace graphics
 {
-namespace gbm
+namespace mesa
 {
 class KMSOutputContainer;
 class KMSOutput;

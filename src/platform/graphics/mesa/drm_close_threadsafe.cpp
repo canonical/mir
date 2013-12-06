@@ -22,9 +22,9 @@
 
 #include <xf86drm.h>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
-int mgg::drm_close_threadsafe(int fd)
+int mgm::drm_close_threadsafe(int fd)
 {
     static std::mutex m;
     std::lock_guard<std::mutex> lg{m};

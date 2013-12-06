@@ -29,10 +29,10 @@
 
 #include <stdexcept>
 
-namespace mgg=mir::graphics::gbm;
+namespace mgm=mir::graphics::mesa;
 namespace geom=mir::geometry;
 
-MirPixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
+MirPixelFormat mgm::gbm_format_to_mir_format(uint32_t format)
 {
     MirPixelFormat pf;
 
@@ -54,7 +54,7 @@ MirPixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
     return pf;
 }
 
-uint32_t mgg::mir_format_to_gbm_format(MirPixelFormat format)
+uint32_t mgm::mir_format_to_gbm_format(MirPixelFormat format)
 {
     uint32_t gbm_pf;
 
@@ -67,14 +67,14 @@ uint32_t mgg::mir_format_to_gbm_format(MirPixelFormat format)
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:
-        gbm_pf = mgg::invalid_gbm_format;
+        gbm_pf = mgm::invalid_gbm_format;
         break;
     }
 
     return gbm_pf;
 }
 
-mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
                           uint32_t bo_flags,
                           std::unique_ptr<BufferTextureBinder> texture_binder)
     : gbm_handle{handle},
@@ -97,33 +97,33 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     }
 }
 
-mgg::GBMBuffer::~GBMBuffer()
+mgm::GBMBuffer::~GBMBuffer()
 {
     if (prime_fd > 0)
         close(prime_fd);
 }
 
-geom::Size mgg::GBMBuffer::size() const
+geom::Size mgm::GBMBuffer::size() const
 {
     return {gbm_bo_get_width(gbm_handle.get()), gbm_bo_get_height(gbm_handle.get())};
 }
 
-geom::Stride mgg::GBMBuffer::stride() const
+geom::Stride mgm::GBMBuffer::stride() const
 {
     return geom::Stride(gbm_bo_get_stride(gbm_handle.get()));
 }
 
-MirPixelFormat mgg::GBMBuffer::pixel_format() const
+MirPixelFormat mgm::GBMBuffer::pixel_format() const
 {
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }
 
-void mgg::GBMBuffer::bind_to_texture()
+void mgm::GBMBuffer::bind_to_texture()
 {
     texture_binder->bind_to_texture();
 }
 
-std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
+std::shared_ptr<MirNativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
 {
     auto temp = std::make_shared<GBMNativeBuffer>();
 
@@ -140,7 +140,7 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     return temp;
 }
 
-bool mgg::GBMBuffer::can_bypass() const
+bool mgm::GBMBuffer::can_bypass() const
 {
     return bo_flags & GBM_BO_USE_SCANOUT;
 }

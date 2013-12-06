@@ -31,7 +31,7 @@
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -77,7 +77,7 @@ TEST_F(InternalNativeDisplay, display_get_platform_matches_construction_platform
 {
     using namespace ::testing;
 
-    mgg::InternalNativeDisplay native_display(platform_package);
+    mgm::InternalNativeDisplay native_display(platform_package);
 
     MirPlatformPackage test_package;
     memset(&test_package, 0, sizeof(MirPlatformPackage));

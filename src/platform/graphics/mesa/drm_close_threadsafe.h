@@ -23,7 +23,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace gbm
+namespace mesa
 {
 
 int drm_close_threadsafe(int fd);

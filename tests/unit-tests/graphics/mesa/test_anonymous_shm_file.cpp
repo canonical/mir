@@ -32,7 +32,7 @@
 #include <sys/inotify.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
 namespace
 {
@@ -193,7 +193,7 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_xdg_runtime_dir)
     EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
     EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
 
-    mgg::AnonymousShmFile shm_file{file_size};
+    mgm::AnonymousShmFile shm_file{file_size};
 
     path_watcher.process_events();
 }
@@ -210,7 +210,7 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_tmp_dir)
     EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
     EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
 
-    mgg::AnonymousShmFile shm_file{file_size};
+    mgm::AnonymousShmFile shm_file{file_size};
 
     path_watcher.process_events();
 }
@@ -223,7 +223,7 @@ TEST(AnonymousShmFile, has_correct_size)
     TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
-    mgg::AnonymousShmFile shm_file{file_size};
+    mgm::AnonymousShmFile shm_file{file_size};
 
     struct stat stat;
     fstat(shm_file.fd(), &stat);
@@ -239,7 +239,7 @@ TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
     TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
-    mgg::AnonymousShmFile shm_file{file_size};
+    mgm::AnonymousShmFile shm_file{file_size};
 
     auto base_ptr = reinterpret_cast<uint8_t*>(shm_file.base_ptr());
 

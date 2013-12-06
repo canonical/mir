@@ -30,14 +30,14 @@
 #include <xf86drm.h>
 #include <fcntl.h>
 
-namespace mgg = mir::graphics::gbm;
-namespace mggh = mir::graphics::gbm::helpers;
+namespace mgm = mir::graphics::mesa;
+namespace mgmh = mir::graphics::mesa::helpers;
 
 /*************
  * DRMHelper *
  *************/
 
-void mggh::DRMHelper::setup(std::shared_ptr<UdevContext> const& udev)
+void mgmh::DRMHelper::setup(std::shared_ptr<UdevContext> const& udev)
 {
     fd = open_drm_device(udev);
 
@@ -45,7 +45,7 @@ void mggh::DRMHelper::setup(std::shared_ptr<UdevContext> const& udev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open DRM device\n"));
 }
 
-int mggh::DRMHelper::get_authenticated_fd()
+int mgmh::DRMHelper::get_authenticated_fd()
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
@@ -86,7 +86,7 @@ int mggh::DRMHelper::get_authenticated_fd()
     return auth_fd;
 }
 
-void mggh::DRMHelper::auth_magic(drm_magic_t magic) const
+void mgmh::DRMHelper::auth_magic(drm_magic_t magic) const
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
@@ -106,7 +106,7 @@ void mggh::DRMHelper::auth_magic(drm_magic_t magic) const
     }
 }
 
-void mggh::DRMHelper::drop_master() const
+void mgmh::DRMHelper::drop_master() const
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
@@ -126,7 +126,7 @@ void mggh::DRMHelper::drop_master() const
     }
 }
 
-void mggh::DRMHelper::set_master() const
+void mgmh::DRMHelper::set_master() const
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
@@ -146,9 +146,9 @@ void mggh::DRMHelper::set_master() const
     }
 }
 
-int mggh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& drm_device)
+int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& drm_device)
 {
-    mgg::UdevEnumerator children(udev);
+    mgm::UdevEnumerator children(udev);
     children.match_parent(drm_device);
 
     char const* devtype = drm_device.devtype();
@@ -167,7 +167,7 @@ int mggh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& u
     return ENOMEDIUM;
 }
 
-int mggh::DRMHelper::count_connections(int fd)
+int mgmh::DRMHelper::count_connections(int fd)
 {
     DRMModeResources resources{fd};
 
@@ -181,7 +181,7 @@ int mggh::DRMHelper::count_connections(int fd)
     return n_connected;
 }
 
-int mggh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
+int mgmh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
 {
     int tmp_fd = -1;
     int error = ENODEV; //Default error is "there are no DRM devices"
@@ -237,17 +237,17 @@ int mggh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
     return tmp_fd;
 }
 
-mggh::DRMHelper::~DRMHelper()
+mgmh::DRMHelper::~DRMHelper()
 {
     if (fd >= 0)
-        mgg::drm_close_threadsafe(fd);
+        mgm::drm_close_threadsafe(fd);
 }
 
 /*************
  * GBMHelper *
  *************/
 
-void mggh::GBMHelper::setup(const DRMHelper& drm)
+void mgmh::GBMHelper::setup(const DRMHelper& drm)
 {
     device = gbm_create_device(drm.fd);
     if (!device)
@@ -255,7 +255,7 @@ void mggh::GBMHelper::setup(const DRMHelper& drm)
             std::runtime_error("Failed to create GBM device"));
 }
 
-void mggh::GBMHelper::setup(int drm_fd)
+void mgmh::GBMHelper::setup(int drm_fd)
 {
     device = gbm_create_device(drm_fd);
     if(!device)
@@ -263,7 +263,7 @@ void mggh::GBMHelper::setup(int drm_fd)
             std::runtime_error("Failed to create GBM device"));
 }
 
-mgg::GBMSurfaceUPtr mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
+mgm::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
 {
     auto surface_raw = gbm_surface_create(device, width, height,
                                           GBM_BO_FORMAT_XRGB8888,
@@ -278,7 +278,7 @@ mgg::GBMSurfaceUPtr mggh::GBMHelper::create_scanout_surface(uint32_t width, uint
     return surface;
 }
 
-mggh::GBMHelper::~GBMHelper()
+mgmh::GBMHelper::~GBMHelper()
 {
     if (device)
         gbm_device_destroy(device);
@@ -288,7 +288,7 @@ mggh::GBMHelper::~GBMHelper()
  * EGLHelper *
  *************/
 
-void mggh::EGLHelper::setup(GBMHelper const& gbm)
+void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -302,7 +302,7 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
 }
 
-void mggh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
+void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 {
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -316,7 +316,7 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
 }
 
-void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
+void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
                             EGLContext shared_context)
 {
     static const EGLint context_attr[] = {
@@ -335,7 +335,7 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
 }
 
-mggh::EGLHelper::~EGLHelper() noexcept
+mgmh::EGLHelper::~EGLHelper() noexcept
 {
     if (egl_display != EGL_NO_DISPLAY) {
         if (egl_context != EGL_NO_CONTEXT)
@@ -351,25 +351,25 @@ mggh::EGLHelper::~EGLHelper() noexcept
     }
 }
 
-bool mggh::EGLHelper::swap_buffers()
+bool mgmh::EGLHelper::swap_buffers()
 {
     auto ret = eglSwapBuffers(egl_display, egl_surface);
     return (ret == EGL_TRUE);
 }
 
-bool mggh::EGLHelper::make_current()
+bool mgmh::EGLHelper::make_current()
 {
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     return (ret == EGL_TRUE);
 }
 
-bool mggh::EGLHelper::release_current()
+bool mgmh::EGLHelper::release_current()
 {
     auto ret = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     return (ret == EGL_TRUE);
 }
 
-void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
+void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
 {
     static const EGLint config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -416,7 +416,7 @@ void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
     }
 }
 
-void mggh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
+void mgmh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
 {
     f(egl_display, egl_config);
 }

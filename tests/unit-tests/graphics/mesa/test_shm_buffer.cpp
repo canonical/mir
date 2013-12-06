@@ -25,14 +25,14 @@
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 namespace
 {
 
-struct StubShmFile : public mgg::ShmFile
+struct StubShmFile : public mgm::ShmFile
 {
     void* base_ptr() const { return fake_mapping; }
     int fd() const { return fake_fd; }
@@ -54,7 +54,7 @@ struct ShmBufferTest : public testing::Test
     geom::Size const size;
     MirPixelFormat const pixel_format;
     std::shared_ptr<StubShmFile> const stub_shm_file;
-    mgg::ShmBuffer shm_buffer;
+    mgm::ShmBuffer shm_buffer;
     testing::NiceMock<mtd::MockGL> mock_gl;
 };
 

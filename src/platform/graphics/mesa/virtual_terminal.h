@@ -27,7 +27,7 @@ namespace graphics
 {
 class EventHandlerRegister;
 
-namespace gbm
+namespace mesa
 {
 
 class VirtualTerminal

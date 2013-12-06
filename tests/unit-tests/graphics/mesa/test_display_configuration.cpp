@@ -39,7 +39,7 @@
 #include <stdexcept>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
@@ -88,9 +88,9 @@ public:
         fake_devices.add_standard_drm_devices();
     }
 
-    std::shared_ptr<mgg::Platform> create_platform()
+    std::shared_ptr<mgm::Platform> create_platform()
     {
-        return std::make_shared<mgg::Platform>(
+        return std::make_shared<mgm::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
@@ -287,7 +287,7 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     auto display = create_display(create_platform());
 
     auto conf = display->configuration();
-    auto const& kms_conf = std::static_pointer_cast<mgg::KMSDisplayConfiguration>(conf);
+    auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
 
     size_t output_count{0};
 
@@ -330,7 +330,7 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     auto display = create_display(create_platform());
 
     auto conf = display->configuration();
-    auto const& kms_conf = std::static_pointer_cast<mgg::KMSDisplayConfiguration>(conf);
+    auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
 
     EXPECT_THROW({
         kms_conf->get_kms_connector_id(mg::DisplayConfigurationOutputId{29});

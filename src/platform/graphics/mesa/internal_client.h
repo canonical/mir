@@ -30,7 +30,7 @@ namespace graphics
 {
 class Platform;
 
-namespace gbm
+namespace mesa
 {
 class InternalClient : public mir::graphics::InternalClient
 {

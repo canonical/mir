@@ -25,7 +25,7 @@
 #include <unordered_set>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
 namespace
@@ -51,7 +51,7 @@ struct DCOutputEqual
  * OverlappingOutputGroup *
  **************************/
 
-geom::Rectangle mgg::OverlappingOutputGroup::bounding_rectangle() const
+geom::Rectangle mgm::OverlappingOutputGroup::bounding_rectangle() const
 {
     geom::Rectangles rectangles;
 
@@ -68,7 +68,7 @@ geom::Rectangle mgg::OverlappingOutputGroup::bounding_rectangle() const
     return rectangles.bounding_rectangle();
 }
 
-void mgg::OverlappingOutputGroup::for_each_output(
+void mgm::OverlappingOutputGroup::for_each_output(
     std::function<void(DisplayConfigurationOutput const&)> const& f) const
 {
     for (auto const& output : outputs)
@@ -79,7 +79,7 @@ void mgg::OverlappingOutputGroup::for_each_output(
  * OverlappingOutputGrouping *
  *****************************/
 
-mgg::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration const& conf)
+mgm::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration const& conf)
 {
     conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
@@ -92,14 +92,14 @@ mgg::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration c
 
 }
 
-void mgg::OverlappingOutputGrouping::for_each_group(
+void mgm::OverlappingOutputGrouping::for_each_group(
     std::function<void(OverlappingOutputGroup const& group)> const& f)
 {
     for (auto const& g : groups)
         f(g);
 }
 
-void mgg::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const& conf_output)
+void mgm::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const& conf_output)
 {
     std::vector<size_t> overlapping_groups;
 

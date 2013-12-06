@@ -21,7 +21,7 @@
 #include "client_buffer.h"
 
 namespace mcl=mir::client;
-namespace mclg=mir::client::gbm;
+namespace mclg=mir::client::mesa;
 
 mclg::ClientBufferFactory::ClientBufferFactory(
     std::shared_ptr<BufferFileOps> const& buffer_file_ops)

@@ -33,7 +33,7 @@
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -86,7 +86,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
     test_buffer_package->fd[1] = 4;
     test_buffer_package->stride = 77;
 
-    mgg::InternalNativeSurface native_surface(mock_surface);
+    mgm::InternalNativeSurface native_surface(mock_surface);
 
     EXPECT_CALL(*buffer, native_buffer_handle())
         .WillOnce(Return(test_buffer_package));
@@ -110,7 +110,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
 TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
 {
     using namespace ::testing;
-    mgg::InternalNativeSurface native_surface(mock_surface);
+    mgm::InternalNativeSurface native_surface(mock_surface);
     auto stub_buffer1 = std::make_shared<mtd::MockBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::MockBuffer>();
 
@@ -149,7 +149,7 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
         .Times(1)
         .WillOnce(Return(test_pixel_format));
 
-    mgg::InternalNativeSurface native_surface(mock_surface);
+    mgm::InternalNativeSurface native_surface(mock_surface);
 
     MirSurfaceParameters parameters;
     memset(&parameters, 0, sizeof(MirSurfaceParameters));

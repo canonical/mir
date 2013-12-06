@@ -23,10 +23,10 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
-mgg::ShmBuffer::ShmBuffer(
+mgm::ShmBuffer::ShmBuffer(
     std::shared_ptr<ShmFile> const& shm_file,
     geom::Size const& size,
     MirPixelFormat const& pixel_format)
@@ -38,26 +38,26 @@ mgg::ShmBuffer::ShmBuffer(
 {
 }
 
-mgg::ShmBuffer::~ShmBuffer() noexcept
+mgm::ShmBuffer::~ShmBuffer() noexcept
 {
 }
 
-geom::Size mgg::ShmBuffer::size() const
+geom::Size mgm::ShmBuffer::size() const
 {
     return size_;
 }
 
-geom::Stride mgg::ShmBuffer::stride() const
+geom::Stride mgm::ShmBuffer::stride() const
 {
     return stride_;
 }
 
-MirPixelFormat mgg::ShmBuffer::pixel_format() const
+MirPixelFormat mgm::ShmBuffer::pixel_format() const
 {
     return pixel_format_;
 }
 
-void mgg::ShmBuffer::bind_to_texture()
+void mgm::ShmBuffer::bind_to_texture()
 {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                  size_.width.as_int(), size_.height.as_int(),
@@ -65,7 +65,7 @@ void mgg::ShmBuffer::bind_to_texture()
                  pixels);
 }
 
-std::shared_ptr<MirNativeBuffer> mgg::ShmBuffer::native_buffer_handle() const
+std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
 {
     auto native_buffer = std::make_shared<MirNativeBuffer>();
 
@@ -81,7 +81,7 @@ std::shared_ptr<MirNativeBuffer> mgg::ShmBuffer::native_buffer_handle() const
     return native_buffer;
 }
 
-bool mgg::ShmBuffer::can_bypass() const
+bool mgm::ShmBuffer::can_bypass() const
 {
     return false;
 }

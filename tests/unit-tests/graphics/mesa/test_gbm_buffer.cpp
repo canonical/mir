@@ -41,7 +41,7 @@
 #include <stdexcept>
 
 namespace mg=mir::graphics;
-namespace mgg=mir::graphics::gbm;
+namespace mgm=mir::graphics::mesa;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir::mir_test_framework;
@@ -73,20 +73,20 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        platform = std::make_shared<mgg::Platform>(
+        platform = std::make_shared<mgm::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgg::BufferAllocator(platform->gbm.device, null_init));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL>  mock_gl;
-    std::shared_ptr<mgg::Platform> platform;
+    std::shared_ptr<mgm::Platform> platform;
     std::shared_ptr<mg::NullBufferInitializer> null_init;
-    std::unique_ptr<mgg::BufferAllocator> allocator;
+    std::unique_ptr<mgm::BufferAllocator> allocator;
 
     // Defaults
     MirPixelFormat pf;

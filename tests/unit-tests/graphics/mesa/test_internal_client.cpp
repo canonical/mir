@@ -25,7 +25,7 @@
 
 namespace geom=mir::geometry;
 namespace mg = mir::graphics;
-namespace mgg=mir::graphics::gbm;
+namespace mgm=mir::graphics::mesa;
 
 namespace
 {
@@ -51,7 +51,7 @@ public:
 TEST(InternalClient, native_display_sanity)
 {
     auto stub_display = std::make_shared<MirMesaEGLNativeDisplay>();
-    mgg::InternalClient client(stub_display);
+    mgm::InternalClient client(stub_display);
 
     auto native_display = client.egl_native_display();
     EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(stub_display.get()), native_display);
@@ -60,10 +60,10 @@ TEST(InternalClient, native_display_sanity)
 TEST(InternalClient, native_surface_sanity)
 {
     auto stub_display = std::make_shared<MirMesaEGLNativeDisplay>();
-    mgg::InternalClient client(stub_display);
+    mgm::InternalClient client(stub_display);
 
     auto stub_window = std::make_shared<StubInternalSurface>();
-    auto native_window = static_cast<mgg::InternalNativeSurface*>(client.egl_native_window(stub_window));
+    auto native_window = static_cast<mgm::InternalNativeSurface*>(client.egl_native_window(stub_window));
 
     ASSERT_NE(nullptr, native_window->surface_advance_buffer);
     ASSERT_NE(nullptr, native_window->surface_get_parameters);

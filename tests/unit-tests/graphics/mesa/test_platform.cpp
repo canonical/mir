@@ -42,7 +42,7 @@
 #include <chrono>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
 
@@ -61,7 +61,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return std::make_shared<mgg::Platform>(
+        return std::make_shared<mgm::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
@@ -215,14 +215,14 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
 TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
 {
     MirMesaEGLNativeDisplay* native_display = nullptr;
-    EXPECT_EQ(MIR_MESA_FALSE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
+    EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
     {
         auto platform = create_platform();
         auto client = platform->create_internal_client();
         native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
-        EXPECT_EQ(MIR_MESA_TRUE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
+        EXPECT_EQ(MIR_MESA_TRUE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
     }
-    EXPECT_EQ(MIR_MESA_FALSE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
+    EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
 }
 
 TEST_F(GBMGraphicsPlatform, egl_native_display_is_gbm_device)

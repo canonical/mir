@@ -19,23 +19,23 @@
 #include "internal_client.h"
 
 namespace mg=mir::graphics;
-namespace mgg=mir::graphics::gbm;
+namespace mgm=mir::graphics::mesa;
 
-mgg::InternalClient::InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> const& native_display)
+mgm::InternalClient::InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> const& native_display)
     : native_display(native_display)
 {
 }
 
-EGLNativeDisplayType mgg::InternalClient::egl_native_display()
+EGLNativeDisplayType mgm::InternalClient::egl_native_display()
 {
     return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
 }
 
-EGLNativeWindowType mgg::InternalClient::egl_native_window(std::shared_ptr<InternalSurface> const& surface)
+EGLNativeWindowType mgm::InternalClient::egl_native_window(std::shared_ptr<InternalSurface> const& surface)
 {
     if (!client_window)
     {
-        client_window = std::make_shared<mgg::InternalNativeSurface>(surface);
+        client_window = std::make_shared<mgm::InternalNativeSurface>(surface);
     }
 
     return client_window.get();

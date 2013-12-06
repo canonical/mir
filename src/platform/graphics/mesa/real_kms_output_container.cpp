@@ -19,17 +19,17 @@
 #include "real_kms_output_container.h"
 #include "real_kms_output.h"
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
-mgg::RealKMSOutputContainer::RealKMSOutputContainer(
+mgm::RealKMSOutputContainer::RealKMSOutputContainer(
     int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper)
     : drm_fd{drm_fd},
       page_flipper{page_flipper}
 {
 }
 
-std::shared_ptr<mgg::KMSOutput>
-mgg::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
+std::shared_ptr<mgm::KMSOutput>
+mgm::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
 {
     std::shared_ptr<KMSOutput> output;
 
@@ -47,7 +47,7 @@ mgg::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
     return output;
 }
 
-void mgg::RealKMSOutputContainer::for_each_output(std::function<void(KMSOutput&)> functor) const
+void mgm::RealKMSOutputContainer::for_each_output(std::function<void(KMSOutput&)> functor) const
 {
     for(auto& pair: outputs)
         functor(*pair.second);

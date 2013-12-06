@@ -79,7 +79,7 @@ public:
             std::make_shared<mir::options::ProgramOption>(),
             report);
 #else
-        auto platform = std::make_shared<mg::gbm::Platform>(report,
+        auto platform = std::make_shared<mg::mesa::Platform>(report,
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
         return platform->create_display(conf_policy);

@@ -39,13 +39,13 @@
 #include <cassert>
 
 namespace mg  = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
 namespace
 {
 
-class EGLImageBufferTextureBinder : public mgg::BufferTextureBinder
+class EGLImageBufferTextureBinder : public mgm::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
@@ -108,7 +108,7 @@ struct GBMBODeleter
 
 }
 
-mgg::BufferAllocator::BufferAllocator(
+mgm::BufferAllocator::BufferAllocator(
     gbm_device* device,
     const std::shared_ptr<BufferInitializer>& buffer_initializer)
     : device(device),
@@ -121,7 +121,7 @@ mgg::BufferAllocator::BufferAllocator(
     bypass_env = env ? env[0] != '0' : true;
 }
 
-std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
     BufferProperties const& buffer_properties)
 {
     std::shared_ptr<mg::Buffer> buffer;
@@ -134,15 +134,15 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_buffer(
     return buffer;
 }
 
-std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_hardware_buffer(
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
     BufferProperties const& buffer_properties)
 {
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
-    uint32_t const gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
+    uint32_t const gbm_format = mgm::mir_format_to_gbm_format(buffer_properties.format);
 
     if (!is_pixel_format_supported(buffer_properties.format) ||
-        gbm_format == mgg::invalid_gbm_format)
+        gbm_format == mgm::invalid_gbm_format)
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
@@ -191,7 +191,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_hardware_buffer(
     return buffer;
 }
 
-std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     BufferProperties const& buffer_properties)
 {
     if (!is_pixel_format_supported(buffer_properties.format))
@@ -207,7 +207,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
     size_t const size_in_bytes = 
         stride.as_int() * buffer_properties.size.height.as_int();
     auto const shm_file =
-        std::make_shared<mgg::AnonymousShmFile>(size_in_bytes);
+        std::make_shared<mgm::AnonymousShmFile>(size_in_bytes);
 
     auto const buffer =
         std::make_shared<ShmBuffer>(shm_file, buffer_properties.size,
@@ -218,7 +218,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
     return buffer;
 }
 
-std::vector<MirPixelFormat> mgg::BufferAllocator::supported_pixel_formats()
+std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 {
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_argb_8888,
@@ -228,7 +228,7 @@ std::vector<MirPixelFormat> mgg::BufferAllocator::supported_pixel_formats()
     return pixel_formats;
 }
 
-bool mgg::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
+bool mgm::BufferAllocator::is_pixel_format_supported(MirPixelFormat format)
 {
     auto formats = supported_pixel_formats();
 

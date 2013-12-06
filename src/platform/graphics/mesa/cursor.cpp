@@ -35,10 +35,10 @@ int const width = black_arrow.width;
 int const height = black_arrow.height;
 }
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
-mgg::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
                 gbm,
                 width,
@@ -49,10 +49,10 @@ mgg::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 }
 
-inline mgg::Cursor::GBMBOWrapper::operator gbm_bo*() { return buffer; }
-inline mgg::Cursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
+inline mgm::Cursor::GBMBOWrapper::operator gbm_bo*() { return buffer; }
+inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
 
-mgg::Cursor::Cursor(
+mgm::Cursor::Cursor(
     gbm_device* gbm,
     KMSOutputContainer& output_container,
     std::shared_ptr<CurrentConfiguration> const& current_configuration) :
@@ -66,12 +66,12 @@ mgg::Cursor::Cursor(
     show_at_last_known_position();
 }
 
-mgg::Cursor::~Cursor() noexcept
+mgm::Cursor::~Cursor() noexcept
 {
     hide();
 }
 
-void mgg::Cursor::set_image(const void* raw_argb, geometry::Size size)
+void mgm::Cursor::set_image(const void* raw_argb, geometry::Size size)
 {
     if (size != geometry::Size{width, height})
         BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
@@ -86,23 +86,23 @@ void mgg::Cursor::set_image(const void* raw_argb, geometry::Size size)
     }
 }
 
-void mgg::Cursor::move_to(geometry::Point position)
+void mgm::Cursor::move_to(geometry::Point position)
 {
     place_cursor_at(position, UpdateState);
 }
 
-void mgg::Cursor::show_at_last_known_position()
+void mgm::Cursor::show_at_last_known_position()
 {
     place_cursor_at(current_position, ForceState);
 }
 
-void mgg::Cursor::hide()
+void mgm::Cursor::hide()
 {
     output_container.for_each_output(
         [&](KMSOutput& output) { output.clear_cursor(); });
 }
 
-void mgg::Cursor::for_each_used_output(
+void mgm::Cursor::for_each_used_output(
     std::function<void(KMSOutput&, geom::Rectangle const&)> const& f)
 {
     current_configuration->with_current_configuration_do(
@@ -125,7 +125,7 @@ void mgg::Cursor::for_each_used_output(
         });
 }
 
-void mgg::Cursor::place_cursor_at(
+void mgm::Cursor::place_cursor_at(
     geometry::Point position,
     ForceCursorState force_state)
 {

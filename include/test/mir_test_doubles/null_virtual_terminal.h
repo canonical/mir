@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullVirtualTerminal : public graphics::gbm::VirtualTerminal
+class NullVirtualTerminal : public graphics::mesa::VirtualTerminal
 {
 public:
     void set_graphics_mode() {}

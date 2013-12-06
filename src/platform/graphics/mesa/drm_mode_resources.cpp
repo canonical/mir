@@ -21,7 +21,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
 namespace
 {
@@ -48,7 +48,7 @@ struct ResourcesDeleter
 
 }
 
-mgg::DRMModeResources::DRMModeResources(int drm_fd)
+mgm::DRMModeResources::DRMModeResources(int drm_fd)
     : drm_fd{drm_fd},
       resources{DRMModeResUPtr{drmModeGetResources(drm_fd), ResourcesDeleter()}}
 {
@@ -56,7 +56,7 @@ mgg::DRMModeResources::DRMModeResources(int drm_fd)
         BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't get DRM resources\n"));
 }
 
-void mgg::DRMModeResources::for_each_connector(std::function<void(DRMModeConnectorUPtr)> const& f) const
+void mgm::DRMModeResources::for_each_connector(std::function<void(DRMModeConnectorUPtr)> const& f) const
 {
     for (int i = 0; i < resources->count_connectors; i++)
     {
@@ -69,7 +69,7 @@ void mgg::DRMModeResources::for_each_connector(std::function<void(DRMModeConnect
     }
 }
 
-void mgg::DRMModeResources::for_each_encoder(std::function<void(DRMModeEncoderUPtr)> const& f) const
+void mgm::DRMModeResources::for_each_encoder(std::function<void(DRMModeEncoderUPtr)> const& f) const
 {
     for (int i = 0; i < resources->count_encoders; i++)
     {
@@ -82,7 +82,7 @@ void mgg::DRMModeResources::for_each_encoder(std::function<void(DRMModeEncoderUP
     }
 }
 
-void mgg::DRMModeResources::for_each_crtc(std::function<void(DRMModeCrtcUPtr)> const& f) const
+void mgm::DRMModeResources::for_each_crtc(std::function<void(DRMModeCrtcUPtr)> const& f) const
 {
     for (int i = 0; i < resources->count_crtcs; i++)
     {
@@ -95,34 +95,34 @@ void mgg::DRMModeResources::for_each_crtc(std::function<void(DRMModeCrtcUPtr)> c
     }
 }
 
-size_t mgg::DRMModeResources::num_connectors()
+size_t mgm::DRMModeResources::num_connectors()
 {
     return resources->count_connectors;
 }
 
-size_t mgg::DRMModeResources::num_encoders()
+size_t mgm::DRMModeResources::num_encoders()
 {
     return resources->count_encoders;
 }
 
-size_t mgg::DRMModeResources::num_crtcs()
+size_t mgm::DRMModeResources::num_crtcs()
 {
     return resources->count_crtcs;
 }
 
-mgg::DRMModeConnectorUPtr mgg::DRMModeResources::connector(uint32_t id) const
+mgm::DRMModeConnectorUPtr mgm::DRMModeResources::connector(uint32_t id) const
 {
     auto connector_raw = drmModeGetConnector(drm_fd, id);
     return DRMModeConnectorUPtr{connector_raw, ConnectorDeleter()};
 }
 
-mgg::DRMModeEncoderUPtr mgg::DRMModeResources::encoder(uint32_t id) const
+mgm::DRMModeEncoderUPtr mgm::DRMModeResources::encoder(uint32_t id) const
 {
     auto encoder_raw = drmModeGetEncoder(drm_fd, id);
     return DRMModeEncoderUPtr{encoder_raw, EncoderDeleter()};
 }
 
-mgg::DRMModeCrtcUPtr mgg::DRMModeResources::crtc(uint32_t id) const
+mgm::DRMModeCrtcUPtr mgm::DRMModeResources::crtc(uint32_t id) const
 {
     auto crtc_raw = drmModeGetCrtc(drm_fd, id);
     return DRMModeCrtcUPtr{crtc_raw, CrtcDeleter()};

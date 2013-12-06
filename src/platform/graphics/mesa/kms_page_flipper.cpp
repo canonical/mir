@@ -27,7 +27,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
 namespace
 {
@@ -36,20 +36,20 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        unsigned int /*sec*/, unsigned int /*usec*/,
                        void* data)
 {
-    auto page_flip_data = static_cast<mgg::PageFlipEventData*>(data);
+    auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
     page_flip_data->pending->erase(page_flip_data->crtc_id);
 }
 
 }
 
-mgg::KMSPageFlipper::KMSPageFlipper(int drm_fd)
+mgm::KMSPageFlipper::KMSPageFlipper(int drm_fd)
     : drm_fd{drm_fd},
       pending_page_flips(),
       worker_tid()
 {
 }
 
-bool mgg::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
+bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
@@ -68,7 +68,7 @@ bool mgg::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
     return (ret == 0);
 }
 
-void mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
+void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
     static drmEventContext evctx =
     {
@@ -142,7 +142,7 @@ void mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
     }
 }
 
-std::thread::id mgg::KMSPageFlipper::debug_get_worker_tid()
+std::thread::id mgm::KMSPageFlipper::debug_get_worker_tid()
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
@@ -150,7 +150,7 @@ std::thread::id mgg::KMSPageFlipper::debug_get_worker_tid()
 }
 
 /* This method should be called with the 'pf_mutex' locked */
-bool mgg::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
+bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 {
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
 }

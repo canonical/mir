@@ -29,7 +29,7 @@
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -37,14 +37,14 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class NullPageFlipper : public mgg::PageFlipper
+class NullPageFlipper : public mgm::PageFlipper
 {
 public:
     bool schedule_flip(uint32_t,uint32_t) { return true; }
     void wait_for_flip(uint32_t) { }
 };
 
-class MockPageFlipper : public mgg::PageFlipper
+class MockPageFlipper : public mgm::PageFlipper
 {
 public:
     MOCK_METHOD2(schedule_flip, bool(uint32_t,uint32_t));
@@ -124,7 +124,7 @@ TEST_F(RealKMSOutputTest, construction_queries_connector)
     EXPECT_CALL(mock_drm, drmModeGetConnector(_,connector_ids[0]))
         .Times(1);
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(null_page_flipper)};
 }
 
@@ -155,7 +155,7 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
             .Times(1);
     }
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
@@ -190,7 +190,7 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
             .Times(1);
     }
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
@@ -223,7 +223,7 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
             .Times(0);
     }
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_FALSE(output.set_crtc(fb_id));
@@ -241,7 +241,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
 
     setup_outputs_connected_crtc();
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
@@ -267,7 +267,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
 
     resources.prepare();
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, 0, 0, 0, nullptr, 0, nullptr))
@@ -282,7 +282,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
 
     setup_outputs_connected_crtc();
 
-    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))

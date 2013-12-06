@@ -34,7 +34,7 @@ namespace graphics
 class DisplayConfiguration;
 struct DisplayConfigurationOutput;
 
-namespace gbm
+namespace mesa
 {
 
 class OverlappingOutputGroup

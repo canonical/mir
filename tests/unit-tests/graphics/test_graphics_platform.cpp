@@ -84,7 +84,7 @@ public:
 #ifdef ANDROID
         return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mg::NullDisplayReport>());
 #else
-        return std::make_shared<mg::gbm::Platform>(
+        return std::make_shared<mg::mesa::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif

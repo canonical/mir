@@ -34,9 +34,9 @@
 #include <linux/kd.h>
 #include <fcntl.h>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
-mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
+mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::shared_ptr<VTFileOperations> const& fops,
     int vt_number,
     std::shared_ptr<DisplayReport> const& report)
@@ -94,7 +94,7 @@ mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
     fops->tcsetattr(vt_fd.fd(), TCSANOW, &tcattr);
 }
 
-mgg::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
+mgm::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
     if (vt_fd.fd() > 0)
     {
@@ -115,7 +115,7 @@ mgg::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
     }
 }
 
-void mgg::LinuxVirtualTerminal::set_graphics_mode()
+void mgm::LinuxVirtualTerminal::set_graphics_mode()
 {
     if (fops->ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
     {
@@ -126,7 +126,7 @@ void mgg::LinuxVirtualTerminal::set_graphics_mode()
     }
 }
 
-void mgg::LinuxVirtualTerminal::register_switch_handlers(
+void mgm::LinuxVirtualTerminal::register_switch_handlers(
     EventHandlerRegister& handlers,
     std::function<bool()> const& switch_away,
     std::function<bool()> const& switch_back)
@@ -181,7 +181,7 @@ void mgg::LinuxVirtualTerminal::register_switch_handlers(
     }
 }
 
-int mgg::LinuxVirtualTerminal::find_active_vt_number()
+int mgm::LinuxVirtualTerminal::find_active_vt_number()
 {
     static std::vector<std::string> const paths{"/dev/tty", "/dev/tty0"};
     int active_vt{-1};
@@ -215,7 +215,7 @@ int mgg::LinuxVirtualTerminal::find_active_vt_number()
     return active_vt;
 }
 
-int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
+int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
 {
     auto activate = true;
     if (vt_number <= 0)

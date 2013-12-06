@@ -26,7 +26,7 @@
 
 #include <memory>
 
-namespace mclg = mir::client::gbm;
+namespace mclg = mir::client::mesa;
 
 namespace
 {

@@ -30,9 +30,9 @@
 #include <stdexcept>
 
 namespace mg = mir::graphics;
-namespace mgg = mg::gbm;
+namespace mgm = mg::mesa;
 
-void mgg::NativeGBMPlatform::initialize(
+void mgm::NativeGBMPlatform::initialize(
     std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     nested_context = nested_context_arg;
@@ -42,13 +42,13 @@ void mgg::NativeGBMPlatform::initialize(
     nested_context->drm_set_gbm_device(gbm.device);
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgg::NativeGBMPlatform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativeGBMPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return std::make_shared<mgg::BufferAllocator>(gbm.device, buffer_initializer);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::NativeGBMPlatform::get_ipc_package()
 {
     struct NativeGBMPlatformIPCPackage : public mg::PlatformIPCPackage
     {
@@ -80,12 +80,12 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package(
     return std::make_shared<NativeGBMPlatformIPCPackage>(auth_fd);
 }
 
-std::shared_ptr<mg::InternalClient> mgg::NativeGBMPlatform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mgm::NativeGBMPlatform::create_internal_client()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_internal_client is not implemented yet!"));
 }
 
-void mgg::NativeGBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
+void mgm::NativeGBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)
@@ -102,5 +102,5 @@ void mgg::NativeGBMPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer co
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    return std::make_shared<mgg::NativeGBMPlatform>();
+    return std::make_shared<mgm::NativeGBMPlatform>();
 }

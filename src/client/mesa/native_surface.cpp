@@ -20,7 +20,7 @@
 #include "../client_buffer.h"
 #include "native_surface.h"
 
-namespace mclg=mir::client::gbm;
+namespace mclg=mir::client::mesa;
 
 namespace
 {

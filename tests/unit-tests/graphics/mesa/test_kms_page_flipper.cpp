@@ -34,7 +34,7 @@
 #include <sys/time.h>
 
 namespace mg  = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace mt  = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -50,7 +50,7 @@ public:
     }
 
     testing::NiceMock<mtd::MockDRM> mock_drm;
-    mgg::KMSPageFlipper page_flipper;
+    mgm::KMSPageFlipper page_flipper;
 };
 
 ACTION_P(InvokePageFlipHandler, param)
@@ -199,7 +199,7 @@ namespace
 class PageFlippingFunctor
 {
 public:
-    PageFlippingFunctor(mgg::KMSPageFlipper& page_flipper,
+    PageFlippingFunctor(mgm::KMSPageFlipper& page_flipper,
                         uint32_t crtc_id)
         : page_flipper(page_flipper), crtc_id{crtc_id}, done{false},
           num_page_flips{0}, num_waits{0}
@@ -234,7 +234,7 @@ public:
     }
 
 private:
-    mgg::KMSPageFlipper& page_flipper;
+    mgm::KMSPageFlipper& page_flipper;
     uint32_t const crtc_id;
     std::atomic<bool> done;
     std::atomic<int> num_page_flips;
@@ -476,7 +476,7 @@ ACTION_P(InvokePageFlipHandlerWithPendingData, counter)
     int const drm_fd{arg0};
     char dummy;
 
-    auto user_data = static_cast<mgg::PageFlipEventData*>(counter->get_pending_flip_data());
+    auto user_data = static_cast<mgm::PageFlipEventData*>(counter->get_pending_flip_data());
     uint32_t const crtc_id{user_data->crtc_id};
 
     /* Remove the event from the drm event queue */

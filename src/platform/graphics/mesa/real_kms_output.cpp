@@ -26,17 +26,17 @@
 #include <vector>
 
 namespace mg = mir::graphics;
-namespace mgg = mg::gbm;
+namespace mgm = mg::mesa;
 namespace geom = mir::geometry;
 
 namespace
 {
 
-bool encoder_is_used(mgg::DRMModeResources const& resources, uint32_t encoder_id)
+bool encoder_is_used(mgm::DRMModeResources const& resources, uint32_t encoder_id)
 {
     bool encoder_used{false};
 
-    resources.for_each_connector([&](mgg::DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
     {
         if (connector->encoder_id == encoder_id &&
             connector->connection == DRM_MODE_CONNECTED)
@@ -54,11 +54,11 @@ bool encoder_is_used(mgg::DRMModeResources const& resources, uint32_t encoder_id
     return encoder_used;
 }
 
-bool crtc_is_used(mgg::DRMModeResources const& resources, uint32_t crtc_id)
+bool crtc_is_used(mgm::DRMModeResources const& resources, uint32_t crtc_id)
 {
     bool crtc_used{false};
 
-    resources.for_each_connector([&](mgg::DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
     {
         if (connector->connection == DRM_MODE_CONNECTED)
         {
@@ -74,11 +74,11 @@ bool crtc_is_used(mgg::DRMModeResources const& resources, uint32_t crtc_id)
     return crtc_used;
 }
 
-std::vector<mgg::DRMModeEncoderUPtr>
-connector_available_encoders(mgg::DRMModeResources const& resources,
+std::vector<mgm::DRMModeEncoderUPtr>
+connector_available_encoders(mgm::DRMModeResources const& resources,
                              drmModeConnector const* connector)
 {
-    std::vector<mgg::DRMModeEncoderUPtr> encoders;
+    std::vector<mgm::DRMModeEncoderUPtr> encoders;
 
     for (int i = 0; i < connector->count_encoders; i++)
     {
@@ -132,7 +132,7 @@ std::string connector_name(const drmModeConnector *conn)
 
 }
 
-mgg::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
+mgm::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
                                   std::shared_ptr<PageFlipper> const& page_flipper)
     : drm_fd{drm_fd}, connector_id{connector_id}, page_flipper{page_flipper},
       connector(), mode_index{0}, current_crtc(), saved_crtc(),
@@ -152,12 +152,12 @@ mgg::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
     }
 }
 
-mgg::RealKMSOutput::~RealKMSOutput()
+mgm::RealKMSOutput::~RealKMSOutput()
 {
     restore_saved_crtc();
 }
 
-void mgg::RealKMSOutput::reset()
+void mgm::RealKMSOutput::reset()
 {
     DRMModeResources resources{drm_fd};
 
@@ -186,19 +186,19 @@ void mgg::RealKMSOutput::reset()
     current_crtc = nullptr;
 }
 
-geom::Size mgg::RealKMSOutput::size() const
+geom::Size mgm::RealKMSOutput::size() const
 {
     drmModeModeInfo const& mode(connector->modes[mode_index]);
     return {mode.hdisplay, mode.vdisplay};
 }
 
-void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
+void mgm::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
 {
     fb_offset = offset;
     mode_index = kms_mode_index;
 }
 
-bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
+bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
         BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
@@ -219,7 +219,7 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
     return true;
 }
 
-void mgg::RealKMSOutput::clear_crtc()
+void mgm::RealKMSOutput::clear_crtc()
 {
     /*
      * In order to actually clear the output, we need to have a crtc
@@ -245,7 +245,7 @@ void mgg::RealKMSOutput::clear_crtc()
     current_crtc = nullptr;
 }
 
-bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
+bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 {
     std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
@@ -258,7 +258,7 @@ bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
 
-void mgg::RealKMSOutput::wait_for_page_flip()
+void mgm::RealKMSOutput::wait_for_page_flip()
 {
     std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
@@ -271,7 +271,7 @@ void mgg::RealKMSOutput::wait_for_page_flip()
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
 
-void mgg::RealKMSOutput::set_cursor(gbm_bo* buffer)
+void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
 {
     if (current_crtc)
     {
@@ -291,7 +291,7 @@ void mgg::RealKMSOutput::set_cursor(gbm_bo* buffer)
     }
 }
 
-void mgg::RealKMSOutput::move_cursor(geometry::Point destination)
+void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
 {
     if (current_crtc)
     {
@@ -306,7 +306,7 @@ void mgg::RealKMSOutput::move_cursor(geometry::Point destination)
     }
 }
 
-void mgg::RealKMSOutput::clear_cursor()
+void mgm::RealKMSOutput::clear_cursor()
 {
     if (current_crtc)
     {
@@ -315,12 +315,12 @@ void mgg::RealKMSOutput::clear_cursor()
     }
 }
 
-bool mgg::RealKMSOutput::has_cursor() const
+bool mgm::RealKMSOutput::has_cursor() const
 {
     return has_cursor_;
 }
 
-bool mgg::RealKMSOutput::ensure_crtc()
+bool mgm::RealKMSOutput::ensure_crtc()
 {
     /* Nothing to do if we already have a crtc */
     if (current_crtc)
@@ -365,7 +365,7 @@ bool mgg::RealKMSOutput::ensure_crtc()
     return (current_crtc != nullptr);
 }
 
-void mgg::RealKMSOutput::restore_saved_crtc()
+void mgm::RealKMSOutput::restore_saved_crtc()
 {
     if (!using_saved_crtc)
     {
@@ -377,7 +377,7 @@ void mgg::RealKMSOutput::restore_saved_crtc()
     }
 }
 
-void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
+void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
 {
     std::lock_guard<std::mutex> lg(power_mutex);
 

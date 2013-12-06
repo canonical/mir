@@ -28,7 +28,7 @@
 #include <stdexcept>
 
 namespace geom=mir::geometry;
-namespace mclg=mir::client::gbm;
+namespace mclg=mir::client::mesa;
 
 namespace
 {

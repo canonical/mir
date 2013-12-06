@@ -26,7 +26,7 @@
 namespace mtd=mir::test::doubles;
 namespace mcl=mir::client;
 namespace mcl=mir::client;
-namespace mclg=mir::client::gbm;
+namespace mclg=mir::client::mesa;
 namespace geom=mir::geometry;
 
 namespace

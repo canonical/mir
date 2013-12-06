@@ -27,7 +27,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace gbm
+namespace mesa
 {
 
 class RealKMSDisplayConfiguration : public KMSDisplayConfiguration

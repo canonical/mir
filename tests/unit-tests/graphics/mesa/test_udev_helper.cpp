@@ -32,7 +32,7 @@
 #include <poll.h>
 
 namespace mg=mir::graphics;
-namespace mgg=mir::graphics::gbm;
+namespace mgm=mir::graphics::mesa;
 namespace mtf=mir::mir_test_framework;
 
 class UdevWrapperTest : public ::testing::Test
@@ -49,8 +49,8 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
     udev_environment.add_device("drm", "fakedev4", NULL, {}, {});
     udev_environment.add_device("drm", "fakedev5", NULL, {}, {});
 
-    auto ctx = std::make_shared<mgg::UdevContext>();
-    mgg::UdevEnumerator enumerator(ctx);
+    auto ctx = std::make_shared<mgm::UdevContext>();
+    mgm::UdevEnumerator enumerator(ctx);
 
     enumerator.scan_devices();
 
@@ -73,8 +73,8 @@ TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
     udev_environment.add_device("usb", "fakeusb1", NULL, {}, {});
     udev_environment.add_device("usb", "fakeusb2", NULL, {}, {});
 
-    auto ctx = std::make_shared<mgg::UdevContext>();
-    mgg::UdevEnumerator devices(ctx);
+    auto ctx = std::make_shared<mgm::UdevContext>();
+    mgm::UdevEnumerator devices(ctx);
 
     devices.match_subsystem("drm");
     devices.scan_devices();
@@ -88,7 +88,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevType)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    mgg::UdevDevice dev(mgg::UdevContext(), sysfs_path);
+    mgm::UdevDevice dev(mgm::UdevContext(), sysfs_path);
     ASSERT_STREQ("drm_minor", dev.devtype());
 }
 
@@ -96,7 +96,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevDevice dev(mgg::UdevContext(), sysfs_path);
+    mgm::UdevDevice dev(mgm::UdevContext(), sysfs_path);
     ASSERT_STREQ("/devices/card0", dev.devpath());
 }
 
@@ -104,7 +104,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVNAME", "/dev/dri/card0"});
 
-    mgg::UdevDevice card0(mgg::UdevContext(), sysfs_path);
+    mgm::UdevDevice card0(mgm::UdevContext(), sysfs_path);
 
     ASSERT_STREQ("/dev/dri/card0", card0.devnode());
 }
@@ -113,7 +113,7 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevDevice dev(mgg::UdevContext(), sysfs_path);
+    mgm::UdevDevice dev(mgm::UdevContext(), sysfs_path);
 
     EXPECT_TRUE(dev == dev);
 }
@@ -122,9 +122,9 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevContext ctx;
-    mgg::UdevDevice same_one(ctx, sysfs_path);
-    mgg::UdevDevice same_two(ctx, sysfs_path);
+    mgm::UdevContext ctx;
+    mgm::UdevDevice same_one(ctx, sysfs_path);
+    mgm::UdevDevice same_two(ctx, sysfs_path);
 
     EXPECT_TRUE(same_one == same_two);
     EXPECT_TRUE(same_two == same_one);
@@ -135,9 +135,9 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
     auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
     auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
 
-    mgg::UdevContext ctx;
-    mgg::UdevDevice dev_one(ctx, path_one);
-    mgg::UdevDevice dev_two(ctx, path_two);
+    mgm::UdevContext ctx;
+    mgm::UdevDevice dev_one(ctx, path_one);
+    mgm::UdevDevice dev_two(ctx, path_two);
 
     EXPECT_FALSE(dev_one == dev_two);
     EXPECT_FALSE(dev_two == dev_one);
@@ -148,9 +148,9 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
     auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
     auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
 
-    mgg::UdevContext ctx;
-    mgg::UdevDevice dev_one(ctx, path_one);
-    mgg::UdevDevice dev_two(ctx, path_two);
+    mgm::UdevContext ctx;
+    mgm::UdevDevice dev_one(ctx, path_one);
+    mgm::UdevDevice dev_two(ctx, path_two);
 
     EXPECT_TRUE(dev_one != dev_two);
     EXPECT_TRUE(dev_two != dev_one);
@@ -160,9 +160,9 @@ TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevContext ctx;
-    mgg::UdevDevice same_one(ctx, sysfs_path);
-    mgg::UdevDevice same_two(ctx, sysfs_path);
+    mgm::UdevContext ctx;
+    mgm::UdevDevice same_one(ctx, sysfs_path);
+    mgm::UdevDevice same_two(ctx, sysfs_path);
 
     EXPECT_FALSE(same_one != same_two);
     EXPECT_FALSE(same_two != same_one);
@@ -177,10 +177,10 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
     udev_environment.add_device("drm", "card0-VGA1", "/sys/devices/card0", {}, {});
     udev_environment.add_device("drm", "card0-LVDS1", "/sys/devices/card0", {}, {});
 
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    auto ctx = std::make_shared<mgm::UdevContext>();
 
-    mgg::UdevEnumerator devices(ctx);
-    mgg::UdevDevice drm_device(*ctx, card0_syspath);
+    mgm::UdevEnumerator devices(ctx);
+    mgm::UdevDevice drm_device(*ctx, card0_syspath);
 
     devices.match_parent(drm_device);
     devices.scan_devices();
@@ -196,9 +196,9 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
 
 TEST_F(UdevWrapperTest, EnumeratorThrowsLogicErrorIfIteratedBeforeScanned)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    auto ctx = std::make_shared<mgm::UdevContext>();
 
-    mgg::UdevEnumerator devices(ctx);
+    mgm::UdevEnumerator devices(ctx);
 
     EXPECT_THROW({ devices.begin(); },
                  std::logic_error);
@@ -206,9 +206,9 @@ TEST_F(UdevWrapperTest, EnumeratorThrowsLogicErrorIfIteratedBeforeScanned)
 
 TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    auto ctx = std::make_shared<mgm::UdevContext>();
 
-    mgg::UdevEnumerator devices(ctx);
+    mgm::UdevEnumerator devices(ctx);
     std::string error_msg;
 
     try
@@ -224,9 +224,9 @@ TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
 
 TEST_F(UdevWrapperTest, EnumeratorEnumeratesEmptyList)
 {
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    auto ctx = std::make_shared<mgm::UdevContext>();
 
-    mgg::UdevEnumerator devices(ctx);
+    mgm::UdevEnumerator devices(ctx);
 
     devices.scan_devices();
 
@@ -241,9 +241,9 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
     udev_environment.add_device("drm", "card1", NULL, {}, {});
 
-    auto ctx = std::make_shared<mgg::UdevContext>();
+    auto ctx = std::make_shared<mgm::UdevContext>();
 
-    mgg::UdevEnumerator devices(ctx);
+    mgm::UdevEnumerator devices(ctx);
 
     devices.match_sysname("card[0-9]");
     devices.scan_devices();
@@ -256,35 +256,35 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
 
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 {
-    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
+    auto monitor = mgm::UdevMonitor(mgm::UdevContext());
     bool event_handler_called = false;
 
     udev_environment.add_device("drm", "control64D", NULL, {}, {});
 
-    monitor.process_events([&event_handler_called](mgg::UdevMonitor::EventType,
-                                                   mgg::UdevDevice const&) {event_handler_called = true;});
+    monitor.process_events([&event_handler_called](mgm::UdevMonitor::EventType,
+                                                   mgm::UdevDevice const&) {event_handler_called = true;});
 
     EXPECT_FALSE(event_handler_called);
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 {
-    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
+    auto monitor = mgm::UdevMonitor(mgm::UdevContext());
     bool event_handler_called = false;
 
     monitor.enable();
 
     udev_environment.add_device("drm", "control64D", NULL, {}, {});
 
-    monitor.process_events([&event_handler_called](mgg::UdevMonitor::EventType,
-                                                   mgg::UdevDevice const&) {event_handler_called = true;});
+    monitor.process_events([&event_handler_called](mgm::UdevMonitor::EventType,
+                                                   mgm::UdevDevice const&) {event_handler_called = true;});
 
     EXPECT_TRUE(event_handler_called);
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 {
-    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
+    auto monitor = mgm::UdevMonitor(mgm::UdevContext());
     bool remove_event_received = false;
 
     monitor.enable();
@@ -293,9 +293,9 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
     udev_environment.remove_device(test_sysfspath);
 
     monitor.process_events([&remove_event_received]
-        (mgg::UdevMonitor::EventType action, mgg::UdevDevice const&)
+        (mgm::UdevMonitor::EventType action, mgm::UdevDevice const&)
             {
-                if (action == mgg::UdevMonitor::EventType::REMOVED)
+                if (action == mgm::UdevMonitor::EventType::REMOVED)
                     remove_event_received = true;
             });
 
@@ -304,7 +304,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 
 TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 {
-    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
+    auto monitor = mgm::UdevMonitor(mgm::UdevContext());
     bool changed_event_received = false;
 
     monitor.enable();
@@ -313,9 +313,9 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
     udev_environment.emit_device_changed(test_sysfspath);
 
     monitor.process_events([&changed_event_received]
-        (mgg::UdevMonitor::EventType action, mgg::UdevDevice const&)
+        (mgm::UdevMonitor::EventType action, mgm::UdevDevice const&)
             {
-                if (action == mgg::UdevMonitor::EventType::CHANGED)
+                if (action == mgm::UdevMonitor::EventType::CHANGED)
                     changed_event_received = true;
             });
 
@@ -324,18 +324,18 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 
 TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 {
-    mgg::UdevContext ctx;
+    mgm::UdevContext ctx;
 
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgm::UdevMonitor(ctx);
     bool event_handler_called = false;
 
     monitor.enable();
 
     auto sysfs_path = udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    mgg::UdevDevice device(ctx, sysfs_path);
+    mgm::UdevDevice device(ctx, sysfs_path);
 
     monitor.process_events(
-        [&event_handler_called, &device](mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+        [&event_handler_called, &device](mgm::UdevMonitor::EventType, mgm::UdevDevice const& dev)
             {
                 event_handler_called = true;
                 EXPECT_EQ(device, dev);
@@ -346,7 +346,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 {
-    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
+    auto monitor = mgm::UdevMonitor(mgm::UdevContext());
 
     monitor.enable();
 
@@ -363,7 +363,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
 {
-    auto monitor = mgg::UdevMonitor(mgg::UdevContext());
+    auto monitor = mgm::UdevMonitor(mgm::UdevContext());
 
     monitor.enable();
 
@@ -378,16 +378,16 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
     ASSERT_GT(poll(&fds, 1, 0), 0);
     ASSERT_TRUE(fds.revents & POLLIN);
 
-    monitor.process_events([](mgg::UdevMonitor::EventType, mgg::UdevDevice const&){});
+    monitor.process_events([](mgm::UdevMonitor::EventType, mgm::UdevDevice const&){});
 
     EXPECT_EQ(poll(&fds, 1, 0), 0);
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 {
-    mgg::UdevContext ctx;
+    mgm::UdevContext ctx;
 
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgm::UdevMonitor(ctx);
     bool event_received = false;
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
@@ -395,12 +395,12 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
     monitor.enable();
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mgg::UdevDevice minor_device(ctx, test_sysfspath);
+    mgm::UdevDevice minor_device(ctx, test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
     monitor.process_events([&event_received, &minor_device]
-        (mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+        (mgm::UdevMonitor::EventType, mgm::UdevDevice const& dev)
             {
                 EXPECT_EQ(dev, minor_device);
                 event_received = true;
@@ -411,9 +411,9 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 
 TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
 {
-    mgg::UdevContext ctx;
+    mgm::UdevContext ctx;
 
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgm::UdevMonitor(ctx);
     bool usb_event_received = false, drm_event_recieved = false;
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
@@ -422,13 +422,13 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
     monitor.enable();
 
     auto drm_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mgg::UdevDevice drm_device(ctx, drm_sysfspath);
+    mgm::UdevDevice drm_device(ctx, drm_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
     auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", NULL, {}, {"DEVTYPE", "hid"});
-    mgg::UdevDevice usb_device(ctx, usb_sysfspath);
+    mgm::UdevDevice usb_device(ctx, usb_sysfspath);
 
     monitor.process_events([&drm_event_recieved, &drm_device, &usb_event_received, &usb_device]
-        (mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+        (mgm::UdevMonitor::EventType, mgm::UdevDevice const& dev)
             {
                 if (dev == drm_device)
                     drm_event_recieved = true;
@@ -442,9 +442,9 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
 
 TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
 {
-    mgg::UdevContext ctx;
+    mgm::UdevContext ctx;
 
-    auto monitor = mgg::UdevMonitor(ctx);
+    auto monitor = mgm::UdevMonitor(ctx);
     bool event_received = false;
 
     monitor.enable();
@@ -452,12 +452,12 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    mgg::UdevDevice minor_device(ctx, test_sysfspath);
+    mgm::UdevDevice minor_device(ctx, test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
     monitor.process_events([&event_received, &minor_device]
-        (mgg::UdevMonitor::EventType, mgg::UdevDevice const& dev)
+        (mgm::UdevMonitor::EventType, mgm::UdevDevice const& dev)
             {
                 EXPECT_EQ(dev, minor_device);
                 event_received = true;

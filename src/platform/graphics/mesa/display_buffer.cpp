@@ -27,10 +27,10 @@
 
 #include <stdexcept>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
-class mgg::BufferObject
+class mgm::BufferObject
 {
 public:
     BufferObject(gbm_surface* surface, gbm_bo* bo, uint32_t drm_fb_id)
@@ -68,7 +68,7 @@ namespace
 
 void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
 {
-    auto bufobj = static_cast<mgg::BufferObject*>(data);
+    auto bufobj = static_cast<mgm::BufferObject*>(data);
     delete bufobj;
 }
 
@@ -94,7 +94,7 @@ void ensure_egl_image_extensions()
 
 }
 
-mgg::DisplayBuffer::DisplayBuffer(
+mgm::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<Platform> const& platform,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
@@ -148,7 +148,7 @@ mgg::DisplayBuffer::DisplayBuffer(
         });
 }
 
-mgg::DisplayBuffer::~DisplayBuffer()
+mgm::DisplayBuffer::~DisplayBuffer()
 {
     /*
      * There is no need to destroy last_flipped_bufobj manually.
@@ -158,22 +158,22 @@ mgg::DisplayBuffer::~DisplayBuffer()
         last_flipped_bufobj->release();
 }
 
-geom::Rectangle mgg::DisplayBuffer::view_area() const
+geom::Rectangle mgm::DisplayBuffer::view_area() const
 {
     return area;
 }
 
-bool mgg::DisplayBuffer::can_bypass() const
+bool mgm::DisplayBuffer::can_bypass() const
 {
     return true;
 }
 
-void mgg::DisplayBuffer::post_update()
+void mgm::DisplayBuffer::post_update()
 {
     post_update(nullptr);
 }
 
-void mgg::DisplayBuffer::post_update(
+void mgm::DisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
@@ -183,11 +183,11 @@ void mgg::DisplayBuffer::post_update(
     if (!bypass_buf && !egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    mgg::BufferObject *bufobj;
+    mgm::BufferObject *bufobj;
     if (bypass_buf)
     {
         auto native = bypass_buf->native_buffer_handle();
-        auto gbm_native = static_cast<mgg::GBMNativeBuffer*>(native.get());
+        auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
         bufobj = get_buffer_object(gbm_native->bo);
     }
     else
@@ -239,7 +239,7 @@ void mgg::DisplayBuffer::post_update(
     last_flipped_bypass_buf = bypass_buf;
 }
 
-mgg::BufferObject* mgg::DisplayBuffer::get_front_buffer_object()
+mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
 {
     auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
     auto ret = get_buffer_object(front);
@@ -250,7 +250,7 @@ mgg::BufferObject* mgg::DisplayBuffer::get_front_buffer_object()
     return ret;
 }
 
-mgg::BufferObject* mgg::DisplayBuffer::get_buffer_object(
+mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
     struct gbm_bo *bo)
 {
     if (!bo)
@@ -282,7 +282,7 @@ mgg::BufferObject* mgg::DisplayBuffer::get_buffer_object(
 }
 
 
-bool mgg::DisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
+bool mgm::DisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
 {
     int page_flips_pending{0};
 
@@ -307,7 +307,7 @@ bool mgg::DisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
     return true;
 }
 
-void mgg::DisplayBuffer::make_current()
+void mgm::DisplayBuffer::make_current()
 {
     if (!egl.make_current())
     {
@@ -315,12 +315,12 @@ void mgg::DisplayBuffer::make_current()
     }
 }
 
-void mgg::DisplayBuffer::release_current()
+void mgm::DisplayBuffer::release_current()
 {
     egl.release_current();
 }
 
-void mgg::DisplayBuffer::schedule_set_crtc()
+void mgm::DisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;
 }

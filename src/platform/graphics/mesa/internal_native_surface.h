@@ -29,7 +29,7 @@ namespace graphics
 class InternalSurface;
 class Buffer;
 
-namespace gbm
+namespace mesa
 {
 
 class InternalNativeSurface : public MirMesaEGLNativeSurface

@@ -29,14 +29,14 @@
 #include <unordered_map>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
 
-struct MockKMSOutput : public mgg::KMSOutput
+struct MockKMSOutput : public mgm::KMSOutput
 {
     MOCK_METHOD0(reset, void());
     MOCK_METHOD2(configure, void(geom::Displacement, size_t));
@@ -55,7 +55,7 @@ struct MockKMSOutput : public mgg::KMSOutput
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
 };
 
-struct StubKMSOutputContainer : public mgg::KMSOutputContainer
+struct StubKMSOutputContainer : public mgm::KMSOutputContainer
 {
     StubKMSOutputContainer()
         : outputs{
@@ -64,12 +64,12 @@ struct StubKMSOutputContainer : public mgg::KMSOutputContainer
     {
     }
 
-    std::shared_ptr<mgg::KMSOutput> get_kms_output_for(uint32_t connector_id)
+    std::shared_ptr<mgm::KMSOutput> get_kms_output_for(uint32_t connector_id)
     {
         return outputs[connector_id];
     }
 
-    void for_each_output(std::function<void(mgg::KMSOutput&)> functor) const
+    void for_each_output(std::function<void(mgm::KMSOutput&)> functor) const
     {
         for (auto const& pair : outputs)
             functor(*pair.second);
@@ -84,7 +84,7 @@ struct StubKMSOutputContainer : public mgg::KMSOutputContainer
     std::unordered_map<uint32_t,std::shared_ptr<testing::NiceMock<MockKMSOutput>>> outputs;
 };
 
-struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
+struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
 {
     StubKMSDisplayConfiguration()
         : card_id{1}
@@ -163,10 +163,10 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
     std::vector<mg::DisplayConfigurationOutput> outputs;
 };
 
-struct StubCurrentConfiguration : public mgg::CurrentConfiguration
+struct StubCurrentConfiguration : public mgm::CurrentConfiguration
 {
     void with_current_configuration_do(
-        std::function<void(mgg::KMSDisplayConfiguration const&)> const& exec)
+        std::function<void(mgm::KMSDisplayConfiguration const&)> const& exec)
     {
         exec(conf);
     }
@@ -184,7 +184,7 @@ struct GBMCursorTest : public ::testing::Test
 
     testing::NiceMock<mtd::MockGBM> mock_gbm;
     StubKMSOutputContainer output_container;
-    mgg::Cursor cursor;
+    mgm::Cursor cursor;
 };
 
 }
@@ -197,7 +197,7 @@ TEST_F(GBMCursorTest, creates_cursor_bo_image)
                                         GBM_FORMAT_ARGB8888,
                                         GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE));
 
-    mgg::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
                               std::make_shared<StubCurrentConfiguration>()};
 }
 
@@ -240,7 +240,7 @@ TEST_F(GBMCursorTest, forces_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[11], has_cursor()).Times(0);
 
-    mgg::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
                               std::make_shared<StubCurrentConfiguration>()};
 
     output_container.verify_and_clear_expectations();

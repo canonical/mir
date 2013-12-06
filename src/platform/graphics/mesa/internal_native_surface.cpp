@@ -20,9 +20,9 @@
 #include "mir/graphics/internal_surface.h"
 #include "internal_native_surface.h"
 #include <cstring>
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
-mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurface> const& surface)
+mgm::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurface> const& surface)
     : surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
@@ -30,14 +30,14 @@ mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurfac
     surface_set_swapinterval = set_swapinterval_static;
 }
 
-int mgg::InternalNativeSurface::advance_buffer_static(
+int mgm::InternalNativeSurface::advance_buffer_static(
     MirMesaEGLNativeSurface* surface, MirBufferPackage* package)
 {
-    auto native_surface = static_cast<mgg::InternalNativeSurface*>(surface);
+    auto native_surface = static_cast<mgm::InternalNativeSurface*>(surface);
     return native_surface->advance_buffer(package);
 }
 
-int mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
+int mgm::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
 {
     surface->swap_buffers(current_buffer);
 
@@ -47,14 +47,14 @@ int mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
     return MIR_MESA_TRUE;
 }
 
-int mgg::InternalNativeSurface::get_parameters_static(
+int mgm::InternalNativeSurface::get_parameters_static(
     MirMesaEGLNativeSurface* surface, MirSurfaceParameters* parameters)
 {
-    auto native_surface = static_cast<mgg::InternalNativeSurface*>(surface);
+    auto native_surface = static_cast<mgm::InternalNativeSurface*>(surface);
     return native_surface->get_parameters(parameters);
 }
 
-int mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
+int mgm::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
 {
     auto size = surface->size();
     parameters->width = size.width.as_uint32_t();
@@ -65,7 +65,7 @@ int mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
     return MIR_MESA_TRUE;
 }
 
-int mgg::InternalNativeSurface::set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval)
+int mgm::InternalNativeSurface::set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval)
 {
     //TODO:
     (void) surface;

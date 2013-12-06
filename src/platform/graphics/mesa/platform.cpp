@@ -36,7 +36,7 @@
 #include <sys/ioctl.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mg::gbm;
+namespace mgm = mg::mesa;
 namespace mo = mir::options;
 
 namespace
@@ -52,11 +52,11 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     ~GBMPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
-            mgg::drm_close_threadsafe(ipc_fds[0]);
+            mgm::drm_close_threadsafe(ipc_fds[0]);
     }
 };
 
-struct RealVTFileOperations : public mgg::VTFileOperations
+struct RealVTFileOperations : public mgm::VTFileOperations
 {
     int open(char const* pathname, int flags)
     {
@@ -91,9 +91,9 @@ struct RealVTFileOperations : public mgg::VTFileOperations
 
 }
 
-std::shared_ptr<mgg::InternalNativeDisplay> mgg::Platform::internal_native_display;
-bool mgg::Platform::internal_display_clients_present;
-mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_display;
+bool mgm::Platform::internal_display_clients_present;
+mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<VirtualTerminal> const& vt)
     : udev{std::make_shared<UdevContext>()},
       listener{listener},
@@ -104,34 +104,34 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     internal_display_clients_present = false;
 }
 
-mgg::Platform::~Platform()
+mgm::Platform::~Platform()
 {
     internal_native_display.reset();
     internal_display_clients_present = false;
 }
 
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgg::Platform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
-    return std::make_shared<mgg::BufferAllocator>(gbm.device, buffer_initializer);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer);
 }
 
-std::shared_ptr<mg::Display> mgg::Platform::create_display(
+std::shared_ptr<mg::Display> mgm::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy)
 {
-    return std::make_shared<mgg::Display>(
+    return std::make_shared<mgm::Display>(
         this->shared_from_this(),
         initial_conf_policy,
         listener);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgg::Platform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
 {
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgg::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
+void mgm::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)
@@ -148,20 +148,20 @@ void mgg::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buff
     packer->pack_size(buffer->size());
 }
 
-void mgg::Platform::drm_auth_magic(drm_magic_t magic)
+void mgm::Platform::drm_auth_magic(drm_magic_t magic)
 {
     drm.auth_magic(magic);
 }
 
-std::shared_ptr<mg::InternalClient> mgg::Platform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 {
     if (!internal_native_display)
-        internal_native_display = std::make_shared<mgg::InternalNativeDisplay>(get_ipc_package());
+        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
     internal_display_clients_present = true;
-    return std::make_shared<mgg::InternalClient>(internal_native_display);
+    return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
-EGLNativeDisplayType mgg::Platform::egl_native_display() const
+EGLNativeDisplayType mgm::Platform::egl_native_display() const
 {
     return gbm.device;
 }
@@ -169,12 +169,12 @@ EGLNativeDisplayType mgg::Platform::egl_native_display() const
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
-    return std::make_shared<mgg::Platform>(report, vt);
+    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
+    return std::make_shared<mgm::Platform>(report, vt);
 }
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
-    return ((mgg::Platform::internal_display_clients_present) &&
-            (display == mgg::Platform::internal_native_display.get()));
+    return ((mgm::Platform::internal_display_clients_present) &&
+            (display == mgm::Platform::internal_native_display.get()));
 }

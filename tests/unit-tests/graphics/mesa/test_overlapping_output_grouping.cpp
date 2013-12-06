@@ -28,7 +28,7 @@
 #include <tuple>
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
 namespace
@@ -103,12 +103,12 @@ public:
                          std::vector<geom::Rectangles> const& expected_groups)
     {
         StubDisplayConfiguration conf{info};
-        mgg::OverlappingOutputGrouping grouping{conf};
+        mgm::OverlappingOutputGrouping grouping{conf};
 
         std::vector<std::vector<mg::DisplayConfigurationOutput>> grouping_results;
 
         grouping.for_each_group(
-            [&](mgg::OverlappingOutputGroup const& group)
+            [&](mgm::OverlappingOutputGroup const& group)
             {
                 std::vector<mg::DisplayConfigurationOutput> outputs;
                 group.for_each_output([&](mg::DisplayConfigurationOutput const& output)

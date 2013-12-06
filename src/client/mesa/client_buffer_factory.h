@@ -26,7 +26,7 @@ namespace mir
 {
 namespace client
 {
-namespace gbm
+namespace mesa
 {
 
 class BufferFileOps;

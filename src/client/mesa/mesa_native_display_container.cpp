@@ -25,7 +25,7 @@
 #include <mutex>
 
 namespace mcl = mir::client;
-namespace mclg = mcl::gbm;
+namespace mclg = mcl::mesa;
 
 namespace
 {

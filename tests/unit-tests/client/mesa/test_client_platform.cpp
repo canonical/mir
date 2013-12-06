@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
-namespace mclg = mir::client::gbm;
+namespace mclg = mir::client::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 

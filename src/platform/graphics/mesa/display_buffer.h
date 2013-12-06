@@ -33,7 +33,7 @@ namespace graphics
 
 class DisplayReport;
 
-namespace gbm
+namespace mesa
 {
 
 class Platform;

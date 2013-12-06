@@ -37,7 +37,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace gbm
+namespace mesa
 {
 
 typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfaceUPtr;

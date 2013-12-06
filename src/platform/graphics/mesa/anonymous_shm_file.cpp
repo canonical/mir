@@ -29,12 +29,12 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
 namespace
 {
 
-mgg::detail::FdHandle create_anonymous_file(size_t size)
+mgm::detail::FdHandle create_anonymous_file(size_t size)
 {
     char const* const tmpl = "/mir-buffer-XXXXXX";
     char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
@@ -45,7 +45,7 @@ mgg::detail::FdHandle create_anonymous_file(size_t size)
     path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
     path.push_back('\0');
 
-    mgg::detail::FdHandle fd{mkostemp(path.data(), O_CLOEXEC)};
+    mgm::detail::FdHandle fd{mkostemp(path.data(), O_CLOEXEC)};
     if (unlink(path.data()) < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
     if (ftruncate(fd, size) < 0)
@@ -60,26 +60,26 @@ mgg::detail::FdHandle create_anonymous_file(size_t size)
  * FdHandle *
  *************/
 
-mgg::detail::FdHandle::FdHandle(int fd)
+mgm::detail::FdHandle::FdHandle(int fd)
     : fd{fd}
 {
     if (fd < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create file"));
 }
 
-mgg::detail::FdHandle::FdHandle(FdHandle&& other)
+mgm::detail::FdHandle::FdHandle(FdHandle&& other)
     : fd{other.fd}
 {
     other.fd = -1;
 }
 
-mgg::detail::FdHandle::~FdHandle() noexcept
+mgm::detail::FdHandle::~FdHandle() noexcept
 {
     if (fd >= 0)
         close(fd);
 }
 
-mgg::detail::FdHandle::operator int() const
+mgm::detail::FdHandle::operator int() const
 {
     return fd;
 }
@@ -88,7 +88,7 @@ mgg::detail::FdHandle::operator int() const
  * MapHandle *
  *************/
 
-mgg::detail::MapHandle::MapHandle(int fd, size_t size)
+mgm::detail::MapHandle::MapHandle(int fd, size_t size)
     : size{size},
       mapping{mmap(nullptr, size, PROT_READ|PROT_WRITE,
                    MAP_SHARED, fd, 0)}
@@ -97,12 +97,12 @@ mgg::detail::MapHandle::MapHandle(int fd, size_t size)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to map file"));
 }
 
-mgg::detail::MapHandle::~MapHandle() noexcept
+mgm::detail::MapHandle::~MapHandle() noexcept
 {
     munmap(mapping, size);
 }
 
-mgg::detail::MapHandle::operator void*() const
+mgm::detail::MapHandle::operator void*() const
 {
     return mapping;
 
@@ -112,18 +112,18 @@ mgg::detail::MapHandle::operator void*() const
  * AnonymousShmFile *
  ********************/
 
-mgg::AnonymousShmFile::AnonymousShmFile(size_t size)
+mgm::AnonymousShmFile::AnonymousShmFile(size_t size)
     : fd_{create_anonymous_file(size)},
       mapping{fd_, size}
 {
 }
 
-void* mgg::AnonymousShmFile::base_ptr() const
+void* mgm::AnonymousShmFile::base_ptr() const
 {
     return mapping;
 }
 
-int mgg::AnonymousShmFile::fd() const
+int mgm::AnonymousShmFile::fd() const
 {
     return fd_;
 }

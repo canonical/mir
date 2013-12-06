@@ -30,7 +30,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace gbm
+namespace mesa
 {
 class NativeGBMPlatform : public mg::NativePlatform
 {

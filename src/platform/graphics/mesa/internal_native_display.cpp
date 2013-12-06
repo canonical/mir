@@ -22,16 +22,16 @@
 #include "mir_toolkit/mesa/native_display.h"
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mgm = mir::graphics::mesa;
 
-mgg::InternalNativeDisplay::InternalNativeDisplay(std::shared_ptr<mg::PlatformIPCPackage> const& platform_package)
+mgm::InternalNativeDisplay::InternalNativeDisplay(std::shared_ptr<mg::PlatformIPCPackage> const& platform_package)
     : platform_package(platform_package)
 {
     context = this;
     this->display_get_platform = &InternalNativeDisplay::native_display_get_platform;
 }
 
-int mgg::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
+int mgm::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
 {
     auto native_disp = static_cast<InternalNativeDisplay*>(display);
     package->data_items = native_disp->platform_package->ipc_data.size();

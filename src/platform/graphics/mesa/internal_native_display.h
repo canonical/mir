@@ -28,7 +28,7 @@ namespace mir
 namespace graphics
 {
 struct PlatformIPCPackage;
-namespace gbm
+namespace mesa
 {
 
 class InternalNativeDisplay : public MirMesaEGLNativeDisplay
