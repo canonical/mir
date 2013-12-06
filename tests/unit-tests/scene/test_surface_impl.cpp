@@ -25,8 +25,8 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 
-#include "mir_test_doubles/stub_surface_controller.h"
-#include "mir_test_doubles/mock_surface_controller.h"
+#include "mir_test_doubles/stub_surface_ranker.h"
+#include "mir_test_doubles/mock_surface_ranker.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -138,7 +138,7 @@ struct SurfaceImpl : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
-    mtd::StubSurfaceController surface_controller;
+    mtd::StubSurfaceRanker surface_ranker;
 
     SurfaceImpl() :
         buffer_stream(std::make_shared<StubBufferStream>()),
@@ -404,12 +404,12 @@ TEST_F(SurfaceImpl, raise)
 {
     using namespace ::testing;
 
-    mtd::MockSurfaceController surface_controller;
+    mtd::MockSurfaceRanker surface_ranker;
     ms::SurfaceImpl test(
         mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
         msh::a_surface(), stub_id, stub_sender);
 
-    EXPECT_CALL(surface_controller, raise(_)).Times(1);
+    EXPECT_CALL(surface_ranker, raise(_)).Times(1);
 
-    test.raise(mt::fake_shared(surface_controller));
+    test.raise(mt::fake_shared(surface_ranker));
 }

@@ -20,7 +20,7 @@
 #include "basic_surface.h"
 #include "surface_builder.h"
 #include "mir/shell/surface_configurator.h"
-#include "mir/shell/surface_controller.h"
+#include "surface_ranker.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
@@ -238,7 +238,7 @@ void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& regio
     surface->set_input_region(region);
 }
 
-void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& controller)
+void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller)
 {
     controller->raise(surface);
 }
