@@ -27,7 +27,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/platform/graphics/gbm/platform.h"
+#include "src/platform/graphics/mesa/platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "src/platform/graphics/android/android_platform.h"
@@ -79,7 +79,7 @@ public:
             std::make_shared<mir::options::ProgramOption>(),
             report);
 #else
-        auto platform = std::make_shared<mg::gbm::Platform>(report,
+        auto platform = std::make_shared<mg::mesa::Platform>(report,
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
         return platform->create_display(conf_policy);

@@ -32,7 +32,7 @@ if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(android/)
 endif()
 
-if (MIR_PLATFORM STREQUAL "gbm")
-  add_subdirectory(gbm/)
+if (MIR_PLATFORM STREQUAL "mesa")
+  add_subdirectory(mesa/)
 endif()
 

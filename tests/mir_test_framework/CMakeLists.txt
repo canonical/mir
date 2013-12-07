@@ -23,7 +23,7 @@ list(APPEND TEST_FRAMEWORK_SRCS
   socket_detect_server.cpp
 )
 
-if (MIR_PLATFORM STREQUAL "gbm")
+if (MIR_PLATFORM STREQUAL "mesa")
   include_directories(${UMOCKDEV_INCLUDE_DIRS})
   list(APPEND TEST_FRAMEWORK_SRCS
     udev_environment.cpp
@@ -53,7 +53,7 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "gbm")
+if (MIR_PLATFORM STREQUAL "mesa")
   target_link_libraries(
     mir-test-framework
 
