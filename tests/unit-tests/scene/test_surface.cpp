@@ -289,6 +289,24 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     EXPECT_EQ(new_size, surf.size());
 }
 
+TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
+{
+    using namespace testing;
+    geom::Size const new_size{123, 456};
+
+    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
+        .Times(1)
+        .WillOnce(Throw(std::runtime_error("bad resize")));
+
+    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+
+    EXPECT_THROW({
+        surf.resize(new_size);
+    }, std::runtime_error);
+
+    EXPECT_EQ(size, surf.size());
+}
+
 TEST_F(SurfaceCreation, impossible_resize_throws)
 {
     using namespace testing;
