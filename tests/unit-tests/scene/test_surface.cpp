@@ -150,6 +150,7 @@ TEST(SurfaceCreationParametersTest, inequality)
         }
     }
 }
+
 namespace
 {
 
@@ -354,7 +355,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     surf.set_alpha(alpha);
     //a bit unintuitive. hopefully goes away when BasicSurface merges with CompositingCriteria
     auto compositing_criteria = surf.compositing_criteria();
-    EXPECT_THAT(alpha, FloatEq(compositing_criteria->alpha()));
+    EXPECT_FLOAT_EQ(alpha, compositing_criteria->alpha());
 }
 
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
