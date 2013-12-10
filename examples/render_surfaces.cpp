@@ -419,9 +419,9 @@ public:
              * (TODO There must be a better way!)
              */
             {
-                std::shared_ptr<mg::Buffer> tmp;
-                s->swap_buffers(tmp);
-                s->swap_buffers(tmp);
+                mg::Buffer* buffer{nullptr};
+                s->swap_buffers(buffer);
+                s->swap_buffers(buffer);
             }
 
             /*

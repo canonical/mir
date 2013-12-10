@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_CONTAINER_H_
-#define MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_CONTAINER_H_
+#ifndef MIR_CLIENT_EGL_NATIVE_DISPLAY_CONTAINER_H_
+#define MIR_CLIENT_EGL_NATIVE_DISPLAY_CONTAINER_H_
 
 #include "mir_toolkit/client_types.h"
 
@@ -47,4 +47,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_CONTAINER_H_
+#endif // MIR_CLIENT_EGL_NATIVE_DISPLAY_CONTAINER_H_

@@ -176,7 +176,7 @@ struct SurfaceCreation : public ::testing::Test
             surface_name, rect, change_notification, false);
 
         ON_CALL(*mock_buffer_stream, swap_client_buffers(_))
-            .WillByDefault(SetArg<0>(std::make_shared<mtd::StubBuffer>()));
+            .WillByDefault(SetArg<0>(&stub_buffer));
     }
 
     std::shared_ptr<ms::SurfaceData> stub_data;
@@ -189,6 +189,7 @@ struct SurfaceCreation : public ::testing::Test
     std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
     std::function<void()> change_notification;
     int notification_count;
+    mtd::StubBuffer stub_buffer;
 };
 
 }
@@ -230,33 +231,33 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
 {
     using namespace testing;
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-    auto graphics_resource = std::make_shared<mtd::StubBuffer>();
+    mtd::StubBuffer graphics_resource;
 
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
         .Times(1)
-        .WillOnce(SetArg<0>(graphics_resource));
+        .WillOnce(SetArg<0>(&graphics_resource));
 
-    std::shared_ptr<mg::Buffer> result;
+    mg::Buffer* result{nullptr};
     surf.swap_buffers(result);
 
-    EXPECT_EQ(graphics_resource, result);
+    EXPECT_EQ(&graphics_resource, result);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 {
     using namespace testing;
 
-    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+    mtd::StubBuffer stub_buffer;
 
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
         .Times(1)
-        .WillOnce(SetArg<0>(stub_buffer));
+        .WillOnce(SetArg<0>(&stub_buffer));
 
-    std::shared_ptr<mg::Buffer> result;
+    mg::Buffer* result{nullptr};
     surf.swap_buffers(result);
 
-    EXPECT_EQ(stub_buffer, result);
+    EXPECT_EQ(&stub_buffer, result);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -381,15 +382,13 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
 
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
-    std::shared_ptr<mg::Buffer> no_buffer = nullptr;
-    std::shared_ptr<mg::Buffer> stub_buffer = std::make_shared<mtd::StubBuffer>();
-
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    mg::Buffer* buffer{nullptr};
 
-    surf.swap_buffers(no_buffer);
-    surf.swap_buffers(stub_buffer);
-    surf.swap_buffers(stub_buffer);
-    surf.swap_buffers(stub_buffer);
+    surf.swap_buffers(buffer);
+    surf.swap_buffers(buffer);
+    surf.swap_buffers(buffer);
+    surf.swap_buffers(buffer);
 
     EXPECT_EQ(3, notification_count); 
 }

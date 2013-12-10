@@ -183,7 +183,7 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
 
     // TODO for proper mirrored mode support we will need to detect overlapping outputs and
     // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
-    // TODO used by the GBM backend for a similar purpose could help with this.
+    // TODO used by the Mesa backend for a similar purpose could help with this.
     configuration.for_each_output(
         [&](mg::DisplayConfigurationOutput const& output)
         {

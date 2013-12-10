@@ -41,8 +41,7 @@ class BufferStream
 public:
     virtual ~BufferStream() = default;
 
-    virtual void swap_client_buffers(std::shared_ptr<graphics::Buffer>& buffer) = 0;
-    virtual void release_client_buffer(std::shared_ptr<graphics::Buffer>& buffer) = 0;
+    virtual void swap_client_buffers(graphics::Buffer*& buffer) = 0;
     virtual std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(unsigned long frameno) = 0;
     virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
