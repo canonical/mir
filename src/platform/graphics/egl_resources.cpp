@@ -20,6 +20,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cstring>
 
 namespace mg = mir::graphics;
 
@@ -76,6 +77,22 @@ mg::EGLSurfaceStore::EGLSurfaceStore(EGLSurfaceStore&& other)
 {
     other.egl_display_ = EGL_NO_DISPLAY;
     other.egl_surface_ = EGL_NO_SURFACE;
+}
+
+mg::EGLSurfaceStore mg::EGLSurfaceStore::create_dummy_surface(EGLDisplay egl_display, EGLConfig egl_config)
+{
+    EGLint const dummy_pbuffer_attribs[] =
+    {
+        EGL_WIDTH, 1,
+        EGL_HEIGHT, 1,
+        EGL_NONE
+    };
+
+    /* If we have surfaceless support then we don't need a real surface */
+    if (strstr(eglQueryString(egl_display, EGL_EXTENSIONS), "EGL_KHR_surfaceless_context") != nullptr)
+        return EGLSurfaceStore(egl_display, EGL_NO_SURFACE, AllowNoSurface);
+
+    return EGLSurfaceStore(egl_display, eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs));
 }
 
 mg::EGLSurfaceStore::~EGLSurfaceStore() noexcept

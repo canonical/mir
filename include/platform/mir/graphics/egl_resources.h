@@ -53,6 +53,8 @@ public:
     EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface);
     EGLSurfaceStore(EGLSurfaceStore&&);
 
+    static EGLSurfaceStore create_dummy_surface(EGLDisplay egl_display, EGLConfig egl_config);
+
     ~EGLSurfaceStore() noexcept;
 
     operator EGLSurface() const;

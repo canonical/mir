@@ -27,7 +27,6 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -276,12 +275,6 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 
 namespace
 {
-EGLint const dummy_pbuffer_attribs[] =
-{
-    EGL_WIDTH, 1,
-    EGL_HEIGHT, 1,
-    EGL_NONE
-};
 }
 
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
@@ -291,11 +284,9 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
     public:
         NestedGLContext(detail::EGLDisplayHandle const& egl_display) :
             egl_display{egl_display},
-            khr_surfaceless_context{strstr(eglQueryString(egl_display, EGL_EXTENSIONS), "EGL_KHR_surfaceless_context") != nullptr},
             egl_config{egl_display.choose_config(detail::nested_egl_config_attribs)},
             egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)},
-            egl_surface{egl_display, khr_surfaceless_context ? EGL_NO_SURFACE : eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs),
-                        khr_surfaceless_context ? EGLSurfaceStore::AllowNoSurface : EGLSurfaceStore::DisallowNoSurface}
+            egl_surface{EGLSurfaceStore::create_dummy_surface(egl_display, egl_config)}
         {
         }
 
@@ -311,8 +302,8 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
             {
                 BOOST_THROW_EXCEPTION(
                     std::runtime_error(std::string("could not activate nested context with eglMakeCurrent") +
-                                       (khr_surfaceless_context ? " (using EGL_KHR_surfaceless context)\n" :
-                                                                  " (using dummy pbuffer surface)\n")));
+                                       ((egl_surface == EGL_NO_SURFACE) ? " (using EGL_KHR_surfaceless_context)\n"
+                                                                        : " (using dummy pbuffer surface)\n")));
             }
         }
 
@@ -323,7 +314,6 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 
     private:
         EGLDisplay const egl_display;
-        bool const khr_surfaceless_context;
         EGLConfig const egl_config;
         EGLContextStore const egl_context;
         EGLSurfaceStore const egl_surface;
