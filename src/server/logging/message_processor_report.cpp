@@ -64,7 +64,7 @@ ml::MessageProcessorReport::~MessageProcessorReport() noexcept(true)
             }
         }
 
-        log->log<Logger::informational>(out.str(), component);
+        log->log(Logger::informational, out.str(), component);
     }
 }
 
@@ -73,7 +73,7 @@ void ml::MessageProcessorReport::received_invocation(void const* mediator, int i
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", method=" << method << "()";
-    log->log<Logger::debug>(out.str(), component);
+    log->log(Logger::debug, out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto& invocations = mediators[mediator].current_invocations;
@@ -118,14 +118,14 @@ void ml::MessageProcessorReport::completed_invocation(void const* mediator, int 
         }
     }
 
-    log->log<Logger::informational>(out.str(), component);
+    log->log(Logger::informational, out.str(), component);
 }
 
 void ml::MessageProcessorReport::unknown_method(void const* mediator, int id, std::string const& method)
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", id=" << id << ", UNKNOWN method=\"" << method << "\"";
-    log->log<Logger::warning>(out.str(), component);
+    log->log(Logger::warning, out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto const pm = mediators.find(mediator);
@@ -154,7 +154,7 @@ void ml::MessageProcessorReport::exception_handled(void const* mediator, std::ex
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", ERROR: " << boost::diagnostic_information(error);
-    log->log<Logger::informational>(out.str(), component);
+    log->log(Logger::informational, out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto const pm = mediators.find(mediator);
@@ -166,5 +166,5 @@ void ml::MessageProcessorReport::sent_event(void const* mediator, MirSurfaceEven
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", sent event, surface id=" << event.id;
-    log->log<Logger::debug>(out.str(), component);
+    log->log(Logger::debug, out.str(), component);
 }

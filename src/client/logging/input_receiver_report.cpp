@@ -121,5 +121,5 @@ void mcll::InputReceiverReport::received_event(
 
     format_event(ss, event);
 
-    logger->log<ml::Logger::debug>(ss.str(), component);
+    logger->log(ml::Logger::debug, ss.str(), component);
 }

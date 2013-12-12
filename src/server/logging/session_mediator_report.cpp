@@ -35,42 +35,42 @@ ml::SessionMediatorReport::SessionMediatorReport(std::shared_ptr<Logger> const& 
 
 void ml::SessionMediatorReport::session_connect_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_connect(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_connect(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_create_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_create_surface(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_create_surface(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_next_buffer_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_next_buffer_called(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_next_buffer_called(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_release_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_release_surface_called(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_release_surface_called(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_disconnect_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_disconnect_called(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_disconnect_called(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_drm_auth_magic_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_drm_auth_magic_called(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_drm_auth_magic_called(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_configure_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_configure_surface_called(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_configure_surface_called(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_configure_display_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("session_configure_display_called(\"" + app_name + "\")", component);
+    log->log(Logger::informational, "session_configure_display_called(\"" + app_name + "\")", component);
 }
 
 void ml::SessionMediatorReport::session_error(
@@ -78,5 +78,5 @@ void ml::SessionMediatorReport::session_error(
         char const* method,
         std::string const& what)
 {
-    log->log<Logger::error>(std::string(method) + " - session_error(\"" + app_name + "\"):\n" + what, component);
+    log->log(Logger::error, std::string(method) + " - session_error(\"" + app_name + "\"):\n" + what, component);
 }

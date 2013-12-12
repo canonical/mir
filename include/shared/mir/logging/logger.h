@@ -39,28 +39,16 @@ public:
         debug = 4
     };
 
-    template<Severity severity>
-    void log(const std::string& message)
-    {
-        static const std::string unknown_component("UnknownComponent");
-        log(severity, message, unknown_component);
-    }
 
-    template<Severity severity>
-    void log(const std::string& message, const std::string& component)
-    {
-        log(severity, message, component);
-    }
+    virtual void log(Severity severity,
+                     const std::string& message,
+                     const std::string& component = "UnknownComponent") = 0;
 
 protected:
     Logger() {}
     virtual ~Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
-
-    virtual void log(Severity severity,
-                     const std::string& message,
-                     const std::string& component) = 0;
 };
 }
 }
