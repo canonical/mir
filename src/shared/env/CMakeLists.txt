@@ -12,8 +12,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+# Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
 
-add_library(mirsharedlogging STATIC
-  dumb_console_logger.cpp
+add_library(mirsharedenv STATIC
+  default_configuration.cpp
 )
