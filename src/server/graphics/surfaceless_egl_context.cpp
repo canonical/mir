@@ -107,6 +107,25 @@ mg::SurfacelessEGLContext::SurfacelessEGLContext(
 {
 }
 
+mg::SurfacelessEGLContext::SurfacelessEGLContext(
+        EGLDisplay egl_display,
+        EGLConfig egl_config,
+        EGLContext shared_context)
+    : egl_display{egl_display},
+      surfaceless{supports_surfaceless_context(egl_display)},
+      egl_config{egl_config},
+      egl_surface{egl_display,
+                  surfaceless ? EGL_NO_SURFACE : create_surface(egl_display, egl_config),
+                  surfaceless ? EGLSurfaceStore::AllowNoSurface :
+                                EGLSurfaceStore::DisallowNoSurface},
+      egl_context{egl_display,
+                  eglCreateContext(egl_display, egl_config,
+                                   shared_context,
+                                   default_egl_context_attr)}
+{
+}
+
+
 mg::SurfacelessEGLContext::SurfacelessEGLContext(SurfacelessEGLContext&& move)
     : egl_display(move.egl_display),
       surfaceless(move.surfaceless),

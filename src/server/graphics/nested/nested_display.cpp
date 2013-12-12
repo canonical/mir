@@ -23,6 +23,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_context.h"
+#include "../surfaceless_egl_context.h"
 #include "host_connection.h"
 
 #include <boost/throw_exception.hpp>
@@ -279,45 +280,7 @@ namespace
 
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
-    class NestedGLContext : public mg::GLContext
-    {
-    public:
-        NestedGLContext(detail::EGLDisplayHandle const& egl_display) :
-            egl_display{egl_display},
-            egl_config{egl_display.choose_config(detail::nested_egl_config_attribs)},
-            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)},
-            egl_surface{EGLSurfaceStore::create_dummy_surface(egl_display, egl_config)}
-        {
-        }
-
-        ~NestedGLContext() noexcept
-        {
-            if (eglGetCurrentContext() == egl_context)
-                release_current();
-        }
-
-        void make_current() const override
-        {
-            if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error(std::string("could not activate nested context with eglMakeCurrent") +
-                                       ((egl_surface == EGL_NO_SURFACE) ? " (using EGL_KHR_surfaceless_context)\n"
-                                                                        : " (using dummy pbuffer surface)\n")));
-            }
-        }
-
-        void release_current() const override
-        {
-            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        }
-
-    private:
-        EGLDisplay const egl_display;
-        EGLConfig const egl_config;
-        EGLContextStore const egl_context;
-        EGLSurfaceStore const egl_surface;
-    };
-
-    return std::unique_ptr<mg::GLContext>{new NestedGLContext(egl_display)};
+    return std::unique_ptr<mg::GLContext>{new SurfacelessEGLContext(egl_display,
+                                                                    egl_display.choose_config(detail::nested_egl_config_attribs),
+                                                                    EGL_NO_CONTEXT)};
 }
