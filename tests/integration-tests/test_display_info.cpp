@@ -163,6 +163,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
         void exec()
         {
             MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
 
             unsigned int const format_storage_size = 4;
             MirPixelFormat formats[format_storage_size];
@@ -170,7 +171,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
             mir_connection_get_available_surface_formats(connection,
                 formats, format_storage_size, &returned_format_size);
 
-            ASSERT_EQ(returned_format_size, StubGraphicBufferAllocator::pixel_formats.size());
+            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(), returned_format_size);
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
