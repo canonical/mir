@@ -16,10 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_OFFSCREEN_SURFACELESS_EGL_CONTEXT_H_
-#define MIR_GRAPHICS_OFFSCREEN_SURFACELESS_EGL_CONTEXT_H_
+#ifndef MIR_GRAPHICS_SURFACELESS_EGL_CONTEXT_H_
+#define MIR_GRAPHICS_SURFACELESS_EGL_CONTEXT_H_
 
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/gl_context.h"
 
 #include <EGL/egl.h>
 
@@ -27,17 +28,17 @@ namespace mir
 {
 namespace graphics
 {
-namespace offscreen
-{
 
-class SurfacelessEGLContext
+class SurfacelessEGLContext : public GLContext
 {
 public:
     SurfacelessEGLContext(EGLDisplay egl_display, EGLContext shared_context);
-    SurfacelessEGLContext(SurfacelessEGLContext&&) = default;
+    /* We have to explicitly define this, as GLContext has a deleted copy construtor */
+    SurfacelessEGLContext(SurfacelessEGLContext&& move);
+    virtual ~SurfacelessEGLContext() noexcept;
 
-    void make_current() const;
-    void release_current() const;
+    void make_current() const override;
+    void release_current() const override;
 
     operator EGLContext() const;
 
@@ -54,6 +55,5 @@ private:
 
 }
 }
-}
 
-#endif /* MIR_GRAPHICS_OFFSCREEN_SURFACELESS_EGL_SURFACE_H_ */
+#endif /* MIR_GRAPHICS_SURFACELESS_EGL_SURFACE_H_ */

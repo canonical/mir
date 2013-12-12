@@ -16,32 +16,36 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_
-#define MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_
+#include "gl_extensions_base.h"
 
-namespace mir
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
+#include <cstring>
+
+namespace mg = mir::graphics;
+
+mg::GLExtensionsBase::GLExtensionsBase(char const* extensions)
+    : extensions{extensions}
 {
-namespace graphics
-{
-namespace offscreen
-{
-
-class GLExtensionsBase
-{
-public:
-    GLExtensionsBase(char const* extensions);
-
-    bool support(char const* ext) const;
-
-private:
-    GLExtensionsBase(GLExtensionsBase const&) = delete;
-    GLExtensionsBase& operator=(GLExtensionsBase const&) = delete;
-
-    char const* const extensions;
-};
-
-}
-}
+    if (!extensions)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Couldn't get list of GL extensions"));
+    }
 }
 
-#endif /* MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_ */
+bool mg::GLExtensionsBase::support(char const* ext) const
+{
+    char const* ext_ptr = extensions;
+    size_t const len = strlen(ext);
+
+    while ((ext_ptr = strstr(ext_ptr, ext)) != nullptr)
+    {
+        if (ext_ptr[len] == ' ' || ext_ptr[len] == '\0')
+            break;
+        ext_ptr += len;
+    }
+
+    return ext_ptr != nullptr;
+}

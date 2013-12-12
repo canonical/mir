@@ -16,27 +16,29 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_
-#define MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_
-
-#include "mir/graphics/gl_context.h"
+#ifndef MIR_GRAPHICS_GL_EXTENSIONS_BASE_H_
+#define MIR_GRAPHICS_GL_EXTENSIONS_BASE_H_
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace graphics
 {
 
-class NullGLContext : public graphics::GLContext
+class GLExtensionsBase
 {
 public:
-    void make_current() const {}
-    void release_current() const {}
+    GLExtensionsBase(char const* extensions);
+
+    bool support(char const* ext) const;
+
+private:
+    GLExtensionsBase(GLExtensionsBase const&) = delete;
+    GLExtensionsBase& operator=(GLExtensionsBase const&) = delete;
+
+    char const* const extensions;
 };
 
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_ */
+#endif /* MIR_GRAPHICS_GL_EXTENSIONS_BASE_H_ */

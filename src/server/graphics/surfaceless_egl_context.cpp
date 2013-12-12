@@ -22,16 +22,16 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mgo = mir::graphics::offscreen;
+namespace mg = mir::graphics;
 
 namespace
 {
 
-class EGLExtensions : public mgo::GLExtensionsBase
+class EGLExtensions : public mg::GLExtensionsBase
 {
 public:
     EGLExtensions(EGLDisplay egl_display) :
-        mgo::GLExtensionsBase{
+        mg::GLExtensionsBase{
             reinterpret_cast<char const*>(eglQueryString(egl_display, EGL_EXTENSIONS))}
     {
     }
@@ -90,7 +90,7 @@ EGLint const default_egl_context_attr[] =
 
 }
 
-mgo::SurfacelessEGLContext::SurfacelessEGLContext(
+mg::SurfacelessEGLContext::SurfacelessEGLContext(
     EGLDisplay egl_display,
     EGLContext shared_context)
     : egl_display{egl_display},
@@ -107,7 +107,23 @@ mgo::SurfacelessEGLContext::SurfacelessEGLContext(
 {
 }
 
-void mgo::SurfacelessEGLContext::make_current() const
+mg::SurfacelessEGLContext::SurfacelessEGLContext(SurfacelessEGLContext&& move)
+    : egl_display(move.egl_display),
+      surfaceless(move.surfaceless),
+      egl_config(move.egl_config),
+      egl_surface{std::move(move.egl_surface)},
+      egl_context{std::move(move.egl_context)}
+{
+    move.egl_display = EGL_NO_DISPLAY;
+}
+
+mg::SurfacelessEGLContext::~SurfacelessEGLContext() noexcept
+{
+    release_current();
+}
+
+
+void mg::SurfacelessEGLContext::make_current() const
 {
     if (eglGetCurrentContext() == egl_context)
         return;
@@ -120,13 +136,13 @@ void mgo::SurfacelessEGLContext::make_current() const
     }
 }
 
-void mgo::SurfacelessEGLContext::release_current() const
+void mg::SurfacelessEGLContext::release_current() const
 {
     if (eglGetCurrentContext() == egl_context)
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-mgo::SurfacelessEGLContext::operator EGLContext() const
+mg::SurfacelessEGLContext::operator EGLContext() const
 {
     return egl_context;
 }

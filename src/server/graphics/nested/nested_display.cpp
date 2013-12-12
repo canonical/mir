@@ -296,7 +296,7 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
                 release_current();
         }
 
-        void make_current() override
+        void make_current() const override
         {
             if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
             {
@@ -307,7 +307,7 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
             }
         }
 
-        void release_current() override
+        void release_current() const override
         {
             eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         }
