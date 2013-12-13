@@ -55,7 +55,12 @@ std::vector<EGLint> ensure_pbuffer_set(EGLint const* attribs)
         attribs_with_surface_type.push_back(attribs[i]);
         if (attribs[i] == EGL_SURFACE_TYPE) {
             has_preferred_surface = true;
-            attribs_with_surface_type.push_back(attribs[i+1] | EGL_PBUFFER_BIT);
+            if (attribs[i+1] == EGL_DONT_CARE) {
+                /* Need to treat EGL_DONT_CARE specially, as it is defined as all-bits-set */
+                attribs_with_surface_type.push_back(EGL_PBUFFER_BIT);
+            } else {
+                attribs_with_surface_type.push_back(attribs[i+1] | EGL_PBUFFER_BIT);
+            }
         } else {
             attribs_with_surface_type.push_back(attribs[i+1]);
         }
