@@ -70,11 +70,26 @@ MATCHER(ConfigAttribContainsPBufferFlag, "")
         if (surface_type == EGL_DONT_CARE) {
             pretty_surface.push_back("EGL_DONT_CARE");
         } else {
-            if (surface_type & EGL_WINDOW_BIT) {
-                pretty_surface.push_back("EGL_WINDOW_BIT");
+            if (surface_type & EGL_MULTISAMPLE_RESOLVE_BOX_BIT) {
+                pretty_surface.push_back("EGL_MULTISAMPLE_RESOLVE_BOX_BIT");
             }
             if (surface_type & EGL_PBUFFER_BIT) {
                 pretty_surface.push_back("EGL_PBUFFER_BIT");
+            }
+            if (surface_type & EGL_PIXMAP_BIT) {
+                pretty_surface.push_back("EGL_PIXMAP_BIT");
+            }
+            if (surface_type & EGL_SWAP_BEHAVIOR_PRESERVED_BIT) {
+                pretty_surface.push_back("EGL_SWAP_BEHAVIOR_PRESERVED_BIT");
+            }
+            if (surface_type & EGL_VG_ALPHA_FORMAT_PRE_BIT) {
+                pretty_surface.push_back("EGL_VG_ALPHA_FORMAT_PRE_BIT");
+            }
+            if (surface_type & EGL_VG_COLORSPACE_LINEAR_BIT) {
+                pretty_surface.push_back("EGL_VG_COLORSPACE_LINEAR_BIT");
+            }
+            if (surface_type & EGL_WINDOW_BIT) {
+                pretty_surface.push_back("EGL_WINDOW_BIT");
             }
         }
         std::string pretty_result = pretty_surface.back();
