@@ -33,62 +33,50 @@
 
 namespace
 {
-// TODO we're only using part of TestingServerConfiguration - so that ought to be factored out
-struct TestMessagePassingServerConfiguration : mir_test_framework::TestingServerConfiguration
+// Fixture for running Mir server in test process
+struct InProcessServer : testing::Test
 {
-private:
-    using mir_test_framework::TestingServerConfiguration::exec;
-    using mir_test_framework::TestingServerConfiguration::on_exit;
-};
-
-struct MessagePassing : testing::Test
-{
-    MessagePassing();
-    ~MessagePassing();
+    ~InProcessServer();
 
     void SetUp();
     void TearDown();
 
-    TestMessagePassingServerConfiguration server_config;
+    // Connection string for client to connect to the server
     std::string new_connection();
 
 private:
     mir::DisplayServer* start_mir_server();
+    virtual mir::DefaultServerConfiguration& server_config() = 0;
 
     std::thread server_thread;
-    mir::DisplayServer* const display_server;
+    mir::DisplayServer* display_server = 0;
 };
 
-MessagePassing::MessagePassing() :
-    server_config(),
-    display_server{start_mir_server()}
+void InProcessServer::SetUp()
 {
-}
-
-void MessagePassing::SetUp()
-{
+    display_server = start_mir_server();
     ASSERT_TRUE(display_server);
 }
 
-std::string MessagePassing::new_connection()
+std::string InProcessServer::new_connection()
 {
     char endpoint[128] = {0};
-    sprintf(endpoint, "fd://%d", server_config.the_connector()->client_socket_fd());
+    sprintf(endpoint, "fd://%d", server_config().the_connector()->client_socket_fd());
 
     return endpoint;
 }
 
-void MessagePassing::TearDown()
+void InProcessServer::TearDown()
 {
     display_server->stop();
 }
 
-MessagePassing::~MessagePassing()
+InProcessServer::~InProcessServer()
 {
     if (server_thread.joinable()) server_thread.join();
 }
 
-mir::DisplayServer* MessagePassing::start_mir_server()
+mir::DisplayServer* InProcessServer::start_mir_server()
 {
     std::mutex mutex;
     std::condition_variable cv;
@@ -98,7 +86,7 @@ mir::DisplayServer* MessagePassing::start_mir_server()
     {
         try
         {
-            mir::run_mir(server_config, [&](mir::DisplayServer& ds)
+            mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
             {
                 std::unique_lock<std::mutex> lock(mutex);
                 display_server = &ds;
@@ -121,6 +109,21 @@ mir::DisplayServer* MessagePassing::start_mir_server()
 
     return display_server;
 }
+
+// TODO we're only using part of TestingServerConfiguration - so that ought to be factored out
+struct TestMessagePassingServerConfiguration : mir_test_framework::TestingServerConfiguration
+{
+private:
+    using mir_test_framework::TestingServerConfiguration::exec;
+    using mir_test_framework::TestingServerConfiguration::on_exit;
+};
+
+struct MessagePassing : InProcessServer
+{
+    virtual mir::DefaultServerConfiguration& server_config() { return server_config_; }
+
+    TestMessagePassingServerConfiguration server_config_;
+};
 }
 
 TEST_F(MessagePassing, create_and_realize_surface)
