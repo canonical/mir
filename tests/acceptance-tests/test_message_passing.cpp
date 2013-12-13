@@ -18,79 +18,11 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/frontend/connector.h"
-#include "mir/display_server.h"
-#include "mir/run_mir.h"
-
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <condition_variable>
-#include <mutex>
-#include <thread>
-
-void mir_test_framework::InProcessServer::SetUp()
-{
-    display_server = start_mir_server();
-    ASSERT_TRUE(display_server);
-}
-
-std::string mir_test_framework::InProcessServer::new_connection()
-{
-    char endpoint[128] = {0};
-    sprintf(endpoint, "fd://%d", server_config().the_connector()->client_socket_fd());
-
-    return endpoint;
-}
-
-void mir_test_framework::InProcessServer::TearDown()
-{
-    ASSERT_TRUE(display_server)
-        << "Did you override SetUp() and forget to call mir_test_framework::InProcessServer::SetUp()?";
-    display_server->stop();
-}
-
-mir_test_framework::InProcessServer::~InProcessServer()
-{
-    if (server_thread.joinable()) server_thread.join();
-}
-
-mir::DisplayServer* mir_test_framework::InProcessServer::start_mir_server()
-{
-    std::mutex mutex;
-    std::condition_variable cv;
-    mir::DisplayServer* display_server{nullptr};
-
-    server_thread = std::thread([&]
-    {
-        try
-        {
-            mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
-            {
-                std::unique_lock<std::mutex> lock(mutex);
-                display_server = &ds;
-                cv.notify_one();
-            });
-        }
-        catch (std::exception const& e)
-        {
-            FAIL() << e.what();
-        }
-    });
-
-    using namespace std::chrono;
-    auto const time_limit = system_clock::now() + seconds(2);
-
-    std::unique_lock<std::mutex> lock(mutex);
-
-    while (!display_server && time_limit > system_clock::now())
-        cv.wait_until(lock, time_limit);
-
-    return display_server;
-}
 
 namespace
 {
