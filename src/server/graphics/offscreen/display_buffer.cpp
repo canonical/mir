@@ -17,7 +17,7 @@
  */
 
 #include "display_buffer.h"
-#include "../gl_extensions_base.h"
+#include "mir/graphics/gl_extensions_base.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>

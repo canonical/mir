@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "surfaceless_egl_context.h"
-#include "gl_extensions_base.h"
+#include "mir/graphics/surfaceless_egl_context.h"
+#include "mir/graphics/gl_extensions_base.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

@@ -23,7 +23,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_context.h"
-#include "../surfaceless_egl_context.h"
+#include "mir/graphics/surfaceless_egl_context.h"
 #include "host_connection.h"
 
 #include <boost/throw_exception.hpp>

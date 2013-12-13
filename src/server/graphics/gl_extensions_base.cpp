@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gl_extensions_base.h"
+#include "mir/graphics/gl_extensions_base.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
