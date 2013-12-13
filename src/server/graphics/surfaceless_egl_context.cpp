@@ -51,7 +51,7 @@ std::vector<EGLint> ensure_pbuffer_set(EGLint const* attribs)
     std::vector<EGLint> attribs_with_surface_type;
     int i = 0;
 
-    while (attribs[i]) {
+    while (attribs[i] != EGL_NONE) {
         attribs_with_surface_type.push_back(attribs[i]);
         if (attribs[i] == EGL_SURFACE_TYPE) {
             has_preferred_surface = true;
@@ -72,7 +72,7 @@ std::vector<EGLint> ensure_pbuffer_set(EGLint const* attribs)
         attribs_with_surface_type.push_back(EGL_PBUFFER_BIT);
     }
 
-    attribs_with_surface_type.push_back(0);
+    attribs_with_surface_type.push_back(EGL_NONE);
 
     return attribs_with_surface_type;
 }

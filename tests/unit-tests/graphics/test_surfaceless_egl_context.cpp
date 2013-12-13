@@ -59,7 +59,7 @@ MATCHER(ConfigAttribContainsPBufferFlag, "")
     bool found_surface_type = false;
     std::list<std::string> pretty_surface;
 
-    for (int i = 0; arg[i]; ++i) {
+    for (int i = 0; arg[i] != EGL_NONE; ++i) {
         if (arg[i] == EGL_SURFACE_TYPE) {
             surface_type = arg[i+1];
             found_surface_type = true;
@@ -128,7 +128,7 @@ TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsAlre
 
     const EGLint attribs_with_pbuffer[] = {
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT | EGL_WINDOW_BIT,
-        0
+        EGL_NONE
     };
 
     ON_CALL(mock_egl, eglQueryString(_,_))
@@ -147,7 +147,7 @@ TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsDoes
     const EGLint attribs_without_surface_type[] = {
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
-        0
+        EGL_NONE
     };
 
     ON_CALL(mock_egl, eglQueryString(_,_))
@@ -167,7 +167,7 @@ TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsCont
         EGL_SURFACE_TYPE, EGL_DONT_CARE,
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
-        0
+        EGL_NONE
     };
 
     ON_CALL(mock_egl, eglQueryString(_,_))
@@ -199,7 +199,7 @@ TEST_F(SurfacelessEGLContextTest, DoesNotRequestPBufferWhenAttribContainsNoSurfa
     const EGLint attribs_without_surface_type[] = {
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
-        0
+        EGL_NONE
     };
 
     ON_CALL(mock_egl, eglQueryString(_,_))
@@ -219,7 +219,7 @@ TEST_F(SurfacelessEGLContextTest, DoesNotRequestPBufferWhenAttribContainsNonPBuf
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
-        0
+        EGL_NONE
     };
 
     ON_CALL(mock_egl, eglQueryString(_,_))
