@@ -55,7 +55,7 @@ namespace {
 
 MATCHER(ConfigAttribContainsPBufferFlag, "")
 {
-    EGLint surface_type;
+    EGLint surface_type = 0;
     bool found_surface_type = false;
     std::list<std::string> pretty_surface;
 
