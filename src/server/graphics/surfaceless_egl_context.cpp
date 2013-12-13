@@ -21,6 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <vector>
 
 namespace mg = mir::graphics;
 
@@ -44,6 +45,53 @@ bool supports_surfaceless_context(EGLDisplay egl_display)
     return extensions.support("EGL_KHR_surfaceless_context");
 }
 
+std::vector<EGLint> ensure_pbuffer_set(EGLint const* attribs)
+{
+    bool has_preferred_surface = false;
+    std::vector<EGLint> attribs_with_surface_type;
+    int i = 0;
+
+    while (attribs[i]) {
+        attribs_with_surface_type.push_back(attribs[i]);
+        if (attribs[i] == EGL_SURFACE_TYPE) {
+            has_preferred_surface = true;
+            attribs_with_surface_type.push_back(attribs[i+1] | EGL_PBUFFER_BIT);
+        } else {
+            attribs_with_surface_type.push_back(attribs[i+1]);
+        }
+        i += 2;
+    }
+
+    if (!has_preferred_surface) {
+        attribs_with_surface_type.push_back(EGL_SURFACE_TYPE);
+        attribs_with_surface_type.push_back(EGL_PBUFFER_BIT);
+    }
+
+    attribs_with_surface_type.push_back(0);
+
+    return attribs_with_surface_type;
+}
+
+EGLConfig choose_config(EGLDisplay egl_display, EGLint const* attribs, bool surfaceless)
+{
+    EGLConfig egl_config{0};
+    int num_egl_configs{0};
+    std::vector<EGLint> validated_attribs;
+
+    if (!surfaceless) {
+        validated_attribs = ensure_pbuffer_set(attribs);
+        attribs = validated_attribs.data();
+    }
+
+    if (eglChooseConfig(egl_display, attribs, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
+        num_egl_configs != 1)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose EGL config"));
+    }
+
+    return egl_config;
+}
+
 EGLConfig choose_config(EGLDisplay egl_display, bool surfaceless)
 {
     EGLint const surface_type = surfaceless ? EGL_DONT_CARE : EGL_PBUFFER_BIT;
@@ -58,16 +106,7 @@ EGLConfig choose_config(EGLDisplay egl_display, bool surfaceless)
         EGL_NONE
     };
 
-    EGLConfig egl_config{0};
-    int num_egl_configs{0};
-
-    if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
-        num_egl_configs != 1)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose ARGB EGL config"));
-    }
-
-    return egl_config;
+    return choose_config(egl_display, config_attr, surfaceless);
 }
 
 EGLSurface create_surface(EGLDisplay egl_display, EGLConfig egl_config)
@@ -109,11 +148,11 @@ mg::SurfacelessEGLContext::SurfacelessEGLContext(
 
 mg::SurfacelessEGLContext::SurfacelessEGLContext(
         EGLDisplay egl_display,
-        EGLConfig egl_config,
+        EGLint const* attribs,
         EGLContext shared_context)
     : egl_display{egl_display},
       surfaceless{supports_surfaceless_context(egl_display)},
-      egl_config{egl_config},
+      egl_config{choose_config(egl_display, attribs, surfaceless)},
       egl_surface{egl_display,
                   surfaceless ? EGL_NO_SURFACE : create_surface(egl_display, egl_config),
                   surfaceless ? EGLSurfaceStore::AllowNoSurface :

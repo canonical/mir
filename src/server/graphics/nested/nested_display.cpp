@@ -281,6 +281,6 @@ namespace
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
     return std::unique_ptr<mg::GLContext>{new SurfacelessEGLContext(egl_display,
-                                                                    egl_display.choose_config(detail::nested_egl_config_attribs),
+                                                                    detail::nested_egl_config_attribs,
                                                                     EGL_NO_CONTEXT)};
 }
