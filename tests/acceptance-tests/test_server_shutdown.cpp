@@ -374,7 +374,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        void exec() override
+        void on_start() override
         {
             sync.wait_for_signal_ready_for();
             abort();
@@ -392,8 +392,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 
         server_config.sync.signal_ready();
 
-        // shutdown should fail as the server aborted
-        ASSERT_FALSE(shutdown_server_process());
+        shutdown_server_process();
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
@@ -405,7 +404,7 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        void exec() override
+        void on_start() override
         {
             sync.wait_for_signal_ready_for();
             raise(sig);
@@ -426,8 +425,7 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 
         server_config.sync.signal_ready();
 
-        // shutdown should fail as the server faulted
-        ASSERT_FALSE(shutdown_server_process());
+        shutdown_server_process();
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
