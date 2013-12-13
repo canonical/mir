@@ -38,10 +38,9 @@ void mtf::InProcessServer::SetUp()
 
 std::string mtf::InProcessServer::new_connection()
 {
-    char endpoint[128] = {0};
-    sprintf(endpoint, "fd://%d", server_config().the_connector()->client_socket_fd());
-
-    return endpoint;
+    char connect_string[64] = {0};
+    sprintf(connect_string, "fd://%d", server_config().the_connector()->client_socket_fd());
+    return connect_string;
 }
 
 void mtf::InProcessServer::TearDown()
