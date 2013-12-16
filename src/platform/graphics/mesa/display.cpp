@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    mgm::helpers::EGLHelper mutable egl;
+    mgm::helpers::EGLHelper egl;
 };
 
 }

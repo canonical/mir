@@ -357,13 +357,13 @@ bool mgmh::EGLHelper::swap_buffers()
     return (ret == EGL_TRUE);
 }
 
-bool mgmh::EGLHelper::make_current()
+bool mgmh::EGLHelper::make_current() const
 {
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     return (ret == EGL_TRUE);
 }
 
-bool mgmh::EGLHelper::release_current()
+bool mgmh::EGLHelper::release_current() const
 {
     auto ret = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     return (ret == EGL_TRUE);
