@@ -64,6 +64,7 @@ public:
     void launch_client_process(TestingClientConfiguration& config);
 
     bool shutdown_server_process();
+    Result  wait_for_shutdown_server_process();
     void kill_client_processes();
     void terminate_client_processes();
 

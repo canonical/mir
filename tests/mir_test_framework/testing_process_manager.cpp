@@ -192,6 +192,25 @@ mtf::Result mtf::TestingProcessManager::shutdown_server_process()
     return result;
 }
 
+mtf::Result mtf::TestingProcessManager::wait_for_shutdown_server_process()
+{
+    Result result;
+
+    if (server_process)
+    {
+        result = server_process->wait_for_termination();
+        server_process.reset();
+        return result;
+    }
+    else
+    {
+        result.reason = TerminationReason::child_terminated_normally;
+        result.exit_code = EXIT_SUCCESS;
+    }
+
+    return result;
+}
+
 void mtf::TestingProcessManager::terminate_client_processes()
 {
     if (is_test_process)

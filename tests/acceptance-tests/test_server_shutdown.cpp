@@ -392,7 +392,9 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 
         server_config.sync.signal_ready();
 
-        shutdown_server_process();
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
+        EXPECT_EQ(SIGABRT, result.signal);
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
@@ -425,7 +427,9 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 
         server_config.sync.signal_ready();
 
-        shutdown_server_process();
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
+        EXPECT_EQ(GetParam(), result.signal);
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
