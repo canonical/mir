@@ -34,7 +34,7 @@ class SurfacelessEGLContext : public GLContext
 public:
     SurfacelessEGLContext(EGLDisplay egl_display, EGLContext shared_context);
     SurfacelessEGLContext(EGLDisplay egl_display, EGLint const* attribs, EGLContext shared_context);
-    /* We have to explicitly define this, as GLContext has a deleted copy construtor */
+    /* We have to explicitly define this, as GLContext has a deleted copy constructor */
     SurfacelessEGLContext(SurfacelessEGLContext&& move);
     virtual ~SurfacelessEGLContext() noexcept;
 
