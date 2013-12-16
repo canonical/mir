@@ -58,12 +58,12 @@ public:
         egl.setup(gbm, shared_context);
     }
 
-    void make_current()
+    void make_current() const override
     {
         egl.make_current();
     }
 
-    void release_current()
+    void release_current() const override
     {
         egl.release_current();
     }

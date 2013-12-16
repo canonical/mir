@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_OFFSCREEN_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_OFFSCREEN_DISPLAY_BUFFER_H_
 
-#include "surfaceless_egl_context.h"
+#include "mir/graphics/surfaceless_egl_context.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/geometry/size.h"
@@ -59,7 +59,7 @@ private:
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(SurfacelessEGLContext egl_context,
+    DisplayBuffer(SurfacelessEGLContext &&egl_context,
                   geometry::Rectangle const& area);
 
     geometry::Rectangle view_area() const;

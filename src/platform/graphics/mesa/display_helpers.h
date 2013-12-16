@@ -108,8 +108,8 @@ public:
                EGLContext shared_context);
 
     bool swap_buffers();
-    bool make_current();
-    bool release_current();
+    bool make_current() const;
+    bool release_current() const;
 
     EGLContext context() { return egl_context; }
 

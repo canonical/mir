@@ -17,7 +17,7 @@
  */
 
 #include "display_buffer.h"
-#include "gl_extensions_base.h"
+#include "mir/graphics/gl_extensions_base.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
@@ -33,11 +33,11 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class GLExtensions : public mgo::GLExtensionsBase
+class GLExtensions : public mg::GLExtensionsBase
 {
 public:
     GLExtensions() :
-        mgo::GLExtensionsBase{
+        mg::GLExtensionsBase{
             reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS))}
     {
     }
@@ -114,9 +114,9 @@ void mgo::detail::GLFramebufferObject::unbind() const
                old_viewport[2], old_viewport[3]);
 }
 
-mgo::DisplayBuffer::DisplayBuffer(SurfacelessEGLContext egl_context,
+mgo::DisplayBuffer::DisplayBuffer(SurfacelessEGLContext &&egl_context,
                                   geom::Rectangle const& area)
-    : egl_context{std::move(egl_context)},
+    : egl_context{std::forward<SurfacelessEGLContext>(egl_context)},
       fbo{area.size},
       area(area)
 {

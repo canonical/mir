@@ -131,7 +131,7 @@ mga::GLContext::GLContext(
 {
 }
 
-void mga::GLContext::make_current()
+void mga::GLContext::make_current() const
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
     {
@@ -140,7 +140,7 @@ void mga::GLContext::make_current()
     }
 }
 
-void mga::GLContext::release_current()
+void mga::GLContext::release_current() const
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
