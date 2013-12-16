@@ -19,7 +19,7 @@
 #include "mir/logging/dumb_console_logger.h"
 
 #include <iostream>
-#include <chrono>
+#include <ctime>
 #include <cstdio>
 
 namespace ml = mir::logging;
@@ -40,13 +40,11 @@ void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
 
     std::ostream& out = severity < Logger::informational ? std::cerr : std::cout;
 
-    using namespace std::chrono;
-    unsigned long long microsec = duration_cast<microseconds>(
-        system_clock::now().time_since_epoch()
-        ).count();
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
     char now[32];
-    snprintf(now, sizeof(now), "%llu.%06llu",
-             microsec / 1000000ULL, microsec % 1000000ULL);
+    snprintf(now, sizeof(now), "%ld.%06ld",
+             (long)ts.tv_sec, ts.tv_nsec / 1000);
 
     out << "["
         << now
