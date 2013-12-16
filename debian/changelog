@@ -1,3 +1,9 @@
+mir (0.1.2+14.04.20131128.1-0ubuntu2) trusty; urgency=low
+
+  * No-change rebuild for ust.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Fri, 06 Dec 2013 15:03:27 -0500
+
 mir (0.1.2+14.04.20131128.1-0ubuntu1) trusty; urgency=low
 
   [ Kevin Gunn ]

@@ -47,8 +47,6 @@ namespace
 {
 static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
-    mtd::StubSurfaceBuilder surface_builder;
-
     return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 }
 }
@@ -61,13 +59,15 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_,_,_,_)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _))
+        .WillOnce(Return(mock_surface));
 
     mtd::MockSessionListener listener;
-    EXPECT_CALL(listener, surface_created(_, _)).Times(1);
-    EXPECT_CALL(listener, destroying_surface(_, _)).Times(1);
+    EXPECT_CALL(listener, surface_created(_, _))
+        .Times(1);
+    EXPECT_CALL(listener, destroying_surface(_, _))
+        .Times(1);
 
     ms::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
                                     std::make_shared<mtd::NullSnapshotStrategy>(),
