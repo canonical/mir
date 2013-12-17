@@ -114,9 +114,9 @@ void mgo::detail::GLFramebufferObject::unbind() const
                old_viewport[2], old_viewport[3]);
 }
 
-mgo::DisplayBuffer::DisplayBuffer(SurfacelessEGLContext &&egl_context,
+mgo::DisplayBuffer::DisplayBuffer(SurfacelessEGLContext egl_context,
                                   geom::Rectangle const& area)
-    : egl_context{std::forward<SurfacelessEGLContext>(egl_context)},
+    : egl_context{std::move(egl_context)},
       fbo{area.size},
       area(area)
 {
