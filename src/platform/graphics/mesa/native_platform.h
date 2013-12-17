@@ -30,15 +30,23 @@ namespace graphics
 {
 namespace mesa
 {
+class InternalNativeDisplay; 
+
 class NativePlatform : public graphics::NativePlatform
 {
 public:
+    virtual ~NativePlatform();
+
     void initialize(std::shared_ptr<NestedContext> const& nested_context);
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) override;
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
     void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const override;
+
+    //connection shared by all internal clients
+    static bool internal_display_clients_present;
+    static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 
 private:
     int drm_fd;

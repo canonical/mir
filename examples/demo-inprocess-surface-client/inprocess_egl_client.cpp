@@ -84,6 +84,8 @@ struct NullEventSink : mf::EventSink
 };
 }
 
+#include <stdio.h>
+
 void me::InprocessEGLClient::thread_loop()
 {
     geom::Size const surface_size{512, 512};
@@ -117,9 +119,12 @@ void me::InprocessEGLClient::thread_loop()
     ///\internal [loop_tag]
     while(!terminate)
     {
+        auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
+        assert(rc == EGL_TRUE);
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
         assert(rc == EGL_TRUE);
+        printf("Swapped\n");
 
         gl_animation.step();
     }

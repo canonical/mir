@@ -17,6 +17,7 @@
  */
 
 #include "platform.h"
+#include "native_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
 #include "internal_client.h"
@@ -176,5 +177,6 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
     return ((mgm::Platform::internal_display_clients_present) &&
-            (display == mgm::Platform::internal_native_display.get()));
+            (display == mgm::Platform::internal_native_display.get())) || ((mgm::NativePlatform::internal_display_clients_present) &&
+            (display == mgm::NativePlatform::internal_native_display.get()));
 }

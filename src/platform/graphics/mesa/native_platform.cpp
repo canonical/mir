@@ -25,6 +25,9 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
+#include "internal_client.h"
+#include "internal_native_display.h"
+
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -32,14 +35,26 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display;
+bool mgm::NativePlatform::internal_display_clients_present = false;
+
 void mgm::NativePlatform::initialize(
     std::shared_ptr<NestedContext> const& nested_context_arg)
 {
+    internal_native_display.reset();
+    internal_display_clients_present = false;
+
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
     drm_fd = fds.at(0);
     gbm.setup(drm_fd);
     nested_context->drm_set_gbm_device(gbm.device);
+}
+
+mgm::NativePlatform::~NativePlatform()
+{
+    internal_display_clients_present = false;
+    internal_native_display.reset();
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
@@ -82,7 +97,10 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("MesaNativePlatform::create_internal_client is not implemented yet!"));
+    if (!internal_native_display)
+        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
+    internal_display_clients_present = true;
+    return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
 void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
