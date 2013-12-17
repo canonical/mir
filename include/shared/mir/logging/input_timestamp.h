@@ -19,12 +19,15 @@
 #ifndef MIR_LOGGING_INPUT_TIMESTAMP_H_
 #define MIR_LOGGING_INPUT_TIMESTAMP_H_
 
+#include <string>
+#include "mir_toolkit/event.h"
+
 namespace mir
 {
 namespace logging
 {
 
-std::string mir::logging::input_timestamp(nsecs_t when);
+std::string input_timestamp(nsecs_t when);
 
 }
 }

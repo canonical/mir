@@ -16,4 +16,5 @@
 
 add_library(mirsharedlogging STATIC
   dumb_console_logger.cpp
+  input_timestamp.cpp
 )
