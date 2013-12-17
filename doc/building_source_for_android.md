@@ -66,7 +66,6 @@ compile and run code, and is well suited for a development workflow.
     
     Then you should run:
 
-        $ dpkg --add-architecture armhf
         $ apt-get update
 
     To test, try downloading a package like this:

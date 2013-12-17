@@ -19,7 +19,7 @@
  */
 
 #include "basic_surface.h"
-#include "surface_state.h"
+#include "surface_data.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
@@ -37,11 +37,11 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<SurfaceState> const& state,
+    std::shared_ptr<SurfaceData> const& surface_data,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<SceneReport> const& report) :
-    surface_state(state),
+    surface_data(surface_data),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     report(report)
@@ -66,42 +66,42 @@ std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const
 
 std::shared_ptr<mc::CompositingCriteria> ms::BasicSurface::compositing_criteria()
 {
-    return surface_state;
+    return surface_data;
 }
 
 std::string const& ms::BasicSurface::name() const
 {
-    return surface_state->name();
+    return surface_data->name();
 }
 
 void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
-    surface_state->move_to(top_left);
+    surface_data->move_to(top_left);
 }
 
 void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 {
-    surface_state->apply_rotation(degrees, axis);
+    surface_data->apply_rotation(degrees, axis);
 }
 
 void ms::BasicSurface::set_alpha(float alpha_v)
 {
-    surface_state->apply_alpha(alpha_v);
+    surface_data->apply_alpha(alpha_v);
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
 {
-    surface_state->set_hidden(hide);
+    surface_data->set_hidden(hide);
 }
 
 geom::Point ms::BasicSurface::top_left() const
 {
-    return surface_state->position();
+    return surface_data->position();
 }
 
 mir::geometry::Size ms::BasicSurface::size() const
 {
-    return surface_state->size();
+    return surface_data->size();
 }
 
 MirPixelFormat ms::BasicSurface::pixel_format() const
@@ -117,7 +117,7 @@ void ms::BasicSurface::swap_buffers(graphics::Buffer*& buffer)
 
     if (posting)
     {
-        surface_state->frame_posted();
+        surface_data->frame_posted();
     }
 }
 
@@ -152,12 +152,12 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 
 std::shared_ptr<mi::Surface> ms::BasicSurface::input_surface() const
 {
-    return surface_state;
+    return surface_data;
 }
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
-    surface_state->set_input_region(input_rectangles);
+    surface_data->set_input_region(input_rectangles);
 }
 
 void ms::BasicSurface::resize(geom::Size const& size)
@@ -175,5 +175,5 @@ void ms::BasicSurface::resize(geom::Size const& size)
     surface_buffer_stream->resize(size);
 
     // Now the buffer stream has successfully resized, update the state second;
-    surface_state->resize(size);
+    surface_data->resize(size);
 }
