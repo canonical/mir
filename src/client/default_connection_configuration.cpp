@@ -46,7 +46,7 @@ mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
 {
 }
 
-std::shared_ptr<mcl::SurfaceMap>
+std::shared_ptr<mcl::ConnectionSurfaceMap>
 mcl::DefaultConnectionConfiguration::the_surface_map()
 {
     return surface_map([]

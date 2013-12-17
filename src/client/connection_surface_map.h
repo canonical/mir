@@ -34,12 +34,12 @@ class ConnectionSurfaceMap : public SurfaceMap
 public:
     ConnectionSurfaceMap();
 
-    void with_surface_do(int const& surface_id, std::function<void(MirSurface*)> exec);
-    void insert(int const& surface_id, MirSurface* surface);
+    void with_surface_do(int surface_id, std::function<void(MirSurface*)> exec) const override;
+    void insert(int surface_id, MirSurface* surface);
     void erase(int surface_id);
 
 private:
-    std::mutex guard;
+    std::mutex mutable guard;
     typedef std::unordered_map<int, MirSurface*> SurfaceMap;
     SurfaceMap surfaces;
 };
