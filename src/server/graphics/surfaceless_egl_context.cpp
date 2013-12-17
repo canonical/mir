@@ -188,7 +188,7 @@ void mg::SurfacelessEGLContext::make_current() const
 
 void mg::SurfacelessEGLContext::release_current() const
 {
-    if (eglGetCurrentContext() == egl_context)
+    if (egl_context != EGL_NO_CONTEXT && eglGetCurrentContext() == egl_context)
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
