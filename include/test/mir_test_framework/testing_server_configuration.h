@@ -21,6 +21,7 @@
 #define MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 
 #include "mir/default_server_configuration.h"
+#include "mir_test_framework/cross_process_sync.h"
 
 namespace mir
 {
@@ -39,6 +40,9 @@ public:
     // Code to run in server process
     virtual void exec();
 
+    // Code to run in server process after server starts
+    virtual void on_start();
+
     // Code to run in server process after server exits
     virtual void on_exit();
 
@@ -50,12 +54,17 @@ public:
     // which do not leverage input.
     std::shared_ptr<input::InputConfiguration> the_input_configuration();
 
+    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override;
+
     virtual std::string the_socket_file() const;
     using DefaultServerConfiguration::the_options;
 
+    virtual void wait_for_server_start();
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
+    CrossProcessSync server_started_sync;
+    bool using_server_started_sync;
 };
 
 std::string const& test_socket_file();
