@@ -50,7 +50,7 @@ void ml::SceneReport::surface_created(ms::BasicSurface* const surface)
     std::stringstream ss;
     ss << "surface_created(" << surface << " [\"" << surface->name() << "\"])";
 
-    logger->log<Logger::informational>(ss.str(), component);
+    logger->log(Logger::informational, ss.str(), component);
 }
 
 void ml::SceneReport::surface_added(ms::BasicSurface* const surface)
@@ -73,7 +73,7 @@ void ml::SceneReport::surface_added(ms::BasicSurface* const surface)
 
     ss << " - INFO surface count=" << surfaces.size();
 
-    logger->log<Logger::informational>(ss.str(), component);
+    logger->log(Logger::informational, ss.str(), component);
 }
 
 void ml::SceneReport::surface_removed(ms::BasicSurface* const surface)
@@ -96,7 +96,7 @@ void ml::SceneReport::surface_removed(ms::BasicSurface* const surface)
 
     ss << " - INFO surface count=" << surfaces.size();
 
-    logger->log<Logger::informational>(ss.str(), component);
+    logger->log(Logger::informational, ss.str(), component);
 }
 
 void ml::SceneReport::surface_deleted(ms::BasicSurface* const surface)
@@ -122,5 +122,5 @@ void ml::SceneReport::surface_deleted(ms::BasicSurface* const surface)
 
     ss << " - INFO surface count=" << surfaces.size() << std::endl;
 
-    logger->log<Logger::informational>(ss.str(), component);
+    logger->log(Logger::informational, ss.str(), component);
 }

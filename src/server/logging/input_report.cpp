@@ -56,19 +56,19 @@ public:
         case ANDROID_LOG_DEFAULT:
         case ANDROID_LOG_VERBOSE:
         case ANDROID_LOG_DEBUG:
-            logger->log<ml::Logger::debug>(buffer, component);
+            logger->log(ml::Logger::debug, buffer, component);
             break;
 
         case ANDROID_LOG_INFO:
-            logger->log<ml::Logger::informational>(buffer, component);
+            logger->log(ml::Logger::informational, buffer, component);
             break;
 
         case ANDROID_LOG_WARN:
-            logger->log<ml::Logger::warning>(buffer, component);
+            logger->log(ml::Logger::warning, buffer, component);
             break;
 
         case ANDROID_LOG_ERROR:
-            logger->log<ml::Logger::error>(buffer, component);
+            logger->log(ml::Logger::error, buffer, component);
         };
     }
 
@@ -108,33 +108,46 @@ void ml::InputReport::received_event_from_kernel(int64_t when, int type, int cod
 {
     std::stringstream ss;
 
-    ss << "Received event (when, type, code, value) from kernel: "
-       << "(" << ml::input_timestamp(when) << ", " << type << ", " << code << ", " << value << ")";
-    logger->log<Logger::informational>(ss.str(), component());
+    ss << "Received event"
+       << " time=" << ml::input_timestamp(when)
+       << " type=" << type
+       << " code=" << code
+       << " value=" << value;
+
+    logger->log(Logger::informational, ss.str(), component());
 }
 
 void ml::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time)
 {
     std::stringstream ss;
 
-    ss << "Published key event (seq_id, event_time) to fd " << dest_fd << ": ("
-        << seq_id << ", " << ml::input_timestamp(event_time) << ")";
-    logger->log<Logger::informational>(ss.str(), component());
+    ss << "Published key event"
+       << " seq_id=" << seq_id
+       << " time=" << ml::input_timestamp(event_time)
+       << " dest_fd=" << dest_fd;
+
+    logger->log(Logger::informational, ss.str(), component());
 }
 
 void ml::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time)
 {
     std::stringstream ss;
 
-    ss << "Published motion event (seq_id, event_time) to fd " << dest_fd << ": ("
-        << seq_id << ", " << ml::input_timestamp(event_time) << ")";
-    logger->log<Logger::informational>(ss.str(), component());
+    ss << "Published motion event"
+       << " seq_id=" << seq_id
+       << " time=" << ml::input_timestamp(event_time)
+       << " dest_fd=" << dest_fd;
+
+    logger->log(Logger::informational, ss.str(), component());
 }
 
 void ml::InputReport::received_event_finished_signal(int src_fd, uint32_t seq_id)
 {
     std::stringstream ss;
 
-    ss << "Received event finished (seq_id) from fd " << src_fd << ": " << seq_id;
-    logger->log<Logger::informational>(ss.str(), component());
+    ss << "Received event finished"
+       << " seq_id=" << seq_id
+       << " src_fd=" << src_fd;
+
+    logger->log(Logger::informational, ss.str(), component());
 }
