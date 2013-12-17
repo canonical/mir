@@ -10,6 +10,7 @@ add_subdirectory(geometry)
 add_subdirectory(input)
 add_subdirectory(logging)
 add_subdirectory(lttng)
+add_subdirectory(env)
 
 set(
   MIR_COMMON_PLATFORM_LIBRARIES
