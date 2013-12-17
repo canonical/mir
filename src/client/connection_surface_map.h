@@ -40,8 +40,7 @@ public:
 
 private:
     std::mutex mutable guard;
-    typedef std::unordered_map<int, MirSurface*> SurfaceMap;
-    SurfaceMap surfaces;
+    std::unordered_map<int, MirSurface*> surfaces;
 };
 
 }

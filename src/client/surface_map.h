@@ -19,8 +19,9 @@
 #ifndef MIR_CLIENT_SURFACE_MAP_H_
 #define MIR_CLIENT_SURFACE_MAP_H_
 
-#include "mir_toolkit/client_types.h"
 #include <functional>
+
+struct MirSurface;
 
 namespace mir
 {
