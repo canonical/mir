@@ -47,13 +47,13 @@ class Surface;
 }
 namespace scene
 {
-class SurfaceState;
+class SurfaceData;
 class SceneReport;
 
 class BasicSurface
 {
 public:
-    BasicSurface(std::shared_ptr<SurfaceState> const& surface_state,
+    BasicSurface(std::shared_ptr<SurfaceData> const& surface_data,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<SceneReport> const& report);
@@ -93,7 +93,7 @@ private:
     BasicSurface(BasicSurface const&) = delete;
     BasicSurface& operator=(BasicSurface const&) = delete;
 
-    std::shared_ptr<SurfaceState> surface_state;
+    std::shared_ptr<SurfaceData> surface_data;
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SceneReport> const report;

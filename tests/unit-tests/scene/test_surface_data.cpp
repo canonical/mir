@@ -20,7 +20,6 @@
 
 #include "mir/geometry/rectangle.h"
 
-#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test/fake_shared.h"
 
 #include <algorithm>
@@ -28,7 +27,6 @@
 #include <gmock/gmock.h>
 
 namespace mc = mir::compositor;
-namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mi = mir::input;
 namespace ms = mir::scene;

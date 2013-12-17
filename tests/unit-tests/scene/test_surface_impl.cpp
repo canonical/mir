@@ -21,6 +21,7 @@
 #include "mir/scene/scene_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/surface_stack_model.h"
+#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -34,7 +35,6 @@
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test/fake_shared.h"
@@ -71,8 +71,9 @@ class StubSurfaceBuilder : public ms::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        mock_surface_state(std::make_shared<mtd::MockSurfaceState>()),
         stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
+        stub_data(std::make_shared<ms::SurfaceData>( 
+            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false)),
         dummy_surface()
     {
     }
@@ -80,7 +81,7 @@ public:
     std::weak_ptr<ms::BasicSurface> create_surface(msh::SurfaceCreationParameters const& ) override
     {
         dummy_surface = std::make_shared<ms::BasicSurface>(
-            mock_surface_state, 
+            stub_data, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);
@@ -102,10 +103,10 @@ public:
         return stub_buffer_stream_;
     }
 
-    std::shared_ptr<mtd::MockSurfaceState> mock_surface_state;
 
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
+    std::shared_ptr<ms::SurfaceData> const stub_data;
     std::shared_ptr<ms::BasicSurface> dummy_surface;
     std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
 };
@@ -303,6 +304,7 @@ TEST_F(SurfaceImpl, emits_resize_events)
 {
     using namespace testing;
 
+    geom::Size const new_size{123, 456};
     auto sink = std::make_shared<MockEventSink>();
     ms::SurfaceImpl surf(
         mt::fake_shared(surface_builder),
@@ -311,22 +313,17 @@ TEST_F(SurfaceImpl, emits_resize_events)
         stub_id,
         sink);
 
-    geom::Size const new_size{123, 456};
-
     MirEvent e;
     memset(&e, 0, sizeof e);
     e.type = mir_event_type_resize;
     e.resize.surface_id = stub_id.as_value();
     e.resize.width = new_size.width.as_int();
     e.resize.height = new_size.height.as_int();
-
     EXPECT_CALL(*sink, handle_event(e))
         .Times(1);
 
-    EXPECT_CALL(*surface_builder.mock_surface_state, resize(Ref(new_size)))
-        .Times(1);
-
     surf.resize(new_size);
+    EXPECT_EQ(new_size, surf.size());
 }
 
 TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
