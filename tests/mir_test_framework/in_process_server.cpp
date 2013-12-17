@@ -59,7 +59,7 @@ mir::DisplayServer* mtf::InProcessServer::start_mir_server()
 {
     std::mutex mutex;
     std::condition_variable cv;
-    mir::DisplayServer* display_server{nullptr};
+    mir::DisplayServer* result{nullptr};
 
     server_thread = std::thread([&]
     {
@@ -68,7 +68,7 @@ mir::DisplayServer* mtf::InProcessServer::start_mir_server()
             mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
             {
                 std::unique_lock<std::mutex> lock(mutex);
-                display_server = &ds;
+                result = &ds;
                 cv.notify_one();
             });
         }
@@ -83,8 +83,8 @@ mir::DisplayServer* mtf::InProcessServer::start_mir_server()
 
     std::unique_lock<std::mutex> lock(mutex);
 
-    while (!display_server && time_limit > system_clock::now())
+    while (!result && time_limit > system_clock::now())
         cv.wait_until(lock, time_limit);
 
-    return display_server;
+    return result;
 }
