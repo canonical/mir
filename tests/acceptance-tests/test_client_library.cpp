@@ -124,8 +124,10 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
     {
         void exec()
         {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
-
+            MirWaitHandle* wh =
+                mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+            EXPECT_TRUE(wh != NULL);
+            mir_wait_for(wh);
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");

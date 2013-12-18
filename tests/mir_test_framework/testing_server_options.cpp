@@ -27,6 +27,7 @@
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 #include "src/server/input/null_input_configuration.h"
+#include "mir/server_status_listener.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -253,7 +254,8 @@ class StubInputManager : public mi::InputManager
 }
 
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
-    DefaultServerConfiguration(::argc, ::argv)
+    DefaultServerConfiguration(::argc, ::argv),
+    using_server_started_sync(false)
 {
     namespace po = boost::program_options;
 
@@ -300,6 +302,10 @@ void mtf::TestingServerConfiguration::exec()
 {
 }
 
+void mtf::TestingServerConfiguration::on_start()
+{
+}
+
 void mtf::TestingServerConfiguration::on_exit()
 {
 }
@@ -309,6 +315,54 @@ std::string mtf::TestingServerConfiguration::the_socket_file() const
     return test_socket_file();
 }
 
+std::shared_ptr<mir::ServerStatusListener>
+mtf::TestingServerConfiguration::the_server_status_listener()
+{
+    struct TestingServerStatusListener : public mir::ServerStatusListener
+    {
+        TestingServerStatusListener(CrossProcessSync const& sync,
+                                    std::function<void(void)> const& on_start)
+            : server_started_sync{sync},
+              on_start{on_start}
+        {
+        }
+
+        void paused() {}
+        void resumed() {}
+        void started()
+        {
+            server_started_sync.try_signal_ready_for();
+            on_start();
+        }
+
+        CrossProcessSync server_started_sync;
+        std::function<void(void)> const on_start;
+    };
+
+    return server_status_listener(
+        [this]
+        {
+            using_server_started_sync = true;
+            return std::make_shared<TestingServerStatusListener>(
+                server_started_sync,
+                [this] { on_start(); });
+        });
+}
+
+void mtf::TestingServerConfiguration::wait_for_server_start()
+{
+    auto listener = the_server_status_listener();
+
+    if (!using_server_started_sync)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Not using cross process sync mechanism for server startup detection."
+                "Did you override the_server_status_listener() in the test?"));
+    }
+
+    server_started_sync.wait_for_signal_ready_for();
+}
 
 std::string const& mtf::test_socket_file()
 {

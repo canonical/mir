@@ -19,6 +19,8 @@
 #include "mir/logging/dumb_console_logger.h"
 
 #include <iostream>
+#include <ctime>
+#include <cstdio>
 
 namespace ml = mir::logging;
 
@@ -38,6 +40,19 @@ void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
 
     std::ostream& out = severity < Logger::informational ? std::cerr : std::cout;
 
-    out << "[" << lut[severity] << ", " << component << "] "
-        << message << "\n";
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    char now[32];
+    snprintf(now, sizeof(now), "%ld.%06ld",
+             (long)ts.tv_sec, ts.tv_nsec / 1000);
+
+    out << "["
+        << now
+        << "] ("
+        << lut[severity]
+        << ") "
+        << component
+        << ": "
+        << message
+        << "\n";
 }

@@ -98,20 +98,25 @@ struct MockSessionAuthorizer : public mf::SessionAuthorizer
 
 TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clients)
 {
+    mtf::CrossProcessSync connect_sync;
+
     struct ServerConfiguration : TestingServerConfiguration
     {
-        ServerConfiguration(ClientPidTestFixture::SharedRegion *shared_region)
-            : shared_region(shared_region)
+        ServerConfiguration(ClientPidTestFixture::SharedRegion *shared_region,
+                            mtf::CrossProcessSync const& connect_sync)
+            : shared_region(shared_region),
+              connect_sync(connect_sync)
         {
         }
 
-        void exec() override
+        void on_start() override
         {
             using namespace ::testing;
             pid_t client_pid = shared_region->get_client_process_pid();
 
             EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid)).Times(1)
                 .WillOnce(Return(true));
+            connect_sync.try_signal_ready_for();
         }
 
         std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
@@ -121,14 +126,17 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
 
         ClientPidTestFixture::SharedRegion* shared_region;
         MockSessionAuthorizer mock_authorizer;
-    } server_config(shared_region);
+        mtf::CrossProcessSync connect_sync;
+    } server_config(shared_region, connect_sync);
     launch_server_process(server_config);
 
 
     struct ClientConfiguration : ConnectingClient
     {
-        ClientConfiguration(ClientPidTestFixture::SharedRegion *shared_region)
-            : shared_region(shared_region)
+        ClientConfiguration(ClientPidTestFixture::SharedRegion *shared_region,
+                            mtf::CrossProcessSync const& connect_sync)
+            : shared_region(shared_region),
+              connect_sync(connect_sync)
         {
         }
 
@@ -137,11 +145,13 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
             pid_t client_pid = getpid();
             shared_region->post_client_process_pid(client_pid);
 
+            connect_sync.wait_for_signal_ready_for();
             ConnectingClient::exec();
         }
 
         ClientPidTestFixture::SharedRegion* shared_region;
-    } client_config(shared_region);
+        mtf::CrossProcessSync connect_sync;
+    } client_config(shared_region, connect_sync);
     launch_client_process(client_config);
 }
 
