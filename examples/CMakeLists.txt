@@ -56,6 +56,9 @@ add_executable(mir_demo_client_flicker
   flicker.c
 )
 
+add_executable(mir_ping ping.c)
+target_link_libraries(mir_ping mirclient)
+
 target_link_libraries(mir_demo_client_flicker
   mirclient
   mirprotobuf
