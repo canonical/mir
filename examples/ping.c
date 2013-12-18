@@ -16,7 +16,7 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 199309L  /* to get struct timespec */
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
 #include <signal.h>
@@ -70,11 +70,17 @@ int main(int argc, char *argv[])
     parm.width = 1;
     parm.height = 1;
     surf = mir_connection_create_surface_sync(conn, &parm);
+    if (surf == NULL || !mir_surface_is_valid(surf))
+    {
+        fprintf(stderr, "Could not create a surface.\n");
+        mir_connection_release(conn);
+        return 2;
+    }
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
-    MirSurfaceType types[2] =
+    static const MirSurfaceType types[2] =
     {
         mir_surface_type_normal,
         mir_surface_type_overlay
