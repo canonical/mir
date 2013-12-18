@@ -32,9 +32,9 @@ std::string mir::logging::input_timestamp(nsecs_t when)
 
     char str[64];
     snprintf(str, sizeof str, "%lld (%ld.%06ld ms ago)",
-             (long long)when,
-             (long)(age / 1000000LL),
-             (long)(age % 1000000LL));
+             static_cast<long long>(when),
+             static_cast<long>(age / 1000000LL),
+             static_cast<long>(age % 1000000LL));
 
     return std::string(str);
 }
