@@ -44,8 +44,34 @@ static long long now()  /* in nanoseconds */
 int main(int argc, char *argv[])
 {
     const char *server = NULL;
-    if (argc > 1)
-        server = argv[1];
+    int interval = 1;
+
+    for (int a = 1; a < argc; a++)
+    {
+        const char *arg = argv[a];
+        if (arg[0] == '-')
+        {
+            switch (arg[1])
+            {
+                case 'f':
+                    interval = 0;
+                    break;
+                case 'h':
+                default:
+                    printf("Usage: %s [-f] [-h] [<socket-file>]\n"
+                           "Options:\n"
+                           "    -f  Flood (no delay). On multi-core systems this can eliminate context\n"
+                           "        switching delays, at the expense of occupying all the CPU time.\n"
+                           "    -h  Show this help information.\n"
+                           , argv[0]);
+                    return 0;
+            }
+        }
+        else
+        {
+            server = arg;
+        }
+    }
 
     MirConnection *conn = mir_connect_sync(server, argv[0]);
     if (!mir_connection_is_valid(conn))
@@ -99,7 +125,7 @@ int main(int argc, char *argv[])
                (long)(duration / 1000000),
                (long)(duration % 1000000));
 
-        sleep(1);
+        if (interval) sleep(interval);
     }
 
     mir_surface_release_sync(surf);
