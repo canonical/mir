@@ -404,7 +404,7 @@ TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
 
     std::unique_lock<std::mutex> lock(m);
 
-    auto const deadline = std::chrono::system_clock::now() + std::chrono::seconds(1);
+    auto const deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
     while (!done && cv.wait_until(lock, deadline) != std::cv_status::timeout);
 }
 
