@@ -61,10 +61,14 @@ std::vector<EGLint> ensure_pbuffer_set(EGLint const* attribs)
             {
                 /* Need to treat EGL_DONT_CARE specially, as it is defined as all-bits-set */
                 attribs_with_surface_type.push_back(EGL_PBUFFER_BIT);
-            } else {
+            }
+            else
+            {
                 attribs_with_surface_type.push_back(attribs[i+1] | EGL_PBUFFER_BIT);
             }
-        } else {
+        }
+        else
+        {
             attribs_with_surface_type.push_back(attribs[i+1]);
         }
         i += 2;
