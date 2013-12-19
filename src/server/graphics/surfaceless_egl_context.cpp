@@ -124,7 +124,8 @@ EGLint const default_egl_context_attr[] =
     EGL_NONE
 };
 
-EGLint const default_attr[] = {
+EGLint const default_attr[] =
+{
     EGL_SURFACE_TYPE, EGL_DONT_CARE,
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,

@@ -51,7 +51,8 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-namespace {
+namespace
+{
 
 MATCHER(ConfigAttribContainsPBufferFlag, "")
 {
@@ -68,7 +69,8 @@ MATCHER(ConfigAttribContainsPBufferFlag, "")
         }
     }
 
-    if (found_surface_type) {
+    if (found_surface_type)
+    {
         if (surface_type == EGL_DONT_CARE)
         {
             pretty_surface.push_back("EGL_DONT_CARE");
@@ -124,7 +126,7 @@ MATCHER(ConfigAttribContainsPBufferFlag, "")
 
 }
 
-TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndNoAttribs)
+TEST_F(SurfacelessEGLContextTest, UsesPBufferContainingAttribsListByDefault)
 {
     using namespace testing;
 
@@ -137,11 +139,12 @@ TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndNoAttribs)
     mg::SurfacelessEGLContext ctx_noattrib(fake_display, EGL_NO_CONTEXT);
 }
 
-TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsAlreadyContainPbuffer)
+TEST_F(SurfacelessEGLContextTest, KeepsPBufferInAttribsList)
 {
     using namespace testing;
 
-    const EGLint attribs_with_pbuffer[] = {
+    const EGLint attribs_with_pbuffer[] =
+    {
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT | EGL_WINDOW_BIT,
         EGL_NONE
     };
@@ -155,11 +158,12 @@ TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsAlre
     mg::SurfacelessEGLContext ctx_attribs_with_pbuffer(fake_display, attribs_with_pbuffer, EGL_NO_CONTEXT);
 }
 
-TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsDoesNotContainSurfaceSpecifier)
+TEST_F(SurfacelessEGLContextTest, AddsPBufferToAttribList)
 {
     using namespace testing;
 
-    const EGLint attribs_without_surface_type[] = {
+    const EGLint attribs_without_surface_type[] =
+    {
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
         EGL_NONE
@@ -174,11 +178,12 @@ TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsDoes
     mg::SurfacelessEGLContext ctx_attribs_without_surface_type(fake_display, attribs_without_surface_type, EGL_NO_CONTEXT);
 }
 
-TEST_F(SurfacelessEGLContextTest, RequestsPBufferWhenNoSurfacelessAndAttribsContainsNonPBufferSurfaceType)
+TEST_F(SurfacelessEGLContextTest, AddsPBufferWhenNonPBufferSurfaceTypeRequested)
 {
     using namespace testing;
 
-    const EGLint attribs_without_pbuffer[] = {
+    const EGLint attribs_without_pbuffer[] =
+    {
         EGL_SURFACE_TYPE, EGL_DONT_CARE,
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
@@ -207,11 +212,12 @@ TEST_F(SurfacelessEGLContextTest, DoesNotRequestPBufferWithNoAttrib)
     mg::SurfacelessEGLContext ctx_noattrib(fake_display, EGL_NO_CONTEXT);
 }
 
-TEST_F(SurfacelessEGLContextTest, DoesNotRequestPBufferWhenAttribContainsNoSurfaceType)
+TEST_F(SurfacelessEGLContextTest, DoesNotAddPBufferToAttribList)
 {
     using namespace testing;
 
-    const EGLint attribs_without_surface_type[] = {
+    const EGLint attribs_without_surface_type[] =
+    {
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
         EGL_NONE
@@ -226,11 +232,12 @@ TEST_F(SurfacelessEGLContextTest, DoesNotRequestPBufferWhenAttribContainsNoSurfa
     mg::SurfacelessEGLContext ctx_attribs_without_surface_type(fake_display, attribs_without_surface_type, EGL_NO_CONTEXT);
 }
 
-TEST_F(SurfacelessEGLContextTest, DoesNotRequestPBufferWhenAttribContainsNonPBufferSurfaceType)
+TEST_F(SurfacelessEGLContextTest, DoesNotAddPBufferToSurfaceTypeRequest)
 {
     using namespace testing;
 
-    const EGLint attribs_with_surface_type[] = {
+    const EGLint attribs_with_surface_type[] =
+    {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_ALPHA_SIZE, 8,
         EGL_CLIENT_APIS, EGL_OPENGL_ES2_BIT,
