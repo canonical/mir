@@ -69,20 +69,11 @@ TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)
 
 namespace
 {
-struct InProcessTestingServerConfiguration : TestingServerConfiguration
-{
-    // Disable the TestingServerConfiguration listener that tries to sync across processes
-    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override
-    {
-        return mir::DefaultServerConfiguration::the_server_status_listener();
-    }
-};
-
 struct DemoInProcessServer : mir_test_framework::InProcessServer
 {
     virtual mir::DefaultServerConfiguration& server_config() { return server_config_; }
 
-    InProcessTestingServerConfiguration server_config_;
+    mir_test_framework::StubbedServerConfiguration server_config_;
 };
 }
 
