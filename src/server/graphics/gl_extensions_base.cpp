@@ -16,16 +16,16 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gl_extensions_base.h"
+#include "mir/graphics/gl_extensions_base.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 #include <cstring>
 
-namespace mgo = mir::graphics::offscreen;
+namespace mg = mir::graphics;
 
-mgo::GLExtensionsBase::GLExtensionsBase(char const* extensions)
+mg::GLExtensionsBase::GLExtensionsBase(char const* extensions)
     : extensions{extensions}
 {
     if (!extensions)
@@ -35,7 +35,7 @@ mgo::GLExtensionsBase::GLExtensionsBase(char const* extensions)
     }
 }
 
-bool mgo::GLExtensionsBase::support(char const* ext) const
+bool mg::GLExtensionsBase::support(char const* ext) const
 {
     char const* ext_ptr = extensions;
     size_t const len = strlen(ext);

@@ -16,14 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_
-#define MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_
+#ifndef MIR_GRAPHICS_GL_EXTENSIONS_BASE_H_
+#define MIR_GRAPHICS_GL_EXTENSIONS_BASE_H_
 
 namespace mir
 {
 namespace graphics
-{
-namespace offscreen
 {
 
 class GLExtensionsBase
@@ -42,6 +40,5 @@ private:
 
 }
 }
-}
 
-#endif /* MIR_GRAPHICS_OFFSCREEN_GL_EXTENSIONS_BASE_H_ */
+#endif /* MIR_GRAPHICS_GL_EXTENSIONS_BASE_H_ */
