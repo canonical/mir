@@ -42,7 +42,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
-class SurfaceMap;
+class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
 
@@ -157,7 +157,7 @@ private:
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
-    std::shared_ptr<mir::client::SurfaceMap> surface_map;
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::vector<int> extra_platform_data;
 

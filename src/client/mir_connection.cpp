@@ -25,7 +25,7 @@
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
-#include "surface_map.h"
+#include "connection_surface_map.h"
 #include "lifecycle_control.h"
 
 #include <algorithm>
