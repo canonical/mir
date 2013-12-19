@@ -23,11 +23,6 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/cross_process_sync.h"
 
-namespace mir
-{
-class DisplayServer;
-}
-
 namespace mir_test_framework
 {
 using namespace mir;

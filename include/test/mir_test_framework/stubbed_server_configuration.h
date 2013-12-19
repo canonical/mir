@@ -25,12 +25,15 @@ namespace mir_test_framework
 {
 using namespace mir;
 
+/**
+ * stubs out the graphics and input subsystems to avoid tests
+ * failing where the hardware is not accessible
+ */
 class StubbedServerConfiguration : public DefaultServerConfiguration
 {
 public:
     StubbedServerConfiguration();
 
-    // TODO can we remove this function and default to real graphics in tests?
     std::shared_ptr<graphics::Platform> the_graphics_platform();
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory();
     // We override the_input_manager in the default server configuration
@@ -42,7 +45,5 @@ private:
     std::shared_ptr<graphics::Platform> graphics_platform;
 };
 }
-
-
 
 #endif /* MIR_TEST_FRAMEWORK_STUBBED_SERVER_CONFIGURATION_H_ */
