@@ -19,8 +19,8 @@
 #ifndef MIR_LOGGING_INPUT_TIMESTAMP_H_
 #define MIR_LOGGING_INPUT_TIMESTAMP_H_
 
-#include <string>
 #include "mir_toolkit/event.h"
+#include <string>
 
 namespace mir
 {
