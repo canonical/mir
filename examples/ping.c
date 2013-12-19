@@ -43,33 +43,31 @@ static long long now()  /* in nanoseconds */
 
 int main(int argc, char *argv[])
 {
-    MirConnection *conn;
-    MirSurfaceParameters parm;
-    MirPixelFormat formats[1];
-    MirSurface *surf;
-    unsigned int valid_formats;
     const char *server = NULL;
-
     if (argc > 1)
         server = argv[1];
 
-    conn = mir_connect_sync(server, argv[0]);
+    MirConnection *conn = mir_connect_sync(server, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
         fprintf(stderr, "Could not connect to a display server.\n");
         return 1;
     }
 
+    MirPixelFormat formats[1];
+    unsigned int valid_formats = 0;
     mir_connection_get_available_surface_formats(conn, formats, 1,
                                                  &valid_formats);
 
+    MirSurfaceParameters parm;
     parm.buffer_usage = mir_buffer_usage_software;
     parm.output_id = mir_display_output_id_invalid;
     parm.pixel_format = formats[0];
     parm.name = "ping";
     parm.width = 1;
     parm.height = 1;
-    surf = mir_connection_create_surface_sync(conn, &parm);
+
+    MirSurface *surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf == NULL || !mir_surface_is_valid(surf))
     {
         fprintf(stderr, "Could not create a surface.\n");
