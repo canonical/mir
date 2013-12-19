@@ -59,15 +59,18 @@ MATCHER(ConfigAttribContainsPBufferFlag, "")
     bool found_surface_type = false;
     std::list<std::string> pretty_surface;
 
-    for (int i = 0; arg[i] != EGL_NONE; ++i) {
-        if (arg[i] == EGL_SURFACE_TYPE) {
+    for (int i = 0; arg[i] != EGL_NONE; ++i)
+    {
+        if (arg[i] == EGL_SURFACE_TYPE)
+        {
             surface_type = arg[i+1];
             found_surface_type = true;
         }
     }
 
     if (found_surface_type) {
-        if (surface_type == EGL_DONT_CARE) {
+        if (surface_type == EGL_DONT_CARE)
+        {
             pretty_surface.push_back("EGL_DONT_CARE");
         } else {
             if (surface_type & EGL_MULTISAMPLE_RESOLVE_BOX_BIT) {
@@ -94,7 +97,8 @@ MATCHER(ConfigAttribContainsPBufferFlag, "")
         }
         std::string pretty_result = pretty_surface.back();
         pretty_surface.pop_back();
-        for (auto& pretty : pretty_surface) {
+        for (auto& pretty : pretty_surface)
+        {
             pretty_result += " | " + pretty;
         }
         *result_listener << "surface type is "<< pretty_result;
