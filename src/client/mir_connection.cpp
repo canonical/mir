@@ -84,11 +84,11 @@ MirConnection::MirConnection(
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map())
 {
+    connect_result.set_error("connect not called");
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
     }
-    connect_result.set_error("connect not called");
 }
 
 MirConnection::~MirConnection() noexcept
