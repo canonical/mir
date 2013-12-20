@@ -349,6 +349,7 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return display_configuration->copy_to_client();
 }
 
