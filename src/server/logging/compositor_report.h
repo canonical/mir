@@ -21,6 +21,9 @@
 
 #include "mir/compositor/compositor_report.h"
 #include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <chrono>
 
 namespace mir
 {
@@ -33,10 +36,20 @@ class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
     CompositorReport(std::shared_ptr<Logger> const& logger);
-    void begin_frame();
-    void end_frame();
+    void begin_frame(Id id);
+    void end_frame(Id id);
 private:
     std::shared_ptr<Logger> logger;
+
+    typedef std::chrono::steady_clock::time_point TimePoint;
+    static TimePoint now();
+
+    struct Instance
+    {
+        TimePoint start_of_frame;
+    };
+    std::mutex mutex; // Protects instance
+    std::unordered_map<Id, Instance> instance;
 };
 
 } // namespace logging

@@ -21,10 +21,10 @@
 using namespace mir;
 using namespace mir::compositor;
 
-void NullCompositorReport::begin_frame()
+void NullCompositorReport::begin_frame(Id)
 {
 }
 
-void NullCompositorReport::end_frame()
+void NullCompositorReport::end_frame(Id)
 {
 }

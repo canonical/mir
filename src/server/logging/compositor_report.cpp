@@ -32,12 +32,25 @@ logging::CompositorReport::CompositorReport(
 {
 }
 
-void logging::CompositorReport::begin_frame()
+logging::CompositorReport::TimePoint logging::CompositorReport::now()
 {
-    logger->log(Logger::informational, "begin_frame TODO", component);
+    return std::chrono::steady_clock::now();
 }
 
-void logging::CompositorReport::end_frame()
+void logging::CompositorReport::begin_frame(Id id)
 {
-    logger->log(Logger::informational, "end_frame TODO", component);
+    std::lock_guard<std::mutex> lock(mutex);
+    auto& inst = instance[id];
+
+    inst.start_of_frame = now();
+}
+
+void logging::CompositorReport::end_frame(Id id)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    auto& inst = instance[id];
+
+    auto duration = now() - inst.start_of_frame;
+    (void)duration; // TODO
+    logger->log(Logger::informational, "TODO end_frame", component);
 }

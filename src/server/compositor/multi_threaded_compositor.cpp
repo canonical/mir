@@ -58,13 +58,11 @@ class CompositingFunctor
 public:
     CompositingFunctor(std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
                        mg::DisplayBuffer& buffer,
-                       int id,
                        std::shared_ptr<CompositorReport> const& report)
         : display_buffer_compositor_factory{db_compositor_factory},
           buffer(buffer),
           running{true},
           frames_scheduled{0},
-          id{id},
           report{report}
     {
     }
@@ -96,9 +94,9 @@ public:
             if (running)
             {
                 lock.unlock();
-                report->begin_frame(); // TODO use id
+                report->begin_frame(this);
                 display_buffer_compositor->composite();
-                report->end_frame(); // TODO use id
+                report->end_frame(this);
                 lock.lock();
             }
         }
@@ -118,6 +116,7 @@ public:
          */
         frames_scheduled = max_client_buffers;
         run_cv.notify_one();
+        // TODO: report->schedule_frame(this);
     }
 
     void stop()
@@ -134,7 +133,6 @@ private:
     int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
-    int const id;
     std::shared_ptr<CompositorReport> const report;
 };
 
@@ -160,11 +158,12 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::start()
 {
-    int id = 0;
+    // TODO: report->start();
+
     /* Start the compositing threads */
-    display->for_each_display_buffer([this,&id](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, id++, report};
+        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, report};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
         threads.push_back(std::thread{std::ref(*thread_functor)});
@@ -185,6 +184,8 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
+    // TODO: report->stop()
+
     scene->set_change_callback([]{});
 
     for (auto& f : thread_functors)
