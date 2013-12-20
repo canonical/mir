@@ -9,6 +9,11 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
 endif()
 
+if (MIR_PLATFORM STREQUAL "android")
+  #avoid complaints about poor quality android headers
+  include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+endif()
+
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
@@ -26,7 +31,6 @@ add_subdirectory(integration-tests/)
 if (MIR_ENABLE_UNIT_TESTS)
   add_subdirectory(unit-tests/)
 endif (MIR_ENABLE_UNIT_TESTS)
-
 
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)

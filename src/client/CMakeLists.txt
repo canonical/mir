@@ -36,6 +36,7 @@ set(
 )
 
 if( MIR_PLATFORM STREQUAL "android")
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 set(
   CLIENT_SOURCES
 

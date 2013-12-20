@@ -1,3 +1,4 @@
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
