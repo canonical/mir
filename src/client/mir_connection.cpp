@@ -177,8 +177,6 @@ MirWaitHandle* MirConnection::release_surface(
         mir_surface_callback callback,
         void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
@@ -274,8 +272,6 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     server.disconnect(0, &ignored, &ignored,
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
@@ -295,8 +291,6 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     mir::protobuf::DRMMagic request;
     request.set_magic(magic);
 
@@ -349,7 +343,6 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
     return display_configuration->copy_to_client();
 }
 
@@ -435,6 +428,8 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 
 void MirConnection::done_display_configure()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     set_error_message(display_configuration_response.error());
 
     if (!display_configuration_response.has_error())
@@ -473,6 +468,8 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 bool MirConnection::set_extra_platform_data(
     std::vector<int> const& extra_platform_data_arg)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
     auto const total_data_size =
         connect_result.platform().data_size() + extra_platform_data_arg.size();
 
