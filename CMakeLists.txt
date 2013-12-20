@@ -112,15 +112,21 @@ include_directories (${GLM_INCLUDE_DIRS})
 add_definitions(-DANDROID_USE_STD)
 
 if (MIR_PLATFORM STREQUAL "android")
+
+  set(ENV{PKG_CONFIG_PATH} ${MIR_NDK_PATH}/usr/lib/pkgconfig)
   find_package( PkgConfig )
-  include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
-  list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
   add_definitions( -DANDROID )
  
-  find_package( LibHardware REQUIRED )
+  pkg_check_modules(ANDROID_HEADERS REQUIRED android-headers)
+
+  message(${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
+  include_directories(SYSTEM ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
+
+
+  find_package(LibHardware REQUIRED)
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
