@@ -20,7 +20,6 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
@@ -101,7 +100,7 @@ private:
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);
     void new_buffer(mir_surface_callback callback, void * context);
-    mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
              race in surface, last_buffer_id */

@@ -28,9 +28,9 @@ if (MIR_PLATFORM STREQUAL "android")
   list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator_android.cpp
   )
-elseif (MIR_PLATFORM STREQUAL "gbm")
+elseif (MIR_PLATFORM STREQUAL "mesa")
   list(APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator_gbm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator_mesa.cpp
   )
 endif()
 

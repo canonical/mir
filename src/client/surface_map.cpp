@@ -27,10 +27,10 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 }
 
 void mcl::ConnectionSurfaceMap::with_surface_do(
-    int const& surface_id, std::function<void(MirSurface*)> exec)
+    int surface_id, std::function<void(MirSurface*)> exec) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    SurfaceMap::iterator it = surfaces.find(surface_id);
+    auto const it = surfaces.find(surface_id);
     if (it != surfaces.end())
     {
         MirSurface *surface = it->second;
@@ -42,19 +42,19 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
         ss << __PRETTY_FUNCTION__
            << "executed with non-existent surface ID "
            << surface_id << ".\n";
-    
+
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
-void mcl::ConnectionSurfaceMap::insert(int const& surface_id, MirSurface* surface)
+void mcl::ConnectionSurfaceMap::insert(int surface_id, MirSurface* surface)
 {
     std::unique_lock<std::mutex> lk(guard);
-    surfaces[surface_id] = surface; 
+    surfaces[surface_id] = surface;
 }
 
 void mcl::ConnectionSurfaceMap::erase(int surface_id)
 {
     std::unique_lock<std::mutex> lk(guard);
-    surfaces.erase(surface_id); 
+    surfaces.erase(surface_id);
 }

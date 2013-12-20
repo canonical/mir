@@ -46,7 +46,7 @@ public:
 
     virtual ~ClientPlatform() { /* TODO: make nothrow */ }
 
-    virtual MirPlatformType platform_type() const = 0; 
+    virtual MirPlatformType platform_type() const = 0;
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;
     virtual std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;

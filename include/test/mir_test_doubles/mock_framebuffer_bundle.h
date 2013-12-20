@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_BUNDLE_H_
 #define MIR_TEST_DOUBLES_MOCK_FRAMEBUFFER_BUNDLE_H_
 
-#include "src/server/graphics/android/framebuffer_bundle.h"
+#include "src/platform/graphics/android/framebuffer_bundle.h"
 #include "stub_buffer.h"
 #include <gmock/gmock.h>
 
@@ -38,7 +38,7 @@ struct MockFBBundle : public graphics::android::FramebufferBundle
         ON_CALL(*this, last_rendered_buffer())
             .WillByDefault(Return(std::make_shared<StubBuffer>()));
     }
-    MOCK_METHOD0(fb_format, geometry::PixelFormat());
+    MOCK_METHOD0(fb_format, MirPixelFormat());
     MOCK_METHOD0(fb_size, geometry::Size());
     MOCK_METHOD0(buffer_for_render, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD0(last_rendered_buffer, std::shared_ptr<graphics::Buffer>());

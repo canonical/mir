@@ -124,8 +124,10 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
     {
         void exec()
         {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
-
+            MirWaitHandle* wh =
+                mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+            EXPECT_TRUE(wh != NULL);
+            mir_wait_for(wh);
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
@@ -576,7 +578,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_gets_buffer_dimensions)
             {
                 parm.width = size.width;
                 parm.height = size.height;
-    
+
                 surface = mir_connection_create_surface_sync(connection, &parm);
                 ASSERT_TRUE(surface != NULL);
                 ASSERT_TRUE(mir_surface_is_valid(surface));
@@ -881,7 +883,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             for (auto i=0u; i < configuration->num_outputs; i++)
             {
                 MirDisplayOutput* disp = &configuration->outputs[i];
-                ASSERT_NE(nullptr, disp); 
+                ASSERT_NE(nullptr, disp);
                 EXPECT_GE(disp->num_modes, disp->current_mode);
                 EXPECT_GE(disp->num_output_formats, disp->current_output_format);
             }

@@ -33,13 +33,13 @@ TEST(DefaultSessionContainer, for_each)
 {
     using namespace ::testing;
     ms::DefaultSessionContainer container;
-    
+
     auto session1 = std::make_shared<mtd::StubShellSession>();
     auto session2 = std::make_shared<mtd::StubShellSession>();
 
     container.insert_session(session1);
     container.insert_session(session2);
-    
+
     struct local
     {
         MOCK_METHOD1(see, void(std::shared_ptr<msh::Session> const&));
@@ -60,7 +60,7 @@ TEST(DefaultSessionContainer, successor_of)
 {
     using namespace ::testing;
     ms::DefaultSessionContainer container;
-    
+
     auto session1 = std::make_shared<mtd::StubShellSession>();
     auto session2 = std::make_shared<mtd::StubShellSession>();
     auto session3 = std::make_shared<mtd::StubShellSession>();

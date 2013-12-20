@@ -50,7 +50,7 @@ protected:
 TEST_F(BufferStreamTest, size_query)
 {
     geom::Size size{4, 5};
-    mg::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mg::BufferUsage::hardware};
+    mg::BufferProperties properties {size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
         .WillOnce(testing::Return(properties));
@@ -62,7 +62,7 @@ TEST_F(BufferStreamTest, size_query)
 
 TEST_F(BufferStreamTest, pixel_format_query)
 {
-    geom::PixelFormat format{geom::PixelFormat::abgr_8888};
+    MirPixelFormat format{mir_pixel_format_abgr_8888};
     mg::BufferProperties properties {geom::Size{4, 5}, format, mg::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
@@ -123,15 +123,21 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    mg::Buffer* buffer{nullptr};
 
+    InSequence seq;
     EXPECT_CALL(*mock_bundle, client_acquire())
         .Times(1)
-        .WillOnce(Return(mock_buffer));
+        .WillOnce(Return(mock_buffer.get()));
     EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
-    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    EXPECT_CALL(*mock_bundle, client_acquire())
+        .Times(1)
+        .WillOnce(Return(mock_buffer.get()));
 
-    buffer_stream.secure_client_buffer();
+    buffer_stream.swap_client_buffers(buffer);
+    buffer_stream.swap_client_buffers(buffer);
 }
 
 TEST_F(BufferStreamTest, allow_framedropping_device)

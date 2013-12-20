@@ -66,10 +66,10 @@ MirConnection *mir_connect_sync(char const *server, char const *app_name);
 /**
  * Test for a valid connection
  * \param [in] connection  The connection
- * \return                 A non-zero value if the supplied connection is
- *                         valid, 0 otherwise
+ * \return                 True if the supplied connection is valid, or
+ *                         false otherwise.
  */
-int mir_connection_is_valid(MirConnection *connection);
+MirBool mir_connection_is_valid(MirConnection *connection);
 
 /**
  * Retrieve a text description of the last error. The returned string is owned
@@ -104,7 +104,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
     mir_lifecycle_event_callback callback, void* context);
 
-/** 
+/**
  * \deprecated Use mir_connection_create_display_config
  */
 __attribute__((__deprecated__("Use mir_connection_create_display_config()")))
@@ -112,8 +112,8 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 
 /**
  * Query the display
- *   \warning return value must be destroyed via mir_display_config_destroy() 
- *   \warning may return null if connection is invalid 
+ *   \warning return value must be destroyed via mir_display_config_destroy()
+ *   \warning may return null if connection is invalid
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
  */
@@ -135,7 +135,7 @@ void mir_connection_set_display_config_change_callback(
 
 /**
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
- *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
+ *   \param [in] display_configuration  The display_configuration information resource to be destroyed
  */
 void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 
@@ -149,7 +149,7 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
  *
  *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
  *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to apply 
+ *   \param [in] display_configuration  The display_configuration to apply
  *   \return                            A handle that can be passed to mir_wait_for
  */
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
@@ -164,10 +164,10 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 /**
  * Get the list of possible formats that a surface can be created with.
  *   \param [in] connection         The connection
- *   \param [out] formats           List of valid formats to create surfaces with 
+ *   \param [out] formats           List of valid formats to create surfaces with
  *   \param [in]  formats_size      size of formats list
  *   \param [out] num_valid_formats number of valid formats returned in formats
- */ 
+ */
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
     unsigned const int format_size, unsigned int *num_valid_formats);
@@ -227,10 +227,10 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
 /**
  * Test for a valid surface
  *   \param [in] surface  The surface
- *   \return              A non-zero value if the supplied surface is valid,
- *                        0 otherwise
+ *   \return              True if the supplied surface is valid, or
+ *                        false otherwise.
  */
-int mir_surface_is_valid(MirSurface *surface);
+MirBool mir_surface_is_valid(MirSurface *surface);
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -253,7 +253,7 @@ void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *param
 
 /**
  * Get the underlying platform type so the buffer obtained in "raw" representation
- * in mir_surface_get_current_buffer() can be understood 
+ * in mir_surface_get_current_buffer() can be understood
  *   \pre                     The surface is valid
  *   \param [in] surface      The surface
  *   \return                  One of mir_platform_type_android or mir_platform_type_gbm
@@ -386,12 +386,12 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
 /**
  * Set the swapinterval for mir_surface_swap_buffers. EGL users should use
  * eglSwapInterval directly.
- * At the time being, only swapinterval of 0 or 1 is supported. 
+ * At the time being, only swapinterval of 0 or 1 is supported.
  *   \param [in] surface  The surface to operate on
  *   \param [in] interval The number of vblank signals that
- *                        mir_surface_swap_buffers will wait for 
+ *                        mir_surface_swap_buffers will wait for
  *   \return              A wait handle that can be passed to mir_wait_for,
- *                        or NULL if the interval could not be supported 
+ *                        or NULL if the interval could not be supported
  */
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
 

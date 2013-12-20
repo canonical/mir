@@ -37,7 +37,7 @@ class XKBMapper
 public:
     XKBMapper();
     virtual ~XKBMapper() = default;
-    
+
     void update_state_and_map_event(MirKeyEvent& key_ev);
 
 protected:

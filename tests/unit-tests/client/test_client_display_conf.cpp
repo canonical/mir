@@ -61,20 +61,20 @@ TEST(TestDisplayConfiguration, configuration_storage)
     fill(protobuf_config.add_display_card());
     fill(protobuf_config.add_display_card());
     fill(protobuf_config.add_display_card());
- 
+
     mcl::DisplayConfiguration internal_config;
 
     internal_config.update_configuration(protobuf_config);
     MirDisplayConfiguration *info;
     info = internal_config.copy_to_client();
-   
+
     EXPECT_THAT(*info, mt::DisplayConfigMatches(protobuf_config));
     mcl::delete_config_storage(info);
 
     int called_count = 0u;
     internal_config.set_display_change_handler([&]() { called_count++; });
 
-    mp::DisplayConfiguration new_result; 
+    mp::DisplayConfiguration new_result;
     fill(new_result.add_display_output());
 
     internal_config.update_configuration(new_result);

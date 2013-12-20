@@ -32,15 +32,6 @@ namespace mo = mir::options;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 
-namespace mir_test_framework
-{
-void startup_pause()
-{
-    if (!detect_server(test_socket_file(), std::chrono::minutes(2)))
-        throw std::runtime_error("Failed to find server");
-}
-}
-
 mtf::TestingProcessManager::TestingProcessManager() :
     is_test_process(true),
     server_process_was_started(false)
@@ -77,7 +68,7 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     else
     {
         server_process = std::shared_ptr<Process>(new Process(pid));
-        startup_pause();
+        config.wait_for_server_start();
         server_process_was_started = true;
     }
 }
@@ -188,6 +179,25 @@ mtf::Result mtf::TestingProcessManager::shutdown_server_process()
     if (server_process)
     {
         server_process->terminate();
+        result = server_process->wait_for_termination();
+        server_process.reset();
+        return result;
+    }
+    else
+    {
+        result.reason = TerminationReason::child_terminated_normally;
+        result.exit_code = EXIT_SUCCESS;
+    }
+
+    return result;
+}
+
+mtf::Result mtf::TestingProcessManager::wait_for_shutdown_server_process()
+{
+    Result result;
+
+    if (server_process)
+    {
         result = server_process->wait_for_termination();
         server_process.reset();
         return result;

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -43,14 +43,14 @@ protected:
     virtual void SetUp()
     {
         size = geom::Size{334, 122};
-        pf  = geom::PixelFormat::abgr_8888;
+        pf  = mir_pixel_format_abgr_8888;
         buffer_properties = mg::BufferProperties{size, pf, mg::BufferUsage::software};
         null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     }
 
     std::shared_ptr<mg::BufferInitializer> null_buffer_initializer;
     geom::Size size;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
     mtd::TestGrallocMapper sw_renderer;
 };

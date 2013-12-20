@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/framebuffer_bundle.h"
-#include "src/server/graphics/android/hwc11_device.h"
-#include "src/server/graphics/android/hwc_layerlist.h"
+#include "src/platform/graphics/android/framebuffer_bundle.h"
+#include "src/platform/graphics/android/hwc11_device.h"
+#include "src/platform/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -42,6 +42,8 @@ protected:
     {
         using namespace testing;
 
+        dpy = mock_egl.fake_egl_display;
+        surf = mock_egl.fake_egl_surface;
         mock_native_buffer = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
         mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();

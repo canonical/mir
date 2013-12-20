@@ -177,7 +177,7 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
     return ring[slot].buf;
 }
 
-std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
+mg::Buffer* mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
 
@@ -203,7 +203,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
          * but always uses 50% more memory. So try to avoid it when possible.
          */
 
-        int min_free = 
+        int min_free =
 #if 0  // FIXME: This memory optimization breaks timing tests
             (nbuffers > 2 && !overlapping_compositors) ?  nbuffers - 1 : 1;
 #else
@@ -247,14 +247,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         ring[client].buf = ret;
     }
 
-    return ret;
+    return ret.get();
 }
 
-void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
+void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (nclients <= 0 || ring[first_client].buf != released_buffer)
+    if (nclients <= 0 || ring[first_client].buf.get() != released_buffer)
     {
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_
 #define MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_
 
-#include "src/server/graphics/gbm/video_devices.h"
+#include "src/platform/graphics/mesa/video_devices.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullVideoDevices : public graphics::gbm::VideoDevices
+class NullVideoDevices : public graphics::mesa::VideoDevices
 {
 public:
     void register_change_handler(

@@ -87,14 +87,12 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubRenderer : public mc::Renderer
         {
-            void clear(unsigned long) override {}
-            void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mc::CompositingCriteria const&, mc::BufferStream& stream)
+            void clear() const override
             {
-                stream.lock_compositor_buffer(0);
             }
-
-            void ensure_no_live_buffers_bound() {}
+            void render(mc::CompositingCriteria const&, mg::Buffer&) const override
+            {
+            }
         };
 
         struct StubRendererFactory : public mc::RendererFactory
@@ -181,10 +179,11 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     std::thread client_thread{
         [&session]
         {
+            mg::Buffer* buffer{nullptr};
             for (int i = 0; i < 500; ++i)
             {
                 auto surface = session.default_surface();
-                surface->advance_client_buffer();
+                surface->swap_buffers(buffer);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};

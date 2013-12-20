@@ -26,7 +26,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/platform/graphics/mesa/platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "mir_test_doubles/mock_android_hw.h"
@@ -84,7 +84,7 @@ public:
 #ifdef ANDROID
         return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mg::NullDisplayReport>());
 #else
-        return std::make_shared<mg::gbm::GBMPlatform>(
+        return std::make_shared<mg::mesa::Platform>(
             std::make_shared<mg::NullDisplayReport>(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
@@ -126,7 +126,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     ASSERT_NE(0u, supported_pixel_formats.size());
 
     geom::Size size{320, 240};
-    geom::PixelFormat const pf{supported_pixel_formats[0]};
+    MirPixelFormat const pf{supported_pixel_formats[0]};
     mg::BufferUsage usage{mg::BufferUsage::hardware};
     mg::BufferProperties buffer_properties{size, pf, usage};
 

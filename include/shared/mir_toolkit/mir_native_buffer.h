@@ -52,6 +52,6 @@ typedef struct MirBufferPackage
 struct ANativeWindowBuffer;
 typedef struct ANativeWindowBuffer MirNativeBuffer;
 #else
-typedef struct MirBufferPackage MirNativeBuffer; 
+typedef struct MirBufferPackage MirNativeBuffer;
 #endif
 #endif /* MIR_CLIENT_MIR_NATIVE_BUFFER_H_ */

@@ -78,7 +78,7 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
 struct StubClientBufferFactory : public mcl::ClientBufferFactory
 {
     std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& /* package */,
-                                                     geom::Size /*size*/, geom::PixelFormat /*pf*/) override
+                                                     geom::Size /*size*/, MirPixelFormat /*pf*/) override
     {
         return std::shared_ptr<mcl::ClientBuffer>();
     }
@@ -510,7 +510,7 @@ TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
         nullptr
-    };  
+    };
 
     unfocused_received = false;
 
@@ -545,7 +545,7 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
         nullptr
-    };  
+    };
 
     unfocused_received = false;
 

@@ -38,9 +38,8 @@ namespace doubles
 
 struct MockSurface : public scene::SurfaceImpl
 {
-    MockSurface(shell::Session* session, std::shared_ptr<scene::SurfaceBuilder> const& builder) :
-        scene::SurfaceImpl(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(),
-            frontend::SurfaceId{}, std::make_shared<NullEventSink>())
+    MockSurface(std::shared_ptr<scene::SurfaceBuilder> const& builder) :
+        scene::SurfaceImpl(builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(), frontend::SurfaceId{}, std::make_shared<NullEventSink>())
     {
     }
 
@@ -49,14 +48,14 @@ struct MockSurface : public scene::SurfaceImpl
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_METHOD0(visible, bool());
-    MOCK_METHOD1(raise, void(std::shared_ptr<shell::SurfaceController> const&));
+    MOCK_METHOD1(raise, void(std::shared_ptr<scene::SurfaceRanker> const&));
 
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
 
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());

@@ -31,12 +31,12 @@ namespace doubles
 {
 struct MockBufferStream : public compositor::BufferStream
 {
-    MOCK_METHOD0(secure_client_buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_METHOD1(swap_client_buffers, void(graphics::Buffer*&));
     MOCK_METHOD1(lock_compositor_buffer,
                  std::shared_ptr<graphics::Buffer>(unsigned long));
     MOCK_METHOD0(lock_snapshot_buffer, std::shared_ptr<graphics::Buffer>());
 
-    MOCK_METHOD0(get_stream_pixel_format, geometry::PixelFormat());
+    MOCK_METHOD0(get_stream_pixel_format, MirPixelFormat());
     MOCK_METHOD0(stream_size, geometry::Size());
     MOCK_METHOD1(resize, void(geometry::Size const&));
     MOCK_METHOD0(force_client_completion, void());

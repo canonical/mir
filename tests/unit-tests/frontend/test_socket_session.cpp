@@ -34,7 +34,7 @@ namespace
 struct MockReceiver : public mfd::MessageReceiver
 {
     MOCK_METHOD3(async_receive_msg, void(std::function<void(boost::system::error_code const&, size_t)> const&,
-                                         boost::asio::streambuf&, size_t)); 
+                                         boost::asio::streambuf&, size_t));
     MOCK_METHOD0(client_pid, pid_t());
 };
 
@@ -74,7 +74,7 @@ TEST_F(SocketSessionTest, basic_msg)
 
     boost::system::error_code code;
     header_read(code, 2);
- 
+
     testing::Mock::VerifyAndClearExpectations(&mock_receiver);
 
     //trigger message process

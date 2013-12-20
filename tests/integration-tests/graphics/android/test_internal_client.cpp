@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/internal_client_window.h"
-#include "src/server/graphics/android/interpreter_cache.h"
-#include "src/server/graphics/android/internal_client.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/internal_client_window.h"
+#include "src/platform/graphics/android/interpreter_cache.h"
+#include "src/platform/graphics/android/internal_client.h"
 #include "src/server/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -68,7 +68,7 @@ protected:
     }
 };
 
-struct StubInputFactory : public mi::InputChannelFactory 
+struct StubInputFactory : public mi::InputChannelFactory
 {
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
@@ -80,10 +80,10 @@ struct StubInputFactory : public mi::InputChannelFactory
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 {
     auto size = geom::Size{334, 122};
-    auto pf  = geom::PixelFormat::abgr_8888;
+    auto pf  = mir_pixel_format_abgr_8888;
     msh::SurfaceCreationParameters params;
     params.name = std::string("test");
-    params.size = size; 
+    params.size = size;
     params.pixel_format = pf;
     params.buffer_usage = mg::BufferUsage::hardware;
     auto id = mf::SurfaceId{4458};
@@ -101,8 +101,8 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto mir_surface = as_internal_surface(
         surface_source->create_surface(nullptr, params, id, std::shared_ptr<mf::EventSink>()));
 
-    auto options = std::shared_ptr<mo::ProgramOption>(); 
-    auto report = std::shared_ptr<mg::NullDisplayReport>(); 
+    auto options = std::shared_ptr<mo::ProgramOption>();
+    auto report = std::shared_ptr<mg::NullDisplayReport>();
     auto internal_client = std::make_shared<mga::InternalClient>();
 
     int major, minor, n;

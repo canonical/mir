@@ -26,3 +26,13 @@ target_link_libraries(
 )
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+if (MIR_PLATFORM STREQUAL "android")
+  include_directories(${LIBHARDWARE_INCLUDE_DIRS})
+  add_subdirectory(android/)
+endif()
+
+if (MIR_PLATFORM STREQUAL "mesa")
+  add_subdirectory(mesa/)
+endif()
+

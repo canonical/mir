@@ -27,7 +27,7 @@ namespace geom = mir::geometry;
 TEST(buffer_properties, default_create)
 {
     geom::Size size;
-    geom::PixelFormat pixel_format{geom::PixelFormat::invalid};
+    MirPixelFormat pixel_format{mir_pixel_format_invalid};
     mg::BufferUsage usage{mg::BufferUsage::undefined};
 
     mg::BufferProperties prop;
@@ -40,7 +40,7 @@ TEST(buffer_properties, default_create)
 TEST(buffer_properties, custom_create)
 {
     geom::Size size{66, 166};
-    geom::PixelFormat pixel_format{geom::PixelFormat::abgr_8888};
+    MirPixelFormat pixel_format{mir_pixel_format_abgr_8888};
     mg::BufferUsage usage{mg::BufferUsage::hardware};
 
     mg::BufferProperties prop{size, pixel_format, usage};
@@ -53,7 +53,7 @@ TEST(buffer_properties, custom_create)
 TEST(buffer_properties, equal_properties_test_equal)
 {
     geom::Size size{66, 166};
-    geom::PixelFormat pixel_format{geom::PixelFormat::abgr_8888};
+    MirPixelFormat pixel_format{mir_pixel_format_abgr_8888};
     mg::BufferUsage usage{mg::BufferUsage::hardware};
 
     mg::BufferProperties prop0{size, pixel_format, usage};
@@ -73,10 +73,10 @@ TEST(buffer_properties, unequal_properties_test_unequal)
         {geom::Width{67}, geom::Height{166}}
     };
 
-    geom::PixelFormat pixel_format[2] =
+    MirPixelFormat pixel_format[2] =
     {
-        geom::PixelFormat::abgr_8888,
-        geom::PixelFormat::bgr_888
+        mir_pixel_format_abgr_8888,
+        mir_pixel_format_bgr_888
     };
 
     mg::BufferUsage usage[2] =

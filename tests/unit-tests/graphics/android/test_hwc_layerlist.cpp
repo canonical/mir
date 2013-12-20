@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc_layerlist.h"
+#include "src/platform/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "hwc_struct_helper-inl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
@@ -34,16 +34,16 @@ public:
     {
         using namespace testing;
 
-        width = 432; 
-        height = 876; 
+        width = 432;
+        height = 876;
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
-        native_handle_2 = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
     }
 
-    int width; 
-    int height; 
+    int width;
+    int height;
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
 };
@@ -55,6 +55,7 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
     expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
     expected_layer.hints = 0;
     expected_layer.flags = 0;
@@ -62,8 +63,8 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
     expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region; 
-    expected_layer.visibleRegionScreen = visible_region;  
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
@@ -84,8 +85,8 @@ TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
     expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region; 
-    expected_layer.visibleRegionScreen = visible_region;  
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
@@ -106,8 +107,8 @@ TEST_F(HWCLayerListTest, gl_target_layer_without_skip)
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
     expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region; 
-    expected_layer.visibleRegionScreen = visible_region;  
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
@@ -117,17 +118,17 @@ TEST_F(HWCLayerListTest, gl_target_layer_without_skip)
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
-    
+
     mga::CompositionLayer surface_layer(*native_handle_1, 0);
     mga::FramebufferLayer target_layer(*native_handle_1);
     mga::LayerList layerlist({
         surface_layer,
         target_layer});
 
-    auto list = layerlist.native_list(); 
+    auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags); 
-    /* note, mali hwc1.1 actually falsely returns if these are not set to something. set to garbage */ 
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
+    /* note, mali hwc1.1 actually falsely returns if these are not set to something. set to garbage */
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
 
@@ -150,7 +151,7 @@ TEST_F(HWCLayerListTest, hwc_list_update)
         mga::FramebufferLayer(*native_handle_1)});
     layerlist.set_fb_target(native_handle_2);
 
-    auto list = layerlist.native_list(); 
+    auto list = layerlist.native_list();
     ASSERT_EQ(2u, list->numHwLayers);
     EXPECT_EQ(native_handle_1->handle(), list->hwLayers[0].handle);
     EXPECT_EQ(-1, list->hwLayers[0].acquireFenceFd);

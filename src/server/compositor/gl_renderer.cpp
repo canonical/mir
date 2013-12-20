@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
@@ -235,15 +236,11 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
 }
 
 mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
-    : frameno{0}
 {
     resources.setup(display_area);
 }
 
-void mc::GLRenderer::render(
-    std::function<void(std::shared_ptr<void> const&)> save_resource,
-    CompositingCriteria const& criteria,
-    BufferStream& stream)
+void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buffer) const
 {
     glUseProgram(resources.program);
 
@@ -273,9 +270,7 @@ void mc::GLRenderer::render(
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-    auto region_resource = stream.lock_compositor_buffer(frameno);
-    region_resource->bind_to_texture();
-    save_resource(region_resource);
+    buffer.bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
@@ -285,9 +280,7 @@ void mc::GLRenderer::render(
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
 
-void mc::GLRenderer::clear(unsigned long frame)
+void mc::GLRenderer::clear() const
 {
-    frameno = frame;
     glClear(GL_COLOR_BUFFER_BIT);
 }
-

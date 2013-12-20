@@ -48,7 +48,7 @@ void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfi
         width,
         height,
         default_display_orientation);
-    
+
     out_config->pointerVelocityControlParameters.acceleration = 1.0;
 }
 

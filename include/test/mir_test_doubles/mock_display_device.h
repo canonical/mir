@@ -20,9 +20,9 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_
 
 #include "mir/graphics/buffer.h"
-#include "src/server/graphics/android/display_device.h"
+#include "src/platform/graphics/android/display_device.h"
 #include <gmock/gmock.h>
- 
+
 namespace mir
 {
 namespace test

@@ -27,6 +27,7 @@
 #include "mir/compositor/compositor.h"
 
 #include <linux/input.h>
+#include <android/keycodes.h>  // TODO remove this dependency
 
 #include <cassert>
 #include <cstdlib>
@@ -133,7 +134,9 @@ bool me::WindowManager::handle(MirEvent const& event)
             focus_controller->focus_next();
             return true;
         }
-        if (event.key.modifiers & mir_key_modifier_alt && event.key.scan_code == KEY_P)
+        else if ((event.key.modifiers & mir_key_modifier_alt &&
+                  event.key.scan_code == KEY_P) ||
+                 (event.key.key_code == AKEYCODE_POWER))
         {
             compositor->stop();
             auto conf = display->configuration();
@@ -155,7 +158,8 @@ bool me::WindowManager::handle(MirEvent const& event)
             display_off = !display_off;
 
             display->configure(*conf.get());
-            compositor->start();
+            if (!display_off)
+                compositor->start();
             return true;
         }
     }

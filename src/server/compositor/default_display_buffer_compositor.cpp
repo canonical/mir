@@ -19,7 +19,6 @@
 #include "default_display_buffer_compositor.h"
 
 #include "rendering_operator.h"
-#include "overlay_renderer.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/graphics/display_buffer.h"
@@ -69,12 +68,10 @@ bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
-    std::shared_ptr<mc::Renderer> const& renderer,
-    std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
+    std::shared_ptr<mc::Renderer> const& renderer)
     : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
-      overlay_renderer{overlay_renderer},
       local_frameno{global_frameno}
 {
 }
@@ -138,11 +135,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
 
-        renderer->clear(local_frameno);
-        mc::RenderingOperator applicator(*renderer, save_resource);
+        renderer->clear();
+        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
-        overlay_renderer->render(view_area, save_resource);
 
         display_buffer.post_update();
     }

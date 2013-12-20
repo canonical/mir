@@ -18,10 +18,10 @@
 
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display_buffer.h"
-#include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/resource_factory.h"
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/output_builder.h"
+#include "src/platform/graphics/android/android_display.h"
+#include "src/platform/graphics/android/resource_factory.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/output_builder.h"
 
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"

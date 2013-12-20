@@ -46,7 +46,7 @@ mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
 {
 }
 
-std::shared_ptr<mcl::SurfaceMap>
+std::shared_ptr<mcl::ConnectionSurfaceMap>
 mcl::DefaultConnectionConfiguration::the_surface_map()
 {
     return surface_map([]
@@ -128,7 +128,7 @@ mcl::DefaultConnectionConfiguration::the_input_receiver_report()
         {
             auto val_raw = getenv("MIR_CLIENT_INPUT_RECEIVER_REPORT");
             std::string const val{val_raw ? val_raw : off_opt_val};
-            
+
             if (val == log_opt_val)
                 return std::make_shared<mcl::logging::InputReceiverReport>(the_logger());
             else

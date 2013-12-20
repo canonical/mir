@@ -52,7 +52,7 @@ MirSurface::MirSurface(
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
     message.set_output_id(params.output_id);
-    
+
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
     for (int i = 0; i < mir_surface_attribs; i++)
@@ -159,10 +159,10 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 }
 
 /* todo: all these conversion functions are a bit of a kludge, probably
-         better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
+         better to have a more developed MirPixelFormat that can handle this */
+MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
-    return static_cast<geom::PixelFormat>(pf);
+    return static_cast<MirPixelFormat>(pf);
 }
 
 void MirSurface::process_incoming_buffer()
@@ -254,7 +254,7 @@ uint32_t MirSurface::get_current_buffer_id() const
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    return buffer_depository->current_buffer_id();    
+    return buffer_depository->current_buffer_id();
 }
 
 void MirSurface::populate(MirBufferPackage& buffer_package)

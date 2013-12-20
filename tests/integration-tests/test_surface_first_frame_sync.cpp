@@ -96,9 +96,11 @@ public:
     {
     }
 
-    void clear(unsigned long) override {}
+    void clear() const override
+    {
+    }
 
-    void render(std::function<void(std::shared_ptr<void> const&)>, mc::CompositingCriteria const&, mc::BufferStream&)
+    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }

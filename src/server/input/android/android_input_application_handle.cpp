@@ -36,7 +36,7 @@ bool mia::InputApplicationHandle::updateInfo()
 {
     if (mInfo == NULL)
         mInfo = new droidinput::InputApplicationInfo;
-    
+
     mInfo->dispatchingTimeout = INT_MAX;
     mInfo->name = droidinput::String8(surface->name().c_str());
 

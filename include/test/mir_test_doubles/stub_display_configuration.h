@@ -21,7 +21,7 @@
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <vector>
 
@@ -43,15 +43,15 @@ public:
     StubDisplayConfig(unsigned int num_displays)
         : StubDisplayConfig(num_displays,
                             {
-                                geometry::PixelFormat::bgr_888,
-                                geometry::PixelFormat::abgr_8888,
-                                geometry::PixelFormat::xbgr_8888
+                                mir_pixel_format_bgr_888,
+                                mir_pixel_format_abgr_8888,
+                                mir_pixel_format_xbgr_8888
                             })
     {
     }
 
     StubDisplayConfig(unsigned int num_displays,
-                      std::vector<geometry::PixelFormat> const& pfs)
+                      std::vector<MirPixelFormat> const& pfs)
     {
         /* construct a non-trivial dummy display config to send */
         int mode_index = 0;
@@ -67,7 +67,7 @@ public:
                 modes.push_back(mode);
             }
 
-            size_t mode_index = modes.size() - 1; 
+            size_t mode_index = modes.size() - 1;
             geometry::Size physical_size{};
             geometry::Point top_left{};
             graphics::DisplayConfigurationOutput output{
@@ -105,7 +105,7 @@ public:
                 graphics::DisplayConfigurationOutputId{id},
                 graphics::DisplayConfigurationCardId{0},
                 graphics::DisplayConfigurationOutputType::vga,
-                std::vector<geometry::PixelFormat>{geometry::PixelFormat::abgr_8888},
+                std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
                 0, geometry::Size{}, true, true, rect.top_left, 0, 0, mir_power_mode_on
             };

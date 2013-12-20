@@ -36,7 +36,7 @@ namespace input
 namespace android
 {
 
-/// The Lexicon translates droidinput event types to MirEvent types prior to 
+/// The Lexicon translates droidinput event types to MirEvent types prior to
 /// shell or client handling.
 class Lexicon
 {

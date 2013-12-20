@@ -33,10 +33,8 @@ class GLRenderer : public Renderer
 public:
     GLRenderer(geometry::Rectangle const& display_area);
 
-    /* From renderer */
-    void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                                   CompositingCriteria const& info, BufferStream& stream);
-    void clear(unsigned long frameno) override;
+    void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
+    void clear() const override;
 
     ~GLRenderer() noexcept {}
 
@@ -60,8 +58,6 @@ private:
     };
 
     Resources resources;
-
-    unsigned long frameno;
 };
 
 }

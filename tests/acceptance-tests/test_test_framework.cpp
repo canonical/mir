@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,8 +17,10 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/testing_server_configuration.h"
+#include "mir_test_framework/in_process_server.h"
 
-#include "mir/frontend/connector.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -63,4 +65,22 @@ TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)
     {
         launch_client_process(demo);
     }
+}
+
+namespace
+{
+struct DemoInProcessServer : mir_test_framework::InProcessServer
+{
+    virtual mir::DefaultServerConfiguration& server_config() { return server_config_; }
+
+    mir_test_framework::StubbedServerConfiguration server_config_;
+};
+}
+
+TEST_F(DemoInProcessServer, client_can_connect)
+{
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    EXPECT_TRUE(mir_connection_is_valid(connection));
+
+    mir_connection_release(connection);
 }

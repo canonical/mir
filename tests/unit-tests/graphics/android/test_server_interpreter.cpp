@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/server_render_window.h"
+#include "src/platform/graphics/android/server_render_window.h"
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_fence.h"
@@ -46,9 +46,9 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer2 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_fb_bundle = std::make_shared<NiceMock<mtd::MockFBBundle>>();
-        mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
+        mock_cache = std::make_shared<NiceMock<mtd::MockInterpreterResourceCache>>();
         ON_CALL(*mock_fb_bundle, fb_format())
-            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
+            .WillByDefault(Return(mir_pixel_format_abgr_8888));
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
@@ -88,7 +88,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     using namespace testing;
     int fake_fence = 488;
     auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
- 
+
     mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
@@ -114,11 +114,11 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
-    using namespace testing; 
+    using namespace testing;
 
     EXPECT_CALL(*mock_fb_bundle, fb_format())
         .Times(1)
-        .WillOnce(Return(geom::PixelFormat::abgr_8888));
+        .WillOnce(Return(mir_pixel_format_abgr_8888));
 
     mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
@@ -133,7 +133,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 
     render_window.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
     auto rc_format = render_window.driver_requests_info(NATIVE_WINDOW_FORMAT);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format); 
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format);
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_set)
@@ -148,13 +148,13 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_se
 
     unsigned int rc_width = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
     unsigned int rc_height = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
-    EXPECT_EQ(test_size.width.as_uint32_t(), rc_width); 
+    EXPECT_EQ(test_size.width.as_uint32_t(), rc_width);
     EXPECT_EQ(test_size.height.as_uint32_t(), rc_height);
 
     rc_width = render_window.driver_requests_info(NATIVE_WINDOW_WIDTH);
     rc_height = render_window.driver_requests_info(NATIVE_WINDOW_HEIGHT);
-    EXPECT_EQ(test_size.width.as_uint32_t(), rc_width); 
-    EXPECT_EQ(test_size.height.as_uint32_t(), rc_height); 
+    EXPECT_EQ(test_size.width.as_uint32_t(), rc_width);
+    EXPECT_EQ(test_size.height.as_uint32_t(), rc_height);
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
