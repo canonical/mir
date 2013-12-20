@@ -113,8 +113,6 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     auto surface = new MirSurface(this, server, platform->create_buffer_factory(), input_platform, params, callback, context);
 
     return surface->get_create_wait_handle();
@@ -122,21 +120,22 @@ MirWaitHandle* MirConnection::create_surface(
 
 char const * MirConnection::get_error_message()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (connect_result.has_error())
-    {
-        return connect_result.error().c_str();
+        if (connect_result.has_error())
+        {
+            return connect_result.error().c_str();
+        }
     }
-    else
-    {
+
+    std::lock_guard<decltype(error_message_mutex)> lock(error_message_mutex);
     return error_message.c_str();
-    }
 }
 
 void MirConnection::set_error_message(std::string const& error)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(error_message_mutex)> lock(error_message_mutex);
 
     error_message = error;
 }
@@ -212,7 +211,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     bool safe_to_callback = true;
     {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
         if (!connect_result.has_platform() || !connect_result.has_display_configuration())
         {
@@ -245,7 +244,7 @@ MirWaitHandle* MirConnection::connect(
     void * context)
 {
     {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
         connect_parameters.set_application_name(app_name);
         connect_wait_handle.expect_result();
@@ -320,7 +319,7 @@ bool MirConnection::is_valid(MirConnection *connection)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (!connect_result.has_error() && connect_result.has_platform())
     {
@@ -370,7 +369,7 @@ void MirConnection::available_surface_formats(
 
 std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
 }
@@ -382,7 +381,7 @@ MirConnection* MirConnection::mir_connection()
 
 EGLNativeDisplayType MirConnection::egl_native_display()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     return *native_display;
 }
@@ -429,7 +428,7 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 
 void MirConnection::done_display_configure()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     set_error_message(display_configuration_response.error());
 
@@ -448,7 +447,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 
     mir::protobuf::DisplayConfiguration request;
     {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
         for (auto i=0u; i < config->num_outputs; i++)
         {
@@ -472,7 +471,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 bool MirConnection::set_extra_platform_data(
     std::vector<int> const& extra_platform_data_arg)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     auto const total_data_size =
         connect_result.platform().data_size() + extra_platform_data_arg.size();

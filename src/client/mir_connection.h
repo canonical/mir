@@ -125,7 +125,7 @@ public:
     bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
 private:
-    std::recursive_mutex mutex; // Protects all members of *this
+    std::mutex mutex; // Protects all members of *this that don't have their own
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
@@ -143,6 +143,7 @@ private:
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 
+    std::mutex error_message_mutex;
     std::string error_message;
 
     MirWaitHandle connect_wait_handle;
