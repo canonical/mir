@@ -154,10 +154,8 @@ struct MirConnection::SurfaceRelease
 
 void MirConnection::released(SurfaceRelease data)
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
-        surface_map->erase(data.surface->id());
-    }
+    surface_map->erase(data.surface->id());
+
     // Erasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
