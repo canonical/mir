@@ -33,15 +33,14 @@ mclrd::PendingCallCache::PendingCallCache(
 {
 }
 
-mclrd::SendBuffer& mclrd::PendingCallCache::save_completion_details(
+void mclrd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
     std::shared_ptr<google::protobuf::Closure> const& complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
-    auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
-    return current.send_buffer;
+    pending_calls[invoke.id()] = PendingCall(response, complete);
 }
 
 void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
