@@ -109,8 +109,6 @@ include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})
 include_directories (${GLM_INCLUDE_DIRS})
 
-add_definitions(-DANDROID_USE_STD)
-
 if (MIR_PLATFORM STREQUAL "android")
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
