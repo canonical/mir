@@ -97,9 +97,12 @@ MirConnection::~MirConnection() noexcept
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
 
-    std::lock_guard<std::mutex> lock(connection_guard);
-    valid_connections.erase(this);
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        valid_connections.erase(this);
+    }
 
+    std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result.has_platform())
     {
         auto const& platform = connect_result.platform();
@@ -314,6 +317,7 @@ bool MirConnection::is_valid(MirConnection *connection)
            return false;
     }
 
+    std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
     return !connection->connect_result.has_error();
 }
 
@@ -354,6 +358,8 @@ void MirConnection::available_surface_formats(
     unsigned int& valid_formats)
 {
     valid_formats = 0;
+
+    std::lock_guard<decltype(mutex)> lock(mutex);
     if (!connect_result.has_error())
     {
         valid_formats = std::min(
