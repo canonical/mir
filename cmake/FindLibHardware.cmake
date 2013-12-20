@@ -1,16 +1,17 @@
 # Variables defined by this module:
-message(${LIBHARDWARE_LIBRARY})
+#message(${LIBHARDWARE_LIBRARY})
 #   LIBHARDWARE_FOUND
 #   LIBHARDWARE_LIBRARIES
+#   LIBHARDWARE_INCLUDE_DIRS
 
 INCLUDE(FindPackageHandleStandardArgs)
 
-set(ENV{PKG_CONFIG_PATH} ${MIR_NDK_PATH}/usr/lib/pkgconfig)
 find_package( PkgConfig )
 
 pkg_check_modules(ANDROID_HEADERS REQUIRED android-headers)
 
-include_directories(SYSTEM ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS} PARENT_SCOPE)
+set(LIBHARDWARE_INCLUDE_DIRS ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
+#include_directories(SYSTEM ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
 
 find_library(LIBHARDWARE_LIBRARY
    NAMES         libhardware.so.2
