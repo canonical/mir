@@ -22,6 +22,7 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/compositor_report.h"
 
 #include <thread>
 #include <condition_variable>
@@ -56,11 +57,15 @@ class CompositingFunctor
 {
 public:
     CompositingFunctor(std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
-                       mg::DisplayBuffer& buffer)
+                       mg::DisplayBuffer& buffer,
+                       int id,
+                       std::shared_ptr<CompositorReport> const& report)
         : display_buffer_compositor_factory{db_compositor_factory},
           buffer(buffer),
           running{true},
-          frames_scheduled{0}
+          frames_scheduled{0},
+          id{id},
+          report{report}
     {
     }
 
@@ -91,7 +96,9 @@ public:
             if (running)
             {
                 lock.unlock();
+                report->begin_frame(); // TODO use id
                 display_buffer_compositor->composite();
+                report->end_frame(); // TODO use id
                 lock.lock();
             }
         }
@@ -127,6 +134,8 @@ private:
     int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
+    int const id;
+    std::shared_ptr<CompositorReport> const report;
 };
 
 }
@@ -135,10 +144,12 @@ private:
 mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Scene> const& scene,
-    std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory)
+    std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
+    std::shared_ptr<CompositorReport> const& compositor_report)
     : display{display},
       scene{scene},
-      display_buffer_compositor_factory{db_compositor_factory}
+      display_buffer_compositor_factory{db_compositor_factory},
+      report{compositor_report}
 {
 }
 
@@ -149,10 +160,11 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::start()
 {
+    int id = 0;
     /* Start the compositing threads */
-    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([this,&id](mg::DisplayBuffer& buffer)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer};
+        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, id++, report};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
         threads.push_back(std::thread{std::ref(*thread_functor)});
