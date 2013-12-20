@@ -1,3 +1,7 @@
+
+#its a bit troubling that these need to be included for demo_input_filter
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC
