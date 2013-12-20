@@ -20,19 +20,14 @@
 #ifndef MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 #define MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 
-#include "mir/default_server_configuration.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/cross_process_sync.h"
-
-namespace mir
-{
-class DisplayServer;
-}
 
 namespace mir_test_framework
 {
 using namespace mir;
 
-class TestingServerConfiguration : public DefaultServerConfiguration
+class TestingServerConfiguration : public StubbedServerConfiguration
 {
 public:
     TestingServerConfiguration();
@@ -46,14 +41,6 @@ public:
     // Code to run in server process after server exits
     virtual void on_exit();
 
-    // TODO can we remove this function and default to real graphics in tests?
-    std::shared_ptr<graphics::Platform> the_graphics_platform();
-    std::shared_ptr<compositor::RendererFactory> the_renderer_factory();
-    // We override the_input_manager in the default server configuration
-    // to avoid starting and stopping the full android input stack for tests
-    // which do not leverage input.
-    std::shared_ptr<input::InputConfiguration> the_input_configuration();
-
     std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override;
 
     virtual std::string the_socket_file() const;
@@ -62,7 +49,6 @@ public:
     virtual void wait_for_server_start();
 
 private:
-    std::shared_ptr<graphics::Platform> graphics_platform;
     CrossProcessSync server_started_sync;
     bool using_server_started_sync;
 };
