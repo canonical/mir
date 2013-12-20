@@ -111,6 +111,7 @@ include_directories (${GLM_INCLUDE_DIRS})
 
 if (MIR_PLATFORM STREQUAL "android")
 
+  #android headers use 'int foo[0]' as struct members
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
   add_definitions( -DANDROID )
@@ -133,9 +134,6 @@ set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 add_subdirectory(3rd_party/)
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 

@@ -19,6 +19,9 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
+
 add_subdirectory(android)
 
 add_library(
