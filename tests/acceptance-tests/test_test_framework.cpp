@@ -77,11 +77,6 @@ struct DemoInProcessServer : mir_test_framework::InProcessServer
 };
 }
 
-TEST_F(DemoInProcessServer, do_nothing)
-{
-    new_connection();
-}
-
 TEST_F(DemoInProcessServer, client_can_connect)
 {
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
