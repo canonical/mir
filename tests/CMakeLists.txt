@@ -15,10 +15,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/test)
 
-if (MIR_PLATFORM STREQUAL "android")
-  include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
-endif()
-
 option(MIR_ENABLE_ACCEPTANCE_TESTS "Build & run acceptance tests" ON)
 option(MIR_ENABLE_INTEGRATION_TESTS "Build & run integration tests" ON)
 option(MIR_ENABLE_UNIT_TESTS "Build & run unit tests" ON)

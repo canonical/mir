@@ -113,19 +113,10 @@ add_definitions(-DANDROID_USE_STD)
 
 if (MIR_PLATFORM STREQUAL "android")
 
-  set(ENV{PKG_CONFIG_PATH} ${MIR_NDK_PATH}/usr/lib/pkgconfig)
-  find_package( PkgConfig )
-
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
   add_definitions( -DANDROID )
  
-  pkg_check_modules(ANDROID_HEADERS REQUIRED android-headers)
-
-  message(${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
-  include_directories(SYSTEM ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
-
-
   find_package(LibHardware REQUIRED)
 
   #ctest does not work for android, so turn test discovery off

@@ -1,28 +1,23 @@
 # Variables defined by this module:
+message(${LIBHARDWARE_LIBRARY})
 #   LIBHARDWARE_FOUND
-#   LIBHARDWARE_INCLUDE_DIRS
 #   LIBHARDWARE_LIBRARIES
 
 INCLUDE(FindPackageHandleStandardArgs)
 
+set(ENV{PKG_CONFIG_PATH} ${MIR_NDK_PATH}/usr/lib/pkgconfig)
+find_package( PkgConfig )
 
-#find_path(LIBHARDWARE_INCLUDE_DIR
-#   NAMES         hardware/hardware.h
-#                 hardware/gralloc.h
-#                 hardware/hwcomposer.h
-#                 cutils/native_handle.h
-#                 system/graphics.h
-#                 system/window.h
-#   )
+pkg_check_modules(ANDROID_HEADERS REQUIRED android-headers)
+
+include_directories(SYSTEM ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS} PARENT_SCOPE)
 
 find_library(LIBHARDWARE_LIBRARY
    NAMES         libhardware.so.2
                  libhardware.so 
 )
 
-message(${LIBHARDWARE_LIBRARY})
 set(LIBHARDWARE_LIBRARIES ${LIBHARDWARE_LIBRARY})
-#set(LIBHARDWARE_INCLUDE_DIRS ${LIBHARDWARE_INCLUDE_DIR})
 
 # handle the QUIETLY and REQUIRED arguments and set LIBHARDWARE_FOUND to TRUE
 # if all listed variables are TRUE
