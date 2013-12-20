@@ -244,10 +244,13 @@ MirWaitHandle* MirConnection::connect(
     mir_connected_callback callback,
     void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    connect_parameters.set_application_name(app_name);
-    connect_wait_handle.expect_result();
+        connect_parameters.set_application_name(app_name);
+        connect_wait_handle.expect_result();
+    }
+
     server.connect(
         0,
         &connect_parameters,
@@ -401,8 +404,6 @@ void MirConnection::register_display_change_callback(mir_display_config_callback
 
 bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     MirDisplayConfigurationStore orig_config{display_configuration->copy_to_client()};
 
     if ((!config) || (config->num_outputs == 0) || (config->outputs == NULL) ||
@@ -440,23 +441,26 @@ void MirConnection::done_display_configure()
 
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (!validate_user_display_config(config))
     {
         return NULL;
     }
 
     mir::protobuf::DisplayConfiguration request;
-    for (auto i=0u; i < config->num_outputs; i++)
     {
-        auto output = config->outputs[i];
-        auto display_request = request.add_display_output();
-        display_request->set_output_id(output.output_id);
-        display_request->set_used(output.used);
-        display_request->set_current_mode(output.current_mode);
-        display_request->set_position_x(output.position_x);
-        display_request->set_position_y(output.position_y);
-        display_request->set_power_mode(output.power_mode);
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+
+        for (auto i=0u; i < config->num_outputs; i++)
+        {
+            auto output = config->outputs[i];
+            auto display_request = request.add_display_output();
+            display_request->set_output_id(output.output_id);
+            display_request->set_used(output.used);
+            display_request->set_current_mode(output.current_mode);
+            display_request->set_position_x(output.position_x);
+            display_request->set_position_y(output.position_y);
+            display_request->set_power_mode(output.power_mode);
+        }
     }
 
     server.configure_display(0, &request, &display_configuration_response,
