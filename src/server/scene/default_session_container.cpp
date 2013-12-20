@@ -63,12 +63,12 @@ void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<ms
 std::shared_ptr<msh::Session> ms::DefaultSessionContainer::successor_of(std::shared_ptr<msh::Session> const& session) const
 {
     std::shared_ptr<msh::Session> result, first;
-    
+
     if (!session && apps.size())
         return apps.back();
     else if(!session)
         return std::shared_ptr<msh::Session>();
-    
+
     for (auto it = apps.begin(); it != apps.end(); it++)
     {
         if (*it == session)
@@ -79,6 +79,6 @@ std::shared_ptr<msh::Session> ms::DefaultSessionContainer::successor_of(std::sha
             else return *successor;
         }
     }
-    
+
     BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
 }

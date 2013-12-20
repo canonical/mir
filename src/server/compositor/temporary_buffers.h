@@ -37,7 +37,7 @@ class TemporaryBuffer : public mg::Buffer
 public:
     geometry::Size size() const;
     geometry::Stride stride() const;
-    geometry::PixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
     mg::BufferID id() const;
     void bind_to_texture();
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const;
@@ -46,16 +46,6 @@ public:
 protected:
     explicit TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer);
     std::shared_ptr<mg::Buffer> const buffer;
-};
-
-class TemporaryClientBuffer : public TemporaryBuffer
-{
-public:
-    explicit TemporaryClientBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper);
-    ~TemporaryClientBuffer();
-
-private:
-    std::weak_ptr<BufferBundle> const allocating_swapper;
 };
 
 class TemporaryCompositorBuffer : public TemporaryBuffer

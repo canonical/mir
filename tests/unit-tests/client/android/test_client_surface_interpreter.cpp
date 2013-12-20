@@ -48,7 +48,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(mark_as_submitted, void());
@@ -209,7 +209,7 @@ TEST_F(AndroidInterpreterTest, native_window_height_query_hook)
 }
 
 /* this is query key is a bit confusing from the system/window.h description.
-   what it means is the minimum number of buffers that the server reserves for its own use in steady 
+   what it means is the minimum number of buffers that the server reserves for its own use in steady
    state. The drivers consider 'steady state' to begin after the first call to queueBuffer.
    So, for instance, if a driver requires 3 buffers to run at steady state, and the server needs
    to keep 2 buffers on hand at all time, the driver might dequeue 5 buffers, then cancel those 5 buffers.

@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_OFFSCREEN_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_OFFSCREEN_DISPLAY_BUFFER_H_
 
-#include "surfaceless_egl_context.h"
+#include "mir/graphics/surfaceless_egl_context.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/geometry/size.h"

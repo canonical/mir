@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/logging/logger.h"
-#include "src/server/graphics/android/android_display.h"
+#include "src/platform/graphics/android/android_display.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -51,7 +51,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-  
+
         dummy_display = mock_egl.fake_egl_display;
         dummy_context = mock_egl.fake_egl_context;
         dummy_config = mock_egl.fake_configs[0];
@@ -114,9 +114,9 @@ TEST_F(AndroidDisplayTest, display_egl_config_selection)
 {
     using namespace testing;
     int const incorrect_visual_id = 2;
-    int const correct_visual_id = 1; 
+    int const correct_visual_id = 1;
     EGLint const num_cfgs = 45;
-    EGLint const expected_cfg_attr [] = 
+    EGLint const expected_cfg_attr [] =
         { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL_NONE };
     EGLConfig selected_config;
     EGLConfig cfgs[45];
@@ -136,7 +136,7 @@ TEST_F(AndroidDisplayTest, display_egl_config_selection)
     (EGLDisplay, EGLint const*, EGLConfig* out_cfgs, EGLint, EGLint* out_num_cfgs) -> EGLBoolean
     {
         memcpy(out_cfgs, cfgs, sizeof(EGLConfig) * num_cfgs);
-        *out_num_cfgs = num_cfgs; 
+        *out_num_cfgs = num_cfgs;
         return EGL_TRUE;
     };
 
@@ -223,11 +223,11 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
     auto& disp_mode = disp_conf.modes[0];
     EXPECT_EQ(display_size, disp_mode.size);
 
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id); 
-    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id); 
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
     EXPECT_TRUE(disp_conf.connected);
     EXPECT_TRUE(disp_conf.used);
-    auto origin = geom::Point{0,0}; 
+    auto origin = geom::Point{0,0};
     EXPECT_EQ(origin, disp_conf.top_left);
     EXPECT_EQ(0, disp_conf.current_mode_index);
 
@@ -238,7 +238,7 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
 TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;
-    auto mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+    auto mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
     Sequence seq;
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
         .InSequence(seq);
@@ -251,7 +251,7 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 
     auto stub_db_factory = std::make_shared<mtd::StubDisplayBuilder>(mock_display_device);
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
-   
+
     auto configuration = display.configuration();
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {

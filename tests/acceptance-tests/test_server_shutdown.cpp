@@ -48,10 +48,9 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class NullRenderer : public mc::Renderer
 {
 public:
-    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mc::CompositingCriteria const&, mc::BufferStream&)
+    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
-        /* 
+        /*
          * Do nothing, so that the surface's buffers are not consumed
          * by the server, thus causing the client to block when asking for
          * the second buffer (assuming double-buffering).
@@ -59,9 +58,10 @@ public:
         std::this_thread::yield();
     }
 
-    void clear(unsigned long) override {}
+    void clear() const override
+    {
+    }
 };
-
 
 class NullRendererFactory : public mc::RendererFactory
 {
@@ -166,7 +166,7 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             next_buffer_done.set();
             server_done.wait();
 
-            /* 
+            /*
              * TODO: Releasing the connection to a shut down server blocks
              * the client. We should handle unexpected server shutdown more
              * gracefully on the client side.
@@ -374,7 +374,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        void exec() override
+        void on_start() override
         {
             sync.wait_for_signal_ready_for();
             abort();
@@ -392,8 +392,12 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
 
         server_config.sync.signal_ready();
 
-        // shutdown should fail as the server aborted
-        ASSERT_FALSE(shutdown_server_process());
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
+        // Under valgrind the server process is reported as being terminated
+        // by SIGKILL because of multithreading madness.
+        // TODO: Investigate if we can do better than this workaround
+        EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
@@ -405,7 +409,7 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        void exec() override
+        void on_start() override
         {
             sync.wait_for_signal_ready_for();
             raise(sig);
@@ -426,8 +430,12 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
 
         server_config.sync.signal_ready();
 
-        // shutdown should fail as the server faulted
-        ASSERT_FALSE(shutdown_server_process());
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
+        // Under valgrind the server process is reported as being terminated
+        // by SIGKILL because of multithreading madness
+        // TODO: Investigate if we can do better than this workaround
+        EXPECT_TRUE(result.signal == GetParam() || result.signal == SIGKILL);
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });

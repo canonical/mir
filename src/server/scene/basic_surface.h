@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_properties.h"
 
@@ -47,44 +47,56 @@ class Surface;
 }
 namespace scene
 {
+class SurfaceData;
+class SceneReport;
+
 class BasicSurface
 {
 public:
-    BasicSurface() = default;
-    virtual ~BasicSurface() = default;
+    BasicSurface(std::shared_ptr<SurfaceData> const& surface_data,
+        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        std::shared_ptr<SceneReport> const& report);
 
-    virtual std::string const& name() const = 0;
-    virtual void move_to(geometry::Point const& top_left) = 0;
-    virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
-    virtual void set_alpha(float alpha) = 0;
-    virtual void set_hidden(bool is_hidden) = 0;
+    virtual ~BasicSurface();
 
-    virtual geometry::Point top_left() const = 0;
-    virtual geometry::Size size() const = 0;
+    virtual std::string const& name() const;
+    virtual void move_to(geometry::Point const& top_left);
+    virtual void set_rotation(float degrees, glm::vec3 const& axis);
+    virtual void set_alpha(float alpha);
+    virtual void set_hidden(bool is_hidden);
 
-    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual geometry::Point top_left() const;
+    virtual geometry::Size size() const;
 
-    virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const = 0;
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
-    virtual void force_requests_to_complete() = 0;
+    virtual MirPixelFormat pixel_format() const;
 
-    virtual bool supports_input() const = 0;
-    virtual int client_input_fd() const = 0;
-    virtual void allow_framedropping(bool) = 0;
-    virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
+    virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
+    virtual void swap_buffers(graphics::Buffer*&);
+    virtual void force_requests_to_complete();
 
-    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) = 0;
+    virtual bool supports_input() const;
+    virtual int client_input_fd() const;
+    virtual void allow_framedropping(bool);
+    virtual std::shared_ptr<input::InputChannel> input_channel() const;
 
-    virtual std::shared_ptr<compositor::CompositingCriteria> compositing_criteria() = 0;
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
-    virtual std::shared_ptr<compositor::BufferStream> buffer_stream() const = 0;
+    virtual std::shared_ptr<compositor::CompositingCriteria> compositing_criteria();
 
-    virtual std::shared_ptr<input::Surface> input_surface() const = 0;
-    virtual void resize(geometry::Size const& size) = 0;
+    virtual std::shared_ptr<compositor::BufferStream> buffer_stream() const;
+
+    virtual std::shared_ptr<input::Surface> input_surface() const;
+    virtual void resize(geometry::Size const& size);
 
 private:
     BasicSurface(BasicSurface const&) = delete;
     BasicSurface& operator=(BasicSurface const&) = delete;
+
+    std::shared_ptr<SurfaceData> surface_data;
+    std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
+    std::shared_ptr<input::InputChannel> const server_input_channel;
+    std::shared_ptr<SceneReport> const report;
 };
 
 }

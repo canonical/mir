@@ -43,7 +43,7 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
         return std::make_shared<StubBuffer>(properties);
     }
 
-    std::vector<geometry::PixelFormat> supported_pixel_formats()
+    std::vector<MirPixelFormat> supported_pixel_formats()
     {
         return {};
     }

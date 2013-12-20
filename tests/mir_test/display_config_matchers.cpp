@@ -86,11 +86,11 @@ public:
             display_output.modes = modes;
 
             /* Pixel formats */
-            std::vector<geom::PixelFormat> pixel_formats;
+            std::vector<MirPixelFormat> pixel_formats;
             for (int n = 0; n < protobuf_output.pixel_format_size(); n++)
             {
                 pixel_formats.push_back(
-                    static_cast<geom::PixelFormat>(protobuf_output.pixel_format(n)));
+                    static_cast<MirPixelFormat>(protobuf_output.pixel_format(n)));
             }
             display_output.pixel_formats = pixel_formats;
 
@@ -151,11 +151,10 @@ public:
             display_output.modes = modes;
 
             /* Pixel formats */
-            std::vector<geom::PixelFormat> pixel_formats;
+            std::vector<MirPixelFormat> pixel_formats;
             for (size_t n = 0; n < client_output.num_output_formats; n++)
             {
-                pixel_formats.push_back(
-                    static_cast<geom::PixelFormat>(client_output.output_formats[n]));
+                pixel_formats.push_back(client_output.output_formats[n]);
             }
             display_output.pixel_formats = pixel_formats;
 

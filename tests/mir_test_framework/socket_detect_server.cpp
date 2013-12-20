@@ -30,7 +30,7 @@ bool mir_test_framework::detect_server(
     std::string const& socket_file,
     std::chrono::milliseconds const& timeout)
 {
-    auto limit = std::chrono::system_clock::now() + timeout;
+    auto limit = std::chrono::steady_clock::now() + timeout;
 
     bool error = false;
     struct stat file_status;
@@ -43,7 +43,7 @@ bool mir_test_framework::detect_server(
         }
         error = stat(socket_file.c_str(), &file_status);
     }
-    while (error && std::chrono::system_clock::now() < limit);
+    while (error && std::chrono::steady_clock::now() < limit);
 
     return !error;
 }

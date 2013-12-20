@@ -16,8 +16,9 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_stack.h"
-#include "src/server/scene/surface_factory.h"
+#include "src/server/scene/basic_surface_factory.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "src/server/compositor/buffer_bundle.h"
@@ -28,7 +29,7 @@
 #include "src/server/compositor/renderer.h"
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/compositing_criteria.h"
-#include "src/server/scene/surface.h"
+#include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
@@ -38,7 +39,6 @@
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/mock_compositing_criteria.h"
 
@@ -67,8 +67,8 @@ namespace
 class NullBufferBundle : public mc::BufferBundle
 {
 public:
-    virtual std::shared_ptr<mg::Buffer> client_acquire() { return std::shared_ptr<mg::Buffer>(); }
-    virtual void client_release(std::shared_ptr<mg::Buffer> const&) {}
+    virtual mg::Buffer* client_acquire() { return nullptr; }
+    virtual void client_release(mg::Buffer*) {}
     virtual std::shared_ptr<mg::Buffer> compositor_acquire(unsigned long)
         { return std::shared_ptr<mg::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mg::Buffer> const&){}
@@ -132,7 +132,7 @@ struct StubInputChannel : public mi::InputChannel
           c_fd(client_fd)
     {
     }
-    
+
     int client_fd() const
     {
         return c_fd;
@@ -142,14 +142,14 @@ struct StubInputChannel : public mi::InputChannel
         return s_fd;
     }
 
-    int const s_fd;    
+    int const s_fd;
     int const c_fd;
 };
 
-struct MockSurfaceAllocator : public ms::SurfaceFactory
+struct MockSurfaceAllocator : public ms::BasicSurfaceFactory
 {
     MOCK_METHOD2(create_surface, std::shared_ptr<ms::BasicSurface>(msh::SurfaceCreationParameters const&,
-                                                              std::function<void()> const&)); 
+                                                              std::function<void()> const&));
 };
 
 struct StubBufferStreamFactory : public ms::BufferStreamFactory
@@ -174,10 +174,11 @@ struct SurfaceStack : public ::testing::Test
         using namespace testing;
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
-        //TODO: this should be a real Stub from mtd, once ms::Surface is an interface
-        stub_surface1 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
-        stub_surface2 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
-        stub_surface3 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        auto stub_data = std::make_shared<ms::SurfaceData>( 
+            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false);
+        stub_surface1 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface2 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface3 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
             .WillByDefault(Return(stub_surface1));
@@ -186,9 +187,9 @@ struct SurfaceStack : public ::testing::Test
     mtd::StubInputRegistrar input_registrar;
     testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     msh::SurfaceCreationParameters default_params;
-    std::shared_ptr<ms::Surface> stub_surface1;
-    std::shared_ptr<ms::Surface> stub_surface2;
-    std::shared_ptr<ms::Surface> stub_surface3;
+    std::shared_ptr<ms::BasicSurface> stub_surface1;
+    std::shared_ptr<ms::BasicSurface> stub_surface2;
+    std::shared_ptr<ms::BasicSurface> stub_surface3;
 
     std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
 };
@@ -589,7 +590,7 @@ TEST_F(SurfaceStack, raise_throw_behavior)
         mt::fake_shared(input_registrar),
         report);
 
-    std::shared_ptr<ms::Surface> null_surface{nullptr};
+    std::shared_ptr<ms::BasicSurface> null_surface{nullptr};
     EXPECT_THROW({
             stack.raise(null_surface);
     }, std::runtime_error);

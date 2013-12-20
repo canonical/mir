@@ -44,7 +44,7 @@ public:
     virtual std::shared_ptr<scene::InputRegistrar> the_input_registrar() = 0;
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
-    
+
     virtual void set_input_targets(std::shared_ptr<input::InputTargets> const& targets) = 0;
 
 protected:

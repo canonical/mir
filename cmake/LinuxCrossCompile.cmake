@@ -12,8 +12,8 @@ set(CMAKE_CXX_COMPILER /usr/bin/${MIR_ARM_EABI}-g++)
 set(CMAKE_FIND_ROOT_PATH  "${MIR_NDK_PATH}")
 
 #treat the chroot's includes as system includes
-include_directories(SYSTEM ${MIR_NDK_PATH}/usr/include)
-list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${MIR_NDK_PATH}/usr/include")
+include_directories(SYSTEM "${MIR_NDK_PATH}/usr/include" "${MIR_NDK_PATH}/usr/include/${MIR_ARM_EABI}")
+list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${MIR_NDK_PATH}/usr/include" "${MIR_NDK_PATH}/usr/include/${MIR_ARM_EABI}" )
 
 # Add the chroot libraries as system libraries
 list(APPEND CMAKE_SYSTEM_LIBRARY_PATH

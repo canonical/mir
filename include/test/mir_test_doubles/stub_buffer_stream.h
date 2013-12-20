@@ -34,30 +34,28 @@ class StubBufferStream : public compositor::BufferStream
 public:
     StubBufferStream()
     {
-        stub_client_buffer = std::make_shared<StubBuffer>();
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
-    std::shared_ptr<graphics::Buffer> secure_client_buffer()
+    void swap_client_buffers(graphics::Buffer*& buffer) override
     {
-        return stub_client_buffer;
+        buffer = &stub_client_buffer;
     }
-
-    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long)
-    {
-        return stub_compositor_buffer;
-    }
-
-    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer()
+    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long) override
     {
         return stub_compositor_buffer;
     }
 
-    geometry::PixelFormat get_stream_pixel_format()
+    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override
     {
-        return geometry::PixelFormat();
+        return stub_compositor_buffer;
     }
 
-    geometry::Size stream_size()
+    MirPixelFormat get_stream_pixel_format() override
+    {
+        return MirPixelFormat();
+    }
+
+    geometry::Size stream_size() override
     {
         return geometry::Size();
     }
@@ -66,15 +64,15 @@ public:
     {
     }
 
-    void force_requests_to_complete()
+    void force_requests_to_complete() override
     {
     }
 
-    void allow_framedropping(bool)
+    void allow_framedropping(bool) override
     {
     }
 
-    std::shared_ptr<graphics::Buffer> stub_client_buffer;
+    StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
 };
 

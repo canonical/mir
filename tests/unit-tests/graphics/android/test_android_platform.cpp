@@ -17,10 +17,12 @@
  */
 
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/native_platform.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
-#include "src/server/graphics/android/android_platform.h"
+#include "src/platform/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_display_builder.h"
@@ -61,7 +63,7 @@ protected:
         }
 
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        mock_buffer = std::make_shared<mtd::MockBuffer>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
         ON_CALL(*native_buffer, handle())
             .WillByDefault(Return(native_buffer_handle.get()));
@@ -93,7 +95,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     {
         EXPECT_CALL(mock_packer, pack_fd(native_buffer_handle->data[offset++]))
             .Times(1);
-    } 
+    }
     for(auto i=0u; i<num_ints; i++)
     {
         EXPECT_CALL(mock_packer, pack_data(native_buffer_handle->data[offset++]))
@@ -120,4 +122,19 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
         std::make_shared<mg::NullDisplayReport>());
 
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
+}
+
+TEST(NestedPlatformCreation, doesnt_access_display_hardware)
+{
+    using namespace testing;
+
+    mtd::HardwareAccessMock hwaccess;
+    mtd::MockDisplayReport stub_report;
+
+    EXPECT_CALL(hwaccess, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(0);
+    EXPECT_CALL(hwaccess, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(AtMost(1));
+
+    auto platform = mg::create_native_platform(mt::fake_shared(stub_report));
 }

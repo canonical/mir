@@ -22,7 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <unordered_map>
 #include <memory>
@@ -61,7 +61,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
-        std::vector<geometry::PixelFormat> const& surface_pixel_formats,
+        std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
@@ -113,21 +113,21 @@ public:
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
-                              std::shared_ptr<graphics::Buffer> const& graphics_buffer,
+                              graphics::Buffer* graphics_buffer,
                               bool need_full_ipc);
 
-    std::tuple<std::shared_ptr<graphics::Buffer>, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
+    std::tuple<graphics::Buffer*, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
-    std::vector<geometry::PixelFormat> const surface_pixel_formats;
+    std::vector<MirPixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::unordered_map<SurfaceId,std::shared_ptr<graphics::Buffer>> client_buffer_resource;
+    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 
     std::mutex session_mutex;

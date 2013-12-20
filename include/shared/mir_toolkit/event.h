@@ -39,7 +39,8 @@ typedef enum
 {
     mir_event_type_key,
     mir_event_type_motion,
-    mir_event_type_surface
+    mir_event_type_surface,
+    mir_event_type_resize
 } MirEventType;
 
 typedef enum {
@@ -141,7 +142,7 @@ typedef struct
 
     int32_t device_id;
     int32_t source_id;
-    /* 
+    /*
      * TODO(racarr): We would like to store this as a MirMotionAction but the android input stack
      * encodes some non enumerable values in it. It's convenient to keep things
      * this way for now until we can drop SF/Hybris support in QtUbuntu.
@@ -194,12 +195,22 @@ typedef struct
     int value;
 } MirSurfaceEvent;
 
+typedef struct
+{
+    MirEventType type;
+
+    int surface_id;
+    int width;
+    int height;
+} MirResizeEvent;
+
 typedef union
 {
     MirEventType    type;
     MirKeyEvent     key;
     MirMotionEvent  motion;
     MirSurfaceEvent surface;
+    MirResizeEvent  resize;
 } MirEvent;
 
 #ifdef __cplusplus

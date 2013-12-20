@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
 #define MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
 
-#include "src/server/graphics/android/graphic_alloc_adaptor.h"
+#include "src/platform/graphics/android/graphic_alloc_adaptor.h"
 
 #include <system/window.h>
 #include <gmock/gmock.h>
@@ -34,8 +34,8 @@ namespace doubles
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
-    MOCK_METHOD3(alloc_buffer, 
-        std::shared_ptr<graphics::NativeBuffer>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
+    MOCK_METHOD3(alloc_buffer,
+        std::shared_ptr<graphics::NativeBuffer>(geometry::Size, MirPixelFormat, graphics::android::BufferUsage));
 };
 
 }

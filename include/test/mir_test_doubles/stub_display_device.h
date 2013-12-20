@@ -18,8 +18,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
 
-#include "src/server/graphics/android/display_device.h"
- 
+#include "src/platform/graphics/android/display_device.h"
+
 namespace mir
 {
 namespace test
@@ -41,7 +41,7 @@ struct StubDisplayDevice : public graphics::android::DisplayDevice
     void prepare_composition()
     {
     }
-    void gpu_render(EGLDisplay, EGLSurface) 
+    void gpu_render(EGLDisplay, EGLSurface)
     {
     }
     void post(graphics::Buffer const&)

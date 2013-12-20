@@ -17,7 +17,7 @@
  */
 
 #include "display_buffer.h"
-#include "gl_extensions_base.h"
+#include "mir/graphics/gl_extensions_base.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
@@ -33,17 +33,11 @@ namespace geom = mir::geometry;
 namespace
 {
 
-EGLint const default_egl_context_attr[] =
-{
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-
-class GLExtensions : public mgo::GLExtensionsBase
+class GLExtensions : public mg::GLExtensionsBase
 {
 public:
     GLExtensions() :
-        mgo::GLExtensionsBase{
+        mg::GLExtensionsBase{
             reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS))}
     {
     }

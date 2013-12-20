@@ -126,7 +126,7 @@ struct MockServerPackageGenerator : public StubServerTool
     int height_sent;
     int pf_sent;
     int stride_sent;
-    
+
     int input_fd;
 
     private:
@@ -180,7 +180,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
@@ -203,7 +203,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
 
     MOCK_METHOD3(create_buffer,
                  std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
-                                                    geom::Size, geom::PixelFormat));
+                                                    geom::Size, MirPixelFormat));
 
     std::shared_ptr<MirBufferPackage> current_package;
     std::shared_ptr<mcl::ClientBuffer> current_buffer;
@@ -214,8 +214,8 @@ struct StubClientPlatform : public mcl::ClientPlatform
 {
     MirPlatformType platform_type() const
     {
-        return mir_platform_type_android; 
-    } 
+        return mir_platform_type_android;
+    }
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::shared_ptr<MockClientBufferFactory>();
@@ -310,7 +310,7 @@ struct MirClientSurfaceTest : public testing::Test
 
         test_server->comm->start();
 
-        mock_buffer_factory = std::make_shared<mt::MockClientBufferFactory>();
+        mock_buffer_factory = std::make_shared<testing::NiceMock<mt::MockClientBufferFactory>>();
 
         input_platform = std::make_shared<mt::StubClientInputPlatform>();
 
@@ -469,7 +469,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
 {
     using namespace testing;
 
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     std::shared_ptr<MirBufferPackage> submitted_package;
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
@@ -482,7 +482,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_all();
 
-    EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
+    EXPECT_EQ(pf, mir_pixel_format_abgr_8888);
 }
 
 
@@ -497,7 +497,7 @@ static void null_event_callback(MirSurface*, MirEvent const*, void*)
 TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_specified)
 {
     using namespace ::testing;
-    
+
     auto mock_input_platform = std::make_shared<mt::MockClientInputPlatform>();
     auto mock_input_thread = std::make_shared<NiceMock<mt::MockInputReceiverThread>>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
@@ -637,7 +637,7 @@ namespace
 
 struct StubBuffer : public mcl::ClientBuffer
 {
-    StubBuffer(geom::Size size, geom::Stride stride, geom::PixelFormat pf)
+    StubBuffer(geom::Size size, geom::Stride stride, MirPixelFormat pf)
         : size_{size}, stride_{stride}, pf_{pf}
     {
     }
@@ -655,7 +655,7 @@ struct StubBuffer : public mcl::ClientBuffer
 
     geom::Size size() const { return size_; }
     geom::Stride stride() const { return stride_; }
-    geom::PixelFormat pixel_format() const { return pf_; }
+    MirPixelFormat pixel_format() const { return pf_; }
     uint32_t age() const { return 0; }
     void increment_age() {}
     void mark_as_submitted() {}
@@ -667,14 +667,14 @@ struct StubBuffer : public mcl::ClientBuffer
 
     geom::Size size_;
     geom::Stride stride_;
-    geom::PixelFormat pf_;
+    MirPixelFormat pf_;
 };
 
 struct StubClientBufferFactory : public mcl::ClientBufferFactory
 {
     std::shared_ptr<mcl::ClientBuffer> create_buffer(
         std::shared_ptr<MirBufferPackage> const& package,
-        geom::Size size, geom::PixelFormat pf)
+        geom::Size size, MirPixelFormat pf)
     {
         return std::make_shared<StubBuffer>(size,
                                             geom::Stride{package->stride},

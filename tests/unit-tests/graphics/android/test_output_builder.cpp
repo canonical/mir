@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/output_builder.h"
-#include "src/server/graphics/android/gl_context.h"
-#include "src/server/graphics/android/android_format_conversion-inl.h"
-#include "src/server/graphics/android/resource_factory.h"
-#include "src/server/graphics/android/graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/output_builder.h"
+#include "src/platform/graphics/android/gl_context.h"
+#include "src/platform/graphics/android/android_format_conversion-inl.h"
+#include "src/platform/graphics/android/resource_factory.h"
+#include "src/platform/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
@@ -51,7 +51,7 @@ struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
             .WillByDefault(Return(nullptr));
     }
     MOCK_METHOD3(alloc_buffer_platform,
-        std::shared_ptr<mg::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
+        std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat, mga::BufferUsage));
 };
 
 struct MockResourceFactory: public mga::DisplayResourceFactory
@@ -91,10 +91,10 @@ public:
         using namespace testing;
         mock_resource_factory = std::make_shared<testing::NiceMock<MockResourceFactory>>();
         ON_CALL(*mock_resource_factory, create_hwc_native_device())
-            .WillByDefault(Return(hw_access_mock.mock_hwc_device)); 
+            .WillByDefault(Return(hw_access_mock.mock_hwc_device));
         ON_CALL(*mock_resource_factory, create_fb_native_device())
             .WillByDefault(Return(mt::fake_shared(fb_hal_mock)));
-        mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
+        mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;

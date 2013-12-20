@@ -100,7 +100,7 @@ public:
                 std::make_shared<mi::NullInputReport>());
 
         fake_event_hub = configuration->the_fake_event_hub();
-        
+
         input_manager = configuration->the_input_manager();
 
         stub_targets = std::make_shared<StubInputTargets>();
@@ -273,7 +273,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
-        
+
         input_registrar = configuration->the_input_registrar();
         input_targeter = configuration->the_input_targeter();
 
@@ -295,7 +295,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     {
         input_manager->start();
     }
-    
+
     int test_fd()
     {
         int fds[2];
@@ -397,4 +397,4 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_3));
     wait3.wait_for_at_most_seconds(5);
-} 
+}

@@ -19,7 +19,9 @@
 #ifndef MIR_SCENE_SURFACE_DATA_STORAGE_H_
 #define MIR_SCENE_SURFACE_DATA_STORAGE_H_
 
-#include "surface_state.h"
+#include "mir/compositor/compositing_criteria.h"
+#include "mir/input/surface.h"
+#include "mutable_surface_state.h"
 
 #include <vector>
 #include <functional>
@@ -30,7 +32,8 @@ namespace mir
 namespace scene
 {
 
-class SurfaceData : public SurfaceState
+class SurfaceData : public compositor::CompositingCriteria, public input::Surface,
+                    public MutableSurfaceState
 {
 public:
     SurfaceData(std::string const& name, geometry::Rectangle rect,

@@ -21,13 +21,13 @@
 #define MIR_TEST_DOUBLES_STUB_SURFACE_BUILDER_H_
 
 #include "src/server/scene/surface_builder.h"
-#include "src/server/scene/surface.h"
+#include "src/server/scene/basic_surface.h"
+#include "src/server/scene/surface_data.h"
 #include "mir/scene/scene_report.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_state.h"
-
+#include <memory>
 namespace mir
 {
 namespace test
@@ -39,30 +39,26 @@ class StubSurfaceBuilder : public scene::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_stream(std::make_shared<StubBufferStream>()),
-        dummy_surface()
+        dummy_surface(std::make_shared<scene::BasicSurface>(
+            std::make_shared<scene::SurfaceData>( 
+                std::string("stub"), geometry::Rectangle{{},{}}, [](){}, false),
+            std::make_shared<StubBufferStream>(),
+            std::shared_ptr<input::InputChannel>(),
+            std::make_shared<scene::NullSceneReport>()))
     {
     }
 
-    std::weak_ptr<scene::BasicSurface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
+    std::weak_ptr<scene::BasicSurface> create_surface(shell::SurfaceCreationParameters const&)
     {
-        auto state = std::make_shared<MockSurfaceState>();
-        dummy_surface = std::make_shared<scene::Surface>(
-            state, buffer_stream,
-            std::shared_ptr<input::InputChannel>(),
-            report);
-
         return dummy_surface;
     }
 
     void destroy_surface(std::weak_ptr<scene::BasicSurface> const& )
     {
     }
-private:
-    std::shared_ptr<compositor::BufferStream> const buffer_stream;
-    std::shared_ptr<scene::BasicSurface>  dummy_surface;
-    std::shared_ptr<scene::SceneReport> report = std::make_shared<scene::NullSceneReport>();
 
+private:
+    std::shared_ptr<scene::BasicSurface> dummy_surface;
 };
 }
 }

@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc10_device.h"
-#include "src/server/graphics/android/hwc11_device.h"
-#include "src/server/graphics/android/hwc_layerlist.h"
-#include "src/server/graphics/android/hwc_vsync_coordinator.h"
+#include "src/platform/graphics/android/hwc10_device.h"
+#include "src/platform/graphics/android/hwc11_device.h"
+#include "src/platform/graphics/android/hwc_layerlist.h"
+#include "src/platform/graphics/android/hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -69,7 +69,7 @@ protected:
     {
         using namespace testing;
 
-        mock_fbdev = std::make_shared<mtd::MockFBHalDevice>(); 
+        mock_fbdev = std::make_shared<mtd::MockFBHalDevice>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }

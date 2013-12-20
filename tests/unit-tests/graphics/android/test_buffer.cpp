@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
-#include "src/server/graphics/android/buffer.h"
+#include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -42,7 +42,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        mock_native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
 
         anwb = mock_native_buffer->anwb();
         anwb->width = 44;
@@ -51,7 +51,7 @@ protected:
         anwb->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         default_use = mga::BufferUsage::use_hardware;
-        pf = geom::PixelFormat::abgr_8888;
+        pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
         extensions = std::make_shared<mg::EGLExtensions>();
     }
@@ -59,7 +59,7 @@ protected:
     ANativeWindowBuffer *anwb;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
-    geom::PixelFormat pf;
+    MirPixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;
     std::shared_ptr<mg::EGLExtensions> extensions;
@@ -80,7 +80,7 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
     using namespace testing;
 
     mga::Buffer buffer(mock_native_buffer, extensions);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
+    EXPECT_EQ(mir_pixel_format_abgr_8888, buffer.pixel_format());
 }
 
 TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
@@ -112,7 +112,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
     using namespace testing;
 
     geom::Stride expected_stride{anwb->stride *
-                                 geom::bytes_per_pixel(pf)};
+                                 MIR_BYTES_PER_PIXEL(pf)};
     mga::Buffer buffer(mock_native_buffer, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

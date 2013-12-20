@@ -36,7 +36,7 @@ struct TestingClientConfiguration
     virtual bool use_real_graphics(mir::options::Option const& options)
     {
         return options.get("tests-use-real-graphics", false);
-    } 
+    }
 };
 
 }

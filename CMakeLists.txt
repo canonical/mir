@@ -28,7 +28,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 1)
-set(MIR_VERSION_PATCH 2)
+set(MIR_VERSION_PATCH 3)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -87,13 +87,13 @@ add_definitions(
 )
 endif(MIR_DISABLE_EPOLL_REACTOR)
 
-# Default to gbm backend
+# Default to mesa backend
 set(
   MIR_PLATFORM
-  gbm
+  mesa
   CACHE
   STRING
-  "graphics backend to build (options are 'gbm' or 'android')"
+  "graphics backend to build (options are 'mesa' or 'android')"
 )
 
 find_package(EGL REQUIRED)
@@ -124,14 +124,14 @@ if (MIR_PLATFORM STREQUAL "android")
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
-elseif (MIR_PLATFORM STREQUAL "gbm")
+elseif (MIR_PLATFORM STREQUAL "mesa")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
   pkg_check_modules( UDEV REQUIRED libudev )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
 else ()
-  message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
+  message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'mesa'")
 endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input

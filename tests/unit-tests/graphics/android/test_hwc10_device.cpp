@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc10_device.h"
+#include "src/platform/graphics/android/hwc10_device.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -40,16 +40,16 @@ protected:
         int width = 88;
         int height = 4;
         test_size = geom::Size{width, height};
-        test_pf = geom::PixelFormat::abgr_8888;
+        test_pf = mir_pixel_format_abgr_8888;
         int fbnum = 558;
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
-            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum); 
+            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
     }
 
-    geom::PixelFormat test_pf;
+    MirPixelFormat test_pf;
     geom::Size test_size;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;
@@ -61,8 +61,10 @@ TEST_F(HWC10Device, hwc10_render_frame)
 {
     using namespace testing;
 
-    EGLDisplay dpy;
-    EGLSurface sur;
+    int fake_dpy = 0;
+    int fake_sur = 0;
+    EGLDisplay dpy = &fake_dpy;
+    EGLSurface sur = &fake_sur;
 
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
@@ -70,8 +72,6 @@ TEST_F(HWC10Device, hwc10_render_frame)
     mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     device.gpu_render(dpy, sur);
-
-    Mock::VerifyAndClearExpectations(mock_hwc_device.get());
 
     EXPECT_EQ(dpy, mock_hwc_device->display0_set_content.dpy);
     EXPECT_EQ(sur, mock_hwc_device->display0_set_content.sur);
@@ -102,8 +102,10 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
 {
     using namespace testing;
 
-    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x1234);
-    EGLSurface sur = reinterpret_cast<EGLSurface>(0x4455);
+    int fake_dpy = 0;
+    int fake_sur = 0;
+    EGLDisplay dpy = &fake_dpy;
+    EGLSurface sur = &fake_sur;
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), _, _))
         .Times(1)
         .WillOnce(Return(-1));

@@ -20,7 +20,6 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
-#include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
@@ -55,9 +54,9 @@ public:
     virtual void force_requests_to_complete() = 0;
 
     virtual geometry::Size size() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual MirPixelFormat pixel_format() const = 0;
 
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
+    virtual void swap_buffers(graphics::Buffer*&) = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

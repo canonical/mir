@@ -118,8 +118,8 @@ void mcll::InputReceiverReport::received_event(
     std::stringstream ss;
 
     ss << "Received event:" << std::endl;
-    
+
     format_event(ss, event);
 
-    logger->log<ml::Logger::debug>(ss.str(), component);
+    logger->log(ml::Logger::debug, ss.str(), component);
 }

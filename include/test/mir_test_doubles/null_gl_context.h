@@ -31,8 +31,8 @@ namespace doubles
 class NullGLContext : public graphics::GLContext
 {
 public:
-    void make_current() {}
-    void release_current() {}
+    void make_current() const {}
+    void release_current() const {}
 };
 
 }

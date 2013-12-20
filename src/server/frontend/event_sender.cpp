@@ -37,7 +37,7 @@ mfd::EventSender::EventSender(std::shared_ptr<MessageSender> const& socket_sende
 void mfd::EventSender::handle_event(MirEvent const& e)
 {
     // Limit the types of events we wish to send over protobuf, for now.
-    if (e.type == mir_event_type_surface)
+    if (e.type != mir_event_type_key && e.type != mir_event_type_motion)
     {
         // In future we might send multiple events, or insert them into messages
         // containing other responses, but for now we send them individually.

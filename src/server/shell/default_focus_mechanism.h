@@ -26,18 +26,18 @@
 
 namespace mir
 {
+namespace scene { class SurfaceRanker; }
 
 namespace shell
 {
 class Surface;
 class InputTargeter;
-class SurfaceController;
 
 class DefaultFocusMechanism : public FocusSetter
 {
 public:
     explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter,
-                                   std::shared_ptr<SurfaceController> const& surface_controller);
+                                   std::shared_ptr<scene::SurfaceRanker> const& surface_controller);
     virtual ~DefaultFocusMechanism() = default;
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
@@ -48,7 +48,7 @@ protected:
 
 private:
     std::shared_ptr<InputTargeter> const input_targeter;
-    std::shared_ptr<SurfaceController> const surface_controller;
+    std::shared_ptr<scene::SurfaceRanker> const surface_controller;
 
     std::mutex surface_focus_lock;
     std::weak_ptr<Surface> currently_focused_surface;

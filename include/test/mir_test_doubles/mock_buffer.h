@@ -42,7 +42,7 @@ struct MockBuffer : public graphics::Buffer
 
     MockBuffer(geometry::Size size,
                geometry::Stride s,
-               geometry::PixelFormat pf)
+               MirPixelFormat pf)
     {
         using namespace testing;
         ON_CALL(*this, size())
@@ -60,7 +60,7 @@ struct MockBuffer : public graphics::Buffer
 
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<graphics::NativeBuffer>());
 
     MOCK_METHOD0(bind_to_texture, void());

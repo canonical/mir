@@ -42,7 +42,7 @@ struct SwitchingBundleTest : public ::testing::Test
         basic_properties =
         {
             geom::Size{3, 4},
-            geom::PixelFormat::abgr_8888,
+            mir_pixel_format_abgr_8888,
             mg::BufferUsage::hardware
         };
     }
@@ -55,7 +55,7 @@ struct SwitchingBundleTest : public ::testing::Test
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
     mg::BufferProperties properties{geom::Size{7, 8},
-                                    geom::PixelFormat::argb_8888,
+                                    mir_pixel_format_argb_8888,
                                     mg::BufferUsage::software};
 
     for (int nbuffers = mc::SwitchingBundle::min_buffers;
@@ -200,11 +200,9 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
     auto client1 = bundle.client_acquire();
     auto client1_id = client1->id();
     bundle.client_release(client1);
-    client1.reset();
 
     auto client2 = bundle.client_acquire();
     bundle.client_release(client2);
-    client2.reset();
 
     auto compositor = bundle.compositor_acquire(1);
     EXPECT_EQ(client1_id, compositor->id());
@@ -320,11 +318,6 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
         unsigned long frameno = 0;
 
         auto client = bundle.client_acquire();
-
-        EXPECT_THROW(
-            bundle.compositor_release(client),
-            std::logic_error
-        );
         bundle.client_release(client);
 
         auto compositor1 = bundle.compositor_acquire(++frameno);
@@ -428,11 +421,6 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
         EXPECT_EQ(compositor->id(), snapshot->id());
 
         EXPECT_NE(client->id(), snapshot->id());
-
-        EXPECT_THROW(
-            bundle.snapshot_release(client),
-            std::logic_error
-        );
 
         bundle.snapshot_release(snapshot);
 
@@ -626,7 +614,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 
         const int nframes = 100;
         mg::BufferID expect[mc::SwitchingBundle::max_buffers];
-        std::shared_ptr<mg::Buffer> buf[mc::SwitchingBundle::max_buffers];
+        mg::Buffer* buf[mc::SwitchingBundle::max_buffers];
 
         for (int b = 0; b < nbuffers; b++)
         {
@@ -810,7 +798,7 @@ TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
                 auto client = bundle.client_acquire();
                 ASSERT_EQ(expect_size, client->size());
                 bundle.client_release(client);
-    
+
                 auto compositor = bundle.compositor_acquire(frameno++);
                 ASSERT_EQ(expect_size, compositor->size());
                 bundle.compositor_release(compositor);
@@ -851,7 +839,7 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
 
         width = width0;
         height = height0;
-    
+
         for (int consume = 0; consume < nbuffers; ++consume)
         {
             geom::Size expect_size{width, height};

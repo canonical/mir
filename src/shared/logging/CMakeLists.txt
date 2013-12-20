@@ -14,14 +14,6 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-set(
-  MIR_SHARED_LOGGING_SOURCES
-
+add_library(mirsharedlogging STATIC
   dumb_console_logger.cpp
-  default_configuration.cpp
-)
-
-add_library(
-  mirsharedlogging STATIC
-  ${MIR_SHARED_LOGGING_SOURCES}
 )

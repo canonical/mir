@@ -144,7 +144,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
     using namespace testing;
 
     int fake_fd = 4948;
-    auto mock_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+    auto mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
     EXPECT_CALL(*mock_buffer, copy_fence())
         .Times(1)
         .WillOnce(Return(fake_fd));
@@ -176,7 +176,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
     using namespace testing;
 
     ANativeWindowBuffer* returned_buffer;
-    auto mock_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+    auto mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
     std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
 
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())

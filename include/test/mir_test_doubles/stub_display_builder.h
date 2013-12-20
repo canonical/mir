@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/server/graphics/android/display_builder.h"
+#include "src/platform/graphics/android/display_builder.h"
 #include "stub_display_buffer.h"
 #include "stub_display_device.h"
 #include <gmock/gmock.h>
@@ -52,9 +52,9 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
     {
     }
 
-    geometry::PixelFormat display_format()
+    MirPixelFormat display_format()
     {
-        return geometry::PixelFormat::abgr_8888;
+        return mir_pixel_format_abgr_8888;
     }
 
     std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
@@ -64,7 +64,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
         return std::unique_ptr<graphics::DisplayBuffer>(
                 new StubDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
-    
+
     std::shared_ptr<graphics::android::DisplayDevice> create_display_device()
     {
         return stub_dev;

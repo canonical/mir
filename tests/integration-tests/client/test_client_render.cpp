@@ -20,9 +20,9 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "src/server/graphics/android/buffer.h"
+#include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test/draw/android_graphics.h"
@@ -143,12 +143,12 @@ struct TestClient
         auto native_display = mir_connection_get_egl_native_display(connection);
         auto egl_display = eglGetDisplay(native_display);
         eglInitialize(egl_display, &major, &minor);
-        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n); 
+        eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
-        auto mir_surface = create_mir_surface(connection, egl_display, egl_config); 
+        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);
         auto native_window = static_cast<EGLNativeWindowType>(
-            mir_surface_get_egl_native_window(mir_surface)); 
-    
+            mir_surface_get_egl_native_window(mir_surface));
+
         egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
         context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
         eglMakeCurrent(egl_display, egl_surface, egl_surface, context);
@@ -192,7 +192,7 @@ struct StubServerGenerator : public mt::StubServerTool
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
         auto size = geom::Size{test_width, test_height};
-        surface_pf = geom::PixelFormat::abgr_8888;
+        surface_pf = mir_pixel_format_abgr_8888;
         last_posted = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
         client_buffer = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
     }
@@ -205,7 +205,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_id()->set_value(13);
         response->set_width(test_width);
         response->set_height(test_height);
-        surface_pf = geom::PixelFormat(request->pixel_format());
+        surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
 
@@ -260,10 +260,10 @@ struct StubServerGenerator : public mt::StubServerTool
 
     uint32_t red_value_for_surface()
     {
-        if ((surface_pf == geom::PixelFormat::abgr_8888) || (surface_pf == geom::PixelFormat::xbgr_8888))
+        if ((surface_pf == mir_pixel_format_abgr_8888) || (surface_pf == mir_pixel_format_xbgr_8888))
             return 0xFF0000FF;
 
-        if ((surface_pf == geom::PixelFormat::argb_8888) || (surface_pf == geom::PixelFormat::xrgb_8888))
+        if ((surface_pf == mir_pixel_format_argb_8888) || (surface_pf == mir_pixel_format_xrgb_8888))
             return 0xFFFF0000;
 
         return 0x0;
@@ -291,7 +291,7 @@ private:
     std::shared_ptr<mg::Buffer> client_buffer;
     std::shared_ptr<mg::Buffer> last_posted;
     std::mutex buffer_mutex;
-    geom::PixelFormat surface_pf;
+    MirPixelFormat surface_pf;
 };
 
 }

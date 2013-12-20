@@ -21,7 +21,7 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_H_
 
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 
 #include <memory>
@@ -41,11 +41,11 @@ class BufferStream
 public:
     virtual ~BufferStream() = default;
 
-    virtual std::shared_ptr<graphics::Buffer> secure_client_buffer() = 0;
+    virtual void swap_client_buffers(graphics::Buffer*& buffer) = 0;
     virtual std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(unsigned long frameno) = 0;
     virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
-    virtual geometry::PixelFormat get_stream_pixel_format() = 0;
+    virtual MirPixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void resize(geometry::Size const& size) = 0;
     virtual void allow_framedropping(bool) = 0;

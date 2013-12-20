@@ -85,7 +85,7 @@ private:
 
 mtd::StubDisplayConfig StubChanger::stub_display_config{
     2,
-    { geom::PixelFormat::xrgb_8888 }
+    { mir_pixel_format_xrgb_8888 }
 };
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
@@ -93,18 +93,18 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
 public:
-    std::vector<geom::PixelFormat> supported_pixel_formats() override
+    std::vector<MirPixelFormat> supported_pixel_formats() override
     {
         return pixel_formats;
     }
 
-    static std::vector<geom::PixelFormat> const pixel_formats;
+    static std::vector<MirPixelFormat> const pixel_formats;
 };
 
-std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
-    geom::PixelFormat::argb_8888,
-    geom::PixelFormat::xbgr_8888,
-    geom::PixelFormat::bgr_888
+std::vector<MirPixelFormat> const StubGraphicBufferAllocator::pixel_formats{
+    mir_pixel_format_argb_8888,
+    mir_pixel_format_xbgr_8888,
+    mir_pixel_format_bgr_888
 };
 
 class StubPlatform : public mtd::NullPlatform
@@ -149,7 +149,7 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
-            return changer; 
+            return changer;
         }
 
         std::shared_ptr<StubChanger> changer;
@@ -163,18 +163,19 @@ TEST_F(AvailableSurfaceFormatsTest, surface_pixel_formats_reach_client)
         void exec()
         {
             MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
 
             unsigned int const format_storage_size = 4;
-            MirPixelFormat formats[format_storage_size]; 
+            MirPixelFormat formats[format_storage_size];
             unsigned int returned_format_size = 0;
             mir_connection_get_available_surface_formats(connection,
                 formats, format_storage_size, &returned_format_size);
 
-            ASSERT_EQ(returned_format_size, StubGraphicBufferAllocator::pixel_formats.size());
+            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(), returned_format_size);
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(formats[i])) << "i=" << i;
+                          formats[i]) << "i=" << i;
             }
 
             mir_connection_release(connection);

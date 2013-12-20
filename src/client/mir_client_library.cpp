@@ -176,9 +176,9 @@ MirConnection *mir_connect_sync(char const *server,
     return conn;
 }
 
-int mir_connection_is_valid(MirConnection * connection)
+MirBool mir_connection_is_valid(MirConnection * connection)
 {
-    return MirConnection::is_valid(connection);
+    return MirConnection::is_valid(connection) ? mir_true : mir_false;
 }
 
 char const * mir_connection_get_error_message(MirConnection * connection)
@@ -266,12 +266,12 @@ int mir_surface_get_id(MirSurface * surface)
 
 int mir_debug_surface_id(MirSurface * surface)
 {
-    return surface->id();    
+    return surface->id();
 }
 
-int mir_surface_is_valid(MirSurface* surface)
+MirBool mir_surface_is_valid(MirSurface* surface)
 {
-    return surface->is_valid();
+    return surface->is_valid() ? mir_true : mir_false;
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)

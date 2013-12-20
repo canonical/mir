@@ -145,7 +145,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 {
     using namespace testing;
     native_handle_t const* handle1 = nullptr;
-    native_handle_t const* handle2 = nullptr; 
+    native_handle_t const* handle2 = nullptr;
 
     EXPECT_CALL(*mock_module, registerBuffer_interface(mock_module.get(),_))
         .Times(1)
@@ -169,7 +169,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = 0;
     package->fd_items = 2;
-    
+
     int ret = pipe(static_cast<int*>(package->fd));
     {
         mcla::AndroidRegistrarGralloc registrar(mir::test::fake_shared(stub_module));
@@ -205,7 +205,7 @@ protected:
     {
         using namespace testing;
 
-        mock_module = std::make_shared<MockRegistrarDevice>();
+        mock_module = std::make_shared<NiceMock<MockRegistrarDevice>>();
 
         width = 41;
         height = 43;
