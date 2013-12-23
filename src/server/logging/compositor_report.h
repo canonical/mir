@@ -39,7 +39,7 @@ public:
     void begin_frame(Id id);
     void end_frame(Id id);
 private:
-    std::shared_ptr<Logger> logger;
+    std::shared_ptr<Logger> const logger;
 
     typedef std::chrono::steady_clock::time_point TimePoint;
     static TimePoint now();
@@ -47,9 +47,19 @@ private:
     struct Instance
     {
         TimePoint start_of_frame;
+        TimePoint end_of_frame;
+        long long total_time_sum = 0;
+        long long frame_time_sum = 0;
+        long long nframes = 0;
+
+        long long last_reported_total_time_sum = 0;
+        long long last_reported_frame_time_sum = 0;
+        long long last_reported_nframes = 0;
     };
-    std::mutex mutex; // Protects instance
+
+    std::mutex mutex; // Protects the following...
     std::unordered_map<Id, Instance> instance;
+    TimePoint last_report;
 };
 
 } // namespace logging

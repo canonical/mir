@@ -24,11 +24,13 @@ using namespace mir;
 namespace
 {
     const char * const component = "compositor";
+    const auto min_report_interval = std::chrono::seconds(1);
 }
 
 logging::CompositorReport::CompositorReport(
     std::shared_ptr<Logger> const& logger)
-    : logger(logger)
+    : logger(logger),
+      last_report(now())
 {
 }
 
@@ -50,7 +52,42 @@ void logging::CompositorReport::end_frame(Id id)
     std::lock_guard<std::mutex> lock(mutex);
     auto& inst = instance[id];
 
-    auto duration = now() - inst.start_of_frame;
-    (void)duration; // TODO
-    logger->log(Logger::informational, "TODO end_frame", component);
+    auto t = now();
+    inst.total_time_sum +=
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            t - inst.end_of_frame).count();
+    inst.frame_time_sum +=
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            t - inst.start_of_frame).count();
+    inst.end_of_frame = t;
+    inst.nframes++;
+
+    if ((t - last_report) >= min_report_interval)
+    {
+        last_report = t;
+
+        int n = 0;
+        for (auto& ip : instance)
+        {
+            auto &i = ip.second;
+
+            if (i.last_reported_total_time_sum)
+            {
+                long fps1000 =
+                    ((i.nframes - i.last_reported_nframes) * 1000000000LL) /
+                    (i.total_time_sum - i.last_reported_total_time_sum);
+
+                char msg[128];
+                snprintf(msg, sizeof msg, "[%d] %ld.%03ld FPS",
+                         n, fps1000 / 1000, fps1000 % 1000);
+
+                logger->log(Logger::informational, msg, component);
+            }
+
+            i.last_reported_total_time_sum = i.total_time_sum;
+            i.last_reported_frame_time_sum = i.frame_time_sum;
+            i.last_reported_nframes = i.nframes;
+            n++;
+        }
+    }
 }
