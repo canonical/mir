@@ -27,9 +27,9 @@ namespace compositor
 class CompositorReport
 {
 public:
-    typedef void* Id;  // Some unique value to distinguish the threads
-    virtual void began_frame(Id id = nullptr) = 0;
-    virtual void finished_frame(Id id = nullptr) = 0;
+    typedef void* SubCompositorId;  // e.g. thread/display buffer ID
+    virtual void began_frame(SubCompositorId id = 0) = 0;
+    virtual void finished_frame(SubCompositorId id = 0) = 0;
     virtual void started() = 0;
     virtual void stopped() = 0;
 protected:
@@ -42,8 +42,8 @@ protected:
 class NullCompositorReport : public CompositorReport
 {
 public:
-    void began_frame(Id id);
-    void finished_frame(Id id);
+    void began_frame(SubCompositorId id);
+    void finished_frame(SubCompositorId id);
     virtual void started();
     virtual void stopped();
 };

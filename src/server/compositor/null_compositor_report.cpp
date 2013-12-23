@@ -20,11 +20,11 @@
 
 using namespace mir::compositor;
 
-void NullCompositorReport::began_frame(Id)
+void NullCompositorReport::began_frame(SubCompositorId)
 {
 }
 
-void NullCompositorReport::finished_frame(Id)
+void NullCompositorReport::finished_frame(SubCompositorId)
 {
 }
 

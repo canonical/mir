@@ -36,8 +36,8 @@ class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
     CompositorReport(std::shared_ptr<Logger> const& logger);
-    void began_frame(Id id);
-    void finished_frame(Id id);
+    void began_frame(SubCompositorId id);
+    void finished_frame(SubCompositorId id);
     void started();
     void stopped();
 
@@ -61,7 +61,7 @@ private:
     };
 
     std::mutex mutex; // Protects the following...
-    std::unordered_map<Id, Instance> instance;
+    std::unordered_map<SubCompositorId, Instance> instance;
     TimePoint last_report;
 };
 
