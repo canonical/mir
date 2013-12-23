@@ -36,7 +36,7 @@ class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
     CompositorReport(std::shared_ptr<Logger> const& logger);
-    void added(int width, int height, int x, int y, SubCompositorId id);
+    void added_display(int width, int height, int x, int y, SubCompositorId id);
     void began_frame(SubCompositorId id);
     void finished_frame(SubCompositorId id);
     void started();

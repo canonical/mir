@@ -66,9 +66,9 @@ public:
           report{report}
     {
         const auto& r = buffer.view_area();
-        report->added(r.size.width.as_int(), r.size.height.as_int(),
-                      r.top_left.x.as_int(), r.top_left.y.as_int(),
-                      this);
+        report->added_display(r.size.width.as_int(), r.size.height.as_int(),
+                              r.top_left.x.as_int(), r.top_left.y.as_int(),
+                              this);
     }
 
     void operator()()

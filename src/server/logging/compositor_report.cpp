@@ -39,8 +39,9 @@ logging::CompositorReport::TimePoint logging::CompositorReport::now()
     return std::chrono::steady_clock::now();
 }
 
-void logging::CompositorReport::added(int width, int height, int x, int y,
-                                      SubCompositorId id)
+void logging::CompositorReport::added_display(int width, int height,
+                                              int x, int y,
+                                              SubCompositorId id)
 {
     char msg[128];
     snprintf(msg, sizeof msg, "Added display %p: %dx%d %+d%+d",

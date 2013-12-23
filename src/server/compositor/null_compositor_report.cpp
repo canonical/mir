@@ -20,7 +20,7 @@
 
 using namespace mir::compositor;
 
-void NullCompositorReport::added(int, int, int, int, SubCompositorId)
+void NullCompositorReport::added_display(int, int, int, int, SubCompositorId)
 {
 }
 
