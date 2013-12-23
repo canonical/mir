@@ -38,6 +38,9 @@ public:
     CompositorReport(std::shared_ptr<Logger> const& logger);
     void begin_frame(Id id);
     void end_frame(Id id);
+    void start_compositor();
+    void stop_compositor();
+
 private:
     std::shared_ptr<Logger> const logger;
 

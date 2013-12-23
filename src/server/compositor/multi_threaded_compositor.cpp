@@ -158,7 +158,7 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::start()
 {
-    // TODO: report->start();
+    report->start_compositor();
 
     /* Start the compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
@@ -184,7 +184,7 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    // TODO: report->stop()
+    report->stop_compositor();
 
     scene->set_change_callback([]{});
 

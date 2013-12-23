@@ -28,9 +28,10 @@ class CompositorReport
 {
 public:
     typedef void* Id;  // Some unique value to distinguish the threads
-
     virtual void begin_frame(Id id = nullptr) = 0;
     virtual void end_frame(Id id = nullptr) = 0;
+    virtual void start_compositor() = 0;
+    virtual void stop_compositor() = 0;
 protected:
     CompositorReport() = default;
     virtual ~CompositorReport() = default;
@@ -43,6 +44,8 @@ class NullCompositorReport : public CompositorReport
 public:
     void begin_frame(Id id);
     void end_frame(Id id);
+    virtual void start_compositor();
+    virtual void stop_compositor();
 };
 
 } // namespace compositor

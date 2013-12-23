@@ -28,3 +28,11 @@ void NullCompositorReport::begin_frame(Id)
 void NullCompositorReport::end_frame(Id)
 {
 }
+
+void NullCompositorReport::start_compositor()
+{
+}
+
+void NullCompositorReport::stop_compositor()
+{
+}

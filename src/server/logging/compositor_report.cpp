@@ -110,3 +110,13 @@ void logging::CompositorReport::end_frame(Id id)
         }
     }
 }
+
+void logging::CompositorReport::start_compositor()
+{
+    logger->log(Logger::informational, "Started", component);
+}
+
+void logging::CompositorReport::stop_compositor()
+{
+    logger->log(Logger::informational, "Stopped", component);
+}
