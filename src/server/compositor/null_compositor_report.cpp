@@ -18,21 +18,20 @@
 
 #include "mir/compositor/compositor_report.h"
 
-using namespace mir;
 using namespace mir::compositor;
 
-void NullCompositorReport::begin_frame(Id)
+void NullCompositorReport::began_frame(Id)
 {
 }
 
-void NullCompositorReport::end_frame(Id)
+void NullCompositorReport::finished_frame(Id)
 {
 }
 
-void NullCompositorReport::start_compositor()
+void NullCompositorReport::started()
 {
 }
 
-void NullCompositorReport::stop_compositor()
+void NullCompositorReport::stopped()
 {
 }

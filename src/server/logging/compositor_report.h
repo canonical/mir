@@ -36,10 +36,10 @@ class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
     CompositorReport(std::shared_ptr<Logger> const& logger);
-    void begin_frame(Id id);
-    void end_frame(Id id);
-    void start_compositor();
-    void stop_compositor();
+    void began_frame(Id id);
+    void finished_frame(Id id);
+    void started();
+    void stopped();
 
 private:
     std::shared_ptr<Logger> const logger;

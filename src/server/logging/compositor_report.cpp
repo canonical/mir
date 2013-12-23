@@ -39,7 +39,7 @@ logging::CompositorReport::TimePoint logging::CompositorReport::now()
     return std::chrono::steady_clock::now();
 }
 
-void logging::CompositorReport::begin_frame(Id id)
+void logging::CompositorReport::began_frame(Id id)
 {
     std::lock_guard<std::mutex> lock(mutex);
     auto& inst = instance[id];
@@ -47,7 +47,7 @@ void logging::CompositorReport::begin_frame(Id id)
     inst.start_of_frame = now();
 }
 
-void logging::CompositorReport::end_frame(Id id)
+void logging::CompositorReport::finished_frame(Id id)
 {
     std::lock_guard<std::mutex> lock(mutex);
     auto& inst = instance[id];
@@ -111,12 +111,12 @@ void logging::CompositorReport::end_frame(Id id)
     }
 }
 
-void logging::CompositorReport::start_compositor()
+void logging::CompositorReport::started()
 {
     logger->log(Logger::informational, "Started", component);
 }
 
-void logging::CompositorReport::stop_compositor()
+void logging::CompositorReport::stopped()
 {
     logger->log(Logger::informational, "Stopped", component);
 }

@@ -94,9 +94,9 @@ public:
             if (running)
             {
                 lock.unlock();
-                report->begin_frame(this);
+                report->began_frame(this);
                 display_buffer_compositor->composite();
-                report->end_frame(this);
+                report->finished_frame(this);
                 lock.lock();
             }
         }
@@ -158,7 +158,7 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::start()
 {
-    report->start_compositor();
+    report->started();
 
     /* Start the compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
@@ -184,8 +184,6 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    report->stop_compositor();
-
     scene->set_change_callback([]{});
 
     for (auto& f : thread_functors)
@@ -196,4 +194,6 @@ void mc::MultiThreadedCompositor::stop()
 
     thread_functors.clear();
     threads.clear();
+
+    report->stopped();
 }
