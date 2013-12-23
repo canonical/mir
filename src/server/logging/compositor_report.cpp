@@ -53,13 +53,8 @@ void logging::CompositorReport::end_frame(Id id)
     auto& inst = instance[id];
 
     auto t = now();
-    auto interval = std::chrono::duration_cast<std::chrono::microseconds>(
-            t - inst.end_of_frame).count();
-    auto frame_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            t - inst.start_of_frame).count();
-
-    inst.total_time_sum += interval;
-    inst.frame_time_sum += frame_time;
+    inst.total_time_sum += t - inst.end_of_frame;
+    inst.frame_time_sum += t - inst.start_of_frame;
     inst.end_of_frame = t;
     inst.nframes++;
 
@@ -75,11 +70,17 @@ void logging::CompositorReport::end_frame(Id id)
         {
             auto &i = ip.second;
 
-            if (i.last_reported_total_time_sum)
+            if (i.last_reported_total_time_sum > TimePoint())
             {
-                auto dt = i.total_time_sum - i.last_reported_total_time_sum;
+                long long dt =
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                        i.total_time_sum - i.last_reported_total_time_sum
+                    ).count();
                 auto dn = i.nframes - i.last_reported_nframes;
-                auto df = i.frame_time_sum - i.last_reported_frame_time_sum;
+                long long df =
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                        i.frame_time_sum - i.last_reported_frame_time_sum
+                    ).count();
 
                 long fps1000 = dn * 1000000000LL / dt;
                 long frametime1000 = df / dn;

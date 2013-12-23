@@ -48,13 +48,13 @@ private:
     {
         TimePoint start_of_frame;
         TimePoint end_of_frame;
-        long long total_time_sum = 0;
-        long long frame_time_sum = 0;
-        long long nframes = 0;
+        TimePoint total_time_sum;
+        TimePoint frame_time_sum;
+        long nframes = 0;
 
-        long long last_reported_total_time_sum = 0;
-        long long last_reported_frame_time_sum = 0;
-        long long last_reported_nframes = 0;
+        TimePoint last_reported_total_time_sum;
+        TimePoint last_reported_frame_time_sum;
+        long last_reported_nframes = 0;
     };
 
     std::mutex mutex; // Protects the following...
