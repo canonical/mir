@@ -35,3 +35,7 @@ void NullCompositorReport::started()
 void NullCompositorReport::stopped()
 {
 }
+
+void NullCompositorReport::scheduled()
+{
+}

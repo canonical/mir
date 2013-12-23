@@ -32,6 +32,7 @@ public:
     virtual void finished_frame(SubCompositorId id = 0) = 0;
     virtual void started() = 0;
     virtual void stopped() = 0;
+    virtual void scheduled() = 0;
 protected:
     CompositorReport() = default;
     virtual ~CompositorReport() = default;
@@ -44,8 +45,9 @@ class NullCompositorReport : public CompositorReport
 public:
     void began_frame(SubCompositorId id);
     void finished_frame(SubCompositorId id);
-    virtual void started();
-    virtual void stopped();
+    void started();
+    void stopped();
+    void scheduled();
 };
 
 } // namespace compositor

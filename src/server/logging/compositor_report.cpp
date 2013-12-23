@@ -44,7 +44,9 @@ void logging::CompositorReport::began_frame(SubCompositorId id)
     std::lock_guard<std::mutex> lock(mutex);
     auto& inst = instance[id];
 
-    inst.start_of_frame = now();
+    auto t = now();
+    inst.start_of_frame = t;
+    inst.latency_sum += t - last_scheduled;
 }
 
 void logging::CompositorReport::finished_frame(SubCompositorId id)
@@ -81,24 +83,33 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
                     std::chrono::duration_cast<std::chrono::microseconds>(
                         i.frame_time_sum - i.last_reported_frame_time_sum
                     ).count();
+                long long dl =
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                        i.latency_sum - i.last_reported_latency_sum
+                    ).count();
 
                 // Keep everything premultiplied by 1000 to guarantee accuracy
                 // and avoid floating point.
                 long frames_per_1000sec = dn * 1000000000LL / dt;
                 long avg_frame_time_usec = df / dn;
+                long avg_latency_usec = dl / dn;
                 long dt_msec = dt / 1000L;
 
                 char msg[128];
                 snprintf(msg, sizeof msg, "[%p] averaged %ld.%03ld FPS, "
-                         "%ld.%03ld ms/frame, %ld frames over %ld.%03ld sec",
+                         "%ld.%03ld ms/frame, "
+                         "latency %ld.%03ld ms, "
+                         "%ld frames over %ld.%03ld sec",
                          ip.first,
-                         frames_per_1000sec / 1000L,
-                         frames_per_1000sec % 1000L,
-                         avg_frame_time_usec / 1000L,
-                         avg_frame_time_usec % 1000L,
+                         frames_per_1000sec / 1000,
+                         frames_per_1000sec % 1000,
+                         avg_frame_time_usec / 1000,
+                         avg_frame_time_usec % 1000,
+                         avg_latency_usec / 1000,
+                         avg_latency_usec % 1000,
                          dn,
-                         dt_msec / 1000L,
-                         dt_msec % 1000L
+                         dt_msec / 1000,
+                         dt_msec % 1000
                          );
 
                 logger->log(Logger::informational, msg, component);
@@ -106,6 +117,7 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
 
             i.last_reported_total_time_sum = i.total_time_sum;
             i.last_reported_frame_time_sum = i.frame_time_sum;
+            i.last_reported_latency_sum = i.latency_sum;
             i.last_reported_nframes = i.nframes;
         }
     }
@@ -119,4 +131,10 @@ void logging::CompositorReport::started()
 void logging::CompositorReport::stopped()
 {
     logger->log(Logger::informational, "Stopped", component);
+}
+
+void logging::CompositorReport::scheduled()
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    last_scheduled = now();
 }

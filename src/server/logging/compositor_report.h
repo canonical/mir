@@ -40,6 +40,7 @@ public:
     void finished_frame(SubCompositorId id);
     void started();
     void stopped();
+    void scheduled();
 
 private:
     std::shared_ptr<Logger> const logger;
@@ -53,15 +54,18 @@ private:
         TimePoint end_of_frame;
         TimePoint total_time_sum;
         TimePoint frame_time_sum;
+        TimePoint latency_sum;
         long nframes = 0;
 
         TimePoint last_reported_total_time_sum;
         TimePoint last_reported_frame_time_sum;
+        TimePoint last_reported_latency_sum;
         long last_reported_nframes = 0;
     };
 
     std::mutex mutex; // Protects the following...
     std::unordered_map<SubCompositorId, Instance> instance;
+    TimePoint last_scheduled;
     TimePoint last_report;
 };
 

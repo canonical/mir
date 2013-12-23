@@ -116,7 +116,6 @@ public:
          */
         frames_scheduled = max_client_buffers;
         run_cv.notify_one();
-        // TODO: report->schedule_frame(this);
     }
 
     void stop()
@@ -173,6 +172,7 @@ void mc::MultiThreadedCompositor::start()
     /* Recomposite whenever the scene changes */
     scene->set_change_callback([this]()
     {
+        report->scheduled();
         for (auto& f : thread_functors)
             f->schedule_compositing();
     });
