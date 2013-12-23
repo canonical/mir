@@ -82,6 +82,8 @@ void logging::CompositorReport::end_frame(Id id)
                         i.frame_time_sum - i.last_reported_frame_time_sum
                     ).count();
 
+                // Keep everything premultiplied by 1000 to guarantee accuracy
+                // and avoid floating point.
                 long frames_per_1000sec = dn * 1000000000LL / dt;
                 long avg_frame_time_usec = df / dn;
 
