@@ -68,7 +68,7 @@ public:
         const auto& r = buffer.view_area();
         report->added_display(r.size.width.as_int(), r.size.height.as_int(),
                               r.top_left.x.as_int(), r.top_left.y.as_int(),
-                              this);
+                              &buffer);
     }
 
     void operator()()
@@ -98,9 +98,9 @@ public:
             if (running)
             {
                 lock.unlock();
-                report->began_frame(this);
+                report->began_frame(&buffer);
                 display_buffer_compositor->composite();
-                report->finished_frame(this);
+                report->finished_frame(&buffer);
                 lock.lock();
             }
         }
