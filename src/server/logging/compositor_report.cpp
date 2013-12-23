@@ -82,14 +82,17 @@ void logging::CompositorReport::end_frame(Id id)
                         i.frame_time_sum - i.last_reported_frame_time_sum
                     ).count();
 
-                long fps1000 = dn * 1000000000LL / dt;
-                long frametime1000 = df / dn;
+                long frames_per_1000sec = dn * 1000000000LL / dt;
+                long avg_frame_time_usec = df / dn;
 
                 char msg[128];
                 snprintf(msg, sizeof msg, "[%p] averaged %ld.%03ld FPS, "
                          "%ld.%03ld ms/frame",
-                         ip.first, fps1000 / 1000, fps1000 % 1000,
-                         frametime1000 / 1000, frametime1000 % 1000
+                         ip.first,
+                         frames_per_1000sec / 1000L,
+                         frames_per_1000sec % 1000L,
+                         avg_frame_time_usec / 1000L,
+                         avg_frame_time_usec % 1000L
                          );
 
                 logger->log(Logger::informational, msg, component);
