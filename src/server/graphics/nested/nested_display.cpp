@@ -23,6 +23,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/surfaceless_egl_context.h"
 #include "host_connection.h"
 
 #include <boost/throw_exception.hpp>
@@ -275,53 +276,11 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 
 namespace
 {
-EGLint const dummy_pbuffer_attribs[] =
-{
-    EGL_WIDTH, 1,
-    EGL_HEIGHT, 1,
-    EGL_NONE
-};
 }
 
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
-    class NestedGLContext : public mg::GLContext
-    {
-    public:
-        NestedGLContext(detail::EGLDisplayHandle const& egl_display) :
-            egl_display{egl_display},
-            egl_config{egl_display.choose_config(detail::nested_egl_config_attribs)},
-            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::nested_egl_context_attribs)},
-            egl_surface{egl_display, eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
-        {
-        }
-
-        ~NestedGLContext() noexcept
-        {
-            if (eglGetCurrentContext() == egl_context)
-                release_current();
-        }
-
-        void make_current() override
-        {
-            if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
-            }
-        }
-
-        void release_current() override
-        {
-            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        }
-
-    private:
-        EGLDisplay const egl_display;
-        EGLConfig const egl_config;
-        EGLContextStore const egl_context;
-        EGLSurfaceStore const egl_surface;
-    };
-
-    return std::unique_ptr<mg::GLContext>{new NestedGLContext(egl_display)};
+    return std::unique_ptr<mg::GLContext>{new SurfacelessEGLContext(egl_display,
+                                                                    detail::nested_egl_config_attribs,
+                                                                    EGL_NO_CONTEXT)};
 }

@@ -10,9 +10,11 @@ set(
   TEST_FRAMEWORK_SRCS
 
   cross_process_sync.cpp
+  in_process_server.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
   input_testing_client_configuration.cpp
+  stubbed_server_configuration.cpp
   testing_process_manager.cpp
   testing_client_options.cpp
   display_server_test_fixture.cpp

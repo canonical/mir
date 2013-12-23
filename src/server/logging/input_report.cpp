@@ -18,6 +18,7 @@
 
 #include "mir/logging/input_report.h"
 #include "mir/logging/logger.h"
+#include "mir/logging/input_timestamp.h"
 
 #include "std/MirLog.h"
 #include <std/Log.h>
@@ -107,8 +108,12 @@ void ml::InputReport::received_event_from_kernel(int64_t when, int type, int cod
 {
     std::stringstream ss;
 
-    ss << "Received event (when, type, code, value) from kernel: "
-       << "(" << when << "ns, " << type << ", " << code << ", " << value << ")";
+    ss << "Received event"
+       << " time=" << ml::input_timestamp(when)
+       << " type=" << type
+       << " code=" << code
+       << " value=" << value;
+
     logger->log(Logger::informational, ss.str(), component());
 }
 
@@ -116,8 +121,11 @@ void ml::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t 
 {
     std::stringstream ss;
 
-    ss << "Published key event (seq_id, event_time) to fd " << dest_fd << ": ("
-        << seq_id << ", " << event_time << ")";
+    ss << "Published key event"
+       << " seq_id=" << seq_id
+       << " time=" << ml::input_timestamp(event_time)
+       << " dest_fd=" << dest_fd;
+
     logger->log(Logger::informational, ss.str(), component());
 }
 
@@ -125,8 +133,11 @@ void ml::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64
 {
     std::stringstream ss;
 
-    ss << "Published motion event (seq_id, event_time) to fd " << dest_fd << ": ("
-        << seq_id << ", " << event_time << ")";
+    ss << "Published motion event"
+       << " seq_id=" << seq_id
+       << " time=" << ml::input_timestamp(event_time)
+       << " dest_fd=" << dest_fd;
+
     logger->log(Logger::informational, ss.str(), component());
 }
 
@@ -134,6 +145,9 @@ void ml::InputReport::received_event_finished_signal(int src_fd, uint32_t seq_id
 {
     std::stringstream ss;
 
-    ss << "Received event finished (seq_id) from fd " << src_fd << ": " << seq_id;
+    ss << "Received event finished"
+       << " seq_id=" << seq_id
+       << " src_fd=" << src_fd;
+
     logger->log(Logger::informational, ss.str(), component());
 }

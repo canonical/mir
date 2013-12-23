@@ -38,8 +38,8 @@ namespace
 struct MockGLContext : public mg::GLContext
 {
     ~MockGLContext() noexcept {}
-    MOCK_METHOD0(make_current, void());
-    MOCK_METHOD0(release_current, void());
+    MOCK_CONST_METHOD0(make_current, void());
+    MOCK_CONST_METHOD0(release_current, void());
 };
 
 struct WrappingGLContext : public mg::GLContext
@@ -49,8 +49,8 @@ struct WrappingGLContext : public mg::GLContext
     {
     }
     ~WrappingGLContext() noexcept {}
-    void make_current() { wrapped.make_current(); }
-    void release_current() { wrapped.release_current(); }
+    void make_current() const { wrapped.make_current(); }
+    void release_current() const { wrapped.release_current(); }
 
     mg::GLContext& wrapped;
 };
