@@ -86,15 +86,19 @@ void logging::CompositorReport::end_frame(Id id)
                 // and avoid floating point.
                 long frames_per_1000sec = dn * 1000000000LL / dt;
                 long avg_frame_time_usec = df / dn;
+                long dt_msec = dt / 1000L;
 
                 char msg[128];
                 snprintf(msg, sizeof msg, "[%p] averaged %ld.%03ld FPS, "
-                         "%ld.%03ld ms/frame",
+                         "%ld.%03ld ms/frame, %ld frames over %ld.%03ld sec",
                          ip.first,
                          frames_per_1000sec / 1000L,
                          frames_per_1000sec % 1000L,
                          avg_frame_time_usec / 1000L,
-                         avg_frame_time_usec % 1000L
+                         avg_frame_time_usec % 1000L,
+                         dn,
+                         dt_msec / 1000L,
+                         dt_msec % 1000L
                          );
 
                 logger->log(Logger::informational, msg, component);
