@@ -39,6 +39,15 @@ logging::CompositorReport::TimePoint logging::CompositorReport::now()
     return std::chrono::steady_clock::now();
 }
 
+void logging::CompositorReport::added(int width, int height, int x, int y,
+                                      SubCompositorId id)
+{
+    char msg[128];
+    snprintf(msg, sizeof msg, "Added display %p: %dx%d %+d%+d",
+             id, width, height, x, y);
+    logger->log(Logger::informational, msg, component);
+}
+
 void logging::CompositorReport::began_frame(SubCompositorId id)
 {
     std::lock_guard<std::mutex> lock(mutex);
@@ -96,7 +105,7 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
                 long dt_msec = dt / 1000L;
 
                 char msg[128];
-                snprintf(msg, sizeof msg, "[%p] averaged %ld.%03ld FPS, "
+                snprintf(msg, sizeof msg, "Display %p averaged %ld.%03ld FPS, "
                          "%ld.%03ld ms/frame, "
                          "latency %ld.%03ld ms, "
                          "%ld frames over %ld.%03ld sec",

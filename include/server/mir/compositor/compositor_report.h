@@ -28,6 +28,7 @@ class CompositorReport
 {
 public:
     typedef void* SubCompositorId;  // e.g. thread/display buffer ID
+    virtual void added(int width, int height, int x, int y, SubCompositorId id = 0) = 0;
     virtual void began_frame(SubCompositorId id = 0) = 0;
     virtual void finished_frame(SubCompositorId id = 0) = 0;
     virtual void started() = 0;
@@ -43,6 +44,7 @@ protected:
 class NullCompositorReport : public CompositorReport
 {
 public:
+    void added(int width, int height, int x, int y, SubCompositorId id);
     void began_frame(SubCompositorId id);
     void finished_frame(SubCompositorId id);
     void started();

@@ -20,6 +20,10 @@
 
 using namespace mir::compositor;
 
+void NullCompositorReport::added(int, int, int, int, SubCompositorId)
+{
+}
+
 void NullCompositorReport::began_frame(SubCompositorId)
 {
 }
