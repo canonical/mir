@@ -65,10 +65,6 @@ public:
           frames_scheduled{0},
           report{report}
     {
-        const auto& r = buffer.view_area();
-        report->added_display(r.size.width.as_int(), r.size.height.as_int(),
-                              r.top_left.x.as_int(), r.top_left.y.as_int(),
-                              &buffer);
     }
 
     void operator()()
@@ -82,6 +78,14 @@ public:
         CurrentRenderingTarget target{buffer};
 
         auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+
+        CompositorReport::SubCompositorId report_id =
+            display_buffer_compositor.get();
+
+        const auto& r = buffer.view_area();
+        report->added_display(r.size.width.as_int(), r.size.height.as_int(),
+                              r.top_left.x.as_int(), r.top_left.y.as_int(),
+                              report_id);
 
         while (running)
         {
@@ -98,9 +102,9 @@ public:
             if (running)
             {
                 lock.unlock();
-                report->began_frame(&buffer);
+                report->began_frame(report_id);
                 display_buffer_compositor->composite();
-                report->finished_frame(&buffer);
+                report->finished_frame(report_id);
                 lock.lock();
             }
         }
