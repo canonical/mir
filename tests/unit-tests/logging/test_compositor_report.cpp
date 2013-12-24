@@ -108,3 +108,35 @@ TEST(LoggingCompositorReport, calculates_accurate_stats)
     EXPECT_FLOAT_EQ(100.0f, measured_fps);
     EXPECT_FLOAT_EQ(10.0f, measured_frame_time);
 }
+
+TEST(LoggingCompositorReport, survives_pause_resume)
+{
+    auto clock = make_shared<FakeClock>();
+    auto logger = make_shared<Recorder>();
+    const void* const before = "before";
+    const void* const after = "after";
+
+    logging::CompositorReport report(logger, clock);
+
+    report.started();
+
+    report.began_frame(before);
+    clock->elapse(chrono::microseconds(12345));
+    report.finished_frame(before);
+
+    report.stopped();
+    clock->elapse(chrono::microseconds(12345678));
+    report.started();
+
+    report.began_frame(after);
+    clock->elapse(chrono::microseconds(12345));
+    report.finished_frame(after);
+
+    clock->elapse(chrono::microseconds(12345678));
+
+    report.began_frame(after);
+    clock->elapse(chrono::microseconds(12345));
+    report.finished_frame(after);
+
+    report.stopped();
+}
