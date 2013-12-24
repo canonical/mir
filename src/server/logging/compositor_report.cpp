@@ -145,6 +145,9 @@ void logging::CompositorReport::started()
 void logging::CompositorReport::stopped()
 {
     logger->log(Logger::informational, "Stopped", component);
+
+    std::lock_guard<std::mutex> lock(mutex);
+    instance.clear();
 }
 
 void logging::CompositorReport::scheduled()
