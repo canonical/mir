@@ -104,9 +104,9 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
 
                 // Keep everything premultiplied by 1000 to guarantee accuracy
                 // and avoid floating point.
-                long frames_per_1000sec = dn * 1000000000LL / dt;
-                long avg_frame_time_usec = df / dn;
-                long avg_latency_usec = dl / dn;
+                long frames_per_1000sec = dt ? dn * 1000000000LL / dt : 0;
+                long avg_frame_time_usec = dn ? df / dn : 0;
+                long avg_latency_usec = dn ? dl / dn : 0;
                 long dt_msec = dt / 1000L;
 
                 char msg[128];
