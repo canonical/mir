@@ -297,7 +297,20 @@ public:
     }
 };
 
+class MockCompositorReport : public mc::CompositorReport
+{
+public:
+    MOCK_METHOD5(added_display,
+                 void(int,int,int,int,mc::CompositorReport::SubCompositorId));
+    MOCK_METHOD1(began_frame, void(mc::CompositorReport::SubCompositorId));
+    MOCK_METHOD1(finished_frame, void(mc::CompositorReport::SubCompositorId));
+    MOCK_METHOD0(started, void());
+    MOCK_METHOD0(stopped, void());
+    MOCK_METHOD0(scheduled, void());
+};
+
 auto const null_report = std::make_shared<mc::NullCompositorReport>();
+
 }
 
 TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
@@ -320,6 +333,51 @@ TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
 
     EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
     EXPECT_TRUE(db_compositor_factory->buffers_rendered_in_different_threads());
+}
+
+TEST(MultiThreadedCompositor, reports_in_the_right_places)
+{
+    using namespace testing;
+
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(1);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory =
+        std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    auto mock_report = std::make_shared<MockCompositorReport>();
+    mc::MultiThreadedCompositor compositor{display, scene,
+                                           db_compositor_factory,
+                                           mock_report};
+
+    EXPECT_CALL(*mock_report, started())
+        .Times(1);
+
+    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
+    {
+        EXPECT_CALL(mock_buf, make_current()).Times(1);
+        EXPECT_CALL(mock_buf, view_area())
+            .WillOnce(Return(geom::Rectangle()));
+    });
+
+    EXPECT_CALL(*mock_report, added_display(_,_,_,_,_))
+        .Times(1);
+    EXPECT_CALL(*mock_report, scheduled())
+        .Times(1);
+    EXPECT_CALL(*mock_report, began_frame(_))
+        .Times(1);
+    EXPECT_CALL(*mock_report, finished_frame(_))
+        .Times(1);
+
+    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
+    {
+        EXPECT_CALL(mock_buf, release_current()).Times(1);
+    });
+
+    EXPECT_CALL(*mock_report, stopped())
+        .Times(AtLeast(1));
+
+    compositor.start();
+    scene->emit_change_event();
+    compositor.stop();
 }
 
 /*
