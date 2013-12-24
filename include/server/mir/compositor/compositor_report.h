@@ -27,7 +27,7 @@ namespace compositor
 class CompositorReport
 {
 public:
-    typedef void* SubCompositorId;  // e.g. thread/display buffer ID
+    typedef const void* SubCompositorId;  // e.g. thread/display buffer ID
     virtual void added_display(int width, int height, int x, int y, SubCompositorId id = 0) = 0;
     virtual void began_frame(SubCompositorId id = 0) = 0;
     virtual void finished_frame(SubCompositorId id = 0) = 0;
