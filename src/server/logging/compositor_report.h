@@ -20,6 +20,7 @@
 #define MIR_LOGGING_COMPOSITOR_REPORT_H_
 
 #include "mir/compositor/compositor_report.h"
+#include "mir/time/time_source.h"
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -35,7 +36,8 @@ class Logger;
 class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
-    CompositorReport(std::shared_ptr<Logger> const& logger);
+    CompositorReport(std::shared_ptr<Logger> const& logger,
+                     std::shared_ptr<time::TimeSource> const& clock);
     void added_display(int width, int height, int x, int y, SubCompositorId id);
     void began_frame(SubCompositorId id);
     void finished_frame(SubCompositorId id);
@@ -45,9 +47,10 @@ public:
 
 private:
     std::shared_ptr<Logger> const logger;
+    std::shared_ptr<time::TimeSource> const clock;
 
-    typedef std::chrono::steady_clock::time_point TimePoint;
-    static TimePoint now();
+    typedef time::Timestamp TimePoint;
+    TimePoint now() const;
 
     struct Instance
     {

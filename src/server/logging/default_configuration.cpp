@@ -80,7 +80,8 @@ DefaultServerConfiguration::the_compositor_report()
         {
             if (the_options()->get(compositor_report_opt, off_opt_value) == log_opt_value)
             {
-                return std::make_shared<ml::CompositorReport>(the_logger());
+                return std::make_shared<ml::CompositorReport>(
+                    the_logger(), the_time_source());
             }
             else
             {

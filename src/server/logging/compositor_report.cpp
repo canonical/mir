@@ -20,6 +20,8 @@
 #include "mir/logging/logger.h"
 
 using namespace mir;
+using namespace mir::compositor;
+using namespace mir::time;
 
 namespace
 {
@@ -28,15 +30,17 @@ namespace
 }
 
 logging::CompositorReport::CompositorReport(
-    std::shared_ptr<Logger> const& logger)
+    std::shared_ptr<Logger> const& logger,
+    std::shared_ptr<TimeSource> const& clock)
     : logger(logger),
+      clock(clock),
       last_report(now())
 {
 }
 
-logging::CompositorReport::TimePoint logging::CompositorReport::now()
+logging::CompositorReport::TimePoint logging::CompositorReport::now() const
 {
-    return std::chrono::steady_clock::now();
+    return clock->sample();
 }
 
 void logging::CompositorReport::added_display(int width, int height,
