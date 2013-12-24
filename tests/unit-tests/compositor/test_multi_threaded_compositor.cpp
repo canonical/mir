@@ -423,6 +423,8 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
+        EXPECT_CALL(mock_buf, view_area())
+            .WillOnce(Return(geom::Rectangle()));
         EXPECT_CALL(mock_buf, make_current()).Times(1);
         EXPECT_CALL(mock_buf, release_current()).Times(1);
     });
