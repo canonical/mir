@@ -211,16 +211,6 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
 
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
-#if 0
-    // TODO: replace
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#endif
-
     glUniform1i(tex_loc, 0);
 
     /* Create VBO */
@@ -287,7 +277,7 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     }
     tex.origin = buf_id;
     tex.used = true;
-    if (changed)
+    if (changed)  // Don't upload a new texture unless the surface has changed
         buffer.bind_to_texture();
 
     // TODO: garbage collection
