@@ -125,8 +125,7 @@ mc::GLRenderer::Resources::Resources() :
     texcoord_attr_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    vertex_attribs_vbo(0),
-    texture(0)
+    vertex_attribs_vbo(0)
 {
 }
 
@@ -140,8 +139,6 @@ mc::GLRenderer::Resources::~Resources()
         glDeleteProgram(program);
     if (vertex_attribs_vbo)
         glDeleteBuffers(1, &vertex_attribs_vbo);
-    if (texture)
-        glDeleteTextures(1, &texture);
 }
 
 void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
@@ -214,13 +211,15 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
 
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
+#if 0
+    // TODO: replace
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#endif
 
     glUniform1i(tex_loc, 0);
 
@@ -268,9 +267,30 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
     /* Use the renderable's texture */
-    glBindTexture(GL_TEXTURE_2D, resources.texture);
+    SurfaceID surf = &criteria; // temporary hack till we rearrange classes
+    auto& tex = textures[surf];
+    bool changed = true;
+    auto const& buf_id = buffer.id();
+    if (!tex.id)
+    {
+        glGenTextures(1, &tex.id);
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        changed = (tex.origin != buf_id);
+    }
+    tex.origin = buf_id;
+    tex.used = true;
+    if (changed)
+        buffer.bind_to_texture();
 
-    buffer.bind_to_texture();
+    // TODO: garbage collection
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);

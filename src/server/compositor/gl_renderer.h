@@ -21,7 +21,9 @@
 
 #include "renderer.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/buffer_id.h"
 #include <GLES2/gl2.h>
+#include <unordered_map>
 
 namespace mir
 {
@@ -54,8 +56,16 @@ private:
         GLuint transform_uniform_loc;
         GLuint alpha_uniform_loc;
         GLuint vertex_attribs_vbo;
-        GLuint texture;
     };
+
+    typedef CompositingCriteria const* SurfaceID;
+    struct Texture
+    {
+        GLuint id = 0;
+        graphics::BufferID origin;
+        bool used;
+    };
+    mutable std::unordered_map<SurfaceID, Texture> textures;
 
     Resources resources;
 };
