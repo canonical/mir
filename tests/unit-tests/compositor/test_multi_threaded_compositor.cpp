@@ -363,9 +363,9 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     EXPECT_CALL(*mock_report, scheduled())
         .Times(1);
     EXPECT_CALL(*mock_report, began_frame(_))
-        .Times(1);
+        .Times(mc::max_client_buffers);
     EXPECT_CALL(*mock_report, finished_frame(_))
-        .Times(1);
+        .Times(mc::max_client_buffers);
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
@@ -377,6 +377,8 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
 
     compositor.start();
     scene->emit_change_event();
+    while (!db_compositor_factory->check_record_count_for_each_buffer(1, mc::max_client_buffers))
+        std::this_thread::yield();
     compositor.stop();
 }
 
