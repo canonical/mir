@@ -256,7 +256,7 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
                           GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    /* Use the renderable's texture */
+    // TODO: thread safety between multimonitor display buffers
     SurfaceID surf = &criteria; // temporary hack till we rearrange classes
     auto& tex = textures[surf];
     bool changed = true;
@@ -280,8 +280,6 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     if (changed)  // Don't upload a new texture unless the surface has changed
         buffer.bind_to_texture();
 
-    // TODO: garbage collection
-
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
     glEnableVertexAttribArray(resources.texcoord_attr_loc);
@@ -293,4 +291,21 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
 void mc::GLRenderer::clear() const
 {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // XXX this is probably better placed in a post-render() method
+    auto t = textures.begin();
+    while (t != textures.end())
+    {
+        auto& tex = t->second;
+        if (tex.used)
+        {
+            tex.used = false;
+            ++t;
+        }
+        else
+        {
+            glDeleteTextures(1, &tex.id);
+            t = textures.erase(t);
+        }
+    }
 }
