@@ -256,7 +256,6 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
                           GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    // TODO: thread safety between multimonitor display buffers
     SurfaceID surf = &criteria; // temporary hack till we rearrange classes
     auto& tex = textures[surf];
     bool changed = true;
