@@ -36,6 +36,7 @@ using testing::SetArgPointee;
 using testing::InSequence;
 using testing::Return;
 using testing::ReturnRef;
+using testing::Pointee;
 using testing::_;
 
 namespace mt=mir::test;
@@ -50,7 +51,7 @@ const GLint stub_v_shader = 1;
 const GLint stub_f_shader = 2;
 const GLint stub_program = 1;
 const GLint stub_vbo = 1;
-const GLint stub_texture = 1;
+const GLuint stub_texture = 1;
 const GLint transform_uniform_location = 1;
 const GLint alpha_uniform_location = 2;
 const GLint position_attr_location = 3;
@@ -319,6 +320,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
 }
@@ -373,6 +375,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
 }

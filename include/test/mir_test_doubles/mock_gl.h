@@ -58,6 +58,7 @@ public:
     MOCK_METHOD2(glGetAttribLocation, GLint (GLuint, const GLchar *));
     MOCK_METHOD3(glTexParameteri, void (GLenum, GLenum, GLenum));
     MOCK_METHOD2(glGenTextures, void (GLsizei, GLuint *));
+    MOCK_METHOD2(glDeleteTextures, void (GLsizei, const GLuint *));
     MOCK_METHOD2(glGenBuffers, void (GLsizei, GLuint *));
     MOCK_METHOD4(glBufferData, void (GLenum, GLsizeiptr, const GLvoid *, GLenum));
     MOCK_METHOD4(glShaderSource, void (GLuint, GLsizei, const GLchar * const *, const GLint *));
