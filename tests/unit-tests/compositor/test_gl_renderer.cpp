@@ -136,18 +136,6 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(screen_to_gl_coords_uniform_location, 1, GL_FALSE, _));
 }
 
-void SetUpMockRenderTexture(mtd::MockGL &mock_gl)
-{
-    /* Set up the render texture */
-    EXPECT_CALL(mock_gl, glGenTextures(1, _))
-        .WillOnce(SetArgPointee<1>(stub_texture));
-    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
-    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-}
-
 void FillMockVertexBuffer(mtd::MockGL &mock_gl)
 {
     /* Set up VBO */
@@ -265,7 +253,6 @@ public:
         SetUpMockFragmentShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
         SetUpMockGraphicsProgram(mock_gl, std::bind(ExpectProgramLinkSuccess, _1,_2));
         SetUpMockProgramData(mock_gl);
-        SetUpMockRenderTexture(mock_gl);
         EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_location, 0));
         FillMockVertexBuffer(mock_gl);
 
@@ -307,7 +294,15 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2, GL_FLOAT, GL_FALSE, _, _));
 
+    EXPECT_CALL(mock_buffer, id())
+        .WillOnce(Return(mg::BufferID()));
+    EXPECT_CALL(mock_gl, glGenTextures(1, _))  // why is this 1 in mock_gl?
+        .WillOnce(SetArgPointee<1>(stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _));
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
 
@@ -319,7 +314,13 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
+    renderer->begin();
     renderer->render(criteria, mock_buffer);
+    renderer->end();
+
+    // Clear the cache to ensure tests are not sensitive to execution order
+    renderer->begin();
+    renderer->end();
 }
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
@@ -347,7 +348,15 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2, GL_FLOAT, GL_FALSE, _, _));
 
+    EXPECT_CALL(mock_buffer, id())
+        .WillOnce(Return(mg::BufferID()));
+    EXPECT_CALL(mock_gl, glGenTextures(1, _))  // why is this 1 in mock_gl?
+        .WillOnce(SetArgPointee<1>(stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _));
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
 
@@ -359,5 +368,11 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
+    renderer->begin();
     renderer->render(criteria, mock_buffer);
+    renderer->end();
+
+    // Clear the cache to ensure tests are not sensitive to execution order
+    renderer->begin();
+    renderer->end();
 }
