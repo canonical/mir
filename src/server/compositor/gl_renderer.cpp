@@ -290,8 +290,10 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
 void mc::GLRenderer::begin() const
 {
     glClear(GL_COLOR_BUFFER_BIT);
+}
 
-    // XXX this is probably better placed in a post-render() method
+void mc::GLRenderer::end() const
+{
     auto t = textures.begin();
     while (t != textures.end())
     {
@@ -307,8 +309,4 @@ void mc::GLRenderer::begin() const
             t = textures.erase(t);
         }
     }
-}
-
-void mc::GLRenderer::end() const
-{
 }
