@@ -76,6 +76,12 @@ void glUseProgram(GLuint program)
     global_mock_gl->glUseProgram (program);
 }
 
+void glClear (GLbitfield mask)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glClear(mask);
+}
+
 void glEnable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();

@@ -38,6 +38,7 @@ public:
     MOCK_METHOD0(glGetError, GLenum ());
     MOCK_METHOD1(glGetString, const GLubyte*(GLenum));
     MOCK_METHOD1(glUseProgram, void (GLuint));
+    MOCK_METHOD1(glClear, void (GLbitfield));
     MOCK_METHOD1(glEnable, void (GLenum));
     MOCK_METHOD1(glDisable, void (GLenum));
     MOCK_METHOD2(glBlendFunc, void (GLenum, GLenum));
