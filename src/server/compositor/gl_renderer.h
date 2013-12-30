@@ -33,8 +33,9 @@ class GLRenderer : public Renderer
 public:
     GLRenderer(geometry::Rectangle const& display_area);
 
+    void begin() const override;
     void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
-    void clear() const override;
+    void end() const override;
 
     ~GLRenderer() noexcept {}
 
