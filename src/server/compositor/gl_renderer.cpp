@@ -217,7 +217,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     glUseProgram(0);
 }
 
-mc::GLRenderer::~GLRenderer()
+mc::GLRenderer::~GLRenderer() noexcept
 {
     if (vertex_shader)
         glDeleteShader(vertex_shader);
