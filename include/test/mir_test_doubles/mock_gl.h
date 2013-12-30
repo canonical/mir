@@ -51,7 +51,9 @@ public:
     MOCK_METHOD1(glDisableVertexAttribArray, void (GLuint));
     MOCK_METHOD3(glDrawArrays, void (GLenum, GLint, GLsizei));
     MOCK_METHOD1(glCreateShader, GLuint (GLenum));
+    MOCK_METHOD1(glDeleteShader, void (GLuint));
     MOCK_METHOD0(glCreateProgram, GLuint ());
+    MOCK_METHOD1(glDeleteProgram, void (GLuint));
     MOCK_METHOD2(glAttachShader, void (GLuint, GLuint));
     MOCK_METHOD1(glLinkProgram, void (GLuint));
     MOCK_METHOD2(glGetUniformLocation, GLint (GLuint, const GLchar *));
@@ -60,6 +62,7 @@ public:
     MOCK_METHOD2(glGenTextures, void (GLsizei, GLuint *));
     MOCK_METHOD2(glDeleteTextures, void (GLsizei, const GLuint *));
     MOCK_METHOD2(glGenBuffers, void (GLsizei, GLuint *));
+    MOCK_METHOD2(glDeleteBuffers, void (GLsizei, const GLuint *));
     MOCK_METHOD4(glBufferData, void (GLenum, GLsizeiptr, const GLvoid *, GLenum));
     MOCK_METHOD4(glShaderSource, void (GLuint, GLsizei, const GLchar * const *, const GLint *));
     MOCK_METHOD1(glCompileShader, void (GLuint));
