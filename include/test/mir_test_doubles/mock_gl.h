@@ -48,8 +48,8 @@ public:
     MOCK_METHOD1(glCheckFramebufferStatus, GLenum(GLenum));
     MOCK_METHOD1(glClear, void(GLbitfield));
     MOCK_METHOD1(glCompileShader, void(GLuint));
-    MOCK_METHOD0(glCreateProgram, GLuint ());
-    MOCK_METHOD1(glCreateShader, GLuint (GLenum));
+    MOCK_METHOD0(glCreateProgram, GLuint());
+    MOCK_METHOD1(glCreateShader, GLuint(GLenum));
     MOCK_METHOD2(glDeleteBuffers, void(GLsizei, const GLuint *));
     MOCK_METHOD2(glDeleteFramebuffers, void(GLsizei, const GLuint *));
     MOCK_METHOD1(glDeleteProgram, void(GLuint));
@@ -67,8 +67,8 @@ public:
     MOCK_METHOD2(glGenFramebuffers, void(GLsizei, GLuint *));
     MOCK_METHOD2(glGenRenderbuffers, void(GLsizei, GLuint*));
     MOCK_METHOD2(glGenTextures, void(GLsizei, GLuint *));
-    MOCK_METHOD2(glGetAttribLocation, GLint (GLuint, const GLchar *));
-    MOCK_METHOD0(glGetError, GLenum ());
+    MOCK_METHOD2(glGetAttribLocation, GLint(GLuint, const GLchar *));
+    MOCK_METHOD0(glGetError, GLenum());
     MOCK_METHOD2(glGetIntegerv, void(GLenum, GLint*));
     MOCK_METHOD4(glGetProgramInfoLog,
                  void(GLuint, GLsizei, GLsizei *, GLchar *));
@@ -77,7 +77,7 @@ public:
                  void(GLuint, GLsizei, GLsizei *, GLchar *));
     MOCK_METHOD3(glGetShaderiv, void(GLuint, GLenum, GLint *));
     MOCK_METHOD1(glGetString, const GLubyte*(GLenum));
-    MOCK_METHOD2(glGetUniformLocation, GLint (GLuint, const GLchar *));
+    MOCK_METHOD2(glGetUniformLocation, GLint(GLuint, const GLchar *));
     MOCK_METHOD1(glLinkProgram, void(GLuint));
     MOCK_METHOD7(glReadPixels,
                  void(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum,
