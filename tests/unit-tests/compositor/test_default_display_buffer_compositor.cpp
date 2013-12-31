@@ -106,14 +106,19 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
-    void clear() const override
+    void begin() const override
     {
-        renderer->clear();
+        renderer->begin();
     }
 
     void render(mc::CompositingCriteria const& criteria, mg::Buffer& buffer) const override
     {
         renderer->render(criteria, buffer);
+    }
+
+    void end() const override
+    {
+        renderer->end();
     }
 
     mc::Renderer* const renderer;
@@ -241,9 +246,13 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     renderable_vec.push_back(&small);
     renderable_vec.push_back(&fullscreen);
 
+    EXPECT_CALL(renderer_factory.mock_renderer, begin())
+        .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+        .Times(0);
+    EXPECT_CALL(renderer_factory.mock_renderer, end())
         .Times(0);
 
     FakeScene scene(renderable_vec);
@@ -253,6 +262,58 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
         .WillOnce(Return(true));
     EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .WillOnce(Return(compositor_buffer));
+
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory));
+
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
+}
+
+TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
+{
+    using namespace testing;
+
+    StubRendererFactory renderer_factory;
+
+    geom::Rectangle screen{{0, 0}, {1366, 768}};
+
+    mtd::MockDisplayBuffer display_buffer;
+
+    EXPECT_CALL(display_buffer, view_area())
+        .WillRepeatedly(Return(screen));
+    EXPECT_CALL(display_buffer, can_bypass())
+        .WillRepeatedly(Return(false));
+
+    mtd::StubCompositingCriteria big(5, 10, 100, 200);
+    mtd::StubCompositingCriteria small(10, 20, 30, 40);
+
+    std::vector<mc::CompositingCriteria*> renderable_vec;
+    renderable_vec.push_back(&big);
+    renderable_vec.push_back(&small);
+
+    Sequence render_seq;
+
+    EXPECT_CALL(display_buffer, make_current())
+        .InSequence(render_seq);
+    EXPECT_CALL(renderer_factory.mock_renderer, begin())
+        .InSequence(render_seq);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(big),_))
+        .InSequence(render_seq);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+        .InSequence(render_seq);
+    EXPECT_CALL(renderer_factory.mock_renderer, end())
+        .InSequence(render_seq);
+    EXPECT_CALL(display_buffer, post_update())
+        .InSequence(render_seq);
+
+    FakeScene scene(renderable_vec);
+
+    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
+    EXPECT_CALL(*compositor_buffer, can_bypass())
+        .Times(0);
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
