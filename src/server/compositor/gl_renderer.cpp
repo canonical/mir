@@ -272,7 +272,7 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     else
     {
         glBindTexture(GL_TEXTURE_2D, tex.id);
-        changed = (tex.origin != buf_id);
+        changed = (tex.origin != buf_id) || skipped;
     }
     tex.origin = buf_id;
     tex.used = true;
@@ -309,4 +309,10 @@ void mc::GLRenderer::end() const
             t = textures.erase(t);
         }
     }
+    skipped = false;
+}
+
+void mc::GLRenderer::skip()
+{
+    skipped = true;
 }

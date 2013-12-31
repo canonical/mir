@@ -212,6 +212,10 @@ public:
     void end() const override
     {
     }
+
+    void skip() override
+    {
+    }
 };
 
 class StubRendererFactory : public mc::RendererFactory

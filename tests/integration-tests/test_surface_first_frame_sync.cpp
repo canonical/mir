@@ -109,6 +109,10 @@ public:
     {
     }
 
+    void skip() override
+    {
+    }
+
 private:
     int render_operations_fd;
 };

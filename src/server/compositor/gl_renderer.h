@@ -35,9 +35,13 @@ class GLRenderer : public Renderer
 public:
     GLRenderer(geometry::Rectangle const& display_area);
 
+    // These are called with a valid GL context:
     void begin() const override;
     void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
     void end() const override;
+
+    // This is called _without_ a GL context:
+    void skip() override;
 
     ~GLRenderer() noexcept {}
 
@@ -67,6 +71,7 @@ private:
         bool used;
     };
     mutable std::unordered_map<SurfaceID, Texture> textures;
+    mutable bool skipped = false;
 
     Resources resources;
 };
