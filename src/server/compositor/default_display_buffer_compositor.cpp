@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "default_display_buffer_compositor.h"
@@ -93,7 +94,11 @@ void mc::DefaultDisplayBufferCompositor::composite()
             local_frameno = global_frameno;
     }
 
-    static bool const bypass_env{[]{ auto const env = getenv("MIR_BYPASS"); return !env || env[0] != '0'; }()};
+    static bool const bypass_env{[]
+    {
+        auto const env = getenv("MIR_BYPASS");
+        return !env || env[0] != '0';
+    }()};
     bool bypassed = false;
 
     if (bypass_env && display_buffer.can_bypass())
@@ -125,7 +130,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
     {
         // preserves buffers used in rendering until after post_update()
         std::vector<std::shared_ptr<void>> saved_resources;
-        auto save_resource = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
+        auto save_resource = [&](std::shared_ptr<void> const& r)
+        {
+            saved_resources.push_back(r);
+        };
 
         display_buffer.make_current();
 
