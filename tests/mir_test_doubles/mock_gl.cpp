@@ -304,6 +304,12 @@ void glGenFramebuffers(GLsizei n, GLuint *framebuffers)
     global_mock_gl->glGenFramebuffers(n, framebuffers);
 }
 
+void glDeleteFramebuffers(GLsizei n, const GLuint * framebuffers)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glDeleteFramebuffers(n, framebuffers);
+}
+
 void glBindFramebuffer(GLenum target, GLuint framebuffer)
 {
     CHECK_GLOBAL_VOID_MOCK();
@@ -337,3 +343,38 @@ void glGetIntegerv(GLenum target, GLint* params)
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glGetIntegerv(target, params);
 }
+
+void glBindRenderbuffer(GLenum target, GLuint renderbuffer)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glBindRenderbuffer(target, renderbuffer);
+}
+
+void glFramebufferRenderbuffer(GLenum target, GLenum attachment,
+                               GLenum renderbuffertarget, GLuint renderbuffer)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glFramebufferRenderbuffer(target, attachment,
+                                              renderbuffertarget, renderbuffer);
+}
+
+void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glGenRenderbuffers(n, renderbuffers);
+}
+
+void glRenderbufferStorage(GLenum target, GLenum internalformat,
+                           GLsizei width, GLsizei height)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glRenderbufferStorage(target, internalformat,
+                                          width, height);
+}
+
+void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glViewport(x, y, width, height);
+}
+
