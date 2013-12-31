@@ -54,6 +54,7 @@ public:
     MOCK_METHOD2(glDeleteFramebuffers, void(GLsizei, const GLuint *));
     MOCK_METHOD1(glDeleteProgram, void(GLuint));
     MOCK_METHOD1(glDeleteShader, void(GLuint));
+    MOCK_METHOD2(glDeleteTextures, void(GLsizei, const GLuint *));
     MOCK_METHOD1(glDisable, void(GLenum));
     MOCK_METHOD1(glDisableVertexAttribArray, void(GLuint));
     MOCK_METHOD3(glDrawArrays, void(GLenum, GLint, GLsizei));

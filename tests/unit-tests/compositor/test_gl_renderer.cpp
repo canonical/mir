@@ -283,6 +283,7 @@ public:
         EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
         EXPECT_CALL(mock_gl, glDeleteProgram(stub_program));
         EXPECT_CALL(mock_gl, glDeleteBuffers(1, Pointee(stub_vbo)));
+        EXPECT_CALL(mock_gl, glDeleteTextures(_, _));
     }
 
     mtd::MockGL         mock_gl;

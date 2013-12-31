@@ -254,6 +254,12 @@ void glGenTextures(GLsizei n, GLuint *textures)
     global_mock_gl->glGenTextures(n, textures);
 }
 
+void glDeleteTextures(GLsizei n, const GLuint *textures)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glDeleteTextures(n, textures);
+}
+
 void glUniform1i(GLint location, GLint x)
 {
     CHECK_GLOBAL_VOID_MOCK();
