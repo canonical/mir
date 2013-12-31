@@ -271,7 +271,11 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     glDisableVertexAttribArray(position_attr_loc);
 }
 
-void mc::GLRenderer::clear() const
+void mc::GLRenderer::begin() const
 {
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void mc::GLRenderer::end() const
+{
 }
