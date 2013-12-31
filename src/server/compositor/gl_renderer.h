@@ -34,6 +34,7 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
+    virtual ~GLRenderer() noexcept;
 
     // These are called with a valid GL context:
     void begin() const override;
@@ -43,26 +44,7 @@ public:
     // This is called _without_ a GL context:
     void skip() override;
 
-    ~GLRenderer() noexcept {}
-
 private:
-    class Resources
-    {
-    public:
-        Resources();
-        ~Resources();
-        void setup(geometry::Rectangle const& display_area);
-
-        GLuint vertex_shader;
-        GLuint fragment_shader;
-        GLuint program;
-        GLuint position_attr_loc;
-        GLuint texcoord_attr_loc;
-        GLuint transform_uniform_loc;
-        GLuint alpha_uniform_loc;
-        GLuint vertex_attribs_vbo;
-    };
-
     typedef CompositingCriteria const* SurfaceID;
     struct Texture
     {
@@ -73,7 +55,14 @@ private:
     mutable std::unordered_map<SurfaceID, Texture> textures;
     mutable bool skipped = false;
 
-    Resources resources;
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint program;
+    GLuint position_attr_loc;
+    GLuint texcoord_attr_loc;
+    GLuint transform_uniform_loc;
+    GLuint alpha_uniform_loc;
+    GLuint vertex_attribs_vbo;
 };
 
 }
