@@ -76,6 +76,12 @@ void glUseProgram(GLuint program)
     global_mock_gl->glUseProgram (program);
 }
 
+void glClear (GLbitfield mask)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glClear(mask);
+}
+
 void glEnable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();
@@ -162,6 +168,12 @@ GLuint glCreateShader(GLenum type)
     return global_mock_gl->glCreateShader(type);
 }
 
+void glDeleteShader(GLuint shader)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    return global_mock_gl->glDeleteShader(shader);
+}
+
 /* This is the version of glShaderSource in Mesa < 9.0.1 */
 void glShaderSource(GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
 {
@@ -198,6 +210,12 @@ GLuint glCreateProgram()
 {
     CHECK_GLOBAL_MOCK(GLuint);
     return global_mock_gl->glCreateProgram();
+}
+
+void glDeleteProgram(GLuint program)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    return global_mock_gl->glDeleteProgram(program);
 }
 
 void glAttachShader(GLuint program, GLuint shader)
@@ -246,6 +264,12 @@ void glGenBuffers(GLsizei n, GLuint *buffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glGenBuffers(n, buffers);
+}
+
+void glDeleteBuffers(GLsizei n, const GLuint *buffers)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glDeleteBuffers(n, buffers);
 }
 
 void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage)
