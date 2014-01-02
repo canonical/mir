@@ -261,6 +261,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                     else if (alpha > 1.0f)
                         alpha = 1.0f;
                     surf->set_alpha(alpha);
+                    handled = true;
                 }
 
                 old_pos = surf->top_left();
