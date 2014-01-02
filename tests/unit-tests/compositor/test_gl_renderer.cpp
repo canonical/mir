@@ -37,6 +37,7 @@ using testing::InSequence;
 using testing::Return;
 using testing::ReturnRef;
 using testing::Pointee;
+using testing::AnyNumber;
 using testing::_;
 
 namespace mt=mir::test;
@@ -248,6 +249,26 @@ public:
     {
         using namespace std::placeholders;
 
+        // Silence warnings about "uninteresting" calls that we truly aren't
+        // interested in (for most test cases)...
+        EXPECT_CALL(mock_gl, glClear(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, _, _))
+            .Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUniform1f(_, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glBindBuffer(_, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glVertexAttribPointer(_, _, _, _, _, _))
+            .Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glEnableVertexAttribArray(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
+
+        EXPECT_CALL(criteria, shaped()).WillRepeatedly(Return(false));
+        EXPECT_CALL(criteria, alpha()).WillRepeatedly(Return(1.0f));
+        EXPECT_CALL(criteria, transformation()).WillRepeatedly(ReturnRef(trans));
+        EXPECT_CALL(mock_gl, glDisable(_)).Times(AnyNumber());
+
         InSequence s;
 
         SetUpMockVertexShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
@@ -270,6 +291,7 @@ public:
     mir::geometry::Rectangle display_area;
     std::unique_ptr<mc::Renderer> renderer;
     glm::mat4           trans;
+    mtd::MockCompositingCriteria criteria;
 };
 
 }
@@ -278,7 +300,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 
-    mtd::MockCompositingCriteria criteria;
     mtd::MockBuffer mock_buffer;
 
     InSequence seq;
@@ -334,29 +355,12 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    mtd::MockCompositingCriteria criteria;
     mtd::MockBuffer mock_buffer;
 
     InSequence seq;
-    EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
-
-    EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
-
-    EXPECT_CALL(criteria, transformation())
-        .WillOnce(ReturnRef(trans));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2, GL_FLOAT, GL_FALSE, _, _));
 
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
@@ -370,20 +374,11 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
 
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
-
     renderer->begin();
     renderer->render(criteria, mock_buffer);
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
-    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
@@ -391,32 +386,11 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
 TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
 {
-    mtd::MockCompositingCriteria criteria;
     mtd::MockBuffer mock_buffer;
 
     InSequence seq;
 
     // First render() - texture generated and uploaded
-    EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-    EXPECT_CALL(criteria, shaped())
-        .WillOnce(Return(false));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
-    EXPECT_CALL(criteria, transformation())
-        .WillOnce(ReturnRef(trans));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1,
-                                            GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
-                                               GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2,
-                                               GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
     EXPECT_CALL(mock_gl, glGenTextures(1, _))  // why is this 1 in mock_gl?
@@ -429,11 +403,6 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                                          _));
     EXPECT_CALL(mock_buffer, bind_to_texture());
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _))
         .Times(0);
 
@@ -442,34 +411,9 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Second render() - texture found in cache and not re-uploaded
-    EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-    EXPECT_CALL(criteria, shaped())
-        .WillOnce(Return(false));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
-    EXPECT_CALL(criteria, transformation())
-        .WillOnce(ReturnRef(trans));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1,
-                                            GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
-                                               GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2,
-                                               GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _))
         .Times(0);
 
@@ -478,35 +422,10 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Third render() - texture found in cache but refreshed with new buffer
-    EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-    EXPECT_CALL(criteria, shaped())
-        .WillOnce(Return(false));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
-    EXPECT_CALL(criteria, transformation())
-        .WillOnce(ReturnRef(trans));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1,
-                                            GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
-                                               GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2,
-                                               GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_buffer, bind_to_texture());
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)))
         .Times(0);
 
@@ -515,35 +434,10 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Forth render() - stale texture reuploaded following bypass
-    EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-    EXPECT_CALL(criteria, shaped())
-        .WillOnce(Return(false));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
-    EXPECT_CALL(criteria, transformation())
-        .WillOnce(ReturnRef(trans));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1,
-                                            GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
-                                               GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2,
-                                               GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_buffer, bind_to_texture());
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)))
         .Times(0);
 
@@ -553,34 +447,9 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Fifth render() - texture found in cache and not re-uploaded
-    EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-    EXPECT_CALL(criteria, shaped())
-        .WillOnce(Return(false));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
-    EXPECT_CALL(criteria, transformation())
-        .WillOnce(ReturnRef(trans));
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1,
-                                            GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
-        .WillOnce(Return(1.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
-                                               GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2,
-                                               GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _))
         .Times(0);
 
@@ -589,7 +458,6 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
-    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
