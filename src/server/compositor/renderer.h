@@ -34,8 +34,9 @@ class Renderer
 public:
     virtual ~Renderer() = default;
 
-    virtual void clear() const = 0;
+    virtual void begin() const = 0;
     virtual void render(CompositingCriteria const& info, graphics::Buffer& buffer) const = 0;
+    virtual void end() const = 0;
 
 protected:
     Renderer() = default;

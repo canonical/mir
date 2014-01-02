@@ -32,32 +32,22 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
+    virtual ~GLRenderer() noexcept;
 
+    void begin() const override;
     void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
-    void clear() const override;
-
-    ~GLRenderer() noexcept {}
+    void end() const override;
 
 private:
-    class Resources
-    {
-    public:
-        Resources();
-        ~Resources();
-        void setup(geometry::Rectangle const& display_area);
-
-        GLuint vertex_shader;
-        GLuint fragment_shader;
-        GLuint program;
-        GLuint position_attr_loc;
-        GLuint texcoord_attr_loc;
-        GLuint transform_uniform_loc;
-        GLuint alpha_uniform_loc;
-        GLuint vertex_attribs_vbo;
-        GLuint texture;
-    };
-
-    Resources resources;
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint program;
+    GLuint position_attr_loc;
+    GLuint texcoord_attr_loc;
+    GLuint transform_uniform_loc;
+    GLuint alpha_uniform_loc;
+    GLuint vertex_attribs_vbo;
+    GLuint texture;
 };
 
 }
