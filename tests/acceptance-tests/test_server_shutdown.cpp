@@ -48,6 +48,10 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class NullRenderer : public mc::Renderer
 {
 public:
+    void begin() const override
+    {
+    }
+
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
         /*
@@ -58,7 +62,7 @@ public:
         std::this_thread::yield();
     }
 
-    void clear() const override
+    void end() const override
     {
     }
 };

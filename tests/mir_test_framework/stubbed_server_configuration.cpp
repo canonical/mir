@@ -201,11 +201,15 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mc::Renderer
 {
 public:
+    void begin() const override
+    {
+    }
+
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
     }
 
-    void clear() const override
+    void end() const override
     {
     }
 };
