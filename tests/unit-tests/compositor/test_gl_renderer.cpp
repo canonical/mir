@@ -259,6 +259,11 @@ public:
 
         mc::GLRendererFactory gl_renderer_factory;
         renderer = gl_renderer_factory.create_renderer_for(display_area);
+
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
+        EXPECT_CALL(mock_gl, glDeleteProgram(stub_program));
+        EXPECT_CALL(mock_gl, glDeleteBuffers(1, Pointee(stub_vbo)));
     }
 
     mtd::MockGL         mock_gl;
@@ -278,6 +283,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     InSequence seq;
 
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(true));
@@ -320,6 +326,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
@@ -331,6 +338,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     mtd::MockBuffer mock_buffer;
 
     InSequence seq;
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
@@ -375,6 +383,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
@@ -388,6 +397,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     InSequence seq;
 
     // First render() - texture generated and uploaded
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
@@ -432,6 +442,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Second render() - texture found in cache and not re-uploaded
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
@@ -467,6 +478,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Third render() - texture found in cache but refreshed with new buffer
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
@@ -503,6 +515,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Forth render() - stale texture reuploaded following bypass
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
@@ -540,6 +553,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Fifth render() - texture found in cache and not re-uploaded
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
         .WillOnce(Return(false));
@@ -575,6 +589,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
+    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
     renderer->begin();
     renderer->end();
