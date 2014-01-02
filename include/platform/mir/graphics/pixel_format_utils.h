@@ -16,8 +16,8 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_PIXEL_FORMAT_UTILS_H
-#define MIR_GRAPHICS_PIXEL_FORMAT_UTILS_H
+#ifndef MIR_GRAPHICS_PIXEL_FORMAT_UTILS_H_
+#define MIR_GRAPHICS_PIXEL_FORMAT_UTILS_H_
 
 #include "mir_toolkit/common.h"
 
