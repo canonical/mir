@@ -65,6 +65,8 @@ private:
         TimePoint last_reported_frame_time_sum;
         TimePoint last_reported_latency_sum;
         long last_reported_nframes = 0;
+
+        void log(Logger& logger, SubCompositorId id);
     };
 
     std::mutex mutex; // Protects the following...
