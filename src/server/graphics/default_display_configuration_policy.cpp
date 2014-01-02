@@ -18,13 +18,47 @@
 
 #include "default_display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <unordered_map>
+#include <algorithm>
 
-namespace mg = mir::graphics;
-namespace geom = mir::geometry;
+namespace mir
+{
+namespace geom = geometry;
+namespace graphics
+{
 
-void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
+namespace
+{
+inline size_t select_mode_index(size_t mode_index, std::vector<DisplayConfigurationMode> const & modes)
+{
+    if (modes.empty())
+        return std::numeric_limits<size_t>::max();
+    if (mode_index > modes.size())
+        return 0;
+    return mode_index;
+}
+
+inline MirPixelFormat select_format(MirPixelFormat format, std::vector<MirPixelFormat> const& formats)
+{
+    if (formats.empty())
+        return mir_pixel_format_invalid;
+
+    if (!contains_alpha(format))
+        return format;
+
+    auto opaque_pos = std::find_if_not(formats.begin(), formats.end(), contains_alpha);
+
+    if (opaque_pos == formats.end())
+        return format;
+
+    return *opaque_pos;
+}
+
+}
+
+void DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 {
     static MirPowerMode const default_power_state = mir_power_mode_on;
     std::unordered_map<DisplayConfigurationCardId, size_t> available_outputs_for_card;
@@ -38,23 +72,24 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
     conf.for_each_output(
         [&](DisplayConfigurationOutput const& conf_output)
         {
-            if (conf_output.connected && conf_output.modes.size() > 0 &&
-                available_outputs_for_card[conf_output.card_id] > 0)
-            {
-                size_t preferred_mode_index{conf_output.preferred_mode_index};
-                if (preferred_mode_index > conf_output.modes.size())
-                    preferred_mode_index = 0;
-
-                conf.configure_output(conf_output.id, true, geom::Point(),
-                                      preferred_mode_index, default_power_state);
-
-                --available_outputs_for_card[conf_output.card_id];
-            }
-            else
+            if (!conf_output.connected || conf_output.modes.empty() ||
+                available_outputs_for_card[conf_output.card_id] == 0)
             {
                 conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                      conf_output.current_mode_index, default_power_state);
+                                      conf_output.current_mode_index, conf_output.current_format,
+                                      default_power_state);
+                return;
             }
+
+            size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
+            MirPixelFormat format{select_format(conf_output.current_format, conf_output.pixel_formats)};
+
+            conf.configure_output(conf_output.id, true, geom::Point(), preferred_mode_index,
+                                  format, default_power_state);
+
+            --available_outputs_for_card[conf_output.card_id];
         });
 }
 
+} // graphics
+} // mir

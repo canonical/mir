@@ -321,7 +321,9 @@ void mf::SessionMediator::configure_display(
             mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
             config->configure_output(output_id, output.used(),
                                      geom::Point{output.position_x(), output.position_y()},
-                                     output.current_mode(), static_cast<MirPowerMode>(output.power_mode()));
+                                     output.current_mode(),
+                                     static_cast<MirPixelFormat>(output.current_format()),
+                                     static_cast<MirPowerMode>(output.power_mode()));
         }
 
         display_changer->configure(session, config);

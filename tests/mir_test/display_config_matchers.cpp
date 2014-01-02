@@ -67,7 +67,7 @@ public:
                 geom::Point{protobuf_output.position_x(),
                             protobuf_output.position_y()},
                 protobuf_output.current_mode(),
-                protobuf_output.current_format(),
+                static_cast<MirPixelFormat>(protobuf_output.current_format()),
                 static_cast<MirPowerMode>(protobuf_output.power_mode())
             };
 
@@ -175,7 +175,7 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode)
+                          geom::Point, size_t, MirPixelFormat, MirPowerMode)
     {
     }
 

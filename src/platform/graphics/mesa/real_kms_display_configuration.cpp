@@ -18,6 +18,7 @@
 
 #include "real_kms_display_configuration.h"
 #include "drm_mode_resources.h"
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <cmath>
 #include <limits>
@@ -26,9 +27,15 @@
 #include <stdexcept>
 #include <algorithm>
 
-namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
-namespace geom = mir::geometry;
+
+namespace mir
+{
+namespace graphics
+{
+namespace mesa
+{
+
+namespace geom = geometry;
 
 namespace
 {
@@ -59,28 +66,33 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
     return round(vrefresh_hz * 10.0) / 10.0;
 }
 
-mg::DisplayConfigurationOutputType
+DisplayConfigurationOutputType
 kms_connector_type_to_output_type(uint32_t connector_type)
 {
-    return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
+    return static_cast<DisplayConfigurationOutputType>(connector_type);
+}
+
+bool format_available_in_pixel_formats(MirPixelFormat format, DisplayConfigurationOutput const& output)
+{
+    return output.pixel_formats.end() != find(output.pixel_formats.begin(), output.pixel_formats.end(), format);
 }
 
 }
 
-mgm::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(int drm_fd)
+RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(int drm_fd)
     : drm_fd{drm_fd}
 {
     update();
 }
 
-mgm::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(
+RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(
     RealKMSDisplayConfiguration const& conf)
     : KMSDisplayConfiguration(), drm_fd{conf.drm_fd},
       card(conf.card), outputs{conf.outputs}
 {
 }
 
-mgm::RealKMSDisplayConfiguration& mgm::RealKMSDisplayConfiguration::operator=(
+RealKMSDisplayConfiguration& RealKMSDisplayConfiguration::operator=(
     RealKMSDisplayConfiguration const& conf)
 {
     if (&conf != this)
@@ -93,23 +105,23 @@ mgm::RealKMSDisplayConfiguration& mgm::RealKMSDisplayConfiguration::operator=(
     return *this;
 }
 
-void mgm::RealKMSDisplayConfiguration::for_each_card(
+void RealKMSDisplayConfiguration::for_each_card(
     std::function<void(DisplayConfigurationCard const&)> f) const
 {
     f(card);
 }
 
-void mgm::RealKMSDisplayConfiguration::for_each_output(
+void RealKMSDisplayConfiguration::for_each_output(
     std::function<void(DisplayConfigurationOutput const&)> f) const
 {
     for (auto const& output : outputs)
         f(output);
 }
 
-void mgm::RealKMSDisplayConfiguration::configure_output(
+void RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index,
-    MirPowerMode power_mode)
+    MirPixelFormat format, MirPowerMode power_mode)
 {
     auto iter = find_output_with_id(id);
 
@@ -120,9 +132,15 @@ void mgm::RealKMSDisplayConfiguration::configure_output(
         if (used && mode_index >= output.modes.size())
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
 
+        if (used && !valid_mir_pixel_format(format))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
+        if (used && !format_available_in_pixel_formats(format, output))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Format not available for used output"));
+
         output.used = used;
         output.top_left = top_left;
         output.current_mode_index = mode_index;
+        output.current_format = format;
         output.power_mode = power_mode;
     }
     else
@@ -131,7 +149,7 @@ void mgm::RealKMSDisplayConfiguration::configure_output(
     }
 }
 
-uint32_t mgm::RealKMSDisplayConfiguration::get_kms_connector_id(
+uint32_t RealKMSDisplayConfiguration::get_kms_connector_id(
     DisplayConfigurationOutputId id) const
 {
     auto iter = find_output_with_id(id);
@@ -145,7 +163,7 @@ uint32_t mgm::RealKMSDisplayConfiguration::get_kms_connector_id(
     return id.as_value();
 }
 
-size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
+size_t RealKMSDisplayConfiguration::get_kms_mode_index(
     DisplayConfigurationOutputId id,
     size_t conf_mode_index) const
 {
@@ -159,12 +177,12 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
 
     return conf_mode_index;
 }
-void mgm::RealKMSDisplayConfiguration::update()
+void RealKMSDisplayConfiguration::update()
 {
     DRMModeResources resources{drm_fd};
 
     size_t max_outputs = std::min(resources.num_crtcs(), resources.num_connectors());
-    card = {mg::DisplayConfigurationCardId{0}, max_outputs};
+    card = {DisplayConfigurationCardId{0}, max_outputs};
 
     resources.for_each_connector([&](DRMModeConnectorUPtr connector)
     {
@@ -172,7 +190,7 @@ void mgm::RealKMSDisplayConfiguration::update()
     });
 }
 
-void mgm::RealKMSDisplayConfiguration::add_or_update_output(
+void RealKMSDisplayConfiguration::add_or_update_output(
     DRMModeResources const& resources,
     drmModeConnector const& connector)
 {
@@ -224,7 +242,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     {
         outputs.push_back({id, card_id, type, formats, modes, preferred_mode_index,
                            physical_size, connected, false, geom::Point(),
-                           current_mode_index, 0u, mir_power_mode_on});
+                           current_mode_index, mir_pixel_format_xrgb_8888,
+                           mir_power_mode_on});
     }
     else
     {
@@ -235,11 +254,12 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.physical_size_mm = physical_size;
         output.connected = connected;
         output.current_mode_index = current_mode_index;
+        output.current_format = mir_pixel_format_xrgb_8888;
     }
 }
 
-std::vector<mg::DisplayConfigurationOutput>::iterator
-mgm::RealKMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id)
+std::vector<DisplayConfigurationOutput>::iterator
+RealKMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id)
 {
     return std::find_if(outputs.begin(), outputs.end(),
                         [id](DisplayConfigurationOutput const& output)
@@ -248,12 +268,16 @@ mgm::RealKMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutput
                         });
 }
 
-std::vector<mg::DisplayConfigurationOutput>::const_iterator
-mgm::RealKMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id) const
+std::vector<DisplayConfigurationOutput>::const_iterator
+RealKMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id) const
 {
     return std::find_if(outputs.begin(), outputs.end(),
                         [id](DisplayConfigurationOutput const& output)
                         {
                             return output.id == id;
                         });
+}
+
+}
+}
 }
