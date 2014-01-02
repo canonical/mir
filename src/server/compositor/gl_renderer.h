@@ -45,6 +45,15 @@ public:
     void skip() override;
 
 private:
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint program;
+    GLuint position_attr_loc;
+    GLuint texcoord_attr_loc;
+    GLuint transform_uniform_loc;
+    GLuint alpha_uniform_loc;
+    GLuint vertex_attribs_vbo;
+
     typedef CompositingCriteria const* SurfaceID;
     struct Texture
     {
@@ -55,14 +64,6 @@ private:
     mutable std::unordered_map<SurfaceID, Texture> textures;
     mutable bool skipped = false;
 
-    GLuint vertex_shader;
-    GLuint fragment_shader;
-    GLuint program;
-    GLuint position_attr_loc;
-    GLuint texcoord_attr_loc;
-    GLuint transform_uniform_loc;
-    GLuint alpha_uniform_loc;
-    GLuint vertex_attribs_vbo;
 };
 
 }
