@@ -79,7 +79,7 @@ public:
                 ((i % 2) == 0),
                 ((i % 2) == 1),
                 top_left,
-                mode_index, pfs[1u],
+                mode_index, pfs[0],
                 mir_power_mode_off
             };
 
