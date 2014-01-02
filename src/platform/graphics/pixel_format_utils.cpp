@@ -61,7 +61,7 @@ int alpha_channel_depth(MirPixelFormat format)
     return 0;
 }
 
-bool valid_format(MirPixelFormat format)
+bool valid_mir_pixel_format(MirPixelFormat format)
 {
     return (format > mir_pixel_format_invalid &&
             format < mir_pixel_formats);

@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 using namespace mir::graphics;
-TEST(MirPixelformat, contains_alpha)
+TEST(MirPixelFormatUtils, contains_alpha)
 {
     EXPECT_FALSE(contains_alpha(mir_pixel_format_xbgr_8888));
     EXPECT_FALSE(contains_alpha(mir_pixel_format_bgr_888));
@@ -33,7 +33,7 @@ TEST(MirPixelformat, contains_alpha)
     EXPECT_FALSE(contains_alpha(mir_pixel_format_invalid));
 } 
 
-TEST(MirPixelformat, red_channel_depths)
+TEST(MirPixelFormatUtils, red_channel_depths)
 {
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_bgr_888));
@@ -44,7 +44,7 @@ TEST(MirPixelformat, red_channel_depths)
     EXPECT_EQ(0, red_channel_depth(mir_pixel_format_invalid));
 }
 
-TEST(MirPixelformat, blue_channel_depths)
+TEST(MirPixelFormatUtils, blue_channel_depths)
 {
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_bgr_888));
@@ -55,7 +55,7 @@ TEST(MirPixelformat, blue_channel_depths)
     EXPECT_EQ(0, blue_channel_depth(mir_pixel_format_invalid));
 }
 
-TEST(MirPixelformat, green_channel_depths)
+TEST(MirPixelFormatUtils, green_channel_depths)
 {
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_bgr_888));
@@ -67,7 +67,7 @@ TEST(MirPixelformat, green_channel_depths)
 }
 
 
-TEST(MirPixelformat, alpha_channel_depths)
+TEST(MirPixelFormatUtils, alpha_channel_depths)
 {
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_bgr_888));
@@ -78,13 +78,13 @@ TEST(MirPixelformat, alpha_channel_depths)
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_invalid));
 }
 
-TEST(MirPixelformat, valid_format)
+TEST(MirPixelFormatUtils, valid_mir_pixel_format)
 {
-    EXPECT_TRUE(valid_format(mir_pixel_format_xbgr_8888));
-    EXPECT_TRUE(valid_format(mir_pixel_format_bgr_888));
-    EXPECT_TRUE(valid_format(mir_pixel_format_xrgb_8888));
-    EXPECT_TRUE(valid_format(mir_pixel_format_xbgr_8888));
-    EXPECT_TRUE(valid_format(mir_pixel_format_argb_8888));
-    EXPECT_TRUE(valid_format(mir_pixel_format_abgr_8888));
-    EXPECT_FALSE(valid_format(mir_pixel_format_invalid));
+    EXPECT_TRUE(valid_mir_pixel_format(mir_pixel_format_xbgr_8888));
+    EXPECT_TRUE(valid_mir_pixel_format(mir_pixel_format_bgr_888));
+    EXPECT_TRUE(valid_mir_pixel_format(mir_pixel_format_xrgb_8888));
+    EXPECT_TRUE(valid_mir_pixel_format(mir_pixel_format_xbgr_8888));
+    EXPECT_TRUE(valid_mir_pixel_format(mir_pixel_format_argb_8888));
+    EXPECT_TRUE(valid_mir_pixel_format(mir_pixel_format_abgr_8888));
+    EXPECT_FALSE(valid_mir_pixel_format(mir_pixel_format_invalid));
 }

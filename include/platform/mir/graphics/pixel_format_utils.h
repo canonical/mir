@@ -16,6 +16,9 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#ifndef MIR_GRAPHICS_PIXEL_FORMAT_UTILS_H
+#define MIR_GRAPHICS_PIXEL_FORMAT_UTILS_H
+
 #include "mir_toolkit/common.h"
 
 namespace mir
@@ -35,7 +38,7 @@ int red_channel_depth(MirPixelFormat format);
 int blue_channel_depth(MirPixelFormat format);
 int green_channel_depth(MirPixelFormat format);
 int alpha_channel_depth(MirPixelFormat format);
-bool valid_format(MirPixelFormat format);
+bool valid_mir_pixel_format(MirPixelFormat format);
 /*!
  * \}
  */
@@ -43,3 +46,5 @@ bool valid_format(MirPixelFormat format);
 
 }
 }
+
+#endif
