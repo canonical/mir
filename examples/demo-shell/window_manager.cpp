@@ -254,7 +254,8 @@ bool me::WindowManager::handle(MirEvent const& event)
                 else if (action == mir_motion_action_scroll)
                 {
                     float alpha = surf->alpha();
-                    alpha += event.motion.pointer_coordinates[0].vscroll;
+                    alpha += 0.1f *
+                             event.motion.pointer_coordinates[0].vscroll;
                     if (alpha < 0.0f)
                         alpha = 0.0f;
                     else if (alpha > 1.0f)
