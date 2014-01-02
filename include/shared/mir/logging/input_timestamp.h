@@ -13,34 +13,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_CLIENT_SURFACE_MAP_H_
-#define MIR_CLIENT_SURFACE_MAP_H_
+#ifndef MIR_LOGGING_INPUT_TIMESTAMP_H_
+#define MIR_LOGGING_INPUT_TIMESTAMP_H_
 
-#include <functional>
-
-struct MirSurface;
+#include "mir_toolkit/event.h"
+#include <string>
 
 namespace mir
 {
-namespace client
+namespace logging
 {
 
-class SurfaceMap
-{
-public:
-    virtual void with_surface_do(
-        int surface_id, std::function<void(MirSurface*)> exec) const = 0;
-
-protected:
-    virtual ~SurfaceMap() = default;
-    SurfaceMap() = default;
-    SurfaceMap(const SurfaceMap&) = delete;
-    SurfaceMap& operator=(const SurfaceMap&) = delete;
-};
+std::string input_timestamp(nsecs_t when);
 
 }
 }
-#endif /* MIR_CLIENT_SURFACE_MAP_H_ */
+
+#endif // MIR_LOGGING_INPUT_TIMESTAMP_H_

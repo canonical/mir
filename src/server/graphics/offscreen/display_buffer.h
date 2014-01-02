@@ -59,7 +59,7 @@ private:
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(SurfacelessEGLContext &&egl_context,
+    DisplayBuffer(SurfacelessEGLContext egl_context,
                   geometry::Rectangle const& area);
 
     geometry::Rectangle view_area() const;

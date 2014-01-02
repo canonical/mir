@@ -63,7 +63,6 @@ libxkbcommon-dev,\
 libumockdev-dev,\
 liblttng-ust-dev,\
 systemtap-sdt-dev,\
-android-platform-headers,\
 libglm-dev
 
     fakeroot debootstrap --include=$BUILD_DEPENDS --arch=armhf --download-only --variant=buildd trusty .

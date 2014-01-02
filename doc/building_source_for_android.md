@@ -51,35 +51,24 @@ This method uses a cross compiler (e.g., the `g++-arm-linux-gnueabihf`
 ubuntu package) to produce armhf code. This is typically the quickest way to
 compile and run code, and is well suited for a development workflow.
 
--  Be sure that the cross compiler that you are using matches the target
-   environment. (eg, make sure you're using the trusty toolchain if you're
-   targeting a trusty phablet image) You can specify the toolchain version
-   thusly:
+Initial setup of a desktop machine for cross-compiling to armhf is simple:
 
-        $ apt-get install g++-arm-linux-gnueabihf/trusty
+    $ sudo apt-get install g++-arm-linux-gnueabihf/trusty debootstrap
+    $ sudo sh -c 'echo "deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports/ trusty main restricted universe multiverse" > /etc/apt/sources.list.d/armhf-xcompile.list'
+    $ sudo apt-get update
 
--  Get access to armhf packages via apt-get. On an amd64/ia32 system, you can
-   do this by adding a file like the one below to /etc/apt/sources.list.d/
+Now to test that everything is working you can try downloading a package like
+this:
 
-        #example sources.list with armhf dependencies
-        deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports/ trusty main restricted universe multiverse
-    
-    Then you should run:
+    $ apt-get download gcc:armhf
 
-        $ apt-get update
+Once you're able to download armhf packages from the repository, the 
+cross-compile-chroot.sh script provides an example of how to build Mir for
+armhf:
 
-    To test, try downloading a package like this:
+    $ ./cross-compile-chroot.sh
+    $ ls -l build-android-arm/*  # binaries to copy to your device
 
-        $ apt-get download my-package:armhf
-
--  Once you're able to download armhf packages from the repository, the 
-   cross-compile-chroot.sh script provides an example of how to download
-   a partial chroot with the mir dependencies, and compile the source for
-   android targets.
-
-   The script sets up a partial chroot via tools/setup-partial-armhf-chroot.sh
-   and then runs build commands similar to this:
-
-        $ mkdir mir/build; cd mir/build
-        $ MIR_NDK_PATH=/path/to/depenendcies/chroot cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake -DBoost_COMPILER=-gcc -DMIR_PLATFORM=android ..
-        $ make
+To speed up the process for future branches you may wish to cache the files
+downloaded by setting environment variable MIR_NDK_PATH to point to a directory
+that cross-compile-chroot.sh should reuse each time.

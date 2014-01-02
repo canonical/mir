@@ -61,10 +61,14 @@ std::vector<EGLint> ensure_pbuffer_set(EGLint const* attribs)
             {
                 /* Need to treat EGL_DONT_CARE specially, as it is defined as all-bits-set */
                 attribs_with_surface_type.push_back(EGL_PBUFFER_BIT);
-            } else {
+            }
+            else
+            {
                 attribs_with_surface_type.push_back(attribs[i+1] | EGL_PBUFFER_BIT);
             }
-        } else {
+        }
+        else
+        {
             attribs_with_surface_type.push_back(attribs[i+1]);
         }
         i += 2;
@@ -102,23 +106,6 @@ EGLConfig choose_config(EGLDisplay egl_display, EGLint const* attribs, bool surf
     return egl_config;
 }
 
-EGLConfig choose_config(EGLDisplay egl_display, bool surfaceless)
-{
-    EGLint const surface_type = surfaceless ? EGL_DONT_CARE : EGL_PBUFFER_BIT;
-
-    EGLint const config_attr[] = {
-        EGL_SURFACE_TYPE, surface_type,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-
-    return choose_config(egl_display, config_attr, surfaceless);
-}
-
 EGLSurface create_surface(EGLDisplay egl_display, EGLConfig egl_config)
 {
     static EGLint const dummy_pbuffer_attribs[] =
@@ -137,22 +124,22 @@ EGLint const default_egl_context_attr[] =
     EGL_NONE
 };
 
+EGLint const default_attr[] =
+{
+    EGL_SURFACE_TYPE, EGL_DONT_CARE,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 0,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
+
+
 }
 
-mg::SurfacelessEGLContext::SurfacelessEGLContext(
-    EGLDisplay egl_display,
-    EGLContext shared_context)
-    : egl_display{egl_display},
-      surfaceless{supports_surfaceless_context(egl_display)},
-      egl_config{choose_config(egl_display, surfaceless)},
-      egl_surface{egl_display,
-                  surfaceless ? EGL_NO_SURFACE : create_surface(egl_display, egl_config),
-                  surfaceless ? EGLSurfaceStore::AllowNoSurface :
-                                EGLSurfaceStore::DisallowNoSurface},
-      egl_context{egl_display,
-                  eglCreateContext(egl_display, egl_config,
-                                   shared_context,
-                                   default_egl_context_attr)}
+mg::SurfacelessEGLContext::SurfacelessEGLContext(EGLDisplay egl_display, EGLContext shared_context)
+    : SurfacelessEGLContext(egl_display, default_attr, shared_context)
 {
 }
 
@@ -206,7 +193,7 @@ void mg::SurfacelessEGLContext::make_current() const
 
 void mg::SurfacelessEGLContext::release_current() const
 {
-    if (eglGetCurrentContext() == egl_context)
+    if (egl_context != EGL_NO_CONTEXT && eglGetCurrentContext() == egl_context)
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 

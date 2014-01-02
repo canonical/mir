@@ -50,6 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedinput
   mirsharedgeometry
   mirsharedlogging
+  mirsharedenv
   mirscene
   mirtime
   mirlttng

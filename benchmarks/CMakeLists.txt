@@ -2,7 +2,9 @@ add_custom_target(
   benchmarks
 )
 
-add_subdirectory(android-input)
+if (MIR_ENABLE_TESTS)
+  add_subdirectory(android-input)
+endif ()
 add_subdirectory(cpu)
 add_subdirectory(memory)
 
