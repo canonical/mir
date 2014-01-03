@@ -118,12 +118,12 @@ int main(int argc, char *argv[])
 
             if (out->connected)
             {
-                if (out->preferred_mode < out->num_modes)
+                if (out->current_mode < out->num_modes)
                 {
-                    const MirDisplayMode *pref = out->modes + out->preferred_mode;
+                    const MirDisplayMode *cur = out->modes + out->current_mode;
                     printf(", %ux%u",
-                           pref->horizontal_resolution,
-                           pref->vertical_resolution
+                           cur->horizontal_resolution,
+                           cur->vertical_resolution
                            );
                 }
                 else
