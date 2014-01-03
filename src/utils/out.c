@@ -46,6 +46,7 @@ static const char *output_type_name(MirDisplayOutputType t)
 
 static const char *power_mode_name(MirPowerMode m)
 {
+    /* XXX it would be safer to define these strings in the client header */
     static const char * const name[] =
     {
         "on",
@@ -55,6 +56,23 @@ static const char *power_mode_name(MirPowerMode m)
     };
     return (m >= 0 && m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
 }
+
+#if 0  /* Don't report pixel formats for now. They're usuing meaningless */
+static const char *pixel_format_name(MirPixelFormat f)
+{
+    /* XXX it would be safer to define these strings in the client header */
+    static const char * const name[] =
+    {
+        "invalid",
+        "ABGR8888",
+        "XBGR8888",
+        "ARGB8888",
+        "XRGB8888",
+        "RGB888"
+    };
+    return (f >= 0 && f < sizeof(name)/sizeof(name[0])) ? name[f] : "unknown";
+}
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -101,7 +119,7 @@ int main(int argc, char *argv[])
         for (unsigned c = 0; c < conf->num_cards; ++c)
         {
             const MirDisplayCard *card = conf->cards + c;
-            printf("Card %u: Max outputs %u\n",
+            printf("Card %u: Max %u simultaneous outputs\n",
                    card->card_id, card->max_simultaneous_outputs);
         }
 
@@ -175,6 +193,18 @@ int main(int argc, char *argv[])
 
             if (out->num_modes)
                 printf("\n");
+
+#if 0  /* This is ugly and likely to change */
+            for (unsigned f = 0; f < out->num_output_formats; ++f)
+            {
+                printf("%10s%c",
+                       pixel_format_name(out->output_formats[f]),
+                       (f == out->current_output_format) ? '*' : ' ');
+            }
+
+            if (out->num_output_formats)
+                printf("\n");
+#endif
         }
 
         mir_display_config_destroy(conf);
