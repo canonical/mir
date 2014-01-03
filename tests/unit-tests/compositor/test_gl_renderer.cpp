@@ -36,6 +36,7 @@ using testing::SetArgPointee;
 using testing::InSequence;
 using testing::Return;
 using testing::ReturnRef;
+using testing::Pointee;
 using testing::_;
 
 namespace mt=mir::test;
@@ -271,6 +272,12 @@ public:
 
         mc::GLRendererFactory gl_renderer_factory;
         renderer = gl_renderer_factory.create_renderer_for(display_area);
+
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
+        EXPECT_CALL(mock_gl, glDeleteProgram(stub_program));
+        EXPECT_CALL(mock_gl, glDeleteBuffers(1, Pointee(stub_vbo)));
+        EXPECT_CALL(mock_gl, glDeleteTextures(_, _));
     }
 
     mtd::MockGL         mock_gl;

@@ -36,6 +36,7 @@ class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class RendererFactory;
+class CompositorReport;
 }
 namespace frontend
 {
@@ -150,6 +151,7 @@ public:
     /** @name compositor configuration - customization
      * configurable interfaces for modifying compositor
      *  @{ */
+    virtual std::shared_ptr<compositor::CompositorReport> the_compositor_report();
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     /** @} */
 
@@ -278,6 +280,7 @@ protected:
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<time::TimeSource> time_source;
