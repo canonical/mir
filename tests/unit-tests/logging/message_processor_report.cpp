@@ -28,12 +28,12 @@ using namespace testing;
 
 namespace
 {
-class MockTimeSource : public mir::time::TimeSource
+class MockClock : public mir::time::Clock
 {
 public:
     MOCK_CONST_METHOD0(sample, mir::time::Timestamp());
 
-    ~MockTimeSource() noexcept(true) {}
+    ~MockClock() noexcept(true) {}
 };
 
 class MockLogger : public mir::logging::Logger
@@ -46,7 +46,7 @@ public:
 struct MessageProcessorReport : public Test
 {
     MockLogger     logger;
-    MockTimeSource time_source;
+    MockClock time_source;
 
     mir::logging::MessageProcessorReport report;
 

@@ -32,7 +32,7 @@ char const* const component = "frontend::MessageProcessor";
 
 ml::MessageProcessorReport::MessageProcessorReport(
     std::shared_ptr<Logger> const& log,
-    std::shared_ptr<time::TimeSource> const& time_source) :
+    std::shared_ptr<time::Clock> const& time_source) :
     log(log),
     time_source(time_source)
 {
