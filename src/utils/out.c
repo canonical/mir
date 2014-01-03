@@ -57,7 +57,7 @@ static const char *power_mode_name(MirPowerMode m)
     return (m >= 0 && m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
 }
 
-#if 0  /* Don't report pixel formats for now. They're usuing meaningless */
+#if 0  /* Don't report pixel formats for now. They're usually meaningless */
 static const char *pixel_format_name(MirPixelFormat f)
 {
     /* XXX it would be safer to define these strings in the client header */
