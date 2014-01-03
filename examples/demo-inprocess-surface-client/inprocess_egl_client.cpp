@@ -124,7 +124,6 @@ void me::InprocessEGLClient::thread_loop()
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
         assert(rc == EGL_TRUE);
-        printf("Swapped\n");
 
         gl_animation.step();
     }
