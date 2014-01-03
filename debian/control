@@ -166,6 +166,16 @@ Description: Display server for Ubuntu - demonstration programs
  .
  Contains demo applications (with source) that use the Mir display server
 
+Package: mir-utils
+Architecture: i386 amd64 armhf arm64
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - utility programs
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains utility programs for probing and controling a Mir server.
+
 Package: mir-doc
 Section: doc
 Architecture: all
