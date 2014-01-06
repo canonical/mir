@@ -32,6 +32,7 @@ public:
     static char const* const no_server_socket_opt;
     static char const* const session_mediator_report_opt;
     static char const* const msg_processor_report_opt;
+    static char const* const compositor_report_opt;
     static char const* const display_report_opt;
     static char const* const legacy_input_report_opt;
     static char const* const connector_report_opt;

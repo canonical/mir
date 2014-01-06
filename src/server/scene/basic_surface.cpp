@@ -84,6 +84,11 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
     surface_data->apply_rotation(degrees, axis);
 }
 
+float ms::BasicSurface::alpha() const
+{
+    return surface_data->alpha();
+}
+
 void ms::BasicSurface::set_alpha(float alpha_v)
 {
     surface_data->apply_alpha(alpha_v);

@@ -326,6 +326,30 @@ TEST_F(SurfaceImpl, emits_resize_events)
     EXPECT_EQ(new_size, surf.size());
 }
 
+TEST_F(SurfaceImpl, remembers_alpha)
+{
+    ms::SurfaceImpl surf(
+        mt::fake_shared(surface_builder),
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        msh::a_surface(),
+        stub_id,
+        stub_sender);
+
+    EXPECT_FLOAT_EQ(1.0f, surf.alpha());
+
+    surf.set_alpha(0.5f);
+    EXPECT_FLOAT_EQ(0.5f, surf.alpha());
+
+    surf.set_alpha(0.25f);
+    EXPECT_FLOAT_EQ(0.25f, surf.alpha());
+
+    surf.set_alpha(0.0f);
+    EXPECT_FLOAT_EQ(0.0f, surf.alpha());
+
+    surf.set_alpha(1.0f);
+    EXPECT_FLOAT_EQ(1.0f, surf.alpha());
+}
+
 TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;
