@@ -83,7 +83,6 @@ public:
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     uint32_t get_current_buffer_id() const;
     void get_cpu_region(MirGraphicsRegion& region);
-    void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
@@ -101,6 +100,7 @@ private:
     void created(mir_surface_callback callback, void * context);
     void new_buffer(mir_surface_callback callback, void * context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    void release_cpu_region();
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
              race in surface, last_buffer_id */

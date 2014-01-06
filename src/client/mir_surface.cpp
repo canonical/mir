@@ -64,18 +64,16 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    if (input_thread)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        if (input_thread)
-        {
-            input_thread->stop();
-            input_thread->join();
-        }
-
-        for (auto i = 0, end = surface.fd_size(); i != end; ++i)
-            close(surface.fd(i));
+        input_thread->stop();
+        input_thread->join();
     }
+
+    for (auto i = 0, end = surface.fd_size(); i != end; ++i)
+        close(surface.fd(i));
 
     release_cpu_region();
 }
@@ -134,13 +132,13 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 
 void MirSurface::release_cpu_region()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
     secured_region.reset();
 }
 
 MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
     release_cpu_region();
 
     server.next_buffer(
