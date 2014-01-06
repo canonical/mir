@@ -63,6 +63,24 @@ void logging::CompositorReport::began_frame(SubCompositorId id)
     inst.latency_sum += t - last_scheduled;
 }
 
+void logging::CompositorReport::bypassed(bool did_bypass, SubCompositorId id)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    auto& inst = instance[id];
+
+    if (did_bypass)
+        ++inst.nbypassed;
+
+    if (did_bypass != inst.prev_bypassed || inst.nframes == 0)
+    {
+        std::string msg = "Bypass ";
+        msg += did_bypass ? "ON" : "OFF";
+        logger->log(Logger::informational, msg, component);
+    }
+
+    inst.prev_bypassed = did_bypass;
+}
+
 void logging::CompositorReport::Instance::log(
     Logger& logger, SubCompositorId id)
 {
@@ -84,6 +102,8 @@ void logging::CompositorReport::Instance::log(
                 latency_sum - last_reported_latency_sum
             ).count();
 
+        long bypass_percent = (nbypassed - last_reported_bypassed) * 100L / dn;
+
         // Keep everything premultiplied by 1000 to guarantee accuracy
         // and avoid floating point.
         long frames_per_1000sec = dt ? dn * 1000000000LL / dt : 0;
@@ -95,7 +115,8 @@ void logging::CompositorReport::Instance::log(
         snprintf(msg, sizeof msg, "Display %p averaged %ld.%03ld FPS, "
                  "%ld.%03ld ms/frame, "
                  "latency %ld.%03ld ms, "
-                 "%ld frames over %ld.%03ld sec",
+                 "%ld frames over %ld.%03ld sec, "
+                 "%ld%% bypassed",
                  id,
                  frames_per_1000sec / 1000,
                  frames_per_1000sec % 1000,
@@ -105,7 +126,8 @@ void logging::CompositorReport::Instance::log(
                  avg_latency_usec % 1000,
                  dn,
                  dt_msec / 1000,
-                 dt_msec % 1000
+                 dt_msec % 1000,
+                 bypass_percent
                  );
 
         logger.log(Logger::informational, msg, component);
@@ -115,6 +137,7 @@ void logging::CompositorReport::Instance::log(
     last_reported_frame_time_sum = frame_time_sum;
     last_reported_latency_sum = latency_sum;
     last_reported_nframes = nframes;
+    last_reported_bypassed = nbypassed;
 }
 
 void logging::CompositorReport::finished_frame(SubCompositorId id)

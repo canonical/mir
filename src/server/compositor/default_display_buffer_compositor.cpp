@@ -128,6 +128,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
         }
     }
 
+    report->bypassed(bypassed, this);
+
     if (!bypassed)
     {
         // preserves buffers used in rendering until after post_update()

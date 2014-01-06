@@ -140,3 +140,36 @@ TEST(LoggingCompositorReport, survives_pause_resume)
 
     report.stopped();
 }
+
+TEST(LoggingCompositorReport, reports_bypass_only_when_changed)
+{
+    const void* const id = "My Screen";
+
+    auto clock = make_shared<FakeClock>();
+    auto logger = make_shared<Recorder>();
+
+    logging::CompositorReport report(logger, clock);
+
+    report.started();
+
+    report.began_frame(id);
+    report.bypassed(false, id);
+    report.finished_frame(id);
+    EXPECT_EQ("Bypass OFF", logger->last_message());
+
+    for (int f = 0; f < 3; ++f)
+    {
+        report.began_frame(id);
+        report.bypassed(false, id);
+        report.finished_frame(id);
+        clock->elapse(chrono::microseconds(12345678));
+    }
+    EXPECT_NE("Bypass", logger->last_message().substr(0, 6));
+
+    report.began_frame(id);
+    report.bypassed(true, id);
+    EXPECT_EQ("Bypass ON", logger->last_message());
+    report.finished_frame(id);
+
+    report.stopped();
+}

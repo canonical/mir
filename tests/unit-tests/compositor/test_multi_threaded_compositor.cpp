@@ -303,6 +303,7 @@ public:
     MOCK_METHOD5(added_display,
                  void(int,int,int,int,mc::CompositorReport::SubCompositorId));
     MOCK_METHOD1(began_frame, void(mc::CompositorReport::SubCompositorId));
+    MOCK_METHOD2(bypassed, void(bool, mc::CompositorReport::SubCompositorId));
     MOCK_METHOD1(finished_frame, void(mc::CompositorReport::SubCompositorId));
     MOCK_METHOD0(started, void());
     MOCK_METHOD0(stopped, void());
