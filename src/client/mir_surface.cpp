@@ -166,8 +166,6 @@ MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 
 void MirSurface::process_incoming_buffer()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     auto const& buffer = surface.buffer();
 
     /*
@@ -201,12 +199,12 @@ void MirSurface::process_incoming_buffer()
 
 void MirSurface::created(mir_surface_callback callback, void * context)
 {
+    auto platform = connection->get_client_platform();
+
     {
         std::lock_guard<std::recursive_mutex> lock(mutex);
 
         process_incoming_buffer();
-
-        auto platform = connection->get_client_platform();
         accelerated_window = platform->create_egl_native_window(this);
     }
 
