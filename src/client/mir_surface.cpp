@@ -208,10 +208,9 @@ void MirSurface::created(mir_surface_callback callback, void * context)
 
         auto platform = connection->get_client_platform();
         accelerated_window = platform->create_egl_native_window(this);
-
-        connection->on_surface_created(id(), this);
     }
 
+    connection->on_surface_created(id(), this);
     callback(this, context);
     create_wait_handle.result_received();
 }

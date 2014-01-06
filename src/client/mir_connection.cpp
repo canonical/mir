@@ -182,7 +182,7 @@ MirWaitHandle* MirConnection::release_surface(
     message.set_value(surface->id());
 
     {
-        std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
+        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
         release_wait_handles.push_back(new_wait_handle);
     }
 
@@ -262,7 +262,7 @@ void MirConnection::done_disconnect()
     /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
-        std::lock_guard<std::mutex> lock(release_wait_handle_guard);
+        std::lock_guard<decltype(release_wait_handle_guard)> lock(release_wait_handle_guard);
         for (auto handle : release_wait_handles)
             delete handle;
     }

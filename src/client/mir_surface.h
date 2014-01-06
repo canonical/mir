@@ -108,7 +108,7 @@ private:
     mir::protobuf::Surface surface;
     std::string error_message;
 
-    MirConnection *connection;
+    MirConnection* const connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;

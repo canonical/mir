@@ -124,7 +124,7 @@ public:
     bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
 private:
-    std::mutex mutex; // Protects all members of *this that don't have their own
+    std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
