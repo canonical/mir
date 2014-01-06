@@ -131,8 +131,7 @@ int main(int argc, char *argv[])
                    out->output_id,
                    out->card_id,
                    output_type_name(out->type),
-                   out->connected ? "connected" : "disconnected"
-                   );
+                   out->connected ? "connected" : "disconnected");
 
             if (out->connected)
             {
@@ -141,8 +140,7 @@ int main(int argc, char *argv[])
                     const MirDisplayMode *cur = out->modes + out->current_mode;
                     printf(", %ux%u",
                            cur->horizontal_resolution,
-                           cur->vertical_resolution
-                           );
+                           cur->vertical_resolution);
                 }
                 else
                 {
@@ -161,8 +159,7 @@ int main(int argc, char *argv[])
                        power_mode_name(out->power_mode),
                        out->physical_width_mm,
                        out->physical_height_mm,
-                       inches
-                       );
+                       inches);
             }
             printf("\n");
 
@@ -187,8 +184,7 @@ int main(int argc, char *argv[])
                 printf("%6.1f%c%c",
                        mode->refresh_rate,
                        (m == out->current_mode) ? '*' : ' ',
-                       (m == out->preferred_mode) ? '+' : ' '
-                       );
+                       (m == out->preferred_mode) ? '+' : ' ');
             }
 
             if (out->num_modes)
