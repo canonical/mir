@@ -69,10 +69,12 @@ bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
-    std::shared_ptr<mc::Renderer> const& renderer)
+    std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<mc::CompositorReport> const& report)
     : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
+      report{report},
       local_frameno{global_frameno}
 {
 }
