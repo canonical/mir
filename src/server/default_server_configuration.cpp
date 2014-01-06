@@ -224,7 +224,7 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
 
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
-    return time_source(
+    return clock(
         []()
         {
             return std::make_shared<mir::time::HighResolutionClock>();

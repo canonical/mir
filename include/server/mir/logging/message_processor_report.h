@@ -56,7 +56,7 @@ class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 public:
     MessageProcessorReport(
         std::shared_ptr<Logger> const& log,
-        std::shared_ptr<time::Clock> const& time_source);
+        std::shared_ptr<time::Clock> const& clock);
 
     void received_invocation(void const* mediator, int id, std::string const& method);
 
@@ -74,7 +74,7 @@ public:
 
 private:
     std::shared_ptr<Logger> const log;
-    std::shared_ptr<time::Clock> const time_source;
+    std::shared_ptr<time::Clock> const clock;
     std::mutex mutex;
     detail::Mediators mediators;
 };
