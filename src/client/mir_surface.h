@@ -93,7 +93,7 @@ public:
     void handle_event(MirEvent const& e);
 
 private:
-    mutable std::recursive_mutex mutex; // Protects all members of *this
+    mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
     void process_incoming_buffer();

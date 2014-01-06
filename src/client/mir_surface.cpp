@@ -64,16 +64,18 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (input_thread)
     {
-        input_thread->stop();
-        input_thread->join();
-    }
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
-    for (auto i = 0, end = surface.fd_size(); i != end; ++i)
-        close(surface.fd(i));
+        if (input_thread)
+        {
+            input_thread->stop();
+            input_thread->join();
+        }
+
+        for (auto i = 0, end = surface.fd_size(); i != end; ++i)
+            close(surface.fd(i));
+    }
 
     release_cpu_region();
 }
@@ -139,8 +141,6 @@ void MirSurface::release_cpu_region()
 
 MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
     release_cpu_region();
 
     server.next_buffer(
@@ -255,7 +255,7 @@ uint32_t MirSurface::get_current_buffer_id() const
 
 void MirSurface::populate(MirBufferPackage& buffer_package)
 {
-    if (is_valid() && surface.has_buffer())
+    if (!surface.has_error() && surface.has_buffer())
     {
         auto const& buffer = surface.buffer();
 
