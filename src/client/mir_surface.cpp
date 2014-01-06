@@ -255,8 +255,6 @@ uint32_t MirSurface::get_current_buffer_id() const
 
 void MirSurface::populate(MirBufferPackage& buffer_package)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     if (is_valid() && surface.has_buffer())
     {
         auto const& buffer = surface.buffer();
