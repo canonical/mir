@@ -32,7 +32,7 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
     std::shared_ptr<mc::CompositorReport> const& report)
     : scene{scene},
       renderer_factory{renderer_factory},
-      report(report)
+      report{report}
 {
 }
 
