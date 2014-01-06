@@ -33,6 +33,7 @@
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_compositor_report.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -266,10 +267,13 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .WillOnce(Return(compositor_buffer));
 
+    auto report = std::make_shared<mtd::MockCompositorReport>();
+    EXPECT_CALL(*report, bypassed(true, _));
+
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        report);
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -365,10 +369,13 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
 
+    auto report = std::make_shared<mtd::MockCompositorReport>();
+    EXPECT_CALL(*report, bypassed(false, _));
+
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        report);
 
     auto comp = factory.create_compositor_for(display_buffer);
 
