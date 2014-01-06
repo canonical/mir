@@ -73,8 +73,9 @@ void logging::CompositorReport::bypassed(bool did_bypass, SubCompositorId id)
 
     if (did_bypass != inst.prev_bypassed || inst.nframes == 0)
     {
-        std::string msg = "Bypass ";
-        msg += did_bypass ? "ON" : "OFF";
+        char msg[128];
+        snprintf(msg, sizeof msg, "Display %p bypass %s",
+                 id, did_bypass ? "ON" : "OFF");
         logger->log(Logger::informational, msg, component);
     }
 

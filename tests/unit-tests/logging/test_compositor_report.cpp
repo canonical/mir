@@ -54,6 +54,10 @@ public:
     {
         return last;
     }
+    bool last_message_contains(char const* substr)
+    {
+        return last.find(substr) != string::npos;
+    }
     bool scrape(float& fps, float& frame_time) const
     {
         return sscanf(last.c_str(), "Display %*s averaged %f FPS, %f ms/frame",
@@ -155,7 +159,8 @@ TEST(LoggingCompositorReport, reports_bypass_only_when_changed)
     report.began_frame(id);
     report.bypassed(false, id);
     report.finished_frame(id);
-    EXPECT_EQ("Bypass OFF", logger->last_message());
+    EXPECT_TRUE(logger->last_message_contains("bypass OFF"))
+        << logger->last_message();
 
     for (int f = 0; f < 3; ++f)
     {
@@ -164,11 +169,13 @@ TEST(LoggingCompositorReport, reports_bypass_only_when_changed)
         report.finished_frame(id);
         clock->elapse(chrono::microseconds(12345678));
     }
-    EXPECT_NE("Bypass", logger->last_message().substr(0, 6));
+    EXPECT_FALSE(logger->last_message_contains("bypass "))
+        << logger->last_message();
 
     report.began_frame(id);
     report.bypassed(true, id);
-    EXPECT_EQ("Bypass ON", logger->last_message());
+    EXPECT_TRUE(logger->last_message_contains("bypass ON"))
+        << logger->last_message();
     report.finished_frame(id);
 
     report.stopped();
