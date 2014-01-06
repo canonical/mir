@@ -14,6 +14,7 @@ set(
   bypass.cpp
   occlusion.cpp
   default_configuration.cpp
+  null_compositor_report.cpp
 )
 
 ADD_LIBRARY(
