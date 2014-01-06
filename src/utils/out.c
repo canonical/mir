@@ -41,7 +41,7 @@ static const char *output_type_name(MirDisplayOutputType t)
         "TV",
         "eDP",
     };
-    return (t >= 0 && t < sizeof(name)/sizeof(name[0])) ? name[t] : name[0];
+    return ((unsigned)t < sizeof(name)/sizeof(name[0])) ? name[t] : name[0];
 }
 
 static const char *power_mode_name(MirPowerMode m)
@@ -54,7 +54,7 @@ static const char *power_mode_name(MirPowerMode m)
         "suspended",
         "off"
     };
-    return (m >= 0 && m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
+    return ((unsigned)m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
 }
 
 #if 0  /* Don't report pixel formats for now. They're usually meaningless */
