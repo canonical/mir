@@ -69,7 +69,7 @@ class Logger;
 struct MirConnection : mir::client::ClientContext
 {
 public:
-    MirConnection();
+    MirConnection(std::string const& error_message);
 
     MirConnection(mir::client::ConnectionConfiguration& conf);
     ~MirConnection() noexcept;
@@ -87,7 +87,6 @@ public:
             void *context);
 
     char const * get_error_message();
-    void set_error_message(std::string const& error);
 
     MirWaitHandle* connect(
         const char* app_name,
@@ -143,7 +142,6 @@ private:
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 
-    std::mutex error_message_mutex;
     std::string error_message;
 
     MirWaitHandle connect_wait_handle;
@@ -164,6 +162,7 @@ private:
 
     struct SurfaceRelease;
 
+    void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );

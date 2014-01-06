@@ -66,10 +66,10 @@ std::mutex connection_guard;
 std::unordered_set<MirConnection*> valid_connections;
 }
 
-MirConnection::MirConnection() :
+MirConnection::MirConnection(std::string const& error_message) :
     channel(),
     server(0),
-    error_message("ERROR")
+    error_message(error_message)
 {
 }
 
@@ -123,23 +123,18 @@ MirWaitHandle* MirConnection::create_surface(
 
 char const * MirConnection::get_error_message()
 {
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
-        if (connect_result.has_error())
-        {
-            return connect_result.error().c_str();
-        }
+    if (connect_result.has_error())
+    {
+        return connect_result.error().c_str();
     }
 
-    std::lock_guard<decltype(error_message_mutex)> lock(error_message_mutex);
     return error_message.c_str();
 }
 
 void MirConnection::set_error_message(std::string const& error)
 {
-    std::lock_guard<decltype(error_message_mutex)> lock(error_message_mutex);
-
     error_message = error;
 }
 
