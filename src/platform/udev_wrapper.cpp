@@ -210,6 +210,7 @@ mir::UdevContext::UdevContext()
     if (!context)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev context"));
 }
+
 mir::UdevContext::~UdevContext() noexcept
 {
     udev_unref(context);

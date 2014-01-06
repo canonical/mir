@@ -1,3 +1,15 @@
+mir (0.1.3-0ubuntu1) UNRELEASED; urgency=low
+
+  * Preparing for release 0.1.3
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 11 Dec 2013 14:58:12 +0800
+
+mir (0.1.2+14.04.20131128.1-0ubuntu2) trusty; urgency=low
+
+  * No-change rebuild for ust.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Fri, 06 Dec 2013 15:03:27 -0500
+
 mir (0.1.2+14.04.20131128.1-0ubuntu1) trusty; urgency=low
 
   [ Kevin Gunn ]

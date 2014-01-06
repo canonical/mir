@@ -53,7 +53,7 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "gbm")
+if (MIR_PLATFORM STREQUAL "mesa")
   target_link_libraries(
     mir_unit_tests
 

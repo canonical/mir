@@ -129,23 +129,6 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
     }
 }
 
-static unsigned int get_bpp(MirPixelFormat pf)
-{
-    switch (pf)
-    {
-        case mir_pixel_format_abgr_8888:
-        case mir_pixel_format_xbgr_8888:
-        case mir_pixel_format_argb_8888:
-        case mir_pixel_format_xrgb_8888:
-            return 32;
-        case mir_pixel_format_bgr_888:
-            return 24;
-        case mir_pixel_format_invalid:
-        default:
-            return 0;
-    }
-}
-
 static const MirDisplayOutput *find_active_output(
     const MirDisplayConfiguration *conf)
 {
@@ -357,7 +340,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
         nformats, mir_pixel_formats, surfaceparm.pixel_format);
-    unsigned int bpp = get_bpp(surfaceparm.pixel_format);
+    unsigned int bpp = 8 * MIR_BYTES_PER_PIXEL(surfaceparm.pixel_format);
     EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,

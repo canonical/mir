@@ -70,6 +70,7 @@ char const* const mir::ConfigurationOptions::server_socket_opt           = "file
 char const* const mir::ConfigurationOptions::no_server_socket_opt        = "no-file";
 char const* const mir::ConfigurationOptions::session_mediator_report_opt = "session-mediator-report";
 char const* const mir::ConfigurationOptions::msg_processor_report_opt    = "msg-processor-report";
+char const* const mir::ConfigurationOptions::compositor_report_opt       = "compositor-report";
 char const* const mir::ConfigurationOptions::display_report_opt          = "display-report";
 char const* const mir::ConfigurationOptions::legacy_input_report_opt     = "legacy-input-report";
 char const* const mir::ConfigurationOptions::connector_report_opt        = "connector-report";
@@ -120,6 +121,8 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
+        (compositor_report_opt, po::value<std::string>(),
+            "Compositor reporting [{log,off}:default=off]")
         (connector_report_opt, po::value<std::string>(),
             "How to handle the Connector report. [{log,off}:default=off]")
         (display_report_opt, po::value<std::string>(),

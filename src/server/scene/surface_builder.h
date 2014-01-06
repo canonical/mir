@@ -26,7 +26,6 @@ namespace mir
 {
 namespace shell
 {
-class Session;
 struct SurfaceCreationParameters;
 }
 
@@ -37,7 +36,7 @@ class BasicSurface;
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::Session* session, shell::SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
 
     virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
 protected:

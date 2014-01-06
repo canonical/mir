@@ -39,14 +39,13 @@ public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
     ~BufferStreamSurfaces();
 
-    void swap_client_buffers(std::shared_ptr<graphics::Buffer>& buffer) override;
-    void release_client_buffer(std::shared_ptr<graphics::Buffer>& buffer) override;
+    void swap_client_buffers(graphics::Buffer*& buffer) override;
 
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(unsigned long frameno) override;
     std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
-    geometry::PixelFormat get_stream_pixel_format() override;
+    MirPixelFormat get_stream_pixel_format() override;
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;

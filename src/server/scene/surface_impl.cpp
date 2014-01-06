@@ -20,7 +20,7 @@
 #include "basic_surface.h"
 #include "surface_builder.h"
 #include "mir/shell/surface_configurator.h"
-#include "mir/shell/surface_controller.h"
+#include "surface_ranker.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
@@ -43,7 +43,6 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
 ms::SurfaceImpl::SurfaceImpl(
-    msh::Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
     std::shared_ptr<msh::SurfaceConfigurator> const& configurator,
     msh::SurfaceCreationParameters const& params,
@@ -51,7 +50,7 @@ ms::SurfaceImpl::SurfaceImpl(
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
     configurator(configurator),
-    surface(builder->create_surface(session, params)),
+    surface(builder->create_surface(params)),
     id(id),
     event_sink(event_sink),
     type_value(mir_surface_type_normal),
@@ -99,12 +98,12 @@ std::string ms::SurfaceImpl::name() const
     return surface->name();
 }
 
-mir::geometry::PixelFormat ms::SurfaceImpl::pixel_format() const
+MirPixelFormat ms::SurfaceImpl::pixel_format() const
 {
     return surface->pixel_format();
 }
 
-void ms::SurfaceImpl::swap_buffers(std::shared_ptr<graphics::Buffer>& buffer)
+void ms::SurfaceImpl::swap_buffers(graphics::Buffer*& buffer)
 {
     surface->swap_buffers(buffer);
 }
@@ -239,7 +238,7 @@ void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& regio
     surface->set_input_region(region);
 }
 
-void ms::SurfaceImpl::raise(std::shared_ptr<msh::SurfaceController> const& controller)
+void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller)
 {
     controller->raise(surface);
 }
@@ -261,6 +260,11 @@ void ms::SurfaceImpl::resize(geom::Size const& size)
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
 {
     surface->set_rotation(degrees, axis);
+}
+
+float ms::SurfaceImpl::alpha() const
+{
+    return surface->alpha();
 }
 
 void ms::SurfaceImpl::set_alpha(float alpha)

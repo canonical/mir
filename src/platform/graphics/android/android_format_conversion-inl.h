@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 #include <system/graphics.h>
 
 namespace mir
@@ -29,39 +29,39 @@ namespace graphics
 namespace android
 {
 
-inline static int to_android_format(geometry::PixelFormat format)
+inline static int to_android_format(MirPixelFormat format)
 {
     switch(format)
     {
-        case geometry::PixelFormat::abgr_8888:
+        case mir_pixel_format_abgr_8888:
             return HAL_PIXEL_FORMAT_RGBA_8888;
-        case geometry::PixelFormat::xbgr_8888:
+        case mir_pixel_format_xbgr_8888:
             return HAL_PIXEL_FORMAT_RGBX_8888;
-        case geometry::PixelFormat::argb_8888:
+        case mir_pixel_format_argb_8888:
             return HAL_PIXEL_FORMAT_BGRA_8888;
-        case geometry::PixelFormat::xrgb_8888:
+        case mir_pixel_format_xrgb_8888:
             return HAL_PIXEL_FORMAT_BGRA_8888;
-        case geometry::PixelFormat::bgr_888:
+        case mir_pixel_format_bgr_888:
             return HAL_PIXEL_FORMAT_RGB_888;
         default:
             return 0;
     }
 }
 
-inline static mir::geometry::PixelFormat to_mir_format(int format)
+inline static MirPixelFormat to_mir_format(int format)
 {
     switch(format)
     {
         case HAL_PIXEL_FORMAT_RGBA_8888:
-            return geometry::PixelFormat::abgr_8888;
+            return mir_pixel_format_abgr_8888;
         case HAL_PIXEL_FORMAT_RGBX_8888:
-            return geometry::PixelFormat::xbgr_8888;
+            return mir_pixel_format_xbgr_8888;
         case HAL_PIXEL_FORMAT_BGRA_8888:
-            return geometry::PixelFormat::argb_8888;
+            return mir_pixel_format_argb_8888;
         case HAL_PIXEL_FORMAT_RGB_888:
-            return geometry::PixelFormat::bgr_888;
+            return mir_pixel_format_bgr_888;
         default:
-            return geometry::PixelFormat::invalid;
+            return mir_pixel_format_invalid;
     }
 }
 

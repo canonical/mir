@@ -57,7 +57,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
-    std::vector<geom::PixelFormat> const& surface_pixel_formats,
+    std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
@@ -115,7 +115,7 @@ void mf::SessionMediator::connect(
     done->Run();
 }
 
-std::tuple<std::shared_ptr<mg::Buffer>, bool>
+std::tuple<mg::Buffer*, bool>
 mf::SessionMediator::advance_buffer(SurfaceId surf_id, Surface& surface)
 {
     auto& tracker = client_buffer_tracker[surf_id];
@@ -138,7 +138,7 @@ void mf::SessionMediator::create_surface(
     google::protobuf::Closure* done)
 {
     bool need_full_ipc;
-    std::shared_ptr<graphics::Buffer> client_buffer;
+    graphics::Buffer* client_buffer{nullptr};
     std::shared_ptr<Session> session;
 
     {
@@ -155,7 +155,7 @@ void mf::SessionMediator::create_surface(
             .of_name(request->surface_name())
             .of_size(request->width(), request->height())
             .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
             .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
 
         auto surface = session->get_surface(surf_id);
@@ -190,7 +190,7 @@ void mf::SessionMediator::next_buffer(
 {
     bool need_full_ipc;
     SurfaceId const surf_id{request->value()};
-    std::shared_ptr<graphics::Buffer> client_buffer;
+    graphics::Buffer* client_buffer{nullptr};
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
@@ -333,7 +333,7 @@ void mf::SessionMediator::configure_display(
 
 void mf::SessionMediator::pack_protobuf_buffer(
     protobuf::Buffer& protobuf_buffer,
-    std::shared_ptr<graphics::Buffer> const& graphics_buffer,
+    graphics::Buffer* graphics_buffer,
     bool need_full_ipc)
 {
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
@@ -341,6 +341,6 @@ void mf::SessionMediator::pack_protobuf_buffer(
     if (need_full_ipc)
     {
         mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-        graphics_platform->fill_ipc_package(&packer, graphics_buffer.get());
+        graphics_platform->fill_ipc_package(&packer, graphics_buffer);
     }
 }

@@ -50,6 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedinput
   mirsharedgeometry
   mirsharedlogging
+  mirsharedenv
   mirscene
   mirtime
   mirlttng
@@ -93,7 +94,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 11)
+set(MIRSERVER_ABI 13)
 
 set_target_properties(
   mirserver

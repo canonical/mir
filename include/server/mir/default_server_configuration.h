@@ -36,6 +36,7 @@ class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class RendererFactory;
+class CompositorReport;
 }
 namespace frontend
 {
@@ -54,7 +55,6 @@ class DisplayChanger;
 namespace shell
 {
 class SurfaceFactory;
-class SurfaceController;
 class InputTargeter;
 class FocusSetter;
 class PlacementStrategy;
@@ -81,6 +81,7 @@ class SnapshotStrategy;
 class SurfaceBuilder;
 class SurfaceStackModel;
 class SurfaceStack;
+class SurfaceRanker;
 class SurfaceController;
 class InputRegistrar;
 class SceneReport;
@@ -150,6 +151,7 @@ public:
     /** @name compositor configuration - customization
      * configurable interfaces for modifying compositor
      *  @{ */
+    virtual std::shared_ptr<compositor::CompositorReport> the_compositor_report();
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     /** @} */
 
@@ -189,7 +191,6 @@ public:
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
-    virtual std::shared_ptr<shell::SurfaceController>   the_shell_surface_controller();
     /** @} */
 
     /** @name internal scene configuration
@@ -202,6 +203,7 @@ public:
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
+    virtual std::shared_ptr<scene::SurfaceRanker>   the_surface_ranker();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -278,6 +280,7 @@ protected:
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<time::TimeSource> time_source;

@@ -21,23 +21,25 @@
 
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
+
 #include <memory>
+#include <unordered_map>
 
 namespace mir
 {
 namespace graphics
 {
+class Buffer;
 class InternalSurface;
+class NativeBuffer;
 
 namespace android
 {
-class InterpreterResourceCache;
 class InternalClientWindow : public AndroidDriverInterpreter
 {
 public:
-    InternalClientWindow(std::shared_ptr<InternalSurface> const&,
-                         std::shared_ptr<InterpreterResourceCache> const&);
+    InternalClientWindow(std::shared_ptr<InternalSurface> const&);
     graphics::NativeBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, int);
     void dispatch_driver_request_format(int);
@@ -46,7 +48,13 @@ public:
 
 private:
     std::shared_ptr<InternalSurface> const surface;
-    std::shared_ptr<InterpreterResourceCache> const resource_cache;
+    graphics::Buffer* buffer;
+    struct Item
+    {
+        graphics::Buffer* buffer;
+        std::shared_ptr<graphics::NativeBuffer> handle;
+    };
+    std::unordered_map<ANativeWindowBuffer*, Item> lookup;
     int format;
 };
 }

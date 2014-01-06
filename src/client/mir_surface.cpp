@@ -126,8 +126,7 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     region_out.width = secured_region->width.as_uint32_t();
     region_out.height = secured_region->height.as_uint32_t();
     region_out.stride = secured_region->stride.as_uint32_t();
-    region_out.pixel_format = static_cast<MirPixelFormat>(secured_region->format);
-
+    region_out.pixel_format = secured_region->format;
     region_out.vaddr = secured_region->vaddr.get();
 }
 
@@ -159,10 +158,10 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 }
 
 /* todo: all these conversion functions are a bit of a kludge, probably
-         better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
+         better to have a more developed MirPixelFormat that can handle this */
+MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
-    return static_cast<geom::PixelFormat>(pf);
+    return static_cast<MirPixelFormat>(pf);
 }
 
 void MirSurface::process_incoming_buffer()

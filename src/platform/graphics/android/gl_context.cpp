@@ -26,7 +26,6 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
 
 namespace
 {
@@ -69,7 +68,7 @@ static EGLDisplay create_and_initialize_display()
 
 /* the minimum requirement is to have EGL_WINDOW_BIT and EGL_OPENGL_ES2_BIT, and to select a config
    whose pixel format matches that of the framebuffer. */
-static EGLConfig select_egl_config_with_format(EGLDisplay egl_display, geom::PixelFormat display_format)
+static EGLConfig select_egl_config_with_format(EGLDisplay egl_display, MirPixelFormat display_format)
 {
     int required_visual_id = mga::to_android_format(display_format);
     int num_potential_configs;
@@ -107,7 +106,7 @@ EGLSurface mga::create_window_surface(EGLDisplay disp, EGLConfig config, EGLNati
     return eglCreateWindowSurface(disp, config, native, NULL);
 }
 
-mga::GLContext::GLContext(geom::PixelFormat display_format, mg::DisplayReport& report)
+mga::GLContext::GLContext(MirPixelFormat display_format, mg::DisplayReport& report)
     : egl_display(create_and_initialize_display()),
       own_display(true),
       egl_config(select_egl_config_with_format(egl_display, display_format)),
@@ -132,7 +131,7 @@ mga::GLContext::GLContext(
 {
 }
 
-void mga::GLContext::make_current()
+void mga::GLContext::make_current() const
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
     {
@@ -141,7 +140,7 @@ void mga::GLContext::make_current()
     }
 }
 
-void mga::GLContext::release_current()
+void mga::GLContext::release_current() const
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

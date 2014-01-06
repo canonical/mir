@@ -105,7 +105,7 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
 
     if (!detached)
     {
-        auto tp = std::chrono::system_clock::now() + timeout;
+        auto tp = std::chrono::steady_clock::now() + timeout;
         int rc = -1;
         while (true)
         {
@@ -147,7 +147,7 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
             }
             else if (rc == 0)
             {
-                if (std::chrono::system_clock::now() < tp)
+                if (std::chrono::steady_clock::now() < tp)
                 {
                     std::this_thread::yield();
                     continue;
