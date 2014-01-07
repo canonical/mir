@@ -137,14 +137,16 @@ void MirSurface::release_cpu_region()
 
 MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
+    std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
+    auto const id = &surface.id();
+    auto const mutable_buffer = surface.mutable_buffer();
+    lock.unlock();
 
     server.next_buffer(
         0,
-        &surface.id(),
-        surface.mutable_buffer(),
+        id,
+        mutable_buffer,
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
 
     return &next_buffer_wait_handle;
@@ -292,12 +294,12 @@ EGLNativeWindowType MirSurface::generate_native_window()
 
 MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
+    std::unique_lock<decltype(mutex)> lock(mutex);
     mp::SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
     setting.set_attrib(at);
     setting.set_ivalue(value);
+    lock.unlock();
 
     configure_wait_handle.expect_result();
     server.configure_surface(0, &setting, &configure_result,
