@@ -23,8 +23,8 @@ way is to use the pre-built packages:
 
 ### Building and installing from source
 
-If you are curious about Mir internals or intend to contribute to it, you should
-get the source and build it:
+If you are curious about Mir internals or intend to contribute to it,
+you should get the source and build it:
 
  - \ref building_source_for_pc
  - \ref building_source_for_android
@@ -43,10 +43,16 @@ The best place to ask questions and discuss about the Mir project is the
 #ubuntu-mir IRC channel on freenode.
 
 The Mir project is hosted on Launchpad: https://launchpad.net/mir
+The Mir code activity is currently performed on a development branch:
+lp:mir/devel
+Approximately fortnightly, the development branch is promoted to the branch
+which feeds the ubuntu archive: lp:mir
+Please submit any merge proposals against the development branch.
 
 Please file bug reports at: https://bugs.launchpad.net/mir
 
-The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
+The Mir development mailing list can be found at:
+https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
 The Mir coding guidelines are [here](cppguide/index.html).
 
@@ -67,12 +73,14 @@ Writing server applications
 Mir server is written as a library which allows the server code to be adapted
 for bespoke applications.
 
- - \subpage render_surfaces-example "render_surfaces.cpp: A simple program using the Mir library"
+ - \subpage render_surfaces-example "render_surfaces.cpp: A simple program
+ using the Mir library"
  - \ref demo_inprocess_egl
 
 Working on Mir code
 -------------------
 
- - \ref md_README  "Mir Read me"
+ - \ref md_README "Mir Read me"
  - \ref md_HACKING "Mir hacking guide"
  - \ref component_reports
+
