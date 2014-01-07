@@ -32,9 +32,9 @@ char const* const component = "frontend::MessageProcessor";
 
 ml::MessageProcessorReport::MessageProcessorReport(
     std::shared_ptr<Logger> const& log,
-    std::shared_ptr<time::TimeSource> const& time_source) :
+    std::shared_ptr<time::Clock> const& clock) :
     log(log),
-    time_source(time_source)
+    clock(clock)
 {
 }
 
@@ -79,13 +79,13 @@ void ml::MessageProcessorReport::received_invocation(void const* mediator, int i
     auto& invocations = mediators[mediator].current_invocations;
     auto& invocation = invocations[id];
 
-    invocation.start = time_source->sample();
+    invocation.start = clock->sample();
     invocation.method = method;
 }
 
 void ml::MessageProcessorReport::completed_invocation(void const* mediator, int id, bool result)
 {
-    auto const end = time_source->sample();
+    auto const end = clock->sample();
     std::ostringstream out;
 
     {
