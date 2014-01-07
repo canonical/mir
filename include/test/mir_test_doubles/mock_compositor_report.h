@@ -37,8 +37,6 @@ public:
                       compositor::CompositorReport::SubCompositorId));
     MOCK_METHOD1(began_frame,
                  void(compositor::CompositorReport::SubCompositorId));
-    MOCK_METHOD2(bypassed,
-                 void(bool, compositor::CompositorReport::SubCompositorId));
     MOCK_METHOD2(finished_frame,
                  void(bool,compositor::CompositorReport::SubCompositorId));
     MOCK_METHOD0(started, void());
