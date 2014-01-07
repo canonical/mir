@@ -57,9 +57,6 @@ BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
 
 bool BypassFilter::operator()(const CompositingCriteria &criteria)
 {
-    if (criteria.alpha() != 1.0f || criteria.shaped())
-        return false;
-
     if (!all_orthogonal)
         return false;
 
@@ -88,6 +85,11 @@ bool BypassFilter::operator()(const CompositingCriteria &criteria)
     // Not weirdly transformed but also not on this monitor? Don't care...
     // This will also check the surface is not hidden and has been posted.
     if (!criteria.should_be_rendered_in(display_buffer.view_area()))
+        return false;
+
+    topmost_fits = false;
+
+    if (criteria.alpha() != 1.0f || criteria.shaped())
         return false;
 
     // Transformed perfectly to fit the monitor? Bypass!
