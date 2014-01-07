@@ -43,6 +43,10 @@ The best place to ask questions and discuss about the Mir project is the
 #ubuntu-mir IRC channel on freenode.
 
 The Mir project is hosted on Launchpad: https://launchpad.net/mir
+The Mir code activity is currently performed on a development branch: lp:mir/devel
+Approximately fortnightly, the development branch is promoted to the branch
+used for the ubuntu archive and touch images: lp:mir
+Please submit any merge proposals against the development branch, lp:mir/devel.
 
 Please file bug reports at: https://bugs.launchpad.net/mir
 
