@@ -264,7 +264,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     mir_socket = argv[++i];
                     break;
                 case 'q':
-                    stdout = freopen("/dev/null", "a", stdout);
+                    freopen("/dev/null", "a", stdout);
                     break;
                 case 'h':
                 default:

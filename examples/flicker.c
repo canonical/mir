@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
             swapinterval = 0;
             break;
         case 'q':
-            stdout = freopen("/dev/null", "a", stdout);
+            freopen("/dev/null", "a", stdout);
             break;
         case '?':
         case 'h':
