@@ -30,8 +30,7 @@ public:
     typedef const void* SubCompositorId;  // e.g. thread/display buffer ID
     virtual void added_display(int width, int height, int x, int y, SubCompositorId id = 0) = 0;
     virtual void began_frame(SubCompositorId id = 0) = 0;
-    virtual void bypassed(bool did_bypass, SubCompositorId id = 0) = 0;
-    virtual void finished_frame(SubCompositorId id = 0) = 0;
+    virtual void finished_frame(bool bypassed, SubCompositorId id = 0) = 0;
     virtual void started() = 0;
     virtual void stopped() = 0;
     virtual void scheduled() = 0;
@@ -47,8 +46,7 @@ class NullCompositorReport : public CompositorReport
 public:
     void added_display(int width, int height, int x, int y, SubCompositorId id);
     void began_frame(SubCompositorId id);
-    void bypassed(bool did_bypass, SubCompositorId id = 0);
-    void finished_frame(SubCompositorId id);
+    void finished_frame(bool bypassed, SubCompositorId id);
     void started();
     void stopped();
     void scheduled();

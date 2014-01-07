@@ -269,8 +269,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
-    EXPECT_CALL(*report, bypassed(true, _));
-    EXPECT_CALL(*report, finished_frame(_));
+    EXPECT_CALL(*report, finished_frame(true,_));
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
@@ -373,8 +372,7 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
 
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
-    EXPECT_CALL(*report, bypassed(false, _));
-    EXPECT_CALL(*report, finished_frame(_));
+    EXPECT_CALL(*report, finished_frame(false,_));
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),

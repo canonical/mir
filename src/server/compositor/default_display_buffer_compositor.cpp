@@ -130,8 +130,6 @@ void mc::DefaultDisplayBufferCompositor::composite()
         }
     }
 
-    report->bypassed(bypassed, this);
-
     if (!bypassed)
     {
         // preserves buffers used in rendering until after post_update()
@@ -158,6 +156,6 @@ void mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.post_update();
     }
 
-    report->finished_frame(this);
+    report->finished_frame(bypassed, this);
 }
 

@@ -87,7 +87,7 @@ TEST(LoggingCompositorReport, calculates_accurate_stats)
     {
         report.began_frame(display_id);
         clock->elapse(chrono::microseconds(1000000 / target_fps));
-        report.finished_frame(display_id);
+        report.finished_frame(false, display_id);
     }
 
     float measured_fps, measured_frame_time;
@@ -105,7 +105,7 @@ TEST(LoggingCompositorReport, calculates_accurate_stats)
     {
         report.began_frame(display_id);
         clock->elapse(chrono::microseconds(1000000 / target_fps));
-        report.finished_frame(display_id);
+        report.finished_frame(false, display_id);
     }
     ASSERT_TRUE(recorder->scrape(measured_fps, measured_frame_time))
         << recorder->last_message();
@@ -126,7 +126,7 @@ TEST(LoggingCompositorReport, survives_pause_resume)
 
     report.began_frame(before);
     clock->elapse(chrono::microseconds(12345));
-    report.finished_frame(before);
+    report.finished_frame(false, before);
 
     report.stopped();
     clock->elapse(chrono::microseconds(12345678));
@@ -134,13 +134,13 @@ TEST(LoggingCompositorReport, survives_pause_resume)
 
     report.began_frame(after);
     clock->elapse(chrono::microseconds(12345));
-    report.finished_frame(after);
+    report.finished_frame(false, after);
 
     clock->elapse(chrono::microseconds(12345678));
 
     report.began_frame(after);
     clock->elapse(chrono::microseconds(12345));
-    report.finished_frame(after);
+    report.finished_frame(false, after);
 
     report.stopped();
 }
@@ -157,26 +157,23 @@ TEST(LoggingCompositorReport, reports_bypass_only_when_changed)
     report.started();
 
     report.began_frame(id);
-    report.bypassed(false, id);
-    report.finished_frame(id);
+    report.finished_frame(false, id);
     EXPECT_TRUE(logger->last_message_contains("bypass OFF"))
         << logger->last_message();
 
     for (int f = 0; f < 3; ++f)
     {
         report.began_frame(id);
-        report.bypassed(false, id);
-        report.finished_frame(id);
+        report.finished_frame(false, id);
         clock->elapse(chrono::microseconds(12345678));
     }
     EXPECT_FALSE(logger->last_message_contains("bypass "))
         << logger->last_message();
 
     report.began_frame(id);
-    report.bypassed(true, id);
+    report.finished_frame(true, id);
     EXPECT_TRUE(logger->last_message_contains("bypass ON"))
         << logger->last_message();
-    report.finished_frame(id);
 
     report.stopped();
 }

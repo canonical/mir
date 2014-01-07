@@ -63,25 +63,6 @@ void logging::CompositorReport::began_frame(SubCompositorId id)
     inst.latency_sum += t - last_scheduled;
 }
 
-void logging::CompositorReport::bypassed(bool did_bypass, SubCompositorId id)
-{
-    std::lock_guard<std::mutex> lock(mutex);
-    auto& inst = instance[id];
-
-    if (did_bypass)
-        ++inst.nbypassed;
-
-    if (did_bypass != inst.prev_bypassed || inst.nframes == 0)
-    {
-        char msg[128];
-        snprintf(msg, sizeof msg, "Display %p bypass %s",
-                 id, did_bypass ? "ON" : "OFF");
-        logger->log(Logger::informational, msg, component);
-    }
-
-    inst.prev_bypassed = did_bypass;
-}
-
 void logging::CompositorReport::Instance::log(
     Logger& logger, SubCompositorId id)
 {
@@ -141,7 +122,8 @@ void logging::CompositorReport::Instance::log(
     last_reported_bypassed = nbypassed;
 }
 
-void logging::CompositorReport::finished_frame(SubCompositorId id)
+void logging::CompositorReport::finished_frame(bool bypassed,
+                                               SubCompositorId id)
 {
     std::lock_guard<std::mutex> lock(mutex);
     auto& inst = instance[id];
@@ -151,6 +133,8 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
     inst.frame_time_sum += t - inst.start_of_frame;
     inst.end_of_frame = t;
     inst.nframes++;
+    if (bypassed)
+        ++inst.nbypassed;
 
     /*
      * The exact reporting interval doesn't matter because we count everything
@@ -163,6 +147,15 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
         for (auto& i : instance)
             i.second.log(*logger, i.first);
     }
+
+    if (bypassed != inst.prev_bypassed || inst.nframes == 1)
+    {
+        char msg[128];
+        snprintf(msg, sizeof msg, "Display %p bypass %s",
+                 id, bypassed ? "ON" : "OFF");
+        logger->log(Logger::informational, msg, component);
+    }
+    inst.prev_bypassed = bypassed;
 }
 
 void logging::CompositorReport::started()

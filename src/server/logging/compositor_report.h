@@ -40,8 +40,7 @@ public:
                      std::shared_ptr<time::TimeSource> const& clock);
     void added_display(int width, int height, int x, int y, SubCompositorId id);
     void began_frame(SubCompositorId id);
-    void bypassed(bool did_bypass, SubCompositorId id);
-    void finished_frame(SubCompositorId id);
+    void finished_frame(bool bypassed, SubCompositorId id);
     void started();
     void stopped();
     void scheduled();
