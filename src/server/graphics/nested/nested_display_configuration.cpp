@@ -18,7 +18,7 @@
 
 #include "nested_display_configuration.h"
 
-#include "mir/graphics/pixel_format_utils.h"
+#include "mir/graphics/pixel_format.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -100,7 +100,7 @@ void NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfi
 }
 
 void NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used,
-    geometry::Point top_left, size_t mode_index, MirPixelFormat format, MirPowerMode power_mode)
+    geometry::Point top_left, size_t mode_index, PixelFormat format, MirPowerMode power_mode)
 {
     for (auto mir_output = display_config->outputs;
         mir_output != display_config->outputs+display_config->num_outputs;
@@ -111,7 +111,7 @@ void NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId i
             if (used && mode_index >= mir_output->num_modes)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
 
-            if (used && !valid_mir_pixel_format(format))
+            if (used && !format)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
 
             if (used && !format_valid_for_output(*mir_output, format))

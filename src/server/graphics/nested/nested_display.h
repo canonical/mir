@@ -69,7 +69,7 @@ public:
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
-    EGLConfig choose_windowed_es_config (MirPixelFormat format) const;
+    EGLConfig choose_windowed_es_config (PixelFormat format) const;
     EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
     EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }

@@ -38,7 +38,7 @@ public:
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const;
 
     void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index,
-                          MirPixelFormat format, MirPowerMode power_mode);
+                          PixelFormat format, MirPowerMode power_mode);
 
     operator MirDisplayConfiguration*() const { return display_config; }
 private:

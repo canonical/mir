@@ -16,20 +16,25 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/graphics/pixel_format_utils.h"
+#include "mir/graphics/pixel_format.h"
 
 namespace mir
 {
 namespace graphics
 {
 
-bool contains_alpha(MirPixelFormat format)
+PixelFormat::PixelFormat(MirPixelFormat format)
+    : format{format}
+{
+}
+
+bool PixelFormat::contains_alpha() const
 {
     return (format == mir_pixel_format_abgr_8888 ||
             format == mir_pixel_format_argb_8888);
 }
 
-int red_channel_depth(MirPixelFormat format)
+int PixelFormat::red_channel_depth() const
 {
     if (mir_pixel_format_invalid < format &&
         format < mir_pixel_formats)
@@ -37,7 +42,7 @@ int red_channel_depth(MirPixelFormat format)
     return 0;
 }
 
-int blue_channel_depth(MirPixelFormat format)
+int PixelFormat::blue_channel_depth() const
 {
     if (mir_pixel_format_invalid < format &&
         format < mir_pixel_formats)
@@ -45,7 +50,7 @@ int blue_channel_depth(MirPixelFormat format)
     return 0;
 }
 
-int green_channel_depth(MirPixelFormat format)
+int PixelFormat::green_channel_depth() const
 {
     if (mir_pixel_format_invalid < format &&
         format < mir_pixel_formats)
@@ -53,7 +58,7 @@ int green_channel_depth(MirPixelFormat format)
     return 0;
 }
 
-int alpha_channel_depth(MirPixelFormat format)
+int PixelFormat::alpha_channel_depth() const
 {
     if (format == mir_pixel_format_abgr_8888 ||
         format == mir_pixel_format_argb_8888)
@@ -61,10 +66,15 @@ int alpha_channel_depth(MirPixelFormat format)
     return 0;
 }
 
-bool valid_mir_pixel_format(MirPixelFormat format)
+PixelFormat::operator bool() const
 {
     return (format > mir_pixel_format_invalid &&
             format < mir_pixel_formats);
+}
+
+PixelFormat::operator MirPixelFormat() const
+{
+    return format;
 }
 
 }

@@ -18,7 +18,7 @@
 
 #include "default_display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/pixel_format_utils.h"
+#include "mir/graphics/pixel_format.h"
 
 #include <unordered_map>
 #include <algorithm>
@@ -31,24 +31,30 @@ namespace graphics
 
 namespace
 {
-inline size_t select_mode_index(size_t mode_index, std::vector<DisplayConfigurationMode> const & modes)
+size_t select_mode_index(size_t mode_index, std::vector<DisplayConfigurationMode> const & modes)
 {
     if (modes.empty())
         return std::numeric_limits<size_t>::max();
-    if (mode_index > modes.size())
+
+    if (mode_index >= modes.size())
         return 0;
+
     return mode_index;
 }
 
-inline MirPixelFormat select_format(MirPixelFormat format, std::vector<MirPixelFormat> const& formats)
+PixelFormat select_format(PixelFormat format, std::vector<MirPixelFormat> const& formats)
 {
     if (formats.empty())
         return mir_pixel_format_invalid;
 
-    if (!contains_alpha(format))
+    if (!format.contains_alpha())
         return format;
 
-    auto opaque_pos = std::find_if_not(formats.begin(), formats.end(), contains_alpha);
+    auto opaque_pos = std::find_if_not(formats.begin(), formats.end(),
+                                       [] (MirPixelFormat const& item) -> bool
+                                       {
+                                           return PixelFormat{item}.contains_alpha();
+                                       });
 
     if (opaque_pos == formats.end())
         return format;

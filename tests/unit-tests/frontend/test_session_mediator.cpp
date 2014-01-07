@@ -83,7 +83,7 @@ struct MockConfig : public mg::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPixelFormat, MirPowerMode));
+    MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, mg::PixelFormat, MirPowerMode));
 };
 
 }
@@ -555,8 +555,8 @@ TEST_F(SessionMediatorTest, display_config_request)
     bool used0 = false, used1 = true;
     geom::Point pt0{44,22}, pt1{3,2};
     size_t mode_index0 = 1, mode_index1 = 3;
-    MirPixelFormat format0 = mir_pixel_format_invalid;
-    MirPixelFormat format1 = mir_pixel_format_argb_8888;
+    mg::PixelFormat format0{mir_pixel_format_invalid};
+    mg::PixelFormat format1{mir_pixel_format_argb_8888};
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
     NiceMock<MockConfig> mock_display_config;

@@ -175,7 +175,7 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPixelFormat, MirPowerMode)
+                          geom::Point, size_t, mg::PixelFormat, MirPowerMode)
     {
     }
 
