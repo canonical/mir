@@ -82,6 +82,8 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
+    report->began_frame(this);
+
     /*
      * Increment frame counts for each tick of the fastest instance of
      * DefaultDisplayBufferCompositor. This means for the fastest refresh
@@ -155,5 +157,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         display_buffer.post_update();
     }
+
+    report->finished_frame(this);
 }
 

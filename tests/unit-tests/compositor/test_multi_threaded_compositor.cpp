@@ -351,10 +351,6 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
         .Times(1);
     EXPECT_CALL(*mock_report, scheduled())
         .Times(1);
-    EXPECT_CALL(*mock_report, began_frame(_))
-        .Times(mc::max_client_buffers);
-    EXPECT_CALL(*mock_report, finished_frame(_))
-        .Times(mc::max_client_buffers);
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
