@@ -65,7 +65,7 @@ public:
     void end() const override
     {
     }
-    void skip() override
+    void suspend() override
     {
     }
 };

@@ -96,7 +96,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             void end() const override
             {
             }
-            void skip() override
+            void suspend() override
             {
             }
         };

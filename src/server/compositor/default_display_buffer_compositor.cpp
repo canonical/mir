@@ -122,7 +122,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
-                renderer->skip();
+                renderer->suspend();
             }
         }
     }

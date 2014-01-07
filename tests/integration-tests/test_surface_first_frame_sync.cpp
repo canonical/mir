@@ -109,7 +109,7 @@ public:
     {
     }
 
-    void skip() override
+    void suspend() override
     {
     }
 

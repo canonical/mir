@@ -38,7 +38,7 @@ public:
     virtual void render(CompositingCriteria const& info, graphics::Buffer& buffer) const = 0;
     virtual void end() const = 0;
 
-    virtual void skip() = 0; // called when begin/render/end skipped
+    virtual void suspend() = 0; // called when begin/render/end skipped
 
 protected:
     Renderer() = default;

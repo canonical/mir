@@ -42,7 +42,7 @@ public:
     void end() const override;
 
     // This is called _without_ a GL context:
-    void skip() override;
+    void suspend() override;
 
 private:
     GLuint vertex_shader;

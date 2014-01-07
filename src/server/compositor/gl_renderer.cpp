@@ -305,7 +305,7 @@ void mc::GLRenderer::end() const
     skipped = false;
 }
 
-void mc::GLRenderer::skip()
+void mc::GLRenderer::suspend()
 {
     skipped = true;
 }

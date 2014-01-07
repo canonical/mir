@@ -441,7 +441,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)))
         .Times(0);
 
-    renderer->skip();
+    renderer->suspend();
     renderer->begin();
     renderer->render(criteria, mock_buffer);
     renderer->end();
