@@ -31,7 +31,7 @@ namespace
 
 logging::CompositorReport::CompositorReport(
     std::shared_ptr<Logger> const& logger,
-    std::shared_ptr<TimeSource> const& clock)
+    std::shared_ptr<Clock> const& clock)
     : logger(logger),
       clock(clock),
       last_report(now())

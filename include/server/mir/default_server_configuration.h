@@ -65,7 +65,7 @@ class SurfaceConfigurator;
 }
 namespace time
 {
-class TimeSource;
+class Clock;
 }
 namespace scene
 {
@@ -230,7 +230,7 @@ public:
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
 
-    virtual std::shared_ptr<time::TimeSource>    the_time_source();
+    virtual std::shared_ptr<time::Clock> the_clock();
 
 protected:
     using DefaultConfigurationOptions::the_options;
@@ -283,7 +283,7 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<time::TimeSource> time_source;
+    CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
