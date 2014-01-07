@@ -140,6 +140,18 @@ TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
     EXPECT_FALSE(filter.fullscreen_on_top());
 }
 
+TEST_F(BypassFilterTest, translucently_obscured_fullscreen_window_not_bypassed)
+{   // Regression test for LP: #1266385
+    BypassFilter filter(display_buffer[0]);
+
+    StubCompositingCriteria fs(0, 0, 1920, 1200);
+    StubCompositingCriteria small(20, 30, 40, 50, 0.5f);
+
+    EXPECT_TRUE(filter(fs));
+    EXPECT_FALSE(filter(small));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+}
+
 TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
 {
     BypassFilter filter(display_buffer[0]);

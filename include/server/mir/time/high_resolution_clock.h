@@ -19,14 +19,14 @@
 #ifndef MIR_TIME_HIGH_RESOLUTION_CLOCK_H_
 #define MIR_TIME_HIGH_RESOLUTION_CLOCK_H_
 
-#include "mir/time/time_source.h"
+#include "mir/time/clock.h"
 
 namespace mir
 {
 namespace time
 {
 
-class HighResolutionClock : public TimeSource
+class HighResolutionClock : public Clock
 {
 public:
     virtual Timestamp sample() const override;

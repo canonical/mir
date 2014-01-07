@@ -28,7 +28,7 @@ using namespace std;
 namespace
 {
 
-class FakeClock : public time::TimeSource
+class FakeClock : public time::Clock
 {
 public:
     void elapse(chrono::microseconds delta)

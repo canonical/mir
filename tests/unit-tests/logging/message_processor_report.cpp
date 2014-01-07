@@ -28,12 +28,12 @@ using namespace testing;
 
 namespace
 {
-class MockTimeSource : public mir::time::TimeSource
+class MockClock : public mir::time::Clock
 {
 public:
     MOCK_CONST_METHOD0(sample, mir::time::Timestamp());
 
-    ~MockTimeSource() noexcept(true) {}
+    ~MockClock() noexcept(true) {}
 };
 
 class MockLogger : public mir::logging::Logger
@@ -45,13 +45,13 @@ public:
 
 struct MessageProcessorReport : public Test
 {
-    MockLogger     logger;
-    MockTimeSource time_source;
+    MockLogger logger;
+    MockClock clock;
 
     mir::logging::MessageProcessorReport report;
 
     MessageProcessorReport() :
-        report(mir::test::fake_shared(logger), mir::test::fake_shared(time_source))
+        report(mir::test::fake_shared(logger), mir::test::fake_shared(clock))
     {
         EXPECT_CALL(logger, log(
             mir::logging::Logger::debug,
@@ -64,7 +64,7 @@ struct MessageProcessorReport : public Test
 TEST_F(MessageProcessorReport, everything_fine)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
         mir::logging::Logger::informational,
         EndsWith(": a_function(), elapsed=0µs"),
@@ -79,7 +79,7 @@ TEST_F(MessageProcessorReport, slow_call)
     mir::time::Timestamp a_time;
     mir::time::Timestamp another_time = a_time + std::chrono::microseconds(1234);
 
-    EXPECT_CALL(time_source, sample()).Times(2)
+    EXPECT_CALL(clock, sample()).Times(2)
     .WillOnce(Return(a_time)).WillOnce(Return(another_time));
 
     EXPECT_CALL(logger, log(
@@ -94,7 +94,7 @@ TEST_F(MessageProcessorReport, slow_call)
 TEST_F(MessageProcessorReport, reports_disconnect)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
         mir::logging::Logger::informational,
         HasSubstr("(disconnecting)"),
@@ -109,7 +109,7 @@ TEST_F(MessageProcessorReport, reports_error_during_call)
     const char* testError = "***Test error***";
 
     mir::time::Timestamp a_time;
-    EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
         mir::logging::Logger::informational,
         HasSubstr(testError),
@@ -122,7 +122,7 @@ TEST_F(MessageProcessorReport, reports_error_during_call)
 
 TEST_F(MessageProcessorReport, reports_unknown_method)
 {
-    EXPECT_CALL(time_source, sample()).Times(0);
+    EXPECT_CALL(clock, sample()).Times(0);
     EXPECT_CALL(logger, log(
         mir::logging::Logger::warning,
         HasSubstr("UNKNOWN method=\"unknown_function_name\""),
@@ -146,7 +146,7 @@ TEST_F(MessageProcessorReport, reports_error_deserializing_call)
 TEST_F(MessageProcessorReport, logs_a_debug_message_when_invocation_starts)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(time_source, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
         mir::logging::Logger::informational,
         HasSubstr("Calls outstanding on exit:"),
@@ -163,7 +163,7 @@ TEST_F(MessageProcessorReport, logs_a_debug_message_when_invocation_starts)
 TEST_F(MessageProcessorReport, logs_incomplete_calls_on_destruction)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(time_source, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
 
     EXPECT_CALL(logger, log(
         mir::logging::Logger::informational,
