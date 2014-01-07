@@ -365,7 +365,7 @@ TEST_F(AndroidBufferBinding, different_egl_contexts_displays_generate_new_eglima
         .WillOnce(Return(disp2));
 
     EXPECT_CALL(mock_egl, eglGetCurrentContext())
-        .Times(2)
+        .Times(3)
         .WillOnce(Return(ctxt1))
         .WillRepeatedly(Return(ctxt2));
 
