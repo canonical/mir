@@ -48,9 +48,9 @@ public:
 
     ~GLContext();
 
-    void make_current();
+    void make_current() const override;
     void swap_buffers();
-    void release_current();
+    void release_current() const override;
 
     /* TODO: (kdub) remove these two functions once HWC1.0 construction is sorted out. */
     EGLDisplay display()

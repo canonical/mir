@@ -35,7 +35,7 @@ private:
     virtual void log(
         Severity severity,
         const std::string& message,
-        const std::string& component);
+        const std::string& component) override;
 };
 }
 }

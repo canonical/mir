@@ -29,8 +29,8 @@ class GLContext
 public:
     virtual ~GLContext() = default;
 
-    virtual void make_current() = 0;
-    virtual void release_current() = 0;
+    virtual void make_current() const = 0;
+    virtual void release_current() const = 0;
 
 protected:
     GLContext() = default;

@@ -73,7 +73,7 @@ struct DemoInProcessServer : mir_test_framework::InProcessServer
 {
     virtual mir::DefaultServerConfiguration& server_config() { return server_config_; }
 
-    TestingServerConfiguration server_config_;
+    mir_test_framework::StubbedServerConfiguration server_config_;
 };
 }
 

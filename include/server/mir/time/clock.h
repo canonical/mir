@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TIME_TIME_SOURCE_H_
-#define MIR_TIME_TIME_SOURCE_H_
+#ifndef MIR_TIME_CLOCK_H_
+#define MIR_TIME_CLOCK_H_
 
 #include <chrono>
 
@@ -28,17 +28,17 @@ namespace time
 
 typedef std::chrono::high_resolution_clock::time_point Timestamp;
 
-class TimeSource
+class Clock
 {
 public:
-    virtual ~TimeSource() = default;
+    virtual ~Clock() = default;
 
     virtual Timestamp sample() const = 0;
 
 protected:
-    TimeSource() = default;
+    Clock() = default;
 };
 }
 }
 
-#endif // MIR_TIME_TIME_SOURCE_H_
+#endif // MIR_TIME_CLOCK_H_

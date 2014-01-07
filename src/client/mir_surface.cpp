@@ -126,8 +126,7 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     region_out.width = secured_region->width.as_uint32_t();
     region_out.height = secured_region->height.as_uint32_t();
     region_out.stride = secured_region->stride.as_uint32_t();
-    region_out.pixel_format = static_cast<MirPixelFormat>(secured_region->format);
-
+    region_out.pixel_format = secured_region->format;
     region_out.vaddr = secured_region->vaddr.get();
 }
 

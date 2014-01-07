@@ -251,6 +251,18 @@ bool me::WindowManager::handle(MirEvent const& event)
 
                     handled = true;
                 }
+                else if (action == mir_motion_action_scroll)
+                {
+                    float alpha = surf->alpha();
+                    alpha += 0.1f *
+                             event.motion.pointer_coordinates[0].vscroll;
+                    if (alpha < 0.0f)
+                        alpha = 0.0f;
+                    else if (alpha > 1.0f)
+                        alpha = 1.0f;
+                    surf->set_alpha(alpha);
+                    handled = true;
+                }
 
                 old_pos = surf->top_left();
                 old_size = surf->size();

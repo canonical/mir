@@ -92,6 +92,7 @@ set(
   mirprotobuf
   mirsharedinput
   mirsharedlogging
+  mirsharedenv
   mirclientrpc
   mirclientlttngstatic
 

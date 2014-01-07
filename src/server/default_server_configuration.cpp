@@ -183,7 +183,7 @@ mir::DefaultServerConfiguration::the_message_processor_report()
             auto mp_report = the_options()->get(msg_processor_report_opt, off_opt_value);
             if (mp_report == log_opt_value)
             {
-                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_time_source());
+                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_clock());
             }
             else if (mp_report == lttng_opt_value)
             {
@@ -222,9 +222,9 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()
+std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
-    return time_source(
+    return clock(
         []()
         {
             return std::make_shared<mir::time::HighResolutionClock>();
