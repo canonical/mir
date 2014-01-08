@@ -42,10 +42,10 @@ mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
 
 mga::Buffer::~Buffer()
 {
-    for(auto it = egl_image_map.begin(); it != egl_image_map.end(); it++)
+    for(auto& it : egl_image_map)
     {
-        EGLDisplay disp = it->first.first;
-        egl_extensions->eglDestroyImageKHR(disp, it->second);
+        EGLDisplay disp = it.first.first;
+        egl_extensions->eglDestroyImageKHR(disp, it.second);
     }
 }
 
