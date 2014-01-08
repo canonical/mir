@@ -36,7 +36,6 @@ target_link_libraries(
   mirdraw
   mirtestdraw
   mirlogging
-  mirsharedgraphics
 
   mir-test
   mir-test-doubles
