@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,43 +18,37 @@
 
 #include "mir/graphics/pixel_format_utils.h"
 
-namespace mir
-{
-namespace graphics
-{
+namespace mg = mir::graphics;
 
-bool contains_alpha(MirPixelFormat format)
+bool mg::contains_alpha(MirPixelFormat format)
 {
     return (format == mir_pixel_format_abgr_8888 ||
             format == mir_pixel_format_argb_8888);
 }
 
-bool valid_pixel_format(MirPixelFormat format)
+bool mg::valid_pixel_format(MirPixelFormat format)
 {
     return (format > mir_pixel_format_invalid &&
             format < mir_pixel_formats);
 }
 
-int red_channel_depth(MirPixelFormat format)
+int mg::red_channel_depth(MirPixelFormat format)
 {
     return valid_pixel_format(format) ? 8 : 0;
 }
 
-int blue_channel_depth(MirPixelFormat format)
+int mg::blue_channel_depth(MirPixelFormat format)
 {
     return valid_pixel_format(format) ? 8 : 0;
 }
 
-int green_channel_depth(MirPixelFormat format)
+int mg::green_channel_depth(MirPixelFormat format)
 {
     return valid_pixel_format(format) ? 8 : 0;
 }
 
-int alpha_channel_depth(MirPixelFormat format)
+int mg::alpha_channel_depth(MirPixelFormat format)
 {
     return contains_alpha(format) ? 8 : 0;
 }
 
-
-}
-}

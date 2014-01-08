@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -31,7 +31,8 @@ TEST(MirPixelFormatUtils, contains_alpha)
     EXPECT_TRUE(contains_alpha(mir_pixel_format_argb_8888));
     EXPECT_TRUE(contains_alpha(mir_pixel_format_abgr_8888));
     EXPECT_FALSE(contains_alpha(mir_pixel_format_invalid));
-} 
+    EXPECT_FALSE(contains_alpha(mir_pixel_formats));
+}
 
 TEST(MirPixelFormatUtils, red_channel_depths)
 {
@@ -42,6 +43,7 @@ TEST(MirPixelFormatUtils, red_channel_depths)
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, red_channel_depth(mir_pixel_format_abgr_8888));
     EXPECT_EQ(0, red_channel_depth(mir_pixel_format_invalid));
+    EXPECT_EQ(0, red_channel_depth(mir_pixel_formats));
 }
 
 TEST(MirPixelFormatUtils, blue_channel_depths)
@@ -53,6 +55,7 @@ TEST(MirPixelFormatUtils, blue_channel_depths)
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, blue_channel_depth(mir_pixel_format_abgr_8888));
     EXPECT_EQ(0, blue_channel_depth(mir_pixel_format_invalid));
+    EXPECT_EQ(0, blue_channel_depth(mir_pixel_formats));
 }
 
 TEST(MirPixelFormatUtils, green_channel_depths)
@@ -64,6 +67,7 @@ TEST(MirPixelFormatUtils, green_channel_depths)
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, green_channel_depth(mir_pixel_format_abgr_8888));
     EXPECT_EQ(0, green_channel_depth(mir_pixel_format_invalid));
+    EXPECT_EQ(0, green_channel_depth(mir_pixel_formats));
 }
 
 
@@ -76,6 +80,7 @@ TEST(MirPixelFormatUtils, alpha_channel_depths)
     EXPECT_EQ(8, alpha_channel_depth(mir_pixel_format_argb_8888));
     EXPECT_EQ(8, alpha_channel_depth(mir_pixel_format_abgr_8888));
     EXPECT_EQ(0, alpha_channel_depth(mir_pixel_format_invalid));
+    EXPECT_EQ(0, alpha_channel_depth(mir_pixel_formats));
 }
 
 TEST(MirPixelFormatUtils, valid_mir_pixel_format)
@@ -87,4 +92,5 @@ TEST(MirPixelFormatUtils, valid_mir_pixel_format)
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_argb_8888));
     EXPECT_TRUE(valid_pixel_format(mir_pixel_format_abgr_8888));
     EXPECT_FALSE(valid_pixel_format(mir_pixel_format_invalid));
+    EXPECT_FALSE(valid_pixel_format(mir_pixel_formats));
 }
