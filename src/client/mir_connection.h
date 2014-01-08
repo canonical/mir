@@ -123,12 +123,17 @@ public:
 
     bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
+    std::shared_ptr<google::protobuf::RpcChannel> rpc_channel() const
+    {
+        return channel;
+    }
+
 private:
     std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<google::protobuf::RpcChannel> const channel;
     mir::protobuf::DisplayServer::Stub server;
-    std::shared_ptr<mir::logging::Logger> logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;

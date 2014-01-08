@@ -33,6 +33,7 @@ set(
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp
+  private.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
