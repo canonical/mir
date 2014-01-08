@@ -126,7 +126,7 @@ public:
 private:
     std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
-    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
+    std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
     std::shared_ptr<mir::logging::Logger> logger;
     mir::protobuf::Void void_response;
