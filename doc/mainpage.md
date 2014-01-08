@@ -44,7 +44,7 @@ The best place to ask questions and discuss about the Mir project is the
 
 The Mir project is hosted on Launchpad: https://launchpad.net/mir
 
-Currently, the Mir code activity is currently performed on a development branch:
+Currently, the Mir code activity is performed on a development branch:
 lp:~mir-team/mir/development-branch
 
 Approximately fortnightly, this development branch is promoted to the branch
