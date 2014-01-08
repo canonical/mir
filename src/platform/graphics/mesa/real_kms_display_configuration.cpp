@@ -18,7 +18,7 @@
 
 #include "real_kms_display_configuration.h"
 #include "drm_mode_resources.h"
-#include "mir/graphics/pixel_format.h"
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <cmath>
 #include <limits>
@@ -66,7 +66,7 @@ kms_connector_type_to_output_type(uint32_t connector_type)
     return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
 }
 
-bool format_available_in_pixel_formats(mg::PixelFormat format, mg::DisplayConfigurationOutput const& output)
+bool format_available_in_pixel_formats(MirPixelFormat format, mg::DisplayConfigurationOutput const& output)
 {
     return output.pixel_formats.end() != find(output.pixel_formats.begin(), output.pixel_formats.end(), format);
 }
@@ -115,7 +115,7 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
 void mgm::RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index,
-    PixelFormat format, MirPowerMode power_mode)
+    MirPixelFormat format, MirPowerMode power_mode)
 {
     auto iter = find_output_with_id(id);
 
@@ -126,7 +126,7 @@ void mgm::RealKMSDisplayConfiguration::configure_output(
         if (used && mode_index >= output.modes.size())
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
 
-        if (used && !format)
+        if (used && !valid_pixel_format(format))
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
 
         if (used && !format_available_in_pixel_formats(format, output))

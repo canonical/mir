@@ -18,19 +18,17 @@
 
 #include "nested_display_configuration.h"
 
-#include "mir/graphics/pixel_format.h"
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 #include <algorithm>
 
-namespace mir
-{
-namespace graphics
-{
-namespace nested
-{
+
+namespace mg = mir::graphics;
+namespace mgn = mg::nested;
+namespace mgn = mir::graphics::nested;
 
 namespace
 {
@@ -42,16 +40,16 @@ bool format_valid_for_output(MirDisplayOutput const& output, MirPixelFormat form
 
 }
 
-NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
+mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
 display_config{connection}
 {
 }
 
-NestedDisplayConfiguration::~NestedDisplayConfiguration() noexcept
+mgn::NestedDisplayConfiguration::~NestedDisplayConfiguration() noexcept
 {
 }
 
-void NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const
+void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const
 {
     std::for_each(
         display_config->cards,
@@ -62,7 +60,7 @@ void NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigu
         });
 }
 
-void NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const
+void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const
 {
     std::for_each(
         display_config->outputs,
@@ -99,8 +97,8 @@ void NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfi
         });
 }
 
-void NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used,
-    geometry::Point top_left, size_t mode_index, PixelFormat format, MirPowerMode power_mode)
+void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used,
+    geometry::Point top_left, size_t mode_index, MirPixelFormat format, MirPowerMode power_mode)
 {
     for (auto mir_output = display_config->outputs;
         mir_output != display_config->outputs+display_config->num_outputs;
@@ -111,7 +109,7 @@ void NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId i
             if (used && mode_index >= mir_output->num_modes)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
 
-            if (used && !format)
+            if (used && !mg::valid_pixel_format(format))
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
 
             if (used && !format_valid_for_output(*mir_output, format))
@@ -129,6 +127,3 @@ void NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId i
     BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
 }
 
-} // nested
-} // graphics
-} // mir

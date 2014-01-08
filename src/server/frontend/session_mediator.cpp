@@ -34,7 +34,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/pixel_format.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"

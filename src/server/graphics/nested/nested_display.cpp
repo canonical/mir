@@ -22,7 +22,7 @@
 #include "mir_api_wrappers.h"
 
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/pixel_format.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/surfaceless_egl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -83,15 +83,15 @@ void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
 }
 
-EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(PixelFormat format) const
+EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelFormat format) const
 {
     EGLint const nested_egl_config_attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, format.red_channel_depth(),
-        EGL_GREEN_SIZE, format.green_channel_depth(),
-        EGL_BLUE_SIZE, format.blue_channel_depth(),
-        EGL_ALPHA_SIZE, format.alpha_channel_depth(),
+        EGL_RED_SIZE, mg::red_channel_depth(format),
+        EGL_GREEN_SIZE, mg::green_channel_depth(format),
+        EGL_BLUE_SIZE, mg::blue_channel_depth(format),
+        EGL_ALPHA_SIZE, mg::alpha_channel_depth(format),
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };

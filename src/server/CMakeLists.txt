@@ -49,7 +49,6 @@ list(APPEND MIRSERVER_ARCHIVES
   mirinput
   mirsharedinput
   mirsharedgeometry
-  mirsharedgraphics
   mirsharedlogging
   mirsharedenv
   mirscene

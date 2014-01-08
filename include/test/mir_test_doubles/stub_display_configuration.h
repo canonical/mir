@@ -137,7 +137,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, graphics::PixelFormat, MirPowerMode) override
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode) override
     {
     }
 

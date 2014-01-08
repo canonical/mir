@@ -62,7 +62,7 @@ public:
     }
 
     MOCK_METHOD6(configure_output, void(DisplayConfigurationOutputId, bool,
-                                        Point, size_t, PixelFormat, MirPowerMode));
+                                        Point, size_t, MirPixelFormat, MirPowerMode));
 
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
 private:
@@ -225,7 +225,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
     DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration pick_xrgb{ { connected_with_rgba_and_xrgb() } };
 
-    EXPECT_CALL(pick_xrgb, configure_output(_, true, _, _, PixelFormat{mir_pixel_format_xrgb_8888}, _));
+    EXPECT_CALL(pick_xrgb, configure_output(_, true, _, _, mir_pixel_format_xrgb_8888, _));
     policy.apply_to(pick_xrgb);
 }
 
@@ -236,7 +236,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, preserve_opaque_selection)
     DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration keep_bgr{ { connected_with_xrgb_bgr() } };
 
-    EXPECT_CALL(keep_bgr, configure_output(_, true, _, _, PixelFormat{mir_pixel_format_bgr_888}, _));
+    EXPECT_CALL(keep_bgr, configure_output(_, true, _, _, mir_pixel_format_bgr_888, _));
     policy.apply_to(keep_bgr);
 }
 
@@ -247,7 +247,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, accept_transparency_when_only_option
     DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration pick_rgba{ { default_output(DisplayConfigurationOutputId{15}) } };
 
-    EXPECT_CALL(pick_rgba, configure_output(_, true, _, _, PixelFormat{mir_pixel_format_abgr_8888}, _));
+    EXPECT_CALL(pick_rgba, configure_output(_, true, _, _, mir_pixel_format_abgr_8888, _));
     policy.apply_to(pick_rgba);
 }
 

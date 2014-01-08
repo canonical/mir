@@ -22,7 +22,7 @@
 #include "mir/int_wrapper.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
-#include "mir/graphics/pixel_format.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -137,7 +137,7 @@ public:
 
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
-                                  size_t mode_index, PixelFormat format, MirPowerMode power_mode) = 0;
+                                  size_t mode_index, MirPixelFormat format, MirPowerMode power_mode) = 0;
 
 protected:
     DisplayConfiguration() = default;

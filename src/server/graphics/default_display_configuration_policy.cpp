@@ -18,20 +18,17 @@
 
 #include "default_display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/pixel_format.h"
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <unordered_map>
 #include <algorithm>
 
-namespace mir
-{
-namespace geom = geometry;
-namespace graphics
-{
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 namespace
 {
-size_t select_mode_index(size_t mode_index, std::vector<DisplayConfigurationMode> const & modes)
+size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes)
 {
     if (modes.empty())
         return std::numeric_limits<size_t>::max();
@@ -42,19 +39,15 @@ size_t select_mode_index(size_t mode_index, std::vector<DisplayConfigurationMode
     return mode_index;
 }
 
-PixelFormat select_format(PixelFormat format, std::vector<MirPixelFormat> const& formats)
+MirPixelFormat select_format(MirPixelFormat format, std::vector<MirPixelFormat> const& formats)
 {
     if (formats.empty())
         return mir_pixel_format_invalid;
 
-    if (!format.contains_alpha())
+    if (!mg::contains_alpha(format))
         return format;
 
-    auto opaque_pos = std::find_if_not(formats.begin(), formats.end(),
-                                       [] (MirPixelFormat const& item) -> bool
-                                       {
-                                           return PixelFormat{item}.contains_alpha();
-                                       });
+    auto opaque_pos = std::find_if_not(formats.begin(), formats.end(), mg::contains_alpha);
 
     if (opaque_pos == formats.end())
         return format;
@@ -64,7 +57,7 @@ PixelFormat select_format(PixelFormat format, std::vector<MirPixelFormat> const&
 
 }
 
-void DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
+void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 {
     static MirPowerMode const default_power_state = mir_power_mode_on;
     std::unordered_map<DisplayConfigurationCardId, size_t> available_outputs_for_card;
@@ -97,5 +90,3 @@ void DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
         });
 }
 
-} // graphics
-} // mir
