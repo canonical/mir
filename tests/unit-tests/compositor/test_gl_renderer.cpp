@@ -324,7 +324,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
-    EXPECT_CALL(mock_gl, glGenTextures(1, _))  // why is this 1 in mock_gl?
+    EXPECT_CALL(mock_gl, glGenTextures(1, _))
         .WillOnce(SetArgPointee<1>(stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _));
@@ -364,7 +364,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
-    EXPECT_CALL(mock_gl, glGenTextures(1, _))  // why is this 1 in mock_gl?
+    EXPECT_CALL(mock_gl, glGenTextures(1, _))
         .WillOnce(SetArgPointee<1>(stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _));
@@ -393,7 +393,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     // First render() - texture generated and uploaded
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
-    EXPECT_CALL(mock_gl, glGenTextures(1, _))  // why is this 1 in mock_gl?
+    EXPECT_CALL(mock_gl, glGenTextures(1, _))
         .WillOnce(SetArgPointee<1>(stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _));
