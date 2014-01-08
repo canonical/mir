@@ -114,7 +114,6 @@ int main(int argc, char* argv[])
                 (void)unused;
                 break;
             }
-            break;
         case '?':
         case 'h':
         default:
