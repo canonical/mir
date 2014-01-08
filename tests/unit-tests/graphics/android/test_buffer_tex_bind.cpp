@@ -353,10 +353,12 @@ TEST_F(AndroidBufferBinding, bind_to_texture_waits_on_fence)
 TEST_F(AndroidBufferBinding, different_egl_contexts_displays_generate_new_eglimages)
 {
     using namespace testing;
-    EGLDisplay disp1 = reinterpret_cast<EGLDisplay>(0x43);
-    EGLDisplay disp2 = reinterpret_cast<EGLDisplay>(0x88);
-    EGLContext ctxt1 = reinterpret_cast<EGLContext>(0x11);
-    EGLContext ctxt2 = reinterpret_cast<EGLContext>(0x12);
+
+    int d1 = 0, d2 = 0, c1 = 0, c2 = 0;
+    EGLDisplay disp1 = reinterpret_cast<EGLDisplay>(&d1);
+    EGLDisplay disp2 = reinterpret_cast<EGLDisplay>(&d2);
+    EGLContext ctxt1 = reinterpret_cast<EGLContext>(&c1);
+    EGLContext ctxt2 = reinterpret_cast<EGLContext>(&c2);
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
         .Times(3)
