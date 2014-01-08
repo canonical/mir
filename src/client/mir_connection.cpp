@@ -66,10 +66,10 @@ std::mutex connection_guard;
 std::unordered_set<MirConnection*> valid_connections;
 }
 
-MirConnection::MirConnection() :
+MirConnection::MirConnection(std::string const& error_message) :
     channel(),
     server(0),
-    error_message("ERROR")
+    error_message(error_message)
 {
 }
 
@@ -84,11 +84,11 @@ MirConnection::MirConnection(
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map())
 {
+    connect_result.set_error("connect not called");
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
     }
-    connect_result.set_error("connect not called");
 }
 
 MirConnection::~MirConnection() noexcept
@@ -97,9 +97,12 @@ MirConnection::~MirConnection() noexcept
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
 
-    std::lock_guard<std::mutex> lock(connection_guard);
-    valid_connections.erase(this);
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        valid_connections.erase(this);
+    }
 
+    std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result.has_platform())
     {
         auto const& platform = connect_result.platform();
@@ -113,8 +116,6 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     auto surface = new MirSurface(this, server, platform->create_buffer_factory(), input_platform, params, callback, context);
 
     return surface->get_create_wait_handle();
@@ -122,22 +123,18 @@ MirWaitHandle* MirConnection::create_surface(
 
 char const * MirConnection::get_error_message()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (connect_result.has_error())
     {
         return connect_result.error().c_str();
     }
-    else
-    {
+
     return error_message.c_str();
-    }
 }
 
 void MirConnection::set_error_message(std::string const& error)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     error_message = error;
 }
 
@@ -154,10 +151,8 @@ struct MirConnection::SurfaceRelease
 
 void MirConnection::released(SurfaceRelease data)
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
-        surface_map->erase(data.surface->id());
-    }
+    surface_map->erase(data.surface->id());
+
     // Erasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
@@ -179,8 +174,6 @@ MirWaitHandle* MirConnection::release_surface(
         mir_surface_callback callback,
         void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
@@ -189,7 +182,7 @@ MirWaitHandle* MirConnection::release_surface(
     message.set_value(surface->id());
 
     {
-        std::lock_guard<std::mutex> rel_lock(release_wait_handle_guard);
+        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
         release_wait_handles.push_back(new_wait_handle);
     }
 
@@ -216,7 +209,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     bool safe_to_callback = true;
     {
-        std::lock_guard<std::recursive_mutex> lock(mutex);
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
         if (!connect_result.has_platform() || !connect_result.has_display_configuration())
         {
@@ -248,10 +241,13 @@ MirWaitHandle* MirConnection::connect(
     mir_connected_callback callback,
     void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
 
-    connect_parameters.set_application_name(app_name);
-    connect_wait_handle.expect_result();
+        connect_parameters.set_application_name(app_name);
+        connect_wait_handle.expect_result();
+    }
+
     server.connect(
         0,
         &connect_parameters,
@@ -266,7 +262,7 @@ void MirConnection::done_disconnect()
     /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
-        std::lock_guard<std::mutex> lock(release_wait_handle_guard);
+        std::lock_guard<decltype(release_wait_handle_guard)> lock(release_wait_handle_guard);
         for (auto handle : release_wait_handles)
             delete handle;
     }
@@ -276,8 +272,6 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     server.disconnect(0, &ignored, &ignored,
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
@@ -297,8 +291,6 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     mir::protobuf::DRMMagic request;
     request.set_magic(magic);
 
@@ -320,12 +312,13 @@ bool MirConnection::is_valid(MirConnection *connection)
            return false;
     }
 
+    std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
     return !connection->connect_result.has_error();
 }
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (!connect_result.has_error() && connect_result.has_platform())
     {
@@ -351,7 +344,7 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return display_configuration->copy_to_client();
 }
 
@@ -361,6 +354,8 @@ void MirConnection::available_surface_formats(
     unsigned int& valid_formats)
 {
     valid_formats = 0;
+
+    std::lock_guard<decltype(mutex)> lock(mutex);
     if (!connect_result.has_error())
     {
         valid_formats = std::min(
@@ -376,7 +371,7 @@ void MirConnection::available_surface_formats(
 
 std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
 }
@@ -388,7 +383,7 @@ MirConnection* MirConnection::mir_connection()
 
 EGLNativeDisplayType MirConnection::egl_native_display()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     return *native_display;
 }
@@ -410,8 +405,6 @@ void MirConnection::register_display_change_callback(mir_display_config_callback
 
 bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     MirDisplayConfigurationStore orig_config{display_configuration->copy_to_client()};
 
     if ((!config) || (config->num_outputs == 0) || (config->outputs == NULL) ||
@@ -437,6 +430,8 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 
 void MirConnection::done_display_configure()
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
     set_error_message(display_configuration_response.error());
 
     if (!display_configuration_response.has_error())
@@ -447,23 +442,26 @@ void MirConnection::done_display_configure()
 
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (!validate_user_display_config(config))
     {
         return NULL;
     }
 
     mir::protobuf::DisplayConfiguration request;
-    for (auto i=0u; i < config->num_outputs; i++)
     {
-        auto output = config->outputs[i];
-        auto display_request = request.add_display_output();
-        display_request->set_output_id(output.output_id);
-        display_request->set_used(output.used);
-        display_request->set_current_mode(output.current_mode);
-        display_request->set_position_x(output.position_x);
-        display_request->set_position_y(output.position_y);
-        display_request->set_power_mode(output.power_mode);
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        for (auto i=0u; i < config->num_outputs; i++)
+        {
+            auto output = config->outputs[i];
+            auto display_request = request.add_display_output();
+            display_request->set_output_id(output.output_id);
+            display_request->set_used(output.used);
+            display_request->set_current_mode(output.current_mode);
+            display_request->set_position_x(output.position_x);
+            display_request->set_position_y(output.position_y);
+            display_request->set_power_mode(output.power_mode);
+        }
     }
 
     server.configure_display(0, &request, &display_configuration_response,
@@ -475,6 +473,8 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 bool MirConnection::set_extra_platform_data(
     std::vector<int> const& extra_platform_data_arg)
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
     auto const total_data_size =
         connect_result.platform().data_size() + extra_platform_data_arg.size();
 

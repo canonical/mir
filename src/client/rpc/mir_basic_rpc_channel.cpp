@@ -33,40 +33,39 @@ mclrd::PendingCallCache::PendingCallCache(
 {
 }
 
-mclrd::SendBuffer& mclrd::PendingCallCache::save_completion_details(
+void mclrd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
     std::shared_ptr<google::protobuf::Closure> const& complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
-    auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
-    return current.send_buffer;
+    pending_calls[invoke.id()] = PendingCall(response, complete);
 }
 
 void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    auto call = pending_calls.find(result.id());
-    if (call == pending_calls.end())
+    PendingCall completion;
+
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        auto call = pending_calls.find(result.id());
+        if (call != pending_calls.end())
+        {
+            completion = call->second;
+            pending_calls.erase(call);
+        }
+    }
+
+    if (!completion.complete)
     {
         rpc_report->orphaned_result(result);
     }
     else
     {
-        auto& completion = call->second;
-
         rpc_report->complete_response(result);
-
         completion.response->ParseFromString(result.response());
-
-        // Let the completion closure live a bit longer than our lock...
-        std::shared_ptr<google::protobuf::Closure> complete =
-            completion.complete;
-        pending_calls.erase(call);
-
-        lock.unlock();  // Avoid deadlocks in callbacks
-        complete->Run();
+        completion.complete->Run();
     }
 }
 

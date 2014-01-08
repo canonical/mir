@@ -108,9 +108,8 @@ MirWaitHandle* mir_default_connect(
     }
     catch (std::exception const& x)
     {
-        MirConnection* error_connection = new MirConnection();
+        MirConnection* error_connection = new MirConnection(x.what());
         error_connections.insert(error_connection);
-        error_connection->set_error_message(x.what());
         callback(error_connection, context);
         return nullptr;
     }
