@@ -113,3 +113,70 @@ TEST_F(AndroidGPUDisplay, hwc_display_ok_with_gles)
         buffer.post_update();
     });
 }
+
+namespace
+{
+class StubRenderable : public mc::Renderable
+{
+public:
+    StubRenderable(std::shared_ptr<mg::Buffer> const& buffer)
+     : buffer{buffer}
+    {
+    }
+
+    bool shaped()
+    {
+        return false;
+    }
+
+    glm::mat4 transformation()
+    {
+        return glm::mat4
+    }
+
+    geom::Rectangle screen_position()
+    {
+        return geom::Rectangle{{0,0}, {buffer->size()}};
+    }
+
+    std::shared_ptr<mg::Buffer> buffer()
+    {
+        return buffer;
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> buffer;
+};
+
+}
+
+TEST_F(AndroidGPUDisplay, hwc_display_optimize)
+{
+    auto should_use_fb_fallback = false;
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
+        fb_allocator, display_resource_factory, mock_display_report, should_use_fb_fallback);
+
+    mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
+
+    mc::StubRenderable renderable{fb_allocator->alloc_buffer_platform(
+            {256, 256}, mir_pixel_format_abgr8888, mga::BufferUsage::use_framebuffer_gles)}; 
+    std::list<std::shared_ptr<Renderable>> renderlist{renderable};
+
+    display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    {
+        buffer.optimize(renderlist)
+
+        if (renderlist.empty())
+        {
+            //the surface was optimized out. we should be able to post here
+            buffer.post_update();
+        }
+        else
+        {
+            SUCCEED() << "this device does not optimize the test surface"; 
+        }
+    });
+}
