@@ -21,9 +21,6 @@
 
 #include <errno.h>
 #include <signal.h>
-#include <string.h>
-#include <sys/ptrace.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
 #include <boost/exception/errinfo_errno.hpp>
