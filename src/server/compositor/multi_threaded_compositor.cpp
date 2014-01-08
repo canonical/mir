@@ -102,9 +102,7 @@ public:
             if (running)
             {
                 lock.unlock();
-                report->began_frame(report_id);
                 display_buffer_compositor->composite();
-                report->finished_frame(report_id);
                 lock.lock();
             }
         }

@@ -28,7 +28,7 @@ void NullCompositorReport::began_frame(SubCompositorId)
 {
 }
 
-void NullCompositorReport::finished_frame(SubCompositorId)
+void NullCompositorReport::finished_frame(bool, SubCompositorId)
 {
 }
 

@@ -40,7 +40,7 @@ public:
                      std::shared_ptr<time::Clock> const& clock);
     void added_display(int width, int height, int x, int y, SubCompositorId id);
     void began_frame(SubCompositorId id);
-    void finished_frame(SubCompositorId id);
+    void finished_frame(bool bypassed, SubCompositorId id);
     void started();
     void stopped();
     void scheduled();
@@ -60,11 +60,14 @@ private:
         TimePoint frame_time_sum;
         TimePoint latency_sum;
         long nframes = 0;
+        long nbypassed = 0;
+        bool prev_bypassed = false;
 
         TimePoint last_reported_total_time_sum;
         TimePoint last_reported_frame_time_sum;
         TimePoint last_reported_latency_sum;
         long last_reported_nframes = 0;
+        long last_reported_bypassed = 0;
 
         void log(Logger& logger, SubCompositorId id);
     };

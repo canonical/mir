@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/compositor_report.h"
 #include <memory>
 
 namespace mir
@@ -40,7 +41,8 @@ public:
     DefaultDisplayBufferCompositor(
         graphics::DisplayBuffer& display_buffer,
         std::shared_ptr<Scene> const& scene,
-        std::shared_ptr<Renderer> const& renderer);
+        std::shared_ptr<Renderer> const& renderer,
+        std::shared_ptr<CompositorReport> const& report);
 
     void composite() override;
 
@@ -49,6 +51,7 @@ private:
 
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<Renderer> const renderer;
+    std::shared_ptr<CompositorReport> const report;
 
     unsigned long local_frameno;
 };
