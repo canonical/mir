@@ -10,7 +10,11 @@ include_directories(
 add_executable(mirping ping.c)
 target_link_libraries(mirping mirclient)
 
+add_executable(mirout out.c)
+target_link_libraries(mirout mirclient)
+
 install(TARGETS
   mirping
+  mirout
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

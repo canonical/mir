@@ -31,7 +31,7 @@ namespace
 
 logging::CompositorReport::CompositorReport(
     std::shared_ptr<Logger> const& logger,
-    std::shared_ptr<TimeSource> const& clock)
+    std::shared_ptr<Clock> const& clock)
     : logger(logger),
       clock(clock),
       last_report(now())
@@ -84,6 +84,8 @@ void logging::CompositorReport::Instance::log(
                 latency_sum - last_reported_latency_sum
             ).count();
 
+        long bypass_percent = (nbypassed - last_reported_bypassed) * 100L / dn;
+
         // Keep everything premultiplied by 1000 to guarantee accuracy
         // and avoid floating point.
         long frames_per_1000sec = dt ? dn * 1000000000LL / dt : 0;
@@ -95,7 +97,8 @@ void logging::CompositorReport::Instance::log(
         snprintf(msg, sizeof msg, "Display %p averaged %ld.%03ld FPS, "
                  "%ld.%03ld ms/frame, "
                  "latency %ld.%03ld ms, "
-                 "%ld frames over %ld.%03ld sec",
+                 "%ld frames over %ld.%03ld sec, "
+                 "%ld%% bypassed",
                  id,
                  frames_per_1000sec / 1000,
                  frames_per_1000sec % 1000,
@@ -105,7 +108,8 @@ void logging::CompositorReport::Instance::log(
                  avg_latency_usec % 1000,
                  dn,
                  dt_msec / 1000,
-                 dt_msec % 1000
+                 dt_msec % 1000,
+                 bypass_percent
                  );
 
         logger.log(Logger::informational, msg, component);
@@ -115,9 +119,11 @@ void logging::CompositorReport::Instance::log(
     last_reported_frame_time_sum = frame_time_sum;
     last_reported_latency_sum = latency_sum;
     last_reported_nframes = nframes;
+    last_reported_bypassed = nbypassed;
 }
 
-void logging::CompositorReport::finished_frame(SubCompositorId id)
+void logging::CompositorReport::finished_frame(bool bypassed,
+                                               SubCompositorId id)
 {
     std::lock_guard<std::mutex> lock(mutex);
     auto& inst = instance[id];
@@ -127,6 +133,8 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
     inst.frame_time_sum += t - inst.start_of_frame;
     inst.end_of_frame = t;
     inst.nframes++;
+    if (bypassed)
+        ++inst.nbypassed;
 
     /*
      * The exact reporting interval doesn't matter because we count everything
@@ -139,6 +147,15 @@ void logging::CompositorReport::finished_frame(SubCompositorId id)
         for (auto& i : instance)
             i.second.log(*logger, i.first);
     }
+
+    if (bypassed != inst.prev_bypassed || inst.nframes == 1)
+    {
+        char msg[128];
+        snprintf(msg, sizeof msg, "Display %p bypass %s",
+                 id, bypassed ? "ON" : "OFF");
+        logger->log(Logger::informational, msg, component);
+    }
+    inst.prev_bypassed = bypassed;
 }
 
 void logging::CompositorReport::started()
