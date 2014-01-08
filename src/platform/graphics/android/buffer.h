@@ -58,10 +58,10 @@ public:
     std::shared_ptr<NativeBuffer> native_buffer_handle() const;
 
 private:
+    typedef std::pair<EGLDisplay, EGLContext> DispContextPair;
+    std::map<DispContextPair,EGLImageKHR> egl_image_map;
+
     std::mutex mutable content_lock;
-
-    std::map<EGLDisplay,EGLImageKHR> egl_image_map;
-
     std::shared_ptr<NativeBuffer> native_buffer;
     std::shared_ptr<EGLExtensions> egl_extensions;
 };
