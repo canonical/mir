@@ -7,11 +7,8 @@
 INCLUDE(FindPackageHandleStandardArgs)
 
 find_package( PkgConfig )
-
 pkg_check_modules(ANDROID_HEADERS REQUIRED android-headers)
-
-set(LIBHARDWARE_INCLUDE_DIRS ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
-#include_directories(SYSTEM ${MIR_NDK_PATH}${ANDROID_HEADERS_INCLUDE_DIRS})
+set(LIBHARDWARE_INCLUDE_DIRS ${ANDROID_HEADERS_INCLUDE_DIRS})
 
 find_library(LIBHARDWARE_LIBRARY
    NAMES         libhardware.so.2
