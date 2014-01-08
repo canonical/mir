@@ -100,9 +100,7 @@ void mga::Buffer::bind_to_texture()
     if (it == egl_image_map.end())
     {
         image = egl_extensions->eglCreateImageKHR(
-                    current.first,
-                    current.second,
-                    EGL_NATIVE_BUFFER_ANDROID,
+                    current.first, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                     native_buffer->anwb(), image_attrs);
 
         if (image == EGL_NO_IMAGE_KHR)

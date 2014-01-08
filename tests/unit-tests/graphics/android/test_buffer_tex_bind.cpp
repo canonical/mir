@@ -369,11 +369,9 @@ TEST_F(AndroidBufferBinding, different_egl_contexts_displays_generate_new_eglima
         .WillOnce(Return(ctxt1))
         .WillRepeatedly(Return(ctxt2));
 
-    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp1,ctxt1,_,_,_))
-        .Times(1);
-    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp1,ctxt2,_,_,_))
-        .Times(1);
-    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp2,ctxt2,_,_,_))
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp1,_,_,_,_))
+        .Times(2);
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp2,_,_,_,_))
         .Times(1);
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,_))
         .Times(Exactly(3));
