@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hnf:")) != -1)
+    while ((arg = getopt (argc, argv, "qhnf:")) != -1)
     {
         switch (arg)
         {
@@ -108,6 +108,12 @@ int main(int argc, char* argv[])
         case 'n':
             swapinterval = 0;
             break;
+        case 'q':
+            {
+                FILE *unused = freopen("/dev/null", "a", stdout);
+                (void)unused;
+                break;
+            }
         case '?':
         case 'h':
         default:
@@ -115,6 +121,7 @@ int main(int argc, char* argv[])
                    "    -f <socket filename>  Connect to a specific Mir socket\n"
                    "    -h  Show this help text\n"
                    "    -n  Don't sync to vblank\n"
+                   "    -q  Quiet mode (no messages output)\n"
                    , argv[0]);
             return -1;
         }
