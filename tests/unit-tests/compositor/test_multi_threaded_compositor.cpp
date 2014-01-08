@@ -24,6 +24,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
+#include "mir_test_doubles/mock_compositor_report.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -297,18 +298,6 @@ public:
     }
 };
 
-class MockCompositorReport : public mc::CompositorReport
-{
-public:
-    MOCK_METHOD5(added_display,
-                 void(int,int,int,int,mc::CompositorReport::SubCompositorId));
-    MOCK_METHOD1(began_frame, void(mc::CompositorReport::SubCompositorId));
-    MOCK_METHOD1(finished_frame, void(mc::CompositorReport::SubCompositorId));
-    MOCK_METHOD0(started, void());
-    MOCK_METHOD0(stopped, void());
-    MOCK_METHOD0(scheduled, void());
-};
-
 auto const null_report = std::make_shared<mc::NullCompositorReport>();
 
 }
@@ -343,7 +332,7 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory =
         std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    auto mock_report = std::make_shared<MockCompositorReport>();
+    auto mock_report = std::make_shared<mtd::MockCompositorReport>();
     mc::MultiThreadedCompositor compositor{display, scene,
                                            db_compositor_factory,
                                            mock_report};
@@ -362,10 +351,6 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
         .Times(1);
     EXPECT_CALL(*mock_report, scheduled())
         .Times(1);
-    EXPECT_CALL(*mock_report, began_frame(_))
-        .Times(mc::max_client_buffers);
-    EXPECT_CALL(*mock_report, finished_frame(_))
-        .Times(mc::max_client_buffers);
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {

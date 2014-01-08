@@ -69,10 +69,12 @@ bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
-    std::shared_ptr<mc::Renderer> const& renderer)
+    std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<mc::CompositorReport> const& report)
     : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
+      report{report},
       local_frameno{global_frameno}
 {
 }
@@ -80,6 +82,8 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
+    report->began_frame(this);
+
     /*
      * Increment frame counts for each tick of the fastest instance of
      * DefaultDisplayBufferCompositor. This means for the fastest refresh
@@ -151,5 +155,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         display_buffer.post_update();
     }
+
+    report->finished_frame(bypassed, this);
 }
 

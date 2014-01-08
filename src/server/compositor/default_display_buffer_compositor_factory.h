@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/compositor_report.h"
 
 namespace mir
 {
@@ -36,13 +37,15 @@ class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFact
 public:
     DefaultDisplayBufferCompositorFactory(
         std::shared_ptr<Scene> const& scene,
-        std::shared_ptr<RendererFactory> const& renderer_factory);
+        std::shared_ptr<RendererFactory> const& renderer_factory,
+        std::shared_ptr<CompositorReport> const& report);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<RendererFactory> const renderer_factory;
+    std::shared_ptr<CompositorReport> const report;
 };
 
 }

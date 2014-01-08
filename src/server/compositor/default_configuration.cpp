@@ -42,7 +42,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
         [this]()
         {
             return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_scene(), the_renderer_factory());
+                the_scene(), the_renderer_factory(), the_compositor_report());
         });
 }
 
