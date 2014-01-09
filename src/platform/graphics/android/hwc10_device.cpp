@@ -51,6 +51,7 @@ void mga::HWC10Device::prepare_gl()
 
 void mga::HWC10Device::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>>&)
 {
+    prepare_gl();
 }
 
 void mga::HWC10Device::gpu_render(EGLDisplay dpy, EGLSurface sur)

@@ -67,12 +67,12 @@ TEST_F(HWC10Device, hwc10_prepare_without_optimize)
 
     device.prepare_gl();
 
-    EXPECT_EQ(-1, mock_hwc_device->display0_set_content.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_set_content.flags);
-    EXPECT_EQ(1u, mock_hwc_device->display0_set_content.numHwLayers);
-    ASSERT_NE(nullptr, mock_hwc_device->display0_set_content.hwLayers);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->set_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->set_layerlist[0].flags);
+    EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_prepare_content.flags);
+    EXPECT_EQ(1u, mock_hwc_device->display0_prepare_content.numHwLayers);
+    ASSERT_NE(nullptr, mock_hwc_device->display0_prepare_content.hwLayers);
+    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->prepare_layerlist[0].compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
 }
 
 TEST_F(HWC10Device, hwc10_prepare_with_optimize)
@@ -86,12 +86,12 @@ TEST_F(HWC10Device, hwc10_prepare_with_optimize)
     std::list<std::shared_ptr<mg::Renderable>> renderlist;
     device.prepare_gl_and_overlays(renderlist);
 
-    EXPECT_EQ(-1, mock_hwc_device->display0_set_content.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_set_content.flags);
-    EXPECT_EQ(1u, mock_hwc_device->display0_set_content.numHwLayers);
-    ASSERT_NE(nullptr, mock_hwc_device->display0_set_content.hwLayers);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->set_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->set_layerlist[0].flags);
+    EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_prepare_content.flags);
+    EXPECT_EQ(1u, mock_hwc_device->display0_prepare_content.numHwLayers);
+    ASSERT_NE(nullptr, mock_hwc_device->display0_prepare_content.hwLayers);
+    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->prepare_layerlist[0].compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
 }
 
 TEST_F(HWC10Device, hwc10_render_frame)
