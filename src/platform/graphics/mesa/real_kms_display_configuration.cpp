@@ -109,7 +109,7 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
 void mgm::RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index,
-    MirPowerMode power_mode)
+    MirPowerMode power_mode, MirRotation)
 {
     auto iter = find_output_with_id(id);
 

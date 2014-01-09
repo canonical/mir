@@ -137,7 +137,9 @@ public:
 
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used,
-                                  geometry::Point top_left, size_t mode_index, MirPowerMode power_mode) = 0;
+                                  geometry::Point top_left, size_t mode_index,
+                                  MirPowerMode power_mode,
+                                  MirRotation rotation) = 0;
 
 protected:
     DisplayConfiguration() = default;

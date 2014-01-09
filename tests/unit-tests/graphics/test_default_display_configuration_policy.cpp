@@ -139,8 +139,9 @@ public:
             f(output);
     }
 
-    MOCK_METHOD5(configure_output, void(mg::DisplayConfigurationOutputId, bool,
-                                        geom::Point, size_t, MirPowerMode));
+    MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool,
+                                        geom::Point, size_t, MirPowerMode,
+                                        MirRotation));
 
 private:
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
@@ -163,12 +164,15 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
         if (output.connected && output.modes.size() > 0)
         {
             EXPECT_CALL(conf, configure_output(output.id, true, geom::Point(),
-                                               output.preferred_mode_index, _));
+                                               output.preferred_mode_index,
+                                               _, _));
         }
         else
         {
-            EXPECT_CALL(conf, configure_output(output.id, false, output.top_left,
-                                               output.current_mode_index, _));
+            EXPECT_CALL(conf, configure_output(output.id, false,
+                                               output.top_left,
+                                               output.current_mode_index,
+                                               _, _));
         }
     });
 
@@ -184,7 +188,8 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
 
     conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
     {
-        EXPECT_CALL(conf, configure_output(output.id, _, _, _, mir_power_mode_on));
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _,
+                                           mir_power_mode_on, _));
     });
 
     policy.apply_to(conf);
@@ -204,10 +209,10 @@ TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_su
         ++output_count;
     });
 
-    EXPECT_CALL(conf, configure_output(_, true, _, _, _))
+    EXPECT_CALL(conf, configure_output(_, true, _, _, _, _))
         .Times(AtMost(max_simultaneous_outputs));
 
-    EXPECT_CALL(conf, configure_output(_, false, _, _, _))
+    EXPECT_CALL(conf, configure_output(_, false, _, _, _, _))
         .Times(AtLeast(output_count - max_simultaneous_outputs));
 
     policy.apply_to(conf);

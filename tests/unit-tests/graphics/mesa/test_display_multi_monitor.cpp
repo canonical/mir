@@ -56,13 +56,19 @@ public:
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true, geom::Point{0, 0},
-                                          conf_output.preferred_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, true,
+                                          geom::Point{0, 0},
+                                          conf_output.preferred_mode_index,
+                                          mir_power_mode_on,
+                                          conf_output.rotation);
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, false,
+                                          conf_output.top_left,
+                                          conf_output.current_mode_index,
+                                          mir_power_mode_on,
+                                          conf_output.rotation);
                 }
             });
     }
@@ -80,14 +86,20 @@ public:
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
-                                          conf_output.preferred_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, true,
+                                          geom::Point{max_x, 0},
+                                          conf_output.preferred_mode_index,
+                                          mir_power_mode_on,
+                                          conf_output.rotation);
                     max_x += conf_output.modes[conf_output.preferred_mode_index].size.width.as_int();
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, false,
+                                          conf_output.top_left,
+                                          conf_output.current_mode_index,
+                                          mir_power_mode_on,
+                                          conf_output.rotation);
                 }
             });
     }
@@ -472,7 +484,8 @@ TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
         [&](mg::DisplayConfigurationOutput const& conf_output)
         {
             conf->configure_output(conf_output.id, false, conf_output.top_left,
-                                   conf_output.preferred_mode_index, mir_power_mode_on);
+                                   conf_output.preferred_mode_index,
+                                   mir_power_mode_on, conf_output.rotation);
         });
 
     display->configure(*conf);
@@ -508,7 +521,8 @@ TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
         [&](mg::DisplayConfigurationOutput const& conf_output)
         {
             conf->configure_output(conf_output.id, false, conf_output.top_left,
-                                   conf_output.preferred_mode_index, mir_power_mode_on);
+                                   conf_output.preferred_mode_index,
+                                   mir_power_mode_on, conf_output.rotation);
         });
 
     display->configure(*conf);

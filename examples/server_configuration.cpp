@@ -60,15 +60,21 @@ public:
                 if (conf_output.connected && conf_output.modes.size() > 0 &&
                     available_outputs_for_card[conf_output.card_id] > 0)
                 {
-                    conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
-                                          preferred_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, true,
+                                          geom::Point{max_x, 0},
+                                          preferred_mode_index,
+                                          mir_power_mode_on,
+                                          mir_rotation_normal);
                     max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
                     --available_outputs_for_card[conf_output.card_id];
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, false,
+                                          conf_output.top_left,
+                                          conf_output.current_mode_index,
+                                          mir_power_mode_on,
+                                          mir_rotation_normal);
                 }
             });
     }
@@ -87,14 +93,20 @@ public:
             {
                 if (!done && conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true, geom::Point{0, 0},
-                                          preferred_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, true,
+                                          geom::Point{0, 0},
+                                          preferred_mode_index,
+                                          mir_power_mode_on,
+                                          mir_rotation_normal);
                     done = true;
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, false,
+                                          conf_output.top_left,
+                                          conf_output.current_mode_index,
+                                          mir_power_mode_on,
+                                          mir_rotation_normal);
                 }
             });
     }

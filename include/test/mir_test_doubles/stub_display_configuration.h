@@ -138,7 +138,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPowerMode)
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPowerMode, MirRotation)
     {
     }
 

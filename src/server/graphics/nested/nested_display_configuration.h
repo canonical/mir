@@ -37,8 +37,9 @@ public:
     void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const;
 
-    void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index,
-                          MirPowerMode power_mode);
+    void configure_output(DisplayConfigurationOutputId id, bool used,
+                          geometry::Point top_left, size_t mode_index,
+                          MirPowerMode power_mode, MirRotation rotation);
 
     operator MirDisplayConfiguration*() const { return display_config; }
 private:
