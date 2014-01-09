@@ -322,6 +322,7 @@ void mf::SessionMediator::configure_display(
             config->configure_output(output_id, output.used(),
                                      geom::Point{output.position_x(), output.position_y()},
                                      output.current_mode(), static_cast<MirPowerMode>(output.power_mode()));
+                                     // TODO rotation ^
         }
 
         display_changer->configure(session, config);

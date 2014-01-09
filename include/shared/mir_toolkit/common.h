@@ -110,6 +110,14 @@ typedef enum MirPixelFormat
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
 #define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
 
+typedef enum MirRotation
+{
+    mir_rotation_normal = 0,
+    mir_rotation_left = 90,
+    mir_rotation_inverted = 180,
+    mir_rotation_right = 270
+} MirRotation;
+
 /**@}*/
 
 #endif

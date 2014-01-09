@@ -157,6 +157,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                                                                     conf_output.current_mode_index);
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
                 kms_output->set_power_mode(conf_output.power_mode);
+                // TODO? kms_output->set_rotation(conf_output.rotation);
                 kms_outputs.push_back(kms_output);
             });
 

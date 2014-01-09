@@ -107,6 +107,7 @@ struct DisplayConfigurationOutput
     size_t current_format_index;
     /** Current power mode **/
     MirPowerMode power_mode;
+    MirRotation rotation;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);

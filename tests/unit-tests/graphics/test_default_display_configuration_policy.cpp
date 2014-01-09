@@ -55,7 +55,8 @@ public:
                 geom::Point{geom::X{123}, geom::Y{343}},
                 1,
                 0,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             });
         /* Connected without modes */
         outputs.push_back(
@@ -72,7 +73,8 @@ public:
                 geom::Point(),
                 std::numeric_limits<size_t>::max(),
                 std::numeric_limits<size_t>::max(),
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             });
         /* Connected with a single mode */
         outputs.push_back(
@@ -93,7 +95,8 @@ public:
                 geom::Point(),
                 0,
                 0,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             });
         /* Not connected */
         outputs.push_back(
@@ -112,7 +115,8 @@ public:
                 geom::Point(),
                 1,
                 0,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             });
 
         if (max_simultaneous_outputs == max_simultaneous_outputs_all)

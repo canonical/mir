@@ -120,7 +120,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
             default_used,
             default_physical_width_mm,
             default_physical_height_mm,
-            mir_power_mode_on
+            mir_power_mode_on,
+            mir_rotation_normal
         }};
 
         init_output(outputs, modes, formats);
@@ -162,7 +163,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
                 default_used,
                 default_physical_width_mm,
                 default_physical_height_mm,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             },
             {
                 default_num_modes,
@@ -181,7 +183,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
                 default_used,
                 default_physical_width_mm,
                 default_physical_height_mm,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             },
             {
                 default_num_modes,
@@ -200,7 +203,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
                 default_used,
                 default_physical_width_mm,
                 default_physical_height_mm,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             },
         };
 

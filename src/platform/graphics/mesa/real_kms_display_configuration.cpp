@@ -224,7 +224,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     {
         outputs.push_back({id, card_id, type, formats, modes, preferred_mode_index,
                            physical_size, connected, false, geom::Point(),
-                           current_mode_index, 0u, mir_power_mode_on});
+                           current_mode_index, 0u, mir_power_mode_on,
+                           mir_rotation_normal});
     }
     else
     {

@@ -80,7 +80,8 @@ public:
                 rect.top_left,
                 i - 1,
                 0,
-                mir_power_mode_on
+                mir_power_mode_on,
+                mir_rotation_normal
             };
 
             f(output);

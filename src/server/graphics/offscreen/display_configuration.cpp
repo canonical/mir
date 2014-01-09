@@ -31,7 +31,7 @@ mgo::DisplayConfiguration::DisplayConfiguration(geom::Size const& display_size)
                  true,
                  true,
                  geom::Point{0,0},
-                 0, 0, mir_power_mode_on},
+                 0, 0, mir_power_mode_on, mir_rotation_normal},
           card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }

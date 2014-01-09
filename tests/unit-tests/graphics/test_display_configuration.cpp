@@ -46,7 +46,8 @@ mg::DisplayConfigurationOutput const tmpl_output
     geom::Point(),
     2,
     0,
-    mir_power_mode_on
+    mir_power_mode_on,
+    mir_rotation_normal
 };
 
 }
