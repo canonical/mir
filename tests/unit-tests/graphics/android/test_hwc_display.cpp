@@ -69,7 +69,7 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimizes)
+TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimize)
 {
     using namespace testing;
 
@@ -77,7 +77,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimizes)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_composition())
+    EXPECT_CALL(*mock_display_device, prepare_for_gl_with_overlay(Ref(renderlist)))
         .Times(Exactly(1));
     db.optimize(renderlist);
 
@@ -102,7 +102,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_optimizes)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_composition())
+    EXPECT_CALL(*mock_display_device, prepare_gl_with_overlay(Ref(renderlist)))
         .Times(Exactly(2));
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
@@ -120,7 +120,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_without_optimize)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_composition())
+    EXPECT_CALL(*mock_display_device, prepare_gl())
         .Times(1);
     EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
         .Times(1);

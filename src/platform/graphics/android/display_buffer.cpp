@@ -35,7 +35,8 @@ mga::DisplayBuffer::DisplayBuffer(
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      prepared{false}
 {
 }
 
@@ -54,9 +55,19 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
+void mga::DisplayBuffer::prepare(HWCLayerList& list)
+{
+    display_device->prepare_composition(default_list);
+}
+
+void mga::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>&)
+{
+    prepare(display_device->default_list());
+//    display_device->prepare_composition();
+}
+
 void mga::DisplayBuffer::post_update()
 {
-    display_device->prepare_composition();
     display_device->gpu_render(gl_context.display(), gl_context.surface());
 
     auto last_rendered = fb_bundle->last_rendered_buffer();
@@ -66,8 +77,4 @@ void mga::DisplayBuffer::post_update()
 bool mga::DisplayBuffer::can_bypass() const
 {
     return false;
-}
-
-void mga::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>&)
-{
 }
