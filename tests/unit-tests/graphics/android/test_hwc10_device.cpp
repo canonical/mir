@@ -94,7 +94,7 @@ TEST_F(HWC10Device, hwc10_prepare_frame_failure)
     mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     EXPECT_THROW({
-        device.prepare_composition();
+        device.prepare_gl();
     }, std::runtime_error);
 }
 

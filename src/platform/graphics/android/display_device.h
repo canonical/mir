@@ -21,12 +21,15 @@
 
 #include "mir_toolkit/common.h"
 #include <EGL/egl.h>
+#include <list>
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
 class Buffer;
+class Renderable;
 
 namespace android
 {
@@ -37,7 +40,8 @@ public:
     virtual ~DisplayDevice() = default;
 
     virtual void mode(MirPowerMode mode) = 0;
-    virtual void prepare_composition() = 0;
+    virtual void prepare_gl() = 0;
+    virtual void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>>& list) = 0; 
     virtual void gpu_render(EGLDisplay dpy, EGLSurface sur) = 0;
     virtual void post(Buffer const& buffer) = 0;
 

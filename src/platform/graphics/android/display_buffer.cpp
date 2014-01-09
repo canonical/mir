@@ -55,23 +55,24 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
-void mga::DisplayBuffer::prepare(HWCLayerList& list)
+void mga::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>& renderable_list)
 {
-    display_device->prepare_composition(default_list);
-}
-
-void mga::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>&)
-{
-    prepare(display_device->default_list());
-//    display_device->prepare_composition();
+    display_device->prepare_gl_and_overlays(renderable_list);
+    prepared = true;
 }
 
 void mga::DisplayBuffer::post_update()
 {
+    if ( !prepared )
+    {
+        display_device->prepare_gl();
+    }
+
     display_device->gpu_render(gl_context.display(), gl_context.surface());
 
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
+    prepared = false;
 }
 
 bool mga::DisplayBuffer::can_bypass() const

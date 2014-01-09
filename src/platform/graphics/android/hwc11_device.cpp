@@ -42,7 +42,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HWC11Device::prepare_composition()
+void mga::HWC11Device::prepare_gl()
 {
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
@@ -52,6 +52,10 @@ void mga::HWC11Device::prepare_composition()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
+}
+
+void mga::HWC11Device::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>>&)
+{
 }
 
 void mga::HWC11Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
