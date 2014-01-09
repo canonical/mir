@@ -195,6 +195,22 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     policy.apply_to(conf);
 }
 
+TEST(DefaultDisplayConfigurationPolicyTest, default_rotation_is_normal)
+{
+    using namespace ::testing;
+
+    mg::DefaultDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf;
+
+    conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
+    {
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _, _,
+                                           mir_rotation_normal));
+    });
+
+    policy.apply_to(conf);
+}
+
 TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
 {
     using namespace ::testing;
