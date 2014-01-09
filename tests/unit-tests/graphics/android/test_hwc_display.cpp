@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_display_device.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include <memory>
 
@@ -68,7 +69,51 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_update)
+TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimizes)
+{
+    using namespace testing;
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist;// {renderable1};
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    InSequence seq;
+    EXPECT_CALL(*mock_display_device, prepare_composition())
+        .Times(Exactly(1));
+    db.optimize(renderlist);
+
+    Mock::VerifyAndClearExpectations(mock_display_device.get());
+
+    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
+        .Times(1);
+    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
+        .Times(1)
+        .WillOnce(Return(stub_buffer));
+    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
+        .Times(1);
+
+    db.post_update();
+}
+
+TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_optimizes)
+{
+    using namespace testing;
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist;// {renderable1};
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    InSequence seq;
+    EXPECT_CALL(*mock_display_device, prepare_composition())
+        .Times(Exactly(2));
+    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
+        .Times(1);
+
+    db.optimize(renderlist);
+    db.optimize(renderlist);
+    db.post_update();
+}
+
+//we still have to call prepare, even if there's no optimization to be made
+TEST_F(AndroidDisplayBufferTest, test_post_update_without_optimize)
 {
     using namespace testing;
 

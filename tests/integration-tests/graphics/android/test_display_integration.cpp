@@ -26,12 +26,14 @@
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/stub_renderable.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
+namespace geom=mir::geometry;
 namespace md=mir::draw;
 namespace mtd=mir::test::doubles;
 
@@ -114,42 +116,6 @@ TEST_F(AndroidGPUDisplay, hwc_display_ok_with_gles)
     });
 }
 
-namespace
-{
-class StubRenderable : public mc::Renderable
-{
-public:
-    StubRenderable(std::shared_ptr<mg::Buffer> const& buffer)
-     : buffer{buffer}
-    {
-    }
-
-    bool shaped()
-    {
-        return false;
-    }
-
-    glm::mat4 transformation()
-    {
-        return glm::mat4
-    }
-
-    geom::Rectangle screen_position()
-    {
-        return geom::Rectangle{{0,0}, {buffer->size()}};
-    }
-
-    std::shared_ptr<mg::Buffer> buffer()
-    {
-        return buffer;
-    }
-
-private:
-    std::shared_ptr<mg::Buffer> buffer;
-};
-
-}
-
 TEST_F(AndroidGPUDisplay, hwc_display_optimize)
 {
     auto should_use_fb_fallback = false;
@@ -161,18 +127,20 @@ TEST_F(AndroidGPUDisplay, hwc_display_optimize)
 
     mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
 
-    mc::StubRenderable renderable{fb_allocator->alloc_buffer_platform(
-            {256, 256}, mir_pixel_format_abgr8888, mga::BufferUsage::use_framebuffer_gles)}; 
-    std::list<std::shared_ptr<Renderable>> renderlist{renderable};
+    auto buffer = fb_allocator->alloc_buffer_platform(
+        {256, 256}, mir_pixel_format_abgr_8888, mga::BufferUsage::use_framebuffer_gles); 
+    auto renderable = std::make_shared<mtd::StubRenderable>(buffer);
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{renderable};
 
-    display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    display.for_each_display_buffer([this, &renderlist](mg::DisplayBuffer& buffer)
     {
-        buffer.optimize(renderlist)
+        buffer.optimize(renderlist);
 
         if (renderlist.empty())
         {
             //the surface was optimized out. we should be able to post here
             buffer.post_update();
+            SUCCEED() << "this device optimized the surface"; 
         }
         else
         {

@@ -67,3 +67,7 @@ bool mga::DisplayBuffer::can_bypass() const
 {
     return false;
 }
+
+void mga::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>&)
+{
+}
