@@ -28,7 +28,6 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_display_device.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include <memory>
 
@@ -73,7 +72,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimize)
 {
     using namespace testing;
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;// {renderable1};
+    std::list<std::shared_ptr<mg::Renderable>> renderlist;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;
@@ -98,7 +97,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_optimizes)
 {
     using namespace testing;
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;// {renderable1};
+    std::list<std::shared_ptr<mg::Renderable>> renderlist;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;

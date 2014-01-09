@@ -116,36 +116,3 @@ TEST_F(AndroidGPUDisplay, hwc_display_ok_with_gles)
         buffer.post_update();
     });
 }
-
-TEST_F(AndroidGPUDisplay, hwc_display_optimize)
-{
-    auto should_use_fb_fallback = false;
-    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, mock_display_report, should_use_fb_fallback);
-
-    mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
-
-    auto buffer = fb_allocator->alloc_buffer_platform(
-        {256, 256}, mir_pixel_format_abgr_8888, mga::BufferUsage::use_framebuffer_gles); 
-    auto renderable = std::make_shared<mtd::StubRenderable>(buffer);
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{renderable};
-
-    display.for_each_display_buffer([this, &renderlist](mg::DisplayBuffer& buffer)
-    {
-        buffer.optimize(renderlist);
-
-        if (renderlist.empty())
-        {
-            //the surface was optimized out. we should be able to post here
-            buffer.post_update();
-            SUCCEED() << "this device optimized the surface"; 
-        }
-        else
-        {
-            SUCCEED() << "this device does not optimize the test surface"; 
-        }
-    });
-}
