@@ -39,20 +39,27 @@ size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfiguration
     return mode_index;
 }
 
-MirPixelFormat select_format(MirPixelFormat format, std::vector<MirPixelFormat> const& formats)
+MirPixelFormat select_opaque_format(MirPixelFormat format, std::vector<MirPixelFormat> const& formats)
 {
-    if (formats.empty())
-        return mir_pixel_format_invalid;
+    auto const format_in_formats = formats.end() != std::find(formats.begin(), formats.end(), format);
 
-    if (!mg::contains_alpha(format))
+    if (!mg::contains_alpha(format) && format_in_formats)
         return format;
 
-    auto opaque_pos = std::find_if_not(formats.begin(), formats.end(), mg::contains_alpha);
+    // format is either unavailable or transparent
+    auto const first_opaque = std::find_if_not(formats.begin(), formats.end(), mg::contains_alpha);
 
-    if (opaque_pos == formats.end())
+    if (first_opaque != formats.end())
+        return *first_opaque;
+
+    // only tranparent options - allow choice if available
+    if (format_in_formats)
         return format;
 
-    return *opaque_pos;
+    if (formats.size())
+        return formats.at(0);
+
+    return mir_pixel_format_invalid;
 }
 
 }
@@ -81,7 +88,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
             }
 
             size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
-            MirPixelFormat format{select_format(conf_output.current_format, conf_output.pixel_formats)};
+            MirPixelFormat format{select_opaque_format(conf_output.current_format, conf_output.pixel_formats)};
 
             conf.configure_output(conf_output.id, true, geom::Point(), preferred_mode_index,
                                   format, default_power_state);

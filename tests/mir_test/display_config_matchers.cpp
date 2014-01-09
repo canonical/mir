@@ -132,7 +132,7 @@ public:
                 geom::Point{client_output.position_x,
                             client_output.position_y},
                 client_output.current_mode,
-                client_output.current_output_format,
+                client_output.current_format,
                 static_cast<MirPowerMode>(client_output.power_mode)
             };
 

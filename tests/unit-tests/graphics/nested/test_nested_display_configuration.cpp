@@ -84,7 +84,7 @@ struct NestedDisplayConfiguration : public ::testing::Test
         output->current_mode = 0;
         output->num_output_formats = NoOfFormats;
         output->output_formats = format_tmp;
-        output->current_output_format = NoOfFormats > 0 ? formats[0] : mir_pixel_format_invalid;
+        output->current_format = NoOfFormats > 0 ? formats[0] : mir_pixel_format_invalid;
     }
 
     template<int NoOfOutputs, int NoOfModes, int NoOfFormats>
