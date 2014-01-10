@@ -33,5 +33,8 @@ add_executable(
 target_link_libraries(
   mir-protobuf
 
+  mir-test-framework
   ${PROTOBUF_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
 )
