@@ -29,6 +29,9 @@ set(CMAKE_EXECUTABLE_RUNTIME_C_FLAG "-Wl,-rpath-link,")
 set(CMAKE_EXECUTABLE_RUNTIME_CXX_FLAG "-Wl,-rpath-link,")
 set(CMAKE_INSTALL_RPATH "${MIR_NDK_PATH}/lib:${MIR_NDK_PATH}/lib/${MIR_ARM_EABI}:${MIR_NDK_PATH}/usr/lib:${MIR_NDK_PATH}/usr/lib/${MIR_ARM_EABI}")
 
+set(ENV{PKG_CONFIG_PATH} "${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/${MIR_ARM_EABI}/pkgconfig")
+set(ENV{PKG_CONFIG_SYSROOT_DIR} "${MIR_NDK_PATH}")
+
 #use only the cross compile system
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

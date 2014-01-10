@@ -109,18 +109,14 @@ include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})
 include_directories (${GLM_INCLUDE_DIRS})
 
-add_definitions(-DANDROID_USE_STD)
-
 if (MIR_PLATFORM STREQUAL "android")
-  find_package( PkgConfig )
-  include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
-  list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
+  #android headers use 'int foo[0]' as struct members
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
   add_definitions( -DANDROID )
  
-  find_package( LibHardware REQUIRED )
+  find_package(LibHardware REQUIRED)
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
@@ -138,9 +134,6 @@ set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 add_subdirectory(3rd_party/)
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
