@@ -13,6 +13,7 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
       are visible.
     - Added opacity controls to mir_demo_server_shell
     - Mir server ABI bumped to 13. No client ABI change.
+    - Removed lots of Android headers, replaced by build-dep: android-headers
     - Bugs fixed:
       . unity8 display flickers and stops responding on Nexus 7 (grouper)
         (LP: #1238695)
