@@ -71,43 +71,92 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayerListTest, gl_target_layer_with_force_gl)
+TEST_F(HWCLayerListTest, normal_layer)
 {
-    mga::CompositionLayer target_layer(*native_handle_1, HWC_SKIP_LAYER);
+    geom::Size display_size{111, 222};
+    geom::Size buffer_size{333, 444};
+    geom::Rectangle buffer_screen_position{{9,8},{245, 250}};
+    bool alpha_enabled = true;
 
-    hwc_rect_t region = {0,0,width, height};
-    hwc_region_t visible_region {1, &region};
+    mtd::MockBuffer mock_buffer;
+    EXPECT_CALL(mock_buffer, size())
+        .Times(1)
+        .WillOnce(Return(buffer_size));
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(native_handle_1));
+
+    mtd::MockRenderable mock_renderable;
+    EXPECT_CALL(renderable, buffer())
+        .Times(1)
+        .WillOnce(Return(mt::fake_shared(mock_buffer)));
+    EXPECT_CALL(renderable, alpha_enabled())
+        .Times(1)
+        .WillOnce(Return(alpha_enabled));
+    EXPECT_CALL(renderable, screen_position())
+        .Times(1)
+        .WillOnce(Return(buffer_screen_position));
+
+    mga::CompositionLayer target_layer(renderable, display_size); 
+
+    hwc_rect_t screen_region{0,0, display_size.width.as_uint32_t(), display_size.height.as_uint32_t()};
+    hwc_rect_t crop{0,0, buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t()};
+    hwc_rect_t screen_pos
+    {
+        screen_position.top_left.x.as_uint32_t(),
+        screen_position.top_left.y.as_uint32_t(),
+        screen_position.size.width.as_uint32_t(),
+        screen_position.size.height.as_uint32_t()
+    };
+
+    hwc_rect_t  = {0,0, buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t()};
+    hwc_region_t visible_region {1, &screen_region};
     hwc_layer_1 expected_layer;
-    expected_layer.compositionType = HWC_FRAMEBUFFER;
-    expected_layer.hints = 0;
-    expected_layer.flags = HWC_SKIP_LAYER;
-    expected_layer.handle = native_handle_1->handle();
-    expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region;
-    expected_layer.visibleRegionScreen = visible_region;
-    expected_layer.acquireFenceFd = -1;
-    expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
-}
-
-TEST_F(HWCLayerListTest, gl_target_layer_without_skip)
-{
-    mga::CompositionLayer target_layer(*native_handle_1, 0);
-
-    hwc_rect_t region = {0,0,width, height};
-    hwc_region_t visible_region {1, &region};
-    hwc_layer_1 expected_layer;
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.hints = 0;
     expected_layer.flags = 0;
     expected_layer.handle = native_handle_1->handle();
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region;
+    expected_layer.sourceCrop = crop;
+    expected_layer.displayFrame = screen_pos;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    EXPECT_TRUE(target_layer.needs_gl_render());
+}
+
+TEST_F(HWCLayerListTest, normal_layer_no_alpha)
+{
+    bool alpha_enabled = false;
+    mtd::MockRenderable mock_renderable;
+    EXPECT_CALL(renderable, alpha_enabled())
+        .Times(1)
+        .WillOnce(Return(alpha_enabled));
+
+    mga::CompositionLayer target_layer(renderable, display_size); 
+    EXPECT_EQ(target_layer.native_list()->blending, HWC_BLENDING_COVERAGE);
+}
+
+TEST_F(HWCLayerListTest, forced_gl_layer)
+{
+    mga::ForceGLLayer target_layer(renderable, display_size);
+
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.hints = 0;
+    expected_layer.flags = HWC_SKIP_LAYER;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = crop;
+    expected_layer.displayFrame = screen_pos;
     expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
@@ -115,6 +164,7 @@ TEST_F(HWCLayerListTest, gl_target_layer_without_skip)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
+#if 0
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
@@ -171,3 +221,4 @@ TEST_F(HWCLayerListTest, get_fb_fence)
 
     EXPECT_EQ(release_fence, layerlist.framebuffer_fence());
 }
+#endif
