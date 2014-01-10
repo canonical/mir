@@ -76,7 +76,7 @@ class StubDisplayWithMockBuffers : public mtd::NullDisplay
     }
 
 private:
-    std::vector<mtd::MockDisplayBuffer> buffers;
+    std::vector<testing::NiceMock<mtd::MockDisplayBuffer>> buffers;
 };
 
 class StubScene : public mc::Scene
@@ -494,7 +494,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto mock_scene = std::make_shared<MockScene>();
     auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
-    auto mock_report = std::make_shared<mtd::MockCompositorReport>();
+    auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
     EXPECT_CALL(*mock_report, started())
         .Times(1);
     EXPECT_CALL(*mock_report, stopped())
