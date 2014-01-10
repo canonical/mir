@@ -128,7 +128,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient4
+Package: libmirclient5
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -146,7 +146,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient4 (= ${binary:Version}),
+Depends: libmirclient5 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          ${misc:Depends},

@@ -54,7 +54,8 @@ public:
         EGLDisplayHandle const& egl_display,
         MirSurface* mir_surface,
         geometry::Rectangle const& area,
-        std::shared_ptr<input::EventFilter> const& event_handler);
+        std::shared_ptr<input::EventFilter> const& event_handler,
+        MirPixelFormat preferred_format);
 
     ~NestedOutput() noexcept;
 

@@ -22,8 +22,10 @@
 #include "mir_api_wrappers.h"
 
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/surfaceless_egl_context.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "host_connection.h"
 
 #include <boost/throw_exception.hpp>
@@ -34,45 +36,8 @@ namespace mgn = mir::graphics::nested;
 namespace mgnw = mir::graphics::nested::mir_api_wrappers;
 namespace geom = mir::geometry;
 
-namespace
+EGLint const mgn::detail::nested_egl_context_attribs[] =
 {
-
-MirPixelFormat find_opaque_surface_format(MirConnection* connection)
-{
-    static unsigned const max_formats = 32;
-    MirPixelFormat formats[max_formats];
-    unsigned int valid_formats;
-
-    mir_connection_get_available_surface_formats(connection, formats,
-                                                 max_formats, &valid_formats);
-
-    // Find an opaque surface format
-    for (auto f = formats; f != formats+valid_formats; ++f)
-    {
-        if (*f == mir_pixel_format_xbgr_8888 ||
-            *f == mir_pixel_format_xrgb_8888)
-        {
-            return *f;
-        }
-    }
-
-    BOOST_THROW_EXCEPTION(
-        std::runtime_error("Nested Mir failed to find an opaque surface format"));
-}
-
-}
-
-EGLint const mgn::detail::nested_egl_config_attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 0,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-EGLint const mgn::detail::nested_egl_context_attribs[] = {
     EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
 };
@@ -93,6 +58,8 @@ mgn::detail::EGLSurfaceHandle::~EGLSurfaceHandle() noexcept
 }
 
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
+    : egl_display(EGL_NO_DISPLAY),
+    egl_context_(EGL_NO_CONTEXT)
 {
     auto const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     egl_display = eglGetDisplay(native_display);
@@ -100,7 +67,7 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
 }
 
-void mgn::detail::EGLDisplayHandle::initialize()
+void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
 {
     int major;
     int minor;
@@ -110,17 +77,28 @@ void mgn::detail::EGLDisplayHandle::initialize()
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
-    egl_context_ = eglCreateContext(egl_display, choose_config(detail::nested_egl_config_attribs), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
+    egl_context_ = eglCreateContext(egl_display, choose_windowed_es_config(format), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
+
     if (egl_context_ == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create shared EGL context"));
 }
 
-EGLConfig mgn::detail::EGLDisplayHandle::choose_config(const EGLint attrib_list[]) const
+EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelFormat format) const
 {
+    EGLint const nested_egl_config_attribs[] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, mg::red_channel_depth(format),
+        EGL_GREEN_SIZE, mg::green_channel_depth(format),
+        EGL_BLUE_SIZE, mg::blue_channel_depth(format),
+        EGL_ALPHA_SIZE, mg::alpha_channel_depth(format),
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
     EGLConfig result;
     int n;
 
-    int res = eglChooseConfig(egl_display, attrib_list, &result, 1, &n);
+    int res = eglChooseConfig(egl_display, nested_egl_config_attribs, &result, 1, &n);
     if ((res != EGL_TRUE) || (n != 1))
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
 
@@ -149,17 +127,18 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 mgn::NestedDisplay::NestedDisplay(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<input::EventFilter> const& event_handler,
-    std::shared_ptr<mg::DisplayReport> const& display_report) :
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy) :
     connection{connection},
     event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
-    egl_pixel_format{find_opaque_surface_format(*connection)},
     outputs{}
 {
-    egl_display.initialize();
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
-    configure(*configuration());
+
+    std::shared_ptr<DisplayConfiguration> conf(configuration());
+    initial_conf_policy->apply_to(*conf);
+    configure(*conf);
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
@@ -178,6 +157,14 @@ std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
     return std::make_shared<NestedDisplayConfiguration>(mir_connection_create_display_config(*connection));
 }
 
+void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)
+{
+    if (egl_display.egl_context() != EGL_NO_CONTEXT)  return;
+
+    egl_display.initialize(format);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
+}
+
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
     decltype(outputs) result;
@@ -193,13 +180,16 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                 geometry::Rectangle const area{output.top_left, output.modes[output.current_mode_index].size};
 
                 auto const& egl_display_mode = output.modes[output.current_mode_index];
+                auto const& egl_config_format = output.current_format;
+
+                complete_display_initialization(egl_config_format);
 
                 MirSurfaceParameters const request_params =
                     {
                         "Mir nested display",
                         egl_display_mode.size.width.as_int(),
                         egl_display_mode.size.height.as_int(),
-                        egl_pixel_format,
+                        egl_config_format,
                         mir_buffer_usage_hardware,
                         static_cast<uint32_t>(output.id.as_value())
                     };
@@ -213,7 +203,8 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                     egl_display,
                     mir_surface,
                     area,
-                    event_handler);
+                    event_handler,
+                    output.current_format);
             }
         });
 
@@ -274,13 +265,7 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
     return std::weak_ptr<Cursor>();
 }
 
-namespace
-{
-}
-
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
-    return std::unique_ptr<mg::GLContext>{new SurfacelessEGLContext(egl_display,
-                                                                    detail::nested_egl_config_attribs,
-                                                                    EGL_NO_CONTEXT)};
+    return std::unique_ptr<mg::GLContext>{new SurfacelessEGLContext(egl_display, EGL_NO_CONTEXT)};
 }
