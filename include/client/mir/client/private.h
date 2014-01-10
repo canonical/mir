@@ -23,7 +23,13 @@
 
 #include <memory>
 
-namespace google { namespace protobuf { class RpcChannel; } }
+namespace google
+{
+namespace protobuf
+{
+class RpcChannel;
+}
+}
 
 namespace mir
 {
