@@ -105,7 +105,7 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 true,
                 geom::Point{0, 0},
                 1,
-                0,
+                mir_pixel_format_invalid,
                 mir_power_mode_on
             });
         outputs.push_back(
@@ -124,33 +124,33 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 true,
                 geom::Point{100, 50},
                 0,
-                0,
+                mir_pixel_format_invalid,
                 mir_power_mode_on
             });
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
         f({card_id, outputs.size()});
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto const& output : outputs)
             f(output);
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode)
+                          geom::Point, size_t, MirPixelFormat, MirPowerMode) override
     {
     }
 
-    uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const
+    uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const override
     {
         return id.as_value();
     }
 
-    size_t get_kms_mode_index(mg::DisplayConfigurationOutputId, size_t conf_mode_index) const
+    size_t get_kms_mode_index(mg::DisplayConfigurationOutputId, size_t conf_mode_index) const override
     {
         return conf_mode_index;
     }
