@@ -31,7 +31,7 @@ mga::AndroidDisplayConfiguration::AndroidDisplayConfiguration(geom::Size const& 
                         true,
                         true,
                         geom::Point{0,0},
-                        0, 0, mir_power_mode_on},
+                        0, 0, mir_power_mode_on, mir_orientation_normal},
           card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
