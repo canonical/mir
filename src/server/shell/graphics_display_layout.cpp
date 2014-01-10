@@ -80,7 +80,7 @@ void msh::GraphicsDisplayLayout::place_in_output(
     {
         if (output.id == id &&
             output.current_mode_index < output.modes.size() &&
-            rect.size == output.modes[output.current_mode_index].size)
+            rect.size == output.extents().size)
         {
             rect.top_left = output.top_left;
             placed = true;

@@ -190,15 +190,12 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
         {
             if (output.used)
             {
-                geometry::Rectangle const area{output.top_left, output.modes[output.current_mode_index].size};
-
-                auto const& egl_display_mode = output.modes[output.current_mode_index];
-
+                geometry::Rectangle const& area = output.extents();
                 MirSurfaceParameters const request_params =
                     {
                         "Mir nested display",
-                        egl_display_mode.size.width.as_int(),
-                        egl_display_mode.size.height.as_int(),
+                        area.size.width.as_int(),
+                        area.size.height.as_int(),
                         egl_pixel_format,
                         mir_buffer_usage_hardware,
                         static_cast<uint32_t>(output.id.as_value())
