@@ -109,6 +109,10 @@ public:
     {
     }
 
+    void suspend() override
+    {
+    }
+
 private:
     int render_operations_fd;
 };

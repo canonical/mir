@@ -1,3 +1,5 @@
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+
 add_library(
   mirsharedandroid STATIC
 

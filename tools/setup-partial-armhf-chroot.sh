@@ -53,6 +53,7 @@ libboost-program-options1.54-dev,\
 libboost-system1.54-dev,\
 libboost-thread1.54-dev,\
 libboost-regex1.54-dev,\
+android-headers,\
 libhardware-dev,\
 libgflags-dev,\
 libgoogle-glog-dev,\

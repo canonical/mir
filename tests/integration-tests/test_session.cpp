@@ -96,6 +96,9 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             void end() const override
             {
             }
+            void suspend() override
+            {
+            }
         };
 
         struct StubRendererFactory : public mc::RendererFactory
