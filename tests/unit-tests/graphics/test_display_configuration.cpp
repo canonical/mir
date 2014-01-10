@@ -217,3 +217,14 @@ TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_u
     EXPECT_NE(output1, output2);
     EXPECT_NE(output2, output1);
 }
+
+TEST(DisplayConfiguration, output_orientation_affects_equality)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_EQ(a, b);
+    a.orientation = mir_orientation_left;
+    b.orientation = mir_orientation_inverted;
+    EXPECT_NE(a, b);
+}
