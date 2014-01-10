@@ -38,6 +38,8 @@ public:
     virtual void render(CompositingCriteria const& info, graphics::Buffer& buffer) const = 0;
     virtual void end() const = 0;
 
+    virtual void suspend() = 0; // called when begin/render/end skipped
+
 protected:
     Renderer() = default;
     Renderer(const Renderer&) = delete;

@@ -125,8 +125,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     texcoord_attr_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    vertex_attribs_vbo(0),
-    texture(0)
+    vertex_attribs_vbo(0)
 {
     GLint param = 0;
 
@@ -196,14 +195,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
 
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
     glUniform1i(tex_loc, 0);
 
     /* Create VBO */
@@ -227,8 +218,8 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteProgram(program);
     if (vertex_attribs_vbo)
         glDeleteBuffers(1, &vertex_attribs_vbo);
-    if (texture)
-        glDeleteTextures(1, &texture);
+    for (auto& t : textures)
+        glDeleteTextures(1, &t.second.id);
 }
 
 void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buffer) const
@@ -258,10 +249,28 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
                           GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    /* Use the renderable's texture */
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    buffer.bind_to_texture();
+    SurfaceID surf = &criteria; // temporary hack till we rearrange classes
+    auto& tex = textures[surf];
+    bool changed = true;
+    auto const& buf_id = buffer.id();
+    if (!tex.id)
+    {
+        glGenTextures(1, &tex.id);
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        changed = (tex.origin != buf_id) || skipped;
+    }
+    tex.origin = buf_id;
+    tex.used = true;
+    if (changed)  // Don't upload a new texture unless the surface has changed
+        buffer.bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
@@ -278,4 +287,25 @@ void mc::GLRenderer::begin() const
 
 void mc::GLRenderer::end() const
 {
+    auto t = textures.begin();
+    while (t != textures.end())
+    {
+        auto& tex = t->second;
+        if (tex.used)
+        {
+            tex.used = false;
+            ++t;
+        }
+        else
+        {
+            glDeleteTextures(1, &tex.id);
+            t = textures.erase(t);
+        }
+    }
+    skipped = false;
+}
+
+void mc::GLRenderer::suspend()
+{
+    skipped = true;
 }

@@ -123,6 +123,11 @@ struct WrappingRenderer : mc::Renderer
         renderer->end();
     }
 
+    void suspend() override
+    {
+        renderer->suspend();
+    }
+
     mc::Renderer* const renderer;
 };
 
@@ -250,6 +255,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     renderable_vec.push_back(&small);
     renderable_vec.push_back(&fullscreen);
 
+    EXPECT_CALL(renderer_factory.mock_renderer, suspend())
+        .Times(1);
     EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
@@ -305,6 +312,8 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
 
     Sequence render_seq;
 
+    EXPECT_CALL(renderer_factory.mock_renderer, suspend())
+        .Times(0);
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(render_seq);
     EXPECT_CALL(renderer_factory.mock_renderer, begin())

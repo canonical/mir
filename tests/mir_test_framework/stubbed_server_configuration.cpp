@@ -214,6 +214,10 @@ public:
     void end() const override
     {
     }
+
+    void suspend() override
+    {
+    }
 };
 
 class StubRendererFactory : public mc::RendererFactory

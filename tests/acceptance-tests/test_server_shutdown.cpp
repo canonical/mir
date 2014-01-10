@@ -65,6 +65,9 @@ public:
     void end() const override
     {
     }
+    void suspend() override
+    {
+    }
 };
 
 class NullRendererFactory : public mc::RendererFactory
