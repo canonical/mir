@@ -73,7 +73,7 @@ message DisplayOutput {
   optional uint32 type = 13;
   optional uint32 preferred_mode = 14;
   optional uint32 power_mode = 15;
-  optional sint32 rotation = 16;
+  optional sint32 orientation = 16;
 }
 
 // DEPRECATED

@@ -107,7 +107,7 @@ struct DisplayConfigurationOutput
     size_t current_format_index;
     /** Current power mode **/
     MirPowerMode power_mode;
-    MirRotation rotation;
+    MirOrientation orientation;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
@@ -139,7 +139,7 @@ public:
     virtual void configure_output(DisplayConfigurationOutputId id, bool used,
                                   geometry::Point top_left, size_t mode_index,
                                   MirPowerMode power_mode,
-                                  MirRotation rotation) = 0;
+                                  MirOrientation orientation) = 0;
 
 protected:
     DisplayConfiguration() = default;

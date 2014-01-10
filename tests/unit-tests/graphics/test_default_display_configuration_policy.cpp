@@ -56,7 +56,7 @@ public:
                 1,
                 0,
                 mir_power_mode_on,
-                mir_rotation_normal
+                mir_orientation_normal
             });
         /* Connected without modes */
         outputs.push_back(
@@ -74,7 +74,7 @@ public:
                 std::numeric_limits<size_t>::max(),
                 std::numeric_limits<size_t>::max(),
                 mir_power_mode_on,
-                mir_rotation_normal
+                mir_orientation_normal
             });
         /* Connected with a single mode */
         outputs.push_back(
@@ -96,7 +96,7 @@ public:
                 0,
                 0,
                 mir_power_mode_on,
-                mir_rotation_normal
+                mir_orientation_normal
             });
         /* Not connected */
         outputs.push_back(
@@ -116,7 +116,7 @@ public:
                 1,
                 0,
                 mir_power_mode_on,
-                mir_rotation_normal
+                mir_orientation_normal
             });
 
         if (max_simultaneous_outputs == max_simultaneous_outputs_all)
@@ -141,7 +141,7 @@ public:
 
     MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool,
                                         geom::Point, size_t, MirPowerMode,
-                                        MirRotation));
+                                        MirOrientation));
 
 private:
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
@@ -195,7 +195,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     policy.apply_to(conf);
 }
 
-TEST(DefaultDisplayConfigurationPolicyTest, default_rotation_is_normal)
+TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
 {
     using namespace ::testing;
 
@@ -205,7 +205,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_rotation_is_normal)
     conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
     {
         EXPECT_CALL(conf, configure_output(output.id, _, _, _, _,
-                                           mir_rotation_normal));
+                                           mir_orientation_normal));
     });
 
     policy.apply_to(conf);

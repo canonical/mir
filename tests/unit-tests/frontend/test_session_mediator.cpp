@@ -83,7 +83,7 @@ struct MockConfig : public mg::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode, MirRotation));
+    MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode, MirOrientation));
 };
 
 }
@@ -570,11 +570,11 @@ TEST_F(SessionMediatorTest, display_config_request)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(mock_display_config,
                 configure_output(id0, used0, pt0, mode_index0,
-                                 mir_power_mode_on, mir_rotation_normal))
+                                 mir_power_mode_on, mir_orientation_normal))
         .InSequence(seq);
     EXPECT_CALL(mock_display_config,
                 configure_output(id1, used1, pt1, mode_index1,
-                                 mir_power_mode_off, mir_rotation_normal))
+                                 mir_power_mode_off, mir_orientation_normal))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);

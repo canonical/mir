@@ -69,7 +69,7 @@ public:
                 protobuf_output.current_mode(),
                 protobuf_output.current_format(),
                 static_cast<MirPowerMode>(protobuf_output.power_mode()),
-                static_cast<MirRotation>(protobuf_output.rotation())
+                static_cast<MirOrientation>(protobuf_output.orientation())
             };
 
             /* Modes */
@@ -135,7 +135,7 @@ public:
                 client_output.current_mode,
                 client_output.current_output_format,
                 static_cast<MirPowerMode>(client_output.power_mode),
-                static_cast<MirRotation>(client_output.rotation)
+                static_cast<MirOrientation>(client_output.orientation)
             };
 
             /* Modes */
@@ -177,7 +177,7 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode, MirRotation)
+                          geom::Point, size_t, MirPowerMode, MirOrientation)
     {
     }
 

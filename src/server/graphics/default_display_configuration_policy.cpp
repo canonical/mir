@@ -48,7 +48,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
                 conf.configure_output(conf_output.id, true, geom::Point(),
                                       preferred_mode_index,
                                       default_power_state,
-                                      mir_rotation_normal);
+                                      mir_orientation_normal);
 
                 --available_outputs_for_card[conf_output.card_id];
             }
@@ -58,7 +58,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
                                       conf_output.top_left,
                                       conf_output.current_mode_index,
                                       default_power_state,
-                                      mir_rotation_normal);
+                                      mir_orientation_normal);
             }
         });
 }

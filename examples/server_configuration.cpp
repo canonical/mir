@@ -64,7 +64,7 @@ public:
                                           geom::Point{max_x, 0},
                                           preferred_mode_index,
                                           mir_power_mode_on,
-                                          mir_rotation_normal);
+                                          mir_orientation_normal);
                     max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
                     --available_outputs_for_card[conf_output.card_id];
                 }
@@ -74,7 +74,7 @@ public:
                                           conf_output.top_left,
                                           conf_output.current_mode_index,
                                           mir_power_mode_on,
-                                          mir_rotation_normal);
+                                          mir_orientation_normal);
                 }
             });
     }
@@ -97,7 +97,7 @@ public:
                                           geom::Point{0, 0},
                                           preferred_mode_index,
                                           mir_power_mode_on,
-                                          mir_rotation_normal);
+                                          mir_orientation_normal);
                     done = true;
                 }
                 else
@@ -106,7 +106,7 @@ public:
                                           conf_output.top_left,
                                           conf_output.current_mode_index,
                                           mir_power_mode_on,
-                                          mir_rotation_normal);
+                                          mir_orientation_normal);
                 }
             });
     }

@@ -39,7 +39,7 @@ public:
 
     void configure_output(DisplayConfigurationOutputId id, bool used,
                           geometry::Point top_left, size_t mode_index,
-                          MirPowerMode power_mode, MirRotation rotation);
+                          MirPowerMode power_mode, MirOrientation orientation);
 
     operator MirDisplayConfiguration*() const { return display_config; }
 private:

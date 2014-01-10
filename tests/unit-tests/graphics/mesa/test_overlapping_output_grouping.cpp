@@ -81,7 +81,7 @@ public:
                 i - 1,
                 0,
                 mir_power_mode_on,
-                mir_rotation_normal
+                mir_orientation_normal
             };
 
             f(output);
@@ -90,7 +90,7 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode, MirRotation)
+                          geom::Point, size_t, MirPowerMode, MirOrientation)
     {
     }
 

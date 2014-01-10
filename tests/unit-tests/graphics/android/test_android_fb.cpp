@@ -257,7 +257,7 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     {
         configuration->configure_output(
             output.id, output.used, output.top_left, output.current_mode_index,
-            mir_power_mode_on, output.rotation);
+            mir_power_mode_on, output.orientation);
     });
     display.configure(*configuration);
 
@@ -265,7 +265,7 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     {
         configuration->configure_output(
             output.id, output.used, output.top_left, output.current_mode_index,
-            mir_power_mode_standby, output.rotation);
+            mir_power_mode_standby, output.orientation);
     });
     display.configure(*configuration);
 
@@ -273,7 +273,7 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     {
         configuration->configure_output(
             output.id, output.used, output.top_left, output.current_mode_index,
-            mir_power_mode_off, output.rotation);
+            mir_power_mode_off, output.orientation);
     });
     display.configure(*configuration);
 
@@ -281,7 +281,7 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     {
         configuration->configure_output(
             output.id, output.used, output.top_left, output.current_mode_index,
-            mir_power_mode_suspend, output.rotation);
+            mir_power_mode_suspend, output.orientation);
     });
     display.configure(*configuration);
 }

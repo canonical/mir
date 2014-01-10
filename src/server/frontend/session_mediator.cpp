@@ -325,8 +325,8 @@ void mf::SessionMediator::configure_display(
                                      output.current_mode(),
                                      static_cast<MirPowerMode>(
                                          output.power_mode()),
-                                     static_cast<MirRotation>(
-                                         output.rotation())
+                                     static_cast<MirOrientation>(
+                                         output.orientation())
                                      );
         }
 

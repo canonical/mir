@@ -199,7 +199,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             1,
             0,
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -215,7 +215,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -231,7 +231,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         }
     };
 
@@ -386,7 +386,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             1,
             0,
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -402,7 +402,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         },
     };
 
@@ -422,7 +422,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -438,7 +438,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             1,
             0,
             mir_power_mode_on,
-            mir_rotation_normal
+            mir_orientation_normal
         },
     };
 

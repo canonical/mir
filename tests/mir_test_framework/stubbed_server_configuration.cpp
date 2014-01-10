@@ -134,7 +134,7 @@ public:
             std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
             modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0,
             mir_power_mode_on,
-            mir_rotation_normal};
+            mir_orientation_normal};
 
         f(dummy_output_config);
     }

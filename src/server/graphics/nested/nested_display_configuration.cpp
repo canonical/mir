@@ -79,7 +79,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 mir_output.current_mode,
                 mir_output.current_output_format,
                 mir_output.power_mode,
-                mir_output.rotation
+                mir_output.orientation
             };
 
             f(output);
@@ -88,7 +88,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
 
 void mgn::NestedDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
-    size_t mode_index, MirPowerMode power_mode, MirRotation rotation)
+    size_t mode_index, MirPowerMode power_mode, MirOrientation orientation)
 {
     for (auto mir_output = display_config->outputs;
         mir_output != display_config->outputs+display_config->num_outputs;
@@ -104,7 +104,7 @@ void mgn::NestedDisplayConfiguration::configure_output(
             mir_output->position_y = top_left.y.as_uint32_t();
             mir_output->current_mode = mode_index;
             mir_output->power_mode = static_cast<MirPowerMode>(power_mode);
-            mir_output->rotation = static_cast<MirRotation>(rotation);
+            mir_output->orientation = static_cast<MirOrientation>(orientation);
             return;
         }
     }

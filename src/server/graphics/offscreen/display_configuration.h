@@ -37,7 +37,7 @@ public:
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const;
     void configure_output(DisplayConfigurationOutputId, bool, geometry::Point,
                           size_t, MirPowerMode power_mode,
-                          MirRotation rotation);
+                          MirOrientation orientation);
 
 private:
     DisplayConfigurationOutput output;

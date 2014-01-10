@@ -47,7 +47,7 @@ mg::DisplayConfigurationOutput const tmpl_output
     2,
     0,
     mir_power_mode_on,
-    mir_rotation_normal
+    mir_orientation_normal
 };
 
 }
