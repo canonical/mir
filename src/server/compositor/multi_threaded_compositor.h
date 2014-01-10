@@ -61,6 +61,7 @@ private:
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::thread> threads;
+    bool started;
 };
 
 }
