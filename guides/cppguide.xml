@@ -16,7 +16,7 @@
 </ACKNOWLEDGEMENTS>
 -->
 <p align="right">
-Revision 4.1
+Revision 4.2
 </p>
 
 <address>
@@ -380,7 +380,7 @@ Thomas Voss
       <p>
         <code><var>dir/foo</var>.cpp</code> and
         <code><var>dir2/foo2</var>.h</code> are often in the same
-        directory (e.g. <code>base/basictypes_test.cpp</code> and
+        directory (e.g. <code>base/test_basictypes.cpp</code> and
         <code>base/basictypes.h</code>), but can be in different
         directories too.
       </p>
@@ -1205,8 +1205,8 @@ Thomas Voss
       called <code>foo</code> and the accessor function
       <code>get_foo()</code>.  You may also want a mutator function
       <code>set_foo()</code>.
-      Exception: <code>static const</code> data members (typically
-      called <code>kFoo</code>) need not be <code>private</code>.
+      Exception: <code>static const</code> data members need not 
+      be <code>private</code>.
     </SUMMARY>
     <BODY>
       <p>
@@ -2187,7 +2187,7 @@ Thomas Voss
           my_useful_class.cpp<br/>
           my-useful-class.cpp<br/>
           myusefulclass.cpp<br/>
-          myusefulclass_test.cpp  // _unittest and _regtest are deprecated.<br/>
+          test_myusefulclass.cpp  // _unittest and _regtest are deprecated.<br/>
         </code>
       </p>
       <p>
@@ -2714,7 +2714,7 @@ Thomas Voss
         </p>
         <CODE_SNIPPET>
           // The total number of tests cases that we run through in this regression test.
-          const int kNumTestCases = 6;
+          const int number_of_test_cases = 6;
         </CODE_SNIPPET>
       </SUBSECTION>
     </BODY>
@@ -2799,12 +2799,12 @@ Thomas Voss
           Or alternatively, constants or self-describing variables:
         </p>
         <CODE_SNIPPET>
-          int const kDefaultBaseValue = 10;
-          bool const kFirstTimeCalling = false;
+          int const default_base_value = 10;
+          bool const first_time_calling = false;
           Callback* null_callback = nullptr;
           bool success = calculate_something(interesting_value,
-                                             kDefaultBaseValue,
-                                             kFirstTimeCalling,
+                                             default_base_value,
+                                             first_time_calling,
                                              null_callback);
         </CODE_SNIPPET>
       </SUBSECTION>
@@ -3237,8 +3237,8 @@ Thomas Voss
         <code>else</code> clause.
       </p>
       <CODE_SNIPPET>
-        if (x == kFoo) return new Foo();
-        if (x == kBar) return new Bar();
+        if (x == foo) return new Foo();
+        if (x == bar) return new Bar();
       </CODE_SNIPPET>
       <p>
         This is not allowed when the if statement has an
@@ -3327,20 +3327,16 @@ Thomas Voss
       <CODE_SNIPPET>
         switch (var)
         {
-          case 0: // 2 space indent
-          {
+        case 0:      // no indent
             ...      // 4 space indent
             break;
-          }
-          case 1:
-          {
-            ...
-            break;
-          }
-          default:
-          {
+        case 1:
+            {
+                ...
+                break;
+            }
+        default:
             assert(false);
-          }
         }
       </CODE_SNIPPET>
       <p>
@@ -3352,7 +3348,7 @@ Thomas Voss
         {
             // Repeat test until it returns false.
         }
-        for (int i = 0; i &lt; kSomeNumber; ++i) {}  // Good - empty body.
+        for (int i = 0; i &lt; some_number_with_descriptive_name; ++i) {}  // Good - empty body.
         while (condition) continue;  // Good - continue indicates no logic.
       </CODE_SNIPPET>
       <BAD_CODE_SNIPPET>
