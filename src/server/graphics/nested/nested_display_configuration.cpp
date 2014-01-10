@@ -28,7 +28,6 @@
 
 namespace mg = mir::graphics;
 namespace mgn = mg::nested;
-namespace mgn = mir::graphics::nested;
 
 namespace
 {
