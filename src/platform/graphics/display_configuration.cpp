@@ -181,3 +181,18 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
 {
     return !(val1 == val2);
 }
+
+mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
+{
+    auto const& size = modes[current_mode_index].size;
+
+    if (orientation == mir_orientation_normal ||
+        orientation == mir_orientation_inverted)
+    {
+        return {top_left, size};
+    }
+    else
+    {
+        return {top_left, {size.height.as_int(), size.width.as_int()}};
+    }
+}
