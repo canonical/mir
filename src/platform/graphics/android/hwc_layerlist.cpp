@@ -63,10 +63,17 @@ mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int 
     memset(&reserved, 0, sizeof(reserved));
 }
 
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
+bool mga::HWCLayer::needs_gl_render() const
 {
+    return true;
 }
+
+ //((compositionType == HWC_FRAMEBUFFER) && (flags != HWC_SKIP_LAYER));
+
+//mga::FramebufferLayer::FramebufferLayer()
+//    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
+//{
+//}
 
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
     : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
@@ -74,14 +81,27 @@ mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
 {
 }
 
-mga::CompositionLayer::CompositionLayer(int layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
+//mga::CompositionLayer::CompositionLayer(int layer_flags)
+//    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
+//{
+//}
+
+//mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
+//    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
+//               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
+//{
+//}
+
+mga::ForceGLLayer::ForceGLLayer()
+    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, HWC_SKIP_LAYER)
 {
 }
 
-mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
+mga::CompositionLayer::CompositionLayer(mg::Renderable const& /*renderable*/, geom::Size /*rect*/)
+//    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
+//               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
+    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, 0)
+//               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
 {
 }
 

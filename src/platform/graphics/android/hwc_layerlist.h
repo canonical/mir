@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
+#include "mir/graphics/renderable.h"
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
 #include <hardware/hwcomposer.h>
@@ -31,6 +32,7 @@ namespace mir
 namespace graphics
 {
 
+class Renderable;
 class NativeBuffer;
 class Buffer;
 
@@ -44,6 +46,7 @@ struct HWCLayer : public hwc_layer_1
     HWCLayer& operator=(HWCLayer const& layer);
     HWCLayer(HWCLayer const& layer);
 
+    bool needs_gl_render() const;
 protected:
     HWCLayer(int type, buffer_handle_t handle, int width, int height, int layer_flags);
 
@@ -52,13 +55,19 @@ protected:
 
 struct CompositionLayer : public HWCLayer
 {
-    CompositionLayer(int layer_flags);
-    CompositionLayer(NativeBuffer const&, int layer_flags);
+//    CompositionLayer(int layer_flags);
+//    CompositionLayer(NativeBuffer const&, int layer_flags);
+    CompositionLayer(graphics::Renderable const&, geometry::Size);
+};
+
+struct ForceGLLayer : public HWCLayer
+{
+    ForceGLLayer();
 };
 
 struct FramebufferLayer : public HWCLayer
 {
-    FramebufferLayer();
+//    FramebufferLayer();
     FramebufferLayer(NativeBuffer const&);
 };
 

@@ -20,10 +20,12 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "hwc_struct_helper-inl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
@@ -71,11 +73,28 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
+namespace mir
+{
+namespace test
+{
+namespace doubles
+{
+struct MockRenderable : public mg::Renderable
+{
+    MOCK_CONST_METHOD0(buffer, std::shared_ptr<mg::Buffer>());
+    MOCK_CONST_METHOD0(alpha_enabled, bool());
+    MOCK_CONST_METHOD0(screen_position, geom::Rectangle());
+};
+}
+}
+}
+
 TEST_F(HWCLayerListTest, normal_layer)
 {
+    using namespace testing;
     geom::Size display_size{111, 222};
     geom::Size buffer_size{333, 444};
-    geom::Rectangle buffer_screen_position{{9,8},{245, 250}};
+    geom::Rectangle screen_position{{9,8},{245, 250}};
     bool alpha_enabled = true;
 
     mtd::MockBuffer mock_buffer;
@@ -87,29 +106,40 @@ TEST_F(HWCLayerListTest, normal_layer)
         .WillOnce(Return(native_handle_1));
 
     mtd::MockRenderable mock_renderable;
-    EXPECT_CALL(renderable, buffer())
+    EXPECT_CALL(mock_renderable, buffer())
         .Times(1)
         .WillOnce(Return(mt::fake_shared(mock_buffer)));
-    EXPECT_CALL(renderable, alpha_enabled())
+    EXPECT_CALL(mock_renderable, alpha_enabled())
         .Times(1)
         .WillOnce(Return(alpha_enabled));
-    EXPECT_CALL(renderable, screen_position())
+    EXPECT_CALL(mock_renderable, screen_position())
         .Times(1)
-        .WillOnce(Return(buffer_screen_position));
+        .WillOnce(Return(screen_position));
 
-    mga::CompositionLayer target_layer(renderable, display_size); 
+    mga::CompositionLayer target_layer(mock_renderable, display_size); 
 
-    hwc_rect_t screen_region{0,0, display_size.width.as_uint32_t(), display_size.height.as_uint32_t()};
-    hwc_rect_t crop{0,0, buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t()};
-    hwc_rect_t screen_pos
+    hwc_rect_t screen_region
     {
-        screen_position.top_left.x.as_uint32_t(),
-        screen_position.top_left.y.as_uint32_t(),
-        screen_position.size.width.as_uint32_t(),
-        screen_position.size.height.as_uint32_t()
+        0, 0,
+        static_cast<int>(display_size.width.as_uint32_t()),
+        static_cast<int>(display_size.height.as_uint32_t())
     };
 
-    hwc_rect_t  = {0,0, buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t()};
+    hwc_rect_t crop
+    {
+        0,0,
+        static_cast<int>(buffer_size.width.as_uint32_t()),
+        static_cast<int>(buffer_size.height.as_uint32_t())
+    };
+
+    hwc_rect_t screen_pos
+    {
+        static_cast<int>(screen_position.top_left.x.as_uint32_t()),
+        static_cast<int>(screen_position.top_left.y.as_uint32_t()),
+        static_cast<int>(screen_position.size.width.as_uint32_t()),
+        static_cast<int>(screen_position.size.height.as_uint32_t())
+    };
+
     hwc_region_t visible_region {1, &screen_region};
     hwc_layer_1 expected_layer;
 
@@ -127,41 +157,50 @@ TEST_F(HWCLayerListTest, normal_layer)
 
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
     EXPECT_TRUE(target_layer.needs_gl_render());
+
+    target_layer.compositionType = HWC_OVERLAY;
+    EXPECT_FALSE(target_layer.needs_gl_render());
 }
 
 TEST_F(HWCLayerListTest, normal_layer_no_alpha)
 {
+    using namespace testing;
+    geom::Size display_size{111, 222};
     bool alpha_enabled = false;
     mtd::MockRenderable mock_renderable;
-    EXPECT_CALL(renderable, alpha_enabled())
+    EXPECT_CALL(mock_renderable, alpha_enabled())
         .Times(1)
         .WillOnce(Return(alpha_enabled));
 
-    mga::CompositionLayer target_layer(renderable, display_size); 
-    EXPECT_EQ(target_layer.native_list()->blending, HWC_BLENDING_COVERAGE);
+    mga::CompositionLayer target_layer(mock_renderable, display_size); 
+    EXPECT_EQ(target_layer.blending, HWC_BLENDING_COVERAGE);
 }
 
 TEST_F(HWCLayerListTest, forced_gl_layer)
 {
-    mga::ForceGLLayer target_layer(renderable, display_size);
+    mga::ForceGLLayer target_layer;
 
-    hwc_rect_t region = {0,0,width, height};
+    hwc_rect_t region = {0,0,0,0};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
 
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.hints = 0;
     expected_layer.flags = HWC_SKIP_LAYER;
-    expected_layer.handle = native_handle_1->handle();
+    expected_layer.handle = nullptr;
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = crop;
-    expected_layer.displayFrame = screen_pos;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region;
     expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    EXPECT_TRUE(target_layer.needs_gl_render());
+
+    target_layer.compositionType = HWC_OVERLAY;
+    EXPECT_TRUE(target_layer.needs_gl_render());
 }
 
 #if 0
