@@ -44,7 +44,7 @@ public:
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
-    LayerList layer_list;
+    HWC10LayerList layer_list;
 };
 
 }

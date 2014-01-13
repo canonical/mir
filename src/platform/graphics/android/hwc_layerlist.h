@@ -22,6 +22,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
+#include "hwc_layers.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
@@ -40,20 +41,37 @@ class Buffer;
 namespace android
 {
 
-class LayerList
+class BasicLayerList
 {
 public:
-    LayerList();
-
-    void replace_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
-    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
-
     hwc_display_contents_1_t* native_list() const;
+    virtual ~BasicLayerList() = default;
+
+protected:
+    BasicLayerList(size_t default_size);
+    void resize_layer_list(size_t size);
+
+    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
+};
+
+class HWC10LayerList : public BasicLayerList
+{
+public:
+    HWC10LayerList();
+    void update_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+};
+
+class FBTargetLayerList : public BasicLayerList
+{
+public:
+    FBTargetLayerList();
+
+    void update_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
     NativeFence framebuffer_fence();
 
 private:
-    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    bool fb_target_in_use;
+    FramebufferLayer fb_target;
     int fb_position;
 };
 
