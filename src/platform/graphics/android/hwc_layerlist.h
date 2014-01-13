@@ -26,6 +26,7 @@
 #include <memory>
 #include <vector>
 #include <initializer_list>
+#include <list>
 
 namespace mir
 {
@@ -87,6 +88,7 @@ public:
 
     hwc_display_contents_1_t* native_list() const;
 
+    void replace_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
     void set_fb_target(std::shared_ptr<NativeBuffer> const&);
     NativeFence framebuffer_fence();
 

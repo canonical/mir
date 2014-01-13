@@ -251,7 +251,32 @@ TEST_F(HWCLayerListTest, hwc_list_throws_if_no_fb_layer)
     }, std::runtime_error);
 }
 
-TEST_F(HWCLayerListTest, hwc_list_update)
+
+TEST_F(HWCLayerListTest, hwc_composition_surfaces_update)
+{
+    mga::LayerList layerlist({
+        mga::CompositionLayer(mock_renderable, display_size), 
+        mga::FramebufferLayer(*native_handle_1)});
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        mt::fake_shared(mock_renderable),
+        mt::fake_shared(mock_renderable),
+        mt::fake_shared(mock_renderable)
+    };
+
+    layerlist.replace_composition_layers(renderlist);
+
+    auto list = layerlist.native_list();
+    ASSERT_EQ(4u, list->numHwLayers);
+    for(auto i = 0u; i < renderlist.size(); i++)
+    {
+        EXPECT_EQ(HWC_FRAMEBUFFER, list->hwLayers[i].compositionType);
+    }
+    EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, list->hwLayers[3].compositionType);
+}
+
+TEST_F(HWCLayerListTest, hwc_fb_target_update)
 {
     using namespace testing;
 
