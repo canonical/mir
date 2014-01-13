@@ -122,8 +122,8 @@ void mgn::NestedDisplayConfiguration::configure_output(
             mir_output->position_y = top_left.y.as_uint32_t();
             mir_output->current_mode = mode_index;
             mir_output->current_format = format;
-            mir_output->power_mode = static_cast<MirPowerMode>(power_mode);
-            mir_output->orientation = static_cast<MirOrientation>(orientation);
+            mir_output->power_mode = power_mode;
+            mir_output->orientation = orientation;
             return;
         }
     }
