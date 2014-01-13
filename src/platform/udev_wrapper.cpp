@@ -32,13 +32,11 @@ class UdevDeviceImpl : public mir::UdevDevice
 public:
     UdevDeviceImpl(udev_device *dev);
     virtual ~UdevDeviceImpl() noexcept;
-    virtual bool operator==(mir::UdevDevice const& rhs) const override;
-    virtual bool operator!=(mir::UdevDevice const& rhs) const override;
 
-    virtual char const * subsystem() const override;
-    virtual char const * devtype() const override;
-    virtual char const * devpath() const override;
-    virtual char const * devnode() const override;
+    virtual char const* subsystem() const override;
+    virtual char const* devtype() const override;
+    virtual char const* devpath() const override;
+    virtual char const* devnode() const override;
 
     udev_device* const dev;
 };
@@ -58,37 +56,39 @@ UdevDeviceImpl::~UdevDeviceImpl() noexcept
     udev_device_unref(dev);
 }
 
-bool UdevDeviceImpl::operator==(UdevDevice const& rhs) const
-{
-    // The device path is unique
-    return strcmp(devpath(), rhs.devpath()) == 0;
-}
-
-bool UdevDeviceImpl::operator!=(UdevDevice const& rhs) const
-{
-    return !(*this == rhs);
-}
-
-char const * UdevDeviceImpl::subsystem() const
+char const* UdevDeviceImpl::subsystem() const
 {
     return udev_device_get_subsystem(dev);
 }
 
-char const * UdevDeviceImpl::devtype() const
+char const* UdevDeviceImpl::devtype() const
 {
     return udev_device_get_devtype(dev);
 }
 
-char const * UdevDeviceImpl::devpath() const
+char const* UdevDeviceImpl::devpath() const
 {
     return udev_device_get_devpath(dev);
 }
 
-char const * UdevDeviceImpl::devnode() const
+char const* UdevDeviceImpl::devnode() const
 {
     return udev_device_get_devnode(dev);
 }
 }
+
+bool mir::operator==(mir::UdevDevice const& lhs, mir::UdevDevice const& rhs)
+{
+    // The device path is unique
+    return strcmp(lhs.devpath(), rhs.devpath()) == 0;
+}
+
+bool mir::operator!=(mir::UdevDevice const& lhs, mir::UdevDevice const& rhs)
+{
+    return !(lhs == rhs);
+}
+
+
 
 ////////////////////////
 //    UdevEnumerator
