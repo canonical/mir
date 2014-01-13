@@ -59,6 +59,7 @@ public:
                     conf.configure_output(conf_output.id, true,
                                           geom::Point{0, 0},
                                           conf_output.preferred_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           conf_output.orientation);
                 }
@@ -67,6 +68,7 @@ public:
                     conf.configure_output(conf_output.id, false,
                                           conf_output.top_left,
                                           conf_output.current_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           conf_output.orientation);
                 }
@@ -89,6 +91,7 @@ public:
                     conf.configure_output(conf_output.id, true,
                                           geom::Point{max_x, 0},
                                           conf_output.preferred_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           conf_output.orientation);
                     max_x += conf_output.modes[conf_output.preferred_mode_index].size.width.as_int();
@@ -98,6 +101,7 @@ public:
                     conf.configure_output(conf_output.id, false,
                                           conf_output.top_left,
                                           conf_output.current_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           conf_output.orientation);
                 }
@@ -485,7 +489,9 @@ TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
         {
             conf->configure_output(conf_output.id, false, conf_output.top_left,
                                    conf_output.preferred_mode_index,
-                                   mir_power_mode_on, conf_output.orientation);
+                                   mir_pixel_format_xrgb_8888,
+                                   mir_power_mode_on,
+                                   conf_output.orientation);
         });
 
     display->configure(*conf);
@@ -522,6 +528,7 @@ TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
         {
             conf->configure_output(conf_output.id, false, conf_output.top_left,
                                    conf_output.preferred_mode_index,
+                                   mir_pixel_format_xrgb_8888,
                                    mir_power_mode_on, conf_output.orientation);
         });
 

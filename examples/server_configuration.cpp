@@ -63,6 +63,7 @@ public:
                     conf.configure_output(conf_output.id, true,
                                           geom::Point{max_x, 0},
                                           preferred_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           mir_orientation_normal);
                     max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
@@ -73,6 +74,7 @@ public:
                     conf.configure_output(conf_output.id, false,
                                           conf_output.top_left,
                                           conf_output.current_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           mir_orientation_normal);
                 }
@@ -96,6 +98,7 @@ public:
                     conf.configure_output(conf_output.id, true,
                                           geom::Point{0, 0},
                                           preferred_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           mir_orientation_normal);
                     done = true;
@@ -105,6 +108,7 @@ public:
                     conf.configure_output(conf_output.id, false,
                                           conf_output.top_left,
                                           conf_output.current_mode_index,
+                                          conf_output.current_format,
                                           mir_power_mode_on,
                                           mir_orientation_normal);
                 }

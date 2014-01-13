@@ -88,7 +88,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     {
         output.output_formats[i] = static_cast<MirPixelFormat>(msg.pixel_format(i));
     }
-    output.current_output_format = msg.current_format();
+    output.current_format = static_cast<MirPixelFormat>(msg.current_format());
 
     output.position_x = msg.position_x();
     output.position_y = msg.position_y();

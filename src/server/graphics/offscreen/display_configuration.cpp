@@ -31,7 +31,10 @@ mgo::DisplayConfiguration::DisplayConfiguration(geom::Size const& display_size)
                  true,
                  true,
                  geom::Point{0,0},
-                 0, 0, mir_power_mode_on, mir_orientation_normal},
+                 0,
+                 mir_pixel_format_xrgb_8888,
+                 mir_power_mode_on,
+                 mir_orientation_normal},
           card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
@@ -67,7 +70,7 @@ void mgo::DisplayConfiguration::for_each_output(
 }
 
 void mgo::DisplayConfiguration::configure_output(
-    mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPowerMode,
-    MirOrientation)
+    mg::DisplayConfigurationOutputId, bool, geom::Point, size_t,
+    MirPixelFormat, MirPowerMode, MirOrientation)
 {
 }

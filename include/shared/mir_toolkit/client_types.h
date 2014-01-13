@@ -230,7 +230,7 @@ typedef struct MirDisplayOutput
 
     uint32_t num_output_formats;
     MirPixelFormat* output_formats;
-    uint32_t current_output_format;
+    MirPixelFormat current_format;
 
     uint32_t card_id;
     uint32_t output_id;

@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -104,8 +105,8 @@ struct DisplayConfigurationOutput
     geometry::Point top_left;
     /** The index in the 'modes' vector of the current output mode. */
     size_t current_mode_index;
-    /** The index in the 'pixel_format' vector of the current output pixel format. */
-    size_t current_format_index;
+    /** The current output pixel format. A matching entry should be found in the 'pixel_formats' vector*/
+    MirPixelFormat current_format;
     /** Current power mode **/
     MirPowerMode power_mode;
     MirOrientation orientation;
@@ -143,6 +144,7 @@ public:
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used,
                                   geometry::Point top_left, size_t mode_index,
+                                  MirPixelFormat format,
                                   MirPowerMode power_mode,
                                   MirOrientation orientation) = 0;
 

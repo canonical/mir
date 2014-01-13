@@ -151,8 +151,9 @@ bool me::WindowManager::handle(MirEvent const& event)
                     power_mode = mir_power_mode_off;
 
                 conf->configure_output(output.id, output.used,
-                                       output.top_left, 
+                                       output.top_left,
                                        output.current_mode_index,
+                                       output.current_format,
                                        power_mode,
                                        output.orientation);
             });

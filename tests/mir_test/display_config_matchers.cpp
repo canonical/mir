@@ -67,7 +67,7 @@ public:
                 geom::Point{protobuf_output.position_x(),
                             protobuf_output.position_y()},
                 protobuf_output.current_mode(),
-                protobuf_output.current_format(),
+                static_cast<MirPixelFormat>(protobuf_output.current_format()),
                 static_cast<MirPowerMode>(protobuf_output.power_mode()),
                 static_cast<MirOrientation>(protobuf_output.orientation())
             };
@@ -133,7 +133,7 @@ public:
                 geom::Point{client_output.position_x,
                             client_output.position_y},
                 client_output.current_mode,
-                client_output.current_output_format,
+                client_output.current_format,
                 static_cast<MirPowerMode>(client_output.power_mode),
                 static_cast<MirOrientation>(client_output.orientation)
             };
@@ -164,20 +164,21 @@ public:
         }
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
             f(card);
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto const& output : outputs)
             f(output);
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode, MirOrientation)
+                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
+                          MirOrientation) override
     {
     }
 
