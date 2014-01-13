@@ -23,6 +23,8 @@
 #include "hwc_layerlist.h"
 
 #include <cstring>
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -158,8 +160,10 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
-    auto fb_position = hwc_representation->numHwLayers - 1;
+    if (hwc_representation->numHwLayers <= 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("no HWC layers. cannot set fb target"));
 
+    auto fb_position = hwc_representation->numHwLayers - 1;
     if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
     {
         hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
@@ -169,6 +173,9 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
 
 mga::NativeFence mga::LayerList::framebuffer_fence()
 {
+    if (hwc_representation->numHwLayers <= 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("no HWC layers. cannot get fb fence"));
+
     auto fb_position = hwc_representation->numHwLayers - 1;
     return hwc_representation->hwLayers[fb_position].releaseFenceFd;
 }

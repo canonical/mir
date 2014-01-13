@@ -241,17 +241,7 @@ TEST_F(HWCLayerListTest, hwc_list_creation)
 TEST_F(HWCLayerListTest, hwc_list_throws_if_no_fb_layer)
 {
     using namespace testing;
-
-    int handle_fence = 442;
-    EXPECT_CALL(*native_handle_2, copy_fence())
-        .Times(1)
-        .WillOnce(Return(handle_fence));
-
-    mga::LayerList layerlist({
-        mga::CompositionLayer(mock_renderable, display_size), 
-        mga::CompositionLayer(mock_renderable, display_size)
-    });
-
+    mga::LayerList layerlist({});
     EXPECT_THROW({
         layerlist.set_fb_target(native_handle_2);
     }, std::runtime_error);
