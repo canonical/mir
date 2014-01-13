@@ -572,11 +572,11 @@ TEST_F(SessionMediatorTest, display_config_request)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(mock_display_config,
                 configure_output(id0, used0, pt0, mode_index0, format0,
-                                 mir_power_mode_on, mir_orientation_normal))
+                                 mir_power_mode_on, mir_orientation_left))
         .InSequence(seq);
     EXPECT_CALL(mock_display_config,
                 configure_output(id1, used1, pt1, mode_index1, format1,
-                                 mir_power_mode_off, mir_orientation_normal))
+                                 mir_power_mode_off, mir_orientation_inverted))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
@@ -601,6 +601,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp0->set_current_mode(mode_index0);
     disp0->set_current_format(format0);
     disp0->set_power_mode(static_cast<uint32_t>(mir_power_mode_on));
+    disp0->set_orientation(mir_orientation_left);
 
     auto disp1 = configuration.add_display_output();
     disp1->set_output_id(id1.as_value());
@@ -610,6 +611,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp1->set_current_mode(mode_index1);
     disp1->set_current_format(format1);
     disp1->set_power_mode(static_cast<uint32_t>(mir_power_mode_off));
+    disp1->set_orientation(mir_orientation_inverted);
 
     session_mediator.configure_display(nullptr, &configuration,
                                        &configuration_response, null_callback.get());
