@@ -110,7 +110,13 @@ void mgm::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const
         groups[i].for_each_output(
             [&](DisplayConfigurationOutput const& conf_o)
             {
-                if (conf_o.extents().overlaps(rect_output))
+                /*
+                 * Prevent grouping of outputs when they have differing
+                 * orientations. It's safer to assume the hardware can't
+                 * handle it for now... until proven otherwise.
+                 */
+                if (conf_o.extents().overlaps(rect_output) &&
+                    conf_o.orientation == conf_output.orientation)
                     found_overlap = true;
             });
 
