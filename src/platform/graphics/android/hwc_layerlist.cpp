@@ -90,21 +90,16 @@ bool mga::HWCLayer::needs_gl_render() const
     return ((compositionType == HWC_FRAMEBUFFER) || (flags == HWC_SKIP_LAYER));
 }
 
-
-//mga::FramebufferLayer::FramebufferLayer()
-//    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
-//{
-//}
-//mga::CompositionLayer::CompositionLayer(int layer_flags)
-//    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
-//{
-//}
-
-//mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
-//    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
-//               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
-//{
-//}
+mga::FramebufferLayer::FramebufferLayer()
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
+               nullptr,
+               geom::Rectangle{{0,0}, {0,0}},
+               geom::Size{0,0},
+               geom::Size{0,0},
+               false,
+               false)
+{
+}
 
 mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
     : HWCLayer(HWC_FRAMEBUFFER_TARGET,
