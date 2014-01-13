@@ -10,7 +10,7 @@ add_library(
 target_link_libraries(
   mirplatform
   mirsharedgeometry
-  mirplatformgraphicsshared
+  mirplatformcommon
 
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
@@ -18,4 +18,3 @@ target_link_libraries(
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(graphics/)
-
