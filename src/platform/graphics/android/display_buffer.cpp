@@ -65,5 +65,12 @@ void mga::DisplayBuffer::post_update()
 
 bool mga::DisplayBuffer::can_bypass() const
 {
+    // TODO: Android bypass/overlay support
     return false;
+}
+
+MirOrientation mga::DisplayBuffer::orientation() const
+{
+    // TODO: Get this from the output structure
+    return mir_orientation_normal;
 }

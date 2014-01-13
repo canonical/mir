@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
 #include <mir/geometry/rectangle.h>
+#include <mir_toolkit/common.h>
 
 #include <memory>
 
@@ -49,6 +50,13 @@ public:
 
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
+
+    /** Returns the orientation of the screen if not already handled by the
+     *  hardware. This tells us the renderer needs to do the rotation.
+     *  If it is handled by the hardware/DisplayBuffer implementation, then
+     *  this will always return mir_orientation_normal.
+     */
+    virtual MirOrientation orientation() const = 0;
 
 protected:
     DisplayBuffer() = default;

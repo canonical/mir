@@ -46,6 +46,7 @@ public:
     void release_current();
     void post_update();
     bool can_bypass() const override;
+    MirOrientation orientation() const override;
 
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;

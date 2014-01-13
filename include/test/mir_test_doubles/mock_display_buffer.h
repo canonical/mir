@@ -38,6 +38,7 @@ public:
     MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(post_update, void());
     MOCK_CONST_METHOD0(can_bypass, bool());
+    MOCK_CONST_METHOD0(orientation, MirOrientation());
 };
 
 }

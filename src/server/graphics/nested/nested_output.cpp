@@ -82,6 +82,15 @@ bool mgn::detail::NestedOutput::can_bypass() const
     return false;
 }
 
+MirOrientation mgn::detail::NestedOutput::orientation() const
+{
+    /*
+     * Always normal orientation. The real rotation is handled by the
+     * native display.
+     */
+    return mir_orientation_normal;
+}
+
 mgn::detail::NestedOutput::~NestedOutput() noexcept
 {
 }

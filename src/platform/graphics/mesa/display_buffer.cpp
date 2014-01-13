@@ -324,3 +324,8 @@ void mgm::DisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;
 }
+
+MirOrientation mgm::DisplayBuffer::orientation() const
+{
+    return mir_orientation_normal; // TODO
+}

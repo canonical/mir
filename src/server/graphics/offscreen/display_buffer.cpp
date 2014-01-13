@@ -148,3 +148,12 @@ bool mgo::DisplayBuffer::can_bypass() const
 {
     return false;
 }
+
+MirOrientation mgo::DisplayBuffer::orientation() const
+{
+    /*
+     * The display buffer's already constructed with rotated dimensions,
+     * so nothing more to do.
+     */
+    return mir_orientation_normal;
+}
