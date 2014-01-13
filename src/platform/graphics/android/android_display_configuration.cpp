@@ -71,7 +71,7 @@ void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::Di
 
 void mga::AndroidDisplayConfiguration::configure_output(
     mg::DisplayConfigurationOutputId, bool, geom::Point, size_t,
-    MirPowerMode power_mode, MirPixelFormat, MirOrientation)
+    MirPixelFormat, MirPowerMode power_mode, MirOrientation)
 {
     configuration.power_mode = power_mode;
 }
