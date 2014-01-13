@@ -136,18 +136,15 @@ mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable, geom::
 {
 }
 
-mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
+namespace
 {
-    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
-    hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+/* hwc layer list uses hwLayers[0] at the end of the struct */
+std::shared_ptr<hwc_display_contents_1_t> alloc_layer_list(size_t num_layers)
+{
+    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(num_layers);
+    return std::shared_ptr<hwc_display_contents_1_t>(
         static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
-
-    auto i = 0u;
-    for(auto& layer : layer_list)
-    {
-        hwc_representation->hwLayers[i++] = layer;
-    }
-    hwc_representation->numHwLayers = layer_list.size();
+    hwc_representation->numHwLayers = default_list.size();
     hwc_representation->retireFenceFd = -1;
     hwc_representation->flags = HWC_GEOMETRY_CHANGED;
 
@@ -155,15 +152,45 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
     //these fields are deprecated in hwc1.1 and later.
     hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
     hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
+}
+}
 
+mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& default_list)
+{
+    hwc_representation = alloc_layer_list(default_list.size());
+
+    auto i = 0u;
+    for(auto& layer : default_list)
+    {
+        hwc_representation->hwLayers[i++] = layer;
+    }
+
+    if (hwc_representation->hwLayers[hwc_representation->numHwLayers - 1].compositionType == HWC_FRAMEBUFFER_TARGET)
+    {
+        fb_position = hwc_representation->numHwLayers - 1;
+        fb_target_in_use = true;
+    }
+    else
+    {
+        fb_target_in_use = false;
+    }
+}
+
+void mga::LayerList::replace_composition_layers(
+    std::list<std::shared_ptr<graphics::Renderable>> const& list)
+{
+    hwc_representation = alloc_layer_list(layer_list.size());
+    for(auto &layer : list)
+    {
+
+    }
 }
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
-    if (hwc_representation->numHwLayers <= 0)
+    if (!fb_target_in_use)
         BOOST_THROW_EXCEPTION(std::runtime_error("no HWC layers. cannot set fb target"));
 
-    auto fb_position = hwc_representation->numHwLayers - 1;
     if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
     {
         hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
@@ -173,10 +200,8 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
 
 mga::NativeFence mga::LayerList::framebuffer_fence()
 {
-    if (hwc_representation->numHwLayers <= 0)
+    if (!fb_target_in_use)
         BOOST_THROW_EXCEPTION(std::runtime_error("no HWC layers. cannot get fb fence"));
-
-    auto fb_position = hwc_representation->numHwLayers - 1;
     return hwc_representation->hwLayers[fb_position].releaseFenceFd;
 }
 
