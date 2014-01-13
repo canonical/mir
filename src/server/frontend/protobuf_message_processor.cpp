@@ -20,7 +20,6 @@
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "resource_cache.h"
-#include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -38,32 +37,6 @@ std::vector<int32_t> extract_fds_from(Response* response)
     response->set_fds_on_side_channel(fd.size());
     return fd;
 }
-}
-
-mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
-    std::shared_ptr<MessageSender> const& sender,
-    std::shared_ptr<protobuf::DisplayServer> const& display_server,
-    std::shared_ptr<ResourceCache> const& resource_cache,
-    std::shared_ptr<MessageProcessorReport> const& report) :
-    ProtobufResponseProcessor(sender, resource_cache),
-    display_server(display_server),
-    report(report)
-{
-}
-
-mfd::ProtobufResponseProcessor::ProtobufResponseProcessor(
-    std::shared_ptr<MessageSender> const& sender,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
-    sender(sender),
-    resource_cache(resource_cache)
-{
-    send_response_buffer.reserve(serialization_buffer_size);
-}
-
-template<class ResultMessage>
-void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
-{
-    send_response(id, static_cast<google::protobuf::Message*>(response));
 }
 
 template<>
@@ -97,6 +70,17 @@ void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id
     resource_cache->free_resource(response);
 }
 
+mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
+    std::shared_ptr<MessageSender> const& sender,
+    std::shared_ptr<protobuf::DisplayServer> const& display_server,
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<MessageProcessorReport> const& report) :
+    responder(sender, resource_cache),
+    display_server(display_server),
+    report(report)
+{
+}
+
 template<class ParameterMessage, class ResultMessage>
 void mfd::ProtobufMessageProcessor::invoke(
     void (protobuf::DisplayServer::*function)(
@@ -113,8 +97,8 @@ void mfd::ProtobufMessageProcessor::invoke(
     try
     {
         std::unique_ptr<google::protobuf::Closure> callback(
-            google::protobuf::NewPermanentCallback(this,
-                &ProtobufMessageProcessor::send_response,
+            google::protobuf::NewPermanentCallback(&responder,
+                &ProtobufResponseProcessor::send_response,
                 invocation.id(),
                 &result_message));
 
@@ -127,30 +111,8 @@ void mfd::ProtobufMessageProcessor::invoke(
     catch (std::exception const& x)
     {
         result_message.set_error(boost::diagnostic_information(x));
-        send_response(invocation.id(), &result_message);
+        responder.send_response(invocation.id(), &result_message);
     }
-}
-
-void mfd::ProtobufResponseProcessor::send_response(
-    ::google::protobuf::uint32 id,
-    google::protobuf::Message* response)
-{
-    send_response(id, response, FdSets());
-}
-
-void mfd::ProtobufResponseProcessor::send_response(
-    ::google::protobuf::uint32 id,
-    google::protobuf::Message* response,
-    FdSets const& fd_sets)
-{
-    response->SerializeToString(&send_response_buffer);
-
-    send_response_result.set_id(id);
-    send_response_result.set_response(send_response_buffer);
-
-    send_response_result.SerializeToString(&send_response_buffer);
-
-    sender->send(send_response_buffer, fd_sets);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
