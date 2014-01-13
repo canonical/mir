@@ -28,27 +28,46 @@
 
 namespace mfd = mir::frontend::detail;
 
+namespace
+{
+template<class Response>
+std::vector<int32_t> extract_fds_from(Response* response)
+{
+    std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
+    response->clear_fd();
+    response->set_fds_on_side_channel(fd.size());
+    return fd;
+}
+}
+
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
-    sender(sender),
+    ProtobufResponseProcessor(sender, resource_cache),
     display_server(display_server),
-    resource_cache(resource_cache),
     report(report)
+{
+}
+
+mfd::ProtobufResponseProcessor::ProtobufResponseProcessor(
+    std::shared_ptr<MessageSender> const& sender,
+    std::shared_ptr<ResourceCache> const& resource_cache) :
+    sender(sender),
+    resource_cache(resource_cache)
 {
     send_response_buffer.reserve(serialization_buffer_size);
 }
 
 template<class ResultMessage>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
+void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
 {
     send_response(id, static_cast<google::protobuf::Message*>(response));
 }
 
 template<>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
+void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
     send_response(id, response, {fd});
@@ -56,7 +75,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 }
 
 template<>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
+void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
     const auto& fd = response->has_platform() ?
         extract_fds_from(response->mutable_platform()) :
@@ -67,7 +86,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 }
 
 template<>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
+void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
     auto const& surface_fd = extract_fds_from(response);
     const auto& buffer_fd = response->has_buffer() ?
@@ -76,15 +95,6 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
     send_response(id, response, {surface_fd, buffer_fd});;
     resource_cache->free_resource(response);
-}
-
-template<class Response>
-std::vector<int32_t> mfd::ProtobufMessageProcessor::extract_fds_from(Response* response)
-{
-    std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
-    response->clear_fd();
-    response->set_fds_on_side_channel(fd.size());
-    return fd;
 }
 
 template<class ParameterMessage, class ResultMessage>
@@ -121,14 +131,14 @@ void mfd::ProtobufMessageProcessor::invoke(
     }
 }
 
-void mfd::ProtobufMessageProcessor::send_response(
+void mfd::ProtobufResponseProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
     send_response(id, response, FdSets());
 }
 
-void mfd::ProtobufMessageProcessor::send_response(
+void mfd::ProtobufResponseProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response,
     FdSets const& fd_sets)

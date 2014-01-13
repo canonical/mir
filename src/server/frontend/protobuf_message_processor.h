@@ -45,8 +45,32 @@ class MessageProcessorReport;
 
 namespace detail
 {
+class ProtobufResponseProcessor
+{
+public:
+    ProtobufResponseProcessor(
+        std::shared_ptr<MessageSender> const& sender,
+        std::shared_ptr<ResourceCache> const& resource_cache);
 
-class ProtobufMessageProcessor : public MessageProcessor
+    template<class ResultMessage>
+    void send_response(::google::protobuf::uint32 id, ResultMessage* response);
+
+private:
+    ProtobufResponseProcessor(ProtobufResponseProcessor const&) = delete;
+    ProtobufResponseProcessor operator=(ProtobufResponseProcessor const&) = delete;
+
+    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
+    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response,
+        FdSets const& fd_sets);
+
+    std::shared_ptr<MessageSender> const sender;
+    std::shared_ptr<ResourceCache> const resource_cache;
+
+    std::string send_response_buffer;
+    mir::protobuf::wire::Result send_response_result;
+};
+
+class ProtobufMessageProcessor : public MessageProcessor, ProtobufResponseProcessor
 {
 public:
     ProtobufMessageProcessor(
@@ -58,15 +82,7 @@ public:
     ~ProtobufMessageProcessor() noexcept {}
 
 private:
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response,
-        FdSets const& fd_sets);
 
-    template<class ResultMessage>
-    void send_response(::google::protobuf::uint32 id, ResultMessage* response);
-
-    template<class Response>
-    std::vector<int32_t> extract_fds_from(Response* response);
 
     bool process_message(std::istream& msg);
 
@@ -81,22 +97,17 @@ private:
             ::google::protobuf::Closure* done),
         mir::protobuf::wire::Invocation const& invocation);
 
-    std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
-    std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<MessageProcessorReport> const report;
-
-    std::string send_response_buffer;
-    mir::protobuf::wire::Result send_response_result;
 };
 
 // TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.
 template<>
-void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
+void ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
 template<>
-void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
+void ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
 template<>
-void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
+void ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
 }
 }
 }
