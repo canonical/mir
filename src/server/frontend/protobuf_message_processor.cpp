@@ -47,6 +47,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     send_response(id, static_cast<google::protobuf::Message*>(response));
 }
 
+template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
@@ -54,6 +55,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     resource_cache->free_resource(response);
 }
 
+template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
     const auto& fd = response->has_platform() ?
@@ -64,6 +66,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     resource_cache->free_resource(response);
 }
 
+template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
     auto const& surface_fd = extract_fds_from(response);

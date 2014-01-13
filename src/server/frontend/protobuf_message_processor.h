@@ -65,18 +65,6 @@ private:
     template<class ResultMessage>
     void send_response(::google::protobuf::uint32 id, ResultMessage* response);
 
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
-
     template<class Response>
     std::vector<int32_t> extract_fds_from(Response* response);
 
@@ -101,6 +89,14 @@ private:
     std::string send_response_buffer;
     mir::protobuf::wire::Result send_response_result;
 };
+
+// TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.
+template<>
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
+template<>
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
+template<>
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
 }
 }
 }
