@@ -105,6 +105,29 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
+TEST_F(HWCLayerListTest, fb_target_layer_no_buffer)
+{
+    mga::FramebufferLayer target_layer;
+
+    hwc_rect_t region = {0,0,0,0};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
+    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = nullptr;
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+}
+
 TEST_F(HWCLayerListTest, normal_layer)
 {
     using namespace testing;

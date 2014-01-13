@@ -61,14 +61,13 @@ protected:
     hwc_rect_t visible_rect;
 };
 
+//layer could be GLES rendered, or overlaid by hwc.
 struct CompositionLayer : public HWCLayer
 {
-//    CompositionLayer(int layer_flags);
-//    CompositionLayer(NativeBuffer const&, int layer_flags);
     CompositionLayer(graphics::Renderable const& renderable, geometry::Size display_size);
 };
 
-//used during compositions restricted to GLES only
+//used during compositions when we want to restrict to GLES render only
 struct ForceGLLayer : public HWCLayer
 {
     ForceGLLayer();
@@ -77,7 +76,7 @@ struct ForceGLLayer : public HWCLayer
 //used as the target (lowest layer, fb)
 struct FramebufferLayer : public HWCLayer
 {
-//    FramebufferLayer();
+    FramebufferLayer();
     FramebufferLayer(NativeBuffer const&);
 };
 
