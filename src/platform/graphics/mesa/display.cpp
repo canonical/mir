@@ -147,6 +147,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         {
             auto bounding_rect = group.bounding_rectangle();
             std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
+            MirOrientation orientation = mir_orientation_normal;
 
             group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
             {
@@ -158,6 +159,12 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
                 kms_output->set_power_mode(conf_output.power_mode);
                 kms_outputs.push_back(kms_output);
+
+                /*
+                 * Presently OverlappingOutputGroup guarantees all grouped
+                 * outputs have the same orientation.
+                 */
+                orientation = conf_output.orientation;
             });
 
             auto surface =
@@ -169,6 +176,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                                   kms_outputs,
                                   std::move(surface),
                                   bounding_rect,
+                                  orientation,
                                   shared_egl.context()}};
 
             display_buffers_new.push_back(std::move(db));

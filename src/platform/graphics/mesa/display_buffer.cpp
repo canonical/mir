@@ -100,6 +100,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMSurfaceUPtr surface_gbm_param,
     geom::Rectangle const& area,
+    MirOrientation rot,
     EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       platform(platform),
@@ -108,6 +109,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
       area(area),
+      rotation(rot),
       needs_set_crtc{false}
 {
     egl.setup(platform->gbm, surface_gbm.get(), shared_context);
@@ -166,6 +168,15 @@ geom::Rectangle mgm::DisplayBuffer::view_area() const
 bool mgm::DisplayBuffer::can_bypass() const
 {
     return true;
+}
+
+
+MirOrientation mgm::DisplayBuffer::orientation() const
+{
+    /*
+     * Let the renderer do the rotation for us, while we don't know how.
+     */
+    return rotation;
 }
 
 void mgm::DisplayBuffer::post_update()
@@ -325,7 +336,3 @@ void mgm::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
-MirOrientation mgm::DisplayBuffer::orientation() const
-{
-    return mir_orientation_normal; // TODO
-}

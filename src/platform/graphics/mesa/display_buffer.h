@@ -48,6 +48,7 @@ public:
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMSurfaceUPtr surface_gbm,
                   geometry::Rectangle const& area,
+                  MirOrientation rot,
                   EGLContext shared_context);
     ~DisplayBuffer();
 
@@ -78,6 +79,7 @@ private:
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
     geometry::Rectangle area;
+    MirOrientation rotation;
     std::atomic<bool> needs_set_crtc;
 };
 
