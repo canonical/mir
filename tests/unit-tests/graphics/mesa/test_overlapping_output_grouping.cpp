@@ -210,6 +210,23 @@ TEST_F(OverlappingOutputGroupingTest, rotated_outputs)
     check_groupings(info, expected_groups);
 }
 
+TEST_F(OverlappingOutputGroupingTest, rotation_creates_overlap)
+{
+    std::vector<StubDisplayConfiguration::OutputInfo> info
+    {
+        {{{0,0}, {100,200}}, true, true, mir_orientation_left},
+        {{{100,0}, {100,200}}, true, true, mir_orientation_normal},
+    };
+
+    std::vector<geom::Rectangles> expected_groups
+    {
+        geom::Rectangles{ {{0,0}, {200,100}},
+                          {{100,0}, {100,200}} }
+    };
+
+    check_groupings(info, expected_groups);
+}
+
 TEST_F(OverlappingOutputGroupingTest, overlapping_outputs)
 {
     std::vector<StubDisplayConfiguration::OutputInfo> info
