@@ -22,8 +22,7 @@
 
 #include "mir/graphics/display_configuration_policy.h"
 
-#include <boost/shared_ptr.hpp>
-
+#include <memory>
 
 namespace mir
 {
