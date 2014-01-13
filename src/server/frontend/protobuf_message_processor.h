@@ -49,12 +49,12 @@ public:
     ~ProtobufMessageProcessor() noexcept {}
 
 private:
+    template<class ResultMessage>
+    void send_response(::google::protobuf::uint32 id, ResultMessage* response);
+
     bool process_message(std::istream& msg);
 
     bool dispatch(mir::protobuf::wire::Invocation const& invocation);
-
-    template<class ResultMessage>
-    void send_response(::google::protobuf::uint32 id, ResultMessage* response);
 
     template<class ParameterMessage, class ResultMessage>
     void invoke(
@@ -65,9 +65,9 @@ private:
             ::google::protobuf::Closure* done),
         mir::protobuf::wire::Invocation const& invocation);
 
-    ProtobufResponseProcessor responder;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<MessageProcessorReport> const report;
+    ProtobufResponseProcessor responder;
 };
 
 // TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.

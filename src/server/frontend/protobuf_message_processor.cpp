@@ -44,9 +44,9 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
-    responder(sender, resource_cache),
     display_server(display_server),
-    report(report)
+    report(report),
+    responder(sender, resource_cache)
 {
 }
 
