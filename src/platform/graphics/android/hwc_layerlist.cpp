@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/renderable.h"
+#include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
@@ -39,48 +41,60 @@ mga::HWCLayer::HWCLayer(HWCLayer const& layer)
     this->visibleRegionScreen = {1, &this->visible_rect};
 }
 
-mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, int layer_flags)
+mga::HWCLayer::HWCLayer(
+        int type,
+        buffer_handle_t buffer_handle,
+        geom::Rectangle position,
+        geom::Size buffer_size,
+        geom::Size screen_size,
+        bool skip, bool alpha)
 {
+    (skip) ? flags = HWC_SKIP_LAYER : flags = 0;
+    (alpha) ? blending = HWC_BLENDING_COVERAGE : blending = HWC_BLENDING_NONE;
     compositionType = type;
     hints = 0;
-    flags = layer_flags;
     transform = 0;
-    blending = HWC_BLENDING_NONE;
     //TODO: acquireFenceFd should be buffer.fence()
     acquireFenceFd = -1;
     releaseFenceFd = -1;
 
+    sourceCrop = 
+    {
+        0, 0,
+        static_cast<int>(buffer_size.width.as_uint32_t()),
+        static_cast<int>(buffer_size.height.as_uint32_t())
+    };
+
+    /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
+    displayFrame = 
+    {
+        static_cast<int>(position.top_left.x.as_uint32_t()),
+        static_cast<int>(position.top_left.y.as_uint32_t()),
+        static_cast<int>(position.size.width.as_uint32_t()),
+        static_cast<int>(position.size.height.as_uint32_t())
+    };
+
     visible_rect.top = 0;
     visible_rect.left = 0;
-    visible_rect.bottom = height;
-    visible_rect.right = width;
-    sourceCrop = visible_rect;
-    displayFrame = visible_rect;
+    visible_rect.bottom = static_cast<int>(screen_size.height.as_uint32_t());
+    visible_rect.right =  static_cast<int>(screen_size.width.as_uint32_t());
     visibleRegionScreen.numRects=1;
     visibleRegionScreen.rects= &visible_rect;
-    handle = buffer_handle;
 
+    handle = buffer_handle;
     memset(&reserved, 0, sizeof(reserved));
 }
 
 bool mga::HWCLayer::needs_gl_render() const
 {
-    return true;
+    return ((compositionType == HWC_FRAMEBUFFER) || (flags == HWC_SKIP_LAYER));
 }
 
- //((compositionType == HWC_FRAMEBUFFER) && (flags != HWC_SKIP_LAYER));
 
 //mga::FramebufferLayer::FramebufferLayer()
 //    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
 //{
 //}
-
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, 0)
-{
-}
-
 //mga::CompositionLayer::CompositionLayer(int layer_flags)
 //    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
 //{
@@ -92,16 +106,36 @@ mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
 //{
 //}
 
-mga::ForceGLLayer::ForceGLLayer()
-    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, HWC_SKIP_LAYER)
+mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
+    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
+               buffer.handle(),
+               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
+               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
+               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
+               false,
+               false)
 {
 }
 
-mga::CompositionLayer::CompositionLayer(mg::Renderable const& /*renderable*/, geom::Size /*rect*/)
-//    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
-//               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, 0)
-//               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
+mga::ForceGLLayer::ForceGLLayer()
+    : HWCLayer(HWC_FRAMEBUFFER,
+               nullptr,
+               geom::Rectangle{{0,0}, {0,0}},
+               geom::Size{0,0},
+               geom::Size{0,0},
+               true,
+               false)
+{
+}
+
+mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable, geom::Size display_size)
+    : HWCLayer(HWC_FRAMEBUFFER,
+               renderable.buffer()->native_buffer_handle()->handle(),
+               renderable.screen_position(),
+               renderable.buffer()->size(),
+               display_size,
+               false,
+               renderable.alpha_enabled())
 {
 }
 

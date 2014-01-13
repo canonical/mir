@@ -107,8 +107,8 @@ TEST_F(HWCLayerListTest, normal_layer)
 
     mtd::MockRenderable mock_renderable;
     EXPECT_CALL(mock_renderable, buffer())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(mock_buffer)));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(mt::fake_shared(mock_buffer)));
     EXPECT_CALL(mock_renderable, alpha_enabled())
         .Times(1)
         .WillOnce(Return(alpha_enabled));
@@ -148,7 +148,7 @@ TEST_F(HWCLayerListTest, normal_layer)
     expected_layer.flags = 0;
     expected_layer.handle = native_handle_1->handle();
     expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.blending = HWC_BLENDING_COVERAGE;
     expected_layer.sourceCrop = crop;
     expected_layer.displayFrame = screen_pos;
     expected_layer.visibleRegionScreen = visible_region;
@@ -168,12 +168,25 @@ TEST_F(HWCLayerListTest, normal_layer_no_alpha)
     geom::Size display_size{111, 222};
     bool alpha_enabled = false;
     mtd::MockRenderable mock_renderable;
+    mtd::MockBuffer mock_buffer;
+    EXPECT_CALL(mock_buffer, size())
+        .Times(1)
+        .WillOnce(Return(geom::Size{}));
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(native_handle_1));
+    EXPECT_CALL(mock_renderable, buffer())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(mt::fake_shared(mock_buffer)));
     EXPECT_CALL(mock_renderable, alpha_enabled())
         .Times(1)
         .WillOnce(Return(alpha_enabled));
+    EXPECT_CALL(mock_renderable, screen_position())
+        .Times(1)
+        .WillOnce(Return(geom::Rectangle{{},{}}));
 
     mga::CompositionLayer target_layer(mock_renderable, display_size); 
-    EXPECT_EQ(target_layer.blending, HWC_BLENDING_COVERAGE);
+    EXPECT_EQ(target_layer.blending, HWC_BLENDING_NONE);
 }
 
 TEST_F(HWCLayerListTest, forced_gl_layer)

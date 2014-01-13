@@ -47,8 +47,16 @@ struct HWCLayer : public hwc_layer_1
     HWCLayer(HWCLayer const& layer);
 
     bool needs_gl_render() const;
+
 protected:
-    HWCLayer(int type, buffer_handle_t handle, int width, int height, int layer_flags);
+    HWCLayer(
+        int type,
+        buffer_handle_t handle,
+        geometry::Rectangle position,
+        geometry::Size buffer_size,
+        geometry::Size screen_size,
+        bool skip, bool alpha
+    );
 
     hwc_rect_t visible_rect;
 };
@@ -57,14 +65,16 @@ struct CompositionLayer : public HWCLayer
 {
 //    CompositionLayer(int layer_flags);
 //    CompositionLayer(NativeBuffer const&, int layer_flags);
-    CompositionLayer(graphics::Renderable const&, geometry::Size);
+    CompositionLayer(graphics::Renderable const& renderable, geometry::Size display_size);
 };
 
+//used during compositions restricted to GLES only
 struct ForceGLLayer : public HWCLayer
 {
     ForceGLLayer();
 };
 
+//used as the target (lowest layer, fb)
 struct FramebufferLayer : public HWCLayer
 {
 //    FramebufferLayer();
