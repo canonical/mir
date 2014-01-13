@@ -16,14 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_toolkit/event.h"
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
-#include "resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
-
-#include <sstream>
 
 namespace mfd = mir::frontend::detail;
 

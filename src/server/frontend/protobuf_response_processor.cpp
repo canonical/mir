@@ -21,8 +21,6 @@
 #include "message_sender.h"
 #include "mir/frontend/client_constants.h"
 
-#include <boost/exception/diagnostic_information.hpp>
-
 namespace mfd = mir::frontend::detail;
 
 mfd::ProtobufResponseProcessor::ProtobufResponseProcessor(

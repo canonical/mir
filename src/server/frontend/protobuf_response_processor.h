@@ -16,12 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_FRONTEND_PROTOBUF_RESPONSE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_RESPONSE_PROCESSOR_H_
 
 #include "fd_sets.h"
-
 #include "mir_protobuf_wire.pb.h"
 
 #include <memory>

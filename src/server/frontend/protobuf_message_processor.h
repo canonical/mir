@@ -20,8 +20,8 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "protobuf_response_processor.h"
 #include "message_processor.h"
+#include "protobuf_response_processor.h"
 
 #include "mir_protobuf.pb.h"
 
