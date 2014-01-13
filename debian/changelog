@@ -12,7 +12,7 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
     - Added GL texture caching to improve performance when multiple surfaces
       are visible.
     - Added opacity controls to mir_demo_server_shell
-    - Mir server ABI bumped to 13. No client ABI change.
+    - Mir server ABI bumped to 13. Client ABI bumped to 5.
     - Removed lots of Android headers, replaced by build-dep: android-headers
     - Added support for translucent nested servers.
     - Bugs fixed:
