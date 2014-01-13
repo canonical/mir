@@ -2,6 +2,12 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR})
+
+protobuf_generate_cpp(
+  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
+  test_protobuf.proto
 )
 
 set(
@@ -20,6 +26,9 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_client_library_drm.cpp
+  test_protobuf.cpp
+  ${GENERATED_PROTOBUF_SRCS}
+  ${GENERATED_PROTOBUF_HDRS}
 )
 
 list(APPEND SOURCES

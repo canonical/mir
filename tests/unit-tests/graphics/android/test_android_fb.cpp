@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/logging/logger.h"
-#include "src/server/graphics/android/android_display.h"
+#include "src/platform/graphics/android/android_display.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -256,28 +256,28 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_on);
+            output.id, output.used, output.top_left, output.current_mode_index, output.current_format, mir_power_mode_on);
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_standby);
+            output.id, output.used, output.top_left, output.current_mode_index, output.current_format, mir_power_mode_standby);
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_off);
+            output.id, output.used, output.top_left, output.current_mode_index, output.current_format, mir_power_mode_off);
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_suspend);
+            output.id, output.used, output.top_left, output.current_mode_index, output.current_format, mir_power_mode_suspend);
     });
     display.configure(*configuration);
 }

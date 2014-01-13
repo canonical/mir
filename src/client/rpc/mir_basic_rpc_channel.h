@@ -54,7 +54,7 @@ class PendingCallCache
 public:
     PendingCallCache(std::shared_ptr<RpcReport> const& rpc_report);
 
-    SendBuffer& save_completion_details(
+    void save_completion_details(
         mir::protobuf::wire::Invocation& invoke,
         google::protobuf::Message* response,
         std::shared_ptr<google::protobuf::Closure> const& complete);
@@ -78,7 +78,6 @@ private:
         PendingCall()
         : response(0), complete() {}
 
-        SendBuffer send_buffer;
         google::protobuf::Message* response;
         std::shared_ptr<google::protobuf::Closure> complete;
     };

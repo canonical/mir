@@ -83,7 +83,7 @@ private:
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
     void receive_file_descriptors(std::vector<int> &fds);
-    void send_message(mir::protobuf::wire::Invocation const& body, detail::SendBuffer& buffer,
+    void send_message(mir::protobuf::wire::Invocation const& body,
                       mir::protobuf::wire::Invocation const& invocation);
     void on_header_read(const boost::system::error_code& error);
 

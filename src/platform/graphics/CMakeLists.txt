@@ -10,6 +10,7 @@ set(
   display_configuration.cpp
   null_display_report.cpp
   buffer_basic.cpp
+  pixel_format_utils.cpp
 )
 
 add_library(
@@ -26,3 +27,12 @@ target_link_libraries(
 )
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+if (MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android/)
+endif()
+
+if (MIR_PLATFORM STREQUAL "mesa")
+  add_subdirectory(mesa/)
+endif()
+

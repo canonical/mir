@@ -49,7 +49,7 @@ namespace
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 geom::Size const size{640, 480};
-geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
+MirPixelFormat const format{mir_pixel_format_abgr_8888};
 mg::BufferUsage const usage{mg::BufferUsage::hardware};
 mg::BufferProperties const buffer_properties{size, format, usage};
 
@@ -144,34 +144,6 @@ struct SurfaceSync
 
 struct ClientConfigCommon : TestingClientConfiguration
 {
-    ClientConfigCommon()
-        : connection(NULL)
-    {
-    }
-
-    static void connection_callback(MirConnection * connection, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connected(connection);
-    }
-
-    void connected(MirConnection * new_connection)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        connection = new_connection;
-        wait_condition.notify_all();
-    }
-
-    void wait_for_connect()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        while (!connection)
-            wait_condition.wait(lock);
-    }
-
-    std::mutex guard;
-    std::condition_variable wait_condition;
-    MirConnection * connection;
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
 };
@@ -180,6 +152,7 @@ const int ClientConfigCommon::max_surface_count;
 }
 
 using SurfaceLoop = BespokeDisplayServerTestFixture;
+using SurfaceLoopDefault = DefaultDisplayServerTestFixture;
 using mir::SurfaceSync;
 using mir::ClientConfigCommon;
 using mir::StubDisplay;
@@ -209,19 +182,13 @@ void wait_for_surface_release(SurfaceSync* context)
 }
 }
 
-TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server)
+TEST_F(SurfaceLoopDefault, creating_a_client_surface_gets_surface_of_requested_size)
 {
-    TestingServerConfiguration server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : ClientConfigCommon
+    struct ClientConfig : TestingClientConfiguration
     {
         void exec()
         {
-            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
-
-            wait_for_connect();
+            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
@@ -236,28 +203,20 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
                 mir_display_output_id_invalid
             };
 
-            mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
+            auto const surface = mir_connection_create_surface_sync(connection, &request_params);
 
-            wait_for_surface_create(ssync);
-
-            ASSERT_TRUE(ssync->surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
-            EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
             MirSurfaceParameters response_params;
-            mir_surface_get_parameters(ssync->surface, &response_params);
+            mir_surface_get_parameters(surface, &response_params);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
             EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
 
-
-            mir_surface_release(ssync->surface, release_surface_callback, ssync);
-
-            wait_for_surface_release(ssync);
-
-            ASSERT_TRUE(ssync->surface == NULL);
-
+            mir_surface_release_sync(surface);
             mir_connection_release(connection);
         }
     } client_config;
@@ -319,9 +278,7 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffers_on_server)
     {
         void exec()
         {
-            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
-
-            wait_for_connect();
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
@@ -446,9 +403,7 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
     {
         void exec() override
         {
-            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
-
-            wait_for_connect();
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             MirSurfaceParameters const request_params =
             {
@@ -496,9 +451,7 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
     {
         void exec() override
         {
-            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
-
-            wait_for_connect();
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             MirSurfaceParameters const request_params =
             {

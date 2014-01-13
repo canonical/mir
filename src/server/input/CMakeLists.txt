@@ -1,3 +1,5 @@
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(
   INPUT_SOURCES
 

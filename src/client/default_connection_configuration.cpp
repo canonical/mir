@@ -46,7 +46,7 @@ mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
 {
 }
 
-std::shared_ptr<mcl::SurfaceMap>
+std::shared_ptr<mcl::ConnectionSurfaceMap>
 mcl::DefaultConnectionConfiguration::the_surface_map()
 {
     return surface_map([]
@@ -55,7 +55,7 @@ mcl::DefaultConnectionConfiguration::the_surface_map()
         });
 }
 
-std::shared_ptr<mcl::rpc::MirBasicRpcChannel>
+std::shared_ptr<google::protobuf::RpcChannel>
 mcl::DefaultConnectionConfiguration::the_rpc_channel()
 {
     return rpc_channel(

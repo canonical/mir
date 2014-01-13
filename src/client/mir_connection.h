@@ -42,7 +42,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
-class SurfaceMap;
+class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
 
@@ -69,7 +69,7 @@ class Logger;
 struct MirConnection : mir::client::ClientContext
 {
 public:
-    MirConnection();
+    MirConnection(std::string const& error_message);
 
     MirConnection(mir::client::ConnectionConfiguration& conf);
     ~MirConnection() noexcept;
@@ -87,7 +87,6 @@ public:
             void *context);
 
     char const * get_error_message();
-    void set_error_message(std::string const& error);
 
     MirWaitHandle* connect(
         const char* app_name,
@@ -124,12 +123,17 @@ public:
 
     bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
-private:
-    std::recursive_mutex mutex; // Protects all members of *this
+    std::shared_ptr<google::protobuf::RpcChannel> rpc_channel() const
+    {
+        return channel;
+    }
 
-    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
+private:
+    std::mutex mutex; // Protects all members of *this (except release_wait_handles)
+
+    std::shared_ptr<google::protobuf::RpcChannel> const channel;
     mir::protobuf::DisplayServer::Stub server;
-    std::shared_ptr<mir::logging::Logger> logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
@@ -157,12 +161,13 @@ private:
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
-    std::shared_ptr<mir::client::SurfaceMap> surface_map;
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::vector<int> extra_platform_data;
 
     struct SurfaceRelease;
 
+    void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );

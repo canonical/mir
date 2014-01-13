@@ -103,26 +103,6 @@ typedef void (*mir_display_config_callback)(
     MirConnection* connection, void* context);
 
 /**
- * The order of components in a format enum matches the
- * order of the components as they would be written in an
- *  integer representing a pixel value of that format.
- *
- * For example, abgr_8888 corresponds to 0xAABBGGRR, which will
- * end up as R,G,B,A in memory in a little endian system, and
- * as A,B,G,R in memory in a big endian system.
- */
-typedef enum MirPixelFormat
-{
-    mir_pixel_format_invalid,
-    mir_pixel_format_abgr_8888,
-    mir_pixel_format_xbgr_8888,
-    mir_pixel_format_argb_8888,
-    mir_pixel_format_xrgb_8888,
-    mir_pixel_format_bgr_888,
-    mir_pixel_formats
-} MirPixelFormat;
-
-/**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
  * surface can be used for OpenGL accelerated rendering. A "software" surface
  * is one that can be addressed in main memory and blitted to directly.
@@ -250,7 +230,7 @@ typedef struct MirDisplayOutput
 
     uint32_t num_output_formats;
     MirPixelFormat* output_formats;
-    uint32_t current_output_format;
+    MirPixelFormat current_format;
 
     uint32_t card_id;
     uint32_t output_id;

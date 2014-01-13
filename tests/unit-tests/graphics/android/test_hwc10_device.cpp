@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc10_device.h"
+#include "src/platform/graphics/android/hwc10_device.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -40,7 +40,7 @@ protected:
         int width = 88;
         int height = 4;
         test_size = geom::Size{width, height};
-        test_pf = geom::PixelFormat::abgr_8888;
+        test_pf = mir_pixel_format_abgr_8888;
         int fbnum = 558;
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
@@ -49,7 +49,7 @@ protected:
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
     }
 
-    geom::PixelFormat test_pf;
+    MirPixelFormat test_pf;
     geom::Size test_size;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;

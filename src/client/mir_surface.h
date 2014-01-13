@@ -20,7 +20,6 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
@@ -84,7 +83,6 @@ public:
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     uint32_t get_current_buffer_id() const;
     void get_cpu_region(MirGraphicsRegion& region);
-    void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
@@ -94,14 +92,15 @@ public:
     void handle_event(MirEvent const& e);
 
 private:
-    mutable std::recursive_mutex mutex; // Protects all members of *this
+    mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);
     void new_buffer(mir_surface_callback callback, void * context);
-    mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    void release_cpu_region();
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
              race in surface, last_buffer_id */
@@ -109,7 +108,7 @@ private:
     mir::protobuf::Surface surface;
     std::string error_message;
 
-    MirConnection *connection;
+    MirConnection* const connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;

@@ -21,7 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "display_configuration.h"
-#include "surfaceless_egl_context.h"
+#include "mir/graphics/surfaceless_egl_context.h"
 
 #include <mutex>
 #include <vector>

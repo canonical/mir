@@ -124,8 +124,10 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
     {
         void exec()
         {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
-
+            MirWaitHandle* wh =
+                mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+            EXPECT_TRUE(wh != NULL);
+            mir_wait_for(wh);
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
@@ -883,7 +885,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
                 MirDisplayOutput* disp = &configuration->outputs[i];
                 ASSERT_NE(nullptr, disp);
                 EXPECT_GE(disp->num_modes, disp->current_mode);
-                EXPECT_GE(disp->num_output_formats, disp->current_output_format);
+                EXPECT_GE(disp->num_output_formats, disp->current_format);
             }
 
             mir_display_config_destroy(configuration);

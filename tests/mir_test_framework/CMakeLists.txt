@@ -10,8 +10,11 @@ set(
   TEST_FRAMEWORK_SRCS
 
   cross_process_sync.cpp
+  in_process_server.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
+  input_testing_client_configuration.cpp
+  stubbed_server_configuration.cpp
   testing_process_manager.cpp
   testing_client_options.cpp
   display_server_test_fixture.cpp
@@ -22,7 +25,7 @@ list(APPEND TEST_FRAMEWORK_SRCS
   socket_detect_server.cpp
 )
 
-if (MIR_PLATFORM STREQUAL "gbm")
+if (MIR_PLATFORM STREQUAL "mesa")
   include_directories(${UMOCKDEV_INCLUDE_DIRS})
   list(APPEND TEST_FRAMEWORK_SRCS
     udev_environment.cpp
@@ -52,7 +55,7 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "gbm")
+if (MIR_PLATFORM STREQUAL "mesa")
   target_link_libraries(
     mir-test-framework
 

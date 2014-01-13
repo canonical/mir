@@ -21,7 +21,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
 #include "surface_data.h"
-#include "surface.h"
+#include "basic_surface.h"
 
 namespace geom=mir::geometry;
 namespace mc=mir::compositor;
@@ -29,6 +29,12 @@ namespace mg=mir::graphics;
 namespace ms=mir::scene;
 namespace msh=mir::shell;
 namespace mi=mir::input;
+
+static inline bool has_alpha(MirPixelFormat fmt)
+{
+    return (fmt == mir_pixel_format_abgr_8888) ||
+           (fmt == mir_pixel_format_argb_8888);
+}
 
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<BufferStreamFactory> const& stream_factory,
@@ -55,5 +61,5 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
                                                     change_callback,
                                                     nonrectangular);
     auto input_channel = input_factory->make_input_channel();
-    return std::make_shared<Surface>(state, buffer_stream, input_channel, report);
+    return std::make_shared<BasicSurface>(state, buffer_stream, input_channel, report);
 }

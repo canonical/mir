@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/framebuffers.h"
-#include "src/server/graphics/android/graphic_buffer_allocator.h"
+#include "src/platform/graphics/android/framebuffers.h"
+#include "src/platform/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -40,7 +40,7 @@ namespace
 struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
     MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(
-        geom::Size, geom::PixelFormat, mga::BufferUsage use));
+        geom::Size, MirPixelFormat, mga::BufferUsage use));
 };
 
 static int const display_width = 180;
@@ -143,7 +143,7 @@ TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
         .InSequence(seq);
 
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
-    EXPECT_EQ(geom::PixelFormat::argb_8888, framebuffers.fb_format());
+    EXPECT_EQ(mir_pixel_format_argb_8888, framebuffers.fb_format());
 }
 
 //apparently this can happen if the display is in the 'unplugged state'
@@ -180,20 +180,20 @@ TEST_F(PostingFBBundleTest, hwc_version_11_format_selection_failure)
         .InSequence(seq);
 
     mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
+    EXPECT_EQ(mir_pixel_format_abgr_8888, framebuffers.fb_format());
 }
 
 TEST_F(PostingFBBundleTest, bundle_from_fb)
 {
     using namespace testing;
     auto display_size = geom::Size{display_width, display_height};
-    EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, geom::PixelFormat::abgr_8888, mga::BufferUsage::use_framebuffer_gles))
+    EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, mir_pixel_format_abgr_8888, mga::BufferUsage::use_framebuffer_gles))
         .Times(fbnum)
         .WillRepeatedly(Return(nullptr));
 
     mga::Framebuffers framebuffers(mock_allocator, mock_fb_hal);
     EXPECT_EQ(display_size, framebuffers.fb_size());
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, framebuffers.fb_format());
+    EXPECT_EQ(mir_pixel_format_abgr_8888, framebuffers.fb_format());
 }
 
 //some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement

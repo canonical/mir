@@ -21,7 +21,7 @@
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <vector>
 
@@ -43,15 +43,15 @@ public:
     StubDisplayConfig(unsigned int num_displays)
         : StubDisplayConfig(num_displays,
                             {
-                                geometry::PixelFormat::bgr_888,
-                                geometry::PixelFormat::abgr_8888,
-                                geometry::PixelFormat::xbgr_8888
+                                mir_pixel_format_bgr_888,
+                                mir_pixel_format_abgr_8888,
+                                mir_pixel_format_xbgr_8888
                             })
     {
     }
 
     StubDisplayConfig(unsigned int num_displays,
-                      std::vector<geometry::PixelFormat> const& pfs)
+                      std::vector<MirPixelFormat> const& pfs)
     {
         /* construct a non-trivial dummy display config to send */
         int mode_index = 0;
@@ -79,7 +79,7 @@ public:
                 ((i % 2) == 0),
                 ((i % 2) == 1),
                 top_left,
-                mode_index, 1u,
+                mode_index, pfs[0],
                 mir_power_mode_off
             };
 
@@ -105,9 +105,10 @@ public:
                 graphics::DisplayConfigurationOutputId{id},
                 graphics::DisplayConfigurationCardId{0},
                 graphics::DisplayConfigurationOutputType::vga,
-                std::vector<geometry::PixelFormat>{geometry::PixelFormat::abgr_8888},
+                std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
-                0, geometry::Size{}, true, true, rect.top_left, 0, 0, mir_power_mode_on
+                0, geometry::Size{}, true, true, rect.top_left, 0,
+                mir_pixel_format_abgr_8888, mir_power_mode_on
             };
 
             outputs.push_back(output);
@@ -122,13 +123,13 @@ public:
         cards.push_back(card);
     }
 
-    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
             f(card);
     }
 
-    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto& disp : outputs)
         {
@@ -136,7 +137,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPowerMode)
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode) override
     {
     }
 

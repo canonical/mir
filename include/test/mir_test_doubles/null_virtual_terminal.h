@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
 #define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
 
-#include "src/server/graphics/gbm/virtual_terminal.h"
+#include "src/platform/graphics/mesa/virtual_terminal.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullVirtualTerminal : public graphics::gbm::VirtualTerminal
+class NullVirtualTerminal : public graphics::mesa::VirtualTerminal
 {
 public:
     void set_graphics_mode() {}

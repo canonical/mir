@@ -19,8 +19,9 @@
 #ifndef MIR_CLIENT_SURFACE_MAP_H_
 #define MIR_CLIENT_SURFACE_MAP_H_
 
-#include "mir_toolkit/client_types.h"
 #include <functional>
+
+struct MirSurface;
 
 namespace mir
 {
@@ -31,9 +32,7 @@ class SurfaceMap
 {
 public:
     virtual void with_surface_do(
-        int const& surface_id, std::function<void(MirSurface*)> exec) = 0;
-    virtual void insert(int const& surface_id, MirSurface* surface) = 0;
-    virtual void erase(int surface_id) = 0;
+        int surface_id, std::function<void(MirSurface*)> exec) const = 0;
 
 protected:
     virtual ~SurfaceMap() = default;

@@ -87,10 +87,16 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubRenderer : public mc::Renderer
         {
-            void clear() const override
+            void begin() const override
             {
             }
             void render(mc::CompositingCriteria const&, mg::Buffer&) const override
+            {
+            }
+            void end() const override
+            {
+            }
+            void suspend() override
             {
             }
         };
@@ -179,7 +185,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     std::thread client_thread{
         [&session]
         {
-            std::shared_ptr<mg::Buffer> buffer;
+            mg::Buffer* buffer{nullptr};
             for (int i = 0; i < 500; ++i)
             {
                 auto surface = session.default_surface();

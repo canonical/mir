@@ -33,10 +33,11 @@ set(
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp
+  private.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
-include_directories(${LIBHARDWARE_INCLUDE_DIRS})
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 set(
   CLIENT_SOURCES
 
@@ -50,15 +51,15 @@ set(
 )
 endif()
 
-if( MIR_PLATFORM STREQUAL "gbm")
+if( MIR_PLATFORM STREQUAL "mesa")
 set(
   CLIENT_SOURCES
 
-  gbm/gbm_client_platform.cpp
-  gbm/gbm_client_buffer_factory.cpp
-  gbm/gbm_client_buffer.cpp
-  gbm/mesa_native_display_container.cpp
-  gbm/gbm_native_surface.cpp
+  mesa/client_platform.cpp
+  mesa/client_buffer_factory.cpp
+  mesa/client_buffer.cpp
+  mesa/mesa_native_display_container.cpp
+  mesa/native_surface.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -69,7 +70,7 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
-set(MIRCLIENT_ABI 4)
+set(MIRCLIENT_ABI 5)
 
 set_target_properties(
   mirclient
@@ -92,6 +93,7 @@ set(
   mirprotobuf
   mirsharedinput
   mirsharedlogging
+  mirsharedenv
   mirclientrpc
   mirclientlttngstatic
 

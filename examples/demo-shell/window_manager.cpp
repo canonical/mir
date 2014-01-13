@@ -27,6 +27,7 @@
 #include "mir/compositor/compositor.h"
 
 #include <linux/input.h>
+#include <android/keycodes.h>  // TODO remove this dependency
 
 #include <cassert>
 #include <cstdlib>
@@ -133,7 +134,9 @@ bool me::WindowManager::handle(MirEvent const& event)
             focus_controller->focus_next();
             return true;
         }
-        if (event.key.modifiers & mir_key_modifier_alt && event.key.scan_code == KEY_P)
+        else if ((event.key.modifiers & mir_key_modifier_alt &&
+                  event.key.scan_code == KEY_P) ||
+                 (event.key.key_code == AKEYCODE_POWER))
         {
             compositor->stop();
             auto conf = display->configuration();
@@ -148,14 +151,16 @@ bool me::WindowManager::handle(MirEvent const& event)
                     power_mode = mir_power_mode_off;
 
                 conf->configure_output(output.id, output.used,
-                                       output.top_left, 
+                                       output.top_left,
                                        output.current_mode_index,
+                                       output.current_format,
                                        power_mode);
             });
             display_off = !display_off;
 
             display->configure(*conf.get());
-            compositor->start();
+            if (!display_off)
+                compositor->start();
             return true;
         }
     }
@@ -245,6 +250,18 @@ bool me::WindowManager::handle(MirEvent const& event)
                         surf->resize({width, height});
                     }
 
+                    handled = true;
+                }
+                else if (action == mir_motion_action_scroll)
+                {
+                    float alpha = surf->alpha();
+                    alpha += 0.1f *
+                             event.motion.pointer_coordinates[0].vscroll;
+                    if (alpha < 0.0f)
+                        alpha = 0.0f;
+                    else if (alpha > 1.0f)
+                        alpha = 1.0f;
+                    surf->set_alpha(alpha);
                     handled = true;
                 }
 

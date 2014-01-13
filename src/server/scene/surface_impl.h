@@ -33,21 +33,19 @@ namespace scene { class BasicSurface; }
 namespace shell
 {
 class InputTargeter;
-class Session;
 class SurfaceConfigurator;
-class SurfaceController;
 struct SurfaceCreationParameters;
 }
 
 namespace scene
 {
 class SurfaceBuilder;
+class SurfaceRanker;
 
 class SurfaceImpl : public shell::Surface
 {
 public:
     SurfaceImpl(
-        shell::Session* session,
         std::shared_ptr<SurfaceBuilder> const& builder,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
         shell::SurfaceCreationParameters const& params,
@@ -68,11 +66,11 @@ public:
     virtual geometry::Size size() const;
     virtual geometry::Point top_left() const;
 
-    virtual geometry::PixelFormat pixel_format() const;
+    virtual MirPixelFormat pixel_format() const;
 
     virtual void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec);
-    virtual void swap_buffers(std::shared_ptr<graphics::Buffer>& buffer);
+    virtual void swap_buffers(graphics::Buffer*& buffer);
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
@@ -86,11 +84,13 @@ public:
 
     virtual void allow_framedropping(bool);
 
-    virtual void raise(std::shared_ptr<shell::SurfaceController> const& controller);
+    virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller);
 
     virtual void resize(geometry::Size const& size);
 
     virtual void set_rotation(float degrees, glm::vec3 const& axis);
+
+    virtual float alpha() const;
     virtual void set_alpha(float alpha);
 
 private:

@@ -48,7 +48,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(mark_as_submitted, void());
