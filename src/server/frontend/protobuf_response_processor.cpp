@@ -18,6 +18,7 @@
 
 #include "protobuf_response_processor.h"
 #include "resource_cache.h"
+#include "message_sender.h"
 #include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -53,4 +54,5 @@ void mfd::ProtobufResponseProcessor::send_response(
     send_response_result.SerializeToString(&send_response_buffer);
 
     sender->send(send_response_buffer, fd_sets);
+    resource_cache->free_resource(response);
 }

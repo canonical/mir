@@ -22,8 +22,6 @@
 
 #include "fd_sets.h"
 
-#include "message_sender.h"
-
 #include "mir_protobuf_wire.pb.h"
 
 #include <memory>
@@ -36,6 +34,8 @@ class ResourceCache;
 
 namespace detail
 {
+class MessageSender;
+
 class ProtobufResponseProcessor
 {
 public:
@@ -43,20 +43,12 @@ public:
         std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    // Providing a template wrapper allows client code to specialize the logic
-    template<class ResultMessage>
-    void send_response(::google::protobuf::uint32 id, ResultMessage* response)
-    {
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-    }
+    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
+    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response, FdSets const& fd_sets);
 
 private:
     ProtobufResponseProcessor(ProtobufResponseProcessor const&) = delete;
     ProtobufResponseProcessor operator=(ProtobufResponseProcessor const&) = delete;
-
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response,
-        FdSets const& fd_sets);
 
     std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<ResourceCache> const resource_cache;

@@ -39,37 +39,6 @@ std::vector<int32_t> extract_fds_from(Response* response)
 }
 }
 
-template<>
-void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
-{
-    const auto& fd = extract_fds_from(response);
-    send_response(id, response, {fd});
-    resource_cache->free_resource(response);
-}
-
-template<>
-void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
-{
-    const auto& fd = response->has_platform() ?
-        extract_fds_from(response->mutable_platform()) :
-        std::vector<int32_t>();
-
-    send_response(id, response, {fd});
-    resource_cache->free_resource(response);
-}
-
-template<>
-void mfd::ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
-{
-    auto const& surface_fd = extract_fds_from(response);
-    const auto& buffer_fd = response->has_buffer() ?
-        extract_fds_from(response->mutable_buffer()) :
-        std::vector<int32_t>();
-
-    send_response(id, response, {surface_fd, buffer_fd});;
-    resource_cache->free_resource(response);
-}
-
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
@@ -79,6 +48,40 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     display_server(display_server),
     report(report)
 {
+}
+
+template<class ResultMessage>
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
+{
+    responder.send_response(id, response);
+}
+
+template<>
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
+{
+    const auto& fd = extract_fds_from(response);
+    responder.send_response(id, response, {fd});
+}
+
+template<>
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
+{
+    const auto& fd = response->has_platform() ?
+        extract_fds_from(response->mutable_platform()) :
+        std::vector<int32_t>();
+
+    responder.send_response(id, response, {fd});
+}
+
+template<>
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
+{
+    auto const& surface_fd = extract_fds_from(response);
+    const auto& buffer_fd = response->has_buffer() ?
+        extract_fds_from(response->mutable_buffer()) :
+        std::vector<int32_t>();
+
+    responder.send_response(id, response, {surface_fd, buffer_fd});
 }
 
 template<class ParameterMessage, class ResultMessage>
@@ -97,8 +100,8 @@ void mfd::ProtobufMessageProcessor::invoke(
     try
     {
         std::unique_ptr<google::protobuf::Closure> callback(
-            google::protobuf::NewPermanentCallback(&responder,
-                &ProtobufResponseProcessor::send_response,
+            google::protobuf::NewPermanentCallback(this,
+                &ProtobufMessageProcessor::send_response,
                 invocation.id(),
                 &result_message));
 
@@ -111,7 +114,7 @@ void mfd::ProtobufMessageProcessor::invoke(
     catch (std::exception const& x)
     {
         result_message.set_error(boost::diagnostic_information(x));
-        responder.send_response(invocation.id(), &result_message);
+        send_response(invocation.id(), &result_message);
     }
 }
 

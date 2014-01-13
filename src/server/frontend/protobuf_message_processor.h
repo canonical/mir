@@ -53,6 +53,9 @@ private:
 
     bool dispatch(mir::protobuf::wire::Invocation const& invocation);
 
+    template<class ResultMessage>
+    void send_response(::google::protobuf::uint32 id, ResultMessage* response);
+
     template<class ParameterMessage, class ResultMessage>
     void invoke(
         void (protobuf::DisplayServer::*function)(
@@ -69,11 +72,11 @@ private:
 
 // TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.
 template<>
-void ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
 template<>
-void ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
 template<>
-void ProtobufResponseProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
 }
 }
 }
