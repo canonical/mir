@@ -14,6 +14,7 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
     - Added opacity controls to mir_demo_server_shell
     - Mir server ABI bumped to 13. No client ABI change.
     - Removed lots of Android headers, replaced by build-dep: android-headers
+    - Added support for translucent nested servers.
     - Bugs fixed:
       . unity8 display flickers and stops responding on Nexus 7 (grouper)
         (LP: #1238695)
@@ -33,6 +34,8 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1243578)
       . helgrind: Lock order violated in
         mir::client::ConnectionSurfaceMap::erase(int) (LP: #1243584)
+      . [enhancement] Allow a Mir nested server to have a transparent
+        background (LP: #1256702)
       . Compiling without tests fails (-DMIR_ENABLE_TESTS=NO) (LP: #1263724)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jan 2014 11:19:03 +0800
