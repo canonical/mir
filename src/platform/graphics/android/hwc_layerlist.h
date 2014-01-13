@@ -40,61 +40,20 @@ class Buffer;
 namespace android
 {
 
-struct HWCLayer : public hwc_layer_1
-{
-    virtual ~HWCLayer() = default;
-
-    HWCLayer& operator=(HWCLayer const& layer);
-    HWCLayer(HWCLayer const& layer);
-
-    bool needs_gl_render() const;
-
-protected:
-    HWCLayer(
-        int type,
-        buffer_handle_t handle,
-        geometry::Rectangle position,
-        geometry::Size buffer_size,
-        geometry::Size screen_size,
-        bool skip, bool alpha
-    );
-
-    hwc_rect_t visible_rect;
-};
-
-//layer could be GLES rendered, or overlaid by hwc.
-struct CompositionLayer : public HWCLayer
-{
-    CompositionLayer(graphics::Renderable const& renderable, geometry::Size display_size);
-};
-
-//used during compositions when we want to restrict to GLES render only
-struct ForceGLLayer : public HWCLayer
-{
-    ForceGLLayer();
-};
-
-//used as the target (lowest layer, fb)
-struct FramebufferLayer : public HWCLayer
-{
-    FramebufferLayer();
-    FramebufferLayer(NativeBuffer const&);
-};
-
 class LayerList
 {
 public:
-    LayerList(std::initializer_list<HWCLayer> const& layers);
-
-    hwc_display_contents_1_t* native_list() const;
+    LayerList();
 
     void replace_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
-
     void set_fb_target(std::shared_ptr<NativeBuffer> const&);
+
+    hwc_display_contents_1_t* native_list() const;
     NativeFence framebuffer_fence();
 
 private:
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
+    bool fb_target_in_use;
     int fb_position;
 };
 

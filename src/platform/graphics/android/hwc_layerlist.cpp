@@ -21,6 +21,7 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
+#include "hwc_layers.h"
 
 #include <cstring>
 #include <boost/throw_exception.hpp>
@@ -30,121 +31,15 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
-{
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
-    return *this;
-}
-
-mga::HWCLayer::HWCLayer(HWCLayer const& layer)
-{
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
-}
-
-mga::HWCLayer::HWCLayer(
-        int type,
-        buffer_handle_t buffer_handle,
-        geom::Rectangle position,
-        geom::Size buffer_size,
-        geom::Size screen_size,
-        bool skip, bool alpha)
-{
-    (skip) ? flags = HWC_SKIP_LAYER : flags = 0;
-    (alpha) ? blending = HWC_BLENDING_COVERAGE : blending = HWC_BLENDING_NONE;
-    compositionType = type;
-    hints = 0;
-    transform = 0;
-    //TODO: acquireFenceFd should be buffer.fence()
-    acquireFenceFd = -1;
-    releaseFenceFd = -1;
-
-    sourceCrop = 
-    {
-        0, 0,
-        static_cast<int>(buffer_size.width.as_uint32_t()),
-        static_cast<int>(buffer_size.height.as_uint32_t())
-    };
-
-    /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
-    displayFrame = 
-    {
-        static_cast<int>(position.top_left.x.as_uint32_t()),
-        static_cast<int>(position.top_left.y.as_uint32_t()),
-        static_cast<int>(position.size.width.as_uint32_t()),
-        static_cast<int>(position.size.height.as_uint32_t())
-    };
-
-    visible_rect.top = 0;
-    visible_rect.left = 0;
-    visible_rect.bottom = static_cast<int>(screen_size.height.as_uint32_t());
-    visible_rect.right =  static_cast<int>(screen_size.width.as_uint32_t());
-    visibleRegionScreen.numRects=1;
-    visibleRegionScreen.rects= &visible_rect;
-
-    handle = buffer_handle;
-    memset(&reserved, 0, sizeof(reserved));
-}
-
-bool mga::HWCLayer::needs_gl_render() const
-{
-    return ((compositionType == HWC_FRAMEBUFFER) || (flags == HWC_SKIP_LAYER));
-}
-
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
-               nullptr,
-               geom::Rectangle{{0,0}, {0,0}},
-               geom::Size{0,0},
-               geom::Size{0,0},
-               false,
-               false)
-{
-}
-
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
-               buffer.handle(),
-               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
-               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
-               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
-               false,
-               false)
-{
-}
-
-mga::ForceGLLayer::ForceGLLayer()
-    : HWCLayer(HWC_FRAMEBUFFER,
-               nullptr,
-               geom::Rectangle{{0,0}, {0,0}},
-               geom::Size{0,0},
-               geom::Size{0,0},
-               true,
-               false)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable, geom::Size display_size)
-    : HWCLayer(HWC_FRAMEBUFFER,
-               renderable.buffer()->native_buffer_handle()->handle(),
-               renderable.screen_position(),
-               renderable.buffer()->size(),
-               display_size,
-               false,
-               renderable.alpha_enabled())
-{
-}
-
 namespace
 {
 /* hwc layer list uses hwLayers[0] at the end of the struct */
 std::shared_ptr<hwc_display_contents_1_t> alloc_layer_list(size_t num_layers)
 {
     auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(num_layers);
-    return std::shared_ptr<hwc_display_contents_1_t>(
+    auto hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
         static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
-    hwc_representation->numHwLayers = default_list.size();
+    hwc_representation->numHwLayers = num_layers;
     hwc_representation->retireFenceFd = -1;
     hwc_representation->flags = HWC_GEOMETRY_CHANGED;
 
@@ -152,33 +47,26 @@ std::shared_ptr<hwc_display_contents_1_t> alloc_layer_list(size_t num_layers)
     //these fields are deprecated in hwc1.1 and later.
     hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
     hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
+
+    return hwc_representation;
 }
 }
 
-mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& default_list)
+mga::LayerList::LayerList()
+    : hwc_representation(alloc_layer_list(1)),
+      fb_target_in_use(false)
 {
-    hwc_representation = alloc_layer_list(default_list.size());
-
-    auto i = 0u;
-    for(auto& layer : default_list)
-    {
-        hwc_representation->hwLayers[i++] = layer;
-    }
-
-    if (hwc_representation->hwLayers[hwc_representation->numHwLayers - 1].compositionType == HWC_FRAMEBUFFER_TARGET)
-    {
-        fb_position = hwc_representation->numHwLayers - 1;
-        fb_target_in_use = true;
-    }
-    else
-    {
-        fb_target_in_use = false;
-    }
+    hwc_representation->hwLayers[0] = mga::ForceGLLayer{};
 }
 
+#if 0
 void mga::LayerList::replace_composition_layers(
     std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
+    if ( fb_target_in_use )
+    {
+        mga::HWCLayer lay = 
+    }
     hwc_representation = alloc_layer_list(layer_list.size());
     for(auto &layer : list)
     {
@@ -209,3 +97,4 @@ hwc_display_contents_1_t* mga::LayerList::native_list() const
 {
     return hwc_representation.get();
 }
+#endif
