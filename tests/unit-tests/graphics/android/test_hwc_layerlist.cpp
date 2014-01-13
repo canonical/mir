@@ -29,6 +29,22 @@ namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace mir
+{
+namespace test
+{
+namespace doubles
+{
+struct MockRenderable : public mg::Renderable
+{
+    MOCK_CONST_METHOD0(buffer, std::shared_ptr<mg::Buffer>());
+    MOCK_CONST_METHOD0(alpha_enabled, bool());
+    MOCK_CONST_METHOD0(screen_position, geom::Rectangle());
+};
+}
+}
+}
+
 class HWCLayerListTest : public ::testing::Test
 {
 public:
@@ -36,18 +52,34 @@ public:
     {
         using namespace testing;
 
-        width = 432;
-        height = 876;
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
         native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
+
+        ON_CALL(mock_buffer, size())
+            .WillByDefault(Return(buffer_size));
+        ON_CALL(mock_buffer, native_buffer_handle())
+            .WillByDefault(Return(native_handle_1));
+        ON_CALL(mock_renderable, buffer())
+            .WillByDefault(Return(mt::fake_shared(mock_buffer)));
+        ON_CALL(mock_renderable, alpha_enabled())
+            .WillByDefault(Return(alpha_enabled));
+        ON_CALL(mock_renderable, screen_position())
+            .WillByDefault(Return(screen_position));
+
     }
 
-    int width;
-    int height;
+    geom::Size display_size{111, 222};
+    geom::Size buffer_size{333, 444};
+    geom::Rectangle screen_position{{9,8},{245, 250}};
+    bool alpha_enabled{true};
+    int width{432};
+    int height{876};
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
+    testing::NiceMock<mtd::MockRenderable> mock_renderable;
+    testing::NiceMock<mtd::MockBuffer> mock_buffer;
 };
 
 TEST_F(HWCLayerListTest, fb_target_layer)
@@ -73,48 +105,9 @@ TEST_F(HWCLayerListTest, fb_target_layer)
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
 
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-struct MockRenderable : public mg::Renderable
-{
-    MOCK_CONST_METHOD0(buffer, std::shared_ptr<mg::Buffer>());
-    MOCK_CONST_METHOD0(alpha_enabled, bool());
-    MOCK_CONST_METHOD0(screen_position, geom::Rectangle());
-};
-}
-}
-}
-
 TEST_F(HWCLayerListTest, normal_layer)
 {
     using namespace testing;
-    geom::Size display_size{111, 222};
-    geom::Size buffer_size{333, 444};
-    geom::Rectangle screen_position{{9,8},{245, 250}};
-    bool alpha_enabled = true;
-
-    mtd::MockBuffer mock_buffer;
-    EXPECT_CALL(mock_buffer, size())
-        .Times(1)
-        .WillOnce(Return(buffer_size));
-    EXPECT_CALL(mock_buffer, native_buffer_handle())
-        .Times(1)
-        .WillOnce(Return(native_handle_1));
-
-    mtd::MockRenderable mock_renderable;
-    EXPECT_CALL(mock_renderable, buffer())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(mt::fake_shared(mock_buffer)));
-    EXPECT_CALL(mock_renderable, alpha_enabled())
-        .Times(1)
-        .WillOnce(Return(alpha_enabled));
-    EXPECT_CALL(mock_renderable, screen_position())
-        .Times(1)
-        .WillOnce(Return(screen_position));
 
     mga::CompositionLayer target_layer(mock_renderable, display_size); 
 
@@ -165,25 +158,9 @@ TEST_F(HWCLayerListTest, normal_layer)
 TEST_F(HWCLayerListTest, normal_layer_no_alpha)
 {
     using namespace testing;
-    geom::Size display_size{111, 222};
-    bool alpha_enabled = false;
-    mtd::MockRenderable mock_renderable;
-    mtd::MockBuffer mock_buffer;
-    EXPECT_CALL(mock_buffer, size())
-        .Times(1)
-        .WillOnce(Return(geom::Size{}));
-    EXPECT_CALL(mock_buffer, native_buffer_handle())
-        .Times(1)
-        .WillOnce(Return(native_handle_1));
-    EXPECT_CALL(mock_renderable, buffer())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(mt::fake_shared(mock_buffer)));
     EXPECT_CALL(mock_renderable, alpha_enabled())
         .Times(1)
-        .WillOnce(Return(alpha_enabled));
-    EXPECT_CALL(mock_renderable, screen_position())
-        .Times(1)
-        .WillOnce(Return(geom::Rectangle{{},{}}));
+        .WillOnce(Return(false));
 
     mga::CompositionLayer target_layer(mock_renderable, display_size); 
     EXPECT_EQ(target_layer.blending, HWC_BLENDING_NONE);
@@ -216,12 +193,11 @@ TEST_F(HWCLayerListTest, forced_gl_layer)
     EXPECT_TRUE(target_layer.needs_gl_render());
 }
 
-#if 0
 TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
 
-    mga::CompositionLayer surface_layer(*native_handle_1, 0);
+    mga::CompositionLayer surface_layer(mock_renderable, display_size); 
     mga::FramebufferLayer target_layer(*native_handle_1);
     mga::LayerList layerlist({
         surface_layer,
@@ -249,7 +225,7 @@ TEST_F(HWCLayerListTest, hwc_list_update)
         .WillOnce(Return(handle_fence));
 
     mga::LayerList layerlist({
-        mga::CompositionLayer(*native_handle_1, 0),
+        mga::CompositionLayer(mock_renderable, display_size), 
         mga::FramebufferLayer(*native_handle_1)});
     layerlist.set_fb_target(native_handle_2);
 
@@ -265,7 +241,7 @@ TEST_F(HWCLayerListTest, get_fb_fence)
 {
     int release_fence = 381;
     mga::LayerList layerlist({
-        mga::CompositionLayer(*native_handle_1, 0),
+        mga::CompositionLayer(mock_renderable, display_size), 
         mga::FramebufferLayer(*native_handle_1)});
 
     auto list = layerlist.native_list();
@@ -273,4 +249,3 @@ TEST_F(HWCLayerListTest, get_fb_fence)
 
     EXPECT_EQ(release_fence, layerlist.framebuffer_fence());
 }
-#endif
