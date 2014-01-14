@@ -20,8 +20,7 @@
 
 #include "fd_sets.h"
 
-#include <vector>
-#include <boost/asio.hpp>
+#include <string>
 
 namespace mir
 {
