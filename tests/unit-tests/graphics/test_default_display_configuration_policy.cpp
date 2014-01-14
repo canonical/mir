@@ -61,6 +61,12 @@ public:
             f(output);
     }
 
+    void for_each_output(std::function<void(DisplayConfigurationOutput&)> f)
+    {
+        for (auto& output : outputs)
+            f(output);
+    }
+
     MOCK_METHOD6(configure_output, void(DisplayConfigurationOutputId, bool,
                                         Point, size_t, MirPixelFormat, MirPowerMode));
 

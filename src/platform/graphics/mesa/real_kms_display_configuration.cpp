@@ -112,6 +112,13 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
         f(output);
 }
 
+void mgm::RealKMSDisplayConfiguration::for_each_output(
+    std::function<void(DisplayConfigurationOutput&)> f)
+{
+    for (auto& output : outputs)
+        f(output);
+}
+
 void mgm::RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index,

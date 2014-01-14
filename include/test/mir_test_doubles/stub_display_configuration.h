@@ -137,6 +137,14 @@ public:
         }
     }
 
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput&)> f) override
+    {
+        for (auto& disp : outputs)
+        {
+            f(disp);
+        }
+    }
+
     void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode) override
     {
     }

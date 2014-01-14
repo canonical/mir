@@ -83,6 +83,7 @@ struct MockConfig : public mg::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
+    MOCK_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput&)>));
     MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPixelFormat, MirPowerMode));
 };
 

@@ -134,6 +134,7 @@ public:
     virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const = 0;
     /** Executes a function object for each output in the configuration. */
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
+    virtual void for_each_output(std::function<void(DisplayConfigurationOutput&)> f) = 0;
 
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
