@@ -203,7 +203,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mc::Renderer
 {
 public:
-    void begin() const override
+    void begin(float) const override
     {
     }
 

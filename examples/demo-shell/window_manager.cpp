@@ -24,6 +24,7 @@
 #include "mir/shell/surface.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositor.h"
 
 #include <linux/input.h>
@@ -164,6 +165,41 @@ bool me::WindowManager::handle(MirEvent const& event)
                 compositor->start();
             return true;
         }
+        else if ((event.key.modifiers & mir_key_modifier_alt) &&
+                 (event.key.modifiers & mir_key_modifier_ctrl))
+        {
+            MirOrientation orientation = mir_orientation_normal;
+            switch (event.key.scan_code)
+            {
+            case KEY_UP:    orientation = mir_orientation_normal; break;
+            case KEY_DOWN:  orientation = mir_orientation_inverted; break;
+            case KEY_LEFT:  orientation = mir_orientation_left; break;
+            case KEY_RIGHT: orientation = mir_orientation_right; break;
+            default:        return false;
+            }
+
+            fprintf(stderr, "demo-shell: orient %d\n", (int)orientation);
+            compositor->stop();
+            auto conf = display->configuration();
+            conf->for_each_output(
+                [&](mg::DisplayConfigurationOutput const& output) -> void
+                {
+                    if (!output.used) return;
+
+                    conf->configure_output(output.id, output.used,
+                                           output.top_left,
+                                           output.current_mode_index,
+                                           output.current_format,
+                                           output.power_mode,
+                                           orientation);
+                }
+            );
+            display->configure(*conf);
+            compositor->start();
+
+            return true;
+        }
+
     }
     else if (event.type == mir_event_type_motion &&
              focus_controller)
