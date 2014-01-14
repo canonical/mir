@@ -31,7 +31,6 @@ namespace detail
 class MessageSender
 {
 public:
-    virtual void send(std::string const& body) = 0;
     virtual void send(std::string const& body, FdSets const& fds) = 0;
 
 protected:
