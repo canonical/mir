@@ -22,7 +22,6 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 
-#include <vector>
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 #include <gtest/gtest.h>
