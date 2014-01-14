@@ -32,93 +32,84 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 /* hwc layer list uses hwLayers[0] at the end of the struct */
-void mga::BasicLayerList::resize_layer_list(size_t num_layers)
+void mga::LayerList::update_representation()
 {
-    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(num_layers);
-    hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
-        static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
-    hwc_representation->numHwLayers = num_layers;
-    hwc_representation->retireFenceFd = -1;
-    hwc_representation->flags = HWC_GEOMETRY_CHANGED;
-
-    //aosp exynos hwc in particular, checks that these fields are non-null in hwc1.1, although
-    //these fields are deprecated in hwc1.1 and later.
-    hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
-    hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
-}
-
-namespace
-{
-void copy_layer_list(
-     std::shared_ptr<hwc_display_contents_1_t> const& hwc_representation,
-     std::list<std::shared_ptr<mg::Renderable>> const& list, geom::Size display_size)
-{
-    auto i = 0u;
-    for( auto& layer : list)
+    if (hwc_representation->numHwLayers != layers.size())
     {
-        hwc_representation->hwLayers[i++] = mga::CompositionLayer(*layer, display_size); 
+        auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layers.size());
+        hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+            static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
+
+        hwc_representation->numHwLayers = layers.size();
+        hwc_representation->retireFenceFd = -1;
+        hwc_representation->flags = HWC_GEOMETRY_CHANGED;
+
+        //aosp exynos hwc in particular, checks that these fields are non-null in hwc1.1, although
+        //these fields are deprecated in hwc1.1 and later.
+        hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
+        hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
+    }
+
+    auto i = 0u;
+    for( auto& layer : layers)
+    {
+        hwc_representation->hwLayers[i++] = layer; 
     } 
 }
-}
 
-mga::BasicLayerList::BasicLayerList(size_t size)
+mga::LayerList::LayerList(std::initializer_list<mga::HWCLayer> const& list)
+    : layers(list)
 {
-    resize_layer_list(size);
+    update_representation();
 }
 
-hwc_display_contents_1_t* mga::BasicLayerList::native_list() const
+
+hwc_display_contents_1_t* mga::LayerList::native_list() const
 {
     return hwc_representation.get();
 }
 
-
-mga::FBTargetLayerList::FBTargetLayerList()
-    : BasicLayerList(2)
+void mga::LayerList::update_composition_layers(
+    std::list<std::shared_ptr<graphics::Renderable>> && list)
 {
-    hwc_representation->hwLayers[0] = mga::ForceGLLayer{};
-    hwc_representation->hwLayers[1] = fb_target;
-    fb_position = 1;
-}
-
-void mga::FBTargetLayerList::update_composition_layers(
-    std::list<std::shared_ptr<graphics::Renderable>> const& list)
-{
-    auto needed_size = list.size() + 1;
-    if (hwc_representation->numHwLayers != needed_size)
+    std::list<HWCLayer> next_layer_list;
+    for(auto& renderable : list)
     {
-        fb_position = list.size();
-        resize_layer_list(needed_size);
-        hwc_representation->hwLayers[fb_position] = fb_target; 
+        layers.push_back(mga::CompositionLayer(*renderable));
     }
 
-    copy_layer_list(hwc_representation, list, geom::Size{});
-}
-
-void mga::FBTargetLayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
-{
-    fb_target = mga::FramebufferLayer(*native_buffer);
-    hwc_representation->hwLayers[fb_position] = fb_target;
-    hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
-}
-
-mga::NativeFence mga::FBTargetLayerList::framebuffer_fence()
-{
-    return hwc_representation->hwLayers[fb_position].releaseFenceFd;
-}
-
-mga::HWC10LayerList::HWC10LayerList()
-    : BasicLayerList(1)
-{
-    hwc_representation->hwLayers[0] = mga::ForceGLLayer{};
-}
-
-void mga::HWC10LayerList::update_composition_layers(
-    std::list<std::shared_ptr<graphics::Renderable>> const& list)
-{
-    if (hwc_representation->numHwLayers != list.size())
+    //preserve FB_TARGET for lists that need it
+    auto& fb_pos = layers.back();
+    if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
     {
-        resize_layer_list(list.size());
+        layers.push_back(fb_pos);
     }
 
-    copy_layer_list(hwc_representation, list, geom::Size{});
+    std::swap(layers, next_layer_list);
+
+    update_representation();
+}
+
+void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
+{
+    auto& fb_pos = layers.back();
+    if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
+    {
+        fb_pos = mga::FramebufferLayer(*native_buffer);
+        hwc_representation->hwLayers[layers.size()] = fb_pos;
+        hwc_representation->hwLayers[layers.size()].acquireFenceFd = native_buffer->copy_fence();
+    }
+}
+
+mga::NativeFence mga::LayerList::framebuffer_fence()
+{
+    auto fb_pos = layers.back();
+    if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
+    {
+        return hwc_representation->hwLayers[layers.size()].releaseFenceFd;
+    }
+    else
+    {
+        return -1;
+    }
 }

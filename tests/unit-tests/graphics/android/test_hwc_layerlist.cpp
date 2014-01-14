@@ -57,9 +57,19 @@ public:
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
         native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
+
+        ON_CALL(mock_buffer, size())
+            .WillByDefault(Return(buffer_size));
+        ON_CALL(mock_buffer, native_buffer_handle())
+            .WillByDefault(Return(native_handle_1));
+        ON_CALL(mock_renderable, buffer())
+            .WillByDefault(Return(mt::fake_shared(mock_buffer)));
+        ON_CALL(mock_renderable, alpha_enabled())
+            .WillByDefault(Return(alpha_enabled));
+        ON_CALL(mock_renderable, screen_position())
+            .WillByDefault(Return(screen_position));
     }
 
-    geom::Size display_size{111, 222};
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
     bool alpha_enabled{true};
@@ -71,10 +81,13 @@ public:
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 };
 
+
+/* Tests without HWC_FRAMEBUFFER_TARGET */
+
+/* an empty list should have a skipped layer. This will force a GL render on hwc set */
 TEST_F(HWCLayerListTest, hwc10_list_defaults)
 {
-    using namespace testing;
-    mga::HWC10LayerList layerlist;
+    mga::LayerList layerlist({});
 
     auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
@@ -87,34 +100,36 @@ TEST_F(HWCLayerListTest, hwc10_list_defaults)
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
 }
 
-TEST_F(HWCLayerListTest, hwc_one_composition_layer)
+TEST_F(HWCLayerListTest, hwc10_list_initializer)
 {
     using namespace testing;
-    mga::HWC10LayerList layerlist;
+    mga::ForceGLLayer surface_layer;
+    mga::LayerList layerlist({surface_layer, surface_layer});
+
     auto list = layerlist.native_list();
-  
-    std::list<std::shared_ptr<mg::Renderable>> renderable_list(
-    {
-        mt::fake_shared(mock_renderable)
-    });
-    layerlist.update_composition_layers(renderable_list);
-
-    //dont realloc
-    EXPECT_EQ(list, layerlist.native_list());
-
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(1, list->numHwLayers);
-    mga::CompositionLayer surface_layer{mock_renderable, display_size};
+
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
 }
 
-TEST_F(HWCLayerListTest, fbtarget_list_defaults)
+TEST_F(HWCLayerListTest, hwc10_list_update)
 {
     using namespace testing;
-    mga::FBTargetLayerList layerlist;
+    mga::CompositionLayer surface_layer{mock_renderable}; 
+    mga::ForceGLLayer skip_layer;
+    mga::LayerList layerlist({});
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        mt::fake_shared(mock_renderable),
+        mt::fake_shared(mock_renderable)
+    });
+
+    layerlist.update_composition_layers(std::move(updated_list));
 
     auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
@@ -123,87 +138,132 @@ TEST_F(HWCLayerListTest, fbtarget_list_defaults)
     EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
 
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
+
+    /* likewise, if we update to an empty list, we revert to the default */
+    std::list<std::shared_ptr<mg::Renderable>> empty_update{};
+    layerlist.update_composition_layers(std::move(empty_update));
+
+    list = layerlist.native_list();
+    EXPECT_EQ(-1, list->retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
+    EXPECT_NE(nullptr, list->dpy);
+    EXPECT_NE(nullptr, list->sur);
+    ASSERT_EQ(1, list->numHwLayers);
+    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
+}
+
+/* tests with a FRAMEBUFFER_TARGET present */
+TEST_F(HWCLayerListTest, fb_target_not_at_end_throws)
+{
+    using namespace testing;
+    //a fb target that is not last is an improperly formed layerlist
+    EXPECT_THROW({
+        mga::LayerList layerlist({mga::ForceGLLayer{}, mga::FramebufferLayer{}, mga::ForceGLLayer{}});
+    }, std::runtime_error);
+
+    //two fb targets is also an improperly formed layerlist
+    EXPECT_THROW({
+        mga::LayerList layerlist({mga::ForceGLLayer{}, mga::FramebufferLayer{}, mga::FramebufferLayer{}});
+    }, std::runtime_error);
+}
+
+TEST_F(HWCLayerListTest, fbtarget_list_initialize)
+{
+    using namespace testing;
     mga::ForceGLLayer surface_layer;
     mga::FramebufferLayer target_layer;
+
+    mga::LayerList layerlist({surface_layer, target_layer});
+    auto list = layerlist.native_list();
+    EXPECT_EQ(-1, list->retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
+    EXPECT_NE(nullptr, list->dpy);
+    EXPECT_NE(nullptr, list->sur);
+    ASSERT_EQ(2, list->numHwLayers);
+
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
-}
 
-TEST_F(HWCLayerListTest, fbtarget_update_one_composition_layer)
-{
-    using namespace testing;
-    mga::FBTargetLayerList layerlist;
-    auto list = layerlist.native_list();
-  
-    std::list<std::shared_ptr<mg::Renderable>> renderable_list(
-    {
-        mt::fake_shared(mock_renderable)
-    });
-    layerlist.update_composition_layers(renderable_list);
-
-    //dont realloc
-    EXPECT_EQ(list, layerlist.native_list());
-
+    //add a skipped layer if we just get a target layer
+    mga::LayerList no_skip_layerlist({target_layer});
+    list = no_skip_layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
 
-    mga::CompositionLayer surface_layer{mock_renderable, display_size};
-    mga::FramebufferLayer target_layer;
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
 TEST_F(HWCLayerListTest, fb_target_set)
 {
-    mga::FBTargetLayerList layerlist;
+    mga::FramebufferLayer target_layer{*native_handle_1};
+    mga::LayerList layerlist({target_layer});
+
+    layerlist.set_fb_target(native_handle_2);
+
     auto list = layerlist.native_list();
-
-    layerlist.set_fb_target(native_handle_1);
-
-    //dont realloc
-    EXPECT_EQ(list, layerlist.native_list());
-
     ASSERT_EQ(2, list->numHwLayers);
     mga::ForceGLLayer skip_layer;
-    mga::FramebufferLayer target_layer(*native_handle_1);
+    mga::FramebufferLayer updated_target_layer(*native_handle_2);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
-    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
+    EXPECT_THAT(updated_target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
-TEST_F(HWCLayerListTest, fbtarget_update_two_composition_layers_and_fb_target)
+TEST_F(HWCLayerListTest, fbtarget_list_update)
 {
     using namespace testing;
-    mga::FBTargetLayerList layerlist;
-    auto list = layerlist.native_list();
-  
-    std::list<std::shared_ptr<mg::Renderable>> renderable_list(
-    {
+    mga::ForceGLLayer surface_layer;
+    mga::FramebufferLayer target_layer;
+
+    mga::LayerList layerlist({target_layer});
+
+    /* set non-default renderlist */
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
         mt::fake_shared(mock_renderable),
         mt::fake_shared(mock_renderable)
     });
-    layerlist.update_composition_layers(renderable_list);
-    layerlist.set_fb_target(native_handle_1);
+    layerlist.update_composition_layers(std::move(updated_list));
 
+    auto list = layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(3, list->numHwLayers);
-
-    mga::CompositionLayer surface_layer{mock_renderable, display_size};
-    mga::FramebufferLayer target_layer;
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[2]));
+
+    /* update FB target */
+    layerlist.set_fb_target(native_handle_1);
+
+    mga::FramebufferLayer handle_target_layer{*native_handle_1};
+    list = layerlist.native_list();
+    ASSERT_EQ(3, list->numHwLayers);
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
+    EXPECT_THAT(handle_target_layer, MatchesLayer(list->hwLayers[2]));
+
+    /* reset default */
+    std::list<std::shared_ptr<mg::Renderable>> empty_list({});
+    layerlist.update_composition_layers(std::move(empty_list));
+
+    list = layerlist.native_list();
+    ASSERT_EQ(2, list->numHwLayers);
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(handle_target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
 TEST_F(HWCLayerListTest, get_fb_fence)
 {
     int release_fence = 381;
-    mga::FBTargetLayerList layerlist;
+    mga::FramebufferLayer target_layer;
+    mga::LayerList layerlist({target_layer});
 
     auto list = layerlist.native_list();
     ASSERT_EQ(2, list->numHwLayers);

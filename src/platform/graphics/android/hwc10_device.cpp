@@ -35,7 +35,8 @@ mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<framebuffer_device_t> const& fb_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      fb_device(fb_device)
+      fb_device(fb_device),
+      layer_list({mga::ForceGLLayer{}})
 {
 }
 

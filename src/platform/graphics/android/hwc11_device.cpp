@@ -19,6 +19,7 @@
 
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
+#include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
@@ -37,6 +38,7 @@ namespace geom = mir::geometry;
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
+      layer_list({mga::ForceGLLayer{}, mga::FramebufferLayer{}}),
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
 }
