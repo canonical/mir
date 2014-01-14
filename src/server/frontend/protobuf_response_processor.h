@@ -41,7 +41,6 @@ public:
         std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response, FdSets const& fd_sets);
 
 private:

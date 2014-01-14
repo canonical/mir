@@ -49,7 +49,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
 template<class ResultMessage>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
 {
-    responder.send_response(id, response);
+    responder.send_response(id, response, {});
 }
 
 template<>
