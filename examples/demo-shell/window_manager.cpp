@@ -178,7 +178,6 @@ bool me::WindowManager::handle(MirEvent const& event)
             default:        return false;
             }
 
-            fprintf(stderr, "demo-shell: orient %d\n", (int)orientation);
             compositor->stop();
             auto conf = display->configuration();
             conf->for_each_output(
