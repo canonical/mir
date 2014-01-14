@@ -1,0 +1,17 @@
+option cc_generic_services = true;
+
+package mir.protobuf;
+
+message Parameters {
+  required string name = 1;
+}
+
+
+message Result {
+  optional string error = 127;
+}
+
+service MirServer {
+  rpc function(Parameters) returns (Result);
+}
+
