@@ -180,7 +180,7 @@ geom::Rectangle mgm::DisplayBuffer::view_area() const
 
 bool mgm::DisplayBuffer::can_bypass() const
 {
-    return true;
+    return (rotation == mir_orientation_normal);
 }
 
 
