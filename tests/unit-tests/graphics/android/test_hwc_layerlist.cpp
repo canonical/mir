@@ -56,7 +56,6 @@ public:
         native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
-        native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
 
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
@@ -76,14 +75,12 @@ public:
     int width{432};
     int height{876};
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
-    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
     testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 };
 
 
 /* Tests without HWC_FRAMEBUFFER_TARGET */
-
 /* an empty list should have a skipped layer. This will force a GL render on hwc set */
 TEST_F(HWCLayerListTest, hwc10_list_defaults)
 {
@@ -111,7 +108,7 @@ TEST_F(HWCLayerListTest, hwc10_list_initializer)
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
-    ASSERT_EQ(1, list->numHwLayers);
+    ASSERT_EQ(2, list->numHwLayers);
 
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
@@ -137,7 +134,6 @@ TEST_F(HWCLayerListTest, hwc10_list_update)
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
-
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
 
@@ -182,11 +178,10 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
-
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 
-    //add a skipped layer if we just get a target layer
+    //add a skipped layer if list is just a target layer
     mga::LayerList no_skip_layerlist({target_layer});
     list = no_skip_layerlist.native_list();
     EXPECT_EQ(-1, list->retireFenceFd);
@@ -201,15 +196,15 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 
 TEST_F(HWCLayerListTest, fb_target_set)
 {
-    mga::FramebufferLayer target_layer{*native_handle_1};
+    mga::FramebufferLayer target_layer;
     mga::LayerList layerlist({target_layer});
 
-    layerlist.set_fb_target(native_handle_2);
+    layerlist.set_fb_target(native_handle_1);
 
     auto list = layerlist.native_list();
     ASSERT_EQ(2, list->numHwLayers);
     mga::ForceGLLayer skip_layer;
-    mga::FramebufferLayer updated_target_layer(*native_handle_2);
+    mga::FramebufferLayer updated_target_layer(*native_handle_1);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(updated_target_layer, MatchesLayer(list->hwLayers[1]));
 }
