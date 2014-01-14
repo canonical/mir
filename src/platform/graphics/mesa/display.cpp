@@ -167,9 +167,17 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 orientation = conf_output.orientation;
             });
 
-            auto surface =
-                platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
-                                                     bounding_rect.size.height.as_uint32_t());
+            uint32_t width = bounding_rect.size.width.as_uint32_t();
+            uint32_t height = bounding_rect.size.height.as_uint32_t();
+            if (orientation == mir_orientation_left ||
+                orientation == mir_orientation_right)
+            {
+                auto tmp = width;
+                width = height;
+                height = tmp;
+            }
+
+            auto surface = platform->gbm.create_scanout_surface(width, height);
 
             std::unique_ptr<DisplayBuffer> db{
                 new DisplayBuffer{platform, listener,
