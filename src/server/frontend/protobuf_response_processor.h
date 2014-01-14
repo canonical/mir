@@ -30,23 +30,40 @@ namespace frontend
 {
 class ResourceCache;
 
+class ProtobufMessageSender
+{
+public:
+    virtual void send_response(
+            ::google::protobuf::uint32 id,
+            ::google::protobuf::Message* message,
+            FdSets const& fd_sets) = 0;
+
+protected:
+    ProtobufMessageSender() = default;
+    virtual ~ProtobufMessageSender() = default;
+
+private:
+    ProtobufMessageSender(ProtobufMessageSender const&) = delete;
+    ProtobufMessageSender& operator=(ProtobufMessageSender const&) = delete;
+};
+
 namespace detail
 {
 class MessageSender;
 
-class ProtobufResponseProcessor
+class ProtobufResponseProcessor : public ProtobufMessageSender
 {
 public:
     ProtobufResponseProcessor(
         std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response, FdSets const& fd_sets);
+    void send_response(
+            ::google::protobuf::uint32 id,
+            ::google::protobuf::Message* response,
+            FdSets const& fd_sets) override;
 
 private:
-    ProtobufResponseProcessor(ProtobufResponseProcessor const&) = delete;
-    ProtobufResponseProcessor operator=(ProtobufResponseProcessor const&) = delete;
-
     std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<ResourceCache> const resource_cache;
 

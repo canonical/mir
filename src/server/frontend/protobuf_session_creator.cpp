@@ -59,11 +59,14 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
     if (session_authorizer->connection_is_allowed(client_pid))
     {
         auto const authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
+        auto const message_sender = std::make_shared<detail::ProtobufResponseProcessor>(
+            messenger,
+            ipc_factory->resource_cache());
+
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
         auto const msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
-            messenger,
+            message_sender,
             ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
-            ipc_factory->resource_cache(),
             ipc_factory->report());
 
         const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);
