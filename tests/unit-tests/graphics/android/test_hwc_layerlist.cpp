@@ -196,8 +196,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 
 TEST_F(HWCLayerListTest, fb_target_set)
 {
-    mga::FramebufferLayer target_layer;
-    mga::LayerList layerlist({target_layer});
+    mga::LayerList layerlist({mga::FramebufferLayer{}});
 
     layerlist.set_fb_target(native_handle_1);
 
@@ -212,7 +211,7 @@ TEST_F(HWCLayerListTest, fb_target_set)
 TEST_F(HWCLayerListTest, fbtarget_list_update)
 {
     using namespace testing;
-    mga::ForceGLLayer surface_layer;
+    mga::CompositionLayer surface_layer(mock_renderable);
     mga::FramebufferLayer target_layer;
 
     mga::LayerList layerlist({target_layer});
@@ -250,7 +249,8 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
 
     list = layerlist.native_list();
     ASSERT_EQ(2, list->numHwLayers);
-    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    mga::ForceGLLayer force_gl_layer;
+    EXPECT_THAT(force_gl_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(handle_target_layer, MatchesLayer(list->hwLayers[1]));
 }
 

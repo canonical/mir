@@ -109,7 +109,7 @@ void mga::LayerList::update_composition_layers(
     }
 
     //preserve FB_TARGET for lists that need it
-    auto& fb_pos = layers.back();
+    auto fb_pos = layers.back();
     if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
     {
         next_layer_list.push_back(fb_pos);
@@ -122,7 +122,7 @@ void mga::LayerList::update_composition_layers(
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
-    if (!layers.empty())
+    if (layers.empty())
         return;
 
     auto fb_pos = layers.back();
