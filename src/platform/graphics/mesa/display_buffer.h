@@ -79,6 +79,7 @@ private:
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
     geometry::Rectangle area;
+    uint32_t fb_width, fb_height;
     MirOrientation rotation;
     std::atomic<bool> needs_set_crtc;
 };

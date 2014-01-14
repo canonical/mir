@@ -112,6 +112,19 @@ mgm::DisplayBuffer::DisplayBuffer(
       rotation(rot),
       needs_set_crtc{false}
 {
+    uint32_t area_width = area.size.width.as_uint32_t();
+    uint32_t area_height = area.size.height.as_uint32_t();
+    if (rotation == mir_orientation_left || rotation == mir_orientation_right)
+    {
+        fb_width = area_height;
+        fb_height = area_width;
+    }
+    else
+    {
+        fb_width = area_width;
+        fb_height = area_height;
+    }
+
     egl.setup(platform->gbm, surface_gbm.get(), shared_context);
 
     listener->report_successful_setup_of_native_resources();
@@ -280,7 +293,7 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
     auto stride = gbm_bo_get_stride(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, area.size.width.as_uint32_t(), area.size.height.as_uint32_t(),
+    auto ret = drmModeAddFB(drm.fd, fb_width, fb_height,
                             24, 32, stride, handle, &fb_id);
     if (ret)
         return nullptr;
