@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,10 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "basic_server_configuration.h"
+#include "translucent_server_configuration.h"
 
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
@@ -26,7 +26,7 @@
 int main(int argc, char const* argv[])
 try
 {
-    mir::examples::BasicServerConfiguration config(argc, argv);
+    mir::examples::TranslucentServerConfiguration config(argc, argv);
 
     run_mir(config, [&](mir::DisplayServer&){ config.launch_client(); });
     return 0;
