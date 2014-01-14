@@ -40,7 +40,19 @@ std::unique_ptr<mc::DisplayBufferCompositor>
 mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     graphics::DisplayBuffer& display_buffer)
 {
-    auto renderer = renderer_factory->create_renderer_for(display_buffer.view_area());
+    geometry::Rectangle rect = display_buffer.view_area();
+
+    // XXX Doing rotation here feels wrong, and redundant
+    auto orientation = display_buffer.orientation();
+    if (orientation == mir_orientation_left ||
+        orientation == mir_orientation_right)
+    {
+        int w = rect.size.width.as_int();
+        int h = rect.size.height.as_int();
+        rect.size = {h, w};
+    }
+
+    auto renderer = renderer_factory->create_renderer_for(rect);
     auto raw = new DefaultDisplayBufferCompositor{display_buffer, scene,
                                                   std::move(renderer),
                                                   report};
