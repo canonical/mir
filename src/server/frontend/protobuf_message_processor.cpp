@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,54 +16,60 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_toolkit/event.h"
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
-#include "resource_cache.h"
-#include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
-#include <sstream>
-
 namespace mfd = mir::frontend::detail;
+
+namespace
+{
+template<class Response>
+std::vector<int32_t> extract_fds_from(Response* response)
+{
+    std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
+    response->clear_fd();
+    response->set_fds_on_side_channel(fd.size());
+    return fd;
+}
+}
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
-    sender(sender),
     display_server(display_server),
-    resource_cache(resource_cache),
-    report(report)
+    report(report),
+    responder(sender, resource_cache)
 {
-    send_response_buffer.reserve(serialization_buffer_size);
 }
 
 template<class ResultMessage>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
 {
-    send_response(id, static_cast<google::protobuf::Message*>(response));
+    responder.send_response(id, response);
 }
 
+template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
-    send_response(id, response, {fd});
-    resource_cache->free_resource(response);
+    responder.send_response(id, response, {fd});
 }
 
+template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
     const auto& fd = response->has_platform() ?
         extract_fds_from(response->mutable_platform()) :
         std::vector<int32_t>();
 
-    send_response(id, response, {fd});
-    resource_cache->free_resource(response);
+    responder.send_response(id, response, {fd});
 }
 
+template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
     auto const& surface_fd = extract_fds_from(response);
@@ -71,17 +77,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
 
-    send_response(id, response, {surface_fd, buffer_fd});;
-    resource_cache->free_resource(response);
-}
-
-template<class Response>
-std::vector<int32_t> mfd::ProtobufMessageProcessor::extract_fds_from(Response* response)
-{
-    std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
-    response->clear_fd();
-    response->set_fds_on_side_channel(fd.size());
-    return fd;
+    responder.send_response(id, response, {surface_fd, buffer_fd});
 }
 
 template<class ParameterMessage, class ResultMessage>
@@ -116,28 +112,6 @@ void mfd::ProtobufMessageProcessor::invoke(
         result_message.set_error(boost::diagnostic_information(x));
         send_response(invocation.id(), &result_message);
     }
-}
-
-void mfd::ProtobufMessageProcessor::send_response(
-    ::google::protobuf::uint32 id,
-    google::protobuf::Message* response)
-{
-    send_response(id, response, FdSets());
-}
-
-void mfd::ProtobufMessageProcessor::send_response(
-    ::google::protobuf::uint32 id,
-    google::protobuf::Message* response,
-    FdSets const& fd_sets)
-{
-    response->SerializeToString(&send_response_buffer);
-
-    send_response_result.set_id(id);
-    send_response_result.set_response(send_response_buffer);
-
-    send_response_result.SerializeToString(&send_response_buffer);
-
-    sender->send(send_response_buffer, fd_sets);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
