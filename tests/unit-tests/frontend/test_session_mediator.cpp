@@ -571,10 +571,6 @@ TEST_F(SessionMediatorTest, display_config_request)
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
-    EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0, format0, mir_power_mode_on))
-        .InSequence(seq);
-    EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1, format1, mir_power_mode_off))
-        .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, active_configuration())
