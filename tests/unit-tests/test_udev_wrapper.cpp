@@ -258,7 +258,7 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
 
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 {
-    auto monitor = mir::udev::Monitor(mir::udev::Context());
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool event_handler_called = false;
 
     udev_environment.add_device("drm", "control64D", NULL, {}, {});
@@ -271,7 +271,7 @@ TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 
 TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 {
-    auto monitor = mir::udev::Monitor(mir::udev::Context());
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool event_handler_called = false;
 
     monitor.enable();
@@ -286,7 +286,7 @@ TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 
 TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 {
-    auto monitor = mir::udev::Monitor(mir::udev::Context());
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool remove_event_received = false;
 
     monitor.enable();
@@ -306,7 +306,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 
 TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 {
-    auto monitor = mir::udev::Monitor(mir::udev::Context());
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool changed_event_received = false;
 
     monitor.enable();
@@ -328,7 +328,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 {
     mir::udev::Context ctx;
 
-    auto monitor = mir::udev::Monitor(ctx);
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool event_handler_called = false;
 
     monitor.enable();
@@ -348,7 +348,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 {
-    auto monitor = mir::udev::Monitor(mir::udev::Context());
+    mir::udev::Monitor monitor{mir::udev::Context()};
 
     monitor.enable();
 
@@ -365,7 +365,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
 TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
 {
-    auto monitor = mir::udev::Monitor(mir::udev::Context());
+    mir::udev::Monitor monitor{mir::udev::Context()};
 
     monitor.enable();
 
@@ -389,7 +389,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 {
     mir::udev::Context ctx;
 
-    auto monitor = mir::udev::Monitor(ctx);
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool event_received = false;
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
@@ -415,7 +415,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
 {
     mir::udev::Context ctx;
 
-    auto monitor = mir::udev::Monitor(ctx);
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool usb_event_received = false, drm_event_recieved = false;
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
@@ -446,7 +446,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
 {
     mir::udev::Context ctx;
 
-    auto monitor = mir::udev::Monitor(ctx);
+    mir::udev::Monitor monitor{mir::udev::Context()};
     bool event_received = false;
 
     monitor.enable();

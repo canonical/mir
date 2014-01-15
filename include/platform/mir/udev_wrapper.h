@@ -53,10 +53,15 @@ class Device
 public:
     virtual ~Device() = default;
 
+    Device(Device const&) = delete;
+    Device& operator=(Device const&) = delete;
+
     virtual char const* subsystem() const = 0;
     virtual char const* devtype() const = 0;
     virtual char const* devpath() const = 0;
     virtual char const* devnode() const = 0;
+protected:
+    Device() = default;
 };
 
 bool operator==(Device const& lhs, Device const& rhs);
@@ -67,6 +72,9 @@ class Enumerator
 public:
     Enumerator(std::shared_ptr<Context> const& ctx);
     ~Enumerator() noexcept;
+
+    Enumerator(Enumerator const&) = delete;
+    Enumerator& operator=(Enumerator const&) = delete;
 
     void scan_devices();
 
@@ -120,6 +128,9 @@ public:
 
     Monitor(const Context &ctx);
     ~Monitor() noexcept;
+
+    Monitor(Monitor const&) = delete;
+    Monitor& operator=(Monitor const&) = delete;
 
     void enable(void);
     int fd(void) const;
