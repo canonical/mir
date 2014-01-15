@@ -1,11 +1,14 @@
 cmake_minimum_required (VERSION 2.6)
 # Create target to discover tests
 
-option(
+include(CMakeDependentOption)
+
+CMAKE_DEPENDENT_OPTION(
   DISABLE_GTEST_TEST_DISCOVERY
   "If set to ON, disables fancy test autodiscovery and switches back to classic add_test behavior"
   OFF
-)
+  "NOT MIR_IS_CROSS_COMPILING"
+  ON)
 
 option(
   ENABLE_MEMCHECK_OPTION
@@ -34,7 +37,7 @@ if(ENABLE_MEMCHECK_OPTION)
 endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
-  if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
+  if(DISABLE_GTEST_TEST_DISCOVERY)
     add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}")
 
     if (${ARGC} GREATER 1)
@@ -81,7 +84,7 @@ endfunction ()
 
 function (mir_add_memcheck_test)
   if (ENABLE_MEMCHECK_OPTION)
-      if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
+      if(DISABLE_GTEST_TEST_DISCOVERY)
           ADD_TEST("memcheck-test" "sh" "-c" "${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error; if [ $? != 0 ]; then exit 0; else exit 1; fi")
       else()
         add_custom_target(
