@@ -69,7 +69,7 @@ class Logger;
 struct MirConnection : mir::client::ClientContext
 {
 public:
-    MirConnection();
+    MirConnection(std::string const& error_message);
 
     MirConnection(mir::client::ConnectionConfiguration& conf);
     ~MirConnection() noexcept;
@@ -87,7 +87,6 @@ public:
             void *context);
 
     char const * get_error_message();
-    void set_error_message(std::string const& error);
 
     MirWaitHandle* connect(
         const char* app_name,
@@ -125,7 +124,7 @@ public:
     bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
 private:
-    std::recursive_mutex mutex; // Protects all members of *this
+    std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
@@ -163,6 +162,7 @@ private:
 
     struct SurfaceRelease;
 
+    void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );

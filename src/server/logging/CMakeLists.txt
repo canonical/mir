@@ -1,3 +1,5 @@
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(
   LOGGING_SOURCES
 
@@ -8,6 +10,7 @@ set(
   message_processor_report.cpp
   display_report.cpp
   input_report.cpp
+  compositor_report.cpp
 )
 
 add_library(

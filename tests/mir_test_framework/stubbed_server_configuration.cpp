@@ -132,7 +132,7 @@ public:
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
-            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, mir_pixel_format_abgr_8888, mir_power_mode_on};
 
         f(dummy_output_config);
     }
@@ -201,11 +201,19 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mc::Renderer
 {
 public:
+    void begin() const override
+    {
+    }
+
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
     }
 
-    void clear() const override
+    void end() const override
+    {
+    }
+
+    void suspend() override
     {
     }
 };

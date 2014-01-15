@@ -42,13 +42,12 @@ mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
 
 mga::Buffer::~Buffer()
 {
-    std::map<EGLDisplay,EGLImageKHR>::iterator it;
-    for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
+    for(auto& it : egl_image_map)
     {
-        egl_extensions->eglDestroyImageKHR(it->first, it->second);
+        EGLDisplay disp = it.first.first;
+        egl_extensions->eglDestroyImageKHR(disp, it.second);
     }
 }
-
 
 geom::Size mga::Buffer::size() const
 {
@@ -79,26 +78,36 @@ void mga::Buffer::bind_to_texture()
     std::unique_lock<std::mutex> lk(content_lock);
     native_buffer->wait_for_content();
 
-    EGLDisplay disp = eglGetCurrentDisplay();
-    if (disp == EGL_NO_DISPLAY) {
+    DispContextPair current
+    {
+        eglGetCurrentDisplay(),
+        eglGetCurrentContext()
+    };
+
+    if (current.first == EGL_NO_DISPLAY)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot bind buffer to texture without EGL context\n"));
     }
+
     static const EGLint image_attrs[] =
     {
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
         EGL_NONE
     };
+
     EGLImageKHR image;
-    auto it = egl_image_map.find(disp);
+    auto it = egl_image_map.find(current);
     if (it == egl_image_map.end())
     {
-        image = egl_extensions->eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_buffer->anwb(), image_attrs);
+        image = egl_extensions->eglCreateImageKHR(
+                    current.first, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+                    native_buffer->anwb(), image_attrs);
+
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
         }
-        egl_image_map[disp] = image;
+        egl_image_map[current] = image;
     }
     else /* already had it in map */
     {

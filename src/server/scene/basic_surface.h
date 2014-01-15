@@ -63,6 +63,7 @@ public:
     virtual std::string const& name() const;
     virtual void move_to(geometry::Point const& top_left);
     virtual void set_rotation(float degrees, glm::vec3 const& axis);
+    virtual float alpha() const;
     virtual void set_alpha(float alpha);
     virtual void set_hidden(bool is_hidden);
 

@@ -36,6 +36,7 @@ class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class RendererFactory;
+class CompositorReport;
 }
 namespace frontend
 {
@@ -64,7 +65,7 @@ class SurfaceConfigurator;
 }
 namespace time
 {
-class TimeSource;
+class Clock;
 }
 namespace scene
 {
@@ -150,6 +151,7 @@ public:
     /** @name compositor configuration - customization
      * configurable interfaces for modifying compositor
      *  @{ */
+    virtual std::shared_ptr<compositor::CompositorReport> the_compositor_report();
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     /** @} */
 
@@ -228,7 +230,7 @@ public:
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
 
-    virtual std::shared_ptr<time::TimeSource>    the_time_source();
+    virtual std::shared_ptr<time::Clock> the_clock();
 
 protected:
     using DefaultConfigurationOptions::the_options;
@@ -278,9 +280,10 @@ protected:
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<time::TimeSource> time_source;
+    CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;

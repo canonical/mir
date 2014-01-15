@@ -34,11 +34,11 @@ public:
     explicit NestedDisplayConfiguration(MirDisplayConfiguration* display_config);
     virtual ~NestedDisplayConfiguration() noexcept;
 
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const;
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const;
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const override;
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const override;
 
     void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index,
-                          MirPowerMode power_mode);
+                          MirPixelFormat format, MirPowerMode power_mode) override;
 
     operator MirDisplayConfiguration*() const { return display_config; }
 private:

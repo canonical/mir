@@ -349,3 +349,37 @@ TEST_F(AndroidBufferBinding, bind_to_texture_waits_on_fence)
     mga::Buffer buffer(mock_native_buffer, extensions);
     buffer.bind_to_texture();
 }
+
+TEST_F(AndroidBufferBinding, different_egl_contexts_displays_generate_new_eglimages)
+{
+    using namespace testing;
+
+    int d1 = 0, d2 = 0, c1 = 0, c2 = 0;
+    EGLDisplay disp1 = reinterpret_cast<EGLDisplay>(&d1);
+    EGLDisplay disp2 = reinterpret_cast<EGLDisplay>(&d2);
+    EGLContext ctxt1 = reinterpret_cast<EGLContext>(&c1);
+    EGLContext ctxt2 = reinterpret_cast<EGLContext>(&c2);
+
+    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
+        .Times(3)
+        .WillOnce(Return(disp1))
+        .WillOnce(Return(disp1))
+        .WillOnce(Return(disp2));
+
+    EXPECT_CALL(mock_egl, eglGetCurrentContext())
+        .Times(3)
+        .WillOnce(Return(ctxt1))
+        .WillRepeatedly(Return(ctxt2));
+
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp1,_,_,_,_))
+        .Times(2);
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(disp2,_,_,_,_))
+        .Times(1);
+    EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,_))
+        .Times(Exactly(3));
+
+    mga::Buffer buffer(mock_native_buffer, extensions);
+    buffer.bind_to_texture();
+    buffer.bind_to_texture();
+    buffer.bind_to_texture();
+}

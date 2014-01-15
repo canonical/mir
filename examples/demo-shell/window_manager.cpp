@@ -151,8 +151,9 @@ bool me::WindowManager::handle(MirEvent const& event)
                     power_mode = mir_power_mode_off;
 
                 conf->configure_output(output.id, output.used,
-                                       output.top_left, 
+                                       output.top_left,
                                        output.current_mode_index,
+                                       output.current_format,
                                        power_mode);
             });
             display_off = !display_off;
@@ -249,6 +250,18 @@ bool me::WindowManager::handle(MirEvent const& event)
                         surf->resize({width, height});
                     }
 
+                    handled = true;
+                }
+                else if (action == mir_motion_action_scroll)
+                {
+                    float alpha = surf->alpha();
+                    alpha += 0.1f *
+                             event.motion.pointer_coordinates[0].vscroll;
+                    if (alpha < 0.0f)
+                        alpha = 0.0f;
+                    else if (alpha > 1.0f)
+                        alpha = 1.0f;
+                    surf->set_alpha(alpha);
                     handled = true;
                 }
 

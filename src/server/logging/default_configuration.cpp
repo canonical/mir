@@ -24,7 +24,9 @@
 #include "session_mediator_report.h"
 
 #include "mir/graphics/null_display_report.h"
+#include "compositor_report.h"
 
+using namespace mir;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
@@ -66,6 +68,24 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
             else
             {
                 return std::make_shared<mg::NullDisplayReport>();
+            }
+        });
+}
+
+std::shared_ptr<compositor::CompositorReport>
+DefaultServerConfiguration::the_compositor_report()
+{
+    return compositor_report(
+        [this]() -> std::shared_ptr<compositor::CompositorReport>
+        {
+            if (the_options()->get(compositor_report_opt, off_opt_value) == log_opt_value)
+            {
+                return std::make_shared<ml::CompositorReport>(
+                    the_logger(), the_clock());
+            }
+            else
+            {
+                return std::make_shared<compositor::NullCompositorReport>();
             }
         });
 }

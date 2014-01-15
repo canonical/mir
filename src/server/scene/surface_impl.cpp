@@ -262,6 +262,11 @@ void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
     surface->set_rotation(degrees, axis);
 }
 
+float ms::SurfaceImpl::alpha() const
+{
+    return surface->alpha();
+}
+
 void ms::SurfaceImpl::set_alpha(float alpha)
 {
     surface->set_alpha(alpha);
