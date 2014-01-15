@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/hwc10_device.h"
-#include "src/platform/graphics/android/hwc11_device.h"
+#include "src/platform/graphics/android/hwc_fb_device.h"
+#include "src/platform/graphics/android/hwc_device.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "src/platform/graphics/android/hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"

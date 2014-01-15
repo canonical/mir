@@ -85,12 +85,12 @@ std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
     {
         if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
         {
-            device = res_factory->create_hwc11_device(hwc_native);
+            device = res_factory->create_hwc_device(hwc_native);
             display_report->report_hwc_composition_in_use(1,1);
         }
         if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
         {
-            device = res_factory->create_hwc10_device(hwc_native, fb_native);
+            device = res_factory->create_hwc_fb_device(hwc_native, fb_native);
             display_report->report_hwc_composition_in_use(1,0);
         }
     }

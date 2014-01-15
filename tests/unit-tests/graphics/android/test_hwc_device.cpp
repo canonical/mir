@@ -17,7 +17,7 @@
  */
 
 #include "src/platform/graphics/android/framebuffer_bundle.h"
-#include "src/platform/graphics/android/hwc11_device.h"
+#include "src/platform/graphics/android/hwc_device.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"

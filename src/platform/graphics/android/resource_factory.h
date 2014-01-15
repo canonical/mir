@@ -38,9 +38,9 @@ public:
     //devices
     std::shared_ptr<DisplayDevice> create_fb_device(
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const;
-    std::shared_ptr<DisplayDevice> create_hwc11_device(
+    std::shared_ptr<DisplayDevice> create_hwc_device(
         std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const;
-    std::shared_ptr<DisplayDevice> create_hwc10_device(
+    std::shared_ptr<DisplayDevice> create_hwc_fb_device(
         std::shared_ptr<hwc_composer_device_1> const& hwc_native_device,
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const;
 
