@@ -205,8 +205,7 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
     }, std::runtime_error);
 }
 
-//we don't support hwc 1.2 quite yet. for the time being, at least try the fb backup
-TEST_F(OutputBuilder, hwc_version_12_attempts_fb_backup)
+TEST_F(OutputBuilder, hwc_version_12)
 {
     using namespace testing;
 
@@ -214,11 +213,9 @@ TEST_F(OutputBuilder, hwc_version_12_attempts_fb_backup)
 
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
+    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
-        .Times(1);
-    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,2))
         .Times(1);
 
     mga::OutputBuilder factory(
