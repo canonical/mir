@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "hwc11_device.h"
+#include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
@@ -34,7 +34,7 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
-mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_list({mga::CompositionLayer{true}, mga::FramebufferLayer{}}),
@@ -42,7 +42,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HWC11Device::prepare_composition()
+void mga::HwcDevice::prepare_composition()
 {
     //note, although we only have a primary display right now,
     //      set the second display to nullptr, as exynos hwc always derefs displays[1]
@@ -54,7 +54,7 @@ void mga::HWC11Device::prepare_composition()
     }
 }
 
-void mga::HWC11Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
+void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
@@ -62,7 +62,7 @@ void mga::HWC11Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
     }
 }
 
-void mga::HWC11Device::post(mg::Buffer const& buffer)
+void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
