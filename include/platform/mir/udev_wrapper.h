@@ -25,31 +25,33 @@
 
 namespace mir
 {
+namespace udev
+{
 
-class UdevDevice;
-class UdevEnumerator;
+class Device;
+class Enumerator;
 
-class UdevContext
+class Context
 {
 public:
-    UdevContext();
-    ~UdevContext() noexcept;
+    Context();
+    ~Context() noexcept;
 
-    UdevContext(UdevContext const&) = delete;
-    UdevContext& operator=(UdevContext const&) = delete;
+    Context(Context const&) = delete;
+    Context& operator=(Context const&) = delete;
 
-    std::shared_ptr<UdevDevice> device_from_syspath(std::string const& syspath);
+    std::shared_ptr<Device> device_from_syspath(std::string const& syspath);
 
-    udev* ctx() const;
+    ::udev* ctx() const;
 
 private:
-    udev* const context;
+    ::udev* const context;
 };
 
-class UdevDevice
+class Device
 {
 public:
-    virtual ~UdevDevice() = default;
+    virtual ~Device() = default;
 
     virtual char const* subsystem() const = 0;
     virtual char const* devtype() const = 0;
@@ -57,23 +59,23 @@ public:
     virtual char const* devnode() const = 0;
 };
 
-bool operator==(UdevDevice const& lhs, UdevDevice const& rhs);
-bool operator!=(UdevDevice const& lhs, UdevDevice const& rhs);
+bool operator==(Device const& lhs, Device const& rhs);
+bool operator!=(Device const& lhs, Device const& rhs);
 
-class UdevEnumerator
+class Enumerator
 {
 public:
-    UdevEnumerator(std::shared_ptr<UdevContext> const& ctx);
-    ~UdevEnumerator() noexcept;
+    Enumerator(std::shared_ptr<Context> const& ctx);
+    ~Enumerator() noexcept;
 
     void scan_devices();
 
     void match_subsystem(std::string const& subsystem);
-    void match_parent(UdevDevice const& parent);
+    void match_parent(Device const& parent);
     void match_sysname(std::string const& sysname);
 
     class iterator :
-        public std::iterator<std::input_iterator_tag, UdevDevice>
+        public std::iterator<std::input_iterator_tag, Device>
     {
     public:
         iterator& operator++();
@@ -82,32 +84,32 @@ public:
         bool operator==(iterator const& rhs) const;
         bool operator!=(iterator const& rhs) const;
 
-        UdevDevice const& operator*() const;
+        Device const& operator*() const;
 
     private:
-        friend class UdevEnumerator;
+        friend class Enumerator;
 
         iterator ();
-        iterator (std::shared_ptr<UdevContext> const& ctx, udev_list_entry* entry);
+        iterator (std::shared_ptr<Context> const& ctx, udev_list_entry* entry);
 
         void increment();
 
-        std::shared_ptr<UdevContext> ctx;
+        std::shared_ptr<Context> ctx;
         udev_list_entry* entry;
 
-        std::shared_ptr<UdevDevice> current;
+        std::shared_ptr<Device> current;
     };
 
     iterator begin();
     iterator end();
 
 private:
-    std::shared_ptr<UdevContext> const ctx;
+    std::shared_ptr<Context> const ctx;
     udev_enumerate* const enumerator;
     bool scanned;
 };
 
-class UdevMonitor
+class Monitor
 {
 public:
     enum EventType {
@@ -116,20 +118,21 @@ public:
         CHANGED,
     };
 
-    UdevMonitor(const UdevContext &ctx);
-    ~UdevMonitor() noexcept;
+    Monitor(const Context &ctx);
+    ~Monitor() noexcept;
 
     void enable(void);
     int fd(void) const;
 
     void filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype);
 
-    void process_events(std::function<void(EventType, UdevDevice const&)> const& handler) const;
+    void process_events(std::function<void(EventType, Device const&)> const& handler) const;
 
 private:
     udev_monitor* const monitor;
     bool enabled;
 };
 
+}
 }
 #endif // MIR_UDEV_WRAPPER_H_

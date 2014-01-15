@@ -31,7 +31,7 @@ namespace test
 namespace doubles
 {
 
-class MockUdevDevice : public mir::UdevDevice
+class MockUdevDevice : public mir::udev::Device
 {
 public:
     MOCK_CONST_METHOD0(subsystem, char const*(void));
@@ -39,10 +39,10 @@ public:
     MOCK_CONST_METHOD0(devpath, char const*(void));
     MOCK_CONST_METHOD0(devnode, char const*(void));
 
-    MOCK_CONST_METHOD1(equals, bool(UdevDevice const& rhs));
+    MOCK_CONST_METHOD1(equals, bool(mir::udev::Device const& rhs));
 
-    virtual bool operator==(UdevDevice const& rhs) const override { return equals(rhs); }
-    virtual bool operator!=(UdevDevice const& rhs) const override { return !equals(rhs); }
+    virtual bool operator==(mir::udev::Device const& rhs) const override { return equals(rhs); }
+    virtual bool operator!=(mir::udev::Device const& rhs) const override { return !equals(rhs); }
 };
 
 }

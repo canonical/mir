@@ -79,7 +79,7 @@ mgm::Display::Display(std::shared_ptr<Platform> const& platform,
                       std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
-      monitor(mir::UdevContext()),
+      monitor(mir::udev::Context()),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
       current_display_configuration{platform->drm.fd}
@@ -195,7 +195,7 @@ void mgm::Display::register_configuration_change_handler(
         [conf_change_handler, this](int)
         {
             monitor.process_events([conf_change_handler]
-                                   (UdevMonitor::EventType, UdevDevice const&)
+                                   (mir::udev::Monitor::EventType, mir::udev::Device const&)
                                    {
                                         conf_change_handler();
                                    });
