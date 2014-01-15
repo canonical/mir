@@ -42,40 +42,11 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
 
 mir (0.1.3+14.04.20140108-0ubuntu1) trusty; urgency=low
 
-  * New upstream release 0.1.3 (https://launchpad.net/mir/+milestone/0.1.3)
-    - Nested servers now work on desktop and Android, with some caveats:
-      https://bugs.launchpad.net/mir/+bugs?field.tag=nested
-    - Surface resizing support is now complete and generates MirResizeEvent for
-      clients.
-    - Software buffers now use shared memory, for correctness, portability, and
-      significantly increased performance.
-    - Mir server ABI bumped to 12. No client ABI change.
-    - Unified redundant PixelFormat typedefs into one: MirPixelFormat.
-    - Bugs fixed:
-      . unit-tests hangs in
-        GBMDisplayTest.drm_device_change_event_triggers_handler (LP: #1253876)
-      . Nested servers fail to start on desktop: std::exception::what: Could
-        not create egl surface (LP: #1260635)
-      . cross-compile-chroot.sh fails [E: Couldn't find these debs:
-        android-platform-headers] (LP: #1261637)
-      . Cross compiling fails with "error: '__uint64_t' does not name a type"
-        (LP: #1262305)
-      . Tests disabled on armhf (LP: #1203004)
-      . [enhancement] Resizable surfaces (LP: #1227744)
-      . Occasional acceptance-test FAIL:
-        ClientPidTestFixture.authorizer_may_prevent_connection_of_clients
-        (LP: #1245803)
-      . Critical: Illegal type-casting of GBM buffers in clients (LP: #1248075)
-      . Performance regression: mir_demo_client_flicker is skipping frames on
-        desktop (GBM) (LP: #1249242)
-      . nested mir on android fails on galaxy nexus (LP: #1258056)
-      . Intermittent acceptance test failure in
-        DemoInProcessServer.client_can_connect (LP: #1262754)
-      . mir_demo_server_shell: On screen power off (Alt+P) rendering restarts
-        immediately, and without any vsync. Severe tearing and fan noise
-        ensues. (LP: #1255818)
-      . PixelFormat is in namespace "geometry" (LP: #1110115)
-      . unit-tests are noisy (LP: #1172184)
+  [ Daniel van Vugt ]
+  * Preparing for release 0.1.3
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1170
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 Jan 2014 02:04:38 +0000
 
