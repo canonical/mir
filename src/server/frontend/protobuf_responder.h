@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_RESPONDER_H_
 #define MIR_FRONTEND_PROTOBUF_RESPONDER_H_
 
-#include "fd_sets.h"
+#include "protobuf_message_sender.h"
 #include "mir_protobuf_wire.pb.h"
 
 #include <memory>
@@ -29,23 +29,6 @@ namespace mir
 namespace frontend
 {
 class ResourceCache;
-
-class ProtobufMessageSender
-{
-public:
-    virtual void send_response(
-            ::google::protobuf::uint32 id,
-            ::google::protobuf::Message* message,
-            FdSets const& fd_sets) = 0;
-
-protected:
-    ProtobufMessageSender() = default;
-    virtual ~ProtobufMessageSender() = default;
-
-private:
-    ProtobufMessageSender(ProtobufMessageSender const&) = delete;
-    ProtobufMessageSender& operator=(ProtobufMessageSender const&) = delete;
-};
 
 namespace detail
 {
