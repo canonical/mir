@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012. 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,19 +20,12 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "fd_sets.h"
-
 #include "message_processor.h"
-#include "message_sender.h"
+#include "protobuf_response_processor.h"
 
 #include "mir_protobuf.pb.h"
-#include "mir_protobuf_wire.pb.h"
-#include "mir/frontend/event_sink.h"
 
-#include <vector>
 #include <memory>
-#include <iosfwd>
-#include <cstdint>
 
 namespace mir
 {
@@ -40,12 +33,10 @@ namespace protobuf { class DisplayServer; }
 
 namespace frontend
 {
-class ResourceCache;
 class MessageProcessorReport;
 
 namespace detail
 {
-
 class ProtobufMessageProcessor : public MessageProcessor
 {
 public:
@@ -58,27 +49,8 @@ public:
     ~ProtobufMessageProcessor() noexcept {}
 
 private:
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response,
-        FdSets const& fd_sets);
-
     template<class ResultMessage>
     void send_response(::google::protobuf::uint32 id, ResultMessage* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
-
-    template<class Response>
-    std::vector<int32_t> extract_fds_from(Response* response);
 
     bool process_message(std::istream& msg);
 
@@ -93,14 +65,18 @@ private:
             ::google::protobuf::Closure* done),
         mir::protobuf::wire::Invocation const& invocation);
 
-    std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
-    std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<MessageProcessorReport> const report;
-
-    std::string send_response_buffer;
-    mir::protobuf::wire::Result send_response_result;
+    ProtobufResponseProcessor responder;
 };
+
+// TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.
+template<>
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
+template<>
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
+template<>
+void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
 }
 }
 }
