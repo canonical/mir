@@ -36,48 +36,59 @@ std::vector<int32_t> extract_fds_from(Response* response)
 }
 }
 
-mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
-    std::shared_ptr<ProtobufMessageSender> const& sender,
-    std::shared_ptr<protobuf::DisplayServer> const& display_server,
-    std::shared_ptr<MessageProcessorReport> const& report) :
-    display_server(display_server),
-    report(report),
-    responder(sender)
+mfd::TemplateProtobufMessageProcessor::TemplateProtobufMessageProcessor(
+    std::shared_ptr<ProtobufMessageSender> const& sender) :
+    sender(sender)
 {
-}
-
-template<class ResultMessage>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
-{
-    responder->send_response(id, response, {});
 }
 
 template<>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
+void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
-    responder->send_response(id, response, {fd});
+    sender->send_response(id, response, {fd});
 }
 
 template<>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
+void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
     const auto& fd = response->has_platform() ?
         extract_fds_from(response->mutable_platform()) :
         std::vector<int32_t>();
 
-    responder->send_response(id, response, {fd});
+    sender->send_response(id, response, {fd});
 }
 
 template<>
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
+void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
     auto const& surface_fd = extract_fds_from(response);
     const auto& buffer_fd = response->has_buffer() ?
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
 
-    responder->send_response(id, response, {surface_fd, buffer_fd});
+    sender->send_response(id, response, {surface_fd, buffer_fd});
+}
+
+bool mfd::TemplateProtobufMessageProcessor::process_message(std::istream& msg)
+{
+    mir::protobuf::wire::Invocation invocation;
+    invocation.ParseFromIstream(&msg);
+
+    if (invocation.has_protocol_version() && invocation.protocol_version() != 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
+
+    return dispatch(invocation);
+}
+
+mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
+    std::shared_ptr<ProtobufMessageSender> const& sender,
+    std::shared_ptr<protobuf::DisplayServer> const& display_server,
+    std::shared_ptr<MessageProcessorReport> const& report) :
+    TemplateProtobufMessageProcessor(sender),
+    display_server(display_server),
+    report(report)
+{
 }
 
 template<class ParameterMessage, class ResultMessage>
@@ -176,24 +187,4 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
     report->completed_invocation(display_server.get(), invocation.id(), result);
 
     return result;
-}
-
-
-bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
-{
-    try
-    {
-        mir::protobuf::wire::Invocation invocation;
-        invocation.ParseFromIstream(&msg);
-
-        if (invocation.has_protocol_version() && invocation.protocol_version() != 1)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
-
-        return dispatch(invocation);
-    }
-    catch (std::exception const& error)
-    {
-        report->exception_handled(display_server.get(), error);
-        return false;
-    }
 }
