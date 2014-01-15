@@ -34,13 +34,6 @@ mfd::ProtobufResponseProcessor::ProtobufResponseProcessor(
 
 void mfd::ProtobufResponseProcessor::send_response(
     ::google::protobuf::uint32 id,
-    google::protobuf::Message* response)
-{
-    send_response(id, response, FdSets());
-}
-
-void mfd::ProtobufResponseProcessor::send_response(
-    ::google::protobuf::uint32 id,
     google::protobuf::Message* response,
     FdSets const& fd_sets)
 {

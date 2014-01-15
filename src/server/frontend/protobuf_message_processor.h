@@ -41,9 +41,8 @@ class ProtobufMessageProcessor : public MessageProcessor
 {
 public:
     ProtobufMessageProcessor(
-        std::shared_ptr<MessageSender> const& sender,
+        std::shared_ptr<ProtobufMessageSender> const& sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
-        std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<MessageProcessorReport> const& report);
 
     ~ProtobufMessageProcessor() noexcept {}
@@ -67,7 +66,7 @@ private:
 
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<MessageProcessorReport> const report;
-    ProtobufResponseProcessor responder;
+    std::shared_ptr<ProtobufMessageSender> responder;
 };
 
 // TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.

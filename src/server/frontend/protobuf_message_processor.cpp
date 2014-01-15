@@ -36,27 +36,26 @@ std::vector<int32_t> extract_fds_from(Response* response)
 }
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
-    std::shared_ptr<MessageSender> const& sender,
+    std::shared_ptr<ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
-    std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
     display_server(display_server),
     report(report),
-    responder(sender, resource_cache)
+    responder(sender)
 {
 }
 
 template<class ResultMessage>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
 {
-    responder.send_response(id, response);
+    responder->send_response(id, response, {});
 }
 
 template<>
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
     const auto& fd = extract_fds_from(response);
-    responder.send_response(id, response, {fd});
+    responder->send_response(id, response, {fd});
 }
 
 template<>
@@ -66,7 +65,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_platform()) :
         std::vector<int32_t>();
 
-    responder.send_response(id, response, {fd});
+    responder->send_response(id, response, {fd});
 }
 
 template<>
@@ -77,7 +76,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
 
-    responder.send_response(id, response, {surface_fd, buffer_fd});
+    responder->send_response(id, response, {surface_fd, buffer_fd});
 }
 
 template<class ParameterMessage, class ResultMessage>
