@@ -38,11 +38,6 @@ public:
     MOCK_CONST_METHOD0(devtype, char const*(void));
     MOCK_CONST_METHOD0(devpath, char const*(void));
     MOCK_CONST_METHOD0(devnode, char const*(void));
-
-    MOCK_CONST_METHOD1(equals, bool(mir::udev::Device const& rhs));
-
-    virtual bool operator==(mir::udev::Device const& rhs) const override { return equals(rhs); }
-    virtual bool operator!=(mir::udev::Device const& rhs) const override { return !equals(rhs); }
 };
 
 }
