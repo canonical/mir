@@ -83,10 +83,17 @@ static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_
 {
     EXPECT_EQ(attribute_list[0], HWC_DISPLAY_WIDTH);
     EXPECT_EQ(attribute_list[1], HWC_DISPLAY_HEIGHT);
-    EXPECT_EQ(attribute_list[2], HWC_DISPLAY_NO_ATTRIBUTE);
-
     values[0] = display_width;
     values[1] = display_height;
+
+    /* note. we check that these are set because the qcom msm8960 drivers ALWAYS check and fill an array of size 6 (which is a bug, it should 
+       stop checking and filling when it hits HWC_DISPLAY_NO_ATTRIBUTE */
+    for(auto i = 2; i <= 6; i++)
+    {
+        EXPECT_EQ(attribute_list[i], HWC_DISPLAY_HEIGHT);
+        values[i] = display_height;
+    }
+
     return 0;
 }
 }
