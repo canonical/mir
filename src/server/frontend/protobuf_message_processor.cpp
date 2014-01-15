@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_message_processor.h"
+#include "protobuf_responder.h"
 #include "mir/frontend/message_processor_report.h"
 
 #include <boost/exception/diagnostic_information.hpp>

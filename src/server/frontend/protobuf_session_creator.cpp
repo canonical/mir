@@ -20,6 +20,7 @@
 
 #include "event_sender.h"
 #include "protobuf_message_processor.h"
+#include "protobuf_responder.h"
 #include "socket_messenger.h"
 #include "socket_session.h"
 
@@ -33,9 +34,11 @@ namespace ba = boost::asio;
 
 mf::ProtobufSessionCreator::ProtobufSessionCreator(
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+    std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+    std::shared_ptr<MessageProcessorReport> const& report)
 :   ipc_factory(ipc_factory),
     session_authorizer(session_authorizer),
+    report(report),
     next_session_id(0),
     connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
 {
@@ -59,7 +62,7 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
     if (session_authorizer->connection_is_allowed(client_pid))
     {
         auto const authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
-        auto const message_sender = std::make_shared<detail::ProtobufResponseProcessor>(
+        auto const message_sender = std::make_shared<detail::ProtobufResponder>(
             messenger,
             ipc_factory->resource_cache());
 
@@ -67,7 +70,7 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
         auto const msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
             message_sender,
             ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
-            ipc_factory->report());
+            report);
 
         const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);
         connected_sessions->add(session);

@@ -51,10 +51,10 @@ namespace detail
 {
 class MessageSender;
 
-class ProtobufResponseProcessor : public ProtobufMessageSender
+class ProtobufResponder : public ProtobufMessageSender
 {
 public:
-    ProtobufResponseProcessor(
+    ProtobufResponder(
         std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<ResourceCache> const& resource_cache);
 

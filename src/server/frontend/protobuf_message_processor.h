@@ -21,8 +21,8 @@
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
 #include "message_processor.h"
-#include "protobuf_response_processor.h"
 
+#include "mir_protobuf_wire.pb.h"
 #include "mir_protobuf.pb.h"
 
 #include <memory>
@@ -34,6 +34,7 @@ namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class MessageProcessorReport;
+class ProtobufMessageSender;
 
 namespace detail
 {
