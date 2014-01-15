@@ -98,7 +98,40 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
 
 void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput&)> f)
 {
-    (void)f;  // TODO
+    // XXX copied and pasted from above. Revisit this.
+    std::for_each(
+        display_config->outputs,
+        display_config->outputs+display_config->num_outputs,
+        [&f](MirDisplayOutput const& mir_output)
+        {
+            std::vector<MirPixelFormat> formats;
+            formats.reserve(mir_output.num_output_formats);
+            for (auto p = mir_output.output_formats; p != mir_output.output_formats+mir_output.num_output_formats; ++p)
+                formats.push_back(MirPixelFormat(*p));
+
+            std::vector<DisplayConfigurationMode> modes;
+            modes.reserve(mir_output.num_modes);
+            for (auto p = mir_output.modes; p != mir_output.modes+mir_output.num_modes; ++p)
+                modes.push_back(DisplayConfigurationMode{{p->horizontal_resolution, p->vertical_resolution}, p->refresh_rate});
+
+            DisplayConfigurationOutput output{
+                DisplayConfigurationOutputId(mir_output.output_id),
+                DisplayConfigurationCardId(mir_output.card_id),
+                DisplayConfigurationOutputType(mir_output.type),
+                std::move(formats),
+                std::move(modes),
+                mir_output.preferred_mode,
+                geometry::Size{mir_output.physical_width_mm, mir_output.physical_height_mm},
+                !!mir_output.connected,
+                !!mir_output.used,
+                geometry::Point{mir_output.position_x, mir_output.position_y},
+                mir_output.current_mode,
+                mir_output.current_format,
+                mir_output.power_mode
+            };
+
+            f(output);
+        });
 }
 
 void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used,
