@@ -69,57 +69,18 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
 {
 }
 
-namespace
+namespace mir
 {
-template<typename ResultType> struct result_ptr_t           { typedef ::google::protobuf::Message* type; };
-
-// Utility function to allow invoke() to pick the right send_response() overload
-template<typename ResultType> inline
-auto result_ptr(ResultType& result) -> typename result_ptr_t<ResultType>::type { return &result; }
-}
-
-template<class ParameterMessage, class ResultMessage>
-void mfd::ProtobufMessageProcessor::invoke(
-    void (protobuf::DisplayServer::*function)(
-        ::google::protobuf::RpcController* controller,
-        const ParameterMessage* request,
-        ResultMessage* response,
-        ::google::protobuf::Closure* done),
-    mir::protobuf::wire::Invocation const& invocation)
+namespace frontend
 {
-    ParameterMessage parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
-    ResultMessage result_message;
-
-    try
-    {
-        std::unique_ptr<google::protobuf::Closure> callback(
-            google::protobuf::NewPermanentCallback(this,
-                &ProtobufMessageProcessor::send_response,
-                invocation.id(),
-                result_ptr(result_message)));
-
-        (display_server.get()->*function)(
-            0,
-            &parameter_message,
-            &result_message,
-            callback.get());
-    }
-    catch (std::exception const& x)
-    {
-        result_message.set_error(boost::diagnostic_information(x));
-        send_response(invocation.id(), &result_message);
-    }
-}
-
-namespace
+namespace detail
 {
 template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
 template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 }
-
-
+}
+}
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {
@@ -133,39 +94,39 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::connect, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::connect, invocation);
         }
         else if ("create_surface" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::create_surface, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::create_surface, invocation);
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::next_buffer, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::next_buffer, invocation);
         }
         else if ("release_surface" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::release_surface, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::release_surface, invocation);
         }
         else if ("test_file_descriptors" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::test_file_descriptors, invocation);
         }
         else if ("drm_auth_magic" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::drm_auth_magic, invocation);
         }
         else if ("configure_display" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::configure_display, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::configure_display, invocation);
         }
         else if ("configure_surface" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::configure_surface, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::configure_surface, invocation);
         }
         else if ("disconnect" == invocation.method_name())
         {
-            invoke(&protobuf::DisplayServer::disconnect, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::disconnect, invocation);
             result = false;
         }
         else
