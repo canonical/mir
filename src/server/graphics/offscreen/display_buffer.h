@@ -69,7 +69,7 @@ public:
 
     bool can_bypass() const;
 
-    void optimize(std::list<std::shared_ptr<graphics::Renderable>>& list); 
+    void filter_out_optimized_renderables(std::list<std::shared_ptr<graphics::Renderable>>& list); 
 
 private:
     SurfacelessEGLContext const egl_context;

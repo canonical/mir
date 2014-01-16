@@ -55,7 +55,7 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
-void mga::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>& renderable_list)
+void mga::DisplayBuffer::filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>& renderable_list)
 {
     display_device->prepare_gl_and_overlays(renderable_list);
     prepared = true;

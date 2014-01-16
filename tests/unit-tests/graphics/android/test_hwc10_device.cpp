@@ -57,7 +57,7 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-TEST_F(HWC10Device, hwc10_prepare_without_optimize)
+TEST_F(HWC10Device, hwc10_prepare_without_filter_out_optimized_renderables)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
@@ -75,7 +75,7 @@ TEST_F(HWC10Device, hwc10_prepare_without_optimize)
     EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
 }
 
-TEST_F(HWC10Device, hwc10_prepare_with_optimize)
+TEST_F(HWC10Device, hwc10_prepare_with_filter_out_optimized_renderables)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))

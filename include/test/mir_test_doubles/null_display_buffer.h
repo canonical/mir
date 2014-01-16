@@ -36,7 +36,7 @@ public:
     void release_current() {}
     void post_update() {}
     bool can_bypass() const override { return false; }
-    void optimize(std::list<std::shared_ptr<graphics::Renderable>>&) {} 
+    void filter_out_optimized_renderables(std::list<std::shared_ptr<graphics::Renderable>>&) {} 
 };
 
 }

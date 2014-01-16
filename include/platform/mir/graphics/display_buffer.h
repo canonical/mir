@@ -52,12 +52,12 @@ public:
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
 
-    /* give the display buffer a chance to optimize the draw.
+    /* give the display buffer a chance to filter_out_optimized_renderables the draw.
        The display buffer may remove items from the list. If items are removed,
        then the display buffer will guarantee that the removed items will appear on the
        screen after calling post_update().
        Items not removed must still be drawn to the GL rendering target */
-    virtual void optimize(std::list<std::shared_ptr<Renderable>>& list) = 0; 
+    virtual void filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>& list) = 0; 
 
 protected:
     DisplayBuffer() = default;

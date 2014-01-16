@@ -51,7 +51,7 @@ public:
                   EGLContext shared_context);
     ~DisplayBuffer();
 
-    void optimize(std::list<std::shared_ptr<Renderable>>& list);
+    void filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>& list);
     geometry::Rectangle view_area() const;
     void make_current();
     void release_current();

@@ -68,7 +68,7 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimize)
+TEST_F(AndroidDisplayBufferTest, test_post_update_with_filter_out_optimized_renderables)
 {
     using namespace testing;
 
@@ -78,7 +78,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimize)
     InSequence seq;
     EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist)))
         .Times(Exactly(1));
-    db.optimize(renderlist);
+    db.filter_out_optimized_renderables(renderlist);
 
     Mock::VerifyAndClearExpectations(mock_display_device.get());
 
@@ -93,7 +93,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_optimize)
     db.post_update();
 }
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_optimizes)
+TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_filter_out_optimized_renderabless)
 {
     using namespace testing;
 
@@ -111,13 +111,13 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_optimizes)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    db.optimize(renderlist);
-    db.optimize(renderlist);
+    db.filter_out_optimized_renderables(renderlist);
+    db.filter_out_optimized_renderables(renderlist);
     db.post_update();
 }
 
 //we still have to call prepare, even if there's no optimization to be made
-TEST_F(AndroidDisplayBufferTest, test_post_update_without_optimize)
+TEST_F(AndroidDisplayBufferTest, test_post_update_without_filter_out_optimized_renderables)
 {
     using namespace testing;
 

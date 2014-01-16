@@ -81,7 +81,7 @@ bool mgn::detail::NestedOutput::can_bypass() const
     return false;
 }
 
-void mgn::detail::NestedOutput::optimize(std::list<std::shared_ptr<mir::graphics::Renderable>>&)
+void mgn::detail::NestedOutput::filter_out_optimized_renderables(std::list<std::shared_ptr<mir::graphics::Renderable>>&)
 {
 } 
 

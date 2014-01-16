@@ -26,7 +26,6 @@
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test_doubles/stub_renderable.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>

@@ -158,7 +158,7 @@ mgm::DisplayBuffer::~DisplayBuffer()
         last_flipped_bufobj->release();
 }
 
-void mgm::DisplayBuffer::optimize(std::list<std::shared_ptr<Renderable>>&)
+void mgm::DisplayBuffer::filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>&)
 {
 }
 

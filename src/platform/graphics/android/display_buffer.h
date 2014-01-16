@@ -46,7 +46,7 @@ public:
     void release_current();
     void post_update();
     bool can_bypass() const override;
-    void optimize(std::list<std::shared_ptr<Renderable>>& list);
+    void filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>& list);
 
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;

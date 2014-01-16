@@ -64,7 +64,7 @@ public:
     void post_update() override;
     virtual bool can_bypass() const override;
 
-    void optimize(std::list<std::shared_ptr<graphics::Renderable>>& list); 
+    void filter_out_optimized_renderables(std::list<std::shared_ptr<graphics::Renderable>>& list); 
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;
