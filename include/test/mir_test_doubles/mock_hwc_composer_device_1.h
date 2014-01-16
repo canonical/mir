@@ -106,11 +106,11 @@ public:
         switch (size)
         {
             case 3:
-                virtual_prepare = (!!displays[2]);
+                virtual_set = (!!displays[2]);
             case 2:
-                external_prepare = (!!displays[1]);
+                external_set = (!!displays[1]);
             case 1:
-                primary_prepare = (!!displays[0]);
+                primary_set = (!!displays[0]);
                 for(auto i = 0u; i < displays[0]->numHwLayers; i++)
                 {
                     set_layerlist.push_back(displays[0]->hwLayers[i]);
