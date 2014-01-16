@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_message_processor.h"
+#include "protobuf_message_sender.h"
 #include "protobuf_responder.h"
 #include "mir/frontend/message_processor_report.h"
 
@@ -42,34 +43,6 @@ mfd::TemplateProtobufMessageProcessor::TemplateProtobufMessageProcessor(
 {
 }
 
-template<>
-void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
-{
-    const auto& fd = extract_fds_from(response);
-    sender->send_response(id, response, {fd});
-}
-
-template<>
-void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
-{
-    const auto& fd = response->has_platform() ?
-        extract_fds_from(response->mutable_platform()) :
-        std::vector<int32_t>();
-
-    sender->send_response(id, response, {fd});
-}
-
-template<>
-void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
-{
-    auto const& surface_fd = extract_fds_from(response);
-    const auto& buffer_fd = response->has_buffer() ?
-        extract_fds_from(response->mutable_buffer()) :
-        std::vector<int32_t>();
-
-    sender->send_response(id, response, {surface_fd, buffer_fd});
-}
-
 bool mfd::TemplateProtobufMessageProcessor::process_message(std::istream& msg)
 {
     mir::protobuf::wire::Invocation invocation;
@@ -81,6 +54,11 @@ bool mfd::TemplateProtobufMessageProcessor::process_message(std::istream& msg)
     return dispatch(invocation);
 }
 
+void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
+{
+    sender->send_response(id, response, {});
+}
+
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
@@ -89,6 +67,18 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     display_server(display_server),
     report(report)
 {
+}
+
+namespace
+{
+template<typename ResultType> struct result_ptr_t           { typedef ::google::protobuf::Message* type; };
+template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
+template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
+template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
+
+// Utility function to allow invoke() to pick the right send_response() overload
+template<typename ResultType> inline
+auto result_ptr(ResultType& result) -> typename result_ptr_t<ResultType>::type { return &result; }
 }
 
 template<class ParameterMessage, class ResultMessage>
@@ -110,7 +100,7 @@ void mfd::ProtobufMessageProcessor::invoke(
             google::protobuf::NewPermanentCallback(this,
                 &ProtobufMessageProcessor::send_response,
                 invocation.id(),
-                &result_message));
+                result_ptr(result_message)));
 
         (display_server.get()->*function)(
             0,
@@ -187,4 +177,29 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
     report->completed_invocation(display_server.get(), invocation.id(), result);
 
     return result;
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
+{
+    const auto& fd = extract_fds_from(response);
+    sender->send_response(id, response, {fd});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
+{
+    const auto& fd = response->has_platform() ?
+        extract_fds_from(response->mutable_platform()) :
+        std::vector<int32_t>();
+
+    sender->send_response(id, response, {fd});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
+{
+    auto const& surface_fd = extract_fds_from(response);
+    const auto& buffer_fd = response->has_buffer() ?
+        extract_fds_from(response->mutable_buffer()) :
+        std::vector<int32_t>();
+
+    sender->send_response(id, response, {surface_fd, buffer_fd});
 }
