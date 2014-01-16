@@ -53,6 +53,7 @@ private:
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     MirPixelFormat fb_format;
+    static size_t const num_displays{3}; //primary, external, virtual
 };
 
 }

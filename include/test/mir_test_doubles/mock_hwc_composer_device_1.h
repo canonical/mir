@@ -38,6 +38,13 @@ public:
     {
         using namespace testing;
 
+        primary_prepare = false;
+        primary_set = false;
+        external_prepare = false;
+        external_set = false;
+        virtual_prepare = false;
+        virtual_set = false;
+
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
         registerProcs = hook_registerProcs;
@@ -71,6 +78,12 @@ public:
 
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
+        if (!displays) 
+            return -1;
+
+        primary_prepare = (!!displays[0]);
+        external_prepare = (!!displays[1]);
+        virtual_prepare = (!!displays[2]);
         return save_args(&display0_prepare_content, displays);
     }
 
@@ -81,6 +94,9 @@ public:
         if (!primary_display)
             return -1;
 
+        primary_set = (!!displays[0]);
+        external_set = (!!displays[1]);
+        virtual_set = (!!displays[2]);
         for(auto i = 0u; i < primary_display->numHwLayers; i++)
         {
             set_layerlist.push_back(primary_display->hwLayers[i]);
@@ -141,6 +157,7 @@ public:
     MOCK_METHOD4(getDisplayConfigs_interface, int(struct hwc_composer_device_1*, int, uint32_t*, size_t*));
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
 
+    bool primary_prepare, primary_set, external_prepare, external_set, virtual_prepare, virtual_set;
     hwc_display_contents_1_t display0_set_content;
     std::vector<hwc_layer_1> set_layerlist;
     hwc_display_contents_1_t display0_prepare_content;

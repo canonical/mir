@@ -45,10 +45,9 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 void mga::HwcDevice::prepare_composition()
 {
     //note, although we only have a primary display right now,
-    //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
-
-    if (hwc_device->prepare(hwc_device.get(), 1, displays))
+    //      set the external and virtual displays to null as some drivers check for that
+    hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
+    if (hwc_device->prepare(hwc_device.get(), num_displays, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
@@ -69,8 +68,8 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     auto native_buffer = buffer.native_buffer_handle();
     layer_list.set_fb_target(native_buffer);
 
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
-    if (hwc_device->set(hwc_device.get(), 1, displays))
+    hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
+    if (hwc_device->set(hwc_device.get(), num_displays, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
