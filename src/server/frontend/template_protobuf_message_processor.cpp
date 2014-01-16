@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "template_protobuf_message_processor.h"
-#include "protobuf_message_sender.h"
+#include "mir/frontend/template_protobuf_message_processor.h"
+#include "mir/frontend/protobuf_message_sender.h"
 
 namespace mfd = mir::frontend::detail;
 

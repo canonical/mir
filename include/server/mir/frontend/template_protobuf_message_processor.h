@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "message_processor.h"
+#include "mir/frontend/message_processor.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -34,10 +34,10 @@ namespace mir
 {
 namespace frontend
 {
-class ProtobufMessageSender;
-
 namespace detail
 {
+class ProtobufMessageSender;
+
 // This class is intended to make implmentation of a protobuf based MessageProcessor simpler.
 // The template method process_message() calls dispatch after unpacking the received "invocation"
 // message. The related invoke<>() template handles further unpacking of the parameter

@@ -17,7 +17,7 @@
  */
 
 #include "protobuf_message_processor.h"
-#include "protobuf_message_sender.h"
+#include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/message_processor_report.h"
 
 namespace mfd = mir::frontend::detail;

@@ -18,7 +18,7 @@
 #ifndef MIR_FRONTEND_MESSAGE_SENDER_H_
 #define MIR_FRONTEND_MESSAGE_SENDER_H_
 
-#include "fd_sets.h"
+#include "mir/frontend/fd_sets.h"
 
 #include <string>
 

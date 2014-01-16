@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_RESPONDER_H_
 #define MIR_FRONTEND_PROTOBUF_RESPONDER_H_
 
-#include "protobuf_message_sender.h"
+#include "mir/frontend/protobuf_message_sender.h"
 #include "mir_protobuf_wire.pb.h"
 
 #include <memory>

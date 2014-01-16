@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "template_protobuf_message_processor.h"
+#include "mir/frontend/template_protobuf_message_processor.h"
 
 #include "mir_protobuf.pb.h"
 

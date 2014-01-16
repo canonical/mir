@@ -37,7 +37,7 @@ namespace
 {
 struct MockMsgSender : public mfd::MessageSender
 {
-    MOCK_METHOD2(send, void(std::string const&, mf::FdSets const&));
+    MOCK_METHOD2(send, void(std::string const&, mfd::FdSets const&));
 };
 }
 

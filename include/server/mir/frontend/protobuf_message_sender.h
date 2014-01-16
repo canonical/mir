@@ -19,13 +19,15 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_SENDER_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_SENDER_H_
 
-#include "fd_sets.h"
+#include "mir/frontend/fd_sets.h"
 
 #include <google/protobuf/generated_message_reflection.h>
 
 namespace mir
 {
 namespace frontend
+{
+namespace detail
 {
 class ProtobufMessageSender
 {
@@ -43,6 +45,7 @@ private:
     ProtobufMessageSender(ProtobufMessageSender const&) = delete;
     ProtobufMessageSender& operator=(ProtobufMessageSender const&) = delete;
 };
+}
 }
 }
 

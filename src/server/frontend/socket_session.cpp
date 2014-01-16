@@ -17,9 +17,9 @@
  */
 
 #include "socket_session.h"
-#include "message_processor.h"
 #include "message_sender.h"
 #include "message_receiver.h"
+#include "mir/frontend/message_processor.h"
 
 #include <boost/signals2.hpp>
 #include <boost/throw_exception.hpp>
