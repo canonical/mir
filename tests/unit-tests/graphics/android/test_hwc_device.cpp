@@ -61,6 +61,36 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
+TEST_F(HwcDevice, test_hwc_displays)
+{
+    using namespace testing;
+
+    hwc_display_contents_1_t** prepare_displays, set_displays;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1)
+        .WillOnce(DoAll(SaveArg<2>(prepare_displays)), Return(0));
+    EXPECT_CALL(*mock_device, set_interface_interface(mock_device.get(), 1, _))
+        .Times(1)
+        .WillOnce(DoAll(SaveArg<2>(set_displays)), Return(0));
+
+    mga::HwcDevice device(mock_device, mock_vsync);
+    device.prepare_composition();
+    device.post(*mock_buffer);
+
+    ASSERT_NE(nullptr, prepare_displays);
+    ASSERT_NE(nullptr, set_displays);
+
+    /* primary phone display */
+    EXPECT_NE(nullptr, prepare_displays[0]);
+    EXPECT_NE(nullptr, set_displays[0]);
+    /* external monitor display not supported yet */
+    EXPECT_EQ(nullptr, prepare_displays[1]);
+    EXPECT_EQ(nullptr, set_displays[1]);
+    /* virtual monitor display not supported yet */
+    EXPECT_EQ(nullptr, prepare_displays[2]);
+    EXPECT_EQ(nullptr, set_displays[2]);
+}
+
 TEST_F(HwcDevice, test_hwc_prepare)
 {
     using namespace testing;
