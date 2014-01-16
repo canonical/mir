@@ -1,3 +1,5 @@
+include(CMakeDependentOption)
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 set(
@@ -64,13 +66,16 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "android")
-  #don't discover the test, we'll run it later on a phone
-else()
-  if(MIR_ENABLE_INTEGRATION_TESTS)
-    mir_discover_tests(mir_integration_tests)
-  endif()
-endif()
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_INTEGRATION_TESTS
+  "Run integration tests as part of default testing"
+  ON
+  "MIR_BUILD_INTEGRATION_TESTS"
+  OFF)
+
+if (MIR_RUN_INTEGRATION_TESTS)
+  mir_discover_tests(mir_integration_tests)
+endif (MIR_RUN_INTEGRATION_TESTS)
 
 install(
     TARGETS mir_integration_tests
