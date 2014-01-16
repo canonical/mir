@@ -41,10 +41,11 @@ mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
     geometry::Rectangle const& area,
-    std::shared_ptr<input::EventFilter> const& event_handler) :
+    std::shared_ptr<input::EventFilter> const& event_handler,
+    MirPixelFormat preferred_format) :
     egl_display(egl_display),
     mir_surface{mir_surface},
-    egl_config{egl_display.choose_config(nested_egl_config_attribs)},
+    egl_config{egl_display.choose_windowed_es_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     event_handler{event_handler},

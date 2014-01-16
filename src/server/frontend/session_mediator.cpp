@@ -34,6 +34,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
@@ -321,7 +322,9 @@ void mf::SessionMediator::configure_display(
             mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
             config->configure_output(output_id, output.used(),
                                      geom::Point{output.position_x(), output.position_y()},
-                                     output.current_mode(), static_cast<MirPowerMode>(output.power_mode()));
+                                     output.current_mode(),
+                                     static_cast<MirPixelFormat>(output.current_format()),
+                                     static_cast<MirPowerMode>(output.power_mode()));
         }
 
         display_changer->configure(session, config);

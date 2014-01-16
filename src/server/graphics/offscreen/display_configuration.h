@@ -33,10 +33,10 @@ public:
     DisplayConfiguration(DisplayConfiguration const& other);
     DisplayConfiguration& operator=(DisplayConfiguration const& other);
 
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const;
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const;
-    void configure_output(DisplayConfigurationOutputId, bool, geometry::Point,
-                          size_t, MirPowerMode power_mode);
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
+    virtual void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
+                                  size_t mode_index, MirPixelFormat format, MirPowerMode power_mode) override;
 
 private:
     DisplayConfigurationOutput output;

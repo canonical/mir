@@ -1,8 +1,83 @@
-mir (0.1.3-0ubuntu1) UNRELEASED; urgency=low
+mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
 
-  * Preparing for release 0.1.3
+  * New upstream release 0.1.4 (https://launchpad.net/mir/+milestone/0.1.4)
+    - Fixed snapshotting and flicker problems for Unity8 on various Nexus
+      devices.
+    - Enhanced reporting of performance information:
+      . Report input latency in InputReport/InputReceiverReport.
+      . Added a CompositorReport for logging compositor performance and state.
+    - Added a new package "mir-utils" containing new tools:
+      . mirping: Displays round-trip times between client and server
+      . mirout: Displays the monitor layout/configuration details
+    - Added GL texture caching to improve performance when multiple surfaces
+      are visible.
+    - Added opacity controls to mir_demo_server_shell
+    - Mir server ABI bumped to 13. Client ABI bumped to 5.
+    - Removed lots of Android headers, replaced by build-dep: android-headers
+    - Added support for translucent nested servers.
+    - Bugs fixed:
+      . unity8 display flickers and stops responding on Nexus 7 (grouper)
+        (LP: #1238695)
+      . Mir gets textures/buffers confused when running both scroll and flicker
+        demos (LP: #1263592)
+      . Some snapshots on Nexus10 upside-down (LP: #1263741)
+      . mir_unit_tests is crashing with SIGSEGV in libhybris gl functions
+        (LP: #1264968)
+      . Some snapshots on Nexus10 have swapped red/blue channels (LP: #1265787)
+      . Bypass causes some non-bypassed surfaces (on top) to be invisible
+        (LP: #1266385)
+      . helgrind: Possible data race - MirConnection::mutex not used
+        consistently (LP: #1243575)
+      . helgrind: Lock order violated (potential deadlock) in
+        ConnectionSurfaceMap (LP: #1243576)
+      . helgrind: Possible data race - inconsistent locking in PendingCallCache
+        (LP: #1243578)
+      . helgrind: Lock order violated in
+        mir::client::ConnectionSurfaceMap::erase(int) (LP: #1243584)
+      . [enhancement] Allow a Mir nested server to have a transparent
+        background (LP: #1256702)
+      . Compiling without tests fails (-DMIR_ENABLE_TESTS=NO) (LP: #1263724)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 11 Dec 2013 14:58:12 +0800
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jan 2014 11:19:03 +0800
+
+mir (0.1.3+14.04.20140108-0ubuntu1) trusty; urgency=low
+
+  * New upstream release 0.1.3 (https://launchpad.net/mir/+milestone/0.1.3)
+    - Nested servers now work on desktop and Android, with some caveats:
+      https://bugs.launchpad.net/mir/+bugs?field.tag=nested
+    - Surface resizing support is now complete and generates MirResizeEvent for
+      clients.
+    - Software buffers now use shared memory, for correctness, portability, and
+      significantly increased performance.
+    - Mir server ABI bumped to 12. No client ABI change.
+    - Unified redundant PixelFormat typedefs into one: MirPixelFormat.
+    - Bugs fixed:
+      . unit-tests hangs in
+        GBMDisplayTest.drm_device_change_event_triggers_handler (LP: #1253876)
+      . Nested servers fail to start on desktop: std::exception::what: Could
+        not create egl surface (LP: #1260635)
+      . cross-compile-chroot.sh fails [E: Couldn't find these debs:
+        android-platform-headers] (LP: #1261637)
+      . Cross compiling fails with "error: '__uint64_t' does not name a type"
+        (LP: #1262305)
+      . Tests disabled on armhf (LP: #1203004)
+      . [enhancement] Resizable surfaces (LP: #1227744)
+      . Occasional acceptance-test FAIL:
+        ClientPidTestFixture.authorizer_may_prevent_connection_of_clients
+        (LP: #1245803)
+      . Critical: Illegal type-casting of GBM buffers in clients (LP: #1248075)
+      . Performance regression: mir_demo_client_flicker is skipping frames on
+        desktop (GBM) (LP: #1249242)
+      . nested mir on android fails on galaxy nexus (LP: #1258056)
+      . Intermittent acceptance test failure in
+        DemoInProcessServer.client_can_connect (LP: #1262754)
+      . mir_demo_server_shell: On screen power off (Alt+P) rendering restarts
+        immediately, and without any vsync. Severe tearing and fan noise
+        ensues. (LP: #1255818)
+      . PixelFormat is in namespace "geometry" (LP: #1110115)
+      . unit-tests are noisy (LP: #1172184)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 Jan 2014 02:04:38 +0000
 
 mir (0.1.2+14.04.20131128.1-0ubuntu2) trusty; urgency=low
 

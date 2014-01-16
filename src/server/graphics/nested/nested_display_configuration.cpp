@@ -18,15 +18,26 @@
 
 #include "nested_display_configuration.h"
 
-namespace mg = mir::graphics;
-namespace mgn = mg::nested;
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 #include <algorithm>
 
-namespace mgn = mir::graphics::nested;
+
+namespace mg = mir::graphics;
+namespace mgn = mg::nested;
+
+namespace
+{
+bool format_valid_for_output(MirDisplayOutput const& output, MirPixelFormat format)
+{
+    MirPixelFormat * end = output.output_formats + output.num_output_formats;
+    return end != std::find(output.output_formats, end, format);
+}
+
+}
 
 mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
 display_config{connection}
@@ -77,7 +88,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 !!mir_output.used,
                 geometry::Point{mir_output.position_x, mir_output.position_y},
                 mir_output.current_mode,
-                mir_output.current_output_format,
+                mir_output.current_format,
                 mir_output.power_mode
             };
 
@@ -86,7 +97,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
 }
 
 void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used,
-    geometry::Point top_left, size_t mode_index, MirPowerMode power_mode)
+    geometry::Point top_left, size_t mode_index, MirPixelFormat format, MirPowerMode power_mode)
 {
     for (auto mir_output = display_config->outputs;
         mir_output != display_config->outputs+display_config->num_outputs;
@@ -97,13 +108,21 @@ void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutpu
             if (used && mode_index >= mir_output->num_modes)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
 
+            if (used && !mg::valid_pixel_format(format))
+                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
+
+            if (used && !format_valid_for_output(*mir_output, format))
+                BOOST_THROW_EXCEPTION(std::runtime_error("Format not available for used output"));
+
             mir_output->used = used;
             mir_output->position_x = top_left.x.as_uint32_t();
             mir_output->position_y = top_left.y.as_uint32_t();
             mir_output->current_mode = mode_index;
+            mir_output->current_format = format;
             mir_output->power_mode = static_cast<MirPowerMode>(power_mode);
             return;
         }
     }
     BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
 }
+
