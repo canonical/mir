@@ -72,9 +72,6 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
 namespace
 {
 template<typename ResultType> struct result_ptr_t           { typedef ::google::protobuf::Message* type; };
-template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
-template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
-template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 
 // Utility function to allow invoke() to pick the right send_response() overload
 template<typename ResultType> inline
@@ -114,6 +111,15 @@ void mfd::ProtobufMessageProcessor::invoke(
         send_response(invocation.id(), &result_message);
     }
 }
+
+namespace
+{
+template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
+template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
+template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
+}
+
+
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {

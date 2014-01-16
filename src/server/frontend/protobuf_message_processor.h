@@ -49,11 +49,11 @@ public:
 protected:
     void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response);
 
-    virtual bool dispatch(mir::protobuf::wire::Invocation const& invocation) = 0;
-
     std::shared_ptr<ProtobufMessageSender> const sender;
 
 private:
+    virtual bool dispatch(mir::protobuf::wire::Invocation const& invocation) = 0;
+
     bool process_message(std::istream& msg) override final;
 };
 
