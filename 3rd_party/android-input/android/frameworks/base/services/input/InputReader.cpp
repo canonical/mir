@@ -1676,6 +1676,7 @@ void MultiTouchMotionAccumulator::process(const RawEvent* rawEvent) {
             case ABS_MT_PRESSURE:
                 slot->mInUse = true;
                 slot->mAbsMTPressure = rawEvent->value;
+                slot->mHaveAbsMTPressure = true;
                 break;
             case ABS_MT_DISTANCE:
                 slot->mInUse = true;
@@ -1715,6 +1716,7 @@ void MultiTouchMotionAccumulator::Slot::clear() {
     mInUse = false;
     mHaveAbsMTTouchMinor = false;
     mHaveAbsMTWidthMinor = false;
+    mHaveAbsMTPressure = false;
     mHaveAbsMTToolType = false;
     mAbsMTPositionX = 0;
     mAbsMTPositionY = 0;
@@ -5909,7 +5911,8 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
 
         bool isHovering = mTouchButtonAccumulator.getToolType() != AMOTION_EVENT_TOOL_TYPE_MOUSE
                 && (mTouchButtonAccumulator.isHovering()
-                        || (mRawPointerAxes.pressure.valid && inSlot->getPressure() <= 0));
+                        || (mRawPointerAxes.pressure.valid
+                            && inSlot->havePressure() && inSlot->getPressure() <= 0));
         outPointer.isHovering = isHovering;
 
         // Assign pointer id using tracking id if available.
