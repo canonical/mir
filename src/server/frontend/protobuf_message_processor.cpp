@@ -18,10 +18,7 @@
 
 #include "protobuf_message_processor.h"
 #include "protobuf_message_sender.h"
-#include "protobuf_responder.h"
 #include "mir/frontend/message_processor_report.h"
-
-#include <boost/exception/diagnostic_information.hpp>
 
 namespace mfd = mir::frontend::detail;
 
@@ -35,28 +32,6 @@ std::vector<int32_t> extract_fds_from(Response* response)
     response->set_fds_on_side_channel(fd.size());
     return fd;
 }
-}
-
-mfd::TemplateProtobufMessageProcessor::TemplateProtobufMessageProcessor(
-    std::shared_ptr<ProtobufMessageSender> const& sender) :
-    sender(sender)
-{
-}
-
-bool mfd::TemplateProtobufMessageProcessor::process_message(std::istream& msg)
-{
-    mir::protobuf::wire::Invocation invocation;
-    invocation.ParseFromIstream(&msg);
-
-    if (invocation.has_protocol_version() && invocation.protocol_version() != 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
-
-    return dispatch(invocation);
-}
-
-void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
-{
-    sender->send_response(id, response, {});
 }
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
