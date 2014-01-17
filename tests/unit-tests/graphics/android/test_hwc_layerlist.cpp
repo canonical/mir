@@ -40,6 +40,8 @@ public:
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
         native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
+        native_handle_2->anwb()->width = width;
+        native_handle_2->anwb()->height = height;
     }
 
     int width;
