@@ -72,11 +72,8 @@ TEST_F(AndroidDisplayBufferTest, test_post_update)
 {
     using namespace testing;
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist)))
+    EXPECT_CALL(*mock_display_device, prepare_gl())
         .Times(Exactly(1));
     EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
         .Times(1);
@@ -86,6 +83,8 @@ TEST_F(AndroidDisplayBufferTest, test_post_update)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
+    std::list<mg::Renderable> renderlist;
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     db.post_update();
 }
 
@@ -120,16 +119,14 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
         MOCK_METHOD0(called, void());
     };
 
+    std::list<mg::Renderable> renderlist{mg::Renderable{}, mg::Renderable{}};
     MockRenderOperator mock_call_counter;
 
-    std::list<mg::Renderable> renderlist{mg::Renderable{}, mg::Renderable{}};
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-
     InSequence seq;
+    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist)))
+        .Times(1);
     EXPECT_CALL(mock_call_counter, called())
         .Times(renderlist.size());
-    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(_))//Ref(renderlist))
-        .Times(1);
     EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
@@ -137,6 +134,8 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
+
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     db.render_and_post_update(renderlist, [&](mg::Renderable const&){
         mock_call_counter.called();

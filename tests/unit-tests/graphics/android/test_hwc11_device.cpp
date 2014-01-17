@@ -80,7 +80,7 @@ TEST_F(HWC11Device, test_hwc_prepare_with_filter_out_optimized_renderables)
         .Times(1);
 
     mga::HWC11Device device(mock_device, mock_vsync);
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;
+    std::list<mg::Renderable> renderlist;
     device.prepare_gl_and_overlays(renderlist);
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);

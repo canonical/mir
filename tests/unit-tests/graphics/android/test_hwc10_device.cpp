@@ -57,7 +57,7 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-TEST_F(HWC10Device, hwc10_prepare_without_filter_out_optimized_renderables)
+TEST_F(HWC10Device, hwc10_prepare_gl_only)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
@@ -75,7 +75,7 @@ TEST_F(HWC10Device, hwc10_prepare_without_filter_out_optimized_renderables)
     EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
 }
 
-TEST_F(HWC10Device, hwc10_prepare_with_filter_out_optimized_renderables)
+TEST_F(HWC10Device, hwc10_prepare_with_renderables)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
@@ -83,7 +83,7 @@ TEST_F(HWC10Device, hwc10_prepare_with_filter_out_optimized_renderables)
 
     mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;
+    std::list<mg::Renderable> renderlist;
     device.prepare_gl_and_overlays(renderlist);
 
     EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);

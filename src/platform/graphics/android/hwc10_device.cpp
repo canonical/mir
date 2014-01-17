@@ -49,7 +49,7 @@ void mga::HWC10Device::prepare_gl()
     }
 }
 
-void mga::HWC10Device::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>>&)
+void mga::HWC10Device::prepare_gl_and_overlays(std::list<Renderable> const&)
 {
     prepare_gl();
 }

@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
+#include "renderable.h"
 #include <mir/geometry/rectangle.h>
 
 #include <list>
@@ -30,10 +31,6 @@ namespace graphics
 {
 
 class Buffer;
-struct Renderable
-{
-    /* TODO: make an interface */
-};
 
 /**
  * Interface to an output framebuffer.

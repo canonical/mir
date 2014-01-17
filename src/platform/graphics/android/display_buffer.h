@@ -52,6 +52,8 @@ public:
         std::function<void(Renderable const&)> const& render_fn);
 
 private:
+    void render_and_post();
+
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;

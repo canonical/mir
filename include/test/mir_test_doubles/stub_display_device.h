@@ -39,7 +39,7 @@ struct StubDisplayDevice : public graphics::android::DisplayDevice
     {
     }
 
-    void prepare_gl_and_overlays(std::list<std::shared_ptr<graphics::Renderable>>&)
+    void prepare_gl_and_overlays(std::list<graphics::Renderable> const&)
     {
     }
     void prepare_gl()
