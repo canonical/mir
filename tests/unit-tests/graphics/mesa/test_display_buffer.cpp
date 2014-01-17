@@ -102,6 +102,38 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
     EXPECT_EQ(area, db.view_area());
 }
 
+TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
+{
+    geometry::Rectangle area{{12,34}, {56,78}};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    EXPECT_TRUE(db.can_bypass());
+}
+
+TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
+{
+    geometry::Rectangle area{{12,34}, {56,78}};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,
+        area,
+        mir_orientation_right,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.can_bypass());
+}
+
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 {
     geometry::Rectangle area{{12,34}, {56,78}};
