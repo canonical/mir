@@ -186,9 +186,7 @@ bool mgm::DisplayBuffer::can_bypass() const
 
 MirOrientation mgm::DisplayBuffer::orientation() const
 {
-    /*
-     * Let the renderer do the rotation for us, while we don't know how.
-     */
+    // Tell the renderer to do the rotation, since we're not doing it here.
     return rotation;
 }
 

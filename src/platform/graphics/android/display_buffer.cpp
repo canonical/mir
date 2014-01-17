@@ -65,7 +65,6 @@ void mga::DisplayBuffer::post_update()
 
 bool mga::DisplayBuffer::can_bypass() const
 {
-    // TODO: Android bypass/overlay support
     return false;
 }
 
