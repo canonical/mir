@@ -38,10 +38,10 @@ namespace detail
 {
 class ProtobufMessageSender;
 
-// This class is intended to make implmentation of a protobuf based MessageProcessor simpler.
+// This class is intended to make implementation of a protobuf based MessageProcessor simpler.
 // The template method process_message() calls dispatch after unpacking the received "invocation"
 // message. The related invoke<>() template handles further unpacking of the parameter
-// message and and packing of the response and calls send_response.
+// message and packing of the response and calls send_response.
 // Derived classes can overload send_response, but need to specialize result_ptr_t before instantiating
 // invoke<>() to ensure the correct overload is called.
 class TemplateProtobufMessageProcessor : public MessageProcessor
