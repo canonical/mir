@@ -40,13 +40,11 @@ public:
     explicit DefaultIpcFactory(
         std::shared_ptr<mf::Shell> const& shell,
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
-        std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mf::DisplayChanger> const& display_changer,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
-        mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         display_changer(display_changer),
@@ -57,7 +55,6 @@ public:
 private:
     std::shared_ptr<mf::Shell> shell;
     std::shared_ptr<mf::SessionMediatorReport> const sm_report;
-    std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const display_changer;
@@ -90,11 +87,6 @@ private:
     {
         return cache;
     }
-
-    virtual std::shared_ptr<mf::MessageProcessorReport> report()
-    {
-        return mp_report;
-    }
 };
 }
 
@@ -105,7 +97,8 @@ mir::DefaultServerConfiguration::the_session_creator()
         {
             return std::make_shared<mf::ProtobufSessionCreator>(
                 the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                the_session_authorizer());
+                the_session_authorizer(),
+                the_message_processor_report());
         });
 }
 
@@ -151,7 +144,6 @@ mir::DefaultServerConfiguration::the_ipc_factory(
             return std::make_shared<DefaultIpcFactory>(
                 shell,
                 the_session_mediator_report(),
-                the_message_processor_report(),
                 the_graphics_platform(),
                 the_frontend_display_changer(), allocator);
         });
