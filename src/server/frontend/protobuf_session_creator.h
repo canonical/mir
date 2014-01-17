@@ -26,6 +26,7 @@
 
 namespace mir
 {
+namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class MessageProcessorReport;
@@ -35,6 +36,8 @@ class SessionAuthorizer;
 namespace detail
 {
 struct SocketSession;
+class TemplateProtobufMessageProcessor;
+class ProtobufMessageSender;
 }
 
 class ProtobufSessionCreator : public SessionCreator
@@ -47,6 +50,13 @@ public:
     ~ProtobufSessionCreator() noexcept;
 
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+
+protected:
+
+    virtual std::shared_ptr<detail::TemplateProtobufMessageProcessor> create_processor(
+        std::shared_ptr<detail::ProtobufMessageSender> const& sender,
+        std::shared_ptr<protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<MessageProcessorReport> const& report) const;
 
 private:
     int next_id();

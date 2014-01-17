@@ -67,7 +67,7 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
             ipc_factory->resource_cache());
 
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
-        auto const msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
+        auto const msg_processor = create_processor(
             message_sender,
             ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
             report);
@@ -76,4 +76,16 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
         connected_sessions->add(session);
         session->read_next_message();
     }
+}
+
+std::shared_ptr<mfd::TemplateProtobufMessageProcessor>
+mf::ProtobufSessionCreator::create_processor(
+    std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
+    std::shared_ptr<protobuf::DisplayServer> const& display_server,
+    std::shared_ptr<mf::MessageProcessorReport> const& report) const
+{
+    return std::make_shared<detail::ProtobufMessageProcessor>(
+        sender,
+        display_server,
+        report);
 }
