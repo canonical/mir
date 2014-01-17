@@ -85,7 +85,7 @@ protected:
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 {
-    geometry::Rectangle area{{12,34}, {56,78}};
+    geometry::Rectangle const area{{12,34}, {56,78}};
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -101,7 +101,7 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 
 TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
 {
-    geometry::Rectangle area{{12,34}, {56,78}};
+    geometry::Rectangle const area{{12,34}, {56,78}};
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -117,7 +117,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
-    geometry::Rectangle area{{12,34}, {56,78}};
+    geometry::Rectangle const area{{12,34}, {56,78}};
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -133,7 +133,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 {
-    geometry::Rectangle area{{12,34}, {56,78}};
+    geometry::Rectangle const area{{12,34}, {56,78}};
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -151,7 +151,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 {
     int const width = 56;
     int const height = 78;
-    geometry::Rectangle area{{12,34}, {width,height}};
+    geometry::Rectangle const area{{12,34}, {width,height}};
 
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
@@ -172,7 +172,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 {
     int const width = 56;
     int const height = 78;
-    geometry::Rectangle area{{12,34}, {width,height}};
+    geometry::Rectangle const area{{12,34}, {width,height}};
 
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
@@ -193,7 +193,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 {
     int const width = 56;
     int const height = 78;
-    geometry::Rectangle area{{12,34}, {width,height}};
+    geometry::Rectangle const area{{12,34}, {width,height}};
 
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
@@ -214,7 +214,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 {
     int const width = 56;
     int const height = 78;
-    geometry::Rectangle area{{12,34}, {width,height}};
+    geometry::Rectangle const area{{12,34}, {width,height}};
 
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
