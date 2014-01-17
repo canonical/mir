@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "protobuf_session_creator.h"
+#include "mir/frontend/protobuf_session_creator.h"
 
 #include "event_sender.h"
 #include "protobuf_message_processor.h"

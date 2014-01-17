@@ -56,9 +56,9 @@ public:
 
     std::shared_ptr<ProtobufMessageSender> const sender;
 
-private:
     virtual bool dispatch(mir::protobuf::wire::Invocation const& invocation) = 0;
 
+private:
     bool process_message(std::istream& msg) override final;
 };
 

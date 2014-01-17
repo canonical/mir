@@ -17,10 +17,10 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/frontend/protobuf_session_creator.h"
 
 #include "resource_cache.h"
 #include "protobuf_ipc_factory.h"
-#include "protobuf_session_creator.h"
 #include "published_socket_connector.h"
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"

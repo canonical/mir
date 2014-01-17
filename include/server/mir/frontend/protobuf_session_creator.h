@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_PROTOBUF_SESSION_CREATOR_H_
 
 #include "mir/frontend/session_creator.h"
-#include "connected_sessions.h"
+#include "mir/frontend/connected_sessions.h"
 
 #include <atomic>
 
