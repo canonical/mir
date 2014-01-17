@@ -58,8 +58,6 @@ public:
         fake_bo = reinterpret_cast<gbm_bo*>(123);
         ON_CALL(mock_gbm, gbm_surface_lock_front_buffer(_))
             .WillByDefault(Return(fake_bo));
-        ON_CALL(mock_gbm, gbm_bo_get_user_data(fake_bo))
-            .WillByDefault(Return(&fake_mesabo));
         fake_handle.u32 = 123;
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
             .WillByDefault(Return(fake_handle));
@@ -82,7 +80,6 @@ protected:
     NiceMock<MockGL>  mock_gl;
     NiceMock<MockDRM> mock_drm; 
     gbm_bo*           fake_bo;
-    int               fake_mesabo[10];
     gbm_bo_handle     fake_handle;
 };
 
