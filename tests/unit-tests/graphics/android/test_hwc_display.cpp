@@ -68,7 +68,7 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_legacy)
+TEST_F(AndroidDisplayBufferTest, test_post_update)
 {
     using namespace testing;
 
@@ -106,9 +106,41 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_empty_list)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    std::list<mg::Rendables> renderlist{};
+    std::list<mg::Renderable> renderlist{};
     auto render_fn = [] (mg::Renderable const&) {};
     db.render_and_post_update(renderlist, render_fn);
+}
+
+TEST_F(AndroidDisplayBufferTest, test_post_update_list)
+{
+    using namespace testing;
+
+    struct MockRenderOperator
+    {
+        MOCK_METHOD0(called, void());
+    };
+
+    MockRenderOperator mock_call_counter;
+
+    std::list<mg::Renderable> renderlist{mg::Renderable{}, mg::Renderable{}};
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    InSequence seq;
+    EXPECT_CALL(mock_call_counter, called())
+        .Times(renderlist.size());
+    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(_))//Ref(renderlist))
+        .Times(1);
+    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
+        .Times(1);
+    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
+        .Times(1)
+        .WillOnce(Return(stub_buffer));
+    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
+        .Times(1);
+
+    db.render_and_post_update(renderlist, [&](mg::Renderable const&){
+        mock_call_counter.called();
+    });
 }
 
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)

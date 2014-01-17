@@ -35,8 +35,7 @@ mga::DisplayBuffer::DisplayBuffer(
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
-      prepared{false}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
 {
 }
 
@@ -55,24 +54,22 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
-void mga::DisplayBuffer::filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>& renderable_list)
+void mga::DisplayBuffer::render_and_post_update(
+        std::list<Renderable> const&,
+        std::function<void(Renderable const&)> const&)
 {
-    display_device->prepare_gl_and_overlays(renderable_list);
-    prepared = true;
+    /* TODO: process list and then post */
+    post_update();
 }
 
 void mga::DisplayBuffer::post_update()
 {
-    if ( !prepared )
-    {
-        display_device->prepare_gl();
-    }
+    display_device->prepare_gl();
 
     display_device->gpu_render(gl_context.display(), gl_context.surface());
 
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
-    prepared = false;
 }
 
 bool mga::DisplayBuffer::can_bypass() const

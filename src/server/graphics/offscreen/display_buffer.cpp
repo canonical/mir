@@ -149,6 +149,8 @@ bool mgo::DisplayBuffer::can_bypass() const
     return false;
 }
 
-void mgo::DisplayBuffer::filter_out_optimized_renderables(std::list<std::shared_ptr<mg::Renderable>>&)
+void mgo::DisplayBuffer::render_and_post_update(
+        std::list<Renderable> const&,
+        std::function<void(Renderable const&)> const&)
 {
 } 

@@ -144,17 +144,6 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         auto const& view_area = display_buffer.view_area();
 
-        auto renderlist = scene->gen_renderlist(view_area);
-
-        scan_out_occlusions(renderlist);
-
-        RenderingApplicator app
-        auto ren = [](mg::Renderable&)
-        {
-            app(ren);
-        }
-        db.post_update(renderlist, render);
-
         mc::OcclusionFilter occlusion_search(view_area);
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
