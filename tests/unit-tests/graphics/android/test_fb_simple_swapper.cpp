@@ -81,24 +81,25 @@ public:
 static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
                                      const uint32_t* attribute_list, int32_t* values)
 {
-    EXPECT_EQ(attribute_list[0], HWC_DISPLAY_WIDTH);
-    EXPECT_EQ(attribute_list[1], HWC_DISPLAY_HEIGHT);
-
-    values[0] = display_width;
-    values[1] = display_height;
-
-    /* note: we check that these are set because the qcom msm8960 drivers ALWAYS check and
-             fill an array of size 6. (which is a bug, it should stop checking and filling
-             when it hits HWC_DISPLAY_NO_ATTRIBUTE) */
-    EXPECT_EQ(attribute_list[2], HWC_DISPLAY_VSYNC_PERIOD);
-    EXPECT_EQ(attribute_list[3], HWC_DISPLAY_DPI_X);
-    EXPECT_EQ(attribute_list[4], HWC_DISPLAY_DPI_Y);
-    EXPECT_EQ(attribute_list[5], HWC_DISPLAY_NO_ATTRIBUTE);
-    for(auto i = 2; i <= 6; i++)
+    int i = 0;
+    while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
     {
-        values[i] = display_height;
+        switch(attribute_list[i])
+        {
+            case HWC_DISPLAY_WIDTH:
+                values[i] = display_width;
+                break;
+            case HWC_DISPLAY_HEIGHT:
+                values[i] = display_height;
+                break;
+            default:
+                break;
+        }
+        i++;
     }
 
+    //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
+    EXPECT_EQ(5, i);
     return 0;
 }
 }
