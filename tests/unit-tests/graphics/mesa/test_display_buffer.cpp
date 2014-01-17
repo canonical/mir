@@ -60,6 +60,11 @@ public:
             .WillByDefault(Return(fake_bo));
         ON_CALL(mock_gbm, gbm_bo_get_user_data(fake_bo))
             .WillByDefault(Return(&fake_mesabo));
+        fake_handle.u32 = 123;
+        ON_CALL(mock_gbm, gbm_bo_get_handle(_))
+            .WillByDefault(Return(fake_handle));
+        ON_CALL(mock_gbm, gbm_bo_get_stride(_))
+            .WillByDefault(Return(456));
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -78,6 +83,7 @@ protected:
     NiceMock<MockDRM> mock_drm; 
     gbm_bo*           fake_bo;
     int               fake_mesabo[10];
+    gbm_bo_handle     fake_handle;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
@@ -110,4 +116,88 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
         mock_egl.fake_egl_context);
 
     EXPECT_EQ(mir_orientation_left, db.orientation());
+}
+
+TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
+{
+    int const width = 56;
+    int const height = 78;
+    geometry::Rectangle area{{12,34}, {width,height}};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
+        .WillOnce(Return((void*)0));
+    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+        .Times(1);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+}
+
+TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
+{
+    int const width = 56;
+    int const height = 78;
+    geometry::Rectangle area{{12,34}, {width,height}};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
+        .WillOnce(Return((void*)0));
+    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+        .Times(1);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,
+        area,
+        mir_orientation_left,
+        mock_egl.fake_egl_context);
+}
+
+TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
+{
+    int const width = 56;
+    int const height = 78;
+    geometry::Rectangle area{{12,34}, {width,height}};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
+        .WillOnce(Return((void*)0));
+    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+        .Times(1);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,
+        area,
+        mir_orientation_inverted,
+        mock_egl.fake_egl_context);
+}
+
+TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
+{
+    int const width = 56;
+    int const height = 78;
+    geometry::Rectangle area{{12,34}, {width,height}};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
+        .WillOnce(Return((void*)0));
+    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+        .Times(1);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,
+        area,
+        mir_orientation_right,
+        mock_egl.fake_egl_context);
 }
