@@ -68,7 +68,7 @@ protected:
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_with_filter_out_optimized_renderables)
+TEST_F(AndroidDisplayBufferTest, test_post_update_legacy)
 {
     using namespace testing;
 
@@ -78,10 +78,6 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_filter_out_optimized_rend
     InSequence seq;
     EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist)))
         .Times(Exactly(1));
-    db.filter_out_optimized_renderables(renderlist);
-
-    Mock::VerifyAndClearExpectations(mock_display_device.get());
-
     EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
@@ -93,31 +89,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_with_filter_out_optimized_rend
     db.post_update();
 }
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_with_multiple_filter_out_optimized_renderabless)
-{
-    using namespace testing;
-
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-
-    InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist)))
-        .Times(Exactly(2));
-    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
-        .Times(1);
-
-    db.filter_out_optimized_renderables(renderlist);
-    db.filter_out_optimized_renderables(renderlist);
-    db.post_update();
-}
-
-//we still have to call prepare, even if there's no optimization to be made
-TEST_F(AndroidDisplayBufferTest, test_post_update_without_filter_out_optimized_renderables)
+TEST_F(AndroidDisplayBufferTest, test_post_update_empty_list)
 {
     using namespace testing;
 
@@ -134,7 +106,9 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_without_filter_out_optimized_r
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    db.post_update();
+    std::list<mg::Rendables> renderlist{};
+    auto render_fn = [] (mg::Renderable const&) {};
+    db.render_and_post_update(renderlist, render_fn);
 }
 
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
