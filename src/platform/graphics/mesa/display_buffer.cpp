@@ -158,10 +158,6 @@ mgm::DisplayBuffer::~DisplayBuffer()
         last_flipped_bufobj->release();
 }
 
-void mgm::DisplayBuffer::filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>&)
-{
-}
-
 geom::Rectangle mgm::DisplayBuffer::view_area() const
 {
     return area;
@@ -170,6 +166,13 @@ geom::Rectangle mgm::DisplayBuffer::view_area() const
 bool mgm::DisplayBuffer::can_bypass() const
 {
     return true;
+}
+
+void mgm::DisplayBuffer::render_and_post_update(
+    std::list<Renderable> const&,
+    std::function<void(Renderable const&)> const&)
+{
+    post_update(nullptr); 
 }
 
 void mgm::DisplayBuffer::post_update()

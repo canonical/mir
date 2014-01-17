@@ -22,8 +22,9 @@
 #include "renderable.h"
 #include <mir/geometry/rectangle.h>
 
-#include <list>
 #include <memory>
+#include <functional>
+#include <list>
 
 namespace mir
 {

@@ -51,7 +51,6 @@ public:
                   EGLContext shared_context);
     ~DisplayBuffer();
 
-    void filter_out_optimized_renderables(std::list<std::shared_ptr<Renderable>>& list);
     geometry::Rectangle view_area() const;
     void make_current();
     void release_current();
@@ -59,6 +58,8 @@ public:
 
     bool can_bypass() const override;
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
+    void render_and_post_update(std::list<Renderable> const& renderlist,
+                                std::function<void(Renderable const&)> const& render_fn);
     void schedule_set_crtc();
 
 private:
