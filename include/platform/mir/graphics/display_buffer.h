@@ -51,10 +51,13 @@ public:
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
 
-    /** Returns the orientation of the screen if not already handled by the
-     *  hardware. This tells us the renderer needs to do the rotation.
-     *  If it is handled by the hardware/DisplayBuffer implementation, then
-     *  this will always return mir_orientation_normal.
+    /** Returns the orientation of the display buffer relative to how the
+     *  user should see it (the orientation of the output).
+     *  This tells us how much (if any) rotation the renderer needs to do.
+     *  If your DisplayBuffer can do the rotation itself then this will
+     *  always return mir_orientation_normal. If the DisplayBuffer does not
+     *  implement the rotation itself then this function will return the
+     *  amount of rotation the renderer must do to make things "look right".
      */
     virtual MirOrientation orientation() const = 0;
 
