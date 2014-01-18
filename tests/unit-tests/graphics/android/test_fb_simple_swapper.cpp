@@ -81,12 +81,25 @@ public:
 static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
                                      const uint32_t* attribute_list, int32_t* values)
 {
-    EXPECT_EQ(attribute_list[0], HWC_DISPLAY_WIDTH);
-    EXPECT_EQ(attribute_list[1], HWC_DISPLAY_HEIGHT);
-    EXPECT_EQ(attribute_list[2], HWC_DISPLAY_NO_ATTRIBUTE);
+    int i = 0;
+    while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
+    {
+        switch(attribute_list[i])
+        {
+            case HWC_DISPLAY_WIDTH:
+                values[i] = display_width;
+                break;
+            case HWC_DISPLAY_HEIGHT:
+                values[i] = display_height;
+                break;
+            default:
+                break;
+        }
+        i++;
+    }
 
-    values[0] = display_width;
-    values[1] = display_height;
+    //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
+    EXPECT_EQ(5, i);
     return 0;
 }
 }

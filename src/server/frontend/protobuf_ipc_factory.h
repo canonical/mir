@@ -39,7 +39,6 @@ public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<EventSink> const& sink, bool authorized_to_resize_display) = 0;
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
-    virtual std::shared_ptr<MessageProcessorReport> report() = 0;
 
 protected:
     ProtobufIpcFactory() {}
