@@ -141,11 +141,13 @@ mga::NativeFence mga::LayerList::framebuffer_fence()
     auto fb_pos = layers.back();
     if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
     {
+        printf("oo\n");
         auto fb_position = layers.size() - 1;
         return hwc_representation->hwLayers[fb_position].releaseFenceFd;
     }
     else
     {
+        printf("zoo\n");
         return -1;
     }
 }
