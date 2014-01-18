@@ -59,7 +59,6 @@ protected:
     EGLDisplay dpy;
     EGLSurface surf;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    int const num_displays{3};
 };
 
 TEST_F(HwcDevice, test_hwc_displays)
@@ -88,7 +87,7 @@ TEST_F(HwcDevice, test_hwc_displays)
 TEST_F(HwcDevice, test_hwc_prepare)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), num_displays, _))
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
 
     mga::HwcDevice device(mock_device, mock_vsync);
@@ -128,7 +127,7 @@ TEST_F(HwcDevice, test_hwc_commit)
     mga::HwcDevice device(mock_device, mock_vsync);
 
     InSequence seq;
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), num_displays, _))
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
     EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
         .Times(1);
