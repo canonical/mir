@@ -93,8 +93,15 @@ public:
             default:
                 break;
         }
-        return 0;
-     }
+
+        for(auto i = 0u; i < displays[0]->numHwLayers; i++)
+        {
+            prepare_layerlist.push_back(display[0]->hwLayers[i]);
+            prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
+        }
+
+        return save_args(&display0_prepare_content, displays);
+    }
 
     int save_last_set_arguments(
         struct hwc_composer_device_1 *, size_t size, hwc_display_contents_1_t** displays)
@@ -178,6 +185,7 @@ public:
     bool primary_prepare, primary_set, external_prepare, external_set, virtual_prepare, virtual_set;
     hwc_display_contents_1_t display0_set_content;
     std::vector<hwc_layer_1> set_layerlist;
+    std::vector<hwc_layer_1> prepare_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
     int fb_fence;
 };
