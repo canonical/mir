@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "hwc11_device.h"
+#include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
@@ -35,7 +35,7 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
-mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_list({mga::ForceGLLayer{}, mga::FramebufferLayer{}}),
@@ -43,19 +43,18 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HWC11Device::prepare_composition()
+void mga::HwcDevice::prepare_composition()
 {
     //note, although we only have a primary display right now,
-    //      set the second display to nullptr, as exynos hwc always derefs displays[1]
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
-
-    if (hwc_device->prepare(hwc_device.get(), 1, displays))
+    //      set the external and virtual displays to null as some drivers check for that
+    hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
+    if (hwc_device->prepare(hwc_device.get(), num_displays, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
 }
 
-void mga::HWC11Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
+void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
@@ -63,15 +62,15 @@ void mga::HWC11Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
     }
 }
 
-void mga::HWC11Device::post(mg::Buffer const& buffer)
+void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
     auto native_buffer = buffer.native_buffer_handle();
     layer_list.set_fb_target(native_buffer);
 
-    hwc_display_contents_1_t* displays[HWC_NUM_DISPLAY_TYPES] {layer_list.native_list(), nullptr};
-    if (hwc_device->set(hwc_device.get(), 1, displays))
+    hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
+    if (hwc_device->set(hwc_device.get(), num_displays, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }

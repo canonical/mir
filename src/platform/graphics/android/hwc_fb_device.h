@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
@@ -31,10 +31,10 @@ namespace graphics
 namespace android
 {
 
-class HWC10Device : public HWCCommonDevice
+class HwcFbDevice : public HWCCommonDevice
 {
 public:
-    HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<framebuffer_device_t> const& fb_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
@@ -51,4 +51,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_ */

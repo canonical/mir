@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
 #include "mir_toolkit/common.h"
 #include "hwc_common_device.h"
@@ -36,10 +36,10 @@ class HWCVsyncCoordinator;
 class SyncFileOps;
 class SyncFence;
 
-class HWC11Device : public HWCCommonDevice
+class HwcDevice : public HWCCommonDevice
 {
 public:
-    HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     void prepare_composition();
@@ -53,10 +53,11 @@ private:
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     MirPixelFormat fb_format;
+    static size_t const num_displays{3}; //primary, external, virtual
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_ */
