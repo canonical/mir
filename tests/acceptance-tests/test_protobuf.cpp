@@ -36,8 +36,6 @@ namespace mfd = mir::frontend::detail;
 
 namespace
 {
-char const* const ok = "ok";
-
 struct DemoMirServer : mir::protobuf::MirServer
 {
     MOCK_CONST_METHOD1(on_call, std::string(std::string));
@@ -45,7 +43,7 @@ struct DemoMirServer : mir::protobuf::MirServer
     DemoMirServer()
     {
         using namespace  testing;
-        ON_CALL(*this, on_call(_)).WillByDefault(Return(ok));
+        ON_CALL(*this, on_call(_)).WillByDefault(Return("ok"));
     }
 
     void function(
@@ -238,11 +236,7 @@ TEST_F(DemoPrivateProtobuf, server_receives_function_call)
 
     EXPECT_CALL(demo_mir_server, on_call(__PRETTY_FUNCTION__)).Times(1);
 
-    server.function(
-        nullptr,
-        &parameters,
-        &result,
-        NewCallback([]{}));
+    server.function(nullptr, &parameters, &result, NewCallback([]{}));
 
     mir_connection_release(connection);
 }
@@ -269,11 +263,7 @@ TEST_F(DemoPrivateProtobuf, client_receives_result)
     Result result;
     parameters.set_name(__PRETTY_FUNCTION__);
 
-    server.function(
-        nullptr,
-        &parameters,
-        &result,
-        NewCallback([]{}));
+    server.function(nullptr, &parameters, &result, NewCallback([]{}));
 
     mir_connection_release(connection);
 
