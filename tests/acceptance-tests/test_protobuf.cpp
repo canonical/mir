@@ -153,9 +153,9 @@ struct DemoPrivateProtobuf : mir_test_framework::InProcessServer
         mir_test_framework::InProcessServer::SetUp();
         demo_session_creator = std::dynamic_pointer_cast<DemoSessionCreator>(my_server_config.the_session_creator());
 
-        ASSERT_THAT(demo_session_creator, testing::Ne(nullptr));
-
         using namespace testing;
+        ASSERT_THAT(demo_session_creator, NotNull());
+
         ON_CALL(*demo_session_creator, create_processor(_, _, _))
             .WillByDefault(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_unwrapped_processor));
     }
@@ -201,7 +201,7 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
     mir_connection_release(connection);
 
     EXPECT_TRUE(called_back);
-    EXPECT_EQ(nothing_returned, result.error());
+    EXPECT_THAT(result.error(), Eq(nothing_returned));
 }
 
 TEST_F(DemoPrivateProtobuf, wrapping_message_processor)
@@ -245,4 +245,38 @@ TEST_F(DemoPrivateProtobuf, server_receives_function_call)
         NewCallback([]{}));
 
     mir_connection_release(connection);
+}
+
+
+TEST_F(DemoPrivateProtobuf, client_receives_result)
+{
+    using namespace testing;
+    EXPECT_CALL(*demo_session_creator, create_processor(_, _, _))
+        .WillRepeatedly(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_wrapped_processor));
+    EXPECT_CALL(demo_mir_server, on_call(_)).WillRepeatedly(Return(__PRETTY_FUNCTION__));
+
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+
+    auto const rpc_channel = mir::client::the_rpc_channel(connection);
+
+    using namespace mir::protobuf;
+    using namespace google::protobuf;
+
+    MirServer::Stub server(rpc_channel.get());
+
+    Parameters parameters;
+    Result result;
+    parameters.set_name(__PRETTY_FUNCTION__);
+
+    server.function(
+        nullptr,
+        &parameters,
+        &result,
+        NewCallback([]{}));
+
+    mir_connection_release(connection);
+
+    EXPECT_THAT(result.has_error(), Eq(false));
+    EXPECT_THAT(result.value(), Eq(__PRETTY_FUNCTION__));
 }
