@@ -20,21 +20,107 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/client/private.h"
+#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/template_protobuf_message_processor.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <atomic>
 
+namespace mf = mir::frontend;
+namespace mfd = mir::frontend::detail;
+
 namespace
 {
-class DemoPrivateProtobuf : public mir_test_framework::InProcessServer
+struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
 {
-    mir::DefaultServerConfiguration& server_config() override { return server_config_; }
+    DemoMessageProcessor(
+        std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
+        std::shared_ptr<mfd::TemplateProtobufMessageProcessor> const& wrapped) :
+        mfd::TemplateProtobufMessageProcessor(sender),
+        wrapped(wrapped) {}
 
-    mir_test_framework::StubbedServerConfiguration server_config_;
+    bool dispatch(mir::protobuf::wire::Invocation const& invocation)
+    {
+        return wrapped->dispatch(invocation);
+    }
+
+    std::shared_ptr<mfd::TemplateProtobufMessageProcessor> const wrapped;
+};
+
+struct DemoSessionCreator : mf::ProtobufSessionCreator
+{
+    using ProtobufSessionCreator::ProtobufSessionCreator;
+
+    MOCK_CONST_METHOD3(create_processor,
+        std::shared_ptr<mfd::TemplateProtobufMessageProcessor>(
+        std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
+        std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<mf::MessageProcessorReport> const& report));
+
+    std::shared_ptr<mfd::TemplateProtobufMessageProcessor> create_wrapped_processor(
+        std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
+        std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<mf::MessageProcessorReport> const& report) const
+    {
+        auto const wrapped = mf::ProtobufSessionCreator::create_processor(
+            sender,
+            display_server,
+            report);
+
+        return std::make_shared<DemoMessageProcessor>(sender, wrapped);
+    }
+
+    std::shared_ptr<mfd::TemplateProtobufMessageProcessor> create_unwrapped_processor(
+        std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
+        std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<mf::MessageProcessorReport> const& report) const
+    {
+        return mf::ProtobufSessionCreator::create_processor(
+            sender,
+            display_server,
+            report);
+    }
+};
+
+struct DemoServerConfiguration : mir_test_framework::StubbedServerConfiguration
+{
+    std::shared_ptr<mf::SessionCreator> the_session_creator() override
+    {
+        return session_creator([this]
+            {
+                return std::make_shared<DemoSessionCreator>(
+                    the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
+                    the_session_authorizer(),
+                    the_message_processor_report());
+            });
+    }
+
+};
+
+struct DemoPrivateProtobuf : mir_test_framework::InProcessServer
+{
+    mir::DefaultServerConfiguration& server_config() override { return my_server_config; }
+
+    DemoServerConfiguration my_server_config;
+
+    std::shared_ptr<DemoSessionCreator> demo_session_creator;
+
+    void SetUp()
+    {
+        mir_test_framework::InProcessServer::SetUp();
+        demo_session_creator = std::dynamic_pointer_cast<DemoSessionCreator>(my_server_config.the_session_creator());
+
+        ASSERT_THAT(demo_session_creator, testing::Ne(nullptr));
+
+        using namespace testing;
+        ON_CALL(*demo_session_creator, create_processor(_, _, _))
+            .WillByDefault(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_unwrapped_processor));
+    }
 };
 
 void callback(std::atomic<bool>* called_back) { called_back->store(true); }
@@ -43,6 +129,9 @@ char const* const nothing_returned = "Nothing returned";
 
 TEST_F(DemoPrivateProtobuf, client_can_call_server)
 {
+    using namespace testing;
+    EXPECT_CALL(*demo_session_creator, create_processor(_, _, _)).Times(AnyNumber());
+
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
@@ -74,3 +163,37 @@ TEST_F(DemoPrivateProtobuf, client_can_call_server)
     EXPECT_TRUE(called_back);
     EXPECT_EQ(nothing_returned, result.error());
 }
+
+TEST_F(DemoPrivateProtobuf, can_wrap_message_processor)
+{
+    using namespace testing;
+    EXPECT_CALL(*demo_session_creator, create_processor(_, _, _))
+        .Times(1)
+        .WillOnce(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_wrapped_processor));
+
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+//    ASSERT_TRUE(mir_connection_is_valid(connection));
+
+//    auto const rpc_channel = mir::client::the_rpc_channel(connection);
+
+//    using namespace mir::protobuf;
+//    using namespace google::protobuf;
+
+//    MirServer::Stub server(rpc_channel.get());
+
+//    Parameters parameters;
+//    parameters.set_name(__PRETTY_FUNCTION__);
+
+//    Result result;
+//    result.set_error(nothing_returned);
+//    std::atomic<bool> called_back{false};
+
+//    server.function(
+//        nullptr,
+//        &parameters,
+//        &result,
+//        NewCallback(&callback, &called_back));
+
+    mir_connection_release(connection);
+}
+
