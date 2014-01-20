@@ -132,6 +132,7 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
         mga::FramebufferLayer fblay(*native_buffer);
         hwc_representation->hwLayers[fb_position] = fblay;
         hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
+        layers.pop_back();
         layers.emplace_back(fblay);
     }
 }

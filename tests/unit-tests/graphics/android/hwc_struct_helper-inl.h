@@ -16,7 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_TEST_HWC_STRUCT_HELPER_INL_H_
+#define MIR_TEST_HWC_STRUCT_HELPER_INL_H_
+
 #include <gtest/gtest.h>
+
+namespace
+{
 
 void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
 {
@@ -85,3 +91,5 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
 
     return !(::testing::Test::HasFailure());
 }
+}
+#endif /* MIR_TEST_HWC_STRUCT_HELPER_INL_H_ */

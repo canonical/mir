@@ -119,6 +119,16 @@ mga::ForceGLLayer::ForceGLLayer()
 {
 }
 
+mga::ForceGLLayer::ForceGLLayer(mg::NativeBuffer const& buffer)
+    : HWCLayer(HWC_FRAMEBUFFER,
+               buffer.handle(),
+               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
+               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
+               true,
+               false)
+{
+}
+
 mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable)
     : HWCLayer(HWC_FRAMEBUFFER,
                renderable.buffer()->native_buffer_handle()->handle(),

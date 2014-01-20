@@ -70,6 +70,7 @@ struct CompositionLayer : public HWCLayer
 struct ForceGLLayer : public HWCLayer
 {
     ForceGLLayer();
+    ForceGLLayer(NativeBuffer const&);
 };
 
 //used as the target (lowest layer, fb)
