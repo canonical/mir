@@ -36,6 +36,32 @@ namespace mfd = mir::frontend::detail;
 
 namespace
 {
+char const* const ok = "ok";
+
+struct DemoMirServer : mir::protobuf::MirServer
+{
+    MOCK_CONST_METHOD1(on_call, std::string(std::string));
+
+    DemoMirServer()
+    {
+        using namespace  testing;
+        ON_CALL(*this, on_call(_)).WillByDefault(Return(ok));
+    }
+
+    void function(
+        ::google::protobuf::RpcController* ,
+        ::mir::protobuf::Parameters const* parameters,
+        ::mir::protobuf::Result* response,
+        ::google::protobuf::Closure* done)
+    {
+        response->set_value(on_call(parameters->name()));
+        done->Run();
+    }
+};
+
+// using a global for easy access from tests and DemoMessageProcessor::dispatch()
+DemoMirServer* demo_mir_server;
+
 struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
 {
     DemoMessageProcessor(
@@ -46,6 +72,16 @@ struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
 
     bool dispatch(mir::protobuf::wire::Invocation const& invocation)
     {
+        if ("function" == invocation.method_name())
+        {
+            mfd::invoke(
+                static_cast<mfd::TemplateProtobufMessageProcessor*>(this), // TODO fix need for this cast
+                demo_mir_server,
+                &DemoMirServer::function,
+                invocation);
+            return true;
+        }
+
         return wrapped->dispatch(invocation);
     }
 
@@ -112,6 +148,8 @@ struct DemoPrivateProtobuf : mir_test_framework::InProcessServer
 
     void SetUp()
     {
+        ::demo_mir_server = &demo_mir_server;
+
         mir_test_framework::InProcessServer::SetUp();
         demo_session_creator = std::dynamic_pointer_cast<DemoSessionCreator>(my_server_config.the_session_creator());
 
@@ -121,13 +159,15 @@ struct DemoPrivateProtobuf : mir_test_framework::InProcessServer
         ON_CALL(*demo_session_creator, create_processor(_, _, _))
             .WillByDefault(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_unwrapped_processor));
     }
+
+    testing::NiceMock<DemoMirServer> demo_mir_server;
 };
 
 void callback(std::atomic<bool>* called_back) { called_back->store(true); }
 char const* const nothing_returned = "Nothing returned";
 }
 
-TEST_F(DemoPrivateProtobuf, client_can_call_server)
+TEST_F(DemoPrivateProtobuf, client_calls_server)
 {
     using namespace testing;
     EXPECT_CALL(*demo_session_creator, create_processor(_, _, _)).Times(AnyNumber());
@@ -164,7 +204,7 @@ TEST_F(DemoPrivateProtobuf, client_can_call_server)
     EXPECT_EQ(nothing_returned, result.error());
 }
 
-TEST_F(DemoPrivateProtobuf, can_wrap_message_processor)
+TEST_F(DemoPrivateProtobuf, wrapping_message_processor)
 {
     using namespace testing;
     EXPECT_CALL(*demo_session_creator, create_processor(_, _, _))
@@ -172,28 +212,37 @@ TEST_F(DemoPrivateProtobuf, can_wrap_message_processor)
         .WillOnce(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_wrapped_processor));
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-//    ASSERT_TRUE(mir_connection_is_valid(connection));
-
-//    auto const rpc_channel = mir::client::the_rpc_channel(connection);
-
-//    using namespace mir::protobuf;
-//    using namespace google::protobuf;
-
-//    MirServer::Stub server(rpc_channel.get());
-
-//    Parameters parameters;
-//    parameters.set_name(__PRETTY_FUNCTION__);
-
-//    Result result;
-//    result.set_error(nothing_returned);
-//    std::atomic<bool> called_back{false};
-
-//    server.function(
-//        nullptr,
-//        &parameters,
-//        &result,
-//        NewCallback(&callback, &called_back));
 
     mir_connection_release(connection);
 }
 
+TEST_F(DemoPrivateProtobuf, server_receives_function_call)
+{
+    using namespace testing;
+    EXPECT_CALL(*demo_session_creator, create_processor(_, _, _))
+        .WillRepeatedly(Invoke(demo_session_creator.get(), &DemoSessionCreator::create_wrapped_processor));
+
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+
+    auto const rpc_channel = mir::client::the_rpc_channel(connection);
+
+    using namespace mir::protobuf;
+    using namespace google::protobuf;
+
+    MirServer::Stub server(rpc_channel.get());
+
+    Parameters parameters;
+    Result result;
+    parameters.set_name(__PRETTY_FUNCTION__);
+
+    EXPECT_CALL(demo_mir_server, on_call(__PRETTY_FUNCTION__)).Times(1);
+
+    server.function(
+        nullptr,
+        &parameters,
+        &result,
+        NewCallback([]{}));
+
+    mir_connection_release(connection);
+}
