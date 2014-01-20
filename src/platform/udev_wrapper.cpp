@@ -47,7 +47,7 @@ DeviceImpl::DeviceImpl(udev_device *dev)
     : dev(dev)
 {
     if (!dev)
-    BOOST_THROW_EXCEPTION(std::runtime_error(" device does not exist"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
 
     udev_ref(udev_device_get_udev(dev));
 }
