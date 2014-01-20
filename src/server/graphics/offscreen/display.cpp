@@ -125,11 +125,9 @@ void mgo::Display::configure(mg::DisplayConfiguration const& conf)
         {
             if (output.connected && output.preferred_mode_index < output.modes.size())
             {
-                geom::Rectangle const area{
-                    output.top_left, output.modes[output.current_mode_index].size};
                 auto raw_db = new mgo::DisplayBuffer{
                     SurfacelessEGLContext{egl_display, egl_context_shared},
-                    area};
+                    output.extents()};
 
                 display_buffers.push_back(std::unique_ptr<mg::DisplayBuffer>(raw_db));
             }

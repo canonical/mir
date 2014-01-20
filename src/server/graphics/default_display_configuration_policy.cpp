@@ -81,17 +81,21 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
             if (!conf_output.connected || conf_output.modes.empty() ||
                 available_outputs_for_card[conf_output.card_id] == 0)
             {
-                conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                      conf_output.current_mode_index, conf_output.current_format,
-                                      default_power_state);
+                conf.configure_output(conf_output.id, false,
+                                      conf_output.top_left,
+                                      conf_output.current_mode_index,
+                                      conf_output.current_format,
+                                      default_power_state,
+                                      conf_output.orientation);
                 return;
             }
 
             size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
             MirPixelFormat format{select_opaque_format(conf_output.current_format, conf_output.pixel_formats)};
 
-            conf.configure_output(conf_output.id, true, geom::Point(), preferred_mode_index,
-                                  format, default_power_state);
+            conf.configure_output(conf_output.id, true, geom::Point(),
+                                  preferred_mode_index, format,
+                                  default_power_state, mir_orientation_normal);
 
             --available_outputs_for_card[conf_output.card_id];
         });

@@ -5057,8 +5057,8 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
 
 #if DEBUG_GESTURES
             {
-                std::string mappedTouchIdsString = mappedTouchIdBits.toString();
-                std::string usedGestureIdsString = usedGestureIdBits.toString();
+                std::string mappedTouchIdsString = mappedTouchIds.toString();
+                std::string usedGestureIdsString = usedGestureIds.toString();
                 ALOGD("Gestures: FREEFORM follow up "
                         "mappedTouchIds=%s, usedGestureIds=%s, "
                         "activeGestureId=%d",
@@ -5137,7 +5137,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             const PointerCoords& coords = mPointerGesture.currentGestureCoords[index];
             ALOGD("  currentGesture[%d]: index=%d, toolType=%d, "
                     "x=%0.3f, y=%0.3f, pressure=%0.3f",
-                    id, index, properties.toolType,
+                    properties.id, index, properties.toolType,
                     coords.getAxisValue(AMOTION_EVENT_AXIS_X),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_Y),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));
@@ -5147,7 +5147,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             const PointerCoords& coords = mPointerGesture.lastGestureCoords[index];
             ALOGD("  lastGesture[%d]: index=%d, toolType=%d, "
                     "x=%0.3f, y=%0.3f, pressure=%0.3f",
-                    id, index, properties.toolType,
+                    properties.id, index, properties.toolType,
                     coords.getAxisValue(AMOTION_EVENT_AXIS_X),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_Y),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));

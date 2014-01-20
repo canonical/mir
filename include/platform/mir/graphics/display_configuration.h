@@ -21,6 +21,7 @@
 
 #include "mir/int_wrapper.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir_toolkit/common.h"
@@ -108,6 +109,11 @@ struct DisplayConfigurationOutput
     MirPixelFormat current_format;
     /** Current power mode **/
     MirPowerMode power_mode;
+    MirOrientation orientation;
+
+    /** The logical rectangle occupied by the output, based on its position,
+        current mode and orientation (rotation) */
+    geometry::Rectangle extents() const;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
@@ -136,8 +142,11 @@ public:
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
 
     /** Configures an output. */
-    virtual void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
-                                  size_t mode_index, MirPixelFormat format, MirPowerMode power_mode) = 0;
+    virtual void configure_output(DisplayConfigurationOutputId id, bool used,
+                                  geometry::Point top_left, size_t mode_index,
+                                  MirPixelFormat format,
+                                  MirPowerMode power_mode,
+                                  MirOrientation orientation) = 0;
 
 protected:
     DisplayConfiguration() = default;
