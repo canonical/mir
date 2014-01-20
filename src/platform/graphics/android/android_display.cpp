@@ -69,10 +69,15 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 
-    // This cast will always succeed. Else, crashing is the right answer :)
-    android::DisplayBuffer* db =
-        dynamic_cast<mga::DisplayBuffer*>(display_buffer.get());
-    db->orient(orientation);
+    /*
+     * It's tempting to put orient() into the base class and so avoid this
+     * cast, but we only need it in the Android implementation right now.
+     */
+    if (android::DisplayBuffer* db =
+            dynamic_cast<mga::DisplayBuffer*>(display_buffer.get()))
+    {
+        db->orient(orientation);
+    }
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(

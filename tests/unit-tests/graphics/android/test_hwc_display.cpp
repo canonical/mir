@@ -88,6 +88,29 @@ TEST_F(AndroidDisplayBufferTest, test_post_update)
     db.post_update();
 }
 
+TEST_F(AndroidDisplayBufferTest, defaults_to_normal_orientation)
+{
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
+                          *gl_context);
+
+    EXPECT_EQ(mir_orientation_normal, db.orientation());
+}
+
+TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
+{
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
+                          *gl_context);
+
+    for (auto const& ori : {mir_orientation_normal,
+                            mir_orientation_left,
+                            mir_orientation_right,
+                            mir_orientation_inverted})
+    {
+        db.orient(ori);
+        EXPECT_EQ(ori, db.orientation());
+    }
+}
+
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
 {
     using namespace testing;
