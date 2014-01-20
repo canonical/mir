@@ -53,17 +53,13 @@ public:
     {
         using namespace testing;
 
-        native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        native_handle_1->anwb()->width = width;
-        native_handle_1->anwb()->height = height;
-        native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
-        native_handle_2->anwb()->width = width;
-        native_handle_2->anwb()->height = height;
+        native_handle_1.anwb()->width = width;
+        native_handle_1.anwb()->height = height;
 
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(native_handle_1));
+            .WillByDefault(Return(mt::fake_shared(native_handle_1)));
         ON_CALL(mock_renderable, buffer())
             .WillByDefault(Return(mt::fake_shared(mock_buffer)));
         ON_CALL(mock_renderable, alpha_enabled())
@@ -77,8 +73,7 @@ public:
     bool alpha_enabled{true};
     int width{432};
     int height{876};
-    std::shared_ptr<mg::NativeBuffer> native_handle_1;
-    std::shared_ptr<mg::NativeBuffer> native_handle_2;
+    mtd::StubAndroidNativeBuffer native_handle_1;
     testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 };
@@ -187,7 +182,7 @@ TEST_F(HWCLayerListTest, fb_target_set)
     layerlist.set_fb_target(native_handle_1);
 
     auto list = layerlist.native_list();
-    mga::ForceGLLayer skip_layer{native_handle_1};
+    mga::ForceGLLayer skip_layer{*native_handle_1};
     mga::FramebufferLayer updated_target_layer(*native_handle_1);
     ASSERT_EQ(2, list->numHwLayers);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));

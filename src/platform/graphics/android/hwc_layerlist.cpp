@@ -61,7 +61,7 @@ mga::LayerList::LayerList(std::initializer_list<mga::HWCLayer> const& list)
     : layers(list)
 {
     if (layers.empty() ||
-       ((layers.size() == 1) && (layers.begin()->compositionType == HWC_FRAMEBUFFER_TARGET)))
+       ((layers.size() == 1) && (layers.front().compositionType == HWC_FRAMEBUFFER_TARGET)))
     {
         layers.push_front(mga::ForceGLLayer{});
     }
@@ -116,7 +116,6 @@ void mga::LayerList::update_composition_layers(
     }
 
     std::swap(layers, next_layer_list);
-
     update_representation();
 }
 
