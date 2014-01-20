@@ -265,7 +265,7 @@ static mu::Monitor::EventType action_to_event_type(const char* action)
 }
 
 void mu::Monitor::process_events(std::function<void(mu::Monitor::EventType,
-                                                         mu::Device const&)> const& handler) const
+                                                    mu::Device const&)> const& handler) const
 {
     udev_device *dev;
     do
