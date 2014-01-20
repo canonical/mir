@@ -48,7 +48,7 @@ void mga::HwcDevice::prepare_gl()
     //note, although we only have a primary display right now,
     //      set the external and virtual displays to null as some drivers check for that
     hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
-    if (hwc_device->prepare(hwc_device.get(), num_displays, displays))
+    if (hwc_device->prepare(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
@@ -75,7 +75,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     layer_list.set_fb_target(native_buffer);
 
     hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
-    if (hwc_device->set(hwc_device.get(), num_displays, displays))
+    if (hwc_device->set(hwc_device.get(), 1, displays))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }

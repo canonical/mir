@@ -206,3 +206,27 @@ TEST_F(HWCLayersTest, forced_gl_layer)
     target_layer.compositionType = HWC_OVERLAY;
     EXPECT_TRUE(target_layer.needs_gl_render());
 }
+
+TEST_F(HWCLayersTest, forced_gl_layer_with_buffer)
+{
+    mga::ForceGLLayer target_layer(*native_handle_1);
+
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.hints = 0;
+    expected_layer.flags = HWC_SKIP_LAYER;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+}

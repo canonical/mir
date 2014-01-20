@@ -78,7 +78,7 @@ mga::LayerList::LayerList(std::initializer_list<mga::HWCLayer> const& list)
 
     //not allowed >1 FB target, and it must be at the end if its present
     if ((fb_target_count > 1) ||
-        ((fb_target_count == 1) && (layers.back().compositionType != HWC_FRAMEBUFFER_TARGET)))
+       ((fb_target_count == 1) && (layers.back().compositionType != HWC_FRAMEBUFFER_TARGET)))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("malformed HWCLayerList"));
     }
@@ -122,32 +122,18 @@ void mga::LayerList::update_composition_layers(
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
-    (void) native_buffer;
     if (layers.empty())
         return;
-#if 0
+
     auto fb_pos = layers.back();
     if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
-
-    if (hwc_representation->numHwLayers == 2)
     {
         auto fb_position = layers.size() - 1;
         mga::FramebufferLayer fblay(*native_buffer);
         hwc_representation->hwLayers[fb_position] = fblay;
         hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
         layers.emplace_back(fblay);
-        if (hwc_representation->hwLayers[0].flags == HWC_SKIP_LAYER)
-        {
-            hwc_representation->hwLayers[0] = mga::CompositionLayer(*native_buffer, HWC_SKIP_LAYER);
-        }
-
-        if (hwc_representation->hwLayers[1].compositionType == HWC_FRAMEBUFFER_TARGET)
-        {
-            hwc_representation->hwLayers[1] = mga::FramebufferLayer(*native_buffer);
-            hwc_representation->hwLayers[1].acquireFenceFd = native_buffer->copy_fence();
-        }
     }
-#endif
 }
 
 mga::NativeFence mga::LayerList::framebuffer_fence()
@@ -155,13 +141,11 @@ mga::NativeFence mga::LayerList::framebuffer_fence()
     auto fb_pos = layers.back();
     if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
     {
-        printf("oo\n");
         auto fb_position = layers.size() - 1;
         return hwc_representation->hwLayers[fb_position].releaseFenceFd;
     }
     else
     {
-        printf("zoo\n");
         return -1;
     }
 }
