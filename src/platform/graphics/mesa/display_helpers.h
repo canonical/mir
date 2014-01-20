@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
 
 #include "drm_mode_resources.h"
-#include <mir/udev_wrapper.h>
+#include "mir/udev/wrapper.h"
 
 #include <cstddef>
 #include <memory>

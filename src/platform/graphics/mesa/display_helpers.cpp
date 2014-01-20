@@ -19,7 +19,7 @@
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
-#include <mir/udev_wrapper.h>
+#include "mir/udev/wrapper.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
