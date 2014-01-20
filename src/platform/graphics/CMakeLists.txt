@@ -13,13 +13,13 @@ set(
 )
 
 add_library(
-  mirplatformcommon STATIC
+  mirplatformgraphicscommon STATIC
 
   ${GRAPHICS_SOURCES}
 )
 
 target_link_libraries(
-  mirplatformcommon
+  mirplatformgraphicscommon
   mirsharedgeometry
 
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

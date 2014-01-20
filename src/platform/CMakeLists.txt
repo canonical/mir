@@ -9,8 +9,7 @@ add_library(
 
 target_link_libraries(
   mirplatform
-  mirsharedgeometry
-  mirplatformcommon
+  mirplatformgraphicscommon
 
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
