@@ -168,7 +168,7 @@ char const* const nothing_returned = "Nothing returned";
 TEST_F(DemoPrivateProtobuf, client_calls_server)
 {
     using namespace testing;
-    EXPECT_CALL(*demo_session_creator, create_processor(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*demo_session_creator, create_processor(_, _, _));
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_TRUE(mir_connection_is_valid(connection));
