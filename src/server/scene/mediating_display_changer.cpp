@@ -137,7 +137,8 @@ void ms::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Ses
                                    output.top_left,
                                    output.current_mode_index,
                                    output.current_format,
-                                   mir_power_mode_on);
+                                   mir_power_mode_on,
+                                   output.orientation);
         }
     });
     if (switched)
