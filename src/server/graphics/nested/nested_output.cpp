@@ -91,6 +91,10 @@ MirOrientation mgn::detail::NestedOutput::orientation() const
     return mir_orientation_normal;
 }
 
+void mgn::detail::NestedOutput::orient(MirOrientation)
+{
+}
+
 mgn::detail::NestedOutput::~NestedOutput() noexcept
 {
 }

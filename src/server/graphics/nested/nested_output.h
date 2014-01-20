@@ -65,6 +65,7 @@ public:
     void post_update() override;
     virtual bool can_bypass() const override;
     MirOrientation orientation() const override;
+    void orient(MirOrientation) override;
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;

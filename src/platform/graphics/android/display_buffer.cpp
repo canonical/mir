@@ -73,3 +73,8 @@ MirOrientation mga::DisplayBuffer::orientation() const
     // TODO: Get this from the output structure
     return mir_orientation_normal;
 }
+
+void mga::DisplayBuffer::orient(MirOrientation)
+{
+    // TODO
+}

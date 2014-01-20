@@ -190,6 +190,11 @@ MirOrientation mgm::DisplayBuffer::orientation() const
     return rotation;
 }
 
+void mgm::DisplayBuffer::orient(MirOrientation)
+{
+     // TODO
+}
+
 void mgm::DisplayBuffer::post_update()
 {
     post_update(nullptr);
