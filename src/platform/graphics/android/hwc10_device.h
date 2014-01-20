@@ -38,7 +38,8 @@ public:
                 std::shared_ptr<framebuffer_device_t> const& fb_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
-    void prepare_composition();
+    void prepare_gl();
+    void prepare_gl_and_overlays(std::list<Renderable> const& list); 
     void gpu_render(EGLDisplay dpy, EGLSurface sur);
     void post(Buffer const& buffer);
 

@@ -68,7 +68,20 @@ TEST_F(HWC11Device, test_hwc_prepare)
         .Times(1);
 
     mga::HWC11Device device(mock_device, mock_vsync);
-    device.prepare_composition();
+    device.prepare_gl();
+    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
+}
+
+TEST_F(HWC11Device, test_hwc_prepare_with_overlays)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1);
+
+    mga::HWC11Device device(mock_device, mock_vsync);
+    std::list<mg::Renderable> renderlist;
+    device.prepare_gl_and_overlays(renderlist);
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
