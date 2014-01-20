@@ -160,6 +160,7 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.connected == val2.connected) &&
                (val1.used == val2.used) &&
                (val1.top_left == val2.top_left) &&
+               (val1.orientation == val2.orientation) &&
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size())};
 
@@ -179,4 +180,19 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
     return !(val1 == val2);
+}
+
+mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
+{
+    auto const& size = modes[current_mode_index].size;
+
+    if (orientation == mir_orientation_normal ||
+        orientation == mir_orientation_inverted)
+    {
+        return {top_left, size};
+    }
+    else
+    {
+        return {top_left, {size.height.as_int(), size.width.as_int()}};
+    }
 }

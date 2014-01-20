@@ -80,7 +80,8 @@ public:
                 ((i % 2) == 1),
                 top_left,
                 mode_index, pfs[0],
-                mir_power_mode_off
+                mir_power_mode_off,
+                mir_orientation_normal
             };
 
             outputs.push_back(output);
@@ -108,7 +109,8 @@ public:
                 std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
                 0, geometry::Size{}, true, true, rect.top_left, 0,
-                mir_pixel_format_abgr_8888, mir_power_mode_on
+                mir_pixel_format_abgr_8888, mir_power_mode_on,
+                mir_orientation_normal
             };
 
             outputs.push_back(output);
@@ -137,7 +139,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode) override
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode, MirOrientation) override
     {
     }
 

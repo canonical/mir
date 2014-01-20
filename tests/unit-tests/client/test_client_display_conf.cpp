@@ -50,6 +50,7 @@ void fill(mp::DisplayOutput* out)
     out->set_used(1);
     out->set_physical_width_mm(11);
     out->set_physical_height_mm(12);
+    out->set_orientation(90);
 }
 }
 
