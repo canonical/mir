@@ -126,7 +126,7 @@ public:
         CHANGED,
     };
 
-    Monitor(const Context &ctx);
+    Monitor(const Context& ctx);
     ~Monitor() noexcept;
 
     Monitor(Monitor const&) = delete;
