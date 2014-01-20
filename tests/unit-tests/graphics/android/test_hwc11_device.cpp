@@ -73,7 +73,7 @@ TEST_F(HWC11Device, test_hwc_prepare)
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
 
-TEST_F(HWC11Device, test_hwc_prepare_with_filter_out_optimized_renderables)
+TEST_F(HWC11Device, test_hwc_prepare_with_overlays)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))

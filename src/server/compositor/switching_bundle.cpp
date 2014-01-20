@@ -151,7 +151,7 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
 {
     /*
      * Many clients will behave in a way that never requires more than 2 or 3
-     * buffers, even though nbuffers may be higher. So to filter_out_optimized_renderables memory
+     * buffers, even though nbuffers may be higher. So to optimize memory
      * usage for this common case, try to avoid allocating new buffers if
      * we don't need to.
      */
