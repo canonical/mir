@@ -62,11 +62,11 @@ private:
     bool process_message(std::istream& msg) override final;
 };
 
-// Utility function result_ptr() allows invoke() to pick the right send_response() overload
-// Client code may specialize result_ptr_t to get an overload of send_response called.
-template<typename ResultType> struct result_ptr_t { typedef ::google::protobuf::Message* type; };
-template<typename ResultType> inline
-auto result_ptr(ResultType& result) -> typename result_ptr_t<ResultType>::type { return &result; }
+// Utility metafunction result_ptr_t<> allows invoke() to pick the right
+// send_response() overload. Client code may specialize result_ptr_t to
+// resolve an overload of send_response called.
+template<typename ResultType> struct result_ptr_t
+{ typedef ::google::protobuf::Message* type; };
 
 // Boiler plate for unpacking a parameter message, invoking a server function, and
 // sending the result message.
@@ -88,10 +88,14 @@ void invoke(
     try
     {
         std::unique_ptr<google::protobuf::Closure> callback(
-            google::protobuf::NewPermanentCallback(self,
-                &Self::send_response,
-                invocation.id(),
-                result_ptr(result_message)));
+            google::protobuf::NewPermanentCallback<
+                Self,
+                ::google::protobuf::uint32,
+                typename result_ptr_t<ResultMessage>::type>(
+                    self,
+                    &Self::send_response,
+                    invocation.id(),
+                    &result_message));
 
         (server->*function)(
             0,

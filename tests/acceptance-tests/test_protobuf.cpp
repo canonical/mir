@@ -73,7 +73,7 @@ struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
         if ("function" == invocation.method_name())
         {
             mfd::invoke(
-                static_cast<mfd::TemplateProtobufMessageProcessor*>(this), // TODO fix need for this cast
+                this,
                 demo_mir_server,
                 &DemoMirServer::function,
                 invocation);
