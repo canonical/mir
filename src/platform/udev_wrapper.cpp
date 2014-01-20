@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include <mir/udev_wrapper.h>
+#include "mir/udev_wrapper.h"
 #include <libudev.h>
 #include <cstring>
 #include <boost/throw_exception.hpp>
