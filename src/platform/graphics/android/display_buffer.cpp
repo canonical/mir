@@ -71,6 +71,7 @@ bool mga::DisplayBuffer::can_bypass() const
 
 MirOrientation mga::DisplayBuffer::orientation() const
 {
+    // Pass through; let the renderer do the rotation for us, for now.
     return rotation;
 }
 
