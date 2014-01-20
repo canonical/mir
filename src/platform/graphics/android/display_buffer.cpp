@@ -71,7 +71,12 @@ bool mga::DisplayBuffer::can_bypass() const
 
 MirOrientation mga::DisplayBuffer::orientation() const
 {
-    // Pass through; let the renderer do the rotation for us, for now.
+    /*
+     * android::DisplayBuffer is aways created with physical width/height
+     * (not rotated). So we just need to pass through the desired rotation
+     * and let the renderer do it.
+     * If and when we choose to implement HWC rotation, this may change.
+     */
     return rotation;
 }
 
