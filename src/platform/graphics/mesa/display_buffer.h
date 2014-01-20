@@ -61,7 +61,6 @@ public:
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
 
     MirOrientation orientation() const override;
-    void orient(MirOrientation) override;
 
     void schedule_set_crtc();
 

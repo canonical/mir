@@ -35,7 +35,8 @@ mga::DisplayBuffer::DisplayBuffer(
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      rotation{mir_orientation_normal}
 {
 }
 
@@ -70,11 +71,10 @@ bool mga::DisplayBuffer::can_bypass() const
 
 MirOrientation mga::DisplayBuffer::orientation() const
 {
-    // TODO: Get this from the output structure
-    return mir_orientation_normal;
+    return rotation;
 }
 
-void mga::DisplayBuffer::orient(MirOrientation)
+void mga::DisplayBuffer::orient(MirOrientation rot)
 {
-    // TODO
+    rotation = rot;
 }

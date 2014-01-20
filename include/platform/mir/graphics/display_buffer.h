@@ -60,7 +60,6 @@ public:
      *  amount of rotation the renderer must do to make things "look right".
      */
     virtual MirOrientation orientation() const = 0;
-    virtual void orient(MirOrientation) = 0;
 
 protected:
     DisplayBuffer() = default;

@@ -68,9 +68,7 @@ public:
     void post_update();
 
     bool can_bypass() const;
-
     MirOrientation orientation() const override;
-    void orient(MirOrientation) override;
 
 private:
     SurfacelessEGLContext const egl_context;

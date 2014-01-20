@@ -37,7 +37,6 @@ public:
     void post_update() {}
     bool can_bypass() const override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal;}
-    void orient(MirOrientation) override {}
 };
 
 }
