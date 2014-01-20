@@ -83,6 +83,15 @@ public:
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 };
 
+TEST_F(HWCLayerListTest, list_defaults)
+{
+    mga::LayerList layerlist({});
+    auto list = layerlist.native_list();
+    EXPECT_EQ(-1, list->retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
+    EXPECT_NE(nullptr, list->dpy);
+    EXPECT_NE(nullptr, list->sur);
+}
 
 /* Tests without HWC_FRAMEBUFFER_TARGET */
 /* an empty list should have a skipped layer. This will force a GL render on hwc set */
@@ -91,12 +100,7 @@ TEST_F(HWCLayerListTest, hwc10_list_defaults)
     mga::LayerList layerlist({});
 
     auto list = layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(1, list->numHwLayers);
-
     mga::ForceGLLayer surface_layer;
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
 }
@@ -108,12 +112,7 @@ TEST_F(HWCLayerListTest, hwc10_list_initializer)
     mga::LayerList layerlist({surface_layer, surface_layer});
 
     auto list = layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
-
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
 }
@@ -133,10 +132,6 @@ TEST_F(HWCLayerListTest, hwc10_list_update)
     layerlist.update_composition_layers(std::move(updated_list));
 
     auto list = layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));
@@ -146,10 +141,6 @@ TEST_F(HWCLayerListTest, hwc10_list_update)
     layerlist.update_composition_layers(std::move(empty_update));
 
     list = layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(1, list->numHwLayers);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
 }
@@ -177,10 +168,6 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 
     mga::LayerList layerlist({surface_layer, target_layer});
     auto list = layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
@@ -188,12 +175,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
     //add a skipped layer if list is just a target layer
     mga::LayerList no_skip_layerlist({target_layer});
     list = no_skip_layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(2, list->numHwLayers);
-
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
@@ -205,9 +187,9 @@ TEST_F(HWCLayerListTest, fb_target_set)
     layerlist.set_fb_target(native_handle_1);
 
     auto list = layerlist.native_list();
-    ASSERT_EQ(2, list->numHwLayers);
-    mga::ForceGLLayer skip_layer;
+    mga::ForceGLLayer skip_layer{native_handle_1};
     mga::FramebufferLayer updated_target_layer(*native_handle_1);
+    ASSERT_EQ(2, list->numHwLayers);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(updated_target_layer, MatchesLayer(list->hwLayers[1]));
 }
@@ -228,10 +210,6 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     layerlist.update_composition_layers(std::move(updated_list));
 
     auto list = layerlist.native_list();
-    EXPECT_EQ(-1, list->retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
-    EXPECT_NE(nullptr, list->dpy);
-    EXPECT_NE(nullptr, list->sur);
     ASSERT_EQ(3, list->numHwLayers);
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[1]));

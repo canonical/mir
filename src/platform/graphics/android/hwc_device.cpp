@@ -69,6 +69,7 @@ void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
+    printf("POST!\n");
     auto lg = lock_unblanked();
 
     auto native_buffer = buffer.native_buffer_handle();
