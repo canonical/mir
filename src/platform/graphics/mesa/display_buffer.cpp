@@ -169,7 +169,7 @@ bool mgm::DisplayBuffer::can_bypass() const
 }
 
 void mgm::DisplayBuffer::render_and_post_update(
-    std::list<Renderable> const&,
+    std::list<std::shared_ptr<Renderable>> const&,
     std::function<void(Renderable const&)> const&)
 {
     post_update(nullptr); 

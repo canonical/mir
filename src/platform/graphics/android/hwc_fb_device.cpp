@@ -49,7 +49,7 @@ void mga::HwcFbDevice::prepare_gl()
     }
 }
 
-void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<Renderable> const&)
+void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
 {
     prepare_gl();
 }

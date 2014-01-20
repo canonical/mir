@@ -96,7 +96,7 @@ public:
 
         for(auto i = 0u; i < displays[0]->numHwLayers; i++)
         {
-            prepare_layerlist.push_back(display[0]->hwLayers[i]);
+            prepare_layerlist.push_back(displays[0]->hwLayers[i]);
             prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
         }
 

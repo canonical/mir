@@ -66,7 +66,7 @@ public:
     virtual bool can_bypass() const override;
 
     void render_and_post_update(
-        std::list<Renderable> const& renderlist,
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
         std::function<void(Renderable const&)> const& render_fn);
 
     NestedOutput(NestedOutput const&) = delete;

@@ -122,6 +122,7 @@ void mga::LayerList::update_composition_layers(
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
+    (void) native_buffer;
     if (layers.empty())
         return;
 #if 0

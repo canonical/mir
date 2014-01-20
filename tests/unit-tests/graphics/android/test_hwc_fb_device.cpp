@@ -63,7 +63,7 @@ TEST_F(HwcFbDevice, hwc10_prepare_gl_only)
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     device.prepare_gl();
 
@@ -81,9 +81,9 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
-    std::list<mg::Renderable> renderlist;
+    std::list<std::shared_ptr<mg::Renderable>> renderlist;
     device.prepare_gl_and_overlays(renderlist);
 
     EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);
