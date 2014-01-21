@@ -89,18 +89,16 @@ public:
                 external_prepare = (!!displays[1]);
             case 1:
                 primary_prepare = (!!displays[0]);
+                for(auto i = 0u; i < displays[0]->numHwLayers; i++)
+                {
+                    prepare_layerlist.push_back(displays[0]->hwLayers[i]);
+                    prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
+                }
                 save_args(&display0_prepare_content, displays);
             default:
                 break;
         }
-
-        for(auto i = 0u; i < displays[0]->numHwLayers; i++)
-        {
-            prepare_layerlist.push_back(displays[0]->hwLayers[i]);
-            prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
-        }
-
-        return save_args(&display0_prepare_content, displays);
+        return 0;
     }
 
     int save_last_set_arguments(
