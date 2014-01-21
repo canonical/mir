@@ -23,8 +23,6 @@
 #include "hwc_layerlist.h"
 
 #include <cstring>
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;

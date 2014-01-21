@@ -40,11 +40,10 @@ class Buffer;
 
 namespace android
 {
-
 class LayerList
 {
 public:
-    LayerList(bool target_layer = false);
+    LayerList(bool target_layer);
 
     virtual ~LayerList() = default;
 
