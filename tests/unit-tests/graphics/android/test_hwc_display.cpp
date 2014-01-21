@@ -165,6 +165,33 @@ TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
     }
 }
 
+TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
+{
+    using namespace testing;
+
+    int const width = 123;
+    int const height = 456;
+    geom::Size const normal{width, height};
+    geom::Size const transposed{height, width};
+
+    EXPECT_CALL(*mock_fb_bundle, fb_size())
+        .WillRepeatedly(Return(normal));
+
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
+                          *gl_context);
+
+    EXPECT_EQ(normal, db.view_area().size);
+
+    db.orient(mir_orientation_right);
+    EXPECT_EQ(transposed, db.view_area().size);
+
+    db.orient(mir_orientation_inverted);
+    EXPECT_EQ(normal, db.view_area().size);
+
+    db.orient(mir_orientation_left);
+    EXPECT_EQ(transposed, db.view_area().size);
+}
+
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
 {
     using namespace testing;

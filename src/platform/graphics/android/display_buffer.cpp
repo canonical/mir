@@ -23,6 +23,7 @@
 #include <functional>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -42,7 +43,14 @@ mga::DisplayBuffer::DisplayBuffer(
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
 {
-    return {geom::Point{}, fb_bundle->fb_size()};
+    auto const& size = fb_bundle->fb_size();
+    int width = size.width.as_int();
+    int height = size.height.as_int();
+
+    if (rotation == mir_orientation_left || rotation == mir_orientation_right)
+        std::swap(width, height);
+
+    return {{0,0}, {width,height}};
 }
 
 void mga::DisplayBuffer::make_current()
