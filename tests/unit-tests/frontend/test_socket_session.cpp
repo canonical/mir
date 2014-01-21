@@ -49,7 +49,7 @@ struct StubReceiver : public mfd::MessageReceiver
     void fake_receive_msg(char* buffer, size_t size)
     {
         using namespace testing;
-        ASSERT_THAT(callback_function, Ne(nullptr));
+        ASSERT_NE(callback_function, nullptr);
         ASSERT_THAT(pstream, NotNull());
         ASSERT_THAT(read_size, Eq(size));
 
