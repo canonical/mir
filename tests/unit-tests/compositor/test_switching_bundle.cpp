@@ -329,6 +329,38 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
     }
 }
 
+/*
+ Regression test for LP#1270964
+ In the situation emulated here SwitchingBundle::last_consumed ise used without ever being set,
+ thus its initial value of zero will wrongly be used and lead to bogus behavior.
+ */
+TEST_F(SwitchingBundleTest, compositor_client_interleaved)
+{
+    int nbuffers = 3;
+    mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+    mg::Buffer* client_buffer = nullptr;
+
+    client_buffer = bundle.client_acquire();
+
+    bundle.client_release(client_buffer);
+
+    client_buffer = bundle.client_acquire();
+
+    bundle.compositor_acquire(0);
+
+    //(nbufs=3,fcomp=2,ncomp=1,fready=0,nready=1,fclient=1,nclient=1) <-- BUG starts here
+    // Should be:
+    //(nbufs=3,fcomp=0,ncomp=1,fready=0,nready=0,fclient=1,nclient=1)
+
+    bundle.client_release(client_buffer);
+
+    //(nbufs=3,fcomp=2,ncomp=1,fready=0,nready=2,fclient=2,nclient=0) 
+    // Should be:
+    //(nbufs=3,fcomp=0,ncomp=1,fready=1,nready=1,fclient=2,nclient=0)
+
+    client_buffer = bundle.client_acquire(); // <- would lock here if in buggy state
+}
+
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
@@ -868,4 +900,3 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
         }
     }
 }
-
