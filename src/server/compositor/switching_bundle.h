@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <memory>
+#include <iostream>
 
 namespace mir
 {
@@ -104,6 +105,22 @@ private:
 
     bool framedropping;
     int force_drop;
+
+    // for use when debugging. e.g "std::cout << *this << std::endl;"
+    friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle) {
+        os << "("
+            << (void*)(&bundle)
+            << ",nbufs=" << bundle.nbuffers
+            << ",fcomp=" << bundle.first_compositor
+            << ",ncomp=" << bundle.ncompositors
+            << ",fready=" << bundle.first_ready
+            << ",nready=" << bundle.nready
+            << ",fclient=" << bundle.first_client
+            << ",nclient=" << bundle.nclients
+            << ")";
+
+        return os;
+    }
 };
 
 }
