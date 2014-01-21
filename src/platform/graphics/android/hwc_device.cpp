@@ -73,7 +73,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     auto lg = lock_unblanked();
 
     auto native_buffer = buffer.native_buffer_handle();
-    layer_list.set_fb_target(native_buffer);
+    layer_list.set_fb_target(*native_buffer);
 
     hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
     if (hwc_device->set(hwc_device.get(), 1, displays))

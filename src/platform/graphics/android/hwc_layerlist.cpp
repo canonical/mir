@@ -119,7 +119,7 @@ void mga::LayerList::update_composition_layers(
     update_representation();
 }
 
-void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
+void mga::LayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
 {
     if (layers.empty())
         return;
@@ -128,9 +128,9 @@ void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_b
     if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
     {
         auto fb_position = layers.size() - 1;
-        mga::FramebufferLayer fblay(*native_buffer);
+        mga::FramebufferLayer fblay(native_buffer);
         hwc_representation->hwLayers[fb_position] = fblay;
-        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
+        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer.copy_fence();
         layers.pop_back();
         layers.emplace_back(fblay);
     }

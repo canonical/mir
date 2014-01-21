@@ -50,7 +50,7 @@ public:
     void update_composition_layers(std::list<std::shared_ptr<graphics::Renderable>>&& list);
     hwc_display_contents_1_t* native_list() const;
 
-    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
+    void set_fb_target(NativeBuffer const&);
     NativeFence framebuffer_fence();
 
 private:

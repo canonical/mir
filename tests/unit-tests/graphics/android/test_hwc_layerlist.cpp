@@ -182,8 +182,8 @@ TEST_F(HWCLayerListTest, fb_target_set)
     layerlist.set_fb_target(native_handle_1);
 
     auto list = layerlist.native_list();
-    mga::ForceGLLayer skip_layer{*native_handle_1};
-    mga::FramebufferLayer updated_target_layer(*native_handle_1);
+    mga::ForceGLLayer skip_layer{native_handle_1};
+    mga::FramebufferLayer updated_target_layer(native_handle_1);
     ASSERT_EQ(2, list->numHwLayers);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
     EXPECT_THAT(updated_target_layer, MatchesLayer(list->hwLayers[1]));
@@ -213,7 +213,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     /* update FB target */
     layerlist.set_fb_target(native_handle_1);
 
-    mga::FramebufferLayer handle_target_layer{*native_handle_1};
+    mga::FramebufferLayer handle_target_layer{native_handle_1};
     list = layerlist.native_list();
     ASSERT_EQ(3, list->numHwLayers);
     EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
