@@ -26,7 +26,10 @@ namespace mir
 {
 namespace frontend
 {
+namespace detail
+{
 typedef std::initializer_list<std::vector<int32_t>> FdSets;
+}
 }
 } // namespace mir
 

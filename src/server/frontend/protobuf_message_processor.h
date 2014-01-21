@@ -20,8 +20,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "message_processor.h"
-#include "protobuf_response_processor.h"
+#include "mir/frontend/template_protobuf_message_processor.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -37,46 +36,27 @@ class MessageProcessorReport;
 
 namespace detail
 {
-class ProtobufMessageProcessor : public MessageProcessor
+class ProtobufMessageProcessor : public TemplateProtobufMessageProcessor
 {
 public:
     ProtobufMessageProcessor(
-        std::shared_ptr<MessageSender> const& sender,
+        std::shared_ptr<ProtobufMessageSender> const& sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
-        std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<MessageProcessorReport> const& report);
 
     ~ProtobufMessageProcessor() noexcept {}
 
+    using TemplateProtobufMessageProcessor::send_response;
+    void send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
+    void send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
+    void send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
+
 private:
-    template<class ResultMessage>
-    void send_response(::google::protobuf::uint32 id, ResultMessage* response);
-
-    bool process_message(std::istream& msg);
-
     bool dispatch(mir::protobuf::wire::Invocation const& invocation);
-
-    template<class ParameterMessage, class ResultMessage>
-    void invoke(
-        void (protobuf::DisplayServer::*function)(
-            ::google::protobuf::RpcController* controller,
-            const ParameterMessage* request,
-            ResultMessage* response,
-            ::google::protobuf::Closure* done),
-        mir::protobuf::wire::Invocation const& invocation);
 
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<MessageProcessorReport> const report;
-    ProtobufResponseProcessor responder;
 };
-
-// TODO specializing on the the message type to determine how we send FDs seems a bit of a frig.
-template<>
-void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
-template<>
-void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
-template<>
-void ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
 }
 }
 }

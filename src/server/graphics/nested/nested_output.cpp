@@ -82,6 +82,12 @@ bool mgn::detail::NestedOutput::can_bypass() const
     return false;
 }
 
+void mgn::detail::NestedOutput::render_and_post_update(
+    std::list<Renderable> const&,
+    std::function<void(Renderable const&)> const&)
+{
+}
+
 MirOrientation mgn::detail::NestedOutput::orientation() const
 {
     /*

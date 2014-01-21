@@ -812,6 +812,7 @@ public:
         inline int32_t getOrientation() const { return mAbsMTOrientation; }
         inline int32_t getTrackingId() const { return mAbsMTTrackingId; }
         inline int32_t getPressure() const { return mAbsMTPressure; }
+        inline bool havePressure() const { return mHaveAbsMTPressure; }
         inline int32_t getDistance() const { return mAbsMTDistance; }
         inline int32_t getToolType() const;
 
@@ -821,6 +822,7 @@ public:
         bool mInUse;
         bool mHaveAbsMTTouchMinor;
         bool mHaveAbsMTWidthMinor;
+        bool mHaveAbsMTPressure;
         bool mHaveAbsMTToolType;
 
         int32_t mAbsMTPositionX;

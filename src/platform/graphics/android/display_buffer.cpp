@@ -55,11 +55,36 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
+void mga::DisplayBuffer::render_and_post_update(
+        std::list<Renderable> const& renderlist,
+        std::function<void(Renderable const&)> const& render_fn)
+{
+    if (renderlist.empty())
+    {
+        display_device->prepare_gl();
+    }
+    else
+    {
+        display_device->prepare_gl_and_overlays(renderlist);
+    }
+
+    for(auto& renderable : renderlist)
+    {
+        render_fn(renderable);
+    }
+
+    render_and_post();
+}
+
 void mga::DisplayBuffer::post_update()
 {
-    display_device->prepare_composition();
-    display_device->gpu_render(gl_context.display(), gl_context.surface());
+    display_device->prepare_gl();
+    render_and_post();
+}
 
+void mga::DisplayBuffer::render_and_post()
+{
+    display_device->gpu_render(gl_context.display(), gl_context.surface());
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
 }

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "message_processor.h"
+#include "mir/frontend/message_processor.h"
 
 namespace mfd = mir::frontend::detail;
 
