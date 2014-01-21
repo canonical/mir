@@ -39,7 +39,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<MessageProcessorReport> const& report) :
-	sender(sender),
+    sender(sender),
     display_server(display_server),
     report(report)
 {

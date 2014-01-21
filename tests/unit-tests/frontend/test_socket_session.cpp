@@ -37,9 +37,9 @@ namespace
 struct StubReceiver : public mfd::MessageReceiver
 {
     void async_receive_msg(
-		std::function<void(boost::system::error_code const&, size_t)> const& callback,
-		boost::asio::streambuf& stream,
-		size_t size)
+        std::function<void(boost::system::error_code const&, size_t)> const& callback,
+        boost::asio::streambuf& stream,
+        size_t size)
     {
     	read_size = size;
     	pstream = &stream;
@@ -49,7 +49,7 @@ struct StubReceiver : public mfd::MessageReceiver
     void fake_receive_msg(char* buffer, size_t size)
     {
         using namespace testing;
-    	ASSERT_THAT(callback_function, Ne(nullptr));
+        ASSERT_THAT(callback_function, Ne(nullptr));
         ASSERT_THAT(pstream, NotNull());
         ASSERT_THAT(read_size, Eq(size));
 
@@ -57,7 +57,7 @@ struct StubReceiver : public mfd::MessageReceiver
         pstream->commit(size);
 
         boost::system::error_code code;
-    	callback_function(code, size);
+        callback_function(code, size);
     }
 
 private:
@@ -81,7 +81,7 @@ struct SocketSessionTest : public ::testing::Test
 
 TEST_F(SocketSessionTest, basic_msg_is_received_and_dispatched)
 {
-	int const header_size = 2;
+    int const header_size = 2;
     char buffer[512];
     mir::protobuf::wire::Invocation invocation;
     invocation.set_id(1);
