@@ -53,93 +53,66 @@ void mga::LayerList::update_representation()
     auto i = 0u;
     for( auto& layer : layers)
     {
-        hwc_representation->hwLayers[i++] = layer; 
+        hwc_representation->hwLayers[i++] = *layer; 
     }
 }
 
-mga::LayerList::LayerList(std::initializer_list<mga::HWCLayer> const& list)
-    : layers(list)
+
+mga::LayerList::LayerList(bool has_target_layer)
+    : composition_layers_present(false),
+      fb_target_present(has_target_layer)
 {
-    if (layers.empty() ||
-       ((layers.size() == 1) && (layers.front().compositionType == HWC_FRAMEBUFFER_TARGET)))
-    {
-        layers.push_front(mga::ForceGLLayer{});
-    }
+    reset_composition_layers();
+}
 
-    /* sanity check for HWC_FRAMEBUFFER_TARGET usage */
-    auto fb_target_count = 0;
-    for (auto& layer : layers)
-    {
-        if (layer.compositionType == HWC_FRAMEBUFFER_TARGET)
-        {
-            fb_target_count++;
-        }
-    }
-
-    //not allowed >1 FB target, and it must be at the end if its present
-    if ((fb_target_count > 1) ||
-       ((fb_target_count == 1) && (layers.back().compositionType != HWC_FRAMEBUFFER_TARGET)))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("malformed HWCLayerList"));
-    }
- 
+void mga::LayerList::with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn)
+{
     update_representation();
+    fn(*hwc_representation);
 }
 
-
-hwc_display_contents_1_t* mga::LayerList::native_list() const
+void mga::LayerList::reset_composition_layers()
 {
-    return hwc_representation.get();
+    std::list<std::shared_ptr<mga::HWCLayer>> next_layer_list;
+
+    layers.push_back(skip_layer);
+    if (fb_target_present)
+    {
+        layers.push_back(fb_target_layer);
+    } 
+
+    std::swap(layers, next_layer_list);
 }
 
-void mga::LayerList::update_composition_layers(
-    std::list<std::shared_ptr<graphics::Renderable>> && list)
+void mga::LayerList::set_composition_layers(
+    std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
-    std::list<HWCLayer> next_layer_list;
-    if (list.empty())
+    std::list<std::shared_ptr<mga::HWCLayer>> next_layer_list;
+    for(auto& renderable : list)
     {
-        next_layer_list.push_front(mga::ForceGLLayer{});
-    }
-    else
-    {
-        for(auto& renderable : list)
-        {
-            next_layer_list.push_back(mga::CompositionLayer(*renderable));
-        }
+        next_layer_list.push_back(std::make_shared<mga::CompositionLayer>(*renderable));
     }
 
     //preserve FB_TARGET for lists that need it
-    auto fb_pos = layers.back();
-    if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
+    if (fb_target_present)
     {
-        next_layer_list.push_back(fb_pos);
+        next_layer_list.push_back(fb_target_layer);
     }
 
     std::swap(layers, next_layer_list);
-    update_representation();
 }
 
 void mga::LayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
 {
-    if (layers.empty())
-        return;
-
-    auto fb_pos = layers.back();
-    if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
+    if (fb_target_present)
     {
-        auto fb_position = layers.size() - 1;
-        mga::FramebufferLayer fblay(native_buffer);
-        hwc_representation->hwLayers[fb_position] = fblay;
-        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer.copy_fence();
-        layers.pop_back();
-        layers.emplace_back(fblay);
+        *fb_target_layer = mga::FramebufferLayer(native_buffer);
     }
 }
 
-mga::NativeFence mga::LayerList::framebuffer_fence()
+mga::NativeFence mga::LayerList::fb_target_fence()
 {
-    auto fb_pos = layers.back();
-    if (fb_pos.compositionType == HWC_FRAMEBUFFER_TARGET)
+    if (fb_target_present)
     {
         auto fb_position = layers.size() - 1;
         return hwc_representation->hwLayers[fb_position].releaseFenceFd;
@@ -148,4 +121,9 @@ mga::NativeFence mga::LayerList::framebuffer_fence()
     {
         return -1;
     }
+}
+
+mga::NativeFence mga::LayerList::retirement_fence()
+{
+    return -1;
 }

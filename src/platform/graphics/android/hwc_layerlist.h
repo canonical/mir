@@ -44,20 +44,29 @@ namespace android
 class LayerList
 {
 public:
-    LayerList(std::initializer_list<HWCLayer> const& default_list);
+    LayerList(bool target_layer = false);
+
     virtual ~LayerList() = default;
 
-    void update_composition_layers(std::list<std::shared_ptr<graphics::Renderable>>&& list);
-    hwc_display_contents_1_t* native_list() const;
+    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    void reset_composition_layers(); 
+    void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
 
     void set_fb_target(NativeBuffer const&);
-    NativeFence framebuffer_fence();
+    NativeFence fb_target_fence();
+    NativeFence retirement_fence();
 
 private:
     void update_representation();
 
+    bool composition_layers_present;
+    bool const fb_target_present;
+
+    std::shared_ptr<ForceGLLayer> skip_layer;
+    std::shared_ptr<FramebufferLayer> fb_target_layer;
+
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    std::list<HWCLayer> layers;
+    std::list<std::shared_ptr<HWCLayer>> layers;
 };
 
 }
