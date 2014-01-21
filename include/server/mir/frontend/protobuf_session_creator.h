@@ -36,7 +36,7 @@ class SessionAuthorizer;
 namespace detail
 {
 struct SocketSession;
-class TemplateProtobufMessageProcessor;
+class MessageProcessor;
 class ProtobufMessageSender;
 }
 
@@ -51,7 +51,7 @@ public:
 
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
-    virtual std::shared_ptr<detail::TemplateProtobufMessageProcessor> create_processor(
+    virtual std::shared_ptr<detail::MessageProcessor> create_processor(
         std::shared_ptr<detail::ProtobufMessageSender> const& sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<MessageProcessorReport> const& report) const;

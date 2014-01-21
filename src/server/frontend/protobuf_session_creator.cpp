@@ -78,7 +78,7 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
     }
 }
 
-std::shared_ptr<mfd::TemplateProtobufMessageProcessor>
+std::shared_ptr<mfd::MessageProcessor>
 mf::ProtobufSessionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,

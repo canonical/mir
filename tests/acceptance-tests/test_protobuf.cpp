@@ -64,7 +64,7 @@ struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
 {
     DemoMessageProcessor(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
-        std::shared_ptr<mfd::TemplateProtobufMessageProcessor> const& wrapped) :
+        std::shared_ptr<mfd::MessageProcessor> const& wrapped) :
         mfd::TemplateProtobufMessageProcessor(sender),
         wrapped(wrapped) {}
 
@@ -83,7 +83,7 @@ struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
         return wrapped->dispatch(invocation);
     }
 
-    std::shared_ptr<mfd::TemplateProtobufMessageProcessor> const wrapped;
+    std::shared_ptr<mfd::MessageProcessor> const wrapped;
 };
 
 struct DemoSessionCreator : mf::ProtobufSessionCreator
@@ -91,12 +91,12 @@ struct DemoSessionCreator : mf::ProtobufSessionCreator
     using ProtobufSessionCreator::ProtobufSessionCreator;
 
     MOCK_CONST_METHOD3(create_processor,
-        std::shared_ptr<mfd::TemplateProtobufMessageProcessor>(
+        std::shared_ptr<mfd::MessageProcessor>(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
         std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report));
 
-    std::shared_ptr<mfd::TemplateProtobufMessageProcessor> create_wrapped_processor(
+    std::shared_ptr<mfd::MessageProcessor> create_wrapped_processor(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
         std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report) const
@@ -109,7 +109,7 @@ struct DemoSessionCreator : mf::ProtobufSessionCreator
         return std::make_shared<DemoMessageProcessor>(sender, wrapped);
     }
 
-    std::shared_ptr<mfd::TemplateProtobufMessageProcessor> create_unwrapped_processor(
+    std::shared_ptr<mfd::MessageProcessor> create_unwrapped_processor(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
         std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report) const
