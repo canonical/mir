@@ -31,12 +31,11 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-/* hwc layer list uses hwLayers[0] at the end of the struct */
 void mga::LayerList::update_representation()
 {
     if ((!hwc_representation) || hwc_representation->numHwLayers != layers.size())
     {
-        printf("ok.\n");
+        /* hwc layer list uses hwLayers[0] at the end of the struct */
         auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layers.size());
         hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
             static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
@@ -51,14 +50,12 @@ void mga::LayerList::update_representation()
         hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
     }
 
-    printf("COPY!\n");
     auto i = 0u;
     for( auto& layer : layers)
     {
         hwc_representation->hwLayers[i++] = *layer; 
     }
 }
-
 
 mga::LayerList::LayerList(bool has_target_layer)
     : composition_layers_present(false),
@@ -83,6 +80,8 @@ void mga::LayerList::with_native_list(std::function<void(hwc_display_contents_1_
         auto fb_position = layers.size() - 1;
         fb_fence = hwc_representation->hwLayers[fb_position].releaseFenceFd;
     }
+
+    retire_fence = hwc_representation->retireFenceFd;
 }
 
 void mga::LayerList::reset_composition_layers()
