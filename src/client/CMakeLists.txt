@@ -34,6 +34,7 @@ set(
   surface_map.cpp
   lifecycle_control.cpp
   private.cpp
+  mir_output_capture.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
