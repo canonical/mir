@@ -37,7 +37,7 @@ namespace geom = mir::geometry;
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      use_fb_target(true),
+      use_fb_target{true},
       layer_list(use_fb_target),
       last_display_fence(std::make_shared<mga::RealSyncFileOps>(), -1)
 {
