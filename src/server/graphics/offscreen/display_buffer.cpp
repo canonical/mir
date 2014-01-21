@@ -149,6 +149,12 @@ bool mgo::DisplayBuffer::can_bypass() const
     return false;
 }
 
+void mgo::DisplayBuffer::render_and_post_update(
+        std::list<Renderable> const&,
+        std::function<void(Renderable const&)> const&)
+{
+}
+
 MirOrientation mgo::DisplayBuffer::orientation() const
 {
     /*

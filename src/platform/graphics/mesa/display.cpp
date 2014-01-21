@@ -36,6 +36,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace mgm = mir::graphics::mesa;
 namespace mg = mir::graphics;
@@ -172,9 +173,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
             if (orientation == mir_orientation_left ||
                 orientation == mir_orientation_right)
             {
-                auto tmp = width;
-                width = height;
-                height = tmp;
+                std::swap(width, height);
             }
 
             auto surface = platform->gbm.create_scanout_surface(width, height);

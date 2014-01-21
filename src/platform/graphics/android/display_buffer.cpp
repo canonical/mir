@@ -35,7 +35,8 @@ mga::DisplayBuffer::DisplayBuffer(
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      rotation{mir_orientation_normal}
 {
 }
 
@@ -54,11 +55,36 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
+void mga::DisplayBuffer::render_and_post_update(
+        std::list<Renderable> const& renderlist,
+        std::function<void(Renderable const&)> const& render_fn)
+{
+    if (renderlist.empty())
+    {
+        display_device->prepare_gl();
+    }
+    else
+    {
+        display_device->prepare_gl_and_overlays(renderlist);
+    }
+
+    for(auto& renderable : renderlist)
+    {
+        render_fn(renderable);
+    }
+
+    render_and_post();
+}
+
 void mga::DisplayBuffer::post_update()
 {
-    display_device->prepare_composition();
-    display_device->gpu_render(gl_context.display(), gl_context.surface());
+    display_device->prepare_gl();
+    render_and_post();
+}
 
+void mga::DisplayBuffer::render_and_post()
+{
+    display_device->gpu_render(gl_context.display(), gl_context.surface());
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
 }
@@ -70,6 +96,16 @@ bool mga::DisplayBuffer::can_bypass() const
 
 MirOrientation mga::DisplayBuffer::orientation() const
 {
-    // TODO: Get this from the output structure
-    return mir_orientation_normal;
+    /*
+     * android::DisplayBuffer is aways created with physical width/height
+     * (not rotated). So we just need to pass through the desired rotation
+     * and let the renderer do it.
+     * If and when we choose to implement HWC rotation, this may change.
+     */
+    return rotation;
+}
+
+void mga::DisplayBuffer::orient(MirOrientation rot)
+{
+    rotation = rot;
 }

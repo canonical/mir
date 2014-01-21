@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -15,12 +15,13 @@
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_FRONTEND_MESSAGE_SENDER_H_
-#define MIR_FRONTEND_MESSAGE_SENDER_H_
+
+#ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_SENDER_H_
+#define MIR_FRONTEND_PROTOBUF_MESSAGE_SENDER_H_
 
 #include "mir/frontend/fd_sets.h"
 
-#include <string>
+#include <google/protobuf/generated_message_reflection.h>
 
 namespace mir
 {
@@ -28,19 +29,24 @@ namespace frontend
 {
 namespace detail
 {
-class MessageSender
+class ProtobufMessageSender
 {
 public:
-    virtual void send(std::string const& body, FdSets const& fds) = 0;
+    virtual void send_response(
+            ::google::protobuf::uint32 call_id,
+            ::google::protobuf::Message* message,
+            FdSets const& fd_sets) = 0;
 
 protected:
-    MessageSender() = default;
-    virtual ~MessageSender() = default;
-    MessageSender(MessageSender const&) = delete;
-    MessageSender& operator=(MessageSender const&) = delete;
-};
+    ProtobufMessageSender() = default;
+    virtual ~ProtobufMessageSender() = default;
 
+private:
+    ProtobufMessageSender(ProtobufMessageSender const&) = delete;
+    ProtobufMessageSender& operator=(ProtobufMessageSender const&) = delete;
+};
 }
 }
 }
-#endif /* MIR_FRONTEND_MESSAGE_SENDER_H_ */
+
+#endif /* MIR_FRONTEND_PROTOBUF_MESSAGE_SENDER_H_ */

@@ -71,6 +71,16 @@ public:
 
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
+        hwc_display_contents_1_t* primary_display = *displays;
+        if (!primary_display)
+            return -1;
+
+        for(auto i = 0u; i < primary_display->numHwLayers; i++)
+        {
+            prepare_layerlist.push_back(primary_display->hwLayers[i]);
+            prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
+        }
+
         return save_args(&display0_prepare_content, displays);
     }
 
@@ -143,6 +153,7 @@ public:
 
     hwc_display_contents_1_t display0_set_content;
     std::vector<hwc_layer_1> set_layerlist;
+    std::vector<hwc_layer_1> prepare_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
     int fb_fence;
 };

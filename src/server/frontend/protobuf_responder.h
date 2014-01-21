@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_PROTOBUF_RESPONSE_PROCESSOR_H_
-#define MIR_FRONTEND_PROTOBUF_RESPONSE_PROCESSOR_H_
+#ifndef MIR_FRONTEND_PROTOBUF_RESPONDER_H_
+#define MIR_FRONTEND_PROTOBUF_RESPONDER_H_
 
-#include "fd_sets.h"
+#include "mir/frontend/protobuf_message_sender.h"
 #include "mir_protobuf_wire.pb.h"
 
 #include <memory>
@@ -34,20 +34,19 @@ namespace detail
 {
 class MessageSender;
 
-class ProtobufResponseProcessor
+class ProtobufResponder : public ProtobufMessageSender
 {
 public:
-    ProtobufResponseProcessor(
+    ProtobufResponder(
         std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response, FdSets const& fd_sets);
+    void send_response(
+            ::google::protobuf::uint32 id,
+            ::google::protobuf::Message* response,
+            FdSets const& fd_sets) override;
 
 private:
-    ProtobufResponseProcessor(ProtobufResponseProcessor const&) = delete;
-    ProtobufResponseProcessor operator=(ProtobufResponseProcessor const&) = delete;
-
     std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<ResourceCache> const resource_cache;
 
