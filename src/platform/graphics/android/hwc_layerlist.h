@@ -67,6 +67,9 @@ private:
 
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
     std::list<std::shared_ptr<HWCLayer>> layers;
+
+    NativeFence retire_fence;
+    NativeFence fb_fence;
 };
 
 }

@@ -79,10 +79,7 @@ public:
 
     //different layer types to check
     mga::FramebufferLayer empty_target_layer;
-    mga::FramebufferLayer handle1_target_layer{native_handle_1};
     mga::ForceGLLayer skip_layer;
-    mga::ForceGLLayer skip_layer_with_buffer{native_handle_1};
-    mga::CompositionLayer comp_layer{mock_renderable}; 
 };
 
 TEST_F(HWCLayerListTest, list_defaults)
@@ -125,6 +122,7 @@ TEST_F(HWCLayerListTest, hwc10_list_update)
 
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
+        mga::CompositionLayer comp_layer{mock_renderable}; 
         ASSERT_EQ(2, list.numHwLayers);
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
@@ -161,8 +159,8 @@ TEST_F(HWCLayerListTest, fb_target_set)
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(2, list.numHwLayers);
-        EXPECT_THAT(skip_layer_with_buffer, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(handle1_target_layer, MatchesLayer(list.hwLayers[1]));
+        EXPECT_THAT(mga::ForceGLLayer{native_handle_1}, MatchesLayer(list.hwLayers[0]));
+        EXPECT_THAT(mga::FramebufferLayer{native_handle_1}, MatchesLayer(list.hwLayers[1]));
     });
 }
 
@@ -180,6 +178,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
 
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
+        mga::CompositionLayer comp_layer{mock_renderable}; 
         ASSERT_EQ(3, list.numHwLayers);
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
@@ -191,10 +190,11 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
 
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
+        mga::CompositionLayer comp_layer{mock_renderable}; 
         ASSERT_EQ(3, list.numHwLayers);
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-        EXPECT_THAT(handle1_target_layer, MatchesLayer(list.hwLayers[2]));
+        EXPECT_THAT(mga::FramebufferLayer{native_handle_1}, MatchesLayer(list.hwLayers[2]));
     });
 
     /* reset default */
@@ -203,8 +203,8 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(2, list.numHwLayers);
-        EXPECT_THAT(skip_layer_with_buffer, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(handle1_target_layer, MatchesLayer(list.hwLayers[1]));
+        EXPECT_THAT(mga::ForceGLLayer{native_handle_1}, MatchesLayer(list.hwLayers[0]));
+        EXPECT_THAT(mga::FramebufferLayer{native_handle_1}, MatchesLayer(list.hwLayers[1]));
     });
 }
 

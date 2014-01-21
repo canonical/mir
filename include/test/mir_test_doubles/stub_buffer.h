@@ -50,6 +50,13 @@ public:
     {
     }
 
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer)
+        : buf_size{0, 0},
+          buf_pixel_format{mir_pixel_format_abgr_8888},
+          native_buffer(native_buffer)
+    {
+    }
+
     virtual geometry::Size size() const { return buf_size; }
 
     virtual geometry::Stride stride() const { return geometry::Stride(); }
@@ -58,6 +65,10 @@ public:
 
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
+        printf("zing.\n");
+        if (native_buffer)
+            return native_buffer;
+
 #ifndef ANDROID
         return std::make_shared<graphics::NativeBuffer>();
 #else
@@ -70,6 +81,7 @@ public:
 
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
+    std::shared_ptr<graphics::NativeBuffer> const native_buffer;
 };
 }
 }
