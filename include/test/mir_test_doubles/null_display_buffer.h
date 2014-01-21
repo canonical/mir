@@ -39,7 +39,7 @@ public:
     void render_and_post_update(
         std::list<graphics::Renderable> const&,
         std::function<void(graphics::Renderable const&)> const&) {}
-    MirOrientation orientation() const override { return mir_orientation_normal;}
+    MirOrientation orientation() const override { return mir_orientation_normal; }
 };
 
 }
