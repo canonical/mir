@@ -17,14 +17,14 @@
  */
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/display_buffer.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir/graphics/null_display_report.h"
-
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
+#include "mir_test_framework/udev_environment.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -34,6 +34,7 @@ using namespace testing;
 using namespace mir;
 using namespace std;
 using namespace mir::test::doubles;
+using namespace mir::mir_test_framework;
 
 class MesaDisplayBufferTest : public Test
 {
@@ -63,6 +64,8 @@ public:
             .WillByDefault(Return(fake_handle));
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
             .WillByDefault(Return(456));
+
+        fake_devices.add_standard_drm_devices();
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -81,6 +84,7 @@ protected:
     NiceMock<MockDRM> mock_drm; 
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
+    UdevEnvironment   fake_devices;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
