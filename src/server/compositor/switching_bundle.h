@@ -98,7 +98,10 @@ private:
     mutable std::mutex guard;
     std::condition_variable cond;
 
+    // the last frame acquired by the compositor. its value is invalid
+    // if compositor_ever_acquired is false
     unsigned long last_consumed;
+    bool compositor_ever_acquired;
 
     bool overlapping_compositors;
 

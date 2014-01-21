@@ -77,6 +77,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
       last_consumed{0},
+      compositor_ever_acquired{false},
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
@@ -273,7 +274,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
     int compositor;
 
     // Multi-monitor acquires close to each other get the same frame:
-    bool same_frame = (frameno == last_consumed);
+    bool same_frame = compositor_ever_acquired && (frameno == last_consumed);
 
     int avail = nfree();
     bool can_recycle = ncompositors || avail;
@@ -303,6 +304,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
         nready--;
         ncompositors++;
         last_consumed = frameno;
+        compositor_ever_acquired = true;
     }
 
     overlapping_compositors = (ncompositors > 1);
