@@ -19,9 +19,12 @@
 #ifndef MIR_GRAPHICS_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
+#include "renderable.h"
 #include <mir/geometry/rectangle.h>
 
 #include <memory>
+#include <functional>
+#include <list>
 
 namespace mir
 {
@@ -44,11 +47,22 @@ public:
     virtual void make_current() = 0;
     /** Releases the current GL rendering target. */
     virtual void release_current() = 0;
-    /** Posts the DisplayBuffer to the screen. */
+
+    /** This will trigger OpenGL rendering and post the result to the screen. */
     virtual void post_update() = 0;
 
+    /** This will render renderlist to the screen and post the result to the screen.
+        For each renderable, the DisplayBuffer will decide if its more efficient to render
+        that Renderable via OpenGL, or via another method. If the Renderable is to be rendered
+        via OpenGL, render_fn will be invoked on that Renderable. */
+    virtual void render_and_post_update(
+        std::list<Renderable> const& renderlist,
+        std::function<void(Renderable const&)> const& render_fn) = 0;
+
+    /** to be deprecated */
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
+
 
 protected:
     DisplayBuffer() = default;

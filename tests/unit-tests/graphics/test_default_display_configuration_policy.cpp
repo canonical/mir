@@ -61,8 +61,9 @@ public:
             f(output);
     }
 
-    MOCK_METHOD6(configure_output, void(DisplayConfigurationOutputId, bool,
-                                        Point, size_t, MirPixelFormat, MirPowerMode));
+    MOCK_METHOD7(configure_output, void(DisplayConfigurationOutputId, bool,
+                                        Point, size_t, MirPixelFormat,
+                                        MirPowerMode, MirOrientation));
 
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
 private:
@@ -85,7 +86,8 @@ DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
         Point{X{123}, Y{343}},
         0,
         mir_pixel_format_abgr_8888,
-        mir_power_mode_on
+        mir_power_mode_on,
+        mir_orientation_normal
     };
 }
 
@@ -167,13 +169,14 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
         {
             EXPECT_CALL(conf, configure_output(output.id, true, Point(),
                                                output.preferred_mode_index,
-                                               _, _));
+                                               _, _, _));
         }
         else
         {
-            EXPECT_CALL(conf, configure_output(output.id, false, output.top_left,
+            EXPECT_CALL(conf, configure_output(output.id, false,
+                                               output.top_left,
                                                output.current_mode_index,
-                                               _, _));
+                                               _, _, _));
         }
     });
 
@@ -189,7 +192,24 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
 
     conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
     {
-        EXPECT_CALL(conf, configure_output(output.id, _, _, _, _, mir_power_mode_on));
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _, _,
+                                           mir_power_mode_on, _));
+    });
+
+    policy.apply_to(conf);
+}
+
+TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
+{
+    using namespace ::testing;
+
+    DefaultDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    {
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _, _, _,
+                                           mir_orientation_normal));
     });
 
     policy.apply_to(conf);
@@ -209,10 +229,10 @@ TEST(DefaultDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_su
         ++output_count;
     });
 
-    EXPECT_CALL(conf, configure_output(_, true, _, _, _, _))
+    EXPECT_CALL(conf, configure_output(_, true, _, _, _, _, _))
         .Times(AtMost(max_simultaneous_outputs));
 
-    EXPECT_CALL(conf, configure_output(_, false, _, _, _, _))
+    EXPECT_CALL(conf, configure_output(_, false, _, _, _, _, _))
         .Times(AtLeast(output_count - max_simultaneous_outputs));
 
     policy.apply_to(conf);
@@ -225,7 +245,8 @@ TEST(DefaultDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
     DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration pick_xrgb{ { connected_with_rgba_and_xrgb() } };
 
-    EXPECT_CALL(pick_xrgb, configure_output(_, true, _, _, mir_pixel_format_xrgb_8888, _));
+    EXPECT_CALL(pick_xrgb, configure_output(_, true, _, _,
+                                            mir_pixel_format_xrgb_8888, _, _));
     policy.apply_to(pick_xrgb);
 }
 
@@ -236,7 +257,8 @@ TEST(DefaultDisplayConfigurationPolicyTest, preserve_opaque_selection)
     DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration keep_bgr{ { connected_with_xrgb_bgr() } };
 
-    EXPECT_CALL(keep_bgr, configure_output(_, true, _, _, mir_pixel_format_bgr_888, _));
+    EXPECT_CALL(keep_bgr, configure_output(_, true, _, _,
+                                           mir_pixel_format_bgr_888, _, _));
     policy.apply_to(keep_bgr);
 }
 
@@ -247,7 +269,8 @@ TEST(DefaultDisplayConfigurationPolicyTest, accept_transparency_when_only_option
     DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration pick_rgba{ { default_output(DisplayConfigurationOutputId{15}) } };
 
-    EXPECT_CALL(pick_rgba, configure_output(_, true, _, _, mir_pixel_format_abgr_8888, _));
+    EXPECT_CALL(pick_rgba, configure_output(_, true, _, _,
+                                            mir_pixel_format_abgr_8888, _, _));
     policy.apply_to(pick_rgba);
 }
 

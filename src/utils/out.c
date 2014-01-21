@@ -57,6 +57,18 @@ static const char *power_mode_name(MirPowerMode m)
     return ((unsigned)m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
 }
 
+static const char *orientation_name(MirOrientation ori)
+{
+    static const char * const name[] =
+    {
+        "normal",
+        "left",
+        "inverted",
+        "right"
+    };
+    return name[(ori % 360) / 90];
+}
+
 int main(int argc, char *argv[])
 {
     const char *server = NULL;
@@ -135,14 +147,15 @@ int main(int argc, char *argv[])
                     (out->physical_height_mm * out->physical_height_mm))
                     / 25.4f;
 
-                printf("%+d%+d, %s, %s, %umm x %umm (%.1f\")",
+                printf("%+d%+d, %s, %s, %umm x %umm (%.1f\"), %s",
                        out->position_x,
                        out->position_y,
                        out->used ? "used" : "unused",
                        power_mode_name(out->power_mode),
                        out->physical_width_mm,
                        out->physical_height_mm,
-                       inches);
+                       inches,
+                       orientation_name(out->orientation));
             }
             printf("\n");
 

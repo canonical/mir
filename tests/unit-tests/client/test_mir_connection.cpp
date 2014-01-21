@@ -147,7 +147,7 @@ public:
     {
     }
 
-    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> the_rpc_channel() override
+    std::shared_ptr<::google::protobuf::RpcChannel> the_rpc_channel() override
     {
         return channel;
     }
