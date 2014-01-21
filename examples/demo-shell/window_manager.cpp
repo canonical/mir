@@ -154,7 +154,8 @@ bool me::WindowManager::handle(MirEvent const& event)
                                        output.top_left,
                                        output.current_mode_index,
                                        output.current_format,
-                                       power_mode);
+                                       power_mode,
+                                       output.orientation);
             });
             display_off = !display_off;
 

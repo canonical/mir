@@ -59,7 +59,8 @@ void PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
             conf.configure_output(conf_output.id, true, conf_output.top_left,
                                   conf_output.current_mode_index,
                                   *pos,
-                                  conf_output.power_mode
+                                  conf_output.power_mode,
+                                  conf_output.orientation
                                  );
         });
 }
