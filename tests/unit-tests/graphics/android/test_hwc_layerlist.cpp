@@ -221,3 +221,16 @@ TEST_F(HWCLayerListTest, fb_fence)
 
     EXPECT_EQ(release_fence, layerlist.fb_target_fence());
 }
+
+TEST_F(HWCLayerListTest, retire_fence)
+{
+    int release_fence = 381;
+    mga::LayerList layerlist(true);
+
+    layerlist.with_native_list([this, &release_fence](hwc_display_contents_1_t& list)
+    {
+        list.retireFenceFd = release_fence;
+    });
+
+    EXPECT_EQ(release_fence, layerlist.retirement_fence());
+}
