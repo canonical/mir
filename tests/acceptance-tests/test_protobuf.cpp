@@ -20,6 +20,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/client/private.h"
+#include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/protobuf_session_creator.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
 
@@ -34,6 +35,12 @@
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 
+/*************************************************************************/
+/*************************************************************************/
+/*  Note that the functionality demonstrated here relies on "detail" and */
+/*  is not guaranteed to be supported in future.                         */
+/*************************************************************************/
+/*************************************************************************/
 namespace
 {
 struct DemoMirServer : mir::protobuf::MirServer
@@ -60,12 +67,12 @@ struct DemoMirServer : mir::protobuf::MirServer
 // using a global for easy access from tests and DemoMessageProcessor::dispatch()
 DemoMirServer* demo_mir_server;
 
-struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
+struct DemoMessageProcessor : mfd::MessageProcessor
 {
     DemoMessageProcessor(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
         std::shared_ptr<mfd::MessageProcessor> const& wrapped) :
-        mfd::TemplateProtobufMessageProcessor(sender),
+        sender(sender),
         wrapped(wrapped) {}
 
     bool dispatch(mir::protobuf::wire::Invocation const& invocation)
@@ -83,6 +90,12 @@ struct DemoMessageProcessor : mfd::TemplateProtobufMessageProcessor
         return wrapped->dispatch(invocation);
     }
 
+    void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
+    {
+        sender->send_response(id, response, {});
+    }
+
+    std::shared_ptr<mfd::ProtobufMessageSender> const sender;
     std::shared_ptr<mfd::MessageProcessor> const wrapped;
 };
 

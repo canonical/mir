@@ -36,35 +36,15 @@ namespace frontend
 {
 namespace detail
 {
-class ProtobufMessageSender;
-
-// This class is intended to make implementation of a protobuf based MessageProcessor simpler.
-// The template method process_message() calls dispatch after unpacking the received "invocation"
-// message. The related invoke<>() template handles further unpacking of the parameter
-// message and packing of the response and calls send_response.
-// Derived classes can overload send_response, but need to specialize result_ptr_t before instantiating
-// invoke<>() to ensure the correct overload is called.
-class TemplateProtobufMessageProcessor : public MessageProcessor
-{
-public:
-    TemplateProtobufMessageProcessor(
-        std::shared_ptr<ProtobufMessageSender> const& sender);
-
-    ~TemplateProtobufMessageProcessor() noexcept {}
-
-    void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response);
-
-    std::shared_ptr<ProtobufMessageSender> const sender;
-};
-
 // Utility metafunction result_ptr_t<> allows invoke() to pick the right
-// send_response() overload. Client code may specialize result_ptr_t to
-// resolve an overload of send_response called.
+// send_response() overload. The base template resolves to the prototype
+// "send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)"
+// Client code may specialize result_ptr_t to resolve to another overload.
 template<typename ResultType> struct result_ptr_t
 { typedef ::google::protobuf::Message* type; };
 
 // Boiler plate for unpacking a parameter message, invoking a server function, and
-// sending the result message.
+// sending the result message. Assumes the existence of Self::send_response().
 template<class Self, class Server, class ParameterMessage, class ResultMessage>
 void invoke(
     Self* self,
