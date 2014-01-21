@@ -61,7 +61,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <utility>
-#include <iostream>
+#include <ostream>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
