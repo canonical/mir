@@ -27,17 +27,6 @@ mfd::TemplateProtobufMessageProcessor::TemplateProtobufMessageProcessor(
 {
 }
 
-bool mfd::TemplateProtobufMessageProcessor::process_message(std::istream& msg)
-{
-    mir::protobuf::wire::Invocation invocation;
-    invocation.ParseFromIstream(&msg);
-
-    if (invocation.has_protocol_version() && invocation.protocol_version() != 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
-
-    return dispatch(invocation);
-}
-
 void mfd::TemplateProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
 {
     sender->send_response(id, response, {});

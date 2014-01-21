@@ -55,11 +55,6 @@ public:
     void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response);
 
     std::shared_ptr<ProtobufMessageSender> const sender;
-
-    virtual bool dispatch(mir::protobuf::wire::Invocation const& invocation) = 0;
-
-private:
-    bool process_message(std::istream& msg) override final;
 };
 
 // Utility metafunction result_ptr_t<> allows invoke() to pick the right
