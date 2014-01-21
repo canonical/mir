@@ -40,13 +40,18 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HwcFbDevice::prepare_composition()
+void mga::HwcFbDevice::prepare_gl()
 {
     auto display_list = layer_list.native_list();
     if (hwc_device->prepare(hwc_device.get(), 1, &display_list) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
+}
+
+void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<Renderable> const&)
+{
+    prepare_gl();
 }
 
 void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)

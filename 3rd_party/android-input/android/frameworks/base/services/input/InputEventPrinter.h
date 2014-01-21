@@ -49,11 +49,20 @@ void absEvCodeToStr(char *codeStr, int code) {
         case ABS_Y:
             sprintf(codeStr, "ABS_Y");
             break;
+        case ABS_MT_SLOT:
+            sprintf(codeStr, "ABS_MT_SLOT");
+            break;
         case ABS_MT_TOUCH_MAJOR:
             sprintf(codeStr, "ABS_MT_TOUCH_MAJOR");
             break;
         case ABS_MT_TOUCH_MINOR:
             sprintf(codeStr, "ABS_MT_TOUCH_MINOR");
+            break;
+        case ABS_MT_WIDTH_MAJOR:
+            sprintf(codeStr, "ABS_MT_WIDTH_MAJOR");
+            break;
+        case ABS_MT_WIDTH_MINOR:
+            sprintf(codeStr, "ABS_MT_WIDTH_MINOR");
             break;
         case ABS_MT_ORIENTATION:
             sprintf(codeStr, "ABS_MT_ORIENTATION");
@@ -67,6 +76,18 @@ void absEvCodeToStr(char *codeStr, int code) {
         case ABS_MT_TOOL_TYPE:
             sprintf(codeStr, "ABS_MT_TOOL_TYPE");
             break;
+        case ABS_MT_BLOB_ID:
+            sprintf(codeStr, "ABS_MT_BLOB_ID");
+            break;
+        case ABS_MT_TRACKING_ID:
+            sprintf(codeStr, "ABS_MT_TRACKING_ID");
+            break;
+        case ABS_MT_PRESSURE:
+            sprintf(codeStr, "ABS_MT_PRESSURE");
+            break;
+        case ABS_MT_DISTANCE:
+            sprintf(codeStr, "ABS_MT_DISTANCE");
+            break;
         default:
             sprintf(codeStr, "0x%08x", code);
             break;
@@ -75,6 +96,15 @@ void absEvCodeToStr(char *codeStr, int code) {
 
 void keyEvCodeToStr(char *codeStr, int code) {
     switch(code) {
+        case BTN_TOOL_PEN:
+            sprintf(codeStr, "BTN_TOOL_PEN");
+            break;
+        case BTN_TOOL_FINGER:
+            sprintf(codeStr, "BTN_TOOL_FINGER");
+            break;
+        case BTN_TOOL_MOUSE:
+            sprintf(codeStr, "BTN_TOOL_MOUSE");
+            break;
         case BTN_TOUCH:
             sprintf(codeStr, "BTN_TOUCH");
             break;

@@ -16,14 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "protobuf_response_processor.h"
+#include "protobuf_responder.h"
 #include "resource_cache.h"
 #include "message_sender.h"
 #include "mir/frontend/client_constants.h"
 
 namespace mfd = mir::frontend::detail;
 
-mfd::ProtobufResponseProcessor::ProtobufResponseProcessor(
+mfd::ProtobufResponder::ProtobufResponder(
     std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     sender(sender),
@@ -32,14 +32,7 @@ mfd::ProtobufResponseProcessor::ProtobufResponseProcessor(
     send_response_buffer.reserve(serialization_buffer_size);
 }
 
-void mfd::ProtobufResponseProcessor::send_response(
-    ::google::protobuf::uint32 id,
-    google::protobuf::Message* response)
-{
-    send_response(id, response, FdSets());
-}
-
-void mfd::ProtobufResponseProcessor::send_response(
+void mfd::ProtobufResponder::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response,
     FdSets const& fd_sets)

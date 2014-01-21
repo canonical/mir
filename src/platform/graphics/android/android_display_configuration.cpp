@@ -37,7 +37,8 @@ mga::AndroidDisplayConfiguration::AndroidDisplayConfiguration(geom::Size const& 
                         geom::Point{0,0},
                         0,
                         mir_pixel_format_abgr_8888,
-                        mir_power_mode_on},
+                        mir_power_mode_on,
+                        mir_orientation_normal},
           card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
@@ -68,7 +69,10 @@ void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::Di
     f(configuration);
 }
 
-void mga::AndroidDisplayConfiguration::configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPixelFormat, MirPowerMode power_mode)
+void mga::AndroidDisplayConfiguration::configure_output(
+    mg::DisplayConfigurationOutputId, bool, geom::Point, size_t,
+    MirPixelFormat, MirPowerMode power_mode, MirOrientation orientation)
 {
     configuration.power_mode = power_mode;
+    configuration.orientation = orientation;
 }
