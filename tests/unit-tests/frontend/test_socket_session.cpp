@@ -41,9 +41,9 @@ struct StubReceiver : public mfd::MessageReceiver
         boost::asio::streambuf& stream,
         size_t size)
     {
-    	read_size = size;
-    	pstream = &stream;
-    	callback_function = callback;
+        read_size = size;
+        pstream = &stream;
+        callback_function = callback;
     }
 
     void fake_receive_msg(char* buffer, size_t size)
