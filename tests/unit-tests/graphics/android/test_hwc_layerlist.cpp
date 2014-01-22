@@ -21,6 +21,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "hwc_struct_helper-inl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/mock_renderable.h"
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
@@ -29,22 +30,6 @@ namespace mga=mir::graphics::android;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
-
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-struct MockRenderable : public mg::Renderable
-{
-    MOCK_CONST_METHOD0(buffer, std::shared_ptr<mg::Buffer>());
-    MOCK_CONST_METHOD0(alpha_enabled, bool());
-    MOCK_CONST_METHOD0(screen_position, geom::Rectangle());
-};
-}
-}
-}
 
 class HWCLayerListTest : public ::testing::Test
 {
