@@ -40,6 +40,7 @@ public:
     MOCK_CONST_METHOD0(can_bypass, bool());
     MOCK_METHOD2(render_and_post_update, void(std::list<graphics::Renderable> const&, 
                                    std::function<void(graphics::Renderable const&)> const&));
+    MOCK_CONST_METHOD0(orientation, MirOrientation());
 };
 
 }

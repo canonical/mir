@@ -59,12 +59,25 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    MirOrientation orientation = mir_orientation_normal;
+
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         // TODO: Properly support multiple outputs
         display_device->mode(output.power_mode);
+        orientation = output.orientation;
     });
     current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
+
+    /*
+     * It's tempting to put orient() into the base class and so avoid this
+     * cast, but we only need it in the Android implementation right now.
+     */
+    if (android::DisplayBuffer* db =
+            dynamic_cast<mga::DisplayBuffer*>(display_buffer.get()))
+    {
+        db->orient(orientation);
+    }
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(
