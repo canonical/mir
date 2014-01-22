@@ -331,34 +331,32 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 
 /*
  Regression test for LP#1270964
- In the situation emulated here SwitchingBundle::last_consumed ise used without ever being set,
- thus its initial value of zero will wrongly be used and lead to bogus behavior.
+ In the original bug, SwitchingBundle::last_consumed would be used without ever being set
+ in the compositor_acquire() call, thus its initial value of zero would wrongly be used
+ and lead to the wrong buffer being given to the compositor
  */
 TEST_F(SwitchingBundleTest, compositor_client_interleaved)
 {
     int nbuffers = 3;
     mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
     mg::Buffer* client_buffer = nullptr;
+    std::shared_ptr<mg::Buffer> compositor_buffer = nullptr;
 
     client_buffer = bundle.client_acquire();
-
+    mg::BufferID first_ready_buffer_id = client_buffer->id();
     bundle.client_release(client_buffer);
 
     client_buffer = bundle.client_acquire();
 
-    bundle.compositor_acquire(0);
+    // in the original bug, compositor would be given the wrong buffer here
+    compositor_buffer = bundle.compositor_acquire(0 /*frameno*/);
 
-    //(nbufs=3,fcomp=2,ncomp=1,fready=0,nready=1,fclient=1,nclient=1) <-- BUG starts here
-    // Should be:
-    //(nbufs=3,fcomp=0,ncomp=1,fready=0,nready=0,fclient=1,nclient=1)
+    ASSERT_EQ(first_ready_buffer_id, compositor_buffer->id());
 
+    // Clean up
     bundle.client_release(client_buffer);
-
-    //(nbufs=3,fcomp=2,ncomp=1,fready=0,nready=2,fclient=2,nclient=0) 
-    // Should be:
-    //(nbufs=3,fcomp=0,ncomp=1,fready=1,nready=1,fclient=2,nclient=0)
-
-    client_buffer = bundle.client_acquire(); // <- would lock here if in buggy state
+    bundle.compositor_release(compositor_buffer);
+    compositor_buffer.reset();
 }
 
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
