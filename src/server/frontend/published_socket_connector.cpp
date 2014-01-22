@@ -17,7 +17,7 @@
  */
 
 #include "published_socket_connector.h"
-#include "protobuf_session_creator.h"
+#include "mir/frontend/protobuf_session_creator.h"
 
 #include "mir/frontend/connector_report.h"
 

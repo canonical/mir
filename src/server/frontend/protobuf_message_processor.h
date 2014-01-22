@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "mir/frontend/template_protobuf_message_processor.h"
+#include "mir/frontend/message_processor.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -36,7 +36,9 @@ class MessageProcessorReport;
 
 namespace detail
 {
-class ProtobufMessageProcessor : public TemplateProtobufMessageProcessor
+class ProtobufMessageSender;
+
+class ProtobufMessageProcessor : public MessageProcessor
 {
 public:
     ProtobufMessageProcessor(
@@ -46,7 +48,7 @@ public:
 
     ~ProtobufMessageProcessor() noexcept {}
 
-    using TemplateProtobufMessageProcessor::send_response;
+    void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
@@ -54,6 +56,7 @@ public:
 private:
     bool dispatch(mir::protobuf::wire::Invocation const& invocation);
 
+    std::shared_ptr<ProtobufMessageSender> const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<MessageProcessorReport> const report;
 };
