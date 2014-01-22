@@ -25,6 +25,8 @@
 #include <mutex>
 #include <memory>
 
+#include <boost/optional/optional.hpp>
+
 namespace mir
 {
 namespace graphics
@@ -98,10 +100,7 @@ private:
     mutable std::mutex guard;
     std::condition_variable cond;
 
-    // the last frame acquired by the compositor. its value is invalid
-    // if compositor_ever_acquired is false
-    unsigned long last_consumed;
-    bool compositor_ever_acquired;
+    boost::optional<unsigned long> last_consumed;
 
     bool overlapping_compositors;
 
