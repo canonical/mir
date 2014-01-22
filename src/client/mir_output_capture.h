@@ -26,8 +26,6 @@
 #include "mir_protobuf.pb.h"
 #include "mir/geometry/size.h"
 
-#include <EGL/egl.h>
-
 namespace mir
 {
 namespace protobuf { class DisplayServer; }
