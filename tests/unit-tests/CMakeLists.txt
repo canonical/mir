@@ -11,6 +11,7 @@ set(
   test_asio_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
+  test_udev_wrapper.cpp
 )
 
 add_subdirectory(options/)
@@ -54,15 +55,13 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "mesa")
-  target_link_libraries(
-    mir_unit_tests
+target_link_libraries(
+  mir_unit_tests
 
-    ${UMOCKDEV_LIBRARIES}
-  )
-  # Umockdev uses glib, which uses the deprecated "register" allocation specifier
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
-endif()
+  ${UMOCKDEV_LIBRARIES}
+)
+# Umockdev uses glib, which uses the deprecated "register" allocation specifier
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS

@@ -21,6 +21,7 @@
 
 #include "mir/compositor/compositor.h"
 
+#include <mutex>
 #include <memory>
 #include <vector>
 #include <thread>
@@ -61,6 +62,9 @@ private:
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::thread> threads;
+
+    std::mutex started_guard;
+    bool started;
 };
 
 }
