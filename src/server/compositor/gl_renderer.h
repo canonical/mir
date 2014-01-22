@@ -50,7 +50,7 @@ private:
     GLuint program;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
-    mutable GLuint display_transform_uniform_loc;
+    GLuint display_transform_uniform_loc;
     GLuint transform_uniform_loc;
     GLuint alpha_uniform_loc;
     GLuint vertex_attribs_vbo;
