@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/hwc10_device.h"
+#include "src/platform/graphics/android/hwc_fb_device.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -31,7 +31,7 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
-class HWC10Device : public ::testing::Test
+class HwcFbDevice : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -57,13 +57,13 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-TEST_F(HWC10Device, hwc10_prepare_gl_only)
+TEST_F(HwcFbDevice, hwc10_prepare_gl_only)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     device.prepare_gl();
 
@@ -75,13 +75,13 @@ TEST_F(HWC10Device, hwc10_prepare_gl_only)
     EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
 }
 
-TEST_F(HWC10Device, hwc10_prepare_with_renderables)
+TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 {
     using namespace testing;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     std::list<mg::Renderable> renderlist;
     device.prepare_gl_and_overlays(renderlist);
@@ -94,7 +94,7 @@ TEST_F(HWC10Device, hwc10_prepare_with_renderables)
     EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
 }
 
-TEST_F(HWC10Device, hwc10_render_frame)
+TEST_F(HwcFbDevice, hwc10_render_frame)
 {
     using namespace testing;
 
@@ -106,7 +106,7 @@ TEST_F(HWC10Device, hwc10_render_frame)
     EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     device.gpu_render(dpy, sur);
 
@@ -120,7 +120,7 @@ TEST_F(HWC10Device, hwc10_render_frame)
     EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->set_layerlist[0].flags);
 }
 
-TEST_F(HWC10Device, hwc10_prepare_frame_failure)
+TEST_F(HwcFbDevice, hwc10_prepare_frame_failure)
 {
     using namespace testing;
 
@@ -128,14 +128,14 @@ TEST_F(HWC10Device, hwc10_prepare_frame_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     EXPECT_THROW({
         device.prepare_gl();
     }, std::runtime_error);
 }
 
-TEST_F(HWC10Device, hwc10_commit_frame_failure)
+TEST_F(HwcFbDevice, hwc10_commit_frame_failure)
 {
     using namespace testing;
 
@@ -147,7 +147,7 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::HWC10Device device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     EXPECT_THROW({
         device.gpu_render(dpy, sur);
