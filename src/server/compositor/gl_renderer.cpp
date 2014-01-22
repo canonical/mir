@@ -292,7 +292,9 @@ void mc::GLRenderer::begin(float rotation) const
                        sin,  cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
+    glUseProgram(program);
     glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_TRUE, rot);
+    glUseProgram(0);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 

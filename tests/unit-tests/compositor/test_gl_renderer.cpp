@@ -148,10 +148,6 @@ void FillMockVertexBuffer(mtd::MockGL &mock_gl)
         .WillOnce(SetArgPointee<1>(stub_vbo));
     EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
     EXPECT_CALL(mock_gl, glBufferData(GL_ARRAY_BUFFER, _, _, GL_STATIC_DRAW));
-
-    /* These should go away */
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, 0));
-    EXPECT_CALL(mock_gl, glUseProgram(0));
 }
 
 class GLRendererSetupProcess :
