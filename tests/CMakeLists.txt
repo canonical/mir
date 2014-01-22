@@ -1,4 +1,4 @@
-pkg_check_modules(UMOCKDEV umockdev-1.0)
+pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0)
 if (NOT UMOCKDEV_FOUND)
   message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
@@ -23,17 +23,21 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/test)
 
-option(MIR_ENABLE_ACCEPTANCE_TESTS "Build & run acceptance tests" ON)
-option(MIR_ENABLE_INTEGRATION_TESTS "Build & run integration tests" ON)
-option(MIR_ENABLE_UNIT_TESTS "Build & run unit tests" ON)
+option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)
+option(MIR_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
+option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(integration-tests/)
+if (MIR_BUILD_ACCEPTANCE_TESTS)
+  add_subdirectory(acceptance-tests/)
+endif (MIR_BUILD_ACCEPTANCE_TESTS)
 
-#we check the other tests in their own cmake file
-if (MIR_ENABLE_UNIT_TESTS)
+if (MIR_BUILD_INTEGRATION_TESTS)
+  add_subdirectory(integration-tests/)
+endif (MIR_BUILD_INTEGRATION_TESTS)
+
+if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
-endif (MIR_ENABLE_UNIT_TESTS)
+endif (MIR_BUILD_UNIT_TESTS)
 
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)

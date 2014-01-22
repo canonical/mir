@@ -56,14 +56,7 @@ geom::Rectangle mgm::OverlappingOutputGroup::bounding_rectangle() const
     geom::Rectangles rectangles;
 
     for (auto const& output : outputs)
-    {
-        geom::Rectangle const rect_output
-        {
-            output.top_left,
-            output.modes[output.current_mode_index].size
-        };
-        rectangles.add(rect_output);
-    }
+        rectangles.add(output.extents());
 
     return rectangles.bounding_rectangle();
 }
@@ -103,11 +96,7 @@ void mgm::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const
 {
     std::vector<size_t> overlapping_groups;
 
-    geom::Rectangle const rect_output
-    {
-        conf_output.top_left,
-        conf_output.modes[conf_output.current_mode_index].size
-    };
+    geom::Rectangle const& rect_output = conf_output.extents();
 
     /*
      * Find which groups the configuration overlaps with. Search in reverse
@@ -121,13 +110,13 @@ void mgm::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const
         groups[i].for_each_output(
             [&](DisplayConfigurationOutput const& conf_o)
             {
-                geom::Rectangle const rect
-                {
-                    conf_o.top_left,
-                    conf_o.modes[conf_o.current_mode_index].size
-                };
-
-                if (rect.overlaps(rect_output))
+                /*
+                 * Prevent grouping of outputs when they have differing
+                 * orientations. It's safer to assume the hardware can't
+                 * handle it for now... until proven otherwise.
+                 */
+                if (conf_o.extents().overlaps(rect_output) &&
+                    conf_o.orientation == conf_output.orientation)
                     found_overlap = true;
             });
 

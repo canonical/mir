@@ -82,6 +82,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
                 available_outputs_for_card[conf_output.card_id] == 0)
             {
                 conf_output.used = false;
+                // XXX Why not mir_power_mode_off?
                 conf_output.power_mode = default_power_state;
                 return;
             }
@@ -94,6 +95,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
             conf_output.preferred_mode_index = preferred_mode_index;
             conf_output.current_format = format;
             conf_output.power_mode = default_power_state;
+            conf_output.orientation = mir_orientation_normal;
 
             --available_outputs_for_card[conf_output.card_id];
         });

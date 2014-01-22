@@ -1,3 +1,5 @@
+include(CMakeDependentOption)
+
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
 
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
@@ -9,6 +11,7 @@ set(
   test_asio_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
+  test_udev_wrapper.cpp
 )
 
 add_subdirectory(options/)
@@ -52,17 +55,24 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "mesa")
-  target_link_libraries(
-    mir_unit_tests
+target_link_libraries(
+  mir_unit_tests
 
-    ${UMOCKDEV_LIBRARIES}
-  )
-  # Umockdev uses glib, which uses the deprecated "register" allocation specifier
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
-endif()
+  ${UMOCKDEV_LIBRARIES}
+)
+# Umockdev uses glib, which uses the deprecated "register" allocation specifier
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
-mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0)
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_UNIT_TESTS
+  "Run unit tests as part of default testing"
+  ON
+  "MIR_BUILD_UNIT_TESTS"
+  OFF)
+
+if (MIR_RUN_UNIT_TESTS)
+  mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0)
+endif (MIR_RUN_UNIT_TESTS)
 
 install(
     TARGETS mir_unit_tests

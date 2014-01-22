@@ -68,7 +68,8 @@ public:
                             protobuf_output.position_y()},
                 protobuf_output.current_mode(),
                 static_cast<MirPixelFormat>(protobuf_output.current_format()),
-                static_cast<MirPowerMode>(protobuf_output.power_mode())
+                static_cast<MirPowerMode>(protobuf_output.power_mode()),
+                static_cast<MirOrientation>(protobuf_output.orientation())
             };
 
             /* Modes */
@@ -133,7 +134,8 @@ public:
                             client_output.position_y},
                 client_output.current_mode,
                 client_output.current_format,
-                static_cast<MirPowerMode>(client_output.power_mode)
+                static_cast<MirPowerMode>(client_output.power_mode),
+                static_cast<MirOrientation>(client_output.orientation)
             };
 
             /* Modes */
@@ -181,7 +183,8 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPixelFormat, MirPowerMode) override
+                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
+                          MirOrientation) override
     {
     }
 

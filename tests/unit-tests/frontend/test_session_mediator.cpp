@@ -84,7 +84,7 @@ struct MockConfig : public mg::DisplayConfiguration
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
     MOCK_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput&)>));
-    MOCK_METHOD6(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPixelFormat, MirPowerMode));
+    MOCK_METHOD7(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirPixelFormat, MirPowerMode, MirOrientation));
 };
 
 }
@@ -594,6 +594,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp0->set_current_mode(mode_index0);
     disp0->set_current_format(format0);
     disp0->set_power_mode(static_cast<uint32_t>(mir_power_mode_on));
+    disp0->set_orientation(mir_orientation_left);
 
     auto disp1 = configuration.add_display_output();
     disp1->set_output_id(id1.as_value());
@@ -603,6 +604,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp1->set_current_mode(mode_index1);
     disp1->set_current_format(format1);
     disp1->set_power_mode(static_cast<uint32_t>(mir_power_mode_off));
+    disp1->set_orientation(mir_orientation_inverted);
 
     session_mediator.configure_display(nullptr, &configuration,
                                        &configuration_response, null_callback.get());

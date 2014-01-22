@@ -67,8 +67,9 @@ public:
             f(output);
     }
 
-    MOCK_METHOD6(configure_output, void(DisplayConfigurationOutputId, bool,
-                                        Point, size_t, MirPixelFormat, MirPowerMode));
+    MOCK_METHOD7(configure_output, void(DisplayConfigurationOutputId, bool,
+                                        Point, size_t, MirPixelFormat,
+                                        MirPowerMode, MirOrientation));
 
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
 private:
@@ -91,7 +92,8 @@ DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
         Point{X{123}, Y{343}},
         0,
         mir_pixel_format_abgr_8888,
-        mir_power_mode_on
+        mir_power_mode_on,
+        mir_orientation_normal
     };
 }
 
@@ -195,6 +197,23 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     conf.for_each_output([](DisplayConfigurationOutput const& output)
     {
         EXPECT_EQ(mir_power_mode_on, output.power_mode);
+    });
+
+    policy.apply_to(conf);
+}
+
+TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
+{
+    using namespace ::testing;
+
+    DefaultDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf{create_default_configuration()};
+
+    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    {
+        // TODO
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _, _, _,
+                                           mir_orientation_normal));
     });
 }
 

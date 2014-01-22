@@ -86,7 +86,7 @@ private:
     std::mutex configuration_mutex;
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
-    UdevMonitor monitor;
+    mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     RealKMSOutputContainer output_container;

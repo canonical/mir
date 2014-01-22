@@ -83,6 +83,29 @@ TEST_F(OffscreenDisplayTest, uses_basic_platform_egl_native_display)
         std::make_shared<mg::NullDisplayReport>()};
 }
 
+TEST_F(OffscreenDisplayTest, orientation_normal)
+{
+    using namespace ::testing;
+
+    EGLNativeDisplayType const native_display{
+        reinterpret_cast<EGLNativeDisplayType>(0x12345)};
+
+    mgo::Display display{
+        std::make_shared<StubBasicPlatform>(native_display),
+        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        std::make_shared<mg::NullDisplayReport>()};
+
+    int count = 0;
+    display.for_each_display_buffer(
+        [&](mg::DisplayBuffer& db)
+        {
+            ++count;
+            EXPECT_EQ(mir_orientation_normal, db.orientation());
+        });
+
+    EXPECT_TRUE(count);
+}
+
 TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
 {
     using namespace ::testing;

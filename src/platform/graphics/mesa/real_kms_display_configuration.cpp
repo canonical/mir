@@ -122,7 +122,7 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
 void mgm::RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index,
-    MirPixelFormat format, MirPowerMode power_mode)
+    MirPixelFormat format, MirPowerMode power_mode, MirOrientation orientation)
 {
     auto iter = find_output_with_id(id);
 
@@ -144,6 +144,7 @@ void mgm::RealKMSDisplayConfiguration::configure_output(
         output.current_mode_index = mode_index;
         output.current_format = format;
         output.power_mode = power_mode;
+        output.orientation = orientation;
     }
     else
     {
@@ -245,7 +246,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         outputs.push_back({id, card_id, type, formats, modes, preferred_mode_index,
                            physical_size, connected, false, geom::Point(),
                            current_mode_index, mir_pixel_format_xrgb_8888,
-                           mir_power_mode_on});
+                           mir_power_mode_on, mir_orientation_normal});
     }
     else
     {

@@ -36,8 +36,11 @@ public:
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput&)> f) override;
-    virtual void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
-                                  size_t mode_index, MirPixelFormat format, MirPowerMode power_mode) override;
+    virtual void configure_output(DisplayConfigurationOutputId id, bool used,
+                                  geometry::Point top_left,
+                                  size_t mode_index, MirPixelFormat format,
+                                  MirPowerMode power_mode,
+                                  MirOrientation orientation) override;
 
 private:
     DisplayConfigurationOutput output;

@@ -28,6 +28,7 @@ namespace mir
 {
 namespace frontend
 {
+class MessageProcessorReport;
 class ProtobufIpcFactory;
 class SessionAuthorizer;
 
@@ -41,7 +42,8 @@ class ProtobufSessionCreator : public SessionCreator
 public:
     ProtobufSessionCreator(
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        std::shared_ptr<SessionAuthorizer> const& session_authorizer);
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+        std::shared_ptr<MessageProcessorReport> const& report);
     ~ProtobufSessionCreator() noexcept;
 
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
@@ -51,6 +53,7 @@ private:
 
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
+    std::shared_ptr<MessageProcessorReport> const report;
     std::atomic<int> next_session_id;
     std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
 };

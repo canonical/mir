@@ -327,9 +327,10 @@ void mf::SessionMediator::configure_display(
             dest.top_left = geom::Point{src.position_x(),
                                         src.position_y()};
             dest.current_mode_index = src.current_mode();
-            dest.current_format = static_cast<MirPixelFormat>(
-                                            src.current_format());
+            dest.current_format =
+                static_cast<MirPixelFormat>(src.current_format());
             dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
+            dest.orientation = static_cast<MirOrientation>(src.orientation());
         });
 
         display_changer->configure(session, config);

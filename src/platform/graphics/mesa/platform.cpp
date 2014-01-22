@@ -95,7 +95,7 @@ std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_displ
 bool mgm::Platform::internal_display_clients_present;
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<VirtualTerminal> const& vt)
-    : udev{std::make_shared<UdevContext>()},
+    : udev{std::make_shared<mir::udev::Context>()},
       listener{listener},
       vt{vt}
 {
