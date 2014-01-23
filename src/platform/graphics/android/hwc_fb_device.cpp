@@ -18,7 +18,6 @@
  */
 
 #include "hwc_fb_device.h"
-#include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
@@ -37,17 +36,23 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       fb_device(fb_device),
-      layer_list({mga::ForceGLLayer{}})
+      use_fb_target(false),
+      layer_list(use_fb_target)
 {
 }
 
 void mga::HwcFbDevice::prepare_gl()
 {
-    auto display_list = layer_list.native_list();
-    if (hwc_device->prepare(hwc_device.get(), 1, &display_list) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-    }
+    layer_list.with_native_list(
+        [this](hwc_display_contents_1_t& display_list)
+        {
+            hwc_display_contents_1_t* displays[num_displays] {&display_list};
+            if (hwc_device->prepare(hwc_device.get(), num_displays, displays) != 0)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+            }
+
+        });
 }
 
 void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
@@ -57,16 +62,20 @@ void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Rendera
 
 void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
-    auto display_list = layer_list.native_list();
-    display_list->dpy = dpy;
-    display_list->sur = sur;
+    layer_list.with_native_list(
+        [this, &dpy, &sur](hwc_display_contents_1_t& display_list)
+        { 
+            display_list.dpy = dpy;
+            display_list.sur = sur;
 
-    //set() may affect EGL state by calling eglSwapBuffers.
-    //HWC 1.0 is the only version of HWC that can do this.
-    if (hwc_device->set(hwc_device.get(), 1, &display_list) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-    }
+            //set() may affect EGL state by calling eglSwapBuffers.
+            //HWC 1.0 is the only version of HWC that can do this.
+            hwc_display_contents_1_t* displays[num_displays] {&display_list};
+            if (hwc_device->set(hwc_device.get(), num_displays, displays) != 0)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+            }
+    });
 }
 
 void mga::HwcFbDevice::post(mg::Buffer const& buffer)

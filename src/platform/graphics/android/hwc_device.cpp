@@ -19,10 +19,10 @@
 
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
+#include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer.h"
 
@@ -37,20 +37,24 @@ namespace geom = mir::geometry;
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list({mga::ForceGLLayer{}, mga::FramebufferLayer{}}),
-      sync_ops(std::make_shared<mga::RealSyncFileOps>())
+      use_fb_target{true},
+      layer_list(use_fb_target),
+      last_display_fence(std::make_shared<mga::RealSyncFileOps>(), -1)
 {
 }
 
 void mga::HwcDevice::prepare_gl()
 {
-    //note, although we only have a primary display right now,
-    //      set the external and virtual displays to null as some drivers check for that
-    hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
-    if (hwc_device->prepare(hwc_device.get(), 1, displays))
+    layer_list.with_native_list([this](hwc_display_contents_1_t& display_list)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-    }
+        //note, although we only have a primary display right now,
+        //      set the external and virtual displays to null as some drivers check for that
+        hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+        if (hwc_device->prepare(hwc_device.get(), 1, displays))
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+        }
+    });
 }
 
 void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
@@ -71,20 +75,21 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     auto lg = lock_unblanked();
 
     auto native_buffer = buffer.native_buffer_handle();
-    layer_list.set_fb_target(native_buffer);
+    layer_list.set_fb_target(*native_buffer);
 
-    hwc_display_contents_1_t* displays[num_displays] {layer_list.native_list(), nullptr, nullptr};
-    if (hwc_device->set(hwc_device.get(), 1, displays))
+    layer_list.with_native_list([this](hwc_display_contents_1_t& display_list)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-    }
+        hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+        if (hwc_device->set(hwc_device.get(), 1, displays))
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+        }
+    });
 
-    if (last_display_fence)
-        last_display_fence->wait();
+    last_display_fence.wait();
+    auto next_fence = layer_list.retirement_fence();
+    last_display_fence.merge_with(next_fence);
 
-    int framebuffer_fence = layer_list.framebuffer_fence();
+    int framebuffer_fence = layer_list.fb_target_fence();
     native_buffer->update_fence(framebuffer_fence);
-
-    last_display_fence = std::make_shared<mga::SyncFence>(
-        sync_ops, displays[HWC_DISPLAY_PRIMARY]->retireFenceFd);
 }

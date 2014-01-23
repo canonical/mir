@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
+#include "mir/graphics/renderable.h"
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
 #include "hwc_layers.h"
@@ -26,30 +27,48 @@
 #include <memory>
 #include <vector>
 #include <initializer_list>
+#include <list>
 
 namespace mir
 {
 namespace graphics
 {
 
+class Renderable;
 class NativeBuffer;
 class Buffer;
 
 namespace android
 {
-
 class LayerList
 {
 public:
-    LayerList(std::initializer_list<HWCLayer> const& layers);
+    LayerList(bool target_layer);
 
-    hwc_display_contents_1_t* native_list() const;
+    virtual ~LayerList() = default;
 
-    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
-    NativeFence framebuffer_fence();
+    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    void reset_composition_layers(); 
+    void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
+
+    void set_fb_target(NativeBuffer const&);
+    NativeFence fb_target_fence();
+    NativeFence retirement_fence();
 
 private:
+    void update_representation();
+
+    bool composition_layers_present;
+    bool const fb_target_present;
+
+    std::shared_ptr<ForceGLLayer> skip_layer;
+    std::shared_ptr<FramebufferLayer> fb_target_layer;
+
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
+    std::list<std::shared_ptr<HWCLayer>> layers;
+
+    NativeFence retire_fence;
+    NativeFence fb_fence;
 };
 
 }
