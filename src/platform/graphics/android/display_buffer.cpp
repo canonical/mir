@@ -23,6 +23,7 @@
 #include <functional>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -36,13 +37,21 @@ mga::DisplayBuffer::DisplayBuffer(
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())}
+      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      rotation{mir_orientation_normal}
 {
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
 {
-    return {geom::Point{}, fb_bundle->fb_size()};
+    auto const& size = fb_bundle->fb_size();
+    int width = size.width.as_int();
+    int height = size.height.as_int();
+
+    if (rotation == mir_orientation_left || rotation == mir_orientation_right)
+        std::swap(width, height);
+
+    return {{0,0}, {width,height}};
 }
 
 void mga::DisplayBuffer::make_current()
@@ -92,4 +101,20 @@ void mga::DisplayBuffer::render_and_post()
 bool mga::DisplayBuffer::can_bypass() const
 {
     return false;
+}
+
+MirOrientation mga::DisplayBuffer::orientation() const
+{
+    /*
+     * android::DisplayBuffer is aways created with physical width/height
+     * (not rotated). So we just need to pass through the desired rotation
+     * and let the renderer do it.
+     * If and when we choose to implement HWC rotation, this may change.
+     */
+    return rotation;
+}
+
+void mga::DisplayBuffer::orient(MirOrientation rot)
+{
+    rotation = rot;
 }

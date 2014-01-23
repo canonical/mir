@@ -153,4 +153,13 @@ void mgo::DisplayBuffer::render_and_post_update(
         std::list<std::shared_ptr<Renderable>> const&,
         std::function<void(Renderable const&)> const&)
 {
-} 
+}
+
+MirOrientation mgo::DisplayBuffer::orientation() const
+{
+    /*
+     * The display buffer's already constructed with rotated dimensions,
+     * so nothing more to do.
+     */
+    return mir_orientation_normal;
+}

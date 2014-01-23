@@ -21,6 +21,8 @@
 #include "message_receiver.h"
 #include "mir/frontend/message_processor.h"
 
+#include "mir_protobuf_wire.pb.h"
+
 #include <boost/signals2.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -85,8 +87,13 @@ try
     }
 
     std::istream msg(&message);
+    mir::protobuf::wire::Invocation invocation;
+    invocation.ParseFromIstream(&msg);
 
-    if (processor->process_message(msg))
+    if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
+
+    if (processor->dispatch(invocation))
     {
         read_next_message();
     }

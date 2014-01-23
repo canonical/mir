@@ -68,6 +68,7 @@ public:
     void post_update();
 
     bool can_bypass() const;
+    MirOrientation orientation() const override;
 
     void render_and_post_update(
         std::list<std::shared_ptr<Renderable>> const& renderlist,
