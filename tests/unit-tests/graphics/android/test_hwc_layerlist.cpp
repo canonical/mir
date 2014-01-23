@@ -21,13 +21,10 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "hwc_struct_helper-inl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_renderable.h"
-#include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
@@ -38,184 +35,78 @@ public:
     {
         using namespace testing;
 
-        native_handle_1.anwb()->width = width;
-        native_handle_1.anwb()->height = height;
-
-        ON_CALL(mock_buffer, size())
-            .WillByDefault(Return(buffer_size));
-        ON_CALL(mock_buffer, native_buffer_handle())
-            .WillByDefault(Return(mt::fake_shared(native_handle_1)));
-        ON_CALL(mock_renderable, buffer())
-            .WillByDefault(Return(mt::fake_shared(mock_buffer)));
-        ON_CALL(mock_renderable, alpha_enabled())
-            .WillByDefault(Return(alpha_enabled));
-        ON_CALL(mock_renderable, screen_position())
-            .WillByDefault(Return(screen_position));
+        width = 432;
+        height = 876;
+        native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        native_handle_1->anwb()->width = width;
+        native_handle_1->anwb()->height = height;
+        native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
+        native_handle_2->anwb()->width = width;
+        native_handle_2->anwb()->height = height;
     }
 
-    geom::Size buffer_size{333, 444};
-    geom::Rectangle screen_position{{9,8},{245, 250}};
-    bool alpha_enabled{true};
-    int width{432};
-    int height{876};
-    mtd::StubAndroidNativeBuffer native_handle_1;
-    testing::NiceMock<mtd::MockRenderable> mock_renderable;
-    testing::NiceMock<mtd::MockBuffer> mock_buffer;
-
-    //different layer types to check
-    mga::FramebufferLayer empty_target_layer;
-    mga::ForceGLLayer skip_layer;
+    int width;
+    int height;
+    std::shared_ptr<mg::NativeBuffer> native_handle_1;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
 };
 
-TEST_F(HWCLayerListTest, list_defaults)
-{
-    mga::LayerList layerlist(false);
-
-    layerlist.with_native_list([](hwc_display_contents_1_t& list)
-    {
-        EXPECT_EQ(-1, list.retireFenceFd);
-        EXPECT_EQ(HWC_GEOMETRY_CHANGED, list.flags);
-        EXPECT_NE(nullptr, list.dpy);
-        EXPECT_NE(nullptr, list.sur);
-    });
-}
-
-/* Tests without HWC_FRAMEBUFFER_TARGET */
-/* an empty list should have a skipped layer. This will force a GL render on hwc set */
-TEST_F(HWCLayerListTest, hwc10_list_defaults)
-{
-    mga::LayerList layerlist(false);
-
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(1, list.numHwLayers);
-        EXPECT_THAT(skip_layer, MatchesLayer(list.hwLayers[0]));
-    });
-}
-
-TEST_F(HWCLayerListTest, hwc10_list_update)
-{
-    using namespace testing;
-    mga::LayerList layerlist(false);
-
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
-    });
-
-    layerlist.set_composition_layers(updated_list);
-
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        mga::CompositionLayer comp_layer{mock_renderable}; 
-        ASSERT_EQ(2, list.numHwLayers);
-        EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-    });
-
-    layerlist.reset_composition_layers();
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(1, list.numHwLayers);
-        EXPECT_THAT(skip_layer, MatchesLayer(list.hwLayers[0]));
-    });
-}
-
-/* tests with a FRAMEBUFFER_TARGET present */
-TEST_F(HWCLayerListTest, fbtarget_list_initialize)
+TEST_F(HWCLayerListTest, hwc_list_creation)
 {
     using namespace testing;
 
-    mga::LayerList layerlist(true);
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(2, list.numHwLayers);
-        EXPECT_THAT(skip_layer, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(empty_target_layer, MatchesLayer(list.hwLayers[1]));
-    });
+    mga::ForceGLLayer surface_layer(*native_handle_1);
+    mga::FramebufferLayer target_layer(*native_handle_1);
+    mga::LayerList layerlist({
+        surface_layer,
+        target_layer});
+
+    auto list = layerlist.native_list();
+    EXPECT_EQ(-1, list->retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
+    /* note, mali hwc1.1 actually falsely returns if these are not set to something. set to garbage */
+    EXPECT_NE(nullptr, list->dpy);
+    EXPECT_NE(nullptr, list->sur);
+
+    ASSERT_EQ(2u, list->numHwLayers);
+    EXPECT_THAT(surface_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
-TEST_F(HWCLayerListTest, fb_target_set)
-{
-    mga::LayerList layerlist(true);
-
-    layerlist.set_fb_target(native_handle_1);
-
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(2, list.numHwLayers);
-        EXPECT_THAT(mga::ForceGLLayer{native_handle_1}, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(mga::FramebufferLayer{native_handle_1}, MatchesLayer(list.hwLayers[1]));
-    });
-}
-
-TEST_F(HWCLayerListTest, fbtarget_list_update)
+TEST_F(HWCLayerListTest, hwc_list_update)
 {
     using namespace testing;
-    mga::LayerList layerlist(true);
 
-    /* set non-default renderlist */
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
-    });
-    layerlist.set_composition_layers(updated_list);
+    int handle_fence = 442;
+    EXPECT_CALL(*native_handle_2, copy_fence())
+        .Times(1)
+        .WillOnce(Return(handle_fence));
 
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        mga::CompositionLayer comp_layer{mock_renderable}; 
-        ASSERT_EQ(3, list.numHwLayers);
-        EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-        EXPECT_THAT(empty_target_layer, MatchesLayer(list.hwLayers[2]));
-    });
+    mga::LayerList layerlist({
+        mga::ForceGLLayer(*native_handle_1),
+        mga::FramebufferLayer(*native_handle_1)});
+    layerlist.set_fb_target(native_handle_2);
 
-    /* update FB target */
-    layerlist.set_fb_target(native_handle_1);
-
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        mga::CompositionLayer comp_layer{mock_renderable}; 
-        ASSERT_EQ(3, list.numHwLayers);
-        EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-        EXPECT_THAT(mga::FramebufferLayer{native_handle_1}, MatchesLayer(list.hwLayers[2]));
-    });
-
-    /* reset default */
-    layerlist.reset_composition_layers();
-
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(2, list.numHwLayers);
-        EXPECT_THAT(mga::ForceGLLayer{native_handle_1}, MatchesLayer(list.hwLayers[0]));
-        EXPECT_THAT(mga::FramebufferLayer{native_handle_1}, MatchesLayer(list.hwLayers[1]));
-    });
+    auto list = layerlist.native_list();
+    ASSERT_EQ(2u, list->numHwLayers);
+    EXPECT_EQ(-1, list->hwLayers[0].acquireFenceFd);
+    hwc_rect_t expected_rect{0, 0, width, height};
+    EXPECT_THAT(list->hwLayers[0].displayFrame, MatchesRect(expected_rect, "dispframe"));
+    EXPECT_THAT(list->hwLayers[1].displayFrame, MatchesRect(expected_rect, "dispframe"));
+    EXPECT_EQ(list->hwLayers[0].handle, native_handle_2->handle());
+    EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
+    EXPECT_EQ(handle_fence, list->hwLayers[1].acquireFenceFd);
 }
 
-TEST_F(HWCLayerListTest, fb_fence)
+TEST_F(HWCLayerListTest, get_fb_fence)
 {
     int release_fence = 381;
-    mga::LayerList layerlist(true);
+    mga::LayerList layerlist({
+        mga::ForceGLLayer(*native_handle_1),
+        mga::FramebufferLayer(*native_handle_1)});
 
-    layerlist.with_native_list([this, &release_fence](hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(2, list.numHwLayers);
-        list.hwLayers[1].releaseFenceFd = release_fence;
-    });
+    auto list = layerlist.native_list();
+    list->hwLayers[1].releaseFenceFd = release_fence;
 
-    EXPECT_EQ(release_fence, layerlist.fb_target_fence());
-}
-
-TEST_F(HWCLayerListTest, retire_fence)
-{
-    int release_fence = 381;
-    mga::LayerList layerlist(true);
-
-    layerlist.with_native_list([this, &release_fence](hwc_display_contents_1_t& list)
-    {
-        list.retireFenceFd = release_fence;
-    });
-
-    EXPECT_EQ(release_fence, layerlist.retirement_fence());
+    EXPECT_EQ(release_fence, layerlist.framebuffer_fence());
 }
