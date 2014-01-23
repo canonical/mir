@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
 #include "mir_toolkit/common.h"
-#include "mir/graphics/android/sync_fence.h"
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
@@ -49,10 +48,9 @@ public:
     void post(Buffer const& buffer);
 
 private:
-    bool const use_fb_target;
     LayerList layer_list;
 
-    SyncFence last_display_fence;
+    std::shared_ptr<SyncFence> last_display_fence;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     MirPixelFormat fb_format;
