@@ -25,6 +25,8 @@
 #include <mutex>
 #include <memory>
 
+#include <boost/optional/optional.hpp>
+
 namespace mir
 {
 namespace graphics
@@ -98,7 +100,7 @@ private:
     mutable std::mutex guard;
     std::condition_variable cond;
 
-    unsigned long last_consumed;
+    boost::optional<unsigned long> last_consumed;
 
     bool overlapping_compositors;
 

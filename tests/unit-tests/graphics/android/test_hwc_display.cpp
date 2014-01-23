@@ -146,6 +146,56 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
     });
 }
 
+TEST_F(AndroidDisplayBufferTest, defaults_to_normal_orientation)
+{
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
+                          *gl_context);
+
+    EXPECT_EQ(mir_orientation_normal, db.orientation());
+}
+
+TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
+{
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
+                          *gl_context);
+
+    for (auto const& ori : {mir_orientation_normal,
+                            mir_orientation_left,
+                            mir_orientation_right,
+                            mir_orientation_inverted})
+    {
+        db.orient(ori);
+        EXPECT_EQ(ori, db.orientation());
+    }
+}
+
+TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
+{
+    using namespace testing;
+
+    int const width = 123;
+    int const height = 456;
+    geom::Size const normal{width, height};
+    geom::Size const transposed{height, width};
+
+    EXPECT_CALL(*mock_fb_bundle, fb_size())
+        .WillRepeatedly(Return(normal));
+
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
+                          *gl_context);
+
+    EXPECT_EQ(normal, db.view_area().size);
+
+    db.orient(mir_orientation_right);
+    EXPECT_EQ(transposed, db.view_area().size);
+
+    db.orient(mir_orientation_inverted);
+    EXPECT_EQ(normal, db.view_area().size);
+
+    db.orient(mir_orientation_left);
+    EXPECT_EQ(transposed, db.view_area().size);
+}
+
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
 {
     using namespace testing;

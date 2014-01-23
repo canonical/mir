@@ -48,7 +48,7 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class NullRenderer : public mc::Renderer
 {
 public:
-    void begin() const override
+    void begin(float) const override
     {
     }
 

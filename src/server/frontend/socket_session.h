@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_DETAIL_SOCKET_SESSION_H_
 #define MIR_FRONTEND_DETAIL_SOCKET_SESSION_H_
 
-#include "connected_sessions.h"
+#include "mir/frontend/connected_sessions.h"
 
 #include <boost/asio.hpp>
 

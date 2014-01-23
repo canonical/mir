@@ -108,9 +108,9 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
-    void begin() const override
+    void begin(float rotation) const override
     {
-        renderer->begin();
+        renderer->begin(rotation);
     }
 
     void render(mc::CompositingCriteria const& criteria, mg::Buffer& buffer) const override
@@ -156,6 +156,9 @@ TEST(DefaultDisplayBufferCompositor, render)
     StubRendererFactory renderer_factory;
     MockScene scene;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
+
+    ON_CALL(display_buffer, orientation())
+        .WillByDefault(Return(mir_orientation_normal));
 
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,_)).Times(0);
 
@@ -257,7 +260,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     EXPECT_CALL(renderer_factory.mock_renderer, suspend())
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, begin())
+    EXPECT_CALL(renderer_factory.mock_renderer, begin(_))
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
         .Times(0);
@@ -316,7 +319,10 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .Times(0);
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(render_seq);
-    EXPECT_CALL(renderer_factory.mock_renderer, begin())
+    EXPECT_CALL(display_buffer, orientation())
+        .InSequence(render_seq)
+        .WillOnce(Return(mir_orientation_normal));
+    EXPECT_CALL(renderer_factory.mock_renderer, begin(_))
         .InSequence(render_seq);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(big),_))
         .InSequence(render_seq);
@@ -356,6 +362,8 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -406,6 +414,8 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -452,6 +462,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -500,6 +512,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillRepeatedly(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -582,6 +596,8 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())

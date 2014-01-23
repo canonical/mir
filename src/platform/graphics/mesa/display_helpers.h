@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
 
 #include "drm_mode_resources.h"
-#include "udev_wrapper.h"
+#include "mir/udev/wrapper.h"
 
 #include <cstddef>
 #include <memory>
@@ -54,7 +54,7 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
-    void setup(std::shared_ptr<UdevContext> const& udev);
+    void setup(std::shared_ptr<mir::udev::Context> const& udev);
     int get_authenticated_fd();
     void auth_magic(drm_magic_t magic) const;
 
@@ -66,11 +66,11 @@ public:
 private:
     // TODO: This herustic is temporary; should be replaced with
     // handling >1 DRM device.
-    int is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& dev);
+    int is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& dev);
 
     int count_connections(int fd);
 
-    int open_drm_device(std::shared_ptr<UdevContext> const& udev);
+    int open_drm_device(std::shared_ptr<mir::udev::Context> const& udev);
 };
 
 class GBMHelper
