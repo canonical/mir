@@ -268,6 +268,18 @@ typedef struct MirEventDelegate
 } MirEventDelegate;
 
 /**
+ * MirOutputCaptureParameters is the structure of minimum required information that
+ * you must provide to Mir in order to create an output capture.
+ */
+typedef struct MirOutputCaptureParameters
+{
+    uint32_t output_id;
+    uint32_t width;
+    uint32_t height;
+    MirPixelFormat pixel_format;
+} MirOutputCaptureParameters;
+
+/**
  * Callback to be passed when calling MirOutputCapture functions.
  *   \param [in] capture             the capture being updated
  *   \param [in,out] client_context  context provided by the client

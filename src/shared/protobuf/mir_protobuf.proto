@@ -151,8 +151,20 @@ message EventSequence {
   optional string error = 127;
 }
 
-message CaptureOutputRequest {
+message CaptureParameters {
   required uint32 output_id = 1;
+  required uint32 width = 2;
+  required uint32 height = 3;
+}
+
+message CaptureId {
+  required uint32 value = 1;
+}
+
+message Capture {
+  optional CaptureId capture_id = 1;
+  optional Buffer buffer = 2;
+  optional string error = 127;
 }
 
 service DisplayServer {
@@ -170,6 +182,9 @@ service DisplayServer {
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
-  rpc capture_output(CaptureOutputRequest) returns (Buffer);
+
+  rpc create_capture(CaptureParameters) returns (Capture);
+  rpc capture_output(CaptureId) returns (Buffer);
+  rpc release_capture(CaptureId) returns (Void);
 }
 

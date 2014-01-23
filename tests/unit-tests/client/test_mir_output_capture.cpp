@@ -18,6 +18,7 @@
 
 #include "src/client/mir_output_capture.h"
 #include "src/client/client_buffer_factory.h"
+#include "src/client/client_platform.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
 
@@ -43,9 +44,19 @@ namespace
 
 struct MockProtobufServer : mir::protobuf::DisplayServer
 {
+    MOCK_METHOD4(create_capture,
+                 void(google::protobuf::RpcController* /*controller*/,
+                      mp::CaptureParameters const* /*request*/,
+                      mp::Capture* /*response*/,
+                      google::protobuf::Closure* /*done*/));
+    MOCK_METHOD4(release_capture,
+                 void(google::protobuf::RpcController* /*controller*/,
+                      mp::CaptureId const* /*request*/,
+                      mp::Void* /*response*/,
+                      google::protobuf::Closure* /*done*/));
     MOCK_METHOD4(capture_output,
                  void(google::protobuf::RpcController* /*controller*/,
-                      mp::CaptureOutputRequest const* /*request*/,
+                      mp::CaptureId const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
 };
@@ -53,9 +64,31 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
 class StubProtobufServer : public mir::protobuf::DisplayServer
 {
 public:
+    void create_capture(
+        google::protobuf::RpcController* /*controller*/,
+        mp::CaptureParameters const* /*request*/,
+        mp::Capture* /*response*/,
+        google::protobuf::Closure* done) override
+    {
+        if (server_thread.joinable())
+            server_thread.join();
+        server_thread = std::thread{[done, this] { done->Run(); }};
+    }
+
+    void release_capture(
+        google::protobuf::RpcController* /*controller*/,
+        mp::CaptureId const* /*request*/,
+        mp::Void* /*response*/,
+        google::protobuf::Closure* done) override
+    {
+        if (server_thread.joinable())
+            server_thread.join();
+        server_thread = std::thread{[done, this] { done->Run(); }};
+    }
+
     void capture_output(
         google::protobuf::RpcController* /*controller*/,
-        mp::CaptureOutputRequest const* /*request*/,
+        mp::CaptureId const* /*request*/,
         mp::Buffer* /*response*/,
         google::protobuf::Closure* done) override
     {
@@ -73,6 +106,20 @@ public:
 private:
     std::thread server_thread;
 };
+
+struct StubEGLNativeWindowFactory : mcl::EGLNativeWindowFactory
+{
+    std::shared_ptr<EGLNativeWindowType>
+        create_egl_native_window(mcl::ClientSurface*)
+    {
+        return std::make_shared<EGLNativeWindowType>(egl_native_window);
+    }
+
+    static EGLNativeWindowType egl_native_window;
+};
+
+EGLNativeWindowType StubEGLNativeWindowFactory::egl_native_window{
+    reinterpret_cast<EGLNativeWindowType>(&StubEGLNativeWindowFactory::egl_native_window)};
 
 class StubClientBufferFactory : public mcl::ClientBufferFactory
 {
@@ -92,29 +139,45 @@ struct MockClientBufferFactory : mcl::ClientBufferFactory
                     mir::geometry::Size /*size*/, MirPixelFormat /*pf*/));
 };
 
-MATCHER_P(RequestTargetsOutput, value, "")
+MATCHER_P(WithOutputId, value, "")
 {
     return arg->output_id() == value;
 }
 
-ACTION_P(SetResponseBufferId, buffer_id)
+MATCHER_P(WithCaptureId, value, "")
+{
+    return arg->value() == value;
+}
+
+ACTION_P(SetCreateCaptureId, capture_id)
+{
+    arg2->mutable_capture_id()->set_value(capture_id);
+}
+
+ACTION_P(SetCreateBufferId, buffer_id)
+{
+    arg2->mutable_buffer()->set_buffer_id(buffer_id);
+}
+
+ACTION_P(SetBufferId, buffer_id)
 {
     arg2->set_buffer_id(buffer_id);
 }
 
-ACTION_P(SetResponseBufferFromPackage, package)
+ACTION_P(SetCreateBufferFromPackage, package)
 {
+    auto buffer = arg2->mutable_buffer();
     for (int i = 0; i != package.data_items; ++i)
     {
-        arg2->add_data(package.data[i]);
+        buffer->add_data(package.data[i]);
     }
 
     for (int i = 0; i != package.fd_items; ++i)
     {
-        arg2->add_fd(package.fd[i]);
+        buffer->add_fd(package.fd[i]);
     }
 
-    arg2->set_stride(package.stride);
+    buffer->set_stride(package.stride);
 }
 
 ACTION(RunClosure)
@@ -187,6 +250,7 @@ public:
     MirOutputCaptureTest()
         : default_output_id{5},
           default_mir_output{default_output_id, 3, 1, mir_pixel_format_xbgr_8888},
+          stub_egl_native_window_factory{std::make_shared<StubEGLNativeWindowFactory>()},
           stub_client_buffer_factory{std::make_shared<StubClientBufferFactory>()},
           mock_client_buffer_factory{std::make_shared<MockClientBufferFactory>()}
     {
@@ -196,44 +260,73 @@ public:
     StubProtobufServer stub_server;
     uint32_t const default_output_id;
     CustomMirDisplayOutput const default_mir_output;
+    std::shared_ptr<StubEGLNativeWindowFactory> const stub_egl_native_window_factory;
     std::shared_ptr<StubClientBufferFactory> const stub_client_buffer_factory;
     std::shared_ptr<MockClientBufferFactory> const mock_client_buffer_factory;
 };
 
 }
 
-TEST_F(MirOutputCaptureTest, requests_capture_on_creation)
+TEST_F(MirOutputCaptureTest, creates_capture_on_construction)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                create_capture(_,WithOutputId(default_output_id),_,_))
         .WillOnce(RunClosure());
 
     MirOutputCapture capture{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
+}
+
+TEST_F(MirOutputCaptureTest, releases_capture_on_release)
+{
+    using namespace testing;
+
+    uint32_t const capture_id{77};
+
+    InSequence seq;
+
+    EXPECT_CALL(mock_server,
+                create_capture(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateCaptureId(capture_id), RunClosure()));
+
+    EXPECT_CALL(mock_server,
+                release_capture(_,WithCaptureId(capture_id),_,_))
+        .WillOnce(RunClosure());
+
+    MirOutputCapture capture{
+        default_mir_output, mock_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
+
+    capture.release(null_callback_func, nullptr);
 }
 
 TEST_F(MirOutputCaptureTest, requests_capture_on_next_buffer)
 {
     using namespace testing;
+    uint32_t const capture_id{77};
+
+    InSequence seq;
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                create_capture(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateCaptureId(capture_id), RunClosure()));
+
+    EXPECT_CALL(mock_server,
+                capture_output(_,WithCaptureId(capture_id),_,_))
         .WillOnce(RunClosure());
 
     MirOutputCapture capture{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
-
-    Mock::VerifyAndClearExpectations(&mock_server);
-
-    EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
-        .WillOnce(RunClosure());
 
     capture.next_buffer(null_callback_func, nullptr);
 }
@@ -247,10 +340,30 @@ TEST_F(MirOutputCaptureTest, executes_callback_on_creation)
 
     MirOutputCapture capture{
         default_mir_output, stub_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         mock_callback_func, &mock_cb};
 
     capture.creation_wait_handle()->wait_for_all();
+}
+
+TEST_F(MirOutputCaptureTest, executes_callback_on_release)
+{
+    using namespace testing;
+
+    MirOutputCapture capture{
+        default_mir_output, stub_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
+
+    capture.creation_wait_handle()->wait_for_all();
+
+    MockCallback mock_cb;
+    EXPECT_CALL(mock_cb, call(&capture, &mock_cb));
+
+    auto wh = capture.release(mock_callback_func, &mock_cb);
+    wh->wait_for_all();
 }
 
 TEST_F(MirOutputCaptureTest, executes_callback_on_next_buffer)
@@ -259,6 +372,7 @@ TEST_F(MirOutputCaptureTest, executes_callback_on_next_buffer)
 
     MirOutputCapture capture{
         default_mir_output, stub_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -283,6 +397,7 @@ TEST_F(MirOutputCaptureTest, construction_throws_on_invalid_output)
     EXPECT_THROW({
         MirOutputCapture capture(
             invalid_modes_output, stub_server,
+            stub_egl_native_window_factory,
             stub_client_buffer_factory,
             null_callback_func, nullptr);
     }, std::runtime_error);
@@ -294,6 +409,7 @@ TEST_F(MirOutputCaptureTest, construction_throws_on_invalid_output)
     EXPECT_THROW({
         MirOutputCapture capture(
             unused_output, stub_server,
+            stub_egl_native_window_factory,
             stub_client_buffer_factory,
             null_callback_func, nullptr);
     }, std::runtime_error);
@@ -303,6 +419,7 @@ TEST_F(MirOutputCaptureTest, returns_correct_surface_parameters)
 {
     MirOutputCapture capture{
         default_mir_output, stub_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -332,8 +449,8 @@ TEST_F(MirOutputCaptureTest, uses_buffer_message_from_server)
     buffer_package.stride = 768;
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
-        .WillOnce(DoAll(SetResponseBufferFromPackage(buffer_package), RunClosure()));
+                create_capture(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateBufferFromPackage(buffer_package), RunClosure()));
 
     EXPECT_CALL(*mock_client_buffer_factory,
                 create_buffer(BufferPackageSharedPtrMatches(buffer_package),_,_))
@@ -341,6 +458,7 @@ TEST_F(MirOutputCaptureTest, uses_buffer_message_from_server)
 
     MirOutputCapture capture{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         mock_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -351,15 +469,21 @@ TEST_F(MirOutputCaptureTest, returns_current_client_buffer)
 {
     using namespace testing;
 
+    uint32_t const capture_id = 88;
     int const buffer_id1 = 5;
     int const buffer_id2 = 6;
     auto const client_buffer1 = std::make_shared<mtd::NullClientBuffer>();
     auto const client_buffer2 = std::make_shared<mtd::NullClientBuffer>();
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
-        .WillOnce(DoAll(SetResponseBufferId(buffer_id1), RunClosure()))
-        .WillOnce(DoAll(SetResponseBufferId(buffer_id2), RunClosure()));
+                create_capture(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateBufferId(buffer_id1),
+                        SetCreateCaptureId(capture_id),
+                        RunClosure()));
+
+    EXPECT_CALL(mock_server,
+                capture_output(_,WithCaptureId(capture_id),_,_))
+        .WillOnce(DoAll(SetBufferId(buffer_id2), RunClosure()));
 
     EXPECT_CALL(*mock_client_buffer_factory, create_buffer(_,_,_))
         .WillOnce(Return(client_buffer1))
@@ -367,6 +491,7 @@ TEST_F(MirOutputCaptureTest, returns_current_client_buffer)
 
     MirOutputCapture capture{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         mock_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -378,4 +503,21 @@ TEST_F(MirOutputCaptureTest, returns_current_client_buffer)
     wh->wait_for_all();
 
     EXPECT_EQ(client_buffer2, capture.get_current_buffer());
+}
+
+TEST_F(MirOutputCaptureTest, gets_egl_native_window)
+{
+    using namespace testing;
+
+    MirOutputCapture capture{
+        default_mir_output, stub_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
+
+    capture.creation_wait_handle()->wait_for_all();
+
+    auto egl_native_window = capture.egl_native_window();
+
+    EXPECT_EQ(StubEGLNativeWindowFactory::egl_native_window, egl_native_window);
 }

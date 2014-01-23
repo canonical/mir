@@ -19,6 +19,7 @@
 #include "mir_output_capture.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "egl_native_window_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -87,20 +88,33 @@ void populate_buffer_package(
 MirOutputCapture::MirOutputCapture(
     MirDisplayOutput const& output,
     mir::protobuf::DisplayServer& server,
+    std::shared_ptr<mcl::EGLNativeWindowFactory> const& egl_native_window_factory,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     mir_output_capture_callback callback, void* context)
     : server(server),
       output_id{output.output_id},
       output_size{mir_output_get_size(output)},
       output_format{output.current_format},
+      egl_native_window_factory{egl_native_window_factory},
       buffer_depository{factory, mir::frontend::client_buffer_cache_size}
 {
-    next_buffer(callback, context);
+    mir::protobuf::CaptureParameters parameters;
+    parameters.set_output_id(output_id);
+    parameters.set_width(output_size.width.as_uint32_t());
+    parameters.set_height(output_size.height.as_uint32_t());
+
+    server.create_capture(
+        nullptr,
+        &parameters,
+        &protobuf_capture,
+        google::protobuf::NewCallback(
+            this, &MirOutputCapture::capture_created,
+            callback, context));
 }
 
 MirWaitHandle* MirOutputCapture::creation_wait_handle()
 {
-    return &next_buffer_wait_handle;
+    return &create_capture_wait_handle;
 }
 
 MirSurfaceParameters MirOutputCapture::get_parameters() const
@@ -119,21 +133,42 @@ std::shared_ptr<mcl::ClientBuffer> MirOutputCapture::get_current_buffer()
     return buffer_depository.current_buffer();
 }
 
+MirWaitHandle* MirOutputCapture::release(
+        mir_output_capture_callback callback, void* context)
+{
+    mir::protobuf::CaptureId capture_id;
+    capture_id.set_value(protobuf_capture.capture_id().value());
+
+    server.release_capture(
+        nullptr,
+        &capture_id,
+        &protobuf_void,
+        google::protobuf::NewCallback(
+            this, &MirOutputCapture::released, callback, context));
+
+    return &release_wait_handle;
+}
+
 MirWaitHandle* MirOutputCapture::next_buffer(
     mir_output_capture_callback callback, void* context)
 {
-    mir::protobuf::CaptureOutputRequest request;
-    request.set_output_id(output_id);
+    mir::protobuf::CaptureId capture_id;
+    capture_id.set_value(protobuf_capture.capture_id().value());
 
     server.capture_output(
         nullptr,
-        &request,
+        &capture_id,
         &protobuf_buffer,
         google::protobuf::NewCallback(
             this, &MirOutputCapture::next_buffer_received,
             callback, context));
 
     return &next_buffer_wait_handle;
+}
+
+EGLNativeWindowType MirOutputCapture::egl_native_window()
+{
+    return *egl_native_window_;
 }
 
 void MirOutputCapture::request_and_wait_for_next_buffer()
@@ -145,11 +180,10 @@ void MirOutputCapture::request_and_wait_for_configure(MirSurfaceAttrib, int)
 {
 }
 
-void MirOutputCapture::next_buffer_received(
-    mir_output_capture_callback callback, void* context)
+void MirOutputCapture::process_buffer(mir::protobuf::Buffer const& buffer)
 {
     auto buffer_package = std::make_shared<MirBufferPackage>();
-    populate_buffer_package(*buffer_package, protobuf_buffer);
+    populate_buffer_package(*buffer_package, buffer);
 
     try
     {
@@ -161,6 +195,29 @@ void MirOutputCapture::next_buffer_received(
     {
         // TODO: Report the error
     }
+}
+
+void MirOutputCapture::capture_created(
+    mir_output_capture_callback callback, void* context)
+{
+    egl_native_window_ = egl_native_window_factory->create_egl_native_window(this);
+    process_buffer(protobuf_capture.buffer());
+
+    callback(this, context);
+    create_capture_wait_handle.result_received();
+}
+
+void MirOutputCapture::released(
+    mir_output_capture_callback callback, void* context)
+{
+    callback(this, context);
+    release_wait_handle.result_received();
+}
+
+void MirOutputCapture::next_buffer_received(
+    mir_output_capture_callback callback, void* context)
+{
+    process_buffer(protobuf_buffer);
 
     callback(this, context);
     next_buffer_wait_handle.result_received();

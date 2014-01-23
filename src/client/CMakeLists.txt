@@ -35,6 +35,7 @@ set(
   lifecycle_control.cpp
   private.cpp
   mir_output_capture.cpp
+  mir_output_capture_api.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")

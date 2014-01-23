@@ -100,6 +100,18 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::configure_surface, invocation);
         }
+        else if ("create_capture" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::create_capture, invocation);
+        }
+        else if ("capture_output" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::capture_output, invocation);
+        }
+        else if ("release_capture" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::release_capture, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::disconnect, invocation);

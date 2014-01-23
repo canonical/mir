@@ -26,10 +26,16 @@
 #include "mir_protobuf.pb.h"
 #include "mir/geometry/size.h"
 
+#include <EGL/eglplatform.h>
+
 namespace mir
 {
 namespace protobuf { class DisplayServer; }
-namespace client { class ClientBufferFactory; }
+namespace client
+{
+class ClientBufferFactory;
+class EGLNativeWindowFactory;
+}
 }
 
 struct MirOutputCapture : public mir::client::ClientSurface
@@ -38,13 +44,19 @@ public:
     MirOutputCapture(
         MirDisplayOutput const& output,
         mir::protobuf::DisplayServer& server,
+        std::shared_ptr<mir::client::EGLNativeWindowFactory> const& egl_native_window_factory,
         std::shared_ptr<mir::client::ClientBufferFactory> const& factory,
         mir_output_capture_callback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
 
+    MirWaitHandle* release(
+        mir_output_capture_callback callback, void* context);
+
     MirWaitHandle* next_buffer(
         mir_output_capture_callback callback, void* context);
+
+    EGLNativeWindowType egl_native_window();
 
     /* mir::client::ClientSurface */
     MirSurfaceParameters get_parameters() const;
@@ -53,6 +65,11 @@ public:
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
 private:
+    void process_buffer(mir::protobuf::Buffer const& buffer);
+    void capture_created(
+        mir_output_capture_callback callback, void* context);
+    void released(
+        mir_output_capture_callback callback, void* context);
     void next_buffer_received(
         mir_output_capture_callback callback, void* context);
 
@@ -60,8 +77,16 @@ private:
     uint32_t const output_id;
     mir::geometry::Size const output_size;
     MirPixelFormat const output_format;
+    std::shared_ptr<mir::client::EGLNativeWindowFactory> const egl_native_window_factory;
     mir::client::ClientBufferDepository buffer_depository;
+    std::shared_ptr<EGLNativeWindowType> egl_native_window_;
+
+    mir::protobuf::Capture protobuf_capture;
     mir::protobuf::Buffer protobuf_buffer;
+    mir::protobuf::Void protobuf_void;
+
+    MirWaitHandle create_capture_wait_handle;
+    MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 };
 
