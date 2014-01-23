@@ -26,7 +26,6 @@ mga::AndroidDisplayConfiguration::AndroidDisplayConfiguration(geom::Size const& 
                         mg::DisplayConfigurationOutputType::lvds,
                         {
                             mir_pixel_format_abgr_8888,
-                            mir_pixel_format_bgr_888,
                             mir_pixel_format_xbgr_8888
                         },
                         {mg::DisplayConfigurationMode{display_size,0.0f}},
