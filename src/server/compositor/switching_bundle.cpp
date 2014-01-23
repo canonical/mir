@@ -426,13 +426,13 @@ std::ostream& mc::operator<<(std::ostream& os, const mc::SwitchingBundle& bundle
 {
     os << "("
         << (void*)(&bundle)
-        << ",nbufs=" << bundle.nbuffers
-        << ",fcomp=" << bundle.first_compositor
-        << ",ncomp=" << bundle.ncompositors
-        << ",fready=" << bundle.first_ready
+        << ",nbuffers=" << bundle.nbuffers
+        << ",first_compositor=" << bundle.first_compositor
+        << ",ncompositors=" << bundle.ncompositors
+        << ",first_ready=" << bundle.first_ready
         << ",nready=" << bundle.nready
-        << ",fclient=" << bundle.first_client
-        << ",nclient=" << bundle.nclients
+        << ",first_client=" << bundle.first_client
+        << ",nclients=" << bundle.nclients
         << ")";
 
     return os;
