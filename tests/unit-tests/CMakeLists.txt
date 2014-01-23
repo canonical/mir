@@ -72,7 +72,11 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_UNIT_TESTS)
-  mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0)
+  if (UMOCKDEV_REQUIRED)
+    mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0)
+  else ()
+    mir_discover_tests(mir_unit_tests)
+  endif ()
 endif (MIR_RUN_UNIT_TESTS)
 
 install(
