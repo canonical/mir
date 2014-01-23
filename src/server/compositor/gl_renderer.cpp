@@ -288,12 +288,12 @@ void mc::GLRenderer::begin(float rotation) const
     float rad = rotation * M_PI / 180.0f;
     GLfloat cos = cosf(rad);
     GLfloat sin = sinf(rad);
-    GLfloat rot[16] = {cos, -sin,  0.0f, 0.0f,
-                       sin,  cos,  0.0f, 0.0f,
+    GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
+                       -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
     glUseProgram(program);
-    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_TRUE, rot);
+    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
     glUseProgram(0);
     glClear(GL_COLOR_BUFFER_BIT);
 }
