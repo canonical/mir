@@ -16,23 +16,34 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "udev_wrapper.h"
+#include "mir/udev/wrapper.h"
 #include <libudev.h>
 #include <cstring>
 #include <boost/throw_exception.hpp>
 
-namespace mgm = mir::graphics::mesa;
+namespace mu = mir::udev;
 
 /////////////////////
-//    UdevDevice
+//    Device
 /////////////////////
 
-mgm::UdevDevice::UdevDevice(UdevContext const& ctx, std::string const& syspath)
-    : UdevDevice(udev_device_new_from_syspath(ctx.ctx(), syspath.c_str()))
+namespace
 {
-}
+class DeviceImpl : public mu::Device
+{
+public:
+    DeviceImpl(udev_device *dev);
+    virtual ~DeviceImpl() noexcept;
 
-mgm::UdevDevice::UdevDevice(udev_device *dev)
+    virtual char const* subsystem() const override;
+    virtual char const* devtype() const override;
+    virtual char const* devpath() const override;
+    virtual char const* devnode() const override;
+
+    udev_device* const dev;
+};
+
+DeviceImpl::DeviceImpl(udev_device *dev)
     : dev(dev)
 {
     if (!dev)
@@ -41,76 +52,74 @@ mgm::UdevDevice::UdevDevice(udev_device *dev)
     udev_ref(udev_device_get_udev(dev));
 }
 
-mgm::UdevDevice::~UdevDevice() noexcept
+DeviceImpl::~DeviceImpl() noexcept
 {
     udev_unref(udev_device_get_udev(dev));
     udev_device_unref(dev);
 }
 
-bool mgm::UdevDevice::operator==(UdevDevice const& rhs) const
-{
-    // The device path is unique
-    return !strcmp(devpath(), rhs.devpath());
-}
-
-bool mgm::UdevDevice::operator!=(UdevDevice const& rhs) const
-{
-    return !(*this == rhs);
-}
-
-char const* mgm::UdevDevice::subsystem() const
+char const* DeviceImpl::subsystem() const
 {
     return udev_device_get_subsystem(dev);
 }
 
-char const* mgm::UdevDevice::devtype() const
+char const* DeviceImpl::devtype() const
 {
     return udev_device_get_devtype(dev);
 }
 
-char const* mgm::UdevDevice::devpath() const
+char const* DeviceImpl::devpath() const
 {
     return udev_device_get_devpath(dev);
 }
 
-char const* mgm::UdevDevice::devnode() const
+char const* DeviceImpl::devnode() const
 {
     return udev_device_get_devnode(dev);
 }
-
-udev_device const* mgm::UdevDevice::device() const
-{
-    return dev;
 }
 
+bool mu::operator==(mu::Device const& lhs, mu::Device const& rhs)
+{
+    // The device path is unique
+    return strcmp(lhs.devpath(), rhs.devpath()) == 0;
+}
+
+bool mu::operator!=(mu::Device const& lhs, mu::Device const& rhs)
+{
+    return !(lhs == rhs);
+}
+
+
+
 ////////////////////////
-//    UdevEnumerator
+//    Enumerator
 ////////////////////////
 
-mgm::UdevEnumerator::iterator::iterator () : entry(nullptr)
+mu::Enumerator::iterator::iterator () : entry(nullptr)
 {
 }
 
-mgm::UdevEnumerator::iterator::iterator (std::shared_ptr<UdevContext> const& ctx, udev_list_entry* entry) :
+mu::Enumerator::iterator::iterator (std::shared_ptr<Context> const& ctx, udev_list_entry* entry) :
     ctx(ctx),
     entry(entry)
 {
     if (entry)
-        current = std::make_shared<UdevDevice>(*ctx, udev_list_entry_get_name(entry));
+        current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
 }
 
-void mgm::UdevEnumerator::iterator::increment()
+void mu::Enumerator::iterator::increment()
 {
     entry = udev_list_entry_get_next(entry);
     if (entry)
     {
         try
         {
-            current = std::make_shared<UdevDevice>(*ctx, udev_list_entry_get_name(entry));
+            current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
         }
         catch (std::runtime_error)
         {
-            // The UdevDevice throws a runtime_error if the device does not exist
+            // The Device throws a runtime_error if the device does not exist
             // This can happen if it has been removed since the iterator was created.
             // If this happens, move on to the next device.
             increment();
@@ -118,69 +127,68 @@ void mgm::UdevEnumerator::iterator::increment()
     }
 }
 
-mgm::UdevEnumerator::iterator& mgm::UdevEnumerator::iterator::operator++()
+mu::Enumerator::iterator& mu::Enumerator::iterator::operator++()
 {
     increment();
     return *this;
 }
 
-mgm::UdevEnumerator::iterator mgm::UdevEnumerator::iterator::operator++(int)
+mu::Enumerator::iterator mu::Enumerator::iterator::operator++(int)
 {
     auto tmp = *this;
     increment();
     return tmp;
 }
 
-bool mgm::UdevEnumerator::iterator::operator==(mgm::UdevEnumerator::iterator const& rhs) const
+bool mu::Enumerator::iterator::operator==(mu::Enumerator::iterator const& rhs) const
 {
     return this->entry == rhs.entry;
 }
 
-bool mgm::UdevEnumerator::iterator::operator!=(mgm::UdevEnumerator::iterator const& rhs) const
+bool mu::Enumerator::iterator::operator!=(mu::Enumerator::iterator const& rhs) const
 {
     return !(*this == rhs);
 }
 
-mgm::UdevDevice const& mgm::UdevEnumerator::iterator::operator*() const
+mu::Device const& mu::Enumerator::iterator::operator*() const
 {
     return *current;
 }
 
-mgm::UdevEnumerator::UdevEnumerator(std::shared_ptr<UdevContext> const& ctx) :
+mu::Enumerator::Enumerator(std::shared_ptr<Context> const& ctx) :
     ctx(ctx),
     enumerator(udev_enumerate_new(ctx->ctx())),
     scanned(false)
 {
 }
 
-mgm::UdevEnumerator::~UdevEnumerator() noexcept
+mu::Enumerator::~Enumerator() noexcept
 {
     udev_enumerate_unref(enumerator);
 }
 
-void mgm::UdevEnumerator::scan_devices()
+void mu::Enumerator::scan_devices()
 {
     udev_enumerate_scan_devices(enumerator);
     scanned = true;
 }
 
-void mgm::UdevEnumerator::match_subsystem(std::string const& subsystem)
+void mu::Enumerator::match_subsystem(std::string const& subsystem)
 {
     udev_enumerate_add_match_subsystem(enumerator, subsystem.c_str());
 }
 
-void mgm::UdevEnumerator::match_parent(mgm::UdevDevice const& parent)
+void mu::Enumerator::match_parent(mu::Device const& parent)
 {
-    // Need to const_cast<> as this increases the udev_device's reference count
-    udev_enumerate_add_match_parent(enumerator, const_cast<udev_device *>(parent.device()));
+    udev_enumerate_add_match_parent(enumerator, dynamic_cast<DeviceImpl const&>(parent).dev);
 }
 
-void mgm::UdevEnumerator::match_sysname(std::string const& sysname)
+void mu::Enumerator::match_sysname(std::string const& sysname)
 {
     udev_enumerate_add_match_sysname(enumerator, sysname.c_str());
 }
 
-mgm::UdevEnumerator::iterator mgm::UdevEnumerator::begin()
+mu::Enumerator::iterator mu::Enumerator::begin()
 {
     if (!scanned)
         BOOST_THROW_EXCEPTION(std::logic_error("Attempted to iterate over udev devices without first scanning"));
@@ -189,35 +197,41 @@ mgm::UdevEnumerator::iterator mgm::UdevEnumerator::begin()
                     udev_enumerate_get_list_entry(enumerator));
 }
 
-mgm::UdevEnumerator::iterator mgm::UdevEnumerator::end()
+mu::Enumerator::iterator mu::Enumerator::end()
 {
     return iterator();
 }
 
 ///////////////////
-//   UdevContext
+//   Context
 ///////////////////
 
-mgm::UdevContext::UdevContext()
+mu::Context::Context()
     : context(udev_new())
 {
     if (!context)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev context"));
 }
-mgm::UdevContext::~UdevContext() noexcept
+
+mu::Context::~Context() noexcept
 {
     udev_unref(context);
 }
 
-udev* mgm::UdevContext::ctx() const
+std::shared_ptr<mu::Device> mu::Context::device_from_syspath(std::string const& syspath)
+{
+    return std::make_shared<DeviceImpl>(udev_device_new_from_syspath(context, syspath.c_str()));
+}
+
+udev* mu::Context::ctx() const
 {
     return context;
 }
 
 ///////////////////
-//   UdevMonitor
+//   Monitor
 ///////////////////
-mgm::UdevMonitor::UdevMonitor(mgm::UdevContext const& ctx)
+mu::Monitor::Monitor(mu::Context const& ctx)
     : monitor(udev_monitor_new_from_netlink(ctx.ctx(), "udev")),
       enabled(false)
 {
@@ -227,47 +241,47 @@ mgm::UdevMonitor::UdevMonitor(mgm::UdevContext const& ctx)
     udev_ref(udev_monitor_get_udev(monitor));
 }
 
-mgm::UdevMonitor::~UdevMonitor() noexcept
+mu::Monitor::~Monitor() noexcept
 {
     udev_unref(udev_monitor_get_udev(monitor));
     udev_monitor_unref(monitor);
 }
 
-void mgm::UdevMonitor::enable(void)
+void mu::Monitor::enable(void)
 {
     udev_monitor_enable_receiving(monitor);
     enabled = true;
 }
 
-static mgm::UdevMonitor::EventType action_to_event_type(const char* action)
+static mu::Monitor::EventType action_to_event_type(const char* action)
 {
     if (strcmp(action, "add") == 0)
-        return mgm::UdevMonitor::EventType::ADDED;
+        return mu::Monitor::EventType::ADDED;
     if (strcmp(action, "remove") == 0)
-        return mgm::UdevMonitor::EventType::REMOVED;
+        return mu::Monitor::EventType::REMOVED;
     if (strcmp(action, "change") == 0)
-        return mgm::UdevMonitor::EventType::CHANGED;
+        return mu::Monitor::EventType::CHANGED;
     BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Unknown udev action encountered: ") + action));
 }
 
-void mgm::UdevMonitor::process_events(std::function<void(mgm::UdevMonitor::EventType,
-                                                         mgm::UdevDevice const&)> const& handler) const
+void mu::Monitor::process_events(std::function<void(mu::Monitor::EventType,
+                                                    mu::Device const&)> const& handler) const
 {
     udev_device *dev;
     do
     {
         dev = udev_monitor_receive_device(const_cast<udev_monitor*>(monitor));
         if (dev != nullptr)
-            handler(action_to_event_type(udev_device_get_action(dev)), UdevDevice(dev));
+            handler(action_to_event_type(udev_device_get_action(dev)), DeviceImpl(dev));
     } while (dev != nullptr);
 }
 
-int mgm::UdevMonitor::fd(void) const
+int mu::Monitor::fd(void) const
 {
     return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
 }
 
-void mgm::UdevMonitor::filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype)
+void mu::Monitor::filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype)
 {
     udev_monitor_filter_add_match_subsystem_devtype(monitor, subsystem.c_str(), devtype.c_str());
     if (enabled)

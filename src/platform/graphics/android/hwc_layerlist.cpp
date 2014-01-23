@@ -109,12 +109,18 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
-    auto fb_position = hwc_representation->numHwLayers - 1;
-
-    if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
+    if (hwc_representation->numHwLayers == 2)
     {
-        hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
-        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
+        if (hwc_representation->hwLayers[0].flags == HWC_SKIP_LAYER)
+        {
+            hwc_representation->hwLayers[0] = mga::CompositionLayer(*native_buffer, HWC_SKIP_LAYER);
+        }
+
+        if (hwc_representation->hwLayers[1].compositionType == HWC_FRAMEBUFFER_TARGET)
+        {
+            hwc_representation->hwLayers[1] = mga::FramebufferLayer(*native_buffer);
+            hwc_representation->hwLayers[1].acquireFenceFd = native_buffer->copy_fence();
+        }
     }
 }
 
