@@ -21,7 +21,6 @@
 
 #include "src/platform/graphics/android/display_builder.h"
 #include "stub_display_buffer.h"
-#include "stub_display_device.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -36,7 +35,7 @@ struct MockConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     MockConfigurableDisplayBuffer()
     {
         ON_CALL(*this, configuration())
-            .WillByDefault(Return(conf));
+            .WillByDefault(testing::Return(conf));
     }
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
     MOCK_CONST_METHOD0(orientation, MirOrientation());
@@ -92,35 +91,13 @@ private:
 
 struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 {
-    StubDisplayBuilder(
-        std::shared_ptr<graphics::android::ConfigurableDisplayBuffer> const& stub_display,
-        std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev,
-        geometry::Size sz)
-        : stub_display(stub_display), stub_dev(stub_dev), sz(sz)
+    StubDisplayBuilder(geometry::Size sz)
+        : StubDisplayBuilder(sz)
     {
     }
 
     StubDisplayBuilder()
-        : StubDisplayBuilder(std::make_shared<StubConfigurableDisplayBuffer>(),
-                             std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
-    {
-    }
-
-    StubDisplayBuilder(geometry::Size sz)
-        : StubDisplayBuilder(std::make_shared<StubConfigurableDisplayBuffer>(),
-                             std::make_shared<StubDisplayDevice>(), sz)
-    {
-    }
-
-    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
-        : StubDisplayBuilder(std::make_shared<StubConfigurableDisplayBuffer>(),
-                             stub_dev, geometry::Size{0,0})
-    {
-    }
-
-
-    StubDisplayBuilder(std::shared_ptr<graphics::android::ConfigurableDisplayBuffer> const& stub_disp)
-        : StubDisplayBuilder(stub_disp, std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
+        : StubDisplayBuilder(geometry::Size{0,0})
     {
     }
 
@@ -130,17 +107,12 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
     }
 
     std::unique_ptr<graphics::android::ConfigurableDisplayBuffer> create_display_buffer(
-        std::shared_ptr<graphics::android::DisplayDevice> const&,
         graphics::android::GLContext const&)
     {
-        return stub_display;
-
         return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
                 new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
     
-    std::shared_ptr<graphics::android::ConfigurableDisplayBuffer> stub_display;
-    std::shared_ptr<graphics::android::DisplayDevice> const stub_dev;
     geometry::Size sz;
 };
 }

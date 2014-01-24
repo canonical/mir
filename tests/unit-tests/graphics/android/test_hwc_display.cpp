@@ -26,7 +26,6 @@
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 #include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_display_device.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include <memory>
