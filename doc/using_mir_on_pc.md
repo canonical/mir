@@ -97,7 +97,7 @@ connect:
     $ sudo mir_demo_server_basic
     <Ctrl+Alt+F2> - log in to VT 2
     $ sudo chmod 777 /tmp/mir_socket
-    $ some-mir-client
+    $ some-mir-client -m /tmp/mir_socket
     <Ctrl+Alt+F1> - switch back to Mir. Watch your friends be amazed!
 
 In case you accidentally killed your X login and ended up with a failsafe
