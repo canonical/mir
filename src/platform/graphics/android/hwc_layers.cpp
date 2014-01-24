@@ -60,18 +60,18 @@ mga::HWCLayer::HWCLayer(
     sourceCrop = 
     {
         0, 0,
-        static_cast<int>(buffer_size.width.as_uint32_t()),
-        static_cast<int>(buffer_size.height.as_uint32_t())
+        buffer_size.width.as_int(),
+        buffer_size.height.as_int()
     };
 
 
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
     displayFrame = 
     {
-        static_cast<int>(position.top_left.x.as_uint32_t()),
-        static_cast<int>(position.top_left.y.as_uint32_t()),
-        static_cast<int>(position.size.width.as_uint32_t()),
-        static_cast<int>(position.size.height.as_uint32_t())
+        position.top_left.x.as_int(),
+        position.top_left.y.as_int(),
+        position.size.width.as_int(),
+        position.size.height.as_int()
     };
 
     visible_rect = displayFrame;
