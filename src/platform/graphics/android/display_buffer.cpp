@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -111,6 +112,15 @@ MirOrientation mga::DisplayBuffer::orientation() const
      * If and when we choose to implement HWC rotation, this may change.
      */
     return rotation;
+}
+
+mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("otnh"));
+}
+
+void mga::DisplayBuffer::configure(DisplayConfigurationOutput const&)
+{
 }
 
 void mga::DisplayBuffer::orient(MirOrientation rot)

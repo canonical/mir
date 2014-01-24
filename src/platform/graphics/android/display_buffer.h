@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_resources.h"
 #include "gl_context.h"
 #include <system/window.h>
@@ -46,12 +47,16 @@ public:
     void release_current();
     void post_update();
     bool can_bypass() const override;
+    MirOrientation orientation() const override;
 
     void render_and_post_update(
         std::list<Renderable> const& renderlist,
         std::function<void(Renderable const&)> const& render_fn);
 
-    MirOrientation orientation() const override;
+    DisplayConfigurationOutput configuration() const;
+    void configure(DisplayConfigurationOutput const&);
+
+    //TODO: remove
     void orient(MirOrientation);
 
 private:

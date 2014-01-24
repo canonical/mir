@@ -42,13 +42,14 @@ public:
             .WillByDefault(Return(geometry::Rectangle{{0,0},{0,0}}));
     }
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
+    MOCK_CONST_METHOD0(orientation, MirOrientation());
+    MOCK_CONST_METHOD0(can_bypass, bool());
+
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(post_update, void());
-    MOCK_CONST_METHOD0(can_bypass, bool());
     MOCK_METHOD2(render_and_post_update, void(std::list<graphics::Renderable> const&, 
                                    std::function<void(graphics::Renderable const&)> const&));
-    MOCK_CONST_METHOD0(orientation, MirOrientation());
 };
 
 }

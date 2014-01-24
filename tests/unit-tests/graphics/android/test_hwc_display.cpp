@@ -298,16 +298,16 @@ TEST_F(AndroidDisplayBufferTest, display_power_mode)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     Sequence seq;
-    EXPECT_CALL(mock_display_device, mode(mir_power_mode_on))
-        .Times(seq);
-    EXPECT_CALL(mock_display_device, mode(mir_power_mode_off))
-        .Times(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
+        .InSequence(seq);
 
     auto config = db.configuration();
     config.power_mode = mir_power_mode_on;
     db.configure(config); 
 
-    auto config = db.configuration();
+    config = db.configuration();
     config.power_mode = mir_power_mode_off;
     db.configure(config); 
 }
@@ -317,7 +317,7 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_display_device, apply_orientation(mir_orientation_left))
+    EXPECT_CALL(*mock_display_device, apply_orientation(mir_orientation_left))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -328,13 +328,13 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
     db.configure(config); 
 
     config = db.configuration();
-    EXPECT_EQ(config.orienation, mir_orientation_normal);
+    EXPECT_EQ(config.orientation, mir_orientation_normal);
 }
 
 TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
 {
     using namespace testing;
-    EXPECT_CALL(mock_display_device, apply_orientation(mir_orientation_left))
+    EXPECT_CALL(*mock_display_device, apply_orientation(mir_orientation_left))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -345,7 +345,7 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
     db.configure(config); 
 
     config = db.configuration();
-    EXPECT_EQ( config.orienation, mir_orientation_left);
+    EXPECT_EQ(config.orientation, mir_orientation_left);
 }
 
 TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
@@ -357,6 +357,5 @@ TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
     config.current_format = mir_pixel_format_invalid;
     EXPECT_THROW({
         db.configure(config);
-    }, std::runtime_error);
- 
+    }, std::runtime_error); 
 }
