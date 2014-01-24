@@ -40,6 +40,8 @@ public:
         native_handle_1->anwb()->width = width;
         native_handle_1->anwb()->height = height;
         native_handle_2 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
+        native_handle_2->anwb()->width = width;
+        native_handle_2->anwb()->height = height;
     }
 
     int width;
@@ -147,14 +149,17 @@ TEST_F(HWCLayerListTest, hwc_list_update)
         .WillOnce(Return(handle_fence));
 
     mga::LayerList layerlist({
-        mga::CompositionLayer(*native_handle_1, 0),
+        mga::CompositionLayer(*native_handle_1, HWC_SKIP_LAYER),
         mga::FramebufferLayer(*native_handle_1)});
     layerlist.set_fb_target(native_handle_2);
 
     auto list = layerlist.native_list();
     ASSERT_EQ(2u, list->numHwLayers);
-    EXPECT_EQ(native_handle_1->handle(), list->hwLayers[0].handle);
     EXPECT_EQ(-1, list->hwLayers[0].acquireFenceFd);
+    hwc_rect_t expected_rect{0, 0, width, height};
+    EXPECT_THAT(list->hwLayers[0].displayFrame, MatchesRect(expected_rect, "dispframe"));
+    EXPECT_THAT(list->hwLayers[1].displayFrame, MatchesRect(expected_rect, "dispframe"));
+    EXPECT_EQ(list->hwLayers[0].handle, native_handle_2->handle());
     EXPECT_EQ(list->hwLayers[1].handle, native_handle_2->handle());
     EXPECT_EQ(handle_fence, list->hwLayers[1].acquireFenceFd);
 }

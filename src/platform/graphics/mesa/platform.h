@@ -58,7 +58,7 @@ public:
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);
 
-    std::shared_ptr<UdevContext> udev;
+    std::shared_ptr<mir::udev::Context> udev;
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
 

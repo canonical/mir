@@ -86,7 +86,16 @@ void mgn::detail::NestedOutput::render_and_post_update(
     std::list<Renderable> const&,
     std::function<void(Renderable const&)> const&)
 {
-} 
+}
+
+MirOrientation mgn::detail::NestedOutput::orientation() const
+{
+    /*
+     * Always normal orientation. The real rotation is handled by the
+     * native display.
+     */
+    return mir_orientation_normal;
+}
 
 mgn::detail::NestedOutput::~NestedOutput() noexcept
 {

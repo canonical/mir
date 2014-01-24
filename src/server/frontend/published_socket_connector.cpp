@@ -17,7 +17,7 @@
  */
 
 #include "published_socket_connector.h"
-#include "protobuf_session_creator.h"
+#include "mir/frontend/protobuf_session_creator.h"
 
 #include "mir/frontend/connector_report.h"
 
@@ -85,7 +85,8 @@ mf::BasicConnector::BasicConnector(
     int threads,
     std::function<void()> const& force_threads_to_unblock,
     std::shared_ptr<ConnectorReport> const& report)
-:   report(report),
+:   work(io_service),
+    report(report),
     io_service_threads(threads),
     force_threads_to_unblock(force_threads_to_unblock),
     session_creator{session_creator}

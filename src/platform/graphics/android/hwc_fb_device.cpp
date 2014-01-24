@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "hwc10_device.h"
+#include "hwc_fb_device.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
@@ -31,7 +31,7 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<framebuffer_device_t> const& fb_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
@@ -40,7 +40,7 @@ mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HWC10Device::prepare_gl()
+void mga::HwcFbDevice::prepare_gl()
 {
     auto display_list = layer_list.native_list();
     if (hwc_device->prepare(hwc_device.get(), 1, &display_list) != 0)
@@ -49,12 +49,12 @@ void mga::HWC10Device::prepare_gl()
     }
 }
 
-void mga::HWC10Device::prepare_gl_and_overlays(std::list<Renderable> const&)
+void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<Renderable> const&)
 {
     prepare_gl();
 }
 
-void mga::HWC10Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
+void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
     auto display_list = layer_list.native_list();
     display_list->dpy = dpy;
@@ -68,7 +68,7 @@ void mga::HWC10Device::gpu_render(EGLDisplay dpy, EGLSurface sur)
     }
 }
 
-void mga::HWC10Device::post(mg::Buffer const& buffer)
+void mga::HwcFbDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 

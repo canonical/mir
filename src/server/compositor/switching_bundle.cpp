@@ -61,6 +61,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <utility>
+#include <ostream>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -76,7 +77,6 @@ mc::SwitchingBundle::SwitchingBundle(
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
-      last_consumed{0},
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
@@ -273,7 +273,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
     int compositor;
 
     // Multi-monitor acquires close to each other get the same frame:
-    bool same_frame = (frameno == last_consumed);
+    bool same_frame = last_consumed && (frameno == *last_consumed);
 
     int avail = nfree();
     bool can_recycle = ncompositors || avail;
@@ -419,4 +419,20 @@ void mc::SwitchingBundle::resize(const geometry::Size &newsize)
 {
     std::unique_lock<std::mutex> lock(guard);
     bundle_properties.size = newsize;
+}
+
+std::ostream& mc::operator<<(std::ostream& os, const mc::SwitchingBundle& bundle)
+{
+    os << "("
+        << (void*)(&bundle)
+        << ",nbuffers=" << bundle.nbuffers
+        << ",first_compositor=" << bundle.first_compositor
+        << ",ncompositors=" << bundle.ncompositors
+        << ",first_ready=" << bundle.first_ready
+        << ",nready=" << bundle.nready
+        << ",first_client=" << bundle.first_client
+        << ",nclients=" << bundle.nclients
+        << ")";
+
+    return os;
 }

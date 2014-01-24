@@ -239,6 +239,9 @@ protected:
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
+        std::shared_ptr<frontend::Shell> const& shell,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     CachedPtr<frontend::Connector>   connector;
 
@@ -292,10 +295,6 @@ protected:
 
 private:
     std::shared_ptr<input::EventFilter> const default_filter;
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
 
