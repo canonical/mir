@@ -67,7 +67,8 @@ public:
 private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
-    bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
+    bool schedule_page_flip(BufferObject* bufobj);
+    void wait_for_page_flip();
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
@@ -82,6 +83,7 @@ private:
     uint32_t fb_width, fb_height;
     MirOrientation rotation;
     std::atomic<bool> needs_set_crtc;
+    int page_flips_pending;
 };
 
 }

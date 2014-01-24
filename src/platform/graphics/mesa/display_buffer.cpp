@@ -110,7 +110,8 @@ mgm::DisplayBuffer::DisplayBuffer(
       surface_gbm{std::move(surface_gbm_param)},
       area(area),
       rotation(rot),
-      needs_set_crtc{false}
+      needs_set_crtc{false},
+      page_flips_pending{0}
 {
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
@@ -228,13 +229,20 @@ void mgm::DisplayBuffer::post_update(
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
 
     /*
+     * If switching from composited to bypass mode, wait_for_page_flip
+     * of the last composited frame has not been called yet. Do it now or
+     * else schedule_page_flip() will fail.
+     */
+    wait_for_page_flip();
+
+    /*
      * Schedule the current front buffer object for display, and wait
      * for it to be actually displayed (flipped).
      *
      * If the flip fails, release the buffer object to make it available
      * for future rendering.
      */
-    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
+    if (!needs_set_crtc && !schedule_page_flip(bufobj))
     {
         if (!bypass_buf)
             bufobj->release();
@@ -248,6 +256,14 @@ void mgm::DisplayBuffer::post_update(
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
         }
         needs_set_crtc = false;
+    }
+    else if (bypass_buf)
+    {
+        /*
+         * For composited frames we defer wait_for_page_flip till make_current,
+         * but that's unsafe on bypass frames, so we have to wait here.
+         */
+        wait_for_page_flip();
     }
 
     /*
@@ -311,10 +327,8 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
 }
 
 
-bool mgm::DisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
+bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
 {
-    int page_flips_pending{0};
-
     /*
      * Schedule the current front buffer object for display. Note that
      * the page flip is asynchronous and synchronized with vertical refresh.
@@ -325,19 +339,24 @@ bool mgm::DisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
             ++page_flips_pending;
     }
 
-    if (page_flips_pending == 0)
-        return false;
+    return page_flips_pending;
+}
 
-    for (auto& output : outputs)
+void mgm::DisplayBuffer::wait_for_page_flip()
+{
+    if (page_flips_pending)
     {
-        output->wait_for_page_flip();
-    }
+        for (auto& output : outputs)
+            output->wait_for_page_flip();
 
-    return true;
+        page_flips_pending = 0;
+    }
 }
 
 void mgm::DisplayBuffer::make_current()
 {
+    wait_for_page_flip();
+
     if (!egl.make_current())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
