@@ -53,6 +53,9 @@ public:
     NativeFence retirement_fence();
 
 private:
+    LayerList& operator=(LayerList const&) = delete;
+    LayerList(LayerList const&) = delete;
+
     void update_representation();
 
     bool composition_layers_present;
