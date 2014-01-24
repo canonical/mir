@@ -19,8 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_H_
 
-#include "mir/graphics/display_buffer.h"
-#include "mir/graphics/display_configuration.h"
+#include "configurable_display_buffer.h"
 #include "mir/graphics/egl_resources.h"
 #include "android_display_configuration.h"
 #include "gl_context.h"
@@ -35,7 +34,7 @@ namespace android
 
 class DisplayDevice;
 class FramebufferBundle;
-class DisplayBuffer : public graphics::DisplayBuffer
+class DisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
 {
 public:
     DisplayBuffer(std::shared_ptr<FramebufferBundle> const& fb_bundle,

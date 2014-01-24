@@ -35,7 +35,7 @@ namespace android
 {
 class DisplayBuilder;
 class DisplaySupportProvider;
-class DisplayBuffer;
+class ConfigurableDisplayBuffer;
 
 class AndroidDisplay : public Display
 {
@@ -68,7 +68,7 @@ private:
     GLContext gl_context;
 
     //we only have a primary display at the moment
-    std::unique_ptr<graphics::android::DisplayBuffer> const display_buffer;
+    std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
 };
 
 }

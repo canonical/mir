@@ -51,7 +51,7 @@ mga::DisplayBuffer::DisplayBuffer(
                             true,
                             geom::Point{0,0},
                             0,
-                            mir_pixel_format_abgr_8888,
+                            fb_bundle->fb_format(),
                             mir_power_mode_on,
                             mir_orientation_normal}
 {
@@ -162,9 +162,4 @@ void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configu
         //GL compositor will rotate
         current_configuration.orientation = new_configuration.orientation;
     }
-}
-
-void mga::DisplayBuffer::orient(MirOrientation rot)
-{
-    rotation = rot;
 }

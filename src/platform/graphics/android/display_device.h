@@ -44,6 +44,7 @@ public:
     virtual void prepare_gl_and_overlays(std::list<Renderable> const& list) = 0; 
     virtual void gpu_render(EGLDisplay dpy, EGLSurface sur) = 0;
     virtual void post(Buffer const& buffer) = 0;
+    virtual bool apply_orientation(MirOrientation orientation) const = 0;
 
 protected:
     DisplayDevice() = default;

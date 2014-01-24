@@ -160,7 +160,9 @@ TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
                             mir_orientation_right,
                             mir_orientation_inverted})
     {
-        db.orient(ori);
+        auto config = db.configuration();
+        config->orientation = ori;
+        db.configure(*config);
         EXPECT_EQ(ori, db.orientation());
     }
 }
@@ -182,13 +184,18 @@ TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
 
     EXPECT_EQ(normal, db.view_area().size);
 
-    db.orient(mir_orientation_right);
+    auto config = db.configuration();
+
+    config->orientation = mir_orientation_right;
+    db.configure(*config);
     EXPECT_EQ(transposed, db.view_area().size);
 
-    db.orient(mir_orientation_inverted);
+    config->orientation = mir_orientation_inverted;
+    db.configure(*config);
     EXPECT_EQ(normal, db.view_area().size);
 
-    db.orient(mir_orientation_left);
+    config->orientation = mir_orientation_left;
+    db.configure(*config);
     EXPECT_EQ(transposed, db.view_area().size);
 }
 
@@ -304,12 +311,12 @@ TEST_F(AndroidDisplayBufferTest, display_power_mode)
         .InSequence(seq);
 
     auto config = db.configuration();
-    config.power_mode = mir_power_mode_on;
-    db.configure(config); 
+    config->power_mode = mir_power_mode_on;
+    db.configure(*config); 
 
     config = db.configuration();
-    config.power_mode = mir_power_mode_off;
-    db.configure(config); 
+    config->power_mode = mir_power_mode_off;
+    db.configure(*config); 
 }
 
 //configuration tests
@@ -324,11 +331,11 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     auto config = db.configuration();
-    config.orientation = mir_orientation_left;
-    db.configure(config); 
+    config->orientation = mir_orientation_left;
+    db.configure(*config); 
 
     config = db.configuration();
-    EXPECT_EQ(config.orientation, mir_orientation_normal);
+    EXPECT_EQ(config->orientation, mir_orientation_normal);
 }
 
 TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
@@ -341,11 +348,11 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     auto config = db.configuration();
-    config.orientation = mir_orientation_left;
-    db.configure(config); 
+    config->orientation = mir_orientation_left;
+    db.configure(*config); 
 
     config = db.configuration();
-    EXPECT_EQ(config.orientation, mir_orientation_left);
+    EXPECT_EQ(config->orientation, mir_orientation_left);
 }
 
 TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
@@ -354,8 +361,8 @@ TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
 
     auto config = db.configuration();
     //error
-    config.current_format = mir_pixel_format_invalid;
+    config->current_format = mir_pixel_format_invalid;
     EXPECT_THROW({
-        db.configure(config);
+        db.configure(*config);
     }, std::runtime_error); 
 }

@@ -38,7 +38,6 @@ struct StubDisplayDevice : public graphics::android::DisplayDevice
     void mode(MirPowerMode)
     {
     }
-
     void prepare_gl_and_overlays(std::list<graphics::Renderable> const&)
     {
     }
@@ -50,6 +49,10 @@ struct StubDisplayDevice : public graphics::android::DisplayDevice
     }
     void post(graphics::Buffer const&)
     {
+    }
+    bool apply_orientation(MirOrientation) const
+    {
+        return true;
     }
 };
 

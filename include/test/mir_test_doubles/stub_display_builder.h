@@ -30,6 +30,25 @@ namespace test
 {
 namespace doubles
 {
+
+struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
+{
+    geometry::Rectangle view_area() const { return geometry::Rectangle(); }
+    void make_current() {}
+    void release_current() {}
+    void post_update() {}
+    bool can_bypass() const override { return false; }
+    void render_and_post_update(
+        std::list<graphics::Renderable> const&,
+        std::function<void(graphics::Renderable const&)> const&) {}
+    MirOrientation orientation() const override { return mir_orientation_normal; }
+    void configure(graphics::DisplayConfigurationOutput const&) {}
+    std::shared_ptr<graphics::DisplayConfigurationOutput> configuration() const
+    {
+        return nullptr;
+    }
+};
+
 struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 {
     StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
@@ -57,12 +76,12 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
         return mir_pixel_format_abgr_8888;
     }
 
-    std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
+    std::unique_ptr<graphics::android::ConfigurableDisplayBuffer> create_display_buffer(
         std::shared_ptr<graphics::android::DisplayDevice> const&,
         graphics::android::GLContext const&)
     {
-        return std::unique_ptr<graphics::DisplayBuffer>(
-                new StubDisplayBuffer(geometry::Rectangle{{0,0},sz}));
+        return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
+                new StubConfigurableDisplayBuffer());//geometry::Rectangle{{0,0},sz}));
     }
 
     std::shared_ptr<graphics::android::DisplayDevice> create_display_device()

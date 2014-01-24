@@ -129,3 +129,8 @@ int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
         return err;
     return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
+
+bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
+{
+    return true; 
+}
