@@ -207,6 +207,13 @@ void mgm::DisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
+     * If switching from composited to bypass mode, wait_for_page_flip
+     * of the last composited frame has not been called yet. Do it now or
+     * else schedule_page_flip() will fail.
+     */
+    wait_for_page_flip();
+
+    /*
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
      */
@@ -227,13 +234,6 @@ void mgm::DisplayBuffer::post_update(
 
     if (!bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
-
-    /*
-     * If switching from composited to bypass mode, wait_for_page_flip
-     * of the last composited frame has not been called yet. Do it now or
-     * else schedule_page_flip() will fail.
-     */
-    wait_for_page_flip();
 
     /*
      * Schedule the current front buffer object for display, and wait
@@ -260,8 +260,9 @@ void mgm::DisplayBuffer::post_update(
     else if (bypass_buf)
     {
         /*
-         * For composited frames we defer wait_for_page_flip till make_current,
-         * but that's unsafe on bypass frames, so we have to wait here.
+         * For composited frames we defer wait_for_page_flip till just before
+         * the next frame, but that's unsafe on bypass frames so we have to
+         * wait here.
          */
         wait_for_page_flip();
     }
@@ -355,8 +356,6 @@ void mgm::DisplayBuffer::wait_for_page_flip()
 
 void mgm::DisplayBuffer::make_current()
 {
-    wait_for_page_flip();
-
     if (!egl.make_current())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
