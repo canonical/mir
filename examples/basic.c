@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
             case 'c':
                 buffer_swap_count = atoi(optarg);
                 break;
-            case 'f':
+            case 'm':
                 server = optarg;
                 break;
 
