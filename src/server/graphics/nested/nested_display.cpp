@@ -181,8 +181,9 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
 
                 auto const& egl_config_format = output.current_format;
 
+printf("NESTED FORMAT BEFORE %i\n", egl_config_format);
                 complete_display_initialization(egl_config_format);
-
+printf("NESTED FORMAT %i\n", egl_config_format);
                 MirSurfaceParameters const request_params =
                     {
                         "Mir nested display",

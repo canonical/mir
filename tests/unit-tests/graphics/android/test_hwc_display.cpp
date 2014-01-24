@@ -291,3 +291,72 @@ TEST_F(AndroidDisplayBufferTest, release_current)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     db.release_current();
 }
+
+TEST_F(AndroidDisplayBufferTest, display_power_mode)
+{
+    using namespace testing;
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    Sequence seq;
+    EXPECT_CALL(mock_display_device, mode(mir_power_mode_on))
+        .Times(seq);
+    EXPECT_CALL(mock_display_device, mode(mir_power_mode_off))
+        .Times(seq);
+
+    auto config = db.configuration();
+    config.power_mode = mir_power_mode_on;
+    db.configure(config); 
+
+    auto config = db.configuration();
+    config.power_mode = mir_power_mode_off;
+    db.configure(config); 
+}
+
+//configuration tests
+TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_display_device, apply_orientation(mir_orientation_left))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    auto config = db.configuration();
+    config.orientation = mir_orientation_left;
+    db.configure(config); 
+
+    config = db.configuration();
+    EXPECT_EQ(config.orienation, mir_orientation_normal);
+}
+
+TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_display_device, apply_orientation(mir_orientation_left))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    auto config = db.configuration();
+    config.orientation = mir_orientation_left;
+    db.configure(config); 
+
+    config = db.configuration();
+    EXPECT_EQ( config.orienation, mir_orientation_left);
+}
+
+TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
+{
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    auto config = db.configuration();
+    //error
+    config.current_format = mir_pixel_format_invalid;
+    EXPECT_THROW({
+        db.configure(config);
+    }, std::runtime_error);
+ 
+}

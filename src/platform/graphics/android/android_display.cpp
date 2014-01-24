@@ -63,6 +63,9 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
 
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
+        if (output.current_format != db->format())
+        {
+        }
         // TODO: Properly support multiple outputs
         display_device->mode(output.power_mode);
         orientation = output.orientation;

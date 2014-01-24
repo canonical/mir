@@ -95,11 +95,13 @@ event_handler{event_handler},
 display_report{display_report},
 connection{connection}
 {
+    printf("a.\n");
     if (!mir_connection_is_valid(*connection))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(*connection))));
     }
 
+    printf("ba.\n");
     native_platform->initialize(std::make_shared<MirConnectionNestedContext>(connection));
 }
 
