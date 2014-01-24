@@ -39,22 +39,23 @@ mga::DisplayBuffer::DisplayBuffer(
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
-      current_configuration{mg::DisplayConfigurationOutputId{1},
-                            mg::DisplayConfigurationCardId{0},
-                            mg::DisplayConfigurationOutputType::lvds,
-                            {
-                                fb_bundle->fb_format()
-                            },
-                            {mg::DisplayConfigurationMode{fb_bundle->fb_size(),0.0f}},
-                            0,
-                            geom::Size{0,0},
-                            true,
-                            true,
-                            geom::Point{0,0},
-                            0,
-                            fb_bundle->fb_format(),
-                            mir_power_mode_on,
-                            mir_orientation_normal}
+      current_configuration{
+          mg::DisplayConfigurationOutputId{1},
+          mg::DisplayConfigurationCardId{0},
+          mg::DisplayConfigurationOutputType::lvds,
+          {
+              fb_bundle->fb_format()
+          },
+          {mg::DisplayConfigurationMode{fb_bundle->fb_size(),0.0f}},
+          0,
+          geom::Size{0,0}, //could use DPI information to fill this
+          true,
+          true,
+          geom::Point{0,0},
+          0,
+          fb_bundle->fb_format(),
+          mir_power_mode_on,
+          mir_orientation_normal}
 {
 }
 

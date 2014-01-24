@@ -34,8 +34,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& 
                                     std::shared_ptr<DisplayReport> const& display_report)
     : display_builder{display_builder},
       gl_context{display_builder->display_format(), *display_report},
-      display_buffer{display_builder->create_display_buffer(
-                     display_builder->create_display_device(), gl_context)}
+      display_buffer{display_builder->create_display_buffer(gl_context)}
 {
     display_report->report_successful_setup_of_native_resources();
 

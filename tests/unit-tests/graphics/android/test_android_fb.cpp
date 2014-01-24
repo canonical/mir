@@ -205,21 +205,9 @@ TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_fai
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
+TEST_F(AndroidDisplayTest, test_configure_gets_to_display_buffer)
 {
     using namespace testing;
-    auto mock_display_device = std::make_shared<NiceMock<mtd::MockDisplayDevice>>();
-    Sequence seq;
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend))
-        .InSequence(seq);
-
-    auto stub_db_factory = std::make_shared<mtd::StubDisplayBuilder>(mock_display_device);
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 
     auto configuration = display.configuration();

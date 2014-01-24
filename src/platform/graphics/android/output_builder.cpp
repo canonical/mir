@@ -106,9 +106,9 @@ std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
 }
 
 std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
-    std::shared_ptr<DisplayDevice> const& display_device,
     GLContext const& gl_context)
 {
+    auto display_device = create_display_device();
     auto native_window = res_factory->create_native_window(framebuffers);
     return std::unique_ptr<mga::DisplayBuffer>(
         new DisplayBuffer(framebuffers, display_device, native_window, gl_context));
