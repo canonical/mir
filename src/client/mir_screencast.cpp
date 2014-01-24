@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_output_capture.h"
+#include "mir_screencast.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
@@ -28,7 +28,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-void null_callback(MirOutputCapture*, void*) {}
+void null_callback(MirScreencast*, void*) {}
 
 geom::Size mir_output_get_size(MirDisplayOutput const& output)
 {
@@ -84,11 +84,11 @@ void populate_buffer_package(
 
 }
 
-MirOutputCapture::MirOutputCapture(
+MirScreencast::MirScreencast(
     MirDisplayOutput const& output,
     mir::protobuf::DisplayServer& server,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    mir_output_capture_callback callback, void* context)
+    mir_screencast_callback callback, void* context)
     : server(server),
       output_id{output.output_id},
       output_size{mir_output_get_size(output)},
@@ -98,12 +98,12 @@ MirOutputCapture::MirOutputCapture(
     next_buffer(callback, context);
 }
 
-MirWaitHandle* MirOutputCapture::creation_wait_handle()
+MirWaitHandle* MirScreencast::creation_wait_handle()
 {
     return &next_buffer_wait_handle;
 }
 
-MirSurfaceParameters MirOutputCapture::get_parameters() const
+MirSurfaceParameters MirScreencast::get_parameters() const
 {
     return MirSurfaceParameters{
         "",
@@ -114,39 +114,39 @@ MirSurfaceParameters MirOutputCapture::get_parameters() const
         output_id};
 }
 
-std::shared_ptr<mcl::ClientBuffer> MirOutputCapture::get_current_buffer()
+std::shared_ptr<mcl::ClientBuffer> MirScreencast::get_current_buffer()
 {
     return buffer_depository.current_buffer();
 }
 
-MirWaitHandle* MirOutputCapture::next_buffer(
-    mir_output_capture_callback callback, void* context)
+MirWaitHandle* MirScreencast::next_buffer(
+    mir_screencast_callback callback, void* context)
 {
-    mir::protobuf::CaptureOutputRequest request;
+    mir::protobuf::ScreencastRequest request;
     request.set_output_id(output_id);
 
-    server.capture_output(
+    server.screencast_buffer(
         nullptr,
         &request,
         &protobuf_buffer,
         google::protobuf::NewCallback(
-            this, &MirOutputCapture::next_buffer_received,
+            this, &MirScreencast::next_buffer_received,
             callback, context));
 
     return &next_buffer_wait_handle;
 }
 
-void MirOutputCapture::request_and_wait_for_next_buffer()
+void MirScreencast::request_and_wait_for_next_buffer()
 {
     next_buffer(null_callback, nullptr)->wait_for_all();
 }
 
-void MirOutputCapture::request_and_wait_for_configure(MirSurfaceAttrib, int)
+void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
 {
 }
 
-void MirOutputCapture::next_buffer_received(
-    mir_output_capture_callback callback, void* context)
+void MirScreencast::next_buffer_received(
+    mir_screencast_callback callback, void* context)
 {
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, protobuf_buffer);

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/client/mir_output_capture.h"
+#include "src/client/mir_screencast.h"
 #include "src/client/client_buffer_factory.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
@@ -43,9 +43,9 @@ namespace
 
 struct MockProtobufServer : mir::protobuf::DisplayServer
 {
-    MOCK_METHOD4(capture_output,
+    MOCK_METHOD4(screencast_buffer,
                  void(google::protobuf::RpcController* /*controller*/,
-                      mp::CaptureOutputRequest const* /*request*/,
+                      mp::ScreencastRequest const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
 };
@@ -53,9 +53,9 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
 class StubProtobufServer : public mir::protobuf::DisplayServer
 {
 public:
-    void capture_output(
+    void screencast_buffer(
         google::protobuf::RpcController* /*controller*/,
-        mp::CaptureOutputRequest const* /*request*/,
+        mp::ScreencastRequest const* /*request*/,
         mp::Buffer* /*response*/,
         google::protobuf::Closure* done) override
     {
@@ -140,13 +140,13 @@ struct MockCallback
     MOCK_METHOD2(call, void(void*, void*));
 };
 
-void mock_callback_func(MirOutputCapture* capture, void* context)
+void mock_callback_func(MirScreencast* screencast, void* context)
 {
     auto mock_cb = static_cast<MockCallback*>(context);
-    mock_cb->call(capture, context);
+    mock_cb->call(screencast, context);
 }
 
-void null_callback_func(MirOutputCapture*, void*)
+void null_callback_func(MirScreencast*, void*)
 {
 }
 
@@ -181,10 +181,10 @@ struct CustomMirDisplayOutput : MirDisplayOutput
     std::unique_ptr<MirDisplayMode[]> const modes_uptr;
 };
 
-class MirOutputCaptureTest : public testing::Test
+class MirScreencastTest : public testing::Test
 {
 public:
-    MirOutputCaptureTest()
+    MirScreencastTest()
         : default_output_id{5},
           default_mir_output{default_output_id, 3, 1, mir_pixel_format_xbgr_8888},
           stub_client_buffer_factory{std::make_shared<StubClientBufferFactory>()},
@@ -202,29 +202,29 @@ public:
 
 }
 
-TEST_F(MirOutputCaptureTest, requests_capture_on_creation)
+TEST_F(MirScreencastTest, requests_screencast_on_creation)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
         .WillOnce(RunClosure());
 
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, mock_server,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 }
 
-TEST_F(MirOutputCaptureTest, requests_capture_on_next_buffer)
+TEST_F(MirScreencastTest, requests_screencast_on_next_buffer)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
         .WillOnce(RunClosure());
 
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, mock_server,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
@@ -232,46 +232,46 @@ TEST_F(MirOutputCaptureTest, requests_capture_on_next_buffer)
     Mock::VerifyAndClearExpectations(&mock_server);
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
         .WillOnce(RunClosure());
 
-    capture.next_buffer(null_callback_func, nullptr);
+    screencast.next_buffer(null_callback_func, nullptr);
 }
 
-TEST_F(MirOutputCaptureTest, executes_callback_on_creation)
+TEST_F(MirScreencastTest, executes_callback_on_creation)
 {
     using namespace testing;
 
     MockCallback mock_cb;
     EXPECT_CALL(mock_cb, call(_, &mock_cb));
 
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, stub_server,
         stub_client_buffer_factory,
         mock_callback_func, &mock_cb};
 
-    capture.creation_wait_handle()->wait_for_all();
+    screencast.creation_wait_handle()->wait_for_all();
 }
 
-TEST_F(MirOutputCaptureTest, executes_callback_on_next_buffer)
+TEST_F(MirScreencastTest, executes_callback_on_next_buffer)
 {
     using namespace testing;
 
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, stub_server,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
-    capture.creation_wait_handle()->wait_for_all();
+    screencast.creation_wait_handle()->wait_for_all();
 
     MockCallback mock_cb;
-    EXPECT_CALL(mock_cb, call(&capture, &mock_cb));
+    EXPECT_CALL(mock_cb, call(&screencast, &mock_cb));
 
-    auto wh = capture.next_buffer(mock_callback_func, &mock_cb);
+    auto wh = screencast.next_buffer(mock_callback_func, &mock_cb);
     wh->wait_for_all();
 }
 
-TEST_F(MirOutputCaptureTest, construction_throws_on_invalid_output)
+TEST_F(MirScreencastTest, construction_throws_on_invalid_output)
 {
     uint32_t const num_modes{2};
     uint32_t const invalid_current_mode{3};
@@ -281,7 +281,7 @@ TEST_F(MirOutputCaptureTest, construction_throws_on_invalid_output)
         default_output_id, num_modes, invalid_current_mode, mir_pixel_format_xbgr_8888};
 
     EXPECT_THROW({
-        MirOutputCapture capture(
+        MirScreencast screencast(
             invalid_modes_output, stub_server,
             stub_client_buffer_factory,
             null_callback_func, nullptr);
@@ -292,23 +292,23 @@ TEST_F(MirOutputCaptureTest, construction_throws_on_invalid_output)
     unused_output.used = false;
 
     EXPECT_THROW({
-        MirOutputCapture capture(
+        MirScreencast screencast(
             unused_output, stub_server,
             stub_client_buffer_factory,
             null_callback_func, nullptr);
     }, std::runtime_error);
 }
 
-TEST_F(MirOutputCaptureTest, returns_correct_surface_parameters)
+TEST_F(MirScreencastTest, returns_correct_surface_parameters)
 {
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, stub_server,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
-    capture.creation_wait_handle()->wait_for_all();
+    screencast.creation_wait_handle()->wait_for_all();
 
-    auto params = capture.get_parameters();
+    auto params = screencast.get_parameters();
 
     EXPECT_STREQ("", params.name);
     EXPECT_EQ(default_mir_output.current_size().width.as_int(), params.width);
@@ -318,7 +318,7 @@ TEST_F(MirOutputCaptureTest, returns_correct_surface_parameters)
     EXPECT_EQ(default_mir_output.output_id, params.output_id);
 }
 
-TEST_F(MirOutputCaptureTest, uses_buffer_message_from_server)
+TEST_F(MirScreencastTest, uses_buffer_message_from_server)
 {
     using namespace testing;
 
@@ -332,22 +332,22 @@ TEST_F(MirOutputCaptureTest, uses_buffer_message_from_server)
     buffer_package.stride = 768;
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
         .WillOnce(DoAll(SetResponseBufferFromPackage(buffer_package), RunClosure()));
 
     EXPECT_CALL(*mock_client_buffer_factory,
                 create_buffer(BufferPackageSharedPtrMatches(buffer_package),_,_))
         .WillOnce(Return(client_buffer1));
 
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, mock_server,
         mock_client_buffer_factory,
         null_callback_func, nullptr};
 
-    capture.creation_wait_handle()->wait_for_all();
+    screencast.creation_wait_handle()->wait_for_all();
 }
 
-TEST_F(MirOutputCaptureTest, returns_current_client_buffer)
+TEST_F(MirScreencastTest, returns_current_client_buffer)
 {
     using namespace testing;
 
@@ -357,7 +357,7 @@ TEST_F(MirOutputCaptureTest, returns_current_client_buffer)
     auto const client_buffer2 = std::make_shared<mtd::NullClientBuffer>();
 
     EXPECT_CALL(mock_server,
-                capture_output(_,RequestTargetsOutput(default_output_id),_,_))
+                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
         .WillOnce(DoAll(SetResponseBufferId(buffer_id1), RunClosure()))
         .WillOnce(DoAll(SetResponseBufferId(buffer_id2), RunClosure()));
 
@@ -365,17 +365,17 @@ TEST_F(MirOutputCaptureTest, returns_current_client_buffer)
         .WillOnce(Return(client_buffer1))
         .WillOnce(Return(client_buffer2));
 
-    MirOutputCapture capture{
+    MirScreencast screencast{
         default_mir_output, mock_server,
         mock_client_buffer_factory,
         null_callback_func, nullptr};
 
-    capture.creation_wait_handle()->wait_for_all();
+    screencast.creation_wait_handle()->wait_for_all();
 
-    EXPECT_EQ(client_buffer1, capture.get_current_buffer());
+    EXPECT_EQ(client_buffer1, screencast.get_current_buffer());
 
-    auto wh = capture.next_buffer(null_callback_func, nullptr);
+    auto wh = screencast.next_buffer(null_callback_func, nullptr);
     wh->wait_for_all();
 
-    EXPECT_EQ(client_buffer2, capture.get_current_buffer());
+    EXPECT_EQ(client_buffer2, screencast.get_current_buffer());
 }

@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MIR_OUTPUT_CAPTURE_H_
-#define MIR_CLIENT_MIR_OUTPUT_CAPTURE_H_
+#ifndef MIR_CLIENT_MIR_SCREENCAST_H_
+#define MIR_CLIENT_MIR_SCREENCAST_H_
 
 #include "mir_client_surface.h"
 #include "mir_wait_handle.h"
@@ -32,19 +32,19 @@ namespace protobuf { class DisplayServer; }
 namespace client { class ClientBufferFactory; }
 }
 
-struct MirOutputCapture : public mir::client::ClientSurface
+struct MirScreencast : public mir::client::ClientSurface
 {
 public:
-    MirOutputCapture(
+    MirScreencast(
         MirDisplayOutput const& output,
         mir::protobuf::DisplayServer& server,
         std::shared_ptr<mir::client::ClientBufferFactory> const& factory,
-        mir_output_capture_callback callback, void* context);
+        mir_screencast_callback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
 
     MirWaitHandle* next_buffer(
-        mir_output_capture_callback callback, void* context);
+        mir_screencast_callback callback, void* context);
 
     /* mir::client::ClientSurface */
     MirSurfaceParameters get_parameters() const;
@@ -54,7 +54,7 @@ public:
 
 private:
     void next_buffer_received(
-        mir_output_capture_callback callback, void* context);
+        mir_screencast_callback callback, void* context);
 
     mir::protobuf::DisplayServer& server;
     uint32_t const output_id;
@@ -65,4 +65,4 @@ private:
     MirWaitHandle next_buffer_wait_handle;
 };
 
-#endif /* MIR_CLIENT_MIR_OUTPUT_CAPTURE_H_ */
+#endif /* MIR_CLIENT_MIR_SCREENCAST_H_ */

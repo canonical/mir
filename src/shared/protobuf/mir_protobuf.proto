@@ -151,7 +151,7 @@ message EventSequence {
   optional string error = 127;
 }
 
-message CaptureOutputRequest {
+message ScreencastRequest {
   required uint32 output_id = 1;
 }
 
@@ -170,6 +170,6 @@ service DisplayServer {
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
-  rpc capture_output(CaptureOutputRequest) returns (Buffer);
+  rpc screencast_buffer(ScreencastRequest) returns (Buffer);
 }
 
