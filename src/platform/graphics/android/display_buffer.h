@@ -53,7 +53,7 @@ public:
         std::list<Renderable> const& renderlist,
         std::function<void(Renderable const&)> const& render_fn);
 
-    std::shared_ptr<DisplayConfigurationOutput> configuration() const;
+    DisplayConfigurationOutput configuration() const;
     void configure(DisplayConfigurationOutput const&);
 
 private:

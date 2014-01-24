@@ -42,7 +42,7 @@ protected:
     virtual void SetUp()
     {
         stub_buffer = std::make_shared<testing::NiceMock<mtd::StubBuffer>>();
-        mock_display_device = std::make_shared<mtd::MockDisplayDevice>();
+        mock_display_device = std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>();
         native_window = std::make_shared<mg::android::MirNativeWindow>(std::make_shared<mtd::StubDriverInterpreter>());
 
         visual_id = 5;
@@ -51,7 +51,12 @@ protected:
         dummy_context = mock_egl.fake_egl_context;
         testing::NiceMock<mtd::MockDisplayReport> report;
         gl_context = std::make_shared<mga::GLContext>(mga::to_mir_format(mock_egl.fake_visual_id),report);
-        mock_fb_bundle = std::make_shared<mtd::MockFBBundle>();
+        mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
+
+        ON_CALL(*mock_fb_bundle, fb_format())
+            .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
+        ON_CALL(*mock_fb_bundle, fb_size())
+            .WillByDefault(testing::Return(geom::Size{}));
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -161,8 +166,8 @@ TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
                             mir_orientation_inverted})
     {
         auto config = db.configuration();
-        config->orientation = ori;
-        db.configure(*config);
+        config.orientation = ori;
+        db.configure(config);
         EXPECT_EQ(ori, db.orientation());
     }
 }
@@ -186,16 +191,16 @@ TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
 
     auto config = db.configuration();
 
-    config->orientation = mir_orientation_right;
-    db.configure(*config);
+    config.orientation = mir_orientation_right;
+    db.configure(config);
     EXPECT_EQ(transposed, db.view_area().size);
 
-    config->orientation = mir_orientation_inverted;
-    db.configure(*config);
+    config.orientation = mir_orientation_inverted;
+    db.configure(config);
     EXPECT_EQ(normal, db.view_area().size);
 
-    config->orientation = mir_orientation_left;
-    db.configure(*config);
+    config.orientation = mir_orientation_left;
+    db.configure(config);
     EXPECT_EQ(transposed, db.view_area().size);
 }
 
@@ -299,24 +304,49 @@ TEST_F(AndroidDisplayBufferTest, release_current)
     db.release_current();
 }
 
+TEST_F(AndroidDisplayBufferTest, display_power_mode_on_at_start)
+{
+    using namespace testing;
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    auto config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_on);
+}
+
 TEST_F(AndroidDisplayBufferTest, display_power_mode)
 {
     using namespace testing;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     Sequence seq;
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
-        .InSequence(seq);
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
         .InSequence(seq);
 
     auto config = db.configuration();
-    config->power_mode = mir_power_mode_on;
-    db.configure(*config); 
+    config.power_mode = mir_power_mode_off;
+    db.configure(config);
 
     config = db.configuration();
-    config->power_mode = mir_power_mode_off;
-    db.configure(*config); 
+    config.power_mode = mir_power_mode_on;
+    db.configure(config); 
+}
+
+TEST_F(AndroidDisplayBufferTest, display_power_mode_disregards_double)
+{
+    using namespace testing;
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
+        .Times(1);
+
+    auto config = db.configuration();
+    config.power_mode = mir_power_mode_off;
+    db.configure(config);
+    config.power_mode = mir_power_mode_suspend;
+    db.configure(config);
+    config.power_mode = mir_power_mode_standby;
+    db.configure(config);
 }
 
 //configuration tests
@@ -331,11 +361,11 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     auto config = db.configuration();
-    config->orientation = mir_orientation_left;
-    db.configure(*config); 
+    config.orientation = mir_orientation_left;
+    db.configure(config); 
 
     config = db.configuration();
-    EXPECT_EQ(config->orientation, mir_orientation_normal);
+    EXPECT_EQ(config.orientation, mir_orientation_normal);
 }
 
 TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
@@ -343,16 +373,16 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
     using namespace testing;
     EXPECT_CALL(*mock_display_device, apply_orientation(mir_orientation_left))
         .Times(1)
-        .WillOnce(Return(true));
+        .WillOnce(Return(false));
 
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     auto config = db.configuration();
-    config->orientation = mir_orientation_left;
-    db.configure(*config); 
+    config.orientation = mir_orientation_left;
+    db.configure(config); 
 
     config = db.configuration();
-    EXPECT_EQ(config->orientation, mir_orientation_left);
+    EXPECT_EQ(config.orientation, mir_orientation_left);
 }
 
 TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
@@ -361,8 +391,39 @@ TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
 
     auto config = db.configuration();
     //error
-    config->current_format = mir_pixel_format_invalid;
+    config.current_format = mir_pixel_format_invalid;
     EXPECT_THROW({
-        db.configure(*config);
+        db.configure(config);
     }, std::runtime_error); 
 }
+#if 0
+//we only have single display and single mode on android for the time being
+TEST_F(AndroidDisplayTest, android_display_configuration_info)
+{
+    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
+    auto config = display.configuration();
+
+    std::vector<mg::DisplayConfigurationOutput> configurations;
+    config.for_each_output([&](mg::DisplayConfigurationOutput const& config)
+    {
+        configurations.push_back(config);
+    });
+
+    ASSERT_EQ(1u, configurations.size());
+    auto& disp_conf = configurations[0];
+    ASSERT_EQ(1u, disp_conf.modes.size());
+    auto& disp_mode = disp_conf.modes[0];
+    EXPECT_EQ(display_size, disp_mode.size);
+
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
+    EXPECT_TRUE(disp_conf.connected);
+    EXPECT_TRUE(disp_conf.used);
+    auto origin = geom::Point{0,0};
+    EXPECT_EQ(origin, disp_conf.top_left);
+    EXPECT_EQ(0, disp_conf.current_mode_index);
+
+    //TODO fill refresh rate accordingly
+    //TODO fill physical_size_mm fields accordingly;
+}
+#endif

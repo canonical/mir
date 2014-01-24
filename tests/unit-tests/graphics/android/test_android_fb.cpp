@@ -205,36 +205,6 @@ TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_fai
     }, std::runtime_error);
 }
 
-//we only have single display and single mode on android for the time being
-TEST_F(AndroidDisplayTest, android_display_configuration_info)
-{
-    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
-    auto config = display.configuration();
-
-    std::vector<mg::DisplayConfigurationOutput> configurations;
-    config->for_each_output([&](mg::DisplayConfigurationOutput const& config)
-    {
-        configurations.push_back(config);
-    });
-
-    ASSERT_EQ(1u, configurations.size());
-    auto& disp_conf = configurations[0];
-    ASSERT_EQ(1u, disp_conf.modes.size());
-    auto& disp_mode = disp_conf.modes[0];
-    EXPECT_EQ(display_size, disp_mode.size);
-
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
-    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
-    EXPECT_TRUE(disp_conf.connected);
-    EXPECT_TRUE(disp_conf.used);
-    auto origin = geom::Point{0,0};
-    EXPECT_EQ(origin, disp_conf.top_left);
-    EXPECT_EQ(0, disp_conf.current_mode_index);
-
-    //TODO fill refresh rate accordingly
-    //TODO fill physical_size_mm fields accordingly;
-}
-
 TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
 {
     using namespace testing;

@@ -52,10 +52,7 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
-    //TODO: fix
-    return std::make_shared<mga::AndroidDisplayConfiguration>(geom::Size{0,0});
-//    return std::make_shared<mga::AndroidDisplayConfiguration>{display_device->configuration()};
-//    return std::make_shared<mga::AndroidDisplayConfiguration>{display_device->configuration()};
+    return std::make_shared<mga::AndroidDisplayConfiguration>(std::move(display_buffer->configuration()));
 }
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)

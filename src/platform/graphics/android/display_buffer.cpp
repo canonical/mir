@@ -24,6 +24,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <sstream>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -132,13 +133,15 @@ MirOrientation mga::DisplayBuffer::orientation() const
     return current_configuration.orientation;
 }
 
-std::shared_ptr<mg::DisplayConfigurationOutput> mga::DisplayBuffer::configuration() const
+mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
 {
-    return std::make_shared<mg::DisplayConfigurationOutput>(current_configuration);
+    return mg::DisplayConfigurationOutput(current_configuration);
 }
 
 void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configuration)
 {
+
+    //power mode
     MirPowerMode intended_power_mode = new_configuration.power_mode;
     if ((intended_power_mode == mir_power_mode_standby) ||
         (intended_power_mode == mir_power_mode_suspend))
@@ -149,17 +152,26 @@ void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configu
     if (intended_power_mode != current_configuration.power_mode)
     {
         display_device->mode(intended_power_mode);
+        current_configuration.power_mode = intended_power_mode;
     }
 
-    //apply orientation
+    //If the hardware can rotate for us, we report normal orientation. If it can't
+    //we preserve this orientation change so the compositor can rotate everything in GL 
     if (display_device->apply_orientation(new_configuration.orientation))
     {
-        //hardware is taking care of orienting for us
         current_configuration.orientation = mir_orientation_normal;
     }
     else
     {
-        //GL compositor will rotate
         current_configuration.orientation = new_configuration.orientation;
+    }
+
+    //do not allow fb format reallocation
+    if (new_configuration.current_format != current_configuration.current_format)
+    {
+        std::stringstream err_msg; 
+        err_msg << std::string("could not change display buffer format to request: ")
+                << new_configuration.current_format;
+        BOOST_THROW_EXCEPTION(std::runtime_error(err_msg.str()));
     }
 }

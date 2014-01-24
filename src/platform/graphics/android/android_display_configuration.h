@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include <memory>
 
 namespace mir
 {
@@ -29,7 +30,9 @@ namespace android
 class AndroidDisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    AndroidDisplayConfiguration(geometry::Size const& display_size);
+    //we only support 1 display at the moment
+    AndroidDisplayConfiguration(DisplayConfigurationOutput&& output);
+
     AndroidDisplayConfiguration(AndroidDisplayConfiguration const& other);
     AndroidDisplayConfiguration& operator=(AndroidDisplayConfiguration const& other);
 
