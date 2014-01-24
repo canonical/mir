@@ -17,14 +17,13 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display_configuration.h"
+#include "android_display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "display_builder.h"
-#include "display_device.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mga=mir::graphics::android;
@@ -35,9 +34,8 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& 
                                     std::shared_ptr<DisplayReport> const& display_report)
     : display_builder{display_builder},
       gl_context{display_builder->display_format(), *display_report},
-      display_device(display_builder->create_display_device()),
-      display_buffer{display_builder->create_display_buffer(display_device, gl_context)},
-      current_configuration{display_buffer->view_area().size}
+      display_buffer{display_builder->create_display_buffer(
+                     display_builder->create_display_device(), gl_context)}
 {
     display_report->report_successful_setup_of_native_resources();
 
@@ -54,30 +52,18 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
-    return std::make_shared<mga::AndroidDisplayConfiguration>(current_configuration);
+    //TODO: fix
+    return std::make_shared<mga::AndroidDisplayConfiguration>(geom::Size{0,0});
+//    return std::make_shared<mga::AndroidDisplayConfiguration>{display_device->configuration()};
+//    return std::make_shared<mga::AndroidDisplayConfiguration>{display_device->configuration()};
 }
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
-    MirOrientation orientation = mir_orientation_normal;
-
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        // TODO: Properly support multiple outputs
-        display_device->mode(output.power_mode);
-        orientation = output.orientation;
+        display_buffer->configure(output);
     });
-    current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
-
-    /*
-     * It's tempting to put orient() into the base class and so avoid this
-     * cast, but we only need it in the Android implementation right now.
-     */
-    if (android::DisplayBuffer* db =
-            dynamic_cast<mga::DisplayBuffer*>(display_buffer.get()))
-    {
-        db->orient(orientation);
-    }
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(

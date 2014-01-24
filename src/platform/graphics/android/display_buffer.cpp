@@ -38,7 +38,22 @@ mga::DisplayBuffer::DisplayBuffer(
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
-      rotation{mir_orientation_normal}
+      current_configuration{mg::DisplayConfigurationOutputId{1},
+                            mg::DisplayConfigurationCardId{0},
+                            mg::DisplayConfigurationOutputType::lvds,
+                            {
+                                fb_bundle->fb_format()
+                            },
+                            {mg::DisplayConfigurationMode{fb_bundle->fb_size(),0.0f}},
+                            0,
+                            geom::Size{0,0},
+                            true,
+                            true,
+                            geom::Point{0,0},
+                            0,
+                            mir_pixel_format_abgr_8888,
+                            mir_power_mode_on,
+                            mir_orientation_normal}
 {
 }
 
@@ -48,8 +63,11 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
     int width = size.width.as_int();
     int height = size.height.as_int();
 
-    if (rotation == mir_orientation_left || rotation == mir_orientation_right)
+    if (current_configuration.orientation == mir_orientation_left
+        || current_configuration.orientation == mir_orientation_right)
+    {
         std::swap(width, height);
+    }
 
     return {{0,0}, {width,height}};
 }
@@ -111,16 +129,39 @@ MirOrientation mga::DisplayBuffer::orientation() const
      * and let the renderer do it.
      * If and when we choose to implement HWC rotation, this may change.
      */
-    return rotation;
+    return current_configuration.orientation;
 }
 
-mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
+std::shared_ptr<mg::DisplayConfigurationOutput> mga::DisplayBuffer::configuration() const
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("otnh"));
+    return std::make_shared<mg::DisplayConfigurationOutput>(current_configuration);
 }
 
-void mga::DisplayBuffer::configure(DisplayConfigurationOutput const&)
+void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configuration)
 {
+    MirPowerMode intended_power_mode = new_configuration.power_mode;
+    if ((intended_power_mode == mir_power_mode_standby) ||
+        (intended_power_mode == mir_power_mode_suspend))
+    {
+        intended_power_mode = mir_power_mode_off;
+    }
+
+    if (intended_power_mode != current_configuration.power_mode)
+    {
+        display_device->mode(intended_power_mode);
+    }
+
+    //apply orientation
+    if (display_device->apply_orientation(new_configuration.orientation))
+    {
+        //hardware is taking care of orienting for us
+        current_configuration.orientation = mir_orientation_normal;
+    }
+    else
+    {
+        //GL compositor will rotate
+        current_configuration.orientation = new_configuration.orientation;
+    }
 }
 
 void mga::DisplayBuffer::orient(MirOrientation rot)

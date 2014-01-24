@@ -22,6 +22,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_resources.h"
+#include "android_display_configuration.h"
 #include "gl_context.h"
 #include <system/window.h>
 
@@ -53,11 +54,8 @@ public:
         std::list<Renderable> const& renderlist,
         std::function<void(Renderable const&)> const& render_fn);
 
-    DisplayConfigurationOutput configuration() const;
+    std::shared_ptr<DisplayConfigurationOutput> configuration() const;
     void configure(DisplayConfigurationOutput const&);
-
-    //TODO: remove
-    void orient(MirOrientation);
 
 private:
     void render_and_post();
@@ -67,7 +65,8 @@ private:
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;
     bool prepared;
-    MirOrientation rotation;
+
+    DisplayConfigurationOutput current_configuration;
 };
 
 }

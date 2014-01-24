@@ -45,7 +45,7 @@ public:
 
     MirPixelFormat display_format();
     std::shared_ptr<DisplayDevice> create_display_device();
-    std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
+    std::unique_ptr<DisplayBuffer> create_display_buffer(
         std::shared_ptr<DisplayDevice> const& display_device,
         GLContext const& gl_context);
 

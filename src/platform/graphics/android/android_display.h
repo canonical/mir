@@ -19,9 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
-#include "display_buffer.h"
 #include "mir/graphics/display.h"
-#include "android_display_configuration.h"
 #include "gl_context.h"
 
 #include <memory>
@@ -35,10 +33,9 @@ class DisplayReport;
 
 namespace android
 {
-class DisplayDevice;
-
 class DisplayBuilder;
 class DisplaySupportProvider;
+class DisplayBuffer;
 
 class AndroidDisplay : public Display
 {
@@ -69,11 +66,9 @@ public:
 private:
     std::shared_ptr<DisplayBuilder> const display_builder;
     GLContext gl_context;
-    std::shared_ptr<DisplayDevice> const display_device;
-    //we only have a primary display at the moment
-    std::unique_ptr<graphics::DisplayBuffer> const display_buffer;
 
-    AndroidDisplayConfiguration current_configuration;
+    //we only have a primary display at the moment
+    std::unique_ptr<graphics::android::DisplayBuffer> const display_buffer;
 };
 
 }
