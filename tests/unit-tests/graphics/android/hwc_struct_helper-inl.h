@@ -21,10 +21,7 @@
 
 #include <gtest/gtest.h>
 
-namespace
-{
-
-void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
+static void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
 {
     *os << "( left: "  << rect.left
         << ", top: "   << rect.top
@@ -32,7 +29,7 @@ void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
         << ", bottom: "<< rect.bottom << ")";
 }
 
-void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
+static void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
 {
   *os << "compositionType: " << layer.compositionType << std::endl
     << "\thints: " << layer.hints << std::endl
@@ -90,6 +87,5 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     EXPECT_THAT(arg.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
 
     return !(::testing::Test::HasFailure());
-}
 }
 #endif /* MIR_TEST_HWC_STRUCT_HELPER_INL_H_ */
