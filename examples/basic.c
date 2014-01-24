@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
     {
         int arg;
         opterr = 0;
-        while ((arg = getopt (argc, argv, "c:hf:")) != -1)
+        while ((arg = getopt (argc, argv, "c:hm:")) != -1)
         {
             switch (arg)
             {
@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
             default:
                 puts(argv[0]);
                 puts("Usage:");
-                puts("    -f <server name>");
+                puts("    -m <Mir server socket>");
                 puts("    -h: this help text");
                 return -1;
             }

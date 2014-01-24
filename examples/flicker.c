@@ -98,11 +98,11 @@ int main(int argc, char* argv[])
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "qhnf:")) != -1)
+    while ((arg = getopt (argc, argv, "qhnm:")) != -1)
     {
         switch (arg)
         {
-        case 'f':
+        case 'm':
             socket_file = optarg;
             break;
         case 'n':
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
         case 'h':
         default:
             printf("Usage: %s [<options>]\n"
-                   "    -f <socket filename>  Connect to a specific Mir socket\n"
+                   "    -f <Mir server socket>  Connect to a specific Mir socket\n"
                    "    -h  Show this help text\n"
                    "    -n  Don't sync to vblank\n"
                    "    -q  Quiet mode (no messages output)\n"
