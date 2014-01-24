@@ -44,9 +44,6 @@ class LayerList
 {
 public:
     LayerList(bool target_layer);
-
-    virtual ~LayerList() = default;
-
     void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
     void reset_composition_layers(); 
     void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
@@ -69,6 +66,8 @@ private:
 
     NativeFence retire_fence;
     NativeFence fb_fence;
+
+    int fake_egl_values;
 };
 
 }
