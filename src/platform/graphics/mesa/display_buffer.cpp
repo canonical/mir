@@ -207,9 +207,11 @@ void mgm::DisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
-     * If switching from composited to bypass mode, wait_for_page_flip
-     * of the last composited frame has not been called yet. Do it now or
-     * else schedule_page_flip() will fail.
+     * If the last frame was composited then we haven't waited for the
+     * page flips yet. This is good because it maximizes the time available
+     * to spend rendering each frame. However we have do wait here, because
+     * it will be unsafe to swap_buffers before guaranteeing the previous
+     * page flip finished.
      */
     wait_for_page_flip();
 
