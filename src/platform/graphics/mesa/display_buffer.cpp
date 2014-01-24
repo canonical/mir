@@ -265,6 +265,7 @@ void mgm::DisplayBuffer::post_update(
          * For composited frames we defer wait_for_page_flip till just before
          * the next frame, but that's unsafe on bypass frames so we have to
          * wait here.
+         * XXX TODO: Remember exactly why this is necessary.
          */
         wait_for_page_flip();
     }
