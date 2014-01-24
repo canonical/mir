@@ -25,12 +25,13 @@ list(APPEND TEST_FRAMEWORK_SRCS
   socket_detect_server.cpp
 )
 
-include_directories(${UMOCKDEV_INCLUDE_DIRS})
-list(APPEND TEST_FRAMEWORK_SRCS
-  udev_environment.cpp
-)
-# Umockdev uses glib, which uses the deprecated "register" storage qualifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
+if (UMOCKDEV_REQUIRED)
+  include_directories(${UMOCKDEV_INCLUDE_DIRS})
+  list(APPEND TEST_FRAMEWORK_SRCS udev_environment.cpp)
+  list(APPEND TEST_FRAMEWORK_LIBS ${UMOCKDEV_LIBRARIES})
+  # Umockdev uses glib, which uses the deprecated "register" storage qualifier
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
+endif ()
 
 add_library(
   mir-test-framework STATIC
@@ -53,8 +54,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-target_link_libraries(
-  mir-test-framework
-
-  ${UMOCKDEV_LIBRARIES}
+target_link_libraries(mir-test-framework
+  ${TEST_FRAMEWORK_LIBS}
 )
