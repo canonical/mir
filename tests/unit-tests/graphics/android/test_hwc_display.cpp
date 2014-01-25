@@ -55,7 +55,7 @@ protected:
         ON_CALL(*mock_fb_bundle, fb_format())
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
         ON_CALL(*mock_fb_bundle, fb_size())
-            .WillByDefault(testing::Return(geom::Size{}));
+            .WillByDefault(testing::Return(display_size));
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -70,6 +70,7 @@ protected:
     std::shared_ptr<ANativeWindow> native_window;
     std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
+    geom::Size const display_size{433,232};
 };
 
 TEST_F(AndroidDisplayBufferTest, test_post_update)
@@ -207,17 +208,12 @@ TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
 {
     using namespace testing;
 
-    geom::Size fake_display_size{223, 332};
-    EXPECT_CALL(*mock_fb_bundle, fb_size())
-        .Times(AnyNumber())
-        .WillRepeatedly(Return(fake_display_size));
-
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     auto view_area = db.view_area();
 
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};
-    EXPECT_EQ(view_area.size, fake_display_size);
+    EXPECT_EQ(view_area.size, display_size);
     EXPECT_EQ(view_area.top_left, origin_pt);
 }
 
@@ -387,7 +383,6 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
 TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
 {
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-
     auto config = db.configuration();
     //error
     config.current_format = mir_pixel_format_invalid;
@@ -395,21 +390,12 @@ TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
         db.configure(config);
     }, std::runtime_error); 
 }
-#if 0
-//we only have single display and single mode on android for the time being
-TEST_F(AndroidDisplayTest, android_display_configuration_info)
+
+TEST_F(AndroidDisplayBufferTest, android_display_configuration_info)
 {
-    mga::AndroidDisplay display(stub_db_factory, mock_display_report);
-    auto config = display.configuration();
+    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    auto disp_conf = db.configuration();
 
-    std::vector<mg::DisplayConfigurationOutput> configurations;
-    config.for_each_output([&](mg::DisplayConfigurationOutput const& config)
-    {
-        configurations.push_back(config);
-    });
-
-    ASSERT_EQ(1u, configurations.size());
-    auto& disp_conf = configurations[0];
     ASSERT_EQ(1u, disp_conf.modes.size());
     auto& disp_mode = disp_conf.modes[0];
     EXPECT_EQ(display_size, disp_mode.size);
@@ -425,4 +411,4 @@ TEST_F(AndroidDisplayTest, android_display_configuration_info)
     //TODO fill refresh rate accordingly
     //TODO fill physical_size_mm fields accordingly;
 }
-#endif
+

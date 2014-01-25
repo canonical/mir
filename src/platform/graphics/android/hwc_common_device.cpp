@@ -130,5 +130,5 @@ int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
 
 bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
 {
-    return true; 
+    return false; 
 }
