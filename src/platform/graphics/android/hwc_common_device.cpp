@@ -75,12 +75,10 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
     std::unique_lock<std::mutex> lg(blanked_mutex);
     int err = 0;
 
-    //note: mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off
-    //      are all treated like mir_power_mode_off
     if ((mode_request == mir_power_mode_suspend) ||
         (mode_request == mir_power_mode_standby))
     {
-        mode_request = mir_power_mode_off;
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot set to suspend or standby"));
     }
 
     if ((mode_request == mir_power_mode_on) &&

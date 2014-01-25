@@ -161,7 +161,7 @@ TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_request_error)
     }, std::runtime_error);
 }
 
-TYPED_TEST(HWCCommon, test_hwc_suspend_standby_turn_off)
+TYPED_TEST(HWCCommon, test_hwc_suspend_standby_throw)
 {
     using namespace testing;
 
@@ -173,11 +173,13 @@ TYPED_TEST(HWCCommon, test_hwc_suspend_standby_turn_off)
         .WillRepeatedly(Return(0));
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-    device->mode(mir_power_mode_off);
-    device->mode(mir_power_mode_on);
-    device->mode(mir_power_mode_suspend);
-    device->mode(mir_power_mode_on);
-    device->mode(mir_power_mode_standby);
+
+    EXPECT_THROW({
+        device->mode(mir_power_mode_suspend);
+    }, std::runtime_error);
+    EXPECT_THROW({
+        device->mode(mir_power_mode_standby);
+    }, std::runtime_error);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
@@ -199,26 +201,6 @@ TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
     device->mode(mir_power_mode_off);
-}
-
-TYPED_TEST(HWCCommon, test_blank_is_ignored_if_already_in_correct_state)
-{
-    using namespace testing;
-
-    //we start off unblanked
-
-    InSequence seq;
-    //from constructor
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        .Times(Exactly(1))
-        .WillOnce(Return(0));
-     //from destructor
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(1)
-        .WillOnce(Return(0));
-
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-    device->mode(mir_power_mode_on);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
@@ -246,4 +228,10 @@ TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
     EXPECT_CALL(*this->mock_vsync, notify_vsync())
         .Times(1);
     procs->vsync(procs, 0, 0);
+}
+
+TYPED_TEST(HWCCommon, set_orientation)
+{
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    EXPECT_FALSE(device->apply_orientation(mir_orientation_left));
 }

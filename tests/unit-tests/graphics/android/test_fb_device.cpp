@@ -111,6 +111,12 @@ TEST_F(FBDevice, set_swapinterval_with_null_hook)
     mga::FBDevice fbdev(fb_hal_mock);
 }
 
+TEST_F(FBDevice, set_orientation)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_FALSE(fbdev.apply_orientation(mir_orientation_left));
+}
+
 TEST_F(FBDevice, screen_on_off)
 {
     fb_hal_mock->setSwapInterval = nullptr;
