@@ -32,7 +32,6 @@ namespace android
 class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    virtual ~ConfigurableDisplayBuffer() = default;
     virtual DisplayConfigurationOutput configuration() const = 0;
     virtual void configure(DisplayConfigurationOutput const&) = 0;
 

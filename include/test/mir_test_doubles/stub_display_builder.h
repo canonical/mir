@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
 #include "src/platform/graphics/android/display_builder.h"
-#include "stub_display_buffer.h"
+#include "src/platform/graphics/android/configurable_display_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -30,40 +30,12 @@ namespace test
 namespace doubles
 {
 
-struct MockConfigurableDisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
-{
-    MockConfigurableDisplayBuffer()
-    {
-        ON_CALL(*this, configuration())
-            .WillByDefault(testing::Return(conf));
-    }
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
-    MOCK_CONST_METHOD0(orientation, MirOrientation());
-    MOCK_CONST_METHOD0(can_bypass, bool());
-
-    MOCK_METHOD0(make_current, void());
-    MOCK_METHOD0(release_current, void());
-    MOCK_METHOD0(post_update, void());
-    MOCK_METHOD2(render_and_post_update, void(std::list<graphics::Renderable> const&, 
-                                   std::function<void(graphics::Renderable const&)> const&));
-    MOCK_METHOD1(configure, void(graphics::DisplayConfigurationOutput const&));
-    MOCK_CONST_METHOD0(configuration, graphics::DisplayConfigurationOutput());
-
-private: 
-    graphics::DisplayConfigurationOutput conf{
-        graphics::DisplayConfigurationOutputId{1},
-        graphics::DisplayConfigurationCardId{0},
-        graphics::DisplayConfigurationOutputType::vga,
-        {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-        mir_power_mode_off,
-        mir_orientation_normal};
-};
-
 struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
 {
     StubConfigurableDisplayBuffer(geometry::Rectangle rect)
-        :rect(rect)
-    {}
+     : rect(rect)
+    {
+    }
 
     geometry::Rectangle view_area() const { return rect; }
     void make_current() {}
@@ -74,7 +46,7 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
         std::list<graphics::Renderable> const&,
         std::function<void(graphics::Renderable const&)> const&) {}
     MirOrientation orientation() const override { return mir_orientation_normal; }
-    void configure(graphics::DisplayConfigurationOutput const&) {}
+    void configure(graphics::DisplayConfigurationOutput const&) {} 
     graphics::DisplayConfigurationOutput configuration() const
     {
         return graphics::DisplayConfigurationOutput{
