@@ -93,19 +93,17 @@ public:
             .WillByDefault(Return(hw_access_mock.mock_hwc_device));
         ON_CALL(*mock_resource_factory, create_fb_native_device())
             .WillByDefault(Return(mt::fake_shared(fb_hal_mock)));
-        mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     testing::NiceMock<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
-    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
+    testing::NiceMock<mtd::MockDisplayReport> mock_display_report;
     testing::NiceMock<MockGraphicBufferAllocator> mock_buffer_allocator;
-    mga::GLContext gl_context{mga::to_mir_format(mock_egl.fake_visual_id), *mock_display_report};
+    mga::GLContext gl_context{mga::to_mir_format(mock_egl.fake_visual_id), mock_display_report};
 };
 }
-
 TEST_F(OutputBuilder, hwc_version_10_success)
 {
     using namespace testing;
@@ -118,13 +116,14 @@ TEST_F(OutputBuilder, hwc_version_10_success)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc_fb_device(_,_))
         .Times(1);
-    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
+    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,0))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory, mt::fake_shared(mock_display_report), false);
     factory.create_display_buffer(gl_context);
 }
 
@@ -141,13 +140,14 @@ TEST_F(OutputBuilder, hwc_version_10_failure_uses_gpu)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
         .Times(1);
-    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+    EXPECT_CALL(mock_display_report, report_gpu_composition_in_use())
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory, mt::fake_shared(mock_display_report), false);
     factory.create_display_buffer(gl_context);
 }
 
@@ -161,13 +161,14 @@ TEST_F(OutputBuilder, hwc_version_11_success)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
         .Times(1);
-    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
+    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory, mt::fake_shared(mock_display_report), false);
     factory.create_display_buffer(gl_context);
 }
 
@@ -184,13 +185,14 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_failure)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
         .Times(1);
-    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+    EXPECT_CALL(mock_display_report, report_gpu_composition_in_use())
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory, mt::fake_shared(mock_display_report), false);
     factory.create_display_buffer(gl_context);
 }
 
@@ -209,7 +211,8 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
 
     EXPECT_THROW({
         mga::OutputBuilder factory(
-            mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+            mt::fake_shared(mock_buffer_allocator),
+            mock_resource_factory, mt::fake_shared(mock_display_report), false);
     }, std::runtime_error);
 }
 
@@ -223,12 +226,13 @@ TEST_F(OutputBuilder, hwc_version_12)
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
         .Times(1);
-    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,2))
+    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,2))
         .Times(1);
     EXPECT_CALL(*mock_resource_factory, create_native_window(_))
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory, mt::fake_shared(mock_display_report), false);
     factory.create_display_buffer(gl_context);
 }

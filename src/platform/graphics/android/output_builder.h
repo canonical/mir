@@ -49,7 +49,6 @@ public:
         GLContext const& gl_context);
 
 private:
-    std::shared_ptr<DisplayDevice> create_display_device();
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<DisplayReport> const display_report;

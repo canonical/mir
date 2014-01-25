@@ -43,7 +43,6 @@ namespace geom=mir::geometry;
 struct DummyGPUDisplayType {};
 struct DummyHWCDisplayType {};
 
-static geom::Size const display_size{433,232};
 
 class AndroidDisplayTest : public ::testing::Test
 {
@@ -64,6 +63,7 @@ protected:
     EGLDisplay dummy_display;
     EGLContext dummy_context;
 
+    geom::Size const display_size{433,232};
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<mtd::StubDisplayBuilder> stub_db_factory;
     testing::NiceMock<mtd::MockEGL> mock_egl;

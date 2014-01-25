@@ -92,7 +92,7 @@ private:
 struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
-        : StubDisplayBuilder(sz)
+        : sz(sz)
     {
     }
 
