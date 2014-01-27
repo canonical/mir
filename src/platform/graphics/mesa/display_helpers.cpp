@@ -19,7 +19,7 @@
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
-#include "udev_wrapper.h"
+#include "mir/udev/wrapper.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -37,7 +37,7 @@ namespace mgmh = mir::graphics::mesa::helpers;
  * DRMHelper *
  *************/
 
-void mgmh::DRMHelper::setup(std::shared_ptr<UdevContext> const& udev)
+void mgmh::DRMHelper::setup(std::shared_ptr<mir::udev::Context> const& udev)
 {
     fd = open_drm_device(udev);
 
@@ -146,9 +146,9 @@ void mgmh::DRMHelper::set_master() const
     }
 }
 
-int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& drm_device)
+int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& drm_device)
 {
-    mgm::UdevEnumerator children(udev);
+    mir::udev::Enumerator children(udev);
     children.match_parent(drm_device);
 
     char const* devtype = drm_device.devtype();
@@ -181,12 +181,12 @@ int mgmh::DRMHelper::count_connections(int fd)
     return n_connected;
 }
 
-int mgmh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
+int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& udev)
 {
     int tmp_fd = -1;
     int error = ENODEV; //Default error is "there are no DRM devices"
 
-    UdevEnumerator devices(udev);
+    mir::udev::Enumerator devices(udev);
     devices.match_subsystem("drm");
     devices.match_sysname("card[0-9]*");
 

@@ -287,7 +287,27 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
 
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
 
-    surf.resize(new_size);
+    ASSERT_NE(new_size, surf.size());
+    EXPECT_TRUE(surf.resize(new_size));
+    EXPECT_EQ(new_size, surf.size());
+}
+
+TEST_F(SurfaceCreation, duplicate_resize_ignored)
+{
+    using namespace testing;
+    geom::Size const new_size{123, 456};
+
+    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
+        .Times(1);
+
+    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+
+    ASSERT_NE(new_size, surf.size());
+
+    EXPECT_TRUE(surf.resize(new_size));
+    EXPECT_EQ(new_size, surf.size());
+
+    EXPECT_FALSE(surf.resize(new_size));
     EXPECT_EQ(new_size, surf.size());
 }
 

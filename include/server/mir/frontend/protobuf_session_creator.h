@@ -20,12 +20,13 @@
 #define MIR_FRONTEND_PROTOBUF_SESSION_CREATOR_H_
 
 #include "mir/frontend/session_creator.h"
-#include "connected_sessions.h"
+#include "mir/frontend/connected_sessions.h"
 
 #include <atomic>
 
 namespace mir
 {
+namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class MessageProcessorReport;
@@ -35,6 +36,8 @@ class SessionAuthorizer;
 namespace detail
 {
 struct SocketSession;
+class MessageProcessor;
+class ProtobufMessageSender;
 }
 
 class ProtobufSessionCreator : public SessionCreator
@@ -47,6 +50,11 @@ public:
     ~ProtobufSessionCreator() noexcept;
 
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+
+    virtual std::shared_ptr<detail::MessageProcessor> create_processor(
+        std::shared_ptr<detail::ProtobufMessageSender> const& sender,
+        std::shared_ptr<protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<MessageProcessorReport> const& report) const;
 
 private:
     int next_id();

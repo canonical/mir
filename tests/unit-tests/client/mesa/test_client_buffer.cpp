@@ -176,3 +176,17 @@ TEST_F(MesaClientBufferTest, factory_gets_size_from_package)
 
     EXPECT_NE(unused_size, buf_size);
 }
+
+TEST_F(MesaClientBufferTest, creation_with_invalid_buffer_package_throws)
+{
+    using namespace testing;
+
+    mclg::ClientBufferFactory factory(buffer_file_ops);
+    auto const invalid_package = std::make_shared<MirBufferPackage>();
+    package->fd_items = 0;
+
+    geom::Size const unused_size{0, 0};
+    EXPECT_THROW({
+        factory.create_buffer(invalid_package, unused_size, pf);
+    }, std::runtime_error);
+}

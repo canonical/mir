@@ -25,6 +25,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cmath>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -38,10 +39,11 @@ const GLchar* vertex_shader_src =
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
     "uniform mat4 screen_to_gl_coords;\n"
+    "uniform mat4 display_transform;\n"
     "uniform mat4 transform;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_Position = screen_to_gl_coords * transform * vec4(position, 1.0);\n"
+    "   gl_Position = display_transform * screen_to_gl_coords * transform * vec4(position, 1.0);\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
@@ -172,6 +174,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     /* Set up program variables */
     GLint mat_loc = glGetUniformLocation(program, "screen_to_gl_coords");
     GLint tex_loc = glGetUniformLocation(program, "tex");
+    display_transform_uniform_loc = glGetUniformLocation(program, "display_transform");
     transform_uniform_loc = glGetUniformLocation(program, "transform");
     alpha_uniform_loc = glGetUniformLocation(program, "alpha");
     position_attr_loc = glGetAttribLocation(program, "position");
@@ -280,8 +283,18 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     glDisableVertexAttribArray(position_attr_loc);
 }
 
-void mc::GLRenderer::begin() const
+void mc::GLRenderer::begin(float rotation) const
 {
+    float rad = rotation * M_PI / 180.0f;
+    GLfloat cos = cosf(rad);
+    GLfloat sin = sinf(rad);
+    GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
+                       -sin, cos,  0.0f, 0.0f,
+                       0.0f, 0.0f, 1.0f, 0.0f,
+                       0.0f, 0.0f, 0.0f, 1.0f};
+    glUseProgram(program);
+    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
+    glUseProgram(0);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
