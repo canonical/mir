@@ -36,8 +36,7 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       fb_device(fb_device),
-      use_fb_target(false),
-      layer_list(use_fb_target)
+      layer_list(do_not_use_fb_target)
 {
 }
 

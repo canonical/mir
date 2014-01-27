@@ -49,7 +49,6 @@ public:
     void post(Buffer const& buffer);
 
 private:
-    bool const use_fb_target;
     LayerList layer_list;
 
     SyncFence last_display_fence;
