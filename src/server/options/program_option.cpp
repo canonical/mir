@@ -20,7 +20,6 @@
 
 #include <boost/program_options/parsers.hpp>
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 
