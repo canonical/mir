@@ -16,36 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_HWC_STRUCT_HELPER_INL_H_
-#define MIR_TEST_HWC_STRUCT_HELPER_INL_H_
+#ifndef MIR_TEST_HWC_STRUCT_HELPERS_H_
+#define MIR_TEST_HWC_STRUCT_HELPERS_H_
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-static void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
-{
-    *os << "( left: "  << rect.left
-        << ", top: "   << rect.top
-        << ", right "  << rect.right
-        << ", bottom: "<< rect.bottom << ")";
-}
-
-static void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
-{
-  *os << "compositionType: " << layer.compositionType << std::endl
-    << "\thints: " << layer.hints << std::endl
-    << "\tflags: " << layer.flags << std::endl
-    << "\thandle: " << layer.handle << std::endl
-    << "\ttransform: " << layer.transform << std::endl
-    << "\tblending: " << layer.blending << std::endl
-    << "\tsourceCrop:  ";
-    PrintTo(layer.sourceCrop, os);
-    *os << std::endl << "\tdisplayFrame:";
-    PrintTo(layer.displayFrame, os);
-    *os << std::endl;
-    *os << "\tvisibleRegionScreen.numRects: " << layer.visibleRegionScreen.numRects << std::endl
-    << "\tacquireFenceFd: " << layer.acquireFenceFd << std::endl
-    << "\treleaseFenceFd: " << layer.releaseFenceFd << std::endl;
-}
+void PrintTo(const hwc_rect_t& rect, ::std::ostream* os);
+void PrintTo(const hwc_layer_1& layer , ::std::ostream* os);
 
 MATCHER_P2(MatchesMember, value, str,
           std::string("layer's " + std::string(str) + " should be: " + testing::PrintToString(value)))
@@ -88,4 +66,5 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
 
     return !(::testing::Test::HasFailure());
 }
-#endif /* MIR_TEST_HWC_STRUCT_HELPER_INL_H_ */
+
+#endif /* MIR_TEST_HWC_STRUCT_HELPERS_H_ */
