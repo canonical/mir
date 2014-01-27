@@ -151,6 +151,10 @@ message EventSequence {
   optional string error = 127;
 }
 
+message ScreencastRequest {
+  required uint32 output_id = 1;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -166,5 +170,6 @@ service DisplayServer {
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
+  rpc screencast_buffer(ScreencastRequest) returns (Buffer);
 }
 
