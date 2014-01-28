@@ -163,6 +163,35 @@ TEST_F(ProgramOption, defaulted_values_are_available)
     EXPECT_THAT(po.get("defaulted", 3), Eq(666));
 }
 
+TEST_F(ProgramOption, test_boost_any_overload)
+{
+    using testing::Eq;
+    mir::options::ProgramOption po;
+
+    const int argc = 8;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--help",
+        "--flag-yes", "yes",
+        "-f", "test_file",
+        "-c", "27"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.is_set("help,h"), Eq(true));
+    EXPECT_THAT(boost::any_cast<bool>(po.get("flag-yes,y")), Eq(true));
+    EXPECT_THAT(boost::any_cast<std::string>(po.get("file,f")), Eq("test_file"));
+    EXPECT_THAT(boost::any_cast<int>(po.get("count,c")), Eq(27));
+    EXPECT_THAT(boost::any_cast<int>(po.get("defaulted")), Eq(666));
+
+    auto const error_result = po.get("garbage");
+    EXPECT_THAT(error_result.empty(), Eq(true));
+
+    EXPECT_THROW(boost::any_cast<int>(error_result), std::bad_cast);
+    EXPECT_THROW(boost::any_cast<int>(po.get("flag-yes,y")), std::bad_cast);
+}
+
 TEST(ProgramOptionEnv, parse_environment)
 {
     // Env variables should be uppercase and "_" delimited
