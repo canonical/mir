@@ -63,12 +63,12 @@ public:
                                 std::function<void(Renderable const&)> const& render_fn);
     MirOrientation orientation() const override;
     void schedule_set_crtc();
+    void wait_for_page_flip();
 
 private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);
-    void wait_for_page_flip();
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
