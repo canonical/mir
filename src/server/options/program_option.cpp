@@ -28,12 +28,9 @@ namespace po = boost::program_options;
 
 namespace
 {
-    std::string parse_name(char const* begin)
+    std::string parse_name(std::string name)
     {
-        auto end = begin;
-        while (*end && *end != ',') ++end;
-
-        return {begin, end};
+        return name.substr(0, name.find_first_of(','));
     }
 }
 
