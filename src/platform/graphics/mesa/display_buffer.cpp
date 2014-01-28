@@ -167,14 +167,6 @@ mgm::DisplayBuffer::DisplayBuffer(
 mgm::DisplayBuffer::~DisplayBuffer()
 {
     /*
-     * For the mesa platform, display config changes trigger destruction and
-     * recreation of DisplayBuffers. So it's extra-important to ensure all
-     * pending page flips are complete before a new DisplayBuffer is
-     * constructed...
-     */
-    wait_for_page_flip();
-
-    /*
      * There is no need to destroy last_flipped_bufobj manually.
      * It will be destroyed when its gbm_surface gets destroyed.
      */
