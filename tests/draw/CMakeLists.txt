@@ -14,7 +14,7 @@ if (MIR_PLATFORM STREQUAL "android")
   set(
     DRAW_SRCS
 
-    android_graphics.cpp
+    android_graphics_region_factory.cpp
     ${DRAW_SRCS}
     )
 endif()

@@ -2,6 +2,7 @@
 #its a bit troubling that these need to be included for demo_input_filter
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC
@@ -93,12 +94,12 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/test/mir_test/draw
   ${GLESv2_INCLUDE_DIRS}
 )
 
-set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
-add_executable(mir_demo_standalone_render_to_fb 
-  ${RENDER_TO_FB_SOURCES}
+add_executable(mir_demo_standalone_render_to_fb
+    render_to_fb.cpp
 )
 
 target_link_libraries(mir_demo_standalone_render_to_fb
@@ -107,6 +108,20 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     mirdraw
     ${Boost_LIBRARIES}
 )
+
+if (MIR_PLATFORM STREQUAL "android")
+    include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+    add_executable(mir_demo_standalone_render_overlays
+        render_overlays.cpp
+    )
+
+    target_link_libraries(mir_demo_standalone_render_overlays
+        mirserver
+        mirlogging
+        mirdraw
+        mirtestdraw
+    )
+endif()
 
 set(RENDER_SURFACES_SOURCES
     render_surfaces.cpp
