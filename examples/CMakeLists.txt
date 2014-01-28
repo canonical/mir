@@ -110,7 +110,6 @@ target_link_libraries(mir_demo_standalone_render_to_fb
 )
 
 if (MIR_PLATFORM STREQUAL "android")
-    include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
     add_executable(mir_demo_standalone_render_overlays
         render_overlays.cpp
     )

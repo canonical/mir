@@ -26,7 +26,6 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/report_exception.h"
-#include "mir/graphics/android/native_buffer.h"
 
 #include "graphics_region_factory.h"
 #include "patterns.h"

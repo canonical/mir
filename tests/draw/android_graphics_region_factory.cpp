@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,11 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-
+#include "mir_test/draw/graphics_region_factory.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "android_graphics_region_factory.h"
 #include "mir_toolkit/common.h"
 
+#include <hardware/gralloc.h>
 #include <stdexcept>
 
 namespace mtd=mir::test::draw;

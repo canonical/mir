@@ -11,12 +11,10 @@ set(
 )
 
 if (MIR_PLATFORM STREQUAL "android")
-  set(
-    DRAW_SRCS
-
+  include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+  set(DRAW_SRCS
     android_graphics_region_factory.cpp
-    ${DRAW_SRCS}
-    )
+    ${DRAW_SRCS})
 endif()
 
 add_library(
