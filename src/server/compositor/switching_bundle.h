@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <memory>
+#include <iosfwd>
 
 #include <boost/optional/optional.hpp>
 
@@ -106,7 +107,12 @@ private:
 
     bool framedropping;
     int force_drop;
+
+    friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 };
+
+// for use when debugging. e.g "std::cout << *this << std::endl;"
+std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 
 }
 }

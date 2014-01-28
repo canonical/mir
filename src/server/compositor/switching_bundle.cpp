@@ -61,6 +61,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <utility>
+#include <ostream>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -418,4 +419,20 @@ void mc::SwitchingBundle::resize(const geometry::Size &newsize)
 {
     std::unique_lock<std::mutex> lock(guard);
     bundle_properties.size = newsize;
+}
+
+std::ostream& mc::operator<<(std::ostream& os, const mc::SwitchingBundle& bundle)
+{
+    os << "("
+        << (void*)(&bundle)
+        << ",nbuffers=" << bundle.nbuffers
+        << ",first_compositor=" << bundle.first_compositor
+        << ",ncompositors=" << bundle.ncompositors
+        << ",first_ready=" << bundle.first_ready
+        << ",nready=" << bundle.nready
+        << ",first_client=" << bundle.first_client
+        << ",nclients=" << bundle.nclients
+        << ")";
+
+    return os;
 }

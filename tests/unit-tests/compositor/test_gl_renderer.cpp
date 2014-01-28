@@ -38,6 +38,7 @@ using testing::Return;
 using testing::ReturnRef;
 using testing::Pointee;
 using testing::AnyNumber;
+using testing::AtLeast;
 using testing::_;
 
 namespace mt=mir::test;
@@ -253,8 +254,8 @@ public:
         EXPECT_CALL(mock_gl, glClear(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
-        EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, _, _))
-            .Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, GL_FALSE, _))
+            .Times(AtLeast(1));
         EXPECT_CALL(mock_gl, glUniform1f(_, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glBindBuffer(_, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glVertexAttribPointer(_, _, _, _, _, _))
@@ -303,6 +304,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     InSequence seq;
 
+    EXPECT_CALL(mock_gl, glUniformMatrix4fv(display_transform_uniform_location, 1, GL_FALSE, _));
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())

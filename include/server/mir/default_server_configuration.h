@@ -113,7 +113,7 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public virtual ServerConfiguration, DefaultConfigurationOptions
+class DefaultServerConfiguration : public virtual ServerConfiguration, protected DefaultConfigurationOptions
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
