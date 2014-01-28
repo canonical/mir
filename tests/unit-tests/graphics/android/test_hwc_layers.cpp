@@ -52,6 +52,8 @@ public:
             .WillByDefault(Return(alpha_enabled));
         ON_CALL(mock_renderable, screen_position())
             .WillByDefault(Return(screen_position));
+
+        memset(&native_layer, 0, sizeof(native_layer));
     }
 
     geom::Size buffer_size{333, 444};
@@ -63,12 +65,12 @@ public:
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
     testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
+
+    hwc_layer_1_t native_layer;
 };
 
 TEST_F(HWCLayersTest, fb_target_layer)
 {
-    mga::FramebufferLayer target_layer(*native_handle_1);
-
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
@@ -85,9 +87,11 @@ TEST_F(HWCLayersTest, fb_target_layer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    mga::FramebufferLayer target_layer(&native_layer, *native_handle_1);
+    EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
 }
 
+#if 0
 TEST_F(HWCLayersTest, fb_target_layer_no_buffer)
 {
     mga::FramebufferLayer target_layer;
@@ -215,3 +219,4 @@ TEST_F(HWCLayersTest, forced_gl_layer_with_buffer)
 
     EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
 }
+#endif
