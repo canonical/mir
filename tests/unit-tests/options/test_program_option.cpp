@@ -42,6 +42,7 @@ struct ProgramOption : testing::Test
             ("flag-no", bpo::value<bool>(), "flag \"no\"")
             ("flag-false", bpo::value<bool>(), "flag \"false\"")
             ("count,c", bpo::value<int>(), "count")
+            ("defaulted,d", bpo::value<int>()->default_value(666), "defaulted")
             ("help,h", "this help text");
     }
 
@@ -144,6 +145,22 @@ TEST_F(ProgramOption, matches_compound_name_lookup)
     EXPECT_THAT(po.get("flag-yes,y", false), Eq(true));
     EXPECT_THAT(po.get("file,f", "default"), Eq("test_file"));
     EXPECT_THAT(po.get("count,c", 42), Eq(27));
+}
+
+TEST_F(ProgramOption, defaulted_values_are_available)
+{
+    using testing::Eq;
+    mir::options::ProgramOption po;
+
+    const int argc = 1;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.is_set("defaulted"), Eq(true));
+    EXPECT_THAT(po.get("defaulted", 3), Eq(666));
 }
 
 TEST(ProgramOptionEnv, parse_environment)
