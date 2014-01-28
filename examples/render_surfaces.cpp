@@ -258,11 +258,10 @@ public:
         namespace po = boost::program_options;
 
         add_options()
-            (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
-                                                    " [int:default=5]")
-            (display_cursor, po::value<bool>()->default_value(false), ""
-                                                "Display test cursor. (If input is "
-                                                "disabled it gets animated.)");
+            (surfaces_to_render, po::value<int>()->default_value(5),
+                "Number of surfaces to render")
+            (display_cursor, po::value<bool>()->default_value(false),
+                "Display test cursor. (If input is disabled it gets animated.)");
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
@@ -383,7 +382,7 @@ public:
     // New function to initialize moveables with surfaces
     void create_surfaces()
     {
-        moveables.resize(the_options()->get(surfaces_to_render, 5));
+        moveables.resize(boost::any_cast<int>(the_options()->get(surfaces_to_render)));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();

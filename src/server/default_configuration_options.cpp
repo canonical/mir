@@ -140,29 +140,27 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "How to handle the scene report. [{log,off}:default=off]")
         (glog,
             "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),
+        (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),
             "Copy log messages at or above this level "
             "to stderr in addition to logfiles. The numbers "
             "of severity levels INFO, WARNING, ERROR, and "
-            "FATAL are 0, 1, 2, and 3, respectively."
-            " [int:default=2]")
-        (glog_minloglevel, po::value<int>(),
+            "FATAL are 0, 1, 2, and 3, respectively.")
+        (glog_minloglevel, po::value<int>()->default_value(glog_minloglevel_default),
             "Log messages at or above this level. The numbers "
             "of severity levels INFO, WARNING, ERROR, and "
             "FATAL are 0, 1, 2, and 3, respectively."
             " [int:default=0]")
-        (glog_log_dir, po::value<std::string>(),
+        (glog_log_dir, po::value<std::string>()->default_value(glog_log_dir_default),
             "If specified, logfiles are written into this "
-            "directory instead of the default logging directory."
-            " [string:default=\"\"]")
-        (frontend_threads_opt, po::value<int>(),
+            "directory instead of the default logging directory.")
+        (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
-        ("vt", po::value<int>(),
-            "VT to run on or 0 to use current. [int:default=0]");
+        ("vt", po::value<int>()->default_value(0), // TODO this not applicable on all graphics platforms
+            "VT to run on or 0 to use current.");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultConfigurationOptions::add_options()
