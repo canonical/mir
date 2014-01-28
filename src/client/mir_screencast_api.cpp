@@ -27,13 +27,6 @@
 namespace
 {
 
-void assign_result_callback(MirScreencast* result, void* context)
-{
-    auto screencast = static_cast<MirScreencast**>(context);
-    if (screencast)
-        *screencast = result;
-}
-
 void null_callback(MirScreencast*, void*) {}
 
 MirDisplayOutput& find_display_output(
@@ -76,7 +69,7 @@ MirScreencast* mir_connection_create_screencast_sync(
             connection->display_server(),
             client_platform,
             client_platform->create_buffer_factory(),
-            assign_result_callback, &screencast};
+            null_callback, nullptr};
 
         screencast->creation_wait_handle()->wait_for_all();
     }
