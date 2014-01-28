@@ -18,15 +18,12 @@
 #ifndef MIR_TEST_DRAW_GRAPHICS_REGION_FACTORY
 #define MIR_TEST_DRAW_GRAPHICS_REGION_FACTORY
 
+#include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <memory>
 
 namespace mir
 {
-namespace graphics
-{
-class NativeBuffer;
-}
 namespace test
 {
 namespace draw
