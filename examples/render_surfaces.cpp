@@ -443,7 +443,7 @@ public:
 
     bool input_is_on()
     {
-        return the_options()->get("enable-input", ::input_is_on);
+        return the_options()->get(enable_input_opt, ::input_is_on);
     }
 
     std::weak_ptr<mg::Cursor> the_cursor()
