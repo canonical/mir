@@ -120,13 +120,7 @@ struct TestClient
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters
-        {
-            "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware, mir_display_output_id_invalid
-        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
-        auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
         /* set up egl context */
         int major, minor, n;
@@ -173,7 +167,7 @@ struct TestClient
             eglSwapBuffers(egl_display, egl_surface);
         }
 
-        mir_surface_release_sync(surface);
+        mir_surface_release_sync(mir_surface);
         mir_connection_release(connection);
         return 0;
     }
