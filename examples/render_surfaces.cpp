@@ -260,9 +260,9 @@ public:
         add_options()
             (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
                                                     " [int:default=5]")
-            (display_cursor, po::value<bool>(), "Display test cursor. (If input is "
-                                                "disabled it gets animated.) "
-                                                "[bool:default=false]");
+            (display_cursor, po::value<bool>()->default_value(false), ""
+                                                "Display test cursor. (If input is "
+                                                "disabled it gets animated.)");
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
@@ -443,12 +443,12 @@ public:
 
     bool input_is_on()
     {
-        return the_options()->get(enable_input_opt, ::input_is_on);
+        return boost::any_cast<bool>(the_options()->get(enable_input_opt));
     }
 
     std::weak_ptr<mg::Cursor> the_cursor()
     {
-        if (the_options()->get(display_cursor, false))
+        if (boost::any_cast<bool>(the_options()->get(display_cursor)))
         {
             return the_display()->the_cursor();
         }

@@ -120,8 +120,8 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
-        (enable_input_opt, po::value<bool>(),
-            "Enable input. [bool:default=true]")
+        (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
+            "Enable input.")
         (compositor_report_opt, po::value<std::string>(),
             "Compositor reporting [{log,off}:default=off]")
         (connector_report_opt, po::value<std::string>(),

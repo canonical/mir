@@ -261,8 +261,8 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
     namespace po = boost::program_options;
 
     add_options()
-        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
-        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
+        ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
+        ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
 }
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
@@ -279,7 +279,7 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
 {
     auto options = the_options();
 
-    if (options->get("tests-use-real-graphics", false))
+    if (boost::any_cast<bool>(options->get("tests-use-real-graphics")))
         return DefaultServerConfiguration::the_renderer_factory();
     else
         return renderer_factory(
@@ -293,7 +293,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
 {
     auto options = the_options();
 
-    if (options->get("tests-use-real-input", false))
+    if (boost::any_cast<bool>(options->get("tests-use-real-input")))
         return DefaultServerConfiguration::the_input_configuration();
     else
         return std::make_shared<mi::NullInputConfiguration>();
