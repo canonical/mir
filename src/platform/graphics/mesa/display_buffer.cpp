@@ -102,7 +102,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     geom::Rectangle const& area,
     MirOrientation rot,
     EGLContext shared_context)
-    : last_flipped_bufobj{nullptr},
+    : composited_front_buffer{nullptr},
       platform(platform),
       listener(listener),
       drm(platform->drm),
@@ -142,13 +142,13 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    last_flipped_bufobj = get_front_buffer_object();
-    if (!last_flipped_bufobj)
+    composited_front_buffer = get_compositing_back_buffer();
+    if (!composited_front_buffer)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
 
     for (auto& output : outputs)
     {
-        if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
+        if (!output->set_crtc(composited_front_buffer->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
 
@@ -166,11 +166,11 @@ mgm::DisplayBuffer::DisplayBuffer(
 mgm::DisplayBuffer::~DisplayBuffer()
 {
     /*
-     * There is no need to destroy last_flipped_bufobj manually.
+     * There is no need to destroy composited_front_buffer manually.
      * It will be destroyed when its gbm_surface gets destroyed.
      */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
+    if (composited_front_buffer)
+        composited_front_buffer->release();
 }
 
 geom::Rectangle mgm::DisplayBuffer::view_area() const
@@ -221,7 +221,7 @@ void mgm::DisplayBuffer::post_update(
     }
     else
     {
-        bufobj = get_front_buffer_object();
+        bufobj = get_compositing_back_buffer();
     }
 
     if (!bufobj)
@@ -254,10 +254,10 @@ void mgm::DisplayBuffer::post_update(
      * Release the last flipped buffer object (which is not displayed anymore)
      * to make it available for future rendering.
      */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
+    if (composited_front_buffer)
+        composited_front_buffer->release();
 
-    last_flipped_bufobj = bypass_buf ? nullptr : bufobj;
+    composited_front_buffer = bypass_buf ? nullptr : bufobj;
 
     /*
      * Keep a reference to the buffer being bypassed for the entire duration
@@ -265,11 +265,13 @@ void mgm::DisplayBuffer::post_update(
      * prematurely, which would be seen as tearing.
      * If not bypassing, then bypass_buf will be nullptr.
      */
-    last_flipped_bypass_buf = bypass_buf;
+    bypassed_front_buffer = bypass_buf;
 }
 
-mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
+mgm::BufferObject* mgm::DisplayBuffer::get_compositing_back_buffer()
 {
+    // GBM is misleading in function names. It's actually the back buffer,
+    // soon to be a front buffer...
     auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
     auto ret = get_buffer_object(front);
 

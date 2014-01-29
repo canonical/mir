@@ -65,12 +65,12 @@ public:
     void schedule_set_crtc();
 
 private:
-    BufferObject* get_front_buffer_object();
+    BufferObject* get_compositing_back_buffer();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
-    BufferObject* last_flipped_bufobj;
-    std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
+    BufferObject* composited_front_buffer;
+    std::shared_ptr<graphics::Buffer> bypassed_front_buffer;
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from mgm::Platform */
