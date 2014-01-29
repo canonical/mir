@@ -41,6 +41,7 @@ struct ProgramOption : testing::Test
             ("flag-true", bpo::value<bool>(), "flag \"true\"")
             ("flag-no", bpo::value<bool>(), "flag \"no\"")
             ("flag-false", bpo::value<bool>(), "flag \"false\"")
+            ("count,c", bpo::value<int>(), "count")
             ("help,h", "this help text");
     }
 
@@ -121,6 +122,28 @@ TEST_F(ProgramOption, parse_device_line_help)
     po.parse_arguments(desc, argc, argv);
 
     EXPECT_TRUE(po.is_set("help"));
+}
+
+TEST_F(ProgramOption, matches_compound_name_lookup)
+{
+    using testing::Eq;
+    mir::options::ProgramOption po;
+
+    const int argc = 8;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--help",
+        "--flag-yes", "yes",
+        "-f", "test_file",
+        "-c", "27"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.is_set("help,h"), Eq(true));
+    EXPECT_THAT(po.get("flag-yes,y", false), Eq(true));
+    EXPECT_THAT(po.get("file,f", "default"), Eq("test_file"));
+    EXPECT_THAT(po.get("count,c", 42), Eq(27));
 }
 
 TEST(ProgramOptionEnv, parse_environment)

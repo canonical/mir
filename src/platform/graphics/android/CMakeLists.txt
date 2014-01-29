@@ -15,6 +15,7 @@ add_library(
   display_buffer.cpp
   output_builder.cpp
   hwc_layerlist.cpp
+  hwc_layers.cpp
   hwc_fb_device.cpp
   hwc_device.cpp
   hwc_common_device.cpp

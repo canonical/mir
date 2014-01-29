@@ -66,8 +66,9 @@ void parse_environment(
 }
 }
 
-char const* const mir::ConfigurationOptions::server_socket_opt           = "file";
+char const* const mir::ConfigurationOptions::server_socket_opt           = "file,f";
 char const* const mir::ConfigurationOptions::no_server_socket_opt        = "no-file";
+char const* const mir::ConfigurationOptions::enable_input_opt            = "enable-input,i";
 char const* const mir::ConfigurationOptions::session_mediator_report_opt = "session-mediator-report";
 char const* const mir::ConfigurationOptions::msg_processor_report_opt    = "msg-processor-report";
 char const* const mir::ConfigurationOptions::compositor_report_opt       = "compositor-report";
@@ -78,7 +79,7 @@ char const* const mir::ConfigurationOptions::scene_report_opt            = "scen
 char const* const mir::ConfigurationOptions::input_report_opt            = "input-report";
 char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
-char const* const mir::ConfigurationOptions::frontend_threads            = "ipc-thread-pool";
+char const* const mir::ConfigurationOptions::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mir::ConfigurationOptions::name_opt                    = "name";
 char const* const mir::ConfigurationOptions::offscreen_opt               = "offscreen";
 
@@ -114,12 +115,12 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
-        ("file,f", po::value<std::string>(),
+        (server_socket_opt, po::value<std::string>(),
             "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
-        ("enable-input,i", po::value<bool>(),
+        (enable_input_opt, po::value<bool>(),
             "Enable input. [bool:default=true]")
         (compositor_report_opt, po::value<std::string>(),
             "Compositor reporting [{log,off}:default=off]")
@@ -154,7 +155,7 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "If specified, logfiles are written into this "
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
-        ("ipc-thread-pool", po::value<int>(),
+        (frontend_threads_opt, po::value<int>(),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")

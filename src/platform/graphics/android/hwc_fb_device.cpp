@@ -18,6 +18,7 @@
  */
 
 #include "hwc_fb_device.h"
+#include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
@@ -36,7 +37,7 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       fb_device(fb_device),
-      layer_list({mga::CompositionLayer{HWC_SKIP_LAYER}})
+      layer_list({mga::ForceGLLayer{}})
 {
 }
 
@@ -49,7 +50,7 @@ void mga::HwcFbDevice::prepare_gl()
     }
 }
 
-void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<Renderable> const&)
+void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
 {
     prepare_gl();
 }

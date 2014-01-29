@@ -41,7 +41,7 @@ public:
 
     virtual void mode(MirPowerMode mode) = 0;
     virtual void prepare_gl() = 0;
-    virtual void prepare_gl_and_overlays(std::list<Renderable> const& list) = 0; 
+    virtual void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list) = 0; 
     virtual void gpu_render(EGLDisplay dpy, EGLSurface sur) = 0;
     virtual void post(Buffer const& buffer) = 0;
 

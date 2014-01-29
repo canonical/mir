@@ -22,6 +22,7 @@
 #include "src/platform/graphics/android/android_format_conversion-inl.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
@@ -83,7 +84,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    std::list<mg::Renderable> renderlist;
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     db.post_update();
 }
@@ -105,7 +106,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_empty_list)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    std::list<mg::Renderable> renderlist{};
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
     auto render_fn = [] (mg::Renderable const&) {};
     db.render_and_post_update(renderlist, render_fn);
 }
@@ -119,7 +120,10 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
         MOCK_METHOD0(called, void());
     };
 
-    std::list<mg::Renderable> renderlist{mg::Renderable{}, mg::Renderable{}};
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()};
+
     MockRenderOperator mock_call_counter;
 
     InSequence seq;

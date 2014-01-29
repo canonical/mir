@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,11 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
+#define MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
 
-#include "mir/graphics/buffer.h"
-#include "src/platform/graphics/android/display_device.h"
+#include <mir/graphics/renderable.h>
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,17 +28,14 @@ namespace test
 {
 namespace doubles
 {
-class MockDisplayDevice : public graphics::android::DisplayDevice
+struct MockRenderable : public graphics::Renderable
 {
-public:
-    ~MockDisplayDevice() noexcept {}
-    MOCK_METHOD1(mode, void(MirPowerMode));
-    MOCK_METHOD0(prepare_gl, void());
-    MOCK_METHOD1(prepare_gl_and_overlays, void(std::list<std::shared_ptr<graphics::Renderable>> const&));
-    MOCK_METHOD2(gpu_render, void(EGLDisplay, EGLSurface));
-    MOCK_METHOD1(post, void(graphics::Buffer const&));
+    MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_CONST_METHOD0(alpha_enabled, bool());
+    MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
 };
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_ */
