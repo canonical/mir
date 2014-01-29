@@ -16,8 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "graphics.h"
-
 #include "mir/default_server_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderable.h"
@@ -31,7 +29,6 @@
 #include "patterns.h"
 
 #include <csignal>
-#include <iostream>
 
 namespace mg=mir::graphics;
 namespace ml=mir::logging;

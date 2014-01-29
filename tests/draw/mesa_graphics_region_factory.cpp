@@ -28,10 +28,6 @@ namespace
 class MesaGraphicsRegionFactory : public mir::test::draw::GraphicsRegionFactory
 {
 public:
-    MesaGraphicsRegionFactory()
-    {
-    }
-
     std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(mir::graphics::NativeBuffer const&)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot map graphic region yet"));

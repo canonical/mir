@@ -28,7 +28,6 @@ namespace mtd=mir::test::draw;
 
 namespace
 {
-
 struct RegionDeleter
 {
     RegionDeleter(gralloc_module_t* grmod, native_handle_t const* handle)
