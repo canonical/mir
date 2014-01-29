@@ -213,7 +213,7 @@ void mgm::DisplayBuffer::post_update(
     /*
      * If the last frame was composited then we haven't waited for the
      * page flips yet. This is good because it maximizes the time available
-     * to spend rendering each frame. However we have do wait here, because
+     * to spend rendering each frame. However we have to wait here, because
      * it will be unsafe to swap_buffers before guaranteeing the previous
      * page flip finished.
      */
