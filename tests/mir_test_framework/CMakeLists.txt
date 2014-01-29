@@ -19,6 +19,7 @@ set(
   testing_client_options.cpp
   display_server_test_fixture.cpp
   process.cpp
+  using_stub_client_platform.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
