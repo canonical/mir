@@ -27,13 +27,32 @@
 extern "C" {
 #endif
 
+/**
+ * Create a screencast on the supplied connection.
+ *
+ * A screencast allows clients to read the contents of the screen.
+ *
+ *   \warning This request may be denied.
+ *   \param [in] connection  The connection
+ *   \param [in] parameters  The screencast parameters
+ *   \return                 The resulting screencast
+ */
 MirScreencast *mir_connection_create_screencast_sync(
     MirConnection *connection,
     MirScreencastParameters *parameters);
 
+/**
+ * Release the specified screencast.
+ *   \param [in] screencast  The screencast to be released
+ */
 void mir_screencast_release_sync(
     MirScreencast *screencast);
 
+/**
+ * Get a window type that can be used by EGL.
+ *   \param [in] screencast  The screencast
+ *   \return                 An EGLNativeWindowType that the client can use
+ */
 MirEGLNativeWindowType mir_screencast_egl_native_window(
     MirScreencast *screencast);
 
