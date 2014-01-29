@@ -19,7 +19,7 @@
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "src/platform/graphics/android/hwc_layers.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "hwc_struct_helper-inl.h"
+#include "hwc_struct_helpers.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test/fake_shared.h"
@@ -69,7 +69,7 @@ public:
 
 TEST_F(HWCLayerListTest, list_defaults)
 {
-    mga::LayerList layerlist(false);
+    mga::LayerList layerlist(do_not_use_fb_target);
 
     layerlist.with_native_list([](hwc_display_contents_1_t& list)
     {
