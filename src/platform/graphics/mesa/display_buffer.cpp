@@ -102,8 +102,8 @@ mgm::DisplayBuffer::DisplayBuffer(
     geom::Rectangle const& area,
     MirOrientation rot,
     EGLContext shared_context)
-    : composited_front_buffer{nullptr},
-      scheduled_composited_buffer{nullptr},
+    : last_flipped_bufobj{nullptr},
+      scheduled_bufobj{nullptr},
       platform(platform),
       listener(listener),
       drm(platform->drm),
@@ -144,13 +144,13 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    composited_front_buffer = get_compositing_back_buffer();
-    if (!composited_front_buffer)
+    last_flipped_bufobj = get_front_buffer_object();
+    if (!last_flipped_bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
 
     for (auto& output : outputs)
     {
-        if (!output->set_crtc(composited_front_buffer->get_drm_fb_id()))
+        if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
 
@@ -168,14 +168,14 @@ mgm::DisplayBuffer::DisplayBuffer(
 mgm::DisplayBuffer::~DisplayBuffer()
 {
     /*
-     * There is no need to destroy composited_front_buffer manually.
+     * There is no need to destroy last_flipped_bufobj manually.
      * It will be destroyed when its gbm_surface gets destroyed.
      */
-    if (composited_front_buffer)
-        composited_front_buffer->release();
+    if (last_flipped_bufobj)
+        last_flipped_bufobj->release();
 
-    if (scheduled_composited_buffer)
-        scheduled_composited_buffer->release();
+    if (scheduled_bufobj)
+        scheduled_bufobj->release();
 }
 
 geom::Rectangle mgm::DisplayBuffer::view_area() const
@@ -223,16 +223,16 @@ void mgm::DisplayBuffer::post_update(
      * Switching from bypass to compositing? Now is the earliest safe time
      * we can unreference the bypass buffer...
      */
-    if (scheduled_composited_buffer)
-        bypassed_front_buffer = nullptr;
+    if (scheduled_bufobj)
+        last_flipped_bypass_buf = nullptr;
     /*
      * Release the last flipped buffer object (which is not displayed anymore)
      * to make it available for future rendering.
      */
-    if (composited_front_buffer)
-        composited_front_buffer->release();
+    if (last_flipped_bufobj)
+        last_flipped_bufobj->release();
 
-    composited_front_buffer = scheduled_composited_buffer;
+    last_flipped_bufobj = scheduled_bufobj;
 
     /*
      * Bring the back buffer to the front and get the buffer object
@@ -250,7 +250,7 @@ void mgm::DisplayBuffer::post_update(
     }
     else
     {
-        bufobj = get_compositing_back_buffer();
+        bufobj = get_front_buffer_object();
     }
 
     if (!bufobj)
@@ -285,12 +285,13 @@ void mgm::DisplayBuffer::post_update(
          * For composited frames we defer wait_for_page_flip till just before
          * the next frame, but not for bypass frames. Deferring the flip of
          * bypass frames would increase the time we held
-         * bypassed_front_buffer unacceptably, resulting in client stuttering
+         * last_flipped_bypass_buf unacceptably, resulting in client stuttering
          * unless we allocate quad-buffers (which I'm trying to avoid).
          * Also, bypass does not need the deferred page flip because it has
          * no compositing/rendering step for which to save time for.
          */
         wait_for_page_flip();
+        scheduled_bufobj = nullptr;
 
         /*
          * Keep a reference to the buffer being bypassed for the entire
@@ -298,19 +299,16 @@ void mgm::DisplayBuffer::post_update(
          * the client while its on-screen, which would be seen as tearing or
          * worse.
          */
-        bypassed_front_buffer = bypass_buf;
-        scheduled_composited_buffer = nullptr;
+        last_flipped_bypass_buf = bypass_buf;
     }
     else
     {
-        scheduled_composited_buffer = bufobj;
+        scheduled_bufobj = bufobj;
     }
 }
 
-mgm::BufferObject* mgm::DisplayBuffer::get_compositing_back_buffer()
+mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
 {
-    // GBM is misleading in function names. It's actually the back buffer,
-    // soon to be a front buffer...
     auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
     auto ret = get_buffer_object(front);
 

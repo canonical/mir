@@ -66,13 +66,13 @@ public:
     void wait_for_page_flip();
 
 private:
-    BufferObject* get_compositing_back_buffer();
+    BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);
 
-    BufferObject* composited_front_buffer;
-    BufferObject* scheduled_composited_buffer;
-    std::shared_ptr<graphics::Buffer> bypassed_front_buffer;
+    BufferObject* last_flipped_bufobj;
+    BufferObject* scheduled_bufobj;
+    std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from mgm::Platform */
