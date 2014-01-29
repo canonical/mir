@@ -21,6 +21,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "mir_protobuf.pb.h"
 
@@ -200,6 +201,7 @@ public:
     mir::DefaultServerConfiguration& server_config() override { return server_config_; }
 
     StubServerConfig server_config_;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 }
