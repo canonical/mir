@@ -171,7 +171,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
         real_fops,
-        boost::any_cast<int>(options->get("vt")), // TODO This option is mesa specific
+        options->get<int>("vt"), // TODO This option is mesa specific
         report);
 
     return std::make_shared<mgm::Platform>(report, vt);

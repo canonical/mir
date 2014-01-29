@@ -206,9 +206,9 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             {
                 return std::make_shared<ml::GlogLogger>(
                     "mir",
-                    boost::any_cast<int>(the_options()->get(glog_stderrthreshold)),
-                    boost::any_cast<int>(the_options()->get(glog_minloglevel)),
-                    boost::any_cast<std::string>(the_options()->get(glog_log_dir)));
+                    the_options()->get<int>(glog_stderrthreshold),
+                    the_options()->get<int>(glog_minloglevel),
+                    the_options()->get<std::string>(glog_log_dir));
             }
             else
             {

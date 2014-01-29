@@ -40,6 +40,10 @@ public:
     virtual int get(char const* name, int default_) const = 0;
     virtual boost::any const& get(char const* name) const = 0;
 
+    template<typename Type>
+    Type get(char const* name) const
+    { return boost::any_cast<Type>(get(name)); }
+
 protected:
     Option() = default;
     virtual ~Option() = default;

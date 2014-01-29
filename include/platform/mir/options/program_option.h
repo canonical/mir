@@ -52,6 +52,7 @@ public:
     std::string get(char const*, char const* default_) const override;
     int get(char const* name, int default_) const override;
     boost::any const& get(char const* name) const override;
+    using Option::get;
 
 private:
     boost::program_options::variables_map options;

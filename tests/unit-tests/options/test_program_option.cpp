@@ -180,16 +180,16 @@ TEST_F(ProgramOption, test_boost_any_overload)
     po.parse_arguments(desc, argc, argv);
 
     EXPECT_THAT(po.is_set("help,h"), Eq(true));
-    EXPECT_THAT(boost::any_cast<bool>(po.get("flag-yes,y")), Eq(true));
-    EXPECT_THAT(boost::any_cast<std::string>(po.get("file,f")), Eq("test_file"));
-    EXPECT_THAT(boost::any_cast<int>(po.get("count,c")), Eq(27));
-    EXPECT_THAT(boost::any_cast<int>(po.get("defaulted")), Eq(666));
+    EXPECT_THAT(po.get<bool>("flag-yes,y"), Eq(true));
+    EXPECT_THAT(po.get<std::string>("file,f"), Eq("test_file"));
+    EXPECT_THAT(po.get<int>("count,c"), Eq(27));
+    EXPECT_THAT(po.get<int>("defaulted"), Eq(666));
 
     auto const error_result = po.get("garbage");
     EXPECT_THAT(error_result.empty(), Eq(true));
 
     EXPECT_THROW(boost::any_cast<int>(error_result), std::bad_cast);
-    EXPECT_THROW(boost::any_cast<int>(po.get("flag-yes,y")), std::bad_cast);
+    EXPECT_THROW(po.get<int>("flag-yes,y"), std::bad_cast);
 }
 
 TEST(ProgramOptionEnv, parse_environment)

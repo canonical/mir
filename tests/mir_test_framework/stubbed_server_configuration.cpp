@@ -279,7 +279,7 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
 {
     auto options = the_options();
 
-    if (boost::any_cast<bool>(options->get("tests-use-real-graphics")))
+    if (options->get<bool>("tests-use-real-graphics"))
         return DefaultServerConfiguration::the_renderer_factory();
     else
         return renderer_factory(
@@ -293,7 +293,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
 {
     auto options = the_options();
 
-    if (boost::any_cast<bool>(options->get("tests-use-real-input")))
+    if (options->get<bool>("tests-use-real-input"))
         return DefaultServerConfiguration::the_input_configuration();
     else
         return std::make_shared<mi::NullInputConfiguration>();

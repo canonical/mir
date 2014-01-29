@@ -382,7 +382,7 @@ public:
     // New function to initialize moveables with surfaces
     void create_surfaces()
     {
-        moveables.resize(boost::any_cast<int>(the_options()->get(surfaces_to_render)));
+        moveables.resize(the_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
@@ -442,12 +442,12 @@ public:
 
     bool input_is_on()
     {
-        return boost::any_cast<bool>(the_options()->get(enable_input_opt));
+        return the_options()->get<bool>(enable_input_opt);
     }
 
     std::weak_ptr<mg::Cursor> the_cursor()
     {
-        if (boost::any_cast<bool>(the_options()->get(display_cursor)))
+        if (the_options()->get<bool>(display_cursor))
         {
             return the_display()->the_cursor();
         }

@@ -60,7 +60,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
     [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         auto const options = the_options();
-        if (!boost::any_cast<bool>(options->get(enable_input_opt)))
+        if (!options->get<bool>(enable_input_opt))
         {
             return std::make_shared<mi::NullInputConfiguration>();
         }
