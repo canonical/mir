@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_configuration_options.h"
+#include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
 namespace
@@ -115,29 +116,29 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
-        (server_socket_opt, po::value<std::string>(),
-            "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket]")
+        (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
+            "Socket filename.")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
-        (platform_graphics_lib, po::value<std::string>(),
-            "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
+        (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
+            "Library to use for platform graphics support")
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
             "Enable input.")
-        (compositor_report_opt, po::value<std::string>(),
-            "Compositor reporting [{log,off}:default=off]")
-        (connector_report_opt, po::value<std::string>(),
-            "How to handle the Connector report. [{log,off}:default=off]")
-        (display_report_opt, po::value<std::string>(),
-            "How to handle the Display report. [{log,off}:default=off]")
-        (input_report_opt, po::value<std::string>(),
-            "How to handle to Input report. [{log,lttng,off}:default=off]")
-        (legacy_input_report_opt, po::value<std::string>(),
-            "How to handle the Legacy Input report. [{log,off}:default=off]")
-        (session_mediator_report_opt, po::value<std::string>(),
-            "How to handle the SessionMediator report. [{log,off}:default=off]")
-        (msg_processor_report_opt, po::value<std::string>(),
-            "How to handle the MessageProcessor report. [{log,lttng,off}:default=off]")
-        (scene_report_opt, po::value<std::string>(),
-            "How to handle the scene report. [{log,off}:default=off]")
+        (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "Compositor reporting [{log,off}]")
+        (connector_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the Connector report. [{log,off}]")
+        (display_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the Display report. [{log,off}]")
+        (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle to Input report. [{log,lttng,off}]")
+        (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the Legacy Input report. [{log,off}]")
+        (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the SessionMediator report. [{log,off}]")
+        (msg_processor_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the MessageProcessor report. [{log,lttng,off}]")
+        (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the scene report. [{log,off}]")
         (glog,
             "Use google::GLog for logging")
         (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),
