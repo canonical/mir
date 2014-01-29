@@ -112,7 +112,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       area(area),
       rotation(rot),
       needs_set_crtc{false},
-      page_flips_pending{0}
+      page_flips_pending{false}
 {
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
@@ -359,7 +359,7 @@ bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
     for (auto& output : outputs)
     {
         if (output->schedule_page_flip(bufobj->get_drm_fb_id()))
-            ++page_flips_pending;
+            page_flips_pending = true;
     }
 
     return page_flips_pending;
@@ -372,7 +372,7 @@ void mgm::DisplayBuffer::wait_for_page_flip()
         for (auto& output : outputs)
             output->wait_for_page_flip();
 
-        page_flips_pending = 0;
+        page_flips_pending = false;
     }
 }
 
