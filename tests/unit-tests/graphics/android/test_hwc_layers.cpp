@@ -91,6 +91,34 @@ TEST_F(HWCLayersTest, fb_target_layer)
     EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
 }
 
+TEST_F(HWCLayersTest, layer_assignment)
+{
+    hwc_layer_1_t second_native_layer;
+    memset(&second_native_layer, 0, sizeof(hwc_layer_1_t));
+
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
+    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    mga::FramebufferLayer target_layer(&native_layer, *native_handle_1);
+    mga::HWCLayer second_layer(&second_native_layer);
+    second_layer = target_layer;
+
+    EXPECT_THAT(second_native_layer, MatchesLayer(expected_layer));
+}
+
 #if 0
 TEST_F(HWCLayersTest, fb_target_layer_no_buffer)
 {
