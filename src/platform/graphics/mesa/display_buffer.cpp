@@ -144,13 +144,13 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    scheduled_bufobj = get_front_buffer_object();
-    if (!scheduled_bufobj)
+    last_flipped_bufobj = get_front_buffer_object();
+    if (!last_flipped_bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
 
     for (auto& output : outputs)
     {
-        if (!output->set_crtc(scheduled_bufobj->get_drm_fb_id()))
+        if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
 
