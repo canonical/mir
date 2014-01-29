@@ -71,9 +71,7 @@ private:
     bool schedule_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
-    BufferObject* scheduled_bufobj;
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
-    std::shared_ptr<graphics::Buffer> scheduled_bypass_buf;
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from mgm::Platform */
