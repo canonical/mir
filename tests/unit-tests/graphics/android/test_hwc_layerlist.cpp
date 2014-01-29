@@ -67,6 +67,7 @@ public:
     mga::ForceGLLayer skip_layer;
 };
 
+#if 0
 TEST_F(HWCLayerListTest, list_defaults)
 {
     mga::LayerList layerlist(false);
@@ -219,3 +220,4 @@ TEST_F(HWCLayerListTest, retire_fence)
 
     EXPECT_EQ(release_fence, layerlist.retirement_fence());
 }
+#endif

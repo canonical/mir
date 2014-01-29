@@ -93,9 +93,6 @@ TEST_F(HWCLayersTest, fb_target_layer)
 
 TEST_F(HWCLayersTest, layer_assignment)
 {
-    hwc_layer_1_t second_native_layer;
-    memset(&second_native_layer, 0, sizeof(hwc_layer_1_t));
-
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
@@ -112,18 +109,19 @@ TEST_F(HWCLayersTest, layer_assignment)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    mga::FramebufferLayer target_layer(&native_layer, *native_handle_1);
+    mga::HWCLayer first_layer(&expected_layer);
+
+    hwc_layer_1_t second_native_layer;
+    memset(&second_native_layer, 0, sizeof(hwc_layer_1_t));
     mga::HWCLayer second_layer(&second_native_layer);
-    second_layer = target_layer;
+
+    second_layer = first_layer;
 
     EXPECT_THAT(second_native_layer, MatchesLayer(expected_layer));
 }
 
-#if 0
 TEST_F(HWCLayersTest, fb_target_layer_no_buffer)
 {
-    mga::FramebufferLayer target_layer;
-
     hwc_rect_t region = {0,0,0,0};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
@@ -140,14 +138,15 @@ TEST_F(HWCLayersTest, fb_target_layer_no_buffer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    mga::FramebufferLayer target_layer(&native_layer);
+    EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, normal_layer)
 {
     using namespace testing;
 
-    mga::CompositionLayer target_layer(mock_renderable); 
+    mga::CompositionLayer target_layer(&native_layer, mock_renderable); 
 
     hwc_rect_t crop
     {
@@ -179,10 +178,10 @@ TEST_F(HWCLayersTest, normal_layer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
     EXPECT_TRUE(target_layer.needs_gl_render());
 
-    target_layer.compositionType = HWC_OVERLAY;
+    native_layer.compositionType = HWC_OVERLAY;
     EXPECT_FALSE(target_layer.needs_gl_render());
 }
 
@@ -193,13 +192,13 @@ TEST_F(HWCLayersTest, normal_layer_no_alpha)
         .Times(1)
         .WillOnce(Return(false));
 
-    mga::CompositionLayer target_layer(mock_renderable); 
-    EXPECT_EQ(target_layer.blending, HWC_BLENDING_NONE);
+    mga::CompositionLayer target_layer(&native_layer, mock_renderable); 
+    EXPECT_EQ(native_layer.blending, HWC_BLENDING_NONE);
 }
 
 TEST_F(HWCLayersTest, forced_gl_layer)
 {
-    mga::ForceGLLayer target_layer;
+    mga::ForceGLLayer target_layer(&native_layer);
 
     hwc_rect_t region = {0,0,0,0};
     hwc_region_t visible_region {1, &region};
@@ -217,16 +216,16 @@ TEST_F(HWCLayersTest, forced_gl_layer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
     EXPECT_TRUE(target_layer.needs_gl_render());
 
-    target_layer.compositionType = HWC_OVERLAY;
+    native_layer.compositionType = HWC_OVERLAY;
     EXPECT_TRUE(target_layer.needs_gl_render());
 }
 
 TEST_F(HWCLayersTest, forced_gl_layer_with_buffer)
 {
-    mga::ForceGLLayer target_layer(*native_handle_1);
+    mga::ForceGLLayer target_layer(&native_layer, *native_handle_1);
 
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -245,6 +244,5 @@ TEST_F(HWCLayersTest, forced_gl_layer_with_buffer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(target_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
 }
-#endif

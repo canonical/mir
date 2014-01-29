@@ -39,17 +39,18 @@ class NativeBuffer;
 namespace android
 {
 
-struct HWCLayer : public hwc_layer_1
+struct HWCLayer
 {
     virtual ~HWCLayer() = default;
 
+    HWCLayer(hwc_layer_1 *native_layer);
     HWCLayer& operator=(HWCLayer const& layer);
-    HWCLayer(HWCLayer const& layer);
 
     bool needs_gl_render() const;
 
 protected:
     HWCLayer(
+        hwc_layer_1 *native_layer,
         int type,
         buffer_handle_t handle,
         geometry::Rectangle position,
@@ -57,27 +58,30 @@ protected:
         bool skip, bool alpha
     );
 
+
+    HWCLayer(HWCLayer const& layer) = delete;
     hwc_rect_t visible_rect;
+    hwc_layer_1 * hwc_layer;
 };
 
 //layer could be GLES rendered, or overlaid by hwc.
 struct CompositionLayer : public HWCLayer
 {
-    CompositionLayer(graphics::Renderable const& renderable);
+    CompositionLayer(hwc_layer_1* native_layer, Renderable const& renderable);
 };
 
 //used during compositions when we want to restrict to GLES render only
 struct ForceGLLayer : public HWCLayer
 {
-    ForceGLLayer();
-    ForceGLLayer(NativeBuffer const&);
+    ForceGLLayer(hwc_layer_1* native_layer);
+    ForceGLLayer(hwc_layer_1* native_layer, NativeBuffer const&);
 };
 
 //used as the target (lowest layer, fb)
 struct FramebufferLayer : public HWCLayer
 {
-    FramebufferLayer();
-    FramebufferLayer(NativeBuffer const&);
+    FramebufferLayer(hwc_layer_1* native_layer);
+    FramebufferLayer(hwc_layer_1* native_layer, NativeBuffer const&);
 };
 
 }

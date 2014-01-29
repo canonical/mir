@@ -33,6 +33,7 @@ namespace geom=mir::geometry;
 
 void mga::LayerList::update_representation()
 {
+#if 0
     if ((!hwc_representation) || hwc_representation->numHwLayers != layers.size())
     {
         /* hwc layer list uses hwLayers[0] at the end of the struct */
@@ -55,6 +56,7 @@ void mga::LayerList::update_representation()
     {
         hwc_representation->hwLayers[i++] = *layer; 
     }
+#endif
 }
 
 mga::LayerList::LayerList(bool has_target_layer)
@@ -64,9 +66,11 @@ mga::LayerList::LayerList(bool has_target_layer)
       retire_fence(-1),
       fb_fence(-1)
 {
+#if 0
     skip_layer = std::make_shared<mga::ForceGLLayer>();
     fb_target_layer = std::make_shared<mga::FramebufferLayer>();
     reset_composition_layers();
+#endif
 }
 
 void mga::LayerList::with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn)
@@ -86,6 +90,7 @@ void mga::LayerList::with_native_list(std::function<void(hwc_display_contents_1_
 
 void mga::LayerList::reset_composition_layers()
 {
+#if 0
     std::list<std::shared_ptr<mga::HWCLayer>> next_layer_list;
 
     next_layer_list.push_back(skip_layer);
@@ -95,11 +100,14 @@ void mga::LayerList::reset_composition_layers()
     } 
 
     std::swap(layers, next_layer_list);
+#endif
 }
 
 void mga::LayerList::set_composition_layers(
     std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
+    (void) list;
+#if 0
     std::list<std::shared_ptr<mga::HWCLayer>> next_layer_list;
     for(auto& renderable : list)
     {
@@ -113,15 +121,19 @@ void mga::LayerList::set_composition_layers(
     }
 
     std::swap(layers, next_layer_list);
+#endif
 }
 
 void mga::LayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
 {
+    (void) native_buffer;
+#if 0
     *skip_layer = mga::ForceGLLayer(native_buffer);
     if (fb_target_present)
     {
         *fb_target_layer = mga::FramebufferLayer(native_buffer);
     }
+#endif
 }
 
 mga::NativeFence mga::LayerList::fb_target_fence()

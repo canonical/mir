@@ -30,34 +30,36 @@ namespace geom=mir::geometry;
 
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
 {
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
+    memcpy(hwc_layer, layer.hwc_layer, sizeof(hwc_layer_1));
+    visible_rect = layer.visible_rect;
+    hwc_layer->visibleRegionScreen = {1, &visible_rect};
     return *this;
 }
 
-mga::HWCLayer::HWCLayer(HWCLayer const& layer)
+mga::HWCLayer::HWCLayer(hwc_layer_1 *native_layer)
+    : hwc_layer(native_layer)
 {
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
 }
 
 mga::HWCLayer::HWCLayer(
+        hwc_layer_1 *native_layer,
         int type,
         buffer_handle_t buffer_handle,
         geom::Rectangle position,
         geom::Size buffer_size,
         bool skip, bool alpha)
+    : hwc_layer(native_layer)
 {
-    (skip) ? flags = HWC_SKIP_LAYER : flags = 0;
-    (alpha) ? blending = HWC_BLENDING_COVERAGE : blending = HWC_BLENDING_NONE;
-    compositionType = type;
-    hints = 0;
-    transform = 0;
+    (skip) ? hwc_layer->flags = HWC_SKIP_LAYER : hwc_layer->flags = 0;
+    (alpha) ? hwc_layer->blending = HWC_BLENDING_COVERAGE : hwc_layer->blending = HWC_BLENDING_NONE;
+    hwc_layer->compositionType = type;
+    hwc_layer->hints = 0;
+    hwc_layer->transform = 0;
     //TODO: acquireFenceFd should be buffer.fence()
-    acquireFenceFd = -1;
-    releaseFenceFd = -1;
+    hwc_layer->acquireFenceFd = -1;
+    hwc_layer->releaseFenceFd = -1;
 
-    sourceCrop = 
+    hwc_layer->sourceCrop = 
     {
         0, 0,
         static_cast<int>(buffer_size.width.as_uint32_t()),
@@ -66,7 +68,7 @@ mga::HWCLayer::HWCLayer(
 
 
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
-    displayFrame = 
+    hwc_layer->displayFrame = 
     {
         static_cast<int>(position.top_left.x.as_uint32_t()),
         static_cast<int>(position.top_left.y.as_uint32_t()),
@@ -74,21 +76,22 @@ mga::HWCLayer::HWCLayer(
         static_cast<int>(position.size.height.as_uint32_t())
     };
 
-    visible_rect = displayFrame;
-    visibleRegionScreen.numRects=1;
-    visibleRegionScreen.rects= &visible_rect;
+    visible_rect = hwc_layer->displayFrame;
+    hwc_layer->visibleRegionScreen.numRects=1;
+    hwc_layer->visibleRegionScreen.rects= &visible_rect;
 
-    handle = buffer_handle;
-    memset(&reserved, 0, sizeof(reserved));
+    hwc_layer->handle = buffer_handle;
+    memset(&hwc_layer->reserved, 0, sizeof(hwc_layer->reserved));
 }
 
 bool mga::HWCLayer::needs_gl_render() const
 {
-    return ((compositionType == HWC_FRAMEBUFFER) || (flags == HWC_SKIP_LAYER));
+    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
 }
 
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
+mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer)
+    : HWCLayer(native_layer,
+               HWC_FRAMEBUFFER_TARGET,
                nullptr,
                geom::Rectangle{{0,0}, {0,0}},
                geom::Size{0,0},
@@ -97,8 +100,9 @@ mga::FramebufferLayer::FramebufferLayer()
 {
 }
 
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
+mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer, mg::NativeBuffer const& buffer)
+    : HWCLayer(native_layer,
+               HWC_FRAMEBUFFER_TARGET,
                buffer.handle(),
                geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
                geom::Size{buffer.anwb()->width, buffer.anwb()->height},
@@ -107,8 +111,9 @@ mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
 {
 }
 
-mga::ForceGLLayer::ForceGLLayer()
-    : HWCLayer(HWC_FRAMEBUFFER,
+mga::ForceGLLayer::ForceGLLayer(hwc_layer_1 *native_layer)
+    : HWCLayer(native_layer,
+               HWC_FRAMEBUFFER,
                nullptr,
                geom::Rectangle{{0,0}, {0,0}},
                geom::Size{0,0},
@@ -117,8 +122,9 @@ mga::ForceGLLayer::ForceGLLayer()
 {
 }
 
-mga::ForceGLLayer::ForceGLLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER,
+mga::ForceGLLayer::ForceGLLayer(hwc_layer_1 *native_layer, mg::NativeBuffer const& buffer)
+    : HWCLayer(native_layer,
+               HWC_FRAMEBUFFER,
                buffer.handle(),
                geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
                geom::Size{buffer.anwb()->width, buffer.anwb()->height},
@@ -127,8 +133,9 @@ mga::ForceGLLayer::ForceGLLayer(mg::NativeBuffer const& buffer)
 {
 }
 
-mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable)
-    : HWCLayer(HWC_FRAMEBUFFER,
+mga::CompositionLayer::CompositionLayer(hwc_layer_1 *native_layer, mg::Renderable const& renderable)
+    : HWCLayer(native_layer,
+               HWC_FRAMEBUFFER,
                renderable.buffer()->native_buffer_handle()->handle(),
                renderable.screen_position(),
                renderable.buffer()->size(),
