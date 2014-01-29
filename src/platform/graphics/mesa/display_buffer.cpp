@@ -220,6 +220,12 @@ void mgm::DisplayBuffer::post_update(
     wait_for_page_flip();
 
     /*
+     * Switching from bypass to compositing? Now is the earliest safe time
+     * we can unreference the bypass buffer...
+     */
+    if (scheduled_bufobj)
+        last_flipped_bypass_buf = nullptr;
+    /*
      * Release the last flipped buffer object (which is not displayed anymore)
      * to make it available for future rendering.
      */
@@ -298,7 +304,6 @@ void mgm::DisplayBuffer::post_update(
     else
     {
         scheduled_bufobj = bufobj;
-        last_flipped_bypass_buf = nullptr;
     }
 }
 
