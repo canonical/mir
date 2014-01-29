@@ -57,9 +57,9 @@ void mga::LayerList::update_representation()
     }
 }
 
-mga::LayerList::LayerList(bool has_target_layer)
+mga::LayerList::LayerList(LayerListTargetUse has_target_layer)
     : composition_layers_present(false),
-      fb_target_present(has_target_layer),
+      fb_target_present((has_target_layer == use_fb_target)),
       hwc_representation(nullptr),
       retire_fence(-1),
       fb_fence(-1)

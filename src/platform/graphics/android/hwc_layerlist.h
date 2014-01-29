@@ -29,12 +29,6 @@
 #include <initializer_list>
 #include <list>
 
-namespace
-{
-bool const use_fb_target = true;
-bool const do_not_use_fb_target = false;
-}
-
 namespace mir
 {
 namespace graphics
@@ -47,10 +41,16 @@ class Buffer;
 namespace android
 {
 
+enum LayerListTargetUse 
+{
+    use_fb_target,
+    do_not_use_fb_target
+};
+
 class LayerList
 {
 public:
-    LayerList(bool use_fb_target);
+    LayerList(LayerListTargetUse use_fb_target);
     void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
     void reset_composition_layers(); 
     void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
