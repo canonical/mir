@@ -1,4 +1,5 @@
 list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/hwc_struct_helpers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_sync_fence.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
@@ -15,6 +16,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_resource_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_simple_swapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_device.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layerlist.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format.cpp

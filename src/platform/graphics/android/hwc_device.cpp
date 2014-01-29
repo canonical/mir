@@ -37,7 +37,7 @@ namespace geom = mir::geometry;
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list({mga::CompositionLayer{true}, mga::FramebufferLayer{}}),
+      layer_list({mga::ForceGLLayer{}, mga::FramebufferLayer{}}),
       sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
 }
@@ -53,7 +53,7 @@ void mga::HwcDevice::prepare_gl()
     }
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(std::list<Renderable> const&)
+void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
 {
     prepare_gl();
 }
