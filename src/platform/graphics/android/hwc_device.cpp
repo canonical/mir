@@ -38,7 +38,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list({mga::CompositionLayer{true}, mga::FramebufferLayer{}}),
+      layer_list({mga::ForceGLLayer{}, mga::FramebufferLayer{}}),
       sync_ops(sync_ops)
 {
 }
@@ -54,7 +54,7 @@ void mga::HwcDevice::prepare_gl()
     }
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(std::list<Renderable> const&)
+void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
 {
     prepare_gl();
 }

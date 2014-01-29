@@ -83,7 +83,7 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 
     mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
-    std::list<mg::Renderable> renderlist;
+    std::list<std::shared_ptr<mg::Renderable>> renderlist;
     device.prepare_gl_and_overlays(renderlist);
 
     EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);

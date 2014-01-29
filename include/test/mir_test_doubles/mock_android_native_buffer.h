@@ -38,6 +38,8 @@ struct MockAndroidNativeBuffer : public graphics::NativeBuffer
             .WillByDefault(Return(&stub_anwb));
         ON_CALL(*this, handle())
             .WillByDefault(Return(&native_handle));
+        ON_CALL(*this, copy_fence())
+            .WillByDefault(Return(-1));
     }
     MOCK_CONST_METHOD0(anwb, ANativeWindowBuffer*());
     MOCK_CONST_METHOD0(handle, buffer_handle_t());
