@@ -103,6 +103,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     MirOrientation rot,
     EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
+      scheduled_bufobj{nullptr},
       platform(platform),
       listener(listener),
       drm(platform->drm),
@@ -143,13 +144,13 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    last_flipped_bufobj = get_front_buffer_object();
-    if (!last_flipped_bufobj)
+    scheduled_bufobj = get_front_buffer_object();
+    if (!scheduled_bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
 
     for (auto& output : outputs)
     {
-        if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
+        if (!output->set_crtc(scheduled_bufobj->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
 
@@ -172,6 +173,9 @@ mgm::DisplayBuffer::~DisplayBuffer()
      */
     if (last_flipped_bufobj)
         last_flipped_bufobj->release();
+
+    if (scheduled_bufobj)
+        scheduled_bufobj->release();
 }
 
 geom::Rectangle mgm::DisplayBuffer::view_area() const
@@ -214,6 +218,15 @@ void mgm::DisplayBuffer::post_update(
      * page flip finished.
      */
     wait_for_page_flip();
+
+    /*
+     * Release the last flipped buffer object (which is not displayed anymore)
+     * to make it available for future rendering.
+     */
+    if (last_flipped_bufobj)
+        last_flipped_bufobj->release();
+
+    last_flipped_bufobj = scheduled_bufobj;
 
     /*
      * Bring the back buffer to the front and get the buffer object
@@ -259,33 +272,34 @@ void mgm::DisplayBuffer::post_update(
         }
         needs_set_crtc = false;
     }
-    else if (bypass_buf)
+
+    if (bypass_buf)
     {
         /*
          * For composited frames we defer wait_for_page_flip till just before
-         * the next frame, but that's unsafe on bypass frames so we have to
-         * wait here.
-         * XXX TODO: Remember exactly why this is necessary.
+         * the next frame, but not for bypass frames. Deferring the flip of
+         * bypass frames would increase the time we held
+         * last_flipped_bypass_buf unacceptably, resulting in client stuttering
+         * unless we allocate quad-buffers (which I'm trying to avoid).
+         * Also, bypass does not need the deferred page flip because it has
+         * no compositing/rendering step for which to save time for.
          */
         wait_for_page_flip();
+        scheduled_bufobj = nullptr;
+
+        /*
+         * Keep a reference to the buffer being bypassed for the entire
+         * duration of the frame. This ensures the buffer doesn't get reused by
+         * the client while its on-screen, which would be seen as tearing or
+         * worse.
+         */
+        last_flipped_bypass_buf = bypass_buf;
     }
-
-    /*
-     * Release the last flipped buffer object (which is not displayed anymore)
-     * to make it available for future rendering.
-     */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
-
-    last_flipped_bufobj = bypass_buf ? nullptr : bufobj;
-
-    /*
-     * Keep a reference to the buffer being bypassed for the entire duration
-     * of the frame. This ensures the buffer doesn't get reused by the client
-     * prematurely, which would be seen as tearing.
-     * If not bypassing, then bypass_buf will be nullptr.
-     */
-    last_flipped_bypass_buf = bypass_buf;
+    else
+    {
+        scheduled_bufobj = bufobj;
+        last_flipped_bypass_buf = nullptr;
+    }
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
