@@ -21,6 +21,7 @@
 
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
+#include "hwc_layers.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
@@ -36,31 +37,6 @@ class Buffer;
 
 namespace android
 {
-
-struct HWCLayer : public hwc_layer_1
-{
-    virtual ~HWCLayer() = default;
-
-    HWCLayer& operator=(HWCLayer const& layer);
-    HWCLayer(HWCLayer const& layer);
-
-protected:
-    HWCLayer(int type, buffer_handle_t handle, int width, int height, int layer_flags);
-
-    hwc_rect_t visible_rect;
-};
-
-struct CompositionLayer : public HWCLayer
-{
-    CompositionLayer(int layer_flags);
-    CompositionLayer(NativeBuffer const&, int layer_flags);
-};
-
-struct FramebufferLayer : public HWCLayer
-{
-    FramebufferLayer();
-    FramebufferLayer(NativeBuffer const&);
-};
 
 class LayerList
 {

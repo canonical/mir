@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -64,7 +65,7 @@ void mga::DisplayBuffer::release_current()
 }
 
 void mga::DisplayBuffer::render_and_post_update(
-        std::list<Renderable> const& renderlist,
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
         std::function<void(Renderable const&)> const& render_fn)
 {
     if (renderlist.empty())
@@ -78,7 +79,7 @@ void mga::DisplayBuffer::render_and_post_update(
 
     for(auto& renderable : renderlist)
     {
-        render_fn(renderable);
+        render_fn(*renderable);
     }
 
     render_and_post();
