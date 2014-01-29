@@ -34,10 +34,10 @@ public:
     virtual std::shared_ptr<Buffer> buffer() const = 0;
     virtual bool alpha_enabled() const = 0;
     virtual geometry::Rectangle screen_position() const = 0;
-    virtual ~Renderable() = default;
 
 protected:
     Renderable() = default;
+    virtual ~Renderable() = default;
     Renderable(Renderable const&) = delete;
     Renderable& operator=(Renderable const&) = delete;
 };
