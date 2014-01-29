@@ -404,7 +404,7 @@ ACTION_P(InvokePageFlipHandler, param)
 
 }
 
-TEST_F(MesaDisplayTest, post_update)
+TEST_F(MesaDisplayTest, single_post_update)
 {
     using namespace testing;
 
@@ -416,6 +416,10 @@ TEST_F(MesaDisplayTest, post_update)
     {
         InSequence s;
 
+        /* Release the current FB */
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
+            .Times(Exactly(1));
+
         /* Flip the new FB */
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_id,
@@ -425,15 +429,6 @@ TEST_F(MesaDisplayTest, post_update)
             .WillOnce(DoAll(QueuePageFlipEvent(mock_drm.fake_drm.write_fd()),
                             SaveArg<4>(&user_data),
                             Return(0)));
-
-        /* Handle the flip event */
-        EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
-            .Times(1)
-            .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
-
-        /* Release the current FB */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
-            .Times(Exactly(1));
 
         /* Release the new FB (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
