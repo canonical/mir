@@ -34,8 +34,8 @@ private:
     UsingStubClientPlatform(UsingStubClientPlatform const&) = delete;
     UsingStubClientPlatform operator=(UsingStubClientPlatform const&) = delete;
 
-    mir_connect_impl_func prev_mir_connect_impl;
-    mir_connection_release_impl_func prev_mir_connection_release_impl;
+    mir_connect_impl_func const prev_mir_connect_impl;
+    mir_connection_release_impl_func const prev_mir_connection_release_impl;
 };
 
 }
