@@ -149,7 +149,7 @@ TEST_F(HwcDevice, test_hwc_commit)
 {
     using namespace testing;
     int hwc_return_fence = 94;
-    int hwc_retire_fence = 94;
+    int hwc_retire_fence = 74;
     mock_device->hwc_set_return_fence(hwc_return_fence);
     mock_device->hwc_set_retire_fence(hwc_retire_fence);
 

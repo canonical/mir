@@ -127,13 +127,14 @@ public:
                     set_layerlist.back().visibleRegionScreen = {0, nullptr};
                 }
 
+                save_args(&display0_set_content, displays);
+
                 if (displays[0]->numHwLayers >= 2)
                 {
                     displays[0]->hwLayers[1].releaseFenceFd = fb_fence;
                     displays[0]->retireFenceFd = retire_fence;
                 }
 
-                save_args(&display0_set_content, displays);
             default:
                 break;
         }
