@@ -130,7 +130,7 @@ public:
                 if (displays[0]->numHwLayers >= 2)
                 {
                     displays[0]->hwLayers[1].releaseFenceFd = fb_fence;
-                    displays[0]->hwLayers[1].retireFenceFd = retire_fence;
+                    displays[0]->retireFenceFd = retire_fence;
                 }
 
                 save_args(&display0_set_content, displays);

@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
 #include "src/platform/graphics/android/framebuffer_bundle.h"
 #include "src/platform/graphics/android/hwc_device.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
@@ -64,7 +65,7 @@ protected:
             .WillByDefault(Return(mock_native_buffer));
     }
 
-    std::shared_ptr<mtd::MockFileOps> mock_file_ops;
+    std::shared_ptr<MockFileOps> mock_file_ops;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
@@ -159,14 +160,14 @@ TEST_F(HwcDevice, test_hwc_commit)
         .Times(1);
     EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
         .Times(1);
-    EXPECT_CALL(*mock_file_ops, close(retirefd))
+    EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
         .Times(1);
 
     device.post(*mock_buffer);
 
     //set
     EXPECT_EQ(2, mock_device->display0_set_content.numHwLayers);
-    EXPECT_EQ(retirefd, mock_device->display0_set_content.retireFenceFd);
+    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
     EXPECT_EQ(HWC_FRAMEBUFFER, mock_device->set_layerlist[0].compositionType);
     EXPECT_EQ(HWC_SKIP_LAYER, mock_device->set_layerlist[0].flags);
     EXPECT_EQ(HWC_FRAMEBUFFER_TARGET, mock_device->set_layerlist[1].compositionType);
