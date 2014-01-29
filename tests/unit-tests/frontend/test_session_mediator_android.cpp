@@ -32,6 +32,7 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/null_screencast.h"
 
 #include <gtest/gtest.h>
 
@@ -59,7 +60,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           mediator{shell, graphics_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache},
+                   resource_cache, std::make_shared<mtd::NullScreencast>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

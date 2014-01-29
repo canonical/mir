@@ -23,12 +23,10 @@
 
 namespace mir
 {
-template<typename Tag>
+template<typename Tag, typename ValueType=int>
 class IntWrapper
 {
 public:
-    typedef int ValueType;
-
     IntWrapper() : value(0) {}
 
     explicit IntWrapper(ValueType value) : value(value) {}
@@ -38,39 +36,39 @@ private:
     ValueType value;
 };
 
-template<typename Tag>
-std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
+template<typename Tag, typename ValueType>
+std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& value)
 {
     out << value.as_value();
     return out;
 }
 
-template<typename Tag>
-inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<typename Tag, typename ValueType>
+inline bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() == rhs.as_value();
 }
 
-template<typename Tag>
-inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<typename Tag, typename ValueType>
+inline bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() != rhs.as_value();
 }
 
-template<typename Tag>
-inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<typename Tag, typename ValueType>
+inline bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() <= rhs.as_value();
 }
 
-template<typename Tag>
-inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<typename Tag, typename ValueType>
+inline bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() >= rhs.as_value();
 }
 
-template<typename Tag>
-inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<typename Tag, typename ValueType>
+inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() < rhs.as_value();
 }
@@ -79,11 +77,11 @@ inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 #include <functional>
 namespace std
 {
-template<typename Tag>
-struct hash< ::mir::IntWrapper<Tag> >
+template<typename Tag, typename ValueType>
+struct hash< ::mir::IntWrapper<Tag,ValueType> >
 {
     std::hash<int> self;
-    std::size_t operator()(::mir::IntWrapper<Tag> const& id) const
+    std::size_t operator()(::mir::IntWrapper<Tag,ValueType> const& id) const
     {
         return self(id.as_value());
     }
