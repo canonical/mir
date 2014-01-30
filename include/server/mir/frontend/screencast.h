@@ -22,6 +22,8 @@
 #include "mir/int_wrapper.h"
 #include "mir/graphics/display_configuration.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics { class Buffer; }
