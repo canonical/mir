@@ -151,8 +151,8 @@ me::ServerConfiguration::ServerConfiguration(int argc, char const** argv)
     namespace po = boost::program_options;
 
     add_options()
-        (display_config_opt, po::value<std::string>(),
-            "Display configuration [{clone,sidebyside,single}:default=clone]");
+        (display_config_opt, po::value<std::string>()->default_value(clone_opt_val),
+            "Display configuration [{clone,sidebyside,single}]");
 }
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
@@ -161,7 +161,7 @@ me::ServerConfiguration::the_display_configuration_policy()
     return display_configuration_policy(
         [this]() -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            auto display_config = the_options()->get(display_config_opt, clone_opt_val);
+            auto display_config = the_options()->get<std::string>(display_config_opt);
 
             if (display_config == sidebyside_opt_val)
                 return std::make_shared<SideBySideDisplayConfigurationPolicy>();

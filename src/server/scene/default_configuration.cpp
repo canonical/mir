@@ -130,7 +130,7 @@ mir::DefaultServerConfiguration::the_scene_report()
 {
     return scene_report([this]() -> std::shared_ptr<ms::SceneReport>
     {
-        auto opt = the_options()->get(scene_report_opt, off_opt_value);
+        auto opt = the_options()->get<std::string>(scene_report_opt);
 
         if (opt == log_opt_value)
         {

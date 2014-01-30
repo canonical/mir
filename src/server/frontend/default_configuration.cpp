@@ -112,8 +112,7 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            auto const threads = the_options()->get(frontend_threads_opt,
-                                                    default_ipc_threads);
+            auto const threads = the_options()->get<int>(frontend_threads_opt);
 
             auto const& force_threads_to_unblock = force_threads_to_unblock_callback();
 

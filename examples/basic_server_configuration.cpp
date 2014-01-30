@@ -51,7 +51,7 @@ void BasicServerConfiguration::launch_client()
         char buffer[128] = {0};
         sprintf(buffer, "fd://%d", the_connector()->client_socket_fd());
         setenv("MIR_SOCKET", buffer, 1);
-        auto ignore = std::system((the_options()->get(launch_child_opt, "") + "&").c_str());
+        auto ignore = std::system((the_options()->get<std::string>(launch_child_opt) + "&").c_str());
         (void)ignore;
     }
 }
