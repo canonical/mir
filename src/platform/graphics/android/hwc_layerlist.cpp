@@ -56,7 +56,6 @@ void mga::LayerListBase::update_representation(
     {
         new_hwc_representation = hwc_representation;
     }
-
     std::list<std::shared_ptr<HWCLayer>> new_layers;
 
     auto i = 0u;
@@ -66,13 +65,13 @@ void mga::LayerListBase::update_representation(
         if (!composition_layers_present)
         {
             //if we are in skip mode, preserve the skip layer
-            skip_layer = std::make_shared<mga::HWCLayer>(&hwc_representation->hwLayers[i++]);
-            *skip_layer = *layers.front();
+            skip_layer = std::make_shared<mga::HWCLayer>(&new_hwc_representation->hwLayers[i++]);
+           // *skip_layer = *layers.front();
         }
         else
         {
             //if we are not in skip mode, make a new layer
-            skip_layer = std::make_shared<mga::ForceGLLayer>(&hwc_representation->hwLayers[i++]);
+            skip_layer = std::make_shared<mga::ForceGLLayer>(&new_hwc_representation->hwLayers[i++]);
         }
         new_layers.push_back(skip_layer);
 
@@ -83,10 +82,16 @@ void mga::LayerListBase::update_representation(
         for( auto& renderable : new_render_list)
         {
             new_layers.push_back(
-                std::make_shared<mga::CompositionLayer>(&hwc_representation->hwLayers[i++], *renderable));
+                std::make_shared<mga::CompositionLayer>(&new_hwc_representation->hwLayers[i++], *renderable));
         }
 
         composition_layers_present = true;
+    }
+
+    for (; i < needed_size; i++)
+    {
+        new_layers.push_back(
+                std::make_shared<mga::HWCLayer>(&new_hwc_representation->hwLayers[i++]));
     }
 
     std::swap(new_layers, layers);
@@ -100,8 +105,7 @@ void mga::LayerListBase::with_native_list(std::function<void(hwc_display_content
 
 mga::NativeFence mga::LayerListBase::retirement_fence()
 {
-    return -1;
-    //return retire_fence;
+    return hwc_representation->retireFenceFd;
 }
 
 mga::LayerList::LayerList()
@@ -111,32 +115,41 @@ mga::LayerList::LayerList()
 
 mga::FBTargetLayerList::FBTargetLayerList()
 {
-    update_representation(2, {});
-    *layers.back() = mga::FramebufferLayer{};
+    reset_composition_layers();
 }
 
-void mga::LayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
+void mga::FBTargetLayerList::reset_composition_layers()
+{
+    update_representation(2, {});
+    hwc_layer_1_t tmp_layer;
+    mga::FramebufferLayer targ(&tmp_layer);
+    *layers.back() = targ;
+}
+
+void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
     auto needed_size = list.size() + 1;
+    hwc_layer_1_t tmp_layer;
+    mga::HWCLayer fb_target(&tmp_layer);
+    fb_target = *layers.back();
 
-    last_fb_target = *layers.back() 
     update_representation(needed_size, list);
-    layers.back() = last_fb_target;
+    *layers.back() = fb_target;
 }
 
 
-void mga::LayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
+void mga::FBTargetLayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
 {
-#if 0
-    if (!comp_layers_present)
+    hwc_layer_1_t tmp_layer;
+    if (!composition_layers_present)
     {
-        *skip_layer = mga::ForceGLLayer(native_buffer);
+        *layers.front() = mga::ForceGLLayer(&tmp_layer);
     }
-    *layers.back() = mga::FramebufferLayer(native_buffer);
-#endif
+
+    *layers.back() = mga::FramebufferLayer(&tmp_layer, native_buffer);
 }
 
-mga::NativeFence mga::LayerList::fb_target_fence()
+mga::NativeFence mga::FBTargetLayerList::fb_target_fence()
 {
-//   layers.back()->fence();
+   return layers.back()->release_fence();
 }

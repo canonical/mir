@@ -89,6 +89,11 @@ bool mga::HWCLayer::needs_gl_render() const
     return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
 }
 
+mga::NativeFence mga::HWCLayer::release_fence() const
+{
+    return hwc_layer->releaseFenceFd;
+}
+
 mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer)
     : HWCLayer(native_layer,
                HWC_FRAMEBUFFER_TARGET,

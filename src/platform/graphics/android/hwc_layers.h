@@ -46,6 +46,7 @@ struct HWCLayer
     HWCLayer(hwc_layer_1 *native_layer);
     HWCLayer& operator=(HWCLayer const& layer);
 
+    NativeFence release_fence() const;
     bool needs_gl_render() const;
 
 protected:

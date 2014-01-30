@@ -61,12 +61,13 @@ protected:
         std::list<std::shared_ptr<Renderable>> const& new_render_list);
     std::list<std::shared_ptr<HWCLayer>> layers;
 
+    bool composition_layers_present{false};
+
 private:
     LayerListBase& operator=(LayerListBase const&) = delete;
     LayerListBase(LayerListBase const&) = delete;
 
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    bool composition_layers_present{false};
     int fake_egl_values;
 };
 

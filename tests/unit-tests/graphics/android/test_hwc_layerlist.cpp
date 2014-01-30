@@ -95,6 +95,7 @@ TEST_F(HWCLayerListTest, hwc10_list_defaults)
     });
 }
 
+#if 0
 TEST_F(HWCLayerListTest, hwc10_list_update)
 {
     using namespace testing;
@@ -123,12 +124,10 @@ TEST_F(HWCLayerListTest, hwc10_list_update)
         EXPECT_THAT(skip_native, MatchesLayer(list.hwLayers[0]));
     });
 }
-
+#endif
 /* tests with a FRAMEBUFFER_TARGET present */
 TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 {
-    using namespace testing;
-
     mga::FBTargetLayerList layerlist;
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
