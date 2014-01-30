@@ -251,7 +251,6 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
 
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
         .Times(1);
-
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
 
@@ -264,6 +263,36 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
         mir_orientation_normal,
         mock_egl.fake_egl_context);
 
+    db.post_update();
+}
+
+TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    InSequence seq;
+
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {mock_kms_output},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    db.post_update();
     db.post_update();
 }
 
