@@ -71,7 +71,7 @@ public:
 
 TEST_F(HWCLayerListTest, list_defaults)
 {
-    mga::LayerList layerlist(do_not_use_fb_target);
+    mga::LayerList layerlist;
 
     layerlist.with_native_list([](hwc_display_contents_1_t& list)
     {
@@ -86,7 +86,7 @@ TEST_F(HWCLayerListTest, list_defaults)
 /* an empty list should have a skipped layer. This will force a GL render on hwc set */
 TEST_F(HWCLayerListTest, hwc10_list_defaults)
 {
-    mga::LayerList layerlist(do_not_use_fb_target);
+    mga::LayerList layerlist;
 
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
@@ -98,7 +98,7 @@ TEST_F(HWCLayerListTest, hwc10_list_defaults)
 TEST_F(HWCLayerListTest, hwc10_list_update)
 {
     using namespace testing;
-    mga::LayerList layerlist(do_not_use_fb_target);
+    mga::LayerList layerlist;
 
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
         mt::fake_shared(mock_renderable),
@@ -129,7 +129,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 {
     using namespace testing;
 
-    mga::LayerList layerlist(use_fb_target);
+    mga::FBTargetLayerList layerlist;
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(2, list.numHwLayers);
@@ -140,7 +140,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 
 TEST_F(HWCLayerListTest, fb_target_set)
 {
-    mga::LayerList layerlist(use_fb_target);
+    mga::FBTargetLayerList layerlist;
 
     layerlist.set_fb_target(native_handle_1);
 
@@ -159,7 +159,7 @@ TEST_F(HWCLayerListTest, fb_target_set)
 TEST_F(HWCLayerListTest, fbtarget_list_update)
 {
     using namespace testing;
-    mga::LayerList layerlist(use_fb_target);
+    mga::FBTargetLayerList layerlist;
 
     /* set non-default renderlist */
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
@@ -210,7 +210,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
 TEST_F(HWCLayerListTest, fb_fence)
 {
     int release_fence = 381;
-    mga::LayerList layerlist(use_fb_target);
+    mga::FBTargetLayerList layerlist;
 
     layerlist.with_native_list([this, &release_fence](hwc_display_contents_1_t& list)
     {
@@ -224,7 +224,7 @@ TEST_F(HWCLayerListTest, fb_fence)
 TEST_F(HWCLayerListTest, retire_fence)
 {
     int release_fence = 381;
-    mga::LayerList layerlist(use_fb_target);
+    mga::FBTargetLayerList layerlist;
 
     layerlist.with_native_list([this, &release_fence](hwc_display_contents_1_t& list)
     {

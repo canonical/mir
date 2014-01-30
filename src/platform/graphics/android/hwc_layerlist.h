@@ -63,7 +63,7 @@ private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
 
-    void update_representation();
+    void update_representation(std::list<std::shared_ptr<Renderable>> const& new_render_list);
 
     bool composition_layers_present;
     bool const fb_target_present;
