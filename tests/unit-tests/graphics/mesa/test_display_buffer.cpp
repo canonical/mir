@@ -234,3 +234,24 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mir_orientation_right,
         mock_egl.fake_egl_context);
 }
+
+TEST_F(MesaDisplayBufferTest, todo)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    EXPECT_CALL(mock_drm, drmModePageFlip(_, _, _, _, _))
+        .Times(1)
+        .WillOnce(Return(0));
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {},
+        nullptr,  // FIXME - no outputs so no page flips occur
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    db.post_update();
+}
+
