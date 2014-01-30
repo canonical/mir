@@ -73,20 +73,21 @@ private:
     hwc_layer_1 native_layer;
 };
 
-//used during compositions when we want to restrict to GLES render only
-struct ForceGLLayer : public HWCLayer
-{
-    ForceGLLayer();
-    ForceGLLayer(NativeBuffer const&);
-private:
-    hwc_layer_1 native_layer;
-};
-
 //used as the target (lowest layer, fb)
 struct FramebufferLayer : public HWCLayer
 {
     FramebufferLayer();
     FramebufferLayer(NativeBuffer const&);
+private:
+    hwc_layer_1 native_layer;
+};
+
+//used during compositions when we want to restrict to GLES render only
+struct ForceGLLayer : public HWCLayer
+{
+    ForceGLLayer();
+    ForceGLLayer(HWCLayer const& fb_layer);
+    ForceGLLayer(NativeBuffer const&);
 private:
     hwc_layer_1 native_layer;
 };

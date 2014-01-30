@@ -95,7 +95,7 @@ TEST_F(HWCLayersTest, needs_gl_render)
     EXPECT_TRUE(layer.needs_gl_render());
 }
 
-TEST_F(HWCLayersTest, layer_assignment)
+TEST_F(HWCLayersTest, layer_copy_and_assignment)
 {
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
@@ -115,13 +115,13 @@ TEST_F(HWCLayersTest, layer_assignment)
 
     mga::HWCLayer first_layer(&expected_layer);
 
-    hwc_layer_1_t second_native_layer;
-    memset(&second_native_layer, 0, sizeof(hwc_layer_1_t));
-    mga::HWCLayer second_layer(&second_native_layer);
+    mga::HWCLayer assigned_layer;
+    assigned_layer = first_layer;
 
-    second_layer = first_layer;
+    HWCLayer copied_layer(first_layer);
 
-    EXPECT_THAT(second_native_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(assigned_layer, MatchesHWCLayer(expected_layer));
+    EXPECT_THAT(copied_layer, MatchesHWCLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, fb_target_layer)

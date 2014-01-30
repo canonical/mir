@@ -59,8 +59,6 @@ protected:
     void update_representation(size_t needed_size); 
     std::list<std::shared_ptr<HWCLayer>> layers;
 
-    bool composition_layers_present{false};
-
 private:
     LayerListBase& operator=(LayerListBase const&) = delete;
     LayerListBase(LayerListBase const&) = delete;
@@ -83,6 +81,7 @@ public:
 
     NativeFence fb_target_fence();
     void set_fb_target(NativeBuffer const&);
+    bool skip_layers_present{true};
 };
 
 }

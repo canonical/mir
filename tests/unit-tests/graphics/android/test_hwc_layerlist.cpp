@@ -151,26 +151,22 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
         mga::FramebufferLayer fb_layer{native_handle_1};
         ASSERT_EQ(3, list.numHwLayers);
         EXPECT_THAT(comp_layer, MatchesHWCLayer(list.hwLayers[0]));
-     //   EXPECT_THAT(comp_layer, MatchesHWCLayer(list.hwLayers[1]));
-     //   EXPECT_THAT(fb_layer, MatchesHWCLayer(list.hwLayers[2]));
+        EXPECT_THAT(comp_layer, MatchesHWCLayer(list.hwLayers[1]));
+        EXPECT_THAT(fb_layer, MatchesHWCLayer(list.hwLayers[2]));
     });
 
-#if 0
     /* reset default */
     layerlist.reset_composition_layers();
 
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
-//        hwc_layer_1_t layer_native, fb_native;
-//        mga::ForceGLLayer skip_layer{&layer_native};
+        mga::ForceGLLayer skip_layer{native_handle_1};
         mga::FramebufferLayer fb_layer{native_handle_1};
-//        mga::FramebufferLayer fb_layer{&fb_native};
 
         ASSERT_EQ(2, list.numHwLayers);
         EXPECT_THAT(skip_layer, MatchesHWCLayer(list.hwLayers[0]));
         EXPECT_THAT(fb_layer, MatchesHWCLayer(list.hwLayers[1]));
     });
-#endif
 }
 
 TEST_F(HWCLayerListTest, fb_fence)

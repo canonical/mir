@@ -112,15 +112,18 @@ mga::FBTargetLayerList::FBTargetLayerList()
 void mga::FBTargetLayerList::reset_composition_layers()
 {
     hwc_layer_1_t tmp_layer;
+
     mga::HWCLayer fb_target(&tmp_layer);
     fb_target = *layers.back();
 
+//    mga::ForceGLLayer skip_layer(fb_target);
+
     update_representation(2);
 
-    *layers.front() = mga::ForceGLLayer{};
+//    *layers.front() = skip_layer;
     *layers.back() = fb_target;
 
-    composition_layers_present = false;
+    skip_layers_present = true;
 }
 
 void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
@@ -141,13 +144,13 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
 
     *layers.back() = fb_target;
 
-    composition_layers_present = true;
+    skip_layers_present = false;
 }
 
 
 void mga::FBTargetLayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
 {
-    if (!composition_layers_present)
+    if (skip_layers_present)
     {
         *layers.front() = mga::ForceGLLayer(native_buffer);
     }
