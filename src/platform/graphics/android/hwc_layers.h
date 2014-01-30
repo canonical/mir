@@ -68,21 +68,27 @@ protected:
 //layer could be GLES rendered, or overlaid by hwc.
 struct CompositionLayer : public HWCLayer
 {
-    CompositionLayer(hwc_layer_1* native_layer, Renderable const& renderable);
+    CompositionLayer(Renderable const& renderable);
+private:
+    hwc_layer_1 native_layer;
 };
 
 //used during compositions when we want to restrict to GLES render only
 struct ForceGLLayer : public HWCLayer
 {
-    ForceGLLayer(hwc_layer_1* native_layer);
-    ForceGLLayer(hwc_layer_1* native_layer, NativeBuffer const&);
+    ForceGLLayer();
+    ForceGLLayer(NativeBuffer const&);
+private:
+    hwc_layer_1 native_layer;
 };
 
 //used as the target (lowest layer, fb)
 struct FramebufferLayer : public HWCLayer
 {
-    FramebufferLayer(hwc_layer_1* native_layer);
-    FramebufferLayer(hwc_layer_1* native_layer, NativeBuffer const&);
+    FramebufferLayer();
+    FramebufferLayer(NativeBuffer const&);
+private:
+    hwc_layer_1 native_layer;
 };
 
 }

@@ -54,11 +54,9 @@ public:
     NativeFence retirement_fence();
 
 protected:
-    LayerListBase() = default;
+    LayerListBase(size_t initial_list_size);
 
-    void update_representation(
-        size_t needed_size, 
-        std::list<std::shared_ptr<Renderable>> const& new_render_list);
+    void update_representation(size_t needed_size); 
     std::list<std::shared_ptr<HWCLayer>> layers;
 
     bool composition_layers_present{false};
@@ -68,7 +66,6 @@ private:
     LayerListBase(LayerListBase const&) = delete;
 
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    int fake_egl_values;
 };
 
 class LayerList : public LayerListBase

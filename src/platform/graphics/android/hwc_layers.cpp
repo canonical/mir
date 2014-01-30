@@ -94,8 +94,8 @@ mga::NativeFence mga::HWCLayer::release_fence() const
     return hwc_layer->releaseFenceFd;
 }
 
-mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer)
-    : HWCLayer(native_layer,
+mga::FramebufferLayer::FramebufferLayer()
+    : HWCLayer(&native_layer,
                HWC_FRAMEBUFFER_TARGET,
                nullptr,
                geom::Rectangle{{0,0}, {0,0}},
@@ -105,8 +105,8 @@ mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer)
 {
 }
 
-mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer, mg::NativeBuffer const& buffer)
-    : HWCLayer(native_layer,
+mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
+    : HWCLayer(&native_layer,
                HWC_FRAMEBUFFER_TARGET,
                buffer.handle(),
                geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
@@ -116,8 +116,8 @@ mga::FramebufferLayer::FramebufferLayer(hwc_layer_1 *native_layer, mg::NativeBuf
 {
 }
 
-mga::ForceGLLayer::ForceGLLayer(hwc_layer_1 *native_layer)
-    : HWCLayer(native_layer,
+mga::ForceGLLayer::ForceGLLayer()
+    : HWCLayer(&native_layer,
                HWC_FRAMEBUFFER,
                nullptr,
                geom::Rectangle{{0,0}, {0,0}},
@@ -127,8 +127,8 @@ mga::ForceGLLayer::ForceGLLayer(hwc_layer_1 *native_layer)
 {
 }
 
-mga::ForceGLLayer::ForceGLLayer(hwc_layer_1 *native_layer, mg::NativeBuffer const& buffer)
-    : HWCLayer(native_layer,
+mga::ForceGLLayer::ForceGLLayer(mg::NativeBuffer const& buffer)
+    : HWCLayer(&native_layer,
                HWC_FRAMEBUFFER,
                buffer.handle(),
                geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
@@ -138,8 +138,8 @@ mga::ForceGLLayer::ForceGLLayer(hwc_layer_1 *native_layer, mg::NativeBuffer cons
 {
 }
 
-mga::CompositionLayer::CompositionLayer(hwc_layer_1 *native_layer, mg::Renderable const& renderable)
-    : HWCLayer(native_layer,
+mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable)
+    : HWCLayer(&native_layer,
                HWC_FRAMEBUFFER,
                renderable.buffer()->native_buffer_handle()->handle(),
                renderable.screen_position(),
