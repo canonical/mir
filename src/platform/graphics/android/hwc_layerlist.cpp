@@ -56,22 +56,23 @@ void mga::LayerListBase::update_representation(
     {
         new_hwc_representation = hwc_representation;
     }
+
     std::list<std::shared_ptr<HWCLayer>> new_layers;
 
     auto i = 0u;
     if (new_render_list.empty())
     {
         std::shared_ptr<mga::HWCLayer> skip_layer;
-        if (!composition_layers_present)
-        {
-            //if we are in skip mode, preserve the skip layer
-            skip_layer = std::make_shared<mga::HWCLayer>(&new_hwc_representation->hwLayers[i++]);
-           // *skip_layer = *layers.front();
-        }
-        else
+        if ((composition_layers_present) || (layers.empty()))
         {
             //if we are not in skip mode, make a new layer
             skip_layer = std::make_shared<mga::ForceGLLayer>(&new_hwc_representation->hwLayers[i++]);
+        }
+        else
+        {
+            //if we are in skip mode, preserve the skip layer
+            skip_layer = std::make_shared<mga::HWCLayer>(&new_hwc_representation->hwLayers[i++]);
+            *skip_layer = *layers.front();
         }
         new_layers.push_back(skip_layer);
 
@@ -122,8 +123,7 @@ void mga::FBTargetLayerList::reset_composition_layers()
 {
     update_representation(2, {});
     hwc_layer_1_t tmp_layer;
-    mga::FramebufferLayer targ(&tmp_layer);
-    *layers.back() = targ;
+    *layers.back() = mga::FramebufferLayer(&tmp_layer);
 }
 
 void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
@@ -143,7 +143,7 @@ void mga::FBTargetLayerList::set_fb_target(mg::NativeBuffer const& native_buffer
     hwc_layer_1_t tmp_layer;
     if (!composition_layers_present)
     {
-        *layers.front() = mga::ForceGLLayer(&tmp_layer);
+        *layers.front() = mga::ForceGLLayer(&tmp_layer, native_buffer);
     }
 
     *layers.back() = mga::FramebufferLayer(&tmp_layer, native_buffer);
