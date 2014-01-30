@@ -47,10 +47,12 @@ public:
         boost::program_options::options_description const& description,
         std::string const& filename);
 
-    bool is_set(char const* name) const;
-    bool get(char const* name, bool default_) const;
-    std::string get(char const*, char const* default_) const;
-    int get(char const* name, int default_) const;
+    bool is_set(char const* name) const override;
+    bool get(char const* name, bool default_) const override;
+    std::string get(char const*, char const* default_) const override;
+    int get(char const* name, int default_) const override;
+    boost::any const& get(char const* name) const override;
+    using Option::get;
 
 private:
     boost::program_options::variables_map options;

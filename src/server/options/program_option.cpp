@@ -149,3 +149,16 @@ int mo::ProgramOption::get(char const* name, int default_) const
 
     return default_;
 }
+
+boost::any const& mo::ProgramOption::get(char const* name) const
+{
+    auto const parsed_name = parse_name(name);
+    if (options.count(parsed_name))
+    {
+        return options[parsed_name].value();
+    }
+
+    static boost::any const default_;
+
+    return default_;
+}

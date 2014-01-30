@@ -19,7 +19,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_test_framework/testing_process_manager.h"
 #include "mir_test_framework/detect_server.h"
-#include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "src/client/mir_connection.h"
 #include "mir/run_mir.h"
 
@@ -73,37 +73,6 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     }
 }
 
-/* if set before any calls to the api functions, assigning to this pointer will allow user to
- * override calls to mir_connect() and mir_connection_release(). This is mostly useful in test scenarios
- */
-extern MirWaitHandle* (*mir_connect_impl)(
-    char const *server,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context);
-extern void (*mir_connection_release_impl) (MirConnection *connection);
-
-namespace
-{
-MirWaitHandle* mir_connect_test_override(
-    char const *socket_file,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context)
-{
-    mtf::StubConnectionConfiguration conf(socket_file);
-    auto connection = new MirConnection(conf);
-    return connection->connect(app_name, callback, context);
-}
-
-void mir_connection_release_override(MirConnection *connection)
-{
-    auto wait_handle = connection->disconnect();
-    wait_handle->wait_for_all();
-    delete connection;
-}
-}
-
 void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguration& config, mo::Option const& test_options)
 {
     if (!is_test_process)
@@ -138,10 +107,14 @@ void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguratio
         SCOPED_TRACE("Client");
         if (!config.use_real_graphics(test_options))
         {
-            mir_connect_impl = mir_connect_test_override;
-            mir_connection_release_impl = mir_connection_release_override;
+            mtf::UsingStubClientPlatform p;
+            config.exec();
         }
-        config.exec();
+        else
+        {
+            config.exec();
+        }
+
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
     }
     else
