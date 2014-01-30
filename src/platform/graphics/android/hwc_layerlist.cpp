@@ -31,24 +31,10 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-void mga::LayerList::update_representation(
+void mga::LayerListBase::update_representation(
+    size_t needed_size,
     std::list<std::shared_ptr<mg::Renderable>> const& new_render_list)
 {
-    size_t needed_size = 0u;
-    if (new_render_list.empty())
-    {
-        needed_size = 1; //need a skip layer
-    } else
-    {
-        needed_size = new_render_list.size();
-    }
-
-    //tack on a fb target at the end if we need it
-    if (fb_target_present)
-    {
-        needed_size++;
-    }
-
     std::shared_ptr<hwc_display_contents_1_t> new_hwc_representation;
     if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
     {
@@ -71,7 +57,6 @@ void mga::LayerList::update_representation(
         new_hwc_representation = hwc_representation;
     }
 
-
     std::list<std::shared_ptr<HWCLayer>> new_layers;
 
     auto i = 0u;
@@ -90,6 +75,8 @@ void mga::LayerList::update_representation(
             skip_layer = std::make_shared<mga::ForceGLLayer>(&hwc_representation->hwLayers[i++]);
         }
         new_layers.push_back(skip_layer);
+
+        composition_layers_present = false;
     }
     else
     {
@@ -98,81 +85,58 @@ void mga::LayerList::update_representation(
             new_layers.push_back(
                 std::make_shared<mga::CompositionLayer>(&hwc_representation->hwLayers[i++], *renderable));
         }
-    }
 
-
-    if (fb_target_present)
-    {
-        std::shared_ptr<mga::HWCLayer> fb_target;
-        if (layers.empty())
-        {
-            fb_target = std::make_shared<mga::FramebufferLayer>(&hwc_representation->hwLayers[i++]);
-        }
-        else
-        {
-            fb_target = std::make_shared<mga::HWCLayer>(&hwc_representation->hwLayers[i++]);
-            //preserve the old target
-            *fb_target = *layers.back();
-        }
-
-        new_layers.push_back(fb_target);
+        composition_layers_present = true;
     }
 
     std::swap(new_layers, layers);
     std::swap(new_hwc_representation, hwc_representation);
 }
 
-mga::LayerList::LayerList(bool has_target_layer)
-    : composition_layers_present(false),
-      fb_target_present(has_target_layer)
-{
-#if 0
-    skip_layer = std::make_shared<mga::ForceGLLayer>();
-    fb_target_layer = std::make_shared<mga::FramebufferLayer>();
-#endif
-    reset_composition_layers();
-}
-
-void mga::LayerList::with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn)
+void mga::LayerListBase::with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn)
 {
     fn(*hwc_representation);
-
-    if (fb_target_present)
-    {
-        auto fb_position = layers.size() - 1;
-        fb_fence = hwc_representation->hwLayers[fb_position].releaseFenceFd;
-    }
 }
 
-void mga::LayerList::reset_composition_layers()
+mga::NativeFence mga::LayerListBase::retirement_fence()
 {
-    update_representation({});
+    return -1;
+    //return retire_fence;
 }
 
-void mga::LayerList::set_composition_layers(
-    std::list<std::shared_ptr<graphics::Renderable>> const& list)
+mga::LayerList::LayerList()
 {
-    update_representation(list);
+    update_representation(1, {});
 }
+
+mga::FBTargetLayerList::FBTargetLayerList()
+{
+    update_representation(2, {});
+    *layers.back() = mga::FramebufferLayer{};
+}
+
+void mga::LayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
+{
+    auto needed_size = list.size() + 1;
+
+    last_fb_target = *layers.back() 
+    update_representation(needed_size, list);
+    layers.back() = last_fb_target;
+}
+
 
 void mga::LayerList::set_fb_target(mg::NativeBuffer const& native_buffer)
 {
-    (void) native_buffer;
 #if 0
-    *skip_layer = mga::ForceGLLayer(native_buffer);
-    if (fb_target_present)
+    if (!comp_layers_present)
     {
-        *fb_target_layer = mga::FramebufferLayer(native_buffer);
+        *skip_layer = mga::ForceGLLayer(native_buffer);
     }
+    *layers.back() = mga::FramebufferLayer(native_buffer);
 #endif
 }
 
 mga::NativeFence mga::LayerList::fb_target_fence()
 {
-    return fb_fence;
-}
-
-mga::NativeFence mga::LayerList::retirement_fence()
-{
-    return retire_fence;
+//   layers.back()->fence();
 }

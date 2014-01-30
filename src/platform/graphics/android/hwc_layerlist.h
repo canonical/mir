@@ -47,37 +47,44 @@ class Buffer;
 namespace android
 {
 
-class LayerList
+class LayerListBase
 {
 public:
-    LayerList(bool use_fb_target);
-    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
-    void reset_composition_layers(); 
     void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
-
-    void set_fb_target(NativeBuffer const&);
-    NativeFence fb_target_fence();
     NativeFence retirement_fence();
 
-private:
-    LayerList& operator=(LayerList const&) = delete;
-    LayerList(LayerList const&) = delete;
+protected:
+    LayerListBase() = default;
 
-    void update_representation(std::list<std::shared_ptr<Renderable>> const& new_render_list);
-
-    bool composition_layers_present;
-    bool const fb_target_present;
-
-    std::shared_ptr<ForceGLLayer> skip_layer;
-    std::shared_ptr<FramebufferLayer> fb_target_layer;
-
-    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
+    void update_representation(
+        size_t needed_size, 
+        std::list<std::shared_ptr<Renderable>> const& new_render_list);
     std::list<std::shared_ptr<HWCLayer>> layers;
 
-    NativeFence retire_fence;
-    NativeFence fb_fence;
+private:
+    LayerListBase& operator=(LayerListBase const&) = delete;
+    LayerListBase(LayerListBase const&) = delete;
 
+    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
+    bool composition_layers_present{false};
     int fake_egl_values;
+};
+
+class LayerList : public LayerListBase
+{
+public:
+    LayerList();
+};
+
+class FBTargetLayerList : public LayerListBase
+{
+public:
+    FBTargetLayerList();
+    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    void reset_composition_layers(); 
+
+    NativeFence fb_target_fence();
+    void set_fb_target(NativeBuffer const&);
 };
 
 }

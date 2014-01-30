@@ -91,6 +91,18 @@ TEST_F(HWCLayersTest, fb_target_layer)
     EXPECT_THAT(native_layer, MatchesLayer(expected_layer));
 }
 
+TEST_F(HWCLayersTest, fences)
+{
+    int fence1 = 1, fence2 = -1;
+    mga::FramebufferLayer target_layer(&native_layer, *native_handle_1);
+
+    native_layer.releaseFenceFd = fence1;
+    EXPECT_EQ(target_layer.release_fence(), fence1);
+
+    native_layer.releaseFenceFd = fence2;
+    EXPECT_EQ(target_layer.release_fence(), fence2);
+}
+
 TEST_F(HWCLayersTest, layer_assignment)
 {
     hwc_rect_t region = {0,0,width, height};

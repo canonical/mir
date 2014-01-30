@@ -49,7 +49,7 @@ public:
     void post(Buffer const& buffer);
 
 private:
-    LayerList layer_list;
+    FBTargetLayerList layer_list;
 
     SyncFence last_display_fence;
     std::shared_ptr<SyncFileOps> const sync_ops;
