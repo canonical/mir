@@ -23,6 +23,8 @@
 #include "multi_threaded_compositor.h"
 #include "gl_renderer_factory.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
@@ -72,25 +74,28 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
 
 std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast()
 {
-    struct NullScreencast : mf::Screencast
+    struct NotImplementedScreencast : mf::Screencast
     {
         mf::ScreencastSessionId create_session(
             graphics::DisplayConfigurationOutputId)
         {
-            return mf::ScreencastSessionId{1};
+            BOOST_THROW_EXCEPTION(std::runtime_error("Screencast not implemented"));
         }
 
-        void destroy_session(mf::ScreencastSessionId) {}
+        void destroy_session(mf::ScreencastSessionId)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Screencast not implemented"));
+        }
 
         std::shared_ptr<graphics::Buffer> capture(mf::ScreencastSessionId)
         {
-            return nullptr;
+            BOOST_THROW_EXCEPTION(std::runtime_error("Screencast not implemented"));
         }
     };
 
     return screencast(
         [this]()
         {
-            return std::make_shared<NullScreencast>();
+            return std::make_shared<NotImplementedScreencast>();
         });
 }
