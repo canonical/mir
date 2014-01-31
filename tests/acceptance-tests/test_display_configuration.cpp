@@ -71,7 +71,7 @@ private:
 
 mtd::StubDisplayConfig StubChanger::stub_display_config;
 
-mtd::StubDisplayConfig changed_stub_display_config;
+mtd::StubDisplayConfig changed_stub_display_config{1};
 
 class MockDisplay : public mtd::NullDisplay
 {
@@ -246,7 +246,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
         {
             auto configuration = mir_connection_create_display_config(connection);
 
-#if 0  // FIXME
+#if 1  // FIXME
             EXPECT_THAT(*configuration,
                         mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
 #endif
