@@ -141,14 +141,14 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
     mg::Buffer* buffer{nullptr};
 
     InSequence seq;
-    EXPECT_CALL(*mock_bundle, client_acquire())
+    EXPECT_CALL(*mock_bundle, client_acquire(_))
         .Times(1)
-        .WillOnce(Return(mock_buffer.get()));
+        .WillOnce(InvokeArgument<0>(mock_buffer.get()));
     EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
-    EXPECT_CALL(*mock_bundle, client_acquire())
+    EXPECT_CALL(*mock_bundle, client_acquire(_))
         .Times(1)
-        .WillOnce(Return(mock_buffer.get()));
+        .WillOnce(InvokeArgument<0>(mock_buffer.get()));
 
     buffer_stream.swap_client_buffers(buffer, callback);
 

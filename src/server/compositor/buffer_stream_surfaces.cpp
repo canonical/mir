@@ -55,9 +55,13 @@ void mc::BufferStreamSurfaces::swap_client_buffers(mg::Buffer*& buffer, std::fun
     {
         buffer_bundle->client_release(buffer);
     }
-    buffer = buffer_bundle->client_acquire();
 
-    complete(); // TODO needs to be called inside the buffer bundle
+    buffer_bundle->client_acquire(
+        [&buffer,complete](mg::Buffer* new_buffer)
+        {
+            buffer = new_buffer;
+            complete();
+        });
 }
 
 MirPixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
