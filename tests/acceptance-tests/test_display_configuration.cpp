@@ -87,9 +87,12 @@ public:
         f(display_buffer);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    std::unique_ptr<mg::DisplayConfiguration> configuration() override
     {
-        return config;
+        // TODO: use config;
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new mtd::StubDisplayConfig
+        );
     }
 
     void register_configuration_change_handler(
