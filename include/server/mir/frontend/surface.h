@@ -56,12 +56,19 @@ public:
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
-    virtual void swap_buffers(graphics::Buffer*&) = 0;
+    virtual void swap_buffers(graphics::Buffer*&, std::function<void()> complete) = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;
 
     virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+
+    /**
+     *  swap_buffers_blocking() is a convenience wrapper around swap_buffers()
+     *  it forces the current thread to block until complete() is called.
+     *  Use with care!
+     */
+    void swap_buffers_blocking(graphics::Buffer*& buffer);
 
 protected:
     Surface() = default;

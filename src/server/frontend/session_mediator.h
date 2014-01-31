@@ -24,6 +24,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
+#include <functional>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -116,7 +117,7 @@ private:
                               graphics::Buffer* graphics_buffer,
                               bool need_full_ipc);
 
-    std::tuple<graphics::Buffer*, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
+    void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
