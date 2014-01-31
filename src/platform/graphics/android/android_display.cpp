@@ -52,7 +52,7 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
     f(*display_buffer);
 }
 
-std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() const
 {
     return std::unique_ptr<mg::DisplayConfiguration>(
         new mga::AndroidDisplayConfiguration(current_configuration)

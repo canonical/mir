@@ -56,7 +56,7 @@ public:
             f(*db);
     }
 
-    std::unique_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
         return std::unique_ptr<mg::DisplayConfiguration>(
             new mtd::StubDisplayConfig(rects)

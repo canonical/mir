@@ -39,7 +39,7 @@ class NullDisplay : public graphics::Display
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */
         std::this_thread::yield();
     }
-    std::unique_ptr<graphics::DisplayConfiguration> configuration() override
+    std::unique_ptr<graphics::DisplayConfiguration> configuration() const override
     {
         return std::unique_ptr<graphics::DisplayConfiguration>(
             new NullDisplayConfiguration

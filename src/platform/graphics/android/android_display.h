@@ -48,7 +48,7 @@ public:
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f);
 
-    std::unique_ptr<DisplayConfiguration> configuration() override;
+    std::unique_ptr<DisplayConfiguration> configuration() const override;
     void configure(DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(

@@ -115,7 +115,7 @@ void mgm::Display::for_each_display_buffer(
         f(*db_ptr);
 }
 
-std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration() const
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 

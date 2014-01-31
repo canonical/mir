@@ -52,7 +52,7 @@ public:
     /**
      * Gets a copy of the current output configuration.
      */
-    virtual std::unique_ptr<DisplayConfiguration> configuration() = 0;
+    virtual std::unique_ptr<DisplayConfiguration> configuration() const = 0;
 
     /**
      * Sets a new output configuration.

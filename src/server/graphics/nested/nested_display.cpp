@@ -152,7 +152,7 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
         f(*i.second);
 }
 
-std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration() const
 {
     return std::unique_ptr<mg::DisplayConfiguration>(
         new NestedDisplayConfiguration(
