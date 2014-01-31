@@ -175,14 +175,9 @@ bool me::WindowManager::handle(MirEvent const& event)
                 compositor->stop();
                 auto conf = display->configuration();
                 conf->for_each_output(
-                    [&](mg::DisplayConfigurationOutput const& output) -> void
+                    [&](mg::DisplayConfigurationOutput& output) -> void
                     {
-                        conf->configure_output(output.id, output.used,
-                                               output.top_left,
-                                               output.current_mode_index,
-                                               output.current_format,
-                                               output.power_mode,
-                                               orientation);
+                        output.orientation = orientation;
                     }
                 );
                 display->configure(*conf);
