@@ -100,6 +100,18 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::configure_surface, invocation);
         }
+        else if ("create_screencast" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::create_screencast, invocation);
+        }
+        else if ("screencast_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::screencast_buffer, invocation);
+        }
+        else if ("release_screencast" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::release_screencast, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::disconnect, invocation);

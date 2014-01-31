@@ -19,6 +19,8 @@
 #ifndef MIR_OPTIONS_OPTION_H_
 #define MIR_OPTIONS_OPTION_H_
 
+#include <boost/any.hpp>
+
 #include <string>
 
 namespace mir
@@ -36,10 +38,15 @@ public:
     virtual bool get(char const* name, bool default_) const = 0;
     virtual std::string get(char const* name, char const* default_) const = 0;
     virtual int get(char const* name, int default_) const = 0;
+    virtual boost::any const& get(char const* name) const = 0;
+
+    template<typename Type>
+    Type get(char const* name) const
+    { return boost::any_cast<Type>(get(name)); }
 
 protected:
     Option() = default;
-    virtual ~Option() { /* TODO: make nothrow */ }
+    virtual ~Option() = default;
     Option(Option const&) = delete;
     Option& operator=(Option const&) = delete;
 };

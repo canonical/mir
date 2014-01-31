@@ -91,7 +91,7 @@ TEST_F(MesaClientNativeSurfaceTest, basic_advance)
 {
     using namespace testing;
     MirBufferPackage buffer_package;
-    EXPECT_CALL(mock_surface, next_buffer(_,_))
+    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
         .Times(1);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
@@ -105,9 +105,9 @@ TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
     using namespace testing;
 
     Sequence seq;
-    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,0))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,0))
         .InSequence(seq);
-    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,1))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,1))
         .InSequence(seq);
 
     mclg::NativeSurface interpreter(mock_surface);

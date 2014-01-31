@@ -43,7 +43,7 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     void post_update() {}
     bool can_bypass() const override { return false; }
     void render_and_post_update(
-        std::list<graphics::Renderable> const&,
+        std::list<std::shared_ptr<graphics::Renderable>> const&,
         std::function<void(graphics::Renderable const&)> const&) {}
     MirOrientation orientation() const override { return mir_orientation_normal; }
     void configure(graphics::DisplayConfigurationOutput const&) {} 

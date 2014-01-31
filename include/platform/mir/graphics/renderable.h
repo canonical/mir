@@ -19,14 +19,27 @@
 #ifndef MIR_GRAPHICS_RENDERABLE_H_
 #define MIR_GRAPHICS_RENDERABLE_H_
 
+#include <mir/geometry/rectangle.h>
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
 
-struct Renderable
+class Buffer;
+class Renderable
 {
-    /* TODO: make an interface */
+public:
+    virtual std::shared_ptr<Buffer> buffer() const = 0;
+    virtual bool alpha_enabled() const = 0;
+    virtual geometry::Rectangle screen_position() const = 0;
+
+protected:
+    Renderable() = default;
+    virtual ~Renderable() = default;
+    Renderable(Renderable const&) = delete;
+    Renderable& operator=(Renderable const&) = delete;
 };
 
 }
