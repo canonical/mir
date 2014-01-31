@@ -198,8 +198,6 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     {
         EXPECT_EQ(mir_power_mode_on, output.power_mode);
     });
-
-    policy.apply_to(conf);
 }
 
 TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
@@ -211,9 +209,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, default_orientation_is_normal)
 
     conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
     {
-        // TODO
-        EXPECT_CALL(conf, configure_output(output.id, _, _, _, _, _,
-                                           mir_orientation_normal));
+        EXPECT_EQ(mir_orientation_normal, output.orientation);
     });
 }
 
