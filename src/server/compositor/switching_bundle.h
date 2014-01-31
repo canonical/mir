@@ -80,7 +80,7 @@ private:
     int last_compositor() const;
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
-
+    void complete_client_acquire(std::unique_lock<std::mutex>& lock);
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
