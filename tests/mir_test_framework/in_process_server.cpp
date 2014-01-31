@@ -30,6 +30,17 @@
 
 namespace mtf = mir_test_framework;
 
+namespace
+{
+char const* const env_no_file = "MIR_SERVER_NO_FILE";
+}
+
+mtf::InProcessServer::InProcessServer() :
+    old_env(getenv(env_no_file))
+{
+    if (!old_env) setenv(env_no_file, "", true);
+}
+
 void mtf::InProcessServer::SetUp()
 {
     display_server = start_mir_server();
@@ -53,6 +64,8 @@ void mtf::InProcessServer::TearDown()
 mtf::InProcessServer::~InProcessServer()
 {
     if (server_thread.joinable()) server_thread.join();
+
+    if (!old_env) unsetenv(env_no_file);
 }
 
 mir::DisplayServer* mtf::InProcessServer::start_mir_server()

@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
-#include "renderable.h"
 #include <mir/geometry/rectangle.h>
 #include <mir_toolkit/common.h>
 
@@ -33,6 +32,7 @@ namespace graphics
 {
 
 class Buffer;
+class Renderable;
 
 /**
  * Interface to an output framebuffer.
@@ -57,7 +57,7 @@ public:
         that Renderable via OpenGL, or via another method. If the Renderable is to be rendered
         via OpenGL, render_fn will be invoked on that Renderable. */
     virtual void render_and_post_update(
-        std::list<Renderable> const& renderlist,
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
         std::function<void(Renderable const&)> const& render_fn) = 0;
 
     /** to be deprecated */

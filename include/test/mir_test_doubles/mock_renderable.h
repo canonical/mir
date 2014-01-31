@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,14 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/message_processor.h"
+#ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
+#define MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
 
-namespace mfd = mir::frontend::detail;
+#include <mir/graphics/renderable.h>
+#include <gmock/gmock.h>
 
-bool mfd::NullMessageProcessor::process_message(std::istream& )
+namespace mir
 {
-    return false;
+namespace test
+{
+namespace doubles
+{
+struct MockRenderable : public graphics::Renderable
+{
+    MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_CONST_METHOD0(alpha_enabled, bool());
+    MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
+};
 }
+}
+}
+
+#endif /* MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_ */

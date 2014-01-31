@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,10 +19,15 @@
 #ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 
-#include <iosfwd>
-
 namespace mir
 {
+namespace protobuf
+{
+namespace wire
+{
+class Invocation;
+}
+}
 namespace frontend
 {
 namespace detail
@@ -31,20 +36,14 @@ namespace detail
 class MessageProcessor
 {
 public:
-    virtual bool process_message(std::istream& msg) = 0;
+    virtual bool dispatch(mir::protobuf::wire::Invocation const& invocation) = 0;
+
 protected:
     MessageProcessor() = default;
     virtual ~MessageProcessor() = default;
     MessageProcessor(MessageProcessor const&) = delete;
     MessageProcessor& operator=(MessageProcessor const&) = delete;
 };
-
-class NullMessageProcessor : MessageProcessor
-{
-public:
-    bool process_message(std::istream&);
-};
-
 }
 }
 }

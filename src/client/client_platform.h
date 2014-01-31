@@ -21,6 +21,7 @@
 #include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "egl_native_window_factory.h"
 
 #include <EGL/eglplatform.h>
 #include <memory>
@@ -37,7 +38,7 @@ class ClientContext;
  * Interface to client-side platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class ClientPlatform
+class ClientPlatform : public EGLNativeWindowFactory
 {
 public:
     ClientPlatform() = default;

@@ -34,7 +34,7 @@ class Renderer
 public:
     virtual ~Renderer() = default;
 
-    virtual void begin() const = 0;
+    virtual void begin(float rotation = 0.0f) const = 0;
     virtual void render(CompositingCriteria const& info, graphics::Buffer& buffer) const = 0;
     virtual void end() const = 0;
 

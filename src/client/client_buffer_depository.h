@@ -26,6 +26,8 @@
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 
+struct MirBufferPackage;
+
 namespace mir
 {
 

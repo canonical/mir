@@ -17,10 +17,10 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/frontend/protobuf_session_creator.h"
 
 #include "resource_cache.h"
 #include "protobuf_ipc_factory.h"
-#include "protobuf_session_creator.h"
 #include "published_socket_connector.h"
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"
@@ -108,8 +108,7 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            auto const threads = the_options()->get(frontend_threads,
-                                                    default_ipc_threads);
+            auto const threads = the_options()->get<int>(frontend_threads_opt);
 
             auto const& force_threads_to_unblock = force_threads_to_unblock_callback();
 

@@ -17,8 +17,9 @@
  */
 
 #include "protobuf_message_processor.h"
-#include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/message_processor_report.h"
+#include "mir/frontend/protobuf_message_sender.h"
+#include "mir/frontend/template_protobuf_message_processor.h"
 
 namespace mfd = mir::frontend::detail;
 
@@ -38,7 +39,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     std::shared_ptr<ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<MessageProcessorReport> const& report) :
-    TemplateProtobufMessageProcessor(sender),
+    sender(sender),
     display_server(display_server),
     report(report)
 {
@@ -99,6 +100,18 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::configure_surface, invocation);
         }
+        else if ("create_screencast" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::create_screencast, invocation);
+        }
+        else if ("screencast_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::screencast_buffer, invocation);
+        }
+        else if ("release_screencast" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::release_screencast, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::disconnect, invocation);
@@ -119,6 +132,11 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
     report->completed_invocation(display_server.get(), invocation.id(), result);
 
     return result;
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
+{
+    sender->send_response(id, response, {});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
