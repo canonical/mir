@@ -108,6 +108,8 @@ private:
     bool framedropping;
     int force_drop;
 
+    std::function<void(graphics::Buffer* buffer)> client_acquire_done;
+
     friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 };
 

@@ -217,6 +217,8 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
     if (force_drop > 0)
         force_drop--;
 
+    client_acquire_done = complete;
+
     int client = first_free();
     nclients++;
 
@@ -247,7 +249,8 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
         ring[client].buf = ret;
     }
 
-    complete(ret.get());
+    client_acquire_done(ret.get());
+    client_acquire_done = nullptr;
 }
 
 void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
