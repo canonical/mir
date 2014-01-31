@@ -36,9 +36,10 @@ public:
     {
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
-    void swap_client_buffers(graphics::Buffer*& buffer) override
+    void swap_client_buffers(graphics::Buffer*& buffer, std::function<void()> complete) override
     {
         buffer = &stub_client_buffer;
+        complete();
     }
     std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long) override
     {

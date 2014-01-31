@@ -103,7 +103,8 @@ public:
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
-        EXPECT_CALL(*mock_surface, swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer.get()));
+        EXPECT_CALL(*mock_surface, swap_buffers(_, _)).Times(AnyNumber())
+            .WillRepeatedly(DoAll(SetArg<0>(mock_buffer.get()), InvokeArgument<1>()));
 
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
         EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -123,7 +124,8 @@ public:
 
             EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
-            EXPECT_CALL(*mock_surfaces[id], swap_buffers(_)).Times(AnyNumber()).WillRepeatedly(SetArg<0>(mock_buffer.get()));
+            EXPECT_CALL(*mock_surface, swap_buffers(_, _)).Times(AnyNumber())
+                .WillRepeatedly(DoAll(SetArg<0>(mock_buffer.get()), InvokeArgument<1>()));
 
             EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
             EXPECT_CALL(*mock_surfaces[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -461,15 +463,18 @@ TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buf
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     {
+        // TODO check this change actually makes sense. (And delete the commented code)
+        // AFAICS these values are stubs to set up the test condition,
+        // the exact calls here are not a *requirement* on SessionMediator
         EXPECT_CALL(*stubbed_session->mock_buffer, id())
-            .WillOnce(Return(mg::BufferID{4}))
-            .WillOnce(Return(mg::BufferID{4}))
-            .WillOnce(Return(mg::BufferID{9}))
-            .WillOnce(Return(mg::BufferID{9}))
-            .WillOnce(Return(mg::BufferID{5}))
-            .WillOnce(Return(mg::BufferID{5}))
-            .WillOnce(Return(mg::BufferID{10}))
-            .WillOnce(Return(mg::BufferID{10}))
+//            .WillOnce(Return(mg::BufferID{4}))
+//            .WillOnce(Return(mg::BufferID{4}))
+//            .WillOnce(Return(mg::BufferID{9}))
+//            .WillOnce(Return(mg::BufferID{9}))
+//            .WillOnce(Return(mg::BufferID{5}))
+//            .WillOnce(Return(mg::BufferID{5}))
+//            .WillOnce(Return(mg::BufferID{10}))
+//            .WillOnce(Return(mg::BufferID{10}))
             .WillOnce(Return(mg::BufferID{4}))
             .WillOnce(Return(mg::BufferID{4}))
             .WillOnce(Return(mg::BufferID{9}))
@@ -519,8 +524,8 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
      * the pre-created stubbed_session->mock_surface. Further create_surface()
      * invocations create new surfaces in stubbed_session->mock_surfaces[].
      */
-    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_))
-        .WillOnce(SetArg<0>(&buffer));
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_, _))
+        .WillOnce(DoAll(SetArg<0>(&buffer), InvokeArgument<1>()));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     mp::SurfaceId our_surface{surface_response.id()};
@@ -528,7 +533,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
     Mock::VerifyAndClearExpectations(stubbed_session->mock_surface.get());
 
     /* Creating a new surface should not affect our surfaces' buffers */
-    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_)).Times(0);
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_, _)).Times(0);
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
 
     mp::SurfaceId new_surface{surface_response.id()};
@@ -540,7 +545,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
     Mock::VerifyAndClearExpectations(stubbed_session->mock_surface.get());
 
     /* Getting the next buffer of our surface should post the original */
-    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(Eq(&buffer))).Times(1);
+    EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(Eq(&buffer), _)).Times(1);
 
     mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());

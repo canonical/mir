@@ -419,8 +419,8 @@ public:
              */
             {
                 mg::Buffer* buffer{nullptr};
-                s->swap_buffers(buffer);
-                s->swap_buffers(buffer);
+                s->swap_buffers(buffer, []{});
+                s->swap_buffers(buffer, []{});
             }
 
             /*

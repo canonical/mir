@@ -175,8 +175,8 @@ struct SurfaceCreation : public ::testing::Test
         stub_data = std::make_shared<ms::SurfaceData>( 
             surface_name, rect, change_notification, false);
 
-        ON_CALL(*mock_buffer_stream, swap_client_buffers(_))
-            .WillByDefault(SetArg<0>(&stub_buffer));
+        ON_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
+            .WillByDefault(DoAll(SetArg<0>(&stub_buffer), InvokeArgument<1>()));
     }
 
     std::shared_ptr<ms::SurfaceData> stub_data;
@@ -233,12 +233,12 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     mtd::StubBuffer graphics_resource;
 
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
         .Times(1)
-        .WillOnce(SetArg<0>(&graphics_resource));
+        .WillOnce(DoAll(SetArg<0>(&graphics_resource), InvokeArgument<1>()));
 
     mg::Buffer* result{nullptr};
-    surf.swap_buffers(result);
+    surf.swap_buffers(result, []{});
 
     EXPECT_EQ(&graphics_resource, result);
 }
@@ -250,12 +250,12 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     mtd::StubBuffer stub_buffer;
 
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_))
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
         .Times(1)
-        .WillOnce(SetArg<0>(&stub_buffer));
+        .WillOnce(DoAll(SetArg<0>(&stub_buffer), InvokeArgument<1>()));
 
     mg::Buffer* result{nullptr};
-    surf.swap_buffers(result);
+    surf.swap_buffers(result, []{});
 
     EXPECT_EQ(&stub_buffer, result);
 }
@@ -405,10 +405,10 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     mg::Buffer* buffer{nullptr};
 
-    surf.swap_buffers(buffer);
-    surf.swap_buffers(buffer);
-    surf.swap_buffers(buffer);
-    surf.swap_buffers(buffer);
+    surf.swap_buffers(buffer, []{});
+    surf.swap_buffers(buffer, []{});
+    surf.swap_buffers(buffer, []{});
+    surf.swap_buffers(buffer, []{});
 
     EXPECT_EQ(3, notification_count); 
 }
