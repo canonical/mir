@@ -61,7 +61,7 @@ namespace test
 struct MockServerPackageGenerator : public StubServerTool
 {
     MockServerPackageGenerator()
-     : global_buffer_id(0)
+        : server_package(), global_buffer_id(0)
     {
         width_sent  = 891;
         height_sent = 458;
@@ -74,7 +74,7 @@ struct MockServerPackageGenerator : public StubServerTool
     {
         close(input_fd);
         for (int i = 0; i < server_package.fd_items; i++)
-            close(server_package.fd[0]);
+            close(server_package.fd[i]);
     }
 
     void create_surface(google::protobuf::RpcController*,
@@ -102,11 +102,12 @@ struct MockServerPackageGenerator : public StubServerTool
     {
         global_buffer_id++;
 
+        for (int i = 0; i < server_package.fd_items; i++)
+            close(server_package.fd[i]);
+
         int num_fd = 2, num_data = 8;
         for (auto i=0; i<num_fd; i++)
         {
-            if (server_package.fd[i])
-                close(server_package.fd[i]);
             server_package.fd[i] = open("/dev/null", O_APPEND);
         }
         server_package.fd_items = num_fd;
