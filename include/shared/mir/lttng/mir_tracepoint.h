@@ -33,7 +33,7 @@ namespace mir_systemtap_bug_13974
 {
 inline void mir_tracepoint_consume_args(int, ...) {}
 }
-#define mir_tracepoint(c, ...) ::mir_systemtap_bug_13974::mir_tracepoint_consume_args(0, __VA_ARGS__)
+#define mir_tracepoint(c, e, ...) ::mir_systemtap_bug_13974::mir_tracepoint_consume_args(0, __VA_ARGS__)
 #pragma message "Building with clang: Disabling LTTng tracepoints."
 #else
 #define mir_tracepoint(c, ...) tracepoint(c, __VA_ARGS__)
