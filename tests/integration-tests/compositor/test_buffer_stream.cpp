@@ -60,8 +60,7 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 
         std::unique_lock<decltype(mutex)> lock(mutex);
 
-        while (!done)
-            cv.wait(lock, [&]{ return done; });
+        cv.wait(lock, [&]{ return done; });
     }
 };
 

@@ -155,8 +155,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
 
-        while (!done)
-            cv.wait(lock, [&]{ return done; });
+        cv.wait(lock, [&]{ return done; });
     }
 
     done = false;
@@ -166,8 +165,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
 
-        while (!done)
-            cv.wait(lock, [&]{ return done; });
+        cv.wait(lock, [&]{ return done; });
     }
 }
 
