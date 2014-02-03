@@ -41,7 +41,6 @@ namespace graphics
 {
 
 class Renderable;
-class NativeBuffer;
 class Buffer;
 
 namespace android
@@ -80,7 +79,7 @@ public:
     void reset_composition_layers(); 
 
     NativeFence fb_target_fence();
-    void set_fb_target(NativeBuffer const&);
+    void set_fb_target(Buffer const&);
     bool skip_layers_present{true};
 };
 

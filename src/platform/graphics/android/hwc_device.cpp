@@ -72,8 +72,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
-    auto native_buffer = buffer.native_buffer_handle();
-    layer_list.set_fb_target(*native_buffer);
+    layer_list.set_fb_target(buffer);
 
     layer_list.with_native_list([this](hwc_display_contents_1_t& display_list)
     {
@@ -89,5 +88,6 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     last_display_fence.merge_with(next_fence);
 
     int framebuffer_fence = layer_list.fb_target_fence();
+    auto native_buffer = buffer.native_buffer_handle();
     native_buffer->update_fence(framebuffer_fence);
 }

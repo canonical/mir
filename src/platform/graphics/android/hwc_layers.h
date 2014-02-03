@@ -34,7 +34,7 @@ namespace graphics
 {
 
 class Renderable;
-class NativeBuffer;
+class Buffer;
 
 namespace android
 {
@@ -64,7 +64,7 @@ public:
     
     void set_layer_type(LayerType type);
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
-    void set_buffer(NativeBuffer const&);
+    void set_buffer(Buffer const&);
 
     //gets the release fence
     NativeFence release_fence() const;

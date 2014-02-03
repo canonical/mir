@@ -49,6 +49,16 @@ mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t l
     : hwc_layer(&list->hwLayers[layer_index]),
       hwc_list(list)
 {
+    memset(hwc_layer, 0, sizeof(hwc_layer_1_t));
+    memset(&visible_rect, 0, sizeof(hwc_rect_t));
+
+    hwc_layer->hints = 0;
+    hwc_layer->transform = 0;
+    hwc_layer->acquireFenceFd = -1;
+    hwc_layer->releaseFenceFd = -1;
+
+    hwc_layer->visibleRegionScreen.numRects=1;
+    hwc_layer->visibleRegionScreen.rects= &visible_rect;
 }
 
 mga::HWCLayer::HWCLayer(
@@ -59,8 +69,22 @@ mga::HWCLayer::HWCLayer(
     size_t layer_index)
      : HWCLayer(list, layer_index)
 {
-    hwc_layer->flags = 0;
+    set_layer_type(type);
+    set_render_parameters(position, alpha_enabled);
+}
 
+bool mga::HWCLayer::needs_gl_render() const
+{
+    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
+}
+
+mga::NativeFence mga::HWCLayer::release_fence() const
+{
+    return hwc_layer->releaseFenceFd;
+}
+
+void mga::HWCLayer::set_layer_type(LayerType type)
+{
     switch(type)
     {
         case mga::LayerType::skip:
@@ -80,22 +104,14 @@ mga::HWCLayer::HWCLayer(
         default:
             BOOST_THROW_EXCEPTION(std::logic_error("invalid layer type creation"));
     }
+}
 
-    (alpha_enabled) ? hwc_layer->blending = HWC_BLENDING_COVERAGE : hwc_layer->blending = HWC_BLENDING_NONE;
-
-    hwc_layer->hints = 0;
-    hwc_layer->transform = 0;
-    hwc_layer->acquireFenceFd = -1;
-    hwc_layer->releaseFenceFd = -1;
-
-    hwc_layer->sourceCrop = 
-    {
-        0, 0,
-//        static_cast<int>(buffer_size.width.as_uint32_t()),
-//        static_cast<int>(buffer_size.height.as_uint32_t())
-        0,0
-    };
-
+void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alpha_enabled)
+{
+    if (alpha_enabled)
+        hwc_layer->blending = HWC_BLENDING_COVERAGE;
+    else
+        hwc_layer->blending = HWC_BLENDING_NONE;
 
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
     hwc_layer->displayFrame = 
@@ -107,30 +123,17 @@ mga::HWCLayer::HWCLayer(
     };
 
     visible_rect = hwc_layer->displayFrame;
-    hwc_layer->visibleRegionScreen.numRects=1;
-    hwc_layer->visibleRegionScreen.rects= &visible_rect;
-
-//    hwc_layer->handle = buffer_handle;
 }
 
-bool mga::HWCLayer::needs_gl_render() const
+void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
-    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
-}
-
-mga::NativeFence mga::HWCLayer::release_fence() const
-{
-    return hwc_layer->releaseFenceFd;
-}
-
-void mga::HWCLayer::set_layer_type(LayerType)
-{
-}
-
-void mga::HWCLayer::set_render_parameters(geometry::Rectangle, bool)
-{
-}
-
-void mga::HWCLayer::set_buffer(NativeBuffer const&)
-{
+    auto size = buffer.size();
+    auto native_buffer = buffer.native_buffer_handle();
+    hwc_layer->handle = native_buffer->handle();
+    hwc_layer->sourceCrop = 
+    {
+        0, 0,
+        size.width.as_int(),
+        size.height.as_int()
+    };
 }

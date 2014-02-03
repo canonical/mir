@@ -150,7 +150,7 @@ TEST_F(HWCLayerListTest, fb_target_set)
 {
     mga::FBTargetLayerList layerlist;
 
-    layerlist.set_fb_target(native_handle_1);
+    layerlist.set_fb_target(mock_buffer);
 
     skip_layer.handle = native_handle_1.handle();
     target_layer.handle = native_handle_1.handle();
@@ -184,7 +184,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     });
 
     /* update FB target */
-    layerlist.set_fb_target(native_handle_1);
+    layerlist.set_fb_target(mock_buffer);
 
     layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     {
