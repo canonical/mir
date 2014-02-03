@@ -124,7 +124,7 @@ public:
 
             EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
-            EXPECT_CALL(*mock_surface, swap_buffers(_, _)).Times(AnyNumber())
+            EXPECT_CALL(*mock_surfaces[id], swap_buffers(_, _)).Times(AnyNumber())
                 .WillRepeatedly(DoAll(SetArg<0>(mock_buffer.get()), InvokeArgument<1>()));
 
             EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
@@ -463,18 +463,17 @@ TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buf
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     {
-        // TODO check this change actually makes sense. (And delete the commented code)
         // AFAICS these values are stubs to set up the test condition,
         // the exact calls here are not a *requirement* on SessionMediator
         EXPECT_CALL(*stubbed_session->mock_buffer, id())
-//            .WillOnce(Return(mg::BufferID{4}))
-//            .WillOnce(Return(mg::BufferID{4}))
-//            .WillOnce(Return(mg::BufferID{9}))
-//            .WillOnce(Return(mg::BufferID{9}))
-//            .WillOnce(Return(mg::BufferID{5}))
-//            .WillOnce(Return(mg::BufferID{5}))
-//            .WillOnce(Return(mg::BufferID{10}))
-//            .WillOnce(Return(mg::BufferID{10}))
+            .WillOnce(Return(mg::BufferID{4}))
+            .WillOnce(Return(mg::BufferID{4}))
+            .WillOnce(Return(mg::BufferID{9}))
+            .WillOnce(Return(mg::BufferID{9}))
+            .WillOnce(Return(mg::BufferID{5}))
+            .WillOnce(Return(mg::BufferID{5}))
+            .WillOnce(Return(mg::BufferID{10}))
+            .WillOnce(Return(mg::BufferID{10}))
             .WillOnce(Return(mg::BufferID{4}))
             .WillOnce(Return(mg::BufferID{4}))
             .WillOnce(Return(mg::BufferID{9}))
