@@ -38,6 +38,7 @@ using testing::Return;
 using testing::ReturnRef;
 using testing::Pointee;
 using testing::AnyNumber;
+using testing::AtLeast;
 using testing::_;
 
 namespace mt=mir::test;
@@ -59,6 +60,7 @@ const GLint position_attr_location = 3;
 const GLint texcoord_attr_location = 4;
 const GLint screen_to_gl_coords_uniform_location = 5;
 const GLint tex_uniform_location = 6;
+const GLint display_transform_uniform_location = 7;
 const std::string stub_info_log = "something failed!";
 const size_t stub_info_log_length = stub_info_log.size();
 
@@ -127,6 +129,8 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
         .WillOnce(Return(tex_uniform_location));
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+        .WillOnce(Return(display_transform_uniform_location));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
         .WillOnce(Return(transform_uniform_location));
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
         .WillOnce(Return(alpha_uniform_location));
@@ -145,10 +149,6 @@ void FillMockVertexBuffer(mtd::MockGL &mock_gl)
         .WillOnce(SetArgPointee<1>(stub_vbo));
     EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
     EXPECT_CALL(mock_gl, glBufferData(GL_ARRAY_BUFFER, _, _, GL_STATIC_DRAW));
-
-    /* These should go away */
-    EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, 0));
-    EXPECT_CALL(mock_gl, glUseProgram(0));
 }
 
 class GLRendererSetupProcess :
@@ -254,8 +254,8 @@ public:
         EXPECT_CALL(mock_gl, glClear(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
-        EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, _, _))
-            .Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, GL_FALSE, _))
+            .Times(AtLeast(1));
         EXPECT_CALL(mock_gl, glUniform1f(_, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glBindBuffer(_, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glVertexAttribPointer(_, _, _, _, _, _))
@@ -304,6 +304,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     InSequence seq;
 
+    EXPECT_CALL(mock_gl, glUniformMatrix4fv(display_transform_uniform_location, 1, GL_FALSE, _));
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())

@@ -26,65 +26,6 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
-{
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
-    return *this;
-}
-
-mga::HWCLayer::HWCLayer(HWCLayer const& layer)
-{
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
-}
-
-mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, int layer_flags)
-{
-    compositionType = type;
-    hints = 0;
-    flags = layer_flags;
-    transform = 0;
-    blending = HWC_BLENDING_NONE;
-    //TODO: acquireFenceFd should be buffer.fence()
-    acquireFenceFd = -1;
-    releaseFenceFd = -1;
-
-    visible_rect.top = 0;
-    visible_rect.left = 0;
-    visible_rect.bottom = height;
-    visible_rect.right = width;
-    sourceCrop = visible_rect;
-    displayFrame = visible_rect;
-    visibleRegionScreen.numRects=1;
-    visibleRegionScreen.rects= &visible_rect;
-    handle = buffer_handle;
-
-    memset(&reserved, 0, sizeof(reserved));
-}
-
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
-{
-}
-
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, 0)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(int layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
-{
-}
-
 mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 {
     auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
@@ -109,12 +50,18 @@ mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
 
 void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
 {
-    auto fb_position = hwc_representation->numHwLayers - 1;
-
-    if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
+    if (hwc_representation->numHwLayers == 2)
     {
-        hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
-        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
+        if (hwc_representation->hwLayers[0].flags == HWC_SKIP_LAYER)
+        {
+            hwc_representation->hwLayers[0] = mga::ForceGLLayer(*native_buffer);
+        }
+
+        if (hwc_representation->hwLayers[1].compositionType == HWC_FRAMEBUFFER_TARGET)
+        {
+            hwc_representation->hwLayers[1] = mga::FramebufferLayer(*native_buffer);
+            hwc_representation->hwLayers[1].acquireFenceFd = native_buffer->copy_fence();
+        }
     }
 }
 

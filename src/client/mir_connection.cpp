@@ -461,6 +461,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
             display_request->set_position_x(output.position_x);
             display_request->set_position_y(output.position_y);
             display_request->set_power_mode(output.power_mode);
+            display_request->set_orientation(output.orientation);
         }
     }
 
@@ -483,4 +484,9 @@ bool MirConnection::set_extra_platform_data(
 
     extra_platform_data = extra_platform_data_arg;
     return true;
+}
+
+mir::protobuf::DisplayServer& MirConnection::display_server()
+{ 
+    return server;
 }

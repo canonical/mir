@@ -41,6 +41,8 @@ struct ProgramOption : testing::Test
             ("flag-true", bpo::value<bool>(), "flag \"true\"")
             ("flag-no", bpo::value<bool>(), "flag \"no\"")
             ("flag-false", bpo::value<bool>(), "flag \"false\"")
+            ("count,c", bpo::value<int>(), "count")
+            ("defaulted,d", bpo::value<int>()->default_value(666), "defaulted")
             ("help,h", "this help text");
     }
 
@@ -121,6 +123,73 @@ TEST_F(ProgramOption, parse_device_line_help)
     po.parse_arguments(desc, argc, argv);
 
     EXPECT_TRUE(po.is_set("help"));
+}
+
+TEST_F(ProgramOption, matches_compound_name_lookup)
+{
+    using testing::Eq;
+    mir::options::ProgramOption po;
+
+    const int argc = 8;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--help",
+        "--flag-yes", "yes",
+        "-f", "test_file",
+        "-c", "27"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.is_set("help,h"), Eq(true));
+    EXPECT_THAT(po.get("flag-yes,y", false), Eq(true));
+    EXPECT_THAT(po.get("file,f", "default"), Eq("test_file"));
+    EXPECT_THAT(po.get("count,c", 42), Eq(27));
+}
+
+TEST_F(ProgramOption, defaulted_values_are_available)
+{
+    using testing::Eq;
+    mir::options::ProgramOption po;
+
+    const int argc = 1;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.is_set("defaulted"), Eq(true));
+    EXPECT_THAT(po.get("defaulted", 3), Eq(666));
+}
+
+TEST_F(ProgramOption, test_boost_any_overload)
+{
+    using testing::Eq;
+    mir::options::ProgramOption po;
+
+    const int argc = 8;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--help",
+        "--flag-yes", "yes",
+        "-f", "test_file",
+        "-c", "27"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.is_set("help,h"), Eq(true));
+    EXPECT_THAT(po.get<bool>("flag-yes,y"), Eq(true));
+    EXPECT_THAT(po.get<std::string>("file,f"), Eq("test_file"));
+    EXPECT_THAT(po.get<int>("count,c"), Eq(27));
+    EXPECT_THAT(po.get<int>("defaulted"), Eq(666));
+
+    auto const error_result = po.get("garbage");
+    EXPECT_THAT(error_result.empty(), Eq(true));
+
+    EXPECT_THROW(boost::any_cast<int>(error_result), std::bad_cast);
+    EXPECT_THROW(po.get<int>("flag-yes,y"), std::bad_cast);
 }
 
 TEST(ProgramOptionEnv, parse_environment)

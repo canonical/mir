@@ -15,6 +15,51 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
     - Mir server ABI bumped to 13. Client ABI bumped to 5.
     - Removed lots of Android headers, replaced by build-dep: android-headers
     - Added support for translucent nested servers.
+    - tests: Fix unitialized values and incorrect fd closing loops
+    - Fix unitialized values and incorrect fd closing loops.
+    - client: Add basic MirScreencast C API.
+    - config: start moving default values for config options from all the
+      call sites to the setup
+    - tests: Provide a helper for running clients with a stub ClientPlatform.
+    - android: split out HWC layers into their own file and add a
+      mga::CompositionLayer type that depends on the interface mg::Renderable.
+    - client: Add basic MirOutputCapture class.
+    - client: Don't create mesa ClientBuffer objects from invalid
+      MirBufferPackages.
+    - Optimize surface resizing to avoid doing anything if the dimensions
+      are unchanged.
+    - SwitchingBundle - add operator<< for debugging.
+    - support hwcomposer 1.2 for android 4.4 on nexus 4 (which needs hwc1.2
+      support). This patch adds hwc1.2 device construction, as well as progs
+      the 'skip' layer in HWC to the buffer properties of the framebuffer.
+    - demo-shell: Add simple keyboard controls to rotate outputs; Ctrl +
+      Alt + <arrow-key>. Fixes: https://bugs.launchpad.net/bugs/1203215.
+    - frontend: exposing internals of the RPC mechanism to enable custom
+      function calls to be added.
+    - Make udev wrapper into a top-level citizen
+    - compositor: ignore double requests to start or stop the
+      MultiThreadedCompositor.
+    - Add DisplayBuffer::orientation(), to tell the Renderer if we need it
+      to do screen rotation in GL (for platforms which don't implement 
+      rotation natively) Fixes: https://bugs.launchpad.net/bugs/1203215.
+    - graphics: add an post_update function that takes a list of renderables
+      to the display buffer. This will let the display buffer take advantage
+      of full-surface overlays on android.
+    - android-input: Improve debug output
+    - the stock qcom 8960 hwcomposer chokes on getDisplayAttributes if the
+      submitted arrays are not at least size 6. patched the qcom android 4.2
+      hwcomposer driver on the ubuntu touch images to work properly, but
+      causes us problems with in-the wild drivers, and the new 4.4 drivers.
+      Make sure we always submit a larger-than-needed array to this function.
+    - frontend: refactoring to make it easier to expose the underlying RPC
+      transport on the server side.
+    - Don't assume pressure value is zero if not yet known
+    - build: Expose options to allow building but not running tests by default.
+    - Translucent Server which prefers a transparent pixel format
+    - frontend: refactor ProtobufMessageProcessor to separate out generic
+      response sending logic from specific message handling.
+    - client: expose the part of the client RPC infrastructure needed for
+      downstream to prototype their own message sending.
     - Bugs fixed:
       . unity8 display flickers and stops responding on Nexus 7 (grouper)
         (LP: #1238695)
@@ -37,6 +82,37 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
       . [enhancement] Allow a Mir nested server to have a transparent
         background (LP: #1256702)
       . Compiling without tests fails (-DMIR_ENABLE_TESTS=NO) (LP: #1263724)
+      . examples, doc: Make it clear and consistent how to use
+        a non-root client with a root compositor endpoint. 
+        (LP: #1272143)
+      . Avoid linking to umockdev on platforms (android) which don't yet
+        use it. This allows mir_unit_tests to run on touch images again
+        (LP: #1271434)
+      . Workaround for N4 nested server issue. This change removes
+        mir_pixel_format_bgr_888 - HAL_PIXEL_FORMAT_RGB_888 from the
+        list of supported pixel formats on android. (LP: #1272041)
+      . Don't ask glUniformMatrix4fv to transpose your matrix. That option
+        was officially deprecated between OpenGL and OpenGL|ES. And some
+        drivers like the Nexus 10 don't implement it, resulting in incorrect
+        transformations and even nothing on screen! (LP: #1271853)
+      . Fixes: bug 1272143 (LP: #1272143)
+      . fix integration test failure on the galaxy nexus that was due to
+        creating two surfaces and registering the same buffer twice. Fixes:
+        (LP: #1272597)
+      . Implement screen rotation in GLRenderer, for platforms
+        which can't do it natively in DisplayBuffer.
+        (LP: #1203215)
+      . Add an "orientation" field to output structures in preparation for
+        screen rotation. It's not yet functionally wired to anything.
+        (LP: #1203215)
+      . Only use SwitchingBundle::last_consumed after it has been
+        set. Otherwise SwitchingBundle::compositor_acquire could follow a bogus
+        code path. (LP:#1270964)
+      . tests: Override configuration to avoid creating an (unused)
+        filesystem endpoint for connections when using InProcessServer. 
+        (LP: #1271604)
+      . frontend: ensure that BasicConnector threads don't exit
+        immediately. (LP: #1271655)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jan 2014 11:19:03 +0800
 

@@ -49,12 +49,6 @@ mga::OutputBuilder::OutputBuilder(
         {
             force_backup_display = true;
         }
-
-        //HWC 1.2 not supported yet. make an attempt to use backup display
-        if (hwc_native && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
-        {
-            force_backup_display = true;
-        }
     }
 
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
@@ -83,16 +77,29 @@ std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
     }
     else
     {
-        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
-        {
-            device = res_factory->create_hwc11_device(hwc_native);
-            display_report->report_hwc_composition_in_use(1,1);
-        }
         if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
         {
-            device = res_factory->create_hwc10_device(hwc_native, fb_native);
-            display_report->report_hwc_composition_in_use(1,0);
+            device = res_factory->create_hwc_fb_device(hwc_native, fb_native);
         }
+        else //versions 1.1, 1.2
+        {
+            device = res_factory->create_hwc_device(hwc_native);
+        }
+
+        switch (hwc_native->common.version)
+        {
+            case HWC_DEVICE_API_VERSION_1_2:
+                display_report->report_hwc_composition_in_use(1,2);
+                break;
+            case HWC_DEVICE_API_VERSION_1_1:
+                display_report->report_hwc_composition_in_use(1,1);
+                break;
+            case HWC_DEVICE_API_VERSION_1_0:
+                display_report->report_hwc_composition_in_use(1,0);
+                break;
+            default:
+                break;
+        } 
     }
 
     return device;

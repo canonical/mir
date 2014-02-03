@@ -1676,6 +1676,7 @@ void MultiTouchMotionAccumulator::process(const RawEvent* rawEvent) {
             case ABS_MT_PRESSURE:
                 slot->mInUse = true;
                 slot->mAbsMTPressure = rawEvent->value;
+                slot->mHaveAbsMTPressure = true;
                 break;
             case ABS_MT_DISTANCE:
                 slot->mInUse = true;
@@ -1715,6 +1716,7 @@ void MultiTouchMotionAccumulator::Slot::clear() {
     mInUse = false;
     mHaveAbsMTTouchMinor = false;
     mHaveAbsMTWidthMinor = false;
+    mHaveAbsMTPressure = false;
     mHaveAbsMTToolType = false;
     mAbsMTPositionX = 0;
     mAbsMTPositionY = 0;
@@ -5055,8 +5057,8 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
 
 #if DEBUG_GESTURES
             {
-                std::string mappedTouchIdsString = mappedTouchIdBits.toString();
-                std::string usedGestureIdsString = usedGestureIdBits.toString();
+                std::string mappedTouchIdsString = mappedTouchIds.toString();
+                std::string usedGestureIdsString = usedGestureIds.toString();
                 ALOGD("Gestures: FREEFORM follow up "
                         "mappedTouchIds=%s, usedGestureIds=%s, "
                         "activeGestureId=%d",
@@ -5135,7 +5137,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             const PointerCoords& coords = mPointerGesture.currentGestureCoords[index];
             ALOGD("  currentGesture[%d]: index=%d, toolType=%d, "
                     "x=%0.3f, y=%0.3f, pressure=%0.3f",
-                    id, index, properties.toolType,
+                    properties.id, index, properties.toolType,
                     coords.getAxisValue(AMOTION_EVENT_AXIS_X),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_Y),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));
@@ -5145,7 +5147,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             const PointerCoords& coords = mPointerGesture.lastGestureCoords[index];
             ALOGD("  lastGesture[%d]: index=%d, toolType=%d, "
                     "x=%0.3f, y=%0.3f, pressure=%0.3f",
-                    id, index, properties.toolType,
+                    properties.id, index, properties.toolType,
                     coords.getAxisValue(AMOTION_EVENT_AXIS_X),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_Y),
                     coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));
@@ -5909,7 +5911,8 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
 
         bool isHovering = mTouchButtonAccumulator.getToolType() != AMOTION_EVENT_TOOL_TYPE_MOUSE
                 && (mTouchButtonAccumulator.isHovering()
-                        || (mRawPointerAxes.pressure.valid && inSlot->getPressure() <= 0));
+                        || (mRawPointerAxes.pressure.valid
+                            && inSlot->havePressure() && inSlot->getPressure() <= 0));
         outPointer.isHovering = isHovering;
 
         // Assign pointer id using tracking id if available.

@@ -25,6 +25,9 @@ mkdir ${BUILD_DIR}
 pushd ${BUILD_DIR} > /dev/null 
 
     export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf/pkgconfig"
+    export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+    export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
+    export PKG_CONFIG_SYSROOT_DIR=$MIR_NDK_PATH
     export PKG_CONFIG_EXECUTABLE=`which pkg-config`
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"

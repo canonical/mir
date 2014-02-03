@@ -43,16 +43,13 @@ mir::graphics::NativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buf
     return buffer_to_driver.get();
 }
 
-static void empty(MirSurface * /*surface*/, void * /*client_context*/)
-{}
-
 void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int fence_fd)
 {
     //TODO: pass fence to server instead of waiting here
     mga::SyncFence sync_fence(sync_ops, fence_fd);
     sync_fence.wait();
 
-    mir_wait_for(surface.next_buffer(empty, NULL));
+    surface.request_and_wait_for_next_buffer();
 }
 
 void mcla::ClientSurfaceInterpreter::dispatch_driver_request_format(int format)

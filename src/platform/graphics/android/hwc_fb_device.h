@@ -16,47 +16,40 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 
-#include "mir_toolkit/common.h"
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
-#include <memory>
+#include "hardware/gralloc.h"
+#include "hardware/fb.h"
 
 namespace mir
 {
 namespace graphics
 {
-class Buffer;
-
 namespace android
 {
-class HWCVsyncCoordinator;
-class SyncFileOps;
-class SyncFence;
 
-class HWC11Device : public HWCCommonDevice
+class HwcFbDevice : public HWCCommonDevice
 {
 public:
-    HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                std::shared_ptr<framebuffer_device_t> const& fb_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
-    void prepare_composition();
+    void prepare_gl();
+    void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list); 
     void gpu_render(EGLDisplay dpy, EGLSurface sur);
     void post(Buffer const& buffer);
 
 private:
+    std::shared_ptr<framebuffer_device_t> const fb_device;
     LayerList layer_list;
-
-    std::shared_ptr<SyncFence> last_display_fence;
-    std::shared_ptr<SyncFileOps> const sync_ops;
-    unsigned int primary_display_config;
-    MirPixelFormat fb_format;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_ */

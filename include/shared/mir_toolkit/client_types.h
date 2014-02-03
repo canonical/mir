@@ -45,6 +45,7 @@ typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
+typedef struct MirScreencast MirScreencast;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -245,6 +246,7 @@ typedef struct MirDisplayOutput
     uint32_t physical_height_mm;
 
     MirPowerMode power_mode;
+    MirOrientation orientation;
 } MirDisplayOutput;
 
 typedef struct MirDisplayConfiguration
@@ -264,6 +266,25 @@ typedef struct MirEventDelegate
     mir_event_delegate_callback callback;
     void *context;
 } MirEventDelegate;
+
+/**
+ * MirScreencastParameters is the structure of required information that
+ * you must provide to Mir in order to create a MirScreencast.
+ */
+typedef struct MirScreencastParameters
+{
+    uint32_t output_id;
+    uint32_t width;
+    uint32_t height;
+    MirPixelFormat pixel_format;
+} MirScreencastParameters;
+
+/**
+ * Callback to be passed when calling MirScreencast functions.
+ *   \param [in] screencast          the screencast being updated
+ *   \param [in,out] client_context  context provided by the client
+ */
+typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
 
 #ifdef __cplusplus
 }

@@ -33,6 +33,9 @@ set(
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp
+  private.cpp
+  mir_screencast.cpp
+  mir_screencast_api.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
@@ -69,7 +72,7 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
-set(MIRCLIENT_ABI 5)
+set(MIRCLIENT_ABI 6)
 
 set_target_properties(
   mirclient

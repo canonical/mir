@@ -76,7 +76,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
+            auto graphics_lib = load_library(the_options()->get<std::string>(platform_graphics_lib));
 
             // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
             if (the_options()->is_set(standalone_opt) || !the_options()->is_set(host_socket_opt))
@@ -139,15 +139,19 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                 if (!options->is_set(host_socket_opt))
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
 
-                auto host_socket = options->get(host_socket_opt, "");
+                auto host_socket = options->get<std::string>(host_socket_opt);
                 auto server_socket = the_socket_file();
 
                 if (server_socket == host_socket)
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
 
+                auto const my_name = options->is_set(name_opt) ?
+                    options->get<std::string>(name_opt) :
+                    "nested-mir@:" + server_socket;
+
                 return std::make_shared<graphics::nested::HostConnection>(
                     host_socket,
-                    options->get(name_opt, ("nested-mir@:" + server_socket).c_str()));
+                    my_name);
             }
             else
             {
