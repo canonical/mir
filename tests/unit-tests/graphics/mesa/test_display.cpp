@@ -416,10 +416,6 @@ TEST_F(MesaDisplayTest, post_update)
     {
         InSequence s;
 
-        /* Release the constructor-provided FB */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
-            .Times(Exactly(1));
-
         /* Flip the new FB */
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_id,
@@ -434,7 +430,10 @@ TEST_F(MesaDisplayTest, post_update)
         EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
             .Times(0);
 
-        /* Release the new FB (at destruction time) */
+        /* Release last_flipped_bufobj (at destruction time) */
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
+            .Times(Exactly(1));
+        /* Release scheduled_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
     }
@@ -459,10 +458,6 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
     {
         InSequence s;
 
-        /* Release the constructor-provided FB */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
-            .Times(Exactly(1));
-
         /* New FB flip failure */
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_id,
@@ -471,8 +466,12 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             .Times(Exactly(1))
             .WillOnce(Return(-1));
 
-        /* Release the new (not flipped) BO */
+        /* Release failed bufobj */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
+            .Times(Exactly(1));
+
+        /* Release scheduled_bufobj (at destruction time) */
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
     }
 
