@@ -54,6 +54,7 @@ namespace detail
 template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::protobuf::Buffer* type; };
 template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
+template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
 }
 }
 }
@@ -162,4 +163,14 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
         std::vector<int32_t>();
 
     sender->send_response(id, response, {surface_fd, buffer_fd});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(
+    ::google::protobuf::uint32 id, mir::protobuf::Screencast* response)
+{
+    auto const& buffer_fd = response->has_buffer() ?
+        extract_fds_from(response->mutable_buffer()) :
+        std::vector<int32_t>();
+
+    sender->send_response(id, response, {buffer_fd});
 }

@@ -195,7 +195,7 @@ void MirScreencast::process_buffer(mir::protobuf::Buffer const& buffer)
     try
     {
         buffer_depository.deposit_package(buffer_package,
-                                          protobuf_buffer.buffer_id(),
+                                          buffer.buffer_id(),
                                           output_size, output_format);
     }
     catch (const std::runtime_error& err)
