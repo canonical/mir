@@ -211,9 +211,9 @@ void MirScreencast::screencast_created(
     {
         egl_native_window_ = egl_native_window_factory->create_egl_native_window(this);
         process_buffer(protobuf_screencast.buffer());
-
-        callback(this, context);
     }
+
+    callback(this, context);
     create_screencast_wait_handle.result_received();
 }
 

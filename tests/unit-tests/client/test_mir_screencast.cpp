@@ -549,5 +549,25 @@ TEST_F(MirScreencastTest, is_invalid_if_server_create_screencast_fails)
 
     screencast.creation_wait_handle()->wait_for_all();
 
-    ASSERT_FALSE(screencast.valid());
+    EXPECT_FALSE(screencast.valid());
+}
+
+TEST_F(MirScreencastTest, calls_callback_on_creation_failure)
+{
+    using namespace testing;
+
+    MockCallback mock_cb;
+    EXPECT_CALL(mock_server, create_screencast(_,_,_,_))
+        .WillOnce(DoAll(SetCreateError(), RunClosure()));
+    EXPECT_CALL(mock_cb, call(_,&mock_cb));
+
+    MirScreencast screencast{
+        default_mir_output, mock_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        mock_callback_func, &mock_cb};
+
+    screencast.creation_wait_handle()->wait_for_all();
+
+    EXPECT_FALSE(screencast.valid());
 }
