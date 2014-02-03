@@ -39,59 +39,42 @@ class NativeBuffer;
 namespace android
 {
 
-struct HWCLayer
+enum LayerType
 {
-    virtual ~HWCLayer() = default;
+    gl_rendered,
+    overlay,
+    framebuffer_target,
+    skip
+};
 
-    HWCLayer(hwc_layer_1 *native_layer);
-    HWCLayer& operator=(HWCLayer const& layer);
+class HWCLayer
+{
+public:
+    HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
+    HWCLayer(LayerType,
+             geometry::Rectangle screen_position,
+             bool alpha_enabled,
+             std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
 
+    HWCLayer& operator=(HWCLayer && layer);
+    HWCLayer(HWCLayer && layer);
+
+    HWCLayer& operator=(HWCLayer const& layer) = delete;
+    HWCLayer(HWCLayer const& layer) = delete;
+    
+    void set_layer_type(LayerType type);
+    void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
+    void set_buffer(NativeBuffer const&);
+
+    //gets the release fence
     NativeFence release_fence() const;
     bool needs_gl_render() const;
 
-protected:
-    HWCLayer(
-        hwc_layer_1 *native_layer,
-        int type,
-        buffer_handle_t handle,
-        geometry::Rectangle position,
-        geometry::Size buffer_size,
-        bool skip, bool alpha
-    );
-
-
-    HWCLayer(HWCLayer const& layer) = delete;
+private:
+    hwc_layer_1_t* hwc_layer;
+    std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
-    hwc_layer_1 * hwc_layer;
 };
-
-//layer could be GLES rendered, or overlaid by hwc.
-struct CompositionLayer : public HWCLayer
-{
-    CompositionLayer(Renderable const& renderable);
-private:
-    hwc_layer_1 native_layer;
-};
-
-//used as the target (lowest layer, fb)
-struct FramebufferLayer : public HWCLayer
-{
-    FramebufferLayer();
-    FramebufferLayer(NativeBuffer const&);
-private:
-    hwc_layer_1 native_layer;
-};
-
-//used during compositions when we want to restrict to GLES render only
-struct ForceGLLayer : public HWCLayer
-{
-    ForceGLLayer();
-    ForceGLLayer(HWCLayer const& fb_layer);
-    ForceGLLayer(NativeBuffer const&);
-private:
-    hwc_layer_1 native_layer;
-};
-
 }
 }
 }

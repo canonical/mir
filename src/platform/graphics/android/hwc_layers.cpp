@@ -22,48 +22,78 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <cstring>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
+mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 {
-    memcpy(hwc_layer, layer.hwc_layer, sizeof(hwc_layer_1));
-    visible_rect = layer.visible_rect;
-    hwc_layer->visibleRegionScreen = {1, &visible_rect};
+    hwc_layer = other.hwc_layer;
+    hwc_list = std::move(other.hwc_list);
+    visible_rect = std::move(other.visible_rect);
     return *this;
 }
 
-mga::HWCLayer::HWCLayer(hwc_layer_1 *native_layer)
-    : hwc_layer(native_layer)
+mga::HWCLayer::HWCLayer(HWCLayer && other)
+    : hwc_layer(std::move(other.hwc_layer)),
+      hwc_list(std::move(other.hwc_list)),
+      visible_rect(std::move(other.visible_rect))
+{
+}
+
+mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index)
+    : hwc_layer(&list->hwLayers[layer_index]),
+      hwc_list(list)
 {
 }
 
 mga::HWCLayer::HWCLayer(
-        hwc_layer_1 *native_layer,
-        int type,
-        buffer_handle_t buffer_handle,
-        geom::Rectangle position,
-        geom::Size buffer_size,
-        bool skip, bool alpha)
-    : hwc_layer(native_layer)
+    LayerType type,
+    geometry::Rectangle position,
+    bool alpha_enabled,
+    std::shared_ptr<hwc_display_contents_1_t> list,
+    size_t layer_index)
+     : HWCLayer(list, layer_index)
 {
-    (skip) ? hwc_layer->flags = HWC_SKIP_LAYER : hwc_layer->flags = 0;
-    (alpha) ? hwc_layer->blending = HWC_BLENDING_COVERAGE : hwc_layer->blending = HWC_BLENDING_NONE;
-    hwc_layer->compositionType = type;
+    hwc_layer->flags = 0;
+
+    switch(type)
+    {
+        case mga::LayerType::skip:
+            hwc_layer->compositionType = HWC_FRAMEBUFFER;
+            hwc_layer->flags = HWC_SKIP_LAYER;
+        break;
+
+        case mga::LayerType::gl_rendered:
+            hwc_layer->compositionType = HWC_FRAMEBUFFER;
+        break;
+
+        case mga::LayerType::framebuffer_target:
+            hwc_layer->compositionType = HWC_FRAMEBUFFER_TARGET;
+        break;
+
+        case mga::LayerType::overlay: //driver is the only one who can set to overlay
+        default:
+            BOOST_THROW_EXCEPTION(std::logic_error("invalid layer type creation"));
+    }
+
+    (alpha_enabled) ? hwc_layer->blending = HWC_BLENDING_COVERAGE : hwc_layer->blending = HWC_BLENDING_NONE;
+
     hwc_layer->hints = 0;
     hwc_layer->transform = 0;
-    //TODO: acquireFenceFd should be buffer.fence()
     hwc_layer->acquireFenceFd = -1;
     hwc_layer->releaseFenceFd = -1;
 
     hwc_layer->sourceCrop = 
     {
         0, 0,
-        static_cast<int>(buffer_size.width.as_uint32_t()),
-        static_cast<int>(buffer_size.height.as_uint32_t())
+//        static_cast<int>(buffer_size.width.as_uint32_t()),
+//        static_cast<int>(buffer_size.height.as_uint32_t())
+        0,0
     };
 
 
@@ -80,8 +110,7 @@ mga::HWCLayer::HWCLayer(
     hwc_layer->visibleRegionScreen.numRects=1;
     hwc_layer->visibleRegionScreen.rects= &visible_rect;
 
-    hwc_layer->handle = buffer_handle;
-    memset(&hwc_layer->reserved, 0, sizeof(hwc_layer->reserved));
+//    hwc_layer->handle = buffer_handle;
 }
 
 bool mga::HWCLayer::needs_gl_render() const
@@ -94,57 +123,14 @@ mga::NativeFence mga::HWCLayer::release_fence() const
     return hwc_layer->releaseFenceFd;
 }
 
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(&native_layer,
-               HWC_FRAMEBUFFER_TARGET,
-               nullptr,
-               geom::Rectangle{{0,0}, {0,0}},
-               geom::Size{0,0},
-               false,
-               false)
+void mga::HWCLayer::set_layer_type(LayerType)
 {
 }
 
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(&native_layer,
-               HWC_FRAMEBUFFER_TARGET,
-               buffer.handle(),
-               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
-               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
-               false,
-               false)
+void mga::HWCLayer::set_render_parameters(geometry::Rectangle, bool)
 {
 }
 
-mga::ForceGLLayer::ForceGLLayer()
-    : HWCLayer(&native_layer,
-               HWC_FRAMEBUFFER,
-               nullptr,
-               geom::Rectangle{{0,0}, {0,0}},
-               geom::Size{0,0},
-               true,
-               false)
-{
-}
-
-mga::ForceGLLayer::ForceGLLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(&native_layer,
-               HWC_FRAMEBUFFER,
-               buffer.handle(),
-               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
-               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
-               true,
-               false)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable)
-    : HWCLayer(&native_layer,
-               HWC_FRAMEBUFFER,
-               renderable.buffer()->native_buffer_handle()->handle(),
-               renderable.screen_position(),
-               renderable.buffer()->size(),
-               false,
-               renderable.alpha_enabled())
+void mga::HWCLayer::set_buffer(NativeBuffer const&)
 {
 }

@@ -46,14 +46,16 @@ public:
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_handle_1));
-        ON_CALL(mock_renderable, buffer())
-            .WillByDefault(Return(mt::fake_shared(mock_buffer)));
-        ON_CALL(mock_renderable, alpha_enabled())
-            .WillByDefault(Return(alpha_enabled));
-        ON_CALL(mock_renderable, screen_position())
-            .WillByDefault(Return(screen_position));
+
+        list = std::shared_ptr<hwc_display_contents_1_t>(
+            static_cast<hwc_display_contents_1_t*>(
+                ::operator new(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t))));
+        list_index = 0;
+        hwc_layer = &list->hwLayers[list_index];
+        type = mga::LayerType::gl_rendered;
     }
 
+    mga::LayerType type;
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
     bool alpha_enabled{true};
@@ -61,94 +63,68 @@ public:
     int height{876};
     std::shared_ptr<mg::NativeBuffer> native_handle_1;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_2;
-    testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 
+    std::shared_ptr<hwc_display_contents_1_t> list;
+    hwc_layer_1_t* hwc_layer;
+    size_t list_index;
 };
 
 TEST_F(HWCLayersTest, release_fences)
 {
     int fence1 = 1, fence2 = -1;
-    hwc_layer_1_t native_layer;
-    mga::HWCLayer layer(&native_layer);
+    mga::HWCLayer layer(list, list_index);
 
-    native_layer.releaseFenceFd = fence1;
+    hwc_layer->releaseFenceFd = fence1;
     EXPECT_EQ(layer.release_fence(), fence1);
 
-    native_layer.releaseFenceFd = fence2;
+    hwc_layer->releaseFenceFd = fence2;
     EXPECT_EQ(layer.release_fence(), fence2);
 }
 
 TEST_F(HWCLayersTest, needs_gl_render)
 {
-    hwc_layer_1_t native_layer;
-    mga::HWCLayer layer(&native_layer);
+    mga::HWCLayer layer(list, list_index);
 
-    native_layer.compositionType = HWC_OVERLAY;
+    hwc_layer->compositionType = HWC_OVERLAY;
     EXPECT_FALSE(layer.needs_gl_render());
 
-    native_layer.flags = HWC_SKIP_LAYER;
+    hwc_layer->flags = HWC_SKIP_LAYER;
     EXPECT_TRUE(layer.needs_gl_render());
 
-    native_layer.flags = 0;
-    native_layer.compositionType = HWC_FRAMEBUFFER;
+    hwc_layer->flags = 0;
+    hwc_layer->compositionType = HWC_FRAMEBUFFER;
     EXPECT_TRUE(layer.needs_gl_render());
 }
 
-TEST_F(HWCLayersTest, layer_copy_and_assignment)
+TEST_F(HWCLayersTest, layer_move)
 {
     hwc_rect_t region = {0,0,width, height};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
     memset(&expected_layer, 0, sizeof(expected_layer));
-    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
-    expected_layer.hints = 0;
-    expected_layer.flags = 0;
-    expected_layer.handle = native_handle_1->handle();
-    expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region;
-    expected_layer.visibleRegionScreen = visible_region;
-    expected_layer.acquireFenceFd = -1;
-    expected_layer.releaseFenceFd = -1;
+    hwc_layer->compositionType = HWC_FRAMEBUFFER_TARGET;
+    hwc_layer->hints = 0;
+    hwc_layer->flags = 0;
+    hwc_layer->handle = native_handle_1->handle();
+    hwc_layer->transform = 0;
+    hwc_layer->blending = HWC_BLENDING_NONE;
+    hwc_layer->sourceCrop = region;
+    hwc_layer->displayFrame = region;
+    hwc_layer->visibleRegionScreen = visible_region;
+    hwc_layer->acquireFenceFd = -1;
+    hwc_layer->releaseFenceFd = -1;
 
-    mga::HWCLayer first_layer(&expected_layer);
+    mga::HWCLayer layer(list, list_index);
+    mga::HWCLayer second_layer(std::move(layer));
 
-    mga::HWCLayer assigned_layer;
-    assigned_layer = first_layer;
-
-    HWCLayer copied_layer(first_layer);
-
-    EXPECT_THAT(assigned_layer, MatchesHWCLayer(expected_layer));
-    EXPECT_THAT(copied_layer, MatchesHWCLayer(expected_layer));
+    second_layer.set_layer_type(mga::LayerType::framebuffer_target);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayersTest, fb_target_layer)
+TEST_F(HWCLayersTest, layer_types)
 {
     hwc_rect_t region = {0,0,width, height};
-    hwc_region_t visible_region {1, &region};
-    hwc_layer_1 expected_layer;
-    memset(&expected_layer, 0, sizeof(expected_layer));
-    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
-    expected_layer.hints = 0;
-    expected_layer.flags = 0;
-    expected_layer.handle = native_handle_1->handle();
-    expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region;
-    expected_layer.visibleRegionScreen = visible_region;
-    expected_layer.acquireFenceFd = -1;
-    expected_layer.releaseFenceFd = -1;
-
-    mga::FramebufferLayer target_layer(*native_handle_1);
-    EXPECT_THAT(target_layer, MatchesHWCLayer(expected_layer));
-}
-
-TEST_F(HWCLayersTest, fb_target_layer_no_buffer)
-{
-    hwc_rect_t region = {0,0,0,0};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
     memset(&expected_layer, 0, sizeof(expected_layer));
@@ -164,15 +140,53 @@ TEST_F(HWCLayersTest, fb_target_layer_no_buffer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    mga::FramebufferLayer target_layer;
-    EXPECT_THAT(target_layer, MatchesHWCLayer(expected_layer));
+    type = mga::LayerType::framebuffer_target;
+    mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+
+    type = mga::LayerType::overlay;
+    EXPECT_THROW({
+        mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
+    }, std::logic_error);
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    type = mga::LayerType::gl_rendered;
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.flags = HWC_SKIP_LAYER;
+    type = mga::LayerType::skip;
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+}
+
+TEST_F(HWCLayersTest, buffer_updates)
+{
+    hwc_rect_t region = {0,0,width, height};
+    hwc_region_t visible_region {1, &region};
+    hwc_layer_1 expected_layer;
+    memset(&expected_layer, 0, sizeof(expected_layer));
+    expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_NONE;
+    expected_layer.sourceCrop = region;
+    expected_layer.displayFrame = region;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+
+    type = mga::LayerType::framebuffer_target;
+    mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
+
+    layer.set_buffer(*native_handle_1);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, normal_layer)
 {
     using namespace testing;
-
-    mga::CompositionLayer composition_layer(mock_renderable); 
 
     hwc_rect_t crop
     {
@@ -195,7 +209,7 @@ TEST_F(HWCLayersTest, normal_layer)
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.hints = 0;
     expected_layer.flags = 0;
-    expected_layer.handle = native_handle_1->handle();
+    expected_layer.handle = 0;
     expected_layer.transform = 0;
     expected_layer.blending = HWC_BLENDING_COVERAGE;
     expected_layer.sourceCrop = crop;
@@ -204,60 +218,11 @@ TEST_F(HWCLayersTest, normal_layer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    EXPECT_THAT(composition_layer, MatchesHWCLayer(expected_layer));
+    mga::HWCLayer layer(list, list_index);
+    layer.set_render_parameters(screen_position, true);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
-    EXPECT_CALL(mock_renderable, alpha_enabled())
-        .Times(1)
-        .WillOnce(Return(false));
-    mga::CompositionLayer composition_layer_no_alpha(mock_renderable); 
     expected_layer.blending = HWC_BLENDING_NONE;
-    EXPECT_THAT(composition_layer_no_alpha, MatchesHWCLayer(expected_layer));
-}
-
-TEST_F(HWCLayersTest, forced_gl_layer)
-{
-    mga::ForceGLLayer layer;
-
-    hwc_rect_t region = {0,0,0,0};
-    hwc_region_t visible_region {1, &region};
-    hwc_layer_1 expected_layer;
-
-    expected_layer.compositionType = HWC_FRAMEBUFFER;
-    expected_layer.hints = 0;
-    expected_layer.flags = HWC_SKIP_LAYER;
-    expected_layer.handle = nullptr;
-    expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region;
-    expected_layer.visibleRegionScreen = visible_region;
-    expected_layer.acquireFenceFd = -1;
-    expected_layer.releaseFenceFd = -1;
-
-    EXPECT_THAT(layer, MatchesHWCLayer(expected_layer));
-    EXPECT_TRUE(layer.needs_gl_render());
-}
-
-TEST_F(HWCLayersTest, forced_gl_layer_with_buffer)
-{
-    mga::ForceGLLayer layer(*native_handle_1);
-
-    hwc_rect_t region = {0,0,width, height};
-    hwc_region_t visible_region {1, &region};
-    hwc_layer_1 expected_layer;
-    memset(&expected_layer, 0, sizeof(expected_layer));
-
-    expected_layer.compositionType = HWC_FRAMEBUFFER;
-    expected_layer.hints = 0;
-    expected_layer.flags = HWC_SKIP_LAYER;
-    expected_layer.handle = native_handle_1->handle();
-    expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_NONE;
-    expected_layer.sourceCrop = region;
-    expected_layer.displayFrame = region;
-    expected_layer.visibleRegionScreen = visible_region;
-    expected_layer.acquireFenceFd = -1;
-    expected_layer.releaseFenceFd = -1;
-
-    EXPECT_THAT(layer, MatchesHWCLayer(expected_layer));
+    layer.set_render_parameters(screen_position, false);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }

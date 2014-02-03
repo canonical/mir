@@ -92,14 +92,5 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     return !(::testing::Test::HasFailure());
 }
 
-MATCHER_P(MatchesHWCLayer, value, std::string(""))
-{
-    hwc_layer_1_t native_layer;
-    mir::graphics::android::HWCLayer layer(&native_layer);
-    layer = arg;
-    EXPECT_THAT(native_layer, MatchesLayer(value));
-    return !(::testing::Test::HasFailure());
-}
-
 }
 #endif /* MIR_TEST_HWC_STRUCT_HELPER_INL_H_ */
