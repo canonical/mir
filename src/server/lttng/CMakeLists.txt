@@ -3,9 +3,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LTTNG_UST_INCLUDE_DIRS})
 set(
   LTTNG_SOURCES
 
-  server_tracepoint_provider.cpp
-  message_processor_report.cpp
+  compositor_report.cpp
+  connector_report.cpp
+  display_report.cpp
   input_report.cpp
+  message_processor_report.cpp
+  session_mediator_report.cpp
+  scene_report.cpp
+  server_tracepoint_provider.cpp
 )
 
 add_library(
@@ -14,18 +19,7 @@ add_library(
   ${LTTNG_SOURCES}
 )
 
-set(
-  MIR_SERVER_LTTNG_SOURCES
-
-  message_processor_report_tp.c
-  input_report_tp.c
-)
-
-add_library(
-  mirserverlttng SHARED
-
-  ${MIR_SERVER_LTTNG_SOURCES}
-)
+add_library(mirserverlttng SHARED tracepoints.c)
 
 # Don't treat missing-field-initializers as an error, since
 # the LTTng macros contain code that triggers this (but it's

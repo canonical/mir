@@ -30,12 +30,12 @@ namespace lttng
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
 public:
-    void received_invocation(void const* mediator, int id, std::string const& method);
-    void completed_invocation(void const* mediator, int id, bool result);
-    void unknown_method(void const* mediator, int id, std::string const& method);
-    void exception_handled(void const* mediator, int id, std::exception const& error);
-    void exception_handled(void const* mediator, std::exception const& error);
-    void sent_event(void const* mediator, MirSurfaceEvent const& event);
+    void received_invocation(void const* mediator, int id, std::string const& method) override;
+    void completed_invocation(void const* mediator, int id, bool result) override;
+    void unknown_method(void const* mediator, int id, std::string const& method) override;
+    void exception_handled(void const* mediator, int id, std::exception const& error) override;
+    void exception_handled(void const* mediator, std::exception const& error) override;
+    void sent_event(void const* mediator, MirSurfaceEvent const& event) override;
 
 private:
     ServerTracepointProvider tp_provider;

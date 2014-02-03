@@ -44,6 +44,8 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 
+#include "logging/create_report.h"
+
 #include <map>
 
 namespace mc = mir::compositor;
@@ -88,23 +90,10 @@ std::shared_ptr<mi::InputReport>
 mir::DefaultServerConfiguration::the_input_report()
 {
     return input_report(
-        [this]() -> std::shared_ptr<mi::InputReport>
-        {
-            auto opt = the_options()->get<std::string>(input_report_opt);
-
-            if (opt == log_opt_value)
-            {
-                return std::make_shared<ml::InputReport>(the_logger());
-            }
-            else if (opt == lttng_opt_value)
-            {
-                return std::make_shared<mir::lttng::InputReport>();
-            }
-            else
-            {
-                return std::make_shared<mi::NullInputReport>();
-            }
-        });
+        std::bind(&ml::create_report<mi::InputReport, ml::InputReport, mir::lttng::InputReport, mi::NullInputReport>,
+                  this,
+                  the_options(),
+                  input_report_opt));
 }
 
 std::shared_ptr<mi::CursorListener>
@@ -179,24 +168,10 @@ std::shared_ptr<mf::MessageProcessorReport>
 mir::DefaultServerConfiguration::the_message_processor_report()
 {
     return message_processor_report(
-        [this]() -> std::shared_ptr<mf::MessageProcessorReport>
-        {
-            auto mp_report = the_options()->get<std::string>(msg_processor_report_opt);
-            if (mp_report == log_opt_value)
-            {
-                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_clock());
-            }
-            else if (mp_report == lttng_opt_value)
-            {
-                return std::make_shared<mir::lttng::MessageProcessorReport>();
-            }
-            else
-            {
-                return std::make_shared<mf::NullMessageProcessorReport>();
-            }
-        });
+        std::bind(&ml::create_report_with_clock<mf::MessageProcessorReport, ml::MessageProcessorReport,
+                                                mir::lttng::MessageProcessorReport, mf::NullMessageProcessorReport>,
+                  this, the_options(), msg_processor_report_opt));
 }
-
 
 std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
 {

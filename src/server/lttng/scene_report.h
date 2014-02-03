@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,13 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_LTTNG_INPUT_REPORT_H_
-#define MIR_LTTNG_INPUT_REPORT_H_
 
-#include "mir/input/input_report.h"
+#ifndef MIR_LTTNG_SCENE_REPORT_H_
+#define MIR_LTTNG_SCENE_REPORT_H_
+
+#include "mir/scene/scene_report.h"
 #include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
@@ -27,25 +28,19 @@ namespace mir
 namespace lttng
 {
 
-class InputReport : public input::InputReport
+class SceneReport : public scene::SceneReport
 {
 public:
-    InputReport() = default;
-    virtual ~InputReport() noexcept(true) = default;
-
-    void received_event_from_kernel(int64_t when, int type, int code, int value) override;
-
-    void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time) override;
-    void published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time) override;
-
-    void received_event_finished_signal(int src_fd, uint32_t seq_id) override;
-
+    void surface_created(scene::BasicSurface* const surface) override;
+    void surface_added(scene::BasicSurface* const surface) override;
+    void surface_removed(scene::BasicSurface* const surface) override;
+    void surface_deleted(scene::BasicSurface* const surface) override;
 private:
     ServerTracepointProvider tp_provider;
 };
-
 }
 }
 
 
-#endif /* MIR_LTTNG_INPUT_REPORT_H_ */
+
+#endif /* MIR_LTTNG_SCENE_REPORT_H_ */

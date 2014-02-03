@@ -2,3 +2,4 @@
 #define TRACEPOINT_CREATE_PROBES
 
 #include "rpc_report_tp.h"
+#include "input_receiver_report_tp.h"

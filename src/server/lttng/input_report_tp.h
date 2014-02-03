@@ -25,18 +25,7 @@
 #if !defined(MIR_LTTNG_INPUT_REPORT_TP_H_) || defined(TRACEPOINT_HEADER_MULTI_READ)
 #define MIR_LTTNG_INPUT_REPORT_TP_H_
 
-#include <lttng/tracepoint.h>
-#include <stdint.h>
-
-#ifdef __clang__
-/*
- * TRACEPOINT_EVENT defines functions; since we disable tracepoints under clang
- * these functions are unused and so generate fatal warnings.
- * (see mir_tracepoint.h and http://sourceware.org/bugzilla/show_bug.cgi?id=13974)
- */
-#pragma clang diagnostic push
-#pragma clang diagnostic warning "-Wunused-function"
-#endif
+#include "lttng_utils.h"
 
 TRACEPOINT_EVENT(
     mir_server_input,
@@ -82,10 +71,8 @@ TRACEPOINT_EVENT(
     )
 )
 
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+#include "lttng_utils_pop.h"
 
-#endif /* MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_ */
+#endif /* MIR_LTTNG_DISPLAY_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>

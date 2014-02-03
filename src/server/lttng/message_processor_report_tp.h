@@ -25,28 +25,25 @@
 #if !defined(MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_) || defined(TRACEPOINT_HEADER_MULTI_READ)
 #define MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_
 
-#include <lttng/tracepoint.h>
+#include "lttng_utils.h"
 
-#ifdef __clang__
-/*
- * TRACEPOINT_EVENT defines functions; since we disable tracepoints under clang
- * these functions are unused and so generate fatal warnings.
- * (see mir_tracepoint.h and http://sourceware.org/bugzilla/show_bug.cgi?id=13974)
- */
-#pragma clang diagnostic push
-#pragma clang diagnostic warning "-Wunused-function"
-#endif
-
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_CLASS(
     mir_server_msgproc,
-    received_invocation,
+    method_event,
     TP_ARGS(const void*, mediator, int, id, const char*, method),
     TP_FIELDS(
         ctf_integer_hex(void*, mediator, mediator)
         ctf_integer(int, id, id)
         ctf_string(method, method)
+        )
     )
-)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_msgproc,
+    method_event,
+    received_invocation,
+    TP_ARGS(const void*, mediator, int, id, const char*, method)
+    )
 
 TRACEPOINT_EVENT(
     mir_server_msgproc,
@@ -56,12 +53,51 @@ TRACEPOINT_EVENT(
         ctf_integer_hex(void*, mediator, mediator)
         ctf_integer(int, id, id)
         ctf_integer(int, result, result)
+        )
     )
-)
 
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_msgproc,
+    method_event,
+    unknown_method,
+    TP_ARGS(const void*, mediator, int, id, char const*, method)
+    )
+
+
+TRACEPOINT_EVENT(
+    mir_server_msgproc,
+    exception_handled,
+    TP_ARGS(const void*, mediator, int, id, char const*, exception),
+    TP_FIELDS(
+        ctf_integer_hex(void*, mediator, mediator)
+        ctf_integer(int, id, id)
+        ctf_string(exception, exception)
+        )
+    )
+
+TRACEPOINT_EVENT(
+    mir_server_msgproc,
+    exception_handled_wo_invocation,
+    TP_ARGS(const void*, mediator, char const*, exception),
+    TP_FIELDS(
+        ctf_integer_hex(void*, mediator, mediator)
+        ctf_string(exception, exception)
+        )
+    )
+
+TRACEPOINT_EVENT(
+    mir_server_msgproc,
+    sent_event,
+    TP_ARGS(const void*, mediator, int, surface_id, int, attribute, int, value),
+    TP_FIELDS(
+        ctf_integer_hex(void*, mediator, mediator)
+        ctf_integer(int, surface_id, surface_id)
+        ctf_integer(int, attribute, attribute)
+        ctf_integer(int, value, value)
+        )
+    )
+
+#include "lttng_utils_pop.h"
 
 #endif /* MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_ */
 

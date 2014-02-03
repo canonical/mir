@@ -36,22 +36,25 @@ void mir::lttng::MessageProcessorReport::completed_invocation(
 }
 
 void mir::lttng::MessageProcessorReport::unknown_method(
-    void const* /*mediator*/, int /*id*/, std::string const& /*method*/)
+    void const* mediator, int id, std::string const& method)
 {
+    mir_tracepoint(mir_server_msgproc, unknown_method, mediator, id, method.c_str());
 }
 
 void mir::lttng::MessageProcessorReport::exception_handled(
-    void const* /*mediator*/, int /*id*/, std::exception const& /*error*/)
+    void const* mediator, int id, std::exception const& error)
 {
+    mir_tracepoint(mir_server_msgproc, exception_handled, mediator, id, error.what());
 }
 
 void mir::lttng::MessageProcessorReport::exception_handled(
-    void const* /*mediator*/, std::exception const& /*error*/)
+    void const* mediator, std::exception const& error)
 {
+    mir_tracepoint(mir_server_msgproc, exception_handled_wo_invocation, mediator, error.what());
 }
 
 void mir::lttng::MessageProcessorReport::sent_event(
-    void const* /*mediator*/, MirSurfaceEvent const&)
+    void const* mediator, MirSurfaceEvent const& event)
 {
-    // TODO
+    mir_tracepoint(mir_server_msgproc, sent_event, mediator, event.id, event.attrib, event.value);
 }

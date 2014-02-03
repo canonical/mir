@@ -36,6 +36,8 @@
 #include "surface_source.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
+#include "../lttng/scene_report.h"
+#include "../logging/create_report.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -128,24 +130,9 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
 std::shared_ptr<ms::SceneReport>
 mir::DefaultServerConfiguration::the_scene_report()
 {
-    return scene_report([this]() -> std::shared_ptr<ms::SceneReport>
-    {
-        auto opt = the_options()->get<std::string>(scene_report_opt);
-
-        if (opt == log_opt_value)
-        {
-            return std::make_shared<ml::SceneReport>(the_logger());
-        }
-        else if (opt == off_opt_value)
-        {
-            return std::make_shared<ms::NullSceneReport>();
-        }
-        else
-        {
-            throw AbnormalExit(std::string("Invalid ") + scene_report_opt + " option: " + opt +
-                " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
-        }
-    });
+    return scene_report(
+        std::bind(&ml::create_report<ms::SceneReport, ml::SceneReport, mir::lttng::SceneReport, ms::NullSceneReport>,
+                  this, the_options(), scene_report_opt));
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>
