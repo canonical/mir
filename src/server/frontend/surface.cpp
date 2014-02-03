@@ -62,14 +62,13 @@ void mf::Surface::swap_buffers_blocking(graphics::Buffer*& buffer)
 
     swap_buffers(buffer,
         [&]
-         {
+        {
             std::unique_lock<decltype(mutex)> lock(mutex);
             done = true;
             cv.notify_one();
-         });
+        });
 
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    while (!done)
-        cv.wait(lock, [&]{ return done; });
+    cv.wait(lock, [&]{ return done; });
 }

@@ -72,8 +72,7 @@ auto client_acquire_blocking(std::shared_ptr<mc::SwitchingBundle> const& switchi
 
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    while (!done)
-        cv.wait(lock, [&]{ return done; });
+    cv.wait(lock, [&]{ return done; });
 
     return result;
 }
