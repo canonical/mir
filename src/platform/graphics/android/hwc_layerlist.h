@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
-#include "mir/graphics/renderable.h"
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
 #include "hwc_layers.h"
@@ -28,12 +27,6 @@
 #include <vector>
 #include <initializer_list>
 #include <list>
-
-namespace
-{
-bool const use_fb_target = true;
-bool const do_not_use_fb_target = false;
-}
 
 namespace mir
 {
