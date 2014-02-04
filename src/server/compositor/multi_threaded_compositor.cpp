@@ -152,7 +152,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     : display{display},
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
-      report{compositor_report}
+      report{compositor_report},
+      started{false}
 {
 }
 
@@ -163,6 +164,12 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::start()
 {
+    std::unique_lock<std::mutex> lk(started_guard);
+    if (started)
+    {
+        return;
+    }
+
     report->started();
 
     /* Start the compositing threads */
@@ -186,10 +193,18 @@ void mc::MultiThreadedCompositor::start()
     /* First render */
     for (auto& f : thread_functors)
         f->schedule_compositing();
+
+    started = true;
 }
 
 void mc::MultiThreadedCompositor::stop()
 {
+    std::unique_lock<std::mutex> lk(started_guard);
+    if (!started)
+    {
+        return;
+    }
+
     scene->set_change_callback([]{});
 
     for (auto& f : thread_functors)
@@ -202,4 +217,6 @@ void mc::MultiThreadedCompositor::stop()
     threads.clear();
 
     report->stopped();
+
+    started = false;
 }

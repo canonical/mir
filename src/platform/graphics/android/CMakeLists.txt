@@ -1,5 +1,5 @@
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
-    ${LIBHARDWARE_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
 )
@@ -15,8 +15,9 @@ add_library(
   display_buffer.cpp
   output_builder.cpp
   hwc_layerlist.cpp
-  hwc10_device.cpp
-  hwc11_device.cpp
+  hwc_layers.cpp
+  hwc_fb_device.cpp
+  hwc_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp
   android_alloc_adaptor.cpp

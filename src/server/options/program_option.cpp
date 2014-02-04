@@ -26,6 +26,13 @@
 namespace mo = mir::options;
 namespace po = boost::program_options;
 
+namespace
+{
+    std::string parse_name(std::string name)
+    {
+        return name.substr(0, name.find_first_of(','));
+    }
+}
 
 mo::ProgramOption::ProgramOption()
 {
@@ -106,15 +113,16 @@ void mo::ProgramOption::parse_file(
 
 bool mo::ProgramOption::is_set(char const* name) const
 {
-    return options.count(name);
+    return options.count(parse_name(name));
 }
 
 
 bool mo::ProgramOption::get(char const* name, bool default_) const
 {
-    if (options.count(name))
+    auto const parsed_name = parse_name(name);
+    if (options.count(parsed_name))
     {
-        return options[name].as<bool>();
+        return options[parsed_name].as<bool>();
     }
 
     return default_;
@@ -122,9 +130,10 @@ bool mo::ProgramOption::get(char const* name, bool default_) const
 
 std::string mo::ProgramOption::get(char const* name, char const* default_) const
 {
-    if (options.count(name))
+    auto const parsed_name = parse_name(name);
+    if (options.count(parsed_name))
     {
-        return options[name].as<std::string>();
+        return options[parsed_name].as<std::string>();
     }
 
     return default_;
@@ -132,10 +141,24 @@ std::string mo::ProgramOption::get(char const* name, char const* default_) const
 
 int mo::ProgramOption::get(char const* name, int default_) const
 {
-    if (options.count(name))
+    auto const parsed_name = parse_name(name);
+    if (options.count(parsed_name))
     {
-        return options[name].as<int>();
+        return options[parsed_name].as<int>();
     }
+
+    return default_;
+}
+
+boost::any const& mo::ProgramOption::get(char const* name) const
+{
+    auto const parsed_name = parse_name(name);
+    if (options.count(parsed_name))
+    {
+        return options[parsed_name].value();
+    }
+
+    static boost::any const default_;
 
     return default_;
 }

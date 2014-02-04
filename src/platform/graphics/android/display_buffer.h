@@ -33,6 +33,7 @@ namespace android
 
 class DisplayDevice;
 class FramebufferBundle;
+
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
@@ -47,11 +48,21 @@ public:
     void post_update();
     bool can_bypass() const override;
 
+    void render_and_post_update(
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
+        std::function<void(Renderable const&)> const& render_fn);
+    MirOrientation orientation() const override;
+    void orient(MirOrientation);
+
 private:
+    void render_and_post();
+
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;
+    bool prepared;
+    MirOrientation rotation;
 };
 
 }

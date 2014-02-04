@@ -54,7 +54,8 @@ public:
         EGLDisplayHandle const& egl_display,
         MirSurface* mir_surface,
         geometry::Rectangle const& area,
-        std::shared_ptr<input::EventFilter> const& event_handler);
+        std::shared_ptr<input::EventFilter> const& event_handler,
+        MirPixelFormat preferred_format);
 
     ~NestedOutput() noexcept;
 
@@ -63,6 +64,11 @@ public:
     void release_current() override;
     void post_update() override;
     virtual bool can_bypass() const override;
+    MirOrientation orientation() const override;
+
+    void render_and_post_update(
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
+        std::function<void(Renderable const&)> const& render_fn);
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;

@@ -256,28 +256,32 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_on);
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_on, output.orientation);
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_standby);
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_standby, output.orientation);
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_off);
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_off, output.orientation);
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index, mir_power_mode_suspend);
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_suspend, output.orientation);
     });
     display.configure(*configuration);
 }

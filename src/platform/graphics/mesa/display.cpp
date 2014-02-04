@@ -36,6 +36,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace mgm = mir::graphics::mesa;
 namespace mg = mir::graphics;
@@ -79,7 +80,7 @@ mgm::Display::Display(std::shared_ptr<Platform> const& platform,
                       std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
-      monitor(mgm::UdevContext()),
+      monitor(mir::udev::Context()),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
       current_display_configuration{platform->drm.fd}
@@ -147,6 +148,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         {
             auto bounding_rect = group.bounding_rectangle();
             std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
+            MirOrientation orientation = mir_orientation_normal;
 
             group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
             {
@@ -158,17 +160,30 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
                 kms_output->set_power_mode(conf_output.power_mode);
                 kms_outputs.push_back(kms_output);
+
+                /*
+                 * Presently OverlappingOutputGroup guarantees all grouped
+                 * outputs have the same orientation.
+                 */
+                orientation = conf_output.orientation;
             });
 
-            auto surface =
-                platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
-                                                     bounding_rect.size.height.as_uint32_t());
+            uint32_t width = bounding_rect.size.width.as_uint32_t();
+            uint32_t height = bounding_rect.size.height.as_uint32_t();
+            if (orientation == mir_orientation_left ||
+                orientation == mir_orientation_right)
+            {
+                std::swap(width, height);
+            }
+
+            auto surface = platform->gbm.create_scanout_surface(width, height);
 
             std::unique_ptr<DisplayBuffer> db{
                 new DisplayBuffer{platform, listener,
                                   kms_outputs,
                                   std::move(surface),
                                   bounding_rect,
+                                  orientation,
                                   shared_egl.context()}};
 
             display_buffers_new.push_back(std::move(db));
@@ -195,7 +210,7 @@ void mgm::Display::register_configuration_change_handler(
         [conf_change_handler, this](int)
         {
             monitor.process_events([conf_change_handler]
-                                   (UdevMonitor::EventType, UdevDevice const&)
+                                   (mir::udev::Monitor::EventType, mir::udev::Device const&)
                                    {
                                         conf_change_handler();
                                    });

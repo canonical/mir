@@ -36,11 +36,11 @@ int main(int argc, char* argv[])
     MirSurface *surface = 0;
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hf:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:")) != -1)
     {
         switch (arg)
         {
-        case 'f':
+        case 'm':
             socket_file = optarg;
             break;
 
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         default:
             puts(argv[0]);
             puts("Usage:");
-            puts("    -f <socket filename>");
+            puts("    -m <Mir server socket>");
             puts("    -h: this help text");
             return -1;
         }

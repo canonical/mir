@@ -114,6 +114,8 @@ void mgm::Cursor::for_each_used_output(
                 {
                     uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
                     auto output = output_container.get_kms_output_for(connector_id);
+
+                    // TODO: Cursor rotation support (conf_output.extents())
                     geom::Rectangle output_rect
                     {
                         conf_output.top_left,

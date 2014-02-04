@@ -53,6 +53,7 @@ libboost-program-options1.54-dev,\
 libboost-system1.54-dev,\
 libboost-thread1.54-dev,\
 libboost-regex1.54-dev,\
+android-headers,\
 libhardware-dev,\
 libgflags-dev,\
 libgoogle-glog-dev,\
@@ -61,16 +62,30 @@ libegl1-mesa-dev,\
 libgles2-mesa-dev,\
 libxkbcommon-dev,\
 libumockdev-dev,\
+libudev-dev,\
 liblttng-ust-dev,\
 systemtap-sdt-dev,\
 libglm-dev
 
     fakeroot debootstrap --include=$BUILD_DEPENDS --arch=armhf --download-only --variant=buildd trusty .
 
+# Remove libc libraries that confuse the cross-compiler
+    rm var/cache/apt/archives/libc-dev*.deb
+    rm var/cache/apt/archives/libc6*.deb
+
     for I in var/cache/apt/archives/* ; do
 	if [ ! -d $I ] ; then
 	    echo "unpacking: $I"
 	    dpkg -x $I .
 	fi
+    done
+
+# Fix up absolute symlinks from /usr/lib/*/*.so to /lib/*/*.so
+    OLDIFS=$IFS
+    IFS="
+"
+    for broken_symlink in $(find -L . -name \*.so -type l -printf "%l %p\n") ; do
+	IFS=$OLDIFS
+	ln -sf $(pwd)$broken_symlink
     done
 popd > /dev/null 

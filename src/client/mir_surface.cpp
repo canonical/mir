@@ -33,6 +33,11 @@ namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
+namespace
+{
+void null_callback(MirSurface*, void*) {}
+}
+
 MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
@@ -396,4 +401,14 @@ MirPlatformType MirSurface::platform_type()
 
     auto platform = connection->get_client_platform();
     return platform->platform_type();
+}
+
+void MirSurface::request_and_wait_for_next_buffer()
+{
+    next_buffer(null_callback, nullptr)->wait_for_all();
+}
+
+void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
+{
+    configure(a, value)->wait_for_all();
 }

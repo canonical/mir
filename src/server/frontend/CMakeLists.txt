@@ -6,8 +6,8 @@ set(
   null_session_mediator_report.cpp
   null_message_processor_report.cpp
   protobuf_message_processor.cpp
+  protobuf_responder.cpp
   protobuf_buffer_packer.cpp
-  null_message_processor.cpp
   published_socket_connector.cpp
   protobuf_session_creator.cpp
   socket_session.cpp

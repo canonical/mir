@@ -88,7 +88,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     {
         output.output_formats[i] = static_cast<MirPixelFormat>(msg.pixel_format(i));
     }
-    output.current_output_format = msg.current_format();
+    output.current_format = static_cast<MirPixelFormat>(msg.current_format());
 
     output.position_x = msg.position_x();
     output.position_y = msg.position_y();
@@ -97,6 +97,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     output.physical_width_mm = msg.physical_width_mm();
     output.physical_height_mm = msg.physical_height_mm();
     output.power_mode = static_cast<MirPowerMode>(msg.power_mode());
+    output.orientation = static_cast<MirOrientation>(msg.orientation());
 }
 
 }

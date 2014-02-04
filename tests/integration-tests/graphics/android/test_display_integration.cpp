@@ -32,6 +32,7 @@
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
+namespace geom=mir::geometry;
 namespace md=mir::draw;
 namespace mtd=mir::test::doubles;
 

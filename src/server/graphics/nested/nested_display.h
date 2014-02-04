@@ -42,6 +42,7 @@ namespace graphics
 {
 class DisplayReport;
 class DisplayBuffer;
+class DisplayConfigurationPolicy;
 
 namespace nested
 {
@@ -67,8 +68,8 @@ public:
     explicit EGLDisplayHandle(MirConnection* connection);
     ~EGLDisplayHandle() noexcept;
 
-    void initialize();
-    EGLConfig choose_config(const EGLint attrib_list[]) const;
+    void initialize(MirPixelFormat format);
+    EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
     EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
     EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }
@@ -83,7 +84,6 @@ private:
 
 class NestedOutput;
 
-extern EGLint const nested_egl_config_attribs[];
 extern EGLint const nested_egl_context_attribs[];
 }
 
@@ -95,7 +95,8 @@ public:
     NestedDisplay(
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<input::EventFilter> const& event_handler,
-        std::shared_ptr<DisplayReport> const& display_report);
+        std::shared_ptr<DisplayReport> const& display_report,
+        std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy);
 
     ~NestedDisplay() noexcept;
 
@@ -124,11 +125,11 @@ private:
     std::shared_ptr<input::EventFilter> const event_handler;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
-    MirPixelFormat const egl_pixel_format;
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
+    void complete_display_initialization(MirPixelFormat format);
 };
 
 }

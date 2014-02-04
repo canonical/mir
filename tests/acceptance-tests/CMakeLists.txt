@@ -1,5 +1,13 @@
+include(CMakeDependentOption)
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR})
+
+protobuf_generate_cpp(
+  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
+  test_protobuf.proto
 )
 
 set(
@@ -18,6 +26,10 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_client_library_drm.cpp
+  test_protobuf.cpp
+  test_client_screencast.cpp
+  ${GENERATED_PROTOBUF_SRCS}
+  ${GENERATED_PROTOBUF_HDRS}
 )
 
 list(APPEND SOURCES
@@ -56,13 +68,16 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "android")
-    #don't discover the test, we'll run it later on a phone
-else()
-    if(MIR_ENABLE_ACCEPTANCE_TESTS)
-    mir_discover_tests(mir_acceptance_tests)
-  endif()
-endif()
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_ACCEPTANCE_TESTS
+  "Run acceptance tests as part of default testing"
+  ON
+  "MIR_BUILD_ACCEPTANCE_TESTS"
+  OFF)
+
+if (MIR_RUN_ACCEPTANCE_TESTS)
+  mir_discover_tests(mir_acceptance_tests)
+endif (MIR_RUN_ACCEPTANCE_TESTS)
 
 install(
     TARGETS mir_acceptance_tests

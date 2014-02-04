@@ -22,7 +22,6 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 
-#include <vector>
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 #include <gtest/gtest.h>
@@ -38,8 +37,7 @@ namespace
 {
 struct MockMsgSender : public mfd::MessageSender
 {
-    MOCK_METHOD1(send, void(std::string const&));
-    MOCK_METHOD2(send, void(std::string const&, mf::FdSets const&));
+    MOCK_METHOD2(send, void(std::string const&, mfd::FdSets const&));
 };
 }
 
@@ -59,9 +57,9 @@ TEST(TestEventSender, display_send)
         EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
     };
 
-    EXPECT_CALL(mock_msg_sender, send(_))
+    EXPECT_CALL(mock_msg_sender, send(_, _))
         .Times(1)
-        .WillOnce(Invoke(msg_validator));
+        .WillOnce(WithArgs<0>(Invoke(msg_validator)));
 
     mfd::EventSender sender(mt::fake_shared(mock_msg_sender));
 
@@ -78,7 +76,7 @@ TEST(TestEventSender, sends_noninput_events)
     MirEvent event;
     memset(&event, 0, sizeof event);
 
-    EXPECT_CALL(*msg_sender, send(_))
+    EXPECT_CALL(*msg_sender, send(_, _))
         .Times(2);
     event.type = mir_event_type_surface;
     event_sender.handle_event(event);
@@ -96,7 +94,7 @@ TEST(TestEventSender, never_sends_input_events)
     MirEvent event;
     memset(&event, 0, sizeof event);
 
-    EXPECT_CALL(*msg_sender, send(_))
+    EXPECT_CALL(*msg_sender, send(_, _))
         .Times(0);
     event.type = mir_event_type_key;
     event_sender.handle_event(event);

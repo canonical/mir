@@ -36,6 +36,7 @@ namespace mir_test_framework
 /// Fixture for running Mir server in test process
 struct InProcessServer : testing::Test
 {
+    InProcessServer();
     ~InProcessServer();
 
     /// Starts the server
@@ -53,6 +54,7 @@ private:
     mir::DisplayServer* start_mir_server();
     virtual mir::DefaultServerConfiguration& server_config() = 0;
 
+    char const* const old_env;
     std::thread server_thread;
     mir::DisplayServer* display_server = 0;
 };

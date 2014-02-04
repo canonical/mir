@@ -31,7 +31,6 @@ add_library(
   internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
-  udev_wrapper.cpp
   overlapping_output_grouping.cpp
   native_platform.cpp
   anonymous_shm_file.cpp
@@ -46,7 +45,6 @@ target_link_libraries(
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
-  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
 install(TARGETS mirplatformgraphics LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

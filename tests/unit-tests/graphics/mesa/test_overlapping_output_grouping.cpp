@@ -25,7 +25,6 @@
 
 #include <vector>
 #include <algorithm>
-#include <tuple>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -37,7 +36,13 @@ namespace
 class StubDisplayConfiguration : public mg::DisplayConfiguration
 {
 public:
-    typedef std::tuple<geom::Rectangle,bool,bool> OutputInfo;
+    struct OutputInfo
+    {
+        geom::Rectangle rect;
+        bool connected;
+        bool used;
+        MirOrientation orientation;
+    };
 
     StubDisplayConfiguration(std::vector<OutputInfo> const& info)
         : outputs{info}
@@ -60,11 +65,8 @@ public:
         size_t i = 1;
         for (auto const& info : outputs)
         {
-            auto const& rect = std::get<0>(info);
-            auto const connected = std::get<1>(info);
-            auto const used = std::get<2>(info);
             std::vector<mg::DisplayConfigurationMode> modes(i);
-            modes[i - 1] = {rect.size, 59.9};
+            modes[i - 1] = {info.rect.size, 59.9};
 
             mg::DisplayConfigurationOutput output
             {
@@ -75,12 +77,13 @@ public:
                 modes,
                 i - 1,
                 {100, 100},
-                connected,
-                used,
-                rect.top_left,
+                info.connected,
+                info.used,
+                info.rect.top_left,
                 i - 1,
-                0,
-                mir_power_mode_on
+                mir_pixel_format_invalid,
+                mir_power_mode_on,
+                info.orientation
             };
 
             f(output);
@@ -89,11 +92,12 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode)
+                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
+                          MirOrientation) override
     {
     }
 
-    std::vector<std::tuple<geom::Rectangle,bool,bool>> outputs;
+    std::vector<OutputInfo> outputs;
 };
 
 class OverlappingOutputGroupingTest : public testing::Test
@@ -126,7 +130,7 @@ public:
         {
             geom::Rectangles rects;
             for (auto const& output : v)
-                rects.add({output.top_left, output.modes[output.current_mode_index].size});
+                rects.add(output.extents());
 
             auto iter = std::find(expected_groups_copy.begin(), expected_groups_copy.end(), rects);
             EXPECT_TRUE(iter != expected_groups_copy.end()) << "Failed to find " << rects;
@@ -141,9 +145,9 @@ TEST_F(OverlappingOutputGroupingTest, ignores_invalid_outputs)
 {
     std::vector<StubDisplayConfiguration::OutputInfo> info
     {
-        std::make_tuple(geom::Rectangle{{0,0}, {100, 100}}, false, false),
-        std::make_tuple(geom::Rectangle{{0,0}, {100, 100}}, true, false),
-        std::make_tuple(geom::Rectangle{{0,0}, {100, 100}}, false, true)
+        {{{0,0}, {100, 100}}, false, false, mir_orientation_normal},
+        {{{0,0}, {100, 100}}, true, false, mir_orientation_normal},
+        {{{0,0}, {100, 100}}, false, true, mir_orientation_normal}
     };
 
     std::vector<geom::Rectangles> expected_groups;
@@ -155,16 +159,86 @@ TEST_F(OverlappingOutputGroupingTest, distinct_outputs)
 {
     std::vector<StubDisplayConfiguration::OutputInfo> info
     {
-        std::make_tuple(geom::Rectangle{{0,0}, {100, 100}}, true, true),
-        std::make_tuple(geom::Rectangle{{100,0}, {100, 100}}, true, true),
-        std::make_tuple(geom::Rectangle{{0,100}, {100, 100}}, true, true)
+        {{{0,0}, {100, 100}}, true, true, mir_orientation_normal},
+        {{{100,0}, {100, 100}}, true, true, mir_orientation_normal},
+        {{{0,100}, {100, 100}}, true, true, mir_orientation_normal}
     };
 
     std::vector<geom::Rectangles> expected_groups
     {
-        geom::Rectangles{geom::Rectangle{{0,0}, {100, 100}}},
-        geom::Rectangles{geom::Rectangle{{100,0}, {100, 100}}},
-        geom::Rectangles{geom::Rectangle{{0,100}, {100, 100}}},
+        geom::Rectangles{{{0,0}, {100, 100}}},
+        geom::Rectangles{{{100,0}, {100, 100}}},
+        geom::Rectangles{{{0,100}, {100, 100}}},
+    };
+
+    check_groupings(info, expected_groups);
+}
+
+TEST_F(OverlappingOutputGroupingTest, rotated_output)
+{
+    std::vector<StubDisplayConfiguration::OutputInfo> info
+    {
+        {{{0,0}, {100,200}}, true, true, mir_orientation_left},
+    };
+
+    std::vector<geom::Rectangles> expected_groups
+    {
+        geom::Rectangles{{{0,0}, {200,100}}},
+    };
+
+    check_groupings(info, expected_groups);
+}
+
+TEST_F(OverlappingOutputGroupingTest, rotated_outputs)
+{
+    std::vector<StubDisplayConfiguration::OutputInfo> info
+    {
+        {{{0,0}, {100,200}}, true, true, mir_orientation_normal},
+        {{{1000,0}, {300,400}}, true, true, mir_orientation_left},
+        {{{2000,0}, {500,600}}, true, true, mir_orientation_right},
+        {{{3000,0}, {700,800}}, true, true, mir_orientation_inverted},
+    };
+
+    std::vector<geom::Rectangles> expected_groups
+    {
+        geom::Rectangles{{{0,0}, {100,200}}},
+        geom::Rectangles{{{1000,0}, {400,300}}},
+        geom::Rectangles{{{2000,0}, {600,500}}},
+        geom::Rectangles{{{3000,0}, {700,800}}},
+    };
+
+    check_groupings(info, expected_groups);
+}
+
+TEST_F(OverlappingOutputGroupingTest, rotation_creates_overlap)
+{
+    std::vector<StubDisplayConfiguration::OutputInfo> info
+    {
+        {{{0,0}, {100,200}}, true, true, mir_orientation_left},
+        {{{100,0}, {100,200}}, true, true, mir_orientation_left},
+    };
+
+    std::vector<geom::Rectangles> expected_groups
+    {
+        geom::Rectangles{ {{0,0}, {200,100}},
+                          {{100,0}, {200,100}} }
+    };
+
+    check_groupings(info, expected_groups);
+}
+
+TEST_F(OverlappingOutputGroupingTest, different_orientation_prevents_grouping)
+{
+    std::vector<StubDisplayConfiguration::OutputInfo> info
+    {
+        {{{0,0}, {100,200}}, true, true, mir_orientation_left},
+        {{{100,0}, {100,200}}, true, true, mir_orientation_normal},
+    };
+
+    std::vector<geom::Rectangles> expected_groups
+    {
+        geom::Rectangles{ {{0,0}, {200,100}} },
+        geom::Rectangles{ {{100,0}, {100,200}} },
     };
 
     check_groupings(info, expected_groups);
@@ -174,23 +248,23 @@ TEST_F(OverlappingOutputGroupingTest, overlapping_outputs)
 {
     std::vector<StubDisplayConfiguration::OutputInfo> info
     {
-        std::make_tuple(geom::Rectangle{{0,0}, {100, 100}}, true, true),
-        std::make_tuple(geom::Rectangle{{0,0}, {50, 50}}, true, true),
-        std::make_tuple(geom::Rectangle{{100,0}, {100, 100}}, true, true),
-        std::make_tuple(geom::Rectangle{{101,0}, {100, 100}}, true, true)
+        {{{0,0}, {100, 100}}, true, true, mir_orientation_normal},
+        {{{0,0}, {50, 50}}, true, true, mir_orientation_normal},
+        {{{100,0}, {100, 100}}, true, true, mir_orientation_normal},
+        {{{101,0}, {100, 100}}, true, true, mir_orientation_normal}
     };
 
     std::vector<geom::Rectangles> expected_groups
     {
         geom::Rectangles
         {
-            geom::Rectangle{{0,0}, {100, 100}},
-            geom::Rectangle{{0,0}, {50, 50}}
+            {{0,0}, {100, 100}},
+            {{0,0}, {50, 50}}
         },
         geom::Rectangles
         {
-            geom::Rectangle{{100,0}, {100, 100}},
-            geom::Rectangle{{101,0}, {100, 100}}
+            {{100,0}, {100, 100}},
+            {{101,0}, {100, 100}}
         }
     };
 
@@ -201,20 +275,20 @@ TEST_F(OverlappingOutputGroupingTest, multiply_overlapping_outputs)
 {
     std::vector<StubDisplayConfiguration::OutputInfo> info
     {
-        std::make_tuple(geom::Rectangle{{0,0}, {100, 100}}, true, true),
-        std::make_tuple(geom::Rectangle{{150,150}, {50, 50}}, true, true),
-        std::make_tuple(geom::Rectangle{{90,90}, {85, 85}}, true, true),
-        std::make_tuple(geom::Rectangle{{50,50}, {100, 100}}, true, true)
+        {{{0,0}, {100, 100}}, true, true, mir_orientation_normal},
+        {{{150,150}, {50, 50}}, true, true, mir_orientation_normal},
+        {{{90,90}, {85, 85}}, true, true, mir_orientation_normal},
+        {{{50,50}, {100, 100}}, true, true, mir_orientation_normal}
     };
 
     std::vector<geom::Rectangles> expected_groups
     {
         geom::Rectangles
         {
-            geom::Rectangle{{0,0}, {100, 100}},
-            geom::Rectangle{{150,150}, {50, 50}},
-            geom::Rectangle{{90,90}, {85, 85}},
-            geom::Rectangle{{50,50}, {100, 100}}
+            {{0,0}, {100, 100}},
+            {{150,150}, {50, 50}},
+            {{90,90}, {85, 85}},
+            {{50,50}, {100, 100}}
         },
     };
 
