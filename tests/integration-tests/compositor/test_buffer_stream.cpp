@@ -51,9 +51,10 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
         bool done = false;
 
         swap_client_buffers(buffer,
-            [&]
+            [&](mg::Buffer* new_buffer)
              {
                 std::unique_lock<decltype(mutex)> lock(mutex);
+                buffer = new_buffer;
                 done = true;
                 cv.notify_one();
              });

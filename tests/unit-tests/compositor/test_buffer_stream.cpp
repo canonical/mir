@@ -126,19 +126,20 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
     std::mutex mutex;
     std::condition_variable cv;
+    mg::Buffer* buffer{nullptr};
     bool done = false;
 
     auto const callback =
-        [&]
-         {
-            std::unique_lock<decltype(mutex)> lock(mutex);
-            done = true;
-            cv.notify_one();
-         };
+        [&](mg::Buffer* new_buffer)
+        {
+           std::unique_lock<decltype(mutex)> lock(mutex);
+           buffer = new_buffer;
+           done = true;
+           cv.notify_one();
+        };
 
     using namespace testing;
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    mg::Buffer* buffer{nullptr};
 
     InSequence seq;
     EXPECT_CALL(*mock_bundle, client_acquire(_))
