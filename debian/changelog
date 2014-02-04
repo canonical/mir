@@ -116,6 +116,18 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jan 2014 11:19:03 +0800
 
+mir (0.1.3+14.04.20140108-0ubuntu3) trusty; urgency=medium
+
+  * No-change rebuild against libprotobuf8 (this time from a clean tree)
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Mon, 03 Feb 2014 13:46:05 -0800
+
+mir (0.1.3+14.04.20140108-0ubuntu2) trusty; urgency=medium
+
+  * No-change rebuild against libprotobuf8
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sat, 01 Feb 2014 00:08:28 +0000
+
 mir (0.1.3+14.04.20140108-0ubuntu1) trusty; urgency=low
 
   [ Daniel van Vugt ]
