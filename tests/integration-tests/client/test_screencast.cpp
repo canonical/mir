@@ -26,14 +26,41 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace mt = mir::test;
 
 namespace
 {
+
+class WaitObject
+{
+public:
+    void notify_ready()
+    {
+        std::unique_lock<std::mutex> lock{mutex};
+        ready = true;
+        cv.notify_all();
+    }
+
+    void wait_until_ready()
+    {
+        std::unique_lock<std::mutex> lock{mutex};
+        if (!cv.wait_for(lock, std::chrono::seconds{10}, [this] { return ready; }))
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("WaitObject timed out"));
+        }
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool ready = false;
+};
 
 struct StubScreencastServerTool : mt::StubServerTool
 {
@@ -83,11 +110,6 @@ struct MirScreencastTest : public testing::Test
     std::shared_ptr<mir::protobuf::DisplayServer> protobuf_server;
 };
 
-void set_done(std::atomic<bool>* done)
-{
-    *done = true;
-}
-
 }
 
 TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
@@ -103,16 +125,15 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     protobuf_parameters.set_height(0);
     mir::protobuf::Screencast protobuf_screencast;
 
-    std::atomic<bool> call_done{false};
+    WaitObject wait_rpc;
 
     protobuf_server->create_screencast(
         nullptr,
         &protobuf_parameters,
         &protobuf_screencast,
-        google::protobuf::NewCallback(set_done, &call_done));
+        google::protobuf::NewCallback(&wait_rpc, &WaitObject::notify_ready));
 
-    while (!call_done)
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    wait_rpc.wait_until_ready();
 
     ASSERT_EQ(1, protobuf_screencast.buffer().fd_size());
     auto const read_fd = protobuf_screencast.buffer().fd(0);
@@ -120,12 +141,15 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     // The received FD should be different from the original pipe fd,
     // since we are sending it over our IPC mechanism, which for
     // the purposes of this test, lives in the same process.
+    // TODO: Don't depend on IPC implementation details
     EXPECT_NE(read_fd, server_tool->pipe.read_fd());
 
     std::vector<char> received(cookie.size(), '\0');
     EXPECT_EQ(static_cast<ssize_t>(cookie.size()),
               read(read_fd, received.data(), received.size()));
     EXPECT_EQ(cookie, received);
+
+    close(read_fd);
 }
 
 TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
@@ -139,16 +163,15 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
     protobuf_screencast_id.set_value(0);
     mir::protobuf::Buffer protobuf_buffer;
 
-    std::atomic<bool> call_done{false};
+    WaitObject wait_rpc;
 
     protobuf_server->screencast_buffer(
         nullptr,
         &protobuf_screencast_id,
         &protobuf_buffer,
-        google::protobuf::NewCallback(set_done, &call_done));
+        google::protobuf::NewCallback(&wait_rpc, &WaitObject::notify_ready));
 
-    while (!call_done)
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    wait_rpc.wait_until_ready();
 
     ASSERT_EQ(1, protobuf_buffer.fd_size());
     auto const read_fd = protobuf_buffer.fd(0);
@@ -156,6 +179,7 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
     // The received FD should be different from the original pipe fd,
     // since we are sending it over our IPC mechanism, which, for
     // the purposes of this test, lives in the same process.
+    // TODO: Don't depend on IPC implementation details
     EXPECT_NE(read_fd, server_tool->pipe.read_fd());
 
     std::vector<char> received(cookie.size(), '\0');
@@ -163,4 +187,5 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
               read(read_fd, received.data(), received.size()));
     EXPECT_EQ(cookie, received);
 
+    close(read_fd);
 }
