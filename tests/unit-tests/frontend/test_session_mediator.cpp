@@ -104,7 +104,7 @@ public:
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
         EXPECT_CALL(*mock_surface, swap_buffers(_, _)).Times(AnyNumber())
-            .WillRepeatedly(DoAll(SetArg<0>(mock_buffer.get()), InvokeArgument<1>()));
+            .WillRepeatedly(InvokeArgument<1>(mock_buffer.get()));
 
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
         EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -125,7 +125,7 @@ public:
             EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
             EXPECT_CALL(*mock_surfaces[id], swap_buffers(_, _)).Times(AnyNumber())
-                .WillRepeatedly(DoAll(SetArg<0>(mock_buffer.get()), InvokeArgument<1>()));
+                .WillRepeatedly(InvokeArgument<1>(mock_buffer.get()));
 
             EXPECT_CALL(*mock_surfaces[id], supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
             EXPECT_CALL(*mock_surfaces[id], client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -524,7 +524,7 @@ TEST_F(SessionMediatorTest, buffer_resource_for_surface_unaffected_by_other_surf
      * invocations create new surfaces in stubbed_session->mock_surfaces[].
      */
     EXPECT_CALL(*stubbed_session->mock_surface, swap_buffers(_, _))
-        .WillOnce(DoAll(SetArg<0>(&buffer), InvokeArgument<1>()));
+        .WillOnce(InvokeArgument<1>(&buffer));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     mp::SurfaceId our_surface{surface_response.id()};
