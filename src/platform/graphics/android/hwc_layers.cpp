@@ -81,6 +81,8 @@ bool mga::HWCLayer::needs_gl_render() const
 
 mga::NativeFence mga::HWCLayer::release_fence() const
 {
+    printf("REL FENCE %i\n",hwc_layer->releaseFenceFd);
+
     return hwc_layer->releaseFenceFd;
 }
 
@@ -117,10 +119,10 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
     hwc_layer->displayFrame = 
     {
-        static_cast<int>(position.top_left.x.as_uint32_t()),
-        static_cast<int>(position.top_left.y.as_uint32_t()),
-        static_cast<int>(position.size.width.as_uint32_t()),
-        static_cast<int>(position.size.height.as_uint32_t())
+        position.top_left.x.as_int(),
+        position.top_left.y.as_int(),
+        position.size.width.as_int(),
+        position.size.height.as_int()
     };
 
     visible_rect = hwc_layer->displayFrame;
@@ -132,6 +134,8 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
     auto native_buffer = buffer.native_buffer_handle();
     hwc_layer->handle = native_buffer->handle();
     hwc_layer->acquireFenceFd = native_buffer->copy_fence();
+    printf("inhere %i\n",hwc_layer->releaseFenceFd);
+//    hwc_layer->releaseFenceFd = -1;
     hwc_layer->sourceCrop = 
     {
         0, 0,

@@ -208,7 +208,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
         ASSERT_EQ(3, list.numHwLayers);
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
         EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-//        EXPECT_THAT(target_layer, MatchesLayer(list.hwLayers[2]));
+        EXPECT_THAT(target_layer, MatchesLayer(list.hwLayers[2]));
     });
 
     /* reset default */
