@@ -56,7 +56,7 @@ public:
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
     bool alpha_enabled{false};
-    std::shared_ptr<mg::NativeBuffer> native_handle_1;
+    std::shared_ptr<mtd::StubAndroidNativeBuffer> native_handle_1;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 
     std::shared_ptr<hwc_display_contents_1_t> list;
@@ -161,6 +161,10 @@ TEST_F(HWCLayersTest, layer_types)
 
 TEST_F(HWCLayersTest, buffer_updates)
 {
+    int fake_fence = 552;
+    ON_CALL(*native_handle_1, copy_fence())
+        .WillByDefault(testing::Return(fake_fence));
+
     hwc_rect_t region = {0,0,buffer_size.width.as_int(), buffer_size.height.as_int()};
     hwc_region_t visible_region {1, &region};
     hwc_layer_1 expected_layer;
@@ -178,7 +182,7 @@ TEST_F(HWCLayersTest, buffer_updates)
         screen_position.size.width.as_int(),
         screen_position.size.height.as_int()};
     expected_layer.visibleRegionScreen = visible_region;
-    expected_layer.acquireFenceFd = -1;
+    expected_layer.acquireFenceFd = fake_fence;
     expected_layer.releaseFenceFd = -1;
 
     type = mga::LayerType::framebuffer_target;

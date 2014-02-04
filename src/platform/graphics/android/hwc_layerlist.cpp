@@ -124,9 +124,8 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
     update_representation(needed_size);
 
     auto layers_it = layers.begin();
-    for( auto& renderable : list)
+    for(auto& renderable : list)
     {
-        printf("ZOO\n");
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
         layers_it->set_buffer(*renderable->buffer());
