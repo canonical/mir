@@ -56,6 +56,7 @@ mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t l
     hwc_layer->transform = 0;
     hwc_layer->acquireFenceFd = -1;
     hwc_layer->releaseFenceFd = -1;
+    hwc_layer->blending = HWC_BLENDING_NONE;
 
     hwc_layer->visibleRegionScreen.numRects=1;
     hwc_layer->visibleRegionScreen.rects= &visible_rect;

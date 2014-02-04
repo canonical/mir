@@ -126,6 +126,7 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
     auto layers_it = layers.begin();
     for( auto& renderable : list)
     {
+        printf("ZOO\n");
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
         layers_it->set_buffer(*renderable->buffer());
@@ -137,14 +138,17 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
 }
 
 
-void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& native_buffer)
+void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 {
+    geom::Rectangle disp_frame{{0,0}, {buffer.size()}};
     if (skip_layers_present)
     {
-        layers.front().set_buffer(native_buffer);
+        layers.front().set_render_parameters(disp_frame, false);
+        layers.front().set_buffer(buffer);
     }
 
-    layers.back().set_buffer(native_buffer);
+    layers.back().set_render_parameters(disp_frame, false);
+    layers.back().set_buffer(buffer);
 }
 
 mga::NativeFence mga::FBTargetLayerList::fb_target_fence()
