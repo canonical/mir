@@ -114,16 +114,11 @@ MirPixelFormat ms::BasicSurface::pixel_format() const
     return surface_buffer_stream->get_stream_pixel_format();
 }
 
-void ms::BasicSurface::swap_buffers(graphics::Buffer*& buffer, std::function<void()> complete)
+void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
 {
-    bool const posting{!!buffer};
+    bool const posting{!!old_buffer};
 
-    surface_buffer_stream->swap_client_buffers(buffer,
-        [&buffer,complete](mg::Buffer* new_buffer)
-        {
-            buffer = new_buffer;
-            complete();
-        });
+    surface_buffer_stream->swap_client_buffers(old_buffer, complete);
 
     if (posting)
     {

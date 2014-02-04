@@ -105,7 +105,12 @@ MirPixelFormat ms::SurfaceImpl::pixel_format() const
 
 void ms::SurfaceImpl::swap_buffers(graphics::Buffer*& buffer, std::function<void()> complete)
 {
-    surface->swap_buffers(buffer, complete);
+    surface->swap_buffers(buffer,
+        [&buffer,complete](mg::Buffer* new_buffer)
+        {
+            buffer = new_buffer;
+            complete();
+        });
 }
 
 void ms::SurfaceImpl::allow_framedropping(bool allow)

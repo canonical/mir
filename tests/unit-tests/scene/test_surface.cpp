@@ -237,10 +237,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
         .Times(1)
         .WillOnce(InvokeArgument<1>(&graphics_resource));
 
-    mg::Buffer* result{nullptr};
-    surf.swap_buffers(result, []{});
-
-    EXPECT_EQ(&graphics_resource, result);
+    surf.swap_buffers(
+        nullptr,
+        [&graphics_resource](mg::Buffer* result){ EXPECT_THAT(result, Eq(&graphics_resource)); });
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
@@ -254,10 +253,9 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         .Times(1)
         .WillOnce(InvokeArgument<1>(&stub_buffer));
 
-    mg::Buffer* result{nullptr};
-    surf.swap_buffers(result, []{});
-
-    EXPECT_EQ(&stub_buffer, result);
+    surf.swap_buffers(
+        nullptr,
+        [&stub_buffer](mg::Buffer* result){ EXPECT_THAT(result, Eq(&stub_buffer)); });
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -405,10 +403,10 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     mg::Buffer* buffer{nullptr};
 
-    surf.swap_buffers(buffer, []{});
-    surf.swap_buffers(buffer, []{});
-    surf.swap_buffers(buffer, []{});
-    surf.swap_buffers(buffer, []{});
+    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
+    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
+    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
+    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
 
     EXPECT_EQ(3, notification_count); 
 }
