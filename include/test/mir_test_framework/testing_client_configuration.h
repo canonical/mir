@@ -35,7 +35,7 @@ struct TestingClientConfiguration
     //this function to force the use of the default client configuraiton
     virtual bool use_real_graphics(mir::options::Option const& options)
     {
-        return options.get("tests-use-real-graphics", false);
+        return options.get<bool>("tests-use-real-graphics");
     }
 };
 

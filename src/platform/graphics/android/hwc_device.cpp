@@ -19,7 +19,6 @@
 
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
-#include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
@@ -35,10 +34,10 @@ namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
+                          std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
+                          std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      layer_list(use_fb_target),
-      last_display_fence(std::make_shared<mga::RealSyncFileOps>(), -1)
+      sync_ops(sync_ops)
 {
 }
 
@@ -49,6 +48,7 @@ void mga::HwcDevice::prepare_gl()
         //note, although we only have a primary display right now,
         //      set the external and virtual displays to null as some drivers check for that
         hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+
         if (hwc_device->prepare(hwc_device.get(), 1, displays))
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
@@ -73,22 +73,21 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
-    auto native_buffer = buffer.native_buffer_handle();
-    layer_list.set_fb_target(*native_buffer);
+    layer_list.set_fb_target(buffer);
 
     layer_list.with_native_list([this](hwc_display_contents_1_t& display_list)
     {
         hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+
         if (hwc_device->set(hwc_device.get(), 1, displays))
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
         }
     });
 
-    last_display_fence.wait();
-    auto next_fence = layer_list.retirement_fence();
-    last_display_fence.merge_with(next_fence);
+    mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
 
     int framebuffer_fence = layer_list.fb_target_fence();
+    auto native_buffer = buffer.native_buffer_handle();
     native_buffer->update_fence(framebuffer_fence);
 }

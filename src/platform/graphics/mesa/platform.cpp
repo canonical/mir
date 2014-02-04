@@ -169,7 +169,11 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
+    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
+        real_fops,
+        options->get<int>("vt"), // TODO This option is mesa specific
+        report);
+
     return std::make_shared<mgm::Platform>(report, vt);
 }
 

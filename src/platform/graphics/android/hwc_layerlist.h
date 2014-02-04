@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
-#include "mir/graphics/renderable.h"
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
 #include "hwc_layers.h"
@@ -35,49 +34,46 @@ namespace graphics
 {
 
 class Renderable;
-class NativeBuffer;
 class Buffer;
 
 namespace android
 {
 
-enum LayerListTargetUse 
-{
-    use_fb_target,
-    do_not_use_fb_target
-};
-
-class LayerList
+class LayerListBase
 {
 public:
-    LayerList(LayerListTargetUse use_fb_target);
-    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
-    void reset_composition_layers(); 
     void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
-
-    void set_fb_target(NativeBuffer const&);
-    NativeFence fb_target_fence();
     NativeFence retirement_fence();
 
+protected:
+    LayerListBase(size_t initial_list_size);
+
+    void update_representation(size_t needed_size); 
+    std::list<HWCLayer> layers;
+
 private:
-    LayerList& operator=(LayerList const&) = delete;
-    LayerList(LayerList const&) = delete;
-
-    void update_representation();
-
-    bool composition_layers_present;
-    bool const fb_target_present;
-
-    std::shared_ptr<ForceGLLayer> skip_layer;
-    std::shared_ptr<FramebufferLayer> fb_target_layer;
+    LayerListBase& operator=(LayerListBase const&) = delete;
+    LayerListBase(LayerListBase const&) = delete;
 
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    std::list<std::shared_ptr<HWCLayer>> layers;
+};
 
-    NativeFence retire_fence;
-    NativeFence fb_fence;
+class LayerList : public LayerListBase
+{
+public:
+    LayerList();
+};
 
-    int fake_egl_values;
+class FBTargetLayerList : public LayerListBase
+{
+public:
+    FBTargetLayerList();
+    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    void reset_composition_layers(); 
+
+    NativeFence fb_target_fence();
+    void set_fb_target(Buffer const&);
+    bool skip_layers_present{true};
 };
 
 }

@@ -35,6 +35,7 @@ set(
   lifecycle_control.cpp
   private.cpp
   mir_screencast.cpp
+  mir_screencast_api.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
