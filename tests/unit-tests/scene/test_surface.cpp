@@ -176,7 +176,7 @@ struct SurfaceCreation : public ::testing::Test
             surface_name, rect, change_notification, false);
 
         ON_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
-            .WillByDefault(DoAll(SetArg<0>(&stub_buffer), InvokeArgument<1>()));
+            .WillByDefault(InvokeArgument<1>(&stub_buffer));
     }
 
     std::shared_ptr<ms::SurfaceData> stub_data;
@@ -235,7 +235,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
 
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
         .Times(1)
-        .WillOnce(DoAll(SetArg<0>(&graphics_resource), InvokeArgument<1>()));
+        .WillOnce(InvokeArgument<1>(&graphics_resource));
 
     mg::Buffer* result{nullptr};
     surf.swap_buffers(result, []{});
@@ -252,7 +252,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
         .Times(1)
-        .WillOnce(DoAll(SetArg<0>(&stub_buffer), InvokeArgument<1>()));
+        .WillOnce(InvokeArgument<1>(&stub_buffer));
 
     mg::Buffer* result{nullptr};
     surf.swap_buffers(result, []{});

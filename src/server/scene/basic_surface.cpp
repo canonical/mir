@@ -118,7 +118,12 @@ void ms::BasicSurface::swap_buffers(graphics::Buffer*& buffer, std::function<voi
 {
     bool const posting{!!buffer};
 
-    surface_buffer_stream->swap_client_buffers(buffer, complete);
+    surface_buffer_stream->swap_client_buffers(buffer,
+        [&buffer,complete](mg::Buffer* new_buffer)
+        {
+            buffer = new_buffer;
+            complete();
+        });
 
     if (posting)
     {
