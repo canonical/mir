@@ -134,8 +134,7 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
     auto native_buffer = buffer.native_buffer_handle();
     hwc_layer->handle = native_buffer->handle();
     hwc_layer->acquireFenceFd = native_buffer->copy_fence();
-    printf("inhere %i\n",hwc_layer->releaseFenceFd);
-//    hwc_layer->releaseFenceFd = -1;
+    hwc_layer->releaseFenceFd = -1;
     hwc_layer->sourceCrop = 
     {
         0, 0,
