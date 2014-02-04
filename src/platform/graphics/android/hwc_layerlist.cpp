@@ -21,11 +21,8 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
-#include "hwc_layers.h"
 
 #include <cstring>
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -33,7 +30,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-
 std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 {
     /* hwc layer list uses hwLayers[0] at the end of the struct */
@@ -53,7 +49,6 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 
     return new_hwc_representation;
 }
-
 }
 
 void mga::LayerListBase::update_representation(size_t needed_size)

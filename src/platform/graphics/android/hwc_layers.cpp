@@ -103,7 +103,7 @@ void mga::HWCLayer::set_layer_type(LayerType type)
 
         case mga::LayerType::overlay: //driver is the only one who can set to overlay
         default:
-            BOOST_THROW_EXCEPTION(std::logic_error("invalid layer type creation"));
+            BOOST_THROW_EXCEPTION(std::logic_error("invalid layer type"));
     }
 }
 

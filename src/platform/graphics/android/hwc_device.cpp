@@ -19,7 +19,6 @@
 
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
-#include "hwc_layers.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
