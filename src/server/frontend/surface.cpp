@@ -61,9 +61,10 @@ void mf::Surface::swap_buffers_blocking(graphics::Buffer*& buffer)
     bool done = false;
 
     swap_buffers(buffer,
-        [&]
+        [&](mg::Buffer* new_buffer)
         {
             std::unique_lock<decltype(mutex)> lock(mutex);
+            buffer = new_buffer;
             done = true;
             cv.notify_one();
         });
