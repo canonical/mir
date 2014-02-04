@@ -66,7 +66,6 @@ public:
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
     void set_buffer(Buffer const&);
 
-    //gets the release fence
     NativeFence release_fence() const;
     bool needs_gl_render() const;
 
