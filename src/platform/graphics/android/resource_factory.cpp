@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/android/mir_native_window.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "buffer.h"
 #include "resource_factory.h"
 #include "fb_device.h"
@@ -91,7 +92,8 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HwcDevice>(hwc_native_device, syncer);
+    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
+    return std::make_shared<mga::HwcDevice>(hwc_native_device, syncer, file_ops);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(

@@ -35,13 +35,13 @@ namespace android
 {
 class HWCVsyncCoordinator;
 class SyncFileOps;
-class SyncFence;
 
 class HwcDevice : public HWCCommonDevice
 {
 public:
     HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
+              std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
+              std::shared_ptr<SyncFileOps> const& sync_ops);
 
     void prepare_gl();
     void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list); 
@@ -51,7 +51,6 @@ public:
 private:
     FBTargetLayerList layer_list;
 
-    SyncFence last_display_fence;
     std::shared_ptr<SyncFileOps> const sync_ops;
     unsigned int primary_display_config;
     MirPixelFormat fb_format;

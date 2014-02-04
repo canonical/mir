@@ -35,9 +35,10 @@ namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
+                          std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
+                          std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      last_display_fence(std::make_shared<mga::RealSyncFileOps>(), -1)
+      sync_ops(sync_ops)
 {
 }
 
@@ -83,9 +84,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
         }
     });
 
-    last_display_fence.wait();
-    auto next_fence = layer_list.retirement_fence();
-    last_display_fence.merge_with(next_fence);
+    mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
 
     int framebuffer_fence = layer_list.fb_target_fence();
     auto native_buffer = buffer.native_buffer_handle();
