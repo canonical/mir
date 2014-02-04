@@ -268,6 +268,18 @@ typedef struct MirEventDelegate
 } MirEventDelegate;
 
 /**
+ * MirScreencastParameters is the structure of required information that
+ * you must provide to Mir in order to create a MirScreencast.
+ */
+typedef struct MirScreencastParameters
+{
+    uint32_t output_id;
+    uint32_t width;
+    uint32_t height;
+    MirPixelFormat pixel_format;
+} MirScreencastParameters;
+
+/**
  * Callback to be passed when calling MirScreencast functions.
  *   \param [in] screencast          the screencast being updated
  *   \param [in,out] client_context  context provided by the client

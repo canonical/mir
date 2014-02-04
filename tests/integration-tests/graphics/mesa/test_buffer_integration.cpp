@@ -93,7 +93,7 @@ protected:
     {
         auto options = mtf::TestingServerConfiguration().the_options();
 
-        if (options->get("tests-use-real-graphics", false))
+        if (options->get<bool>("tests-use-real-graphics"))
             platform = mg::create_platform(options, std::make_shared<mg::NullDisplayReport>());
         else
             platform = std::make_shared<StubGraphicPlatform>();

@@ -19,7 +19,7 @@
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "src/platform/graphics/android/hwc_layers.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "hwc_struct_helper-inl.h"
+#include "hwc_struct_helpers.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test/fake_shared.h"

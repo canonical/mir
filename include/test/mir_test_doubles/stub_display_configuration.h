@@ -50,6 +50,16 @@ public:
     {
     }
 
+    StubDisplayConfig(std::vector<std::pair<bool,bool>> const& connected_used)
+        : StubDisplayConfig(connected_used.size())
+    {
+        for (auto i = 0u; i < outputs.size(); ++i)
+        {
+            outputs[i].connected = connected_used[i].first;
+            outputs[i].used = connected_used[i].second;
+        }
+    }
+
     StubDisplayConfig(unsigned int num_displays,
                       std::vector<MirPixelFormat> const& pfs)
     {

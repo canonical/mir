@@ -18,6 +18,7 @@
 
 #include "src/client/mir_screencast.h"
 #include "src/client/client_buffer_factory.h"
+#include "src/client/client_platform.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
 
@@ -43,9 +44,19 @@ namespace
 
 struct MockProtobufServer : mir::protobuf::DisplayServer
 {
+    MOCK_METHOD4(create_screencast,
+                 void(google::protobuf::RpcController* /*controller*/,
+                      mp::ScreencastParameters const* /*request*/,
+                      mp::Screencast* /*response*/,
+                      google::protobuf::Closure* /*done*/));
+    MOCK_METHOD4(release_screencast,
+                 void(google::protobuf::RpcController* /*controller*/,
+                      mp::ScreencastId const* /*request*/,
+                      mp::Void* /*response*/,
+                      google::protobuf::Closure* /*done*/));
     MOCK_METHOD4(screencast_buffer,
                  void(google::protobuf::RpcController* /*controller*/,
-                      mp::ScreencastRequest const* /*request*/,
+                      mp::ScreencastId const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
 };
@@ -53,9 +64,31 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
 class StubProtobufServer : public mir::protobuf::DisplayServer
 {
 public:
+    void create_screencast(
+        google::protobuf::RpcController* /*controller*/,
+        mp::ScreencastParameters const* /*request*/,
+        mp::Screencast* /*response*/,
+        google::protobuf::Closure* done) override
+    {
+        if (server_thread.joinable())
+            server_thread.join();
+        server_thread = std::thread{[done, this] { done->Run(); }};
+    }
+
+    void release_screencast(
+        google::protobuf::RpcController* /*controller*/,
+        mp::ScreencastId const* /*request*/,
+        mp::Void* /*response*/,
+        google::protobuf::Closure* done) override
+    {
+        if (server_thread.joinable())
+            server_thread.join();
+        server_thread = std::thread{[done, this] { done->Run(); }};
+    }
+
     void screencast_buffer(
         google::protobuf::RpcController* /*controller*/,
-        mp::ScreencastRequest const* /*request*/,
+        mp::ScreencastId const* /*request*/,
         mp::Buffer* /*response*/,
         google::protobuf::Closure* done) override
     {
@@ -73,6 +106,20 @@ public:
 private:
     std::thread server_thread;
 };
+
+struct StubEGLNativeWindowFactory : mcl::EGLNativeWindowFactory
+{
+    std::shared_ptr<EGLNativeWindowType>
+        create_egl_native_window(mcl::ClientSurface*)
+    {
+        return std::make_shared<EGLNativeWindowType>(egl_native_window);
+    }
+
+    static EGLNativeWindowType egl_native_window;
+};
+
+EGLNativeWindowType StubEGLNativeWindowFactory::egl_native_window{
+    reinterpret_cast<EGLNativeWindowType>(&StubEGLNativeWindowFactory::egl_native_window)};
 
 class StubClientBufferFactory : public mcl::ClientBufferFactory
 {
@@ -92,29 +139,45 @@ struct MockClientBufferFactory : mcl::ClientBufferFactory
                     mir::geometry::Size /*size*/, MirPixelFormat /*pf*/));
 };
 
-MATCHER_P(RequestTargetsOutput, value, "")
+MATCHER_P(WithOutputId, value, "")
 {
     return arg->output_id() == value;
 }
 
-ACTION_P(SetResponseBufferId, buffer_id)
+MATCHER_P(WithScreencastId, value, "")
+{
+    return arg->value() == value;
+}
+
+ACTION_P(SetCreateScreencastId, screencast_id)
+{
+    arg2->mutable_screencast_id()->set_value(screencast_id);
+}
+
+ACTION_P(SetCreateBufferId, buffer_id)
+{
+    arg2->mutable_buffer()->set_buffer_id(buffer_id);
+}
+
+ACTION_P(SetBufferId, buffer_id)
 {
     arg2->set_buffer_id(buffer_id);
 }
 
-ACTION_P(SetResponseBufferFromPackage, package)
+ACTION_P(SetCreateBufferFromPackage, package)
 {
+    auto buffer = arg2->mutable_buffer();
     for (int i = 0; i != package.data_items; ++i)
     {
-        arg2->add_data(package.data[i]);
+        buffer->add_data(package.data[i]);
     }
 
     for (int i = 0; i != package.fd_items; ++i)
     {
-        arg2->add_fd(package.fd[i]);
+        buffer->add_fd(package.fd[i]);
     }
 
-    arg2->set_stride(package.stride);
+    buffer->set_stride(package.stride);
 }
 
 ACTION(RunClosure)
@@ -187,6 +250,7 @@ public:
     MirScreencastTest()
         : default_output_id{5},
           default_mir_output{default_output_id, 3, 1, mir_pixel_format_xbgr_8888},
+          stub_egl_native_window_factory{std::make_shared<StubEGLNativeWindowFactory>()},
           stub_client_buffer_factory{std::make_shared<StubClientBufferFactory>()},
           mock_client_buffer_factory{std::make_shared<MockClientBufferFactory>()}
     {
@@ -196,44 +260,73 @@ public:
     StubProtobufServer stub_server;
     uint32_t const default_output_id;
     CustomMirDisplayOutput const default_mir_output;
+    std::shared_ptr<StubEGLNativeWindowFactory> const stub_egl_native_window_factory;
     std::shared_ptr<StubClientBufferFactory> const stub_client_buffer_factory;
     std::shared_ptr<MockClientBufferFactory> const mock_client_buffer_factory;
 };
 
 }
 
-TEST_F(MirScreencastTest, requests_screencast_on_creation)
+TEST_F(MirScreencastTest, creates_screencast_on_construction)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
+                create_screencast(_,WithOutputId(default_output_id),_,_))
         .WillOnce(RunClosure());
 
     MirScreencast screencast{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 }
 
-TEST_F(MirScreencastTest, requests_screencast_on_next_buffer)
+TEST_F(MirScreencastTest, releases_screencast_on_release)
 {
     using namespace testing;
 
+    uint32_t const screencast_id{77};
+
+    InSequence seq;
+
     EXPECT_CALL(mock_server,
-                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
+                create_screencast(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateScreencastId(screencast_id), RunClosure()));
+
+    EXPECT_CALL(mock_server,
+                release_screencast(_,WithScreencastId(screencast_id),_,_))
         .WillOnce(RunClosure());
 
     MirScreencast screencast{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
-    Mock::VerifyAndClearExpectations(&mock_server);
+    screencast.release(null_callback_func, nullptr);
+}
+
+TEST_F(MirScreencastTest, requests_screencast_buffer_on_next_buffer)
+{
+    using namespace testing;
+    uint32_t const screencast_id{77};
+
+    InSequence seq;
 
     EXPECT_CALL(mock_server,
-                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
+                create_screencast(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateScreencastId(screencast_id), RunClosure()));
+
+    EXPECT_CALL(mock_server,
+                screencast_buffer(_,WithScreencastId(screencast_id),_,_))
         .WillOnce(RunClosure());
+
+    MirScreencast screencast{
+        default_mir_output, mock_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
 
     screencast.next_buffer(null_callback_func, nullptr);
 }
@@ -247,10 +340,30 @@ TEST_F(MirScreencastTest, executes_callback_on_creation)
 
     MirScreencast screencast{
         default_mir_output, stub_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         mock_callback_func, &mock_cb};
 
     screencast.creation_wait_handle()->wait_for_all();
+}
+
+TEST_F(MirScreencastTest, executes_callback_on_release)
+{
+    using namespace testing;
+
+    MirScreencast screencast{
+        default_mir_output, stub_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
+
+    screencast.creation_wait_handle()->wait_for_all();
+
+    MockCallback mock_cb;
+    EXPECT_CALL(mock_cb, call(&screencast, &mock_cb));
+
+    auto wh = screencast.release(mock_callback_func, &mock_cb);
+    wh->wait_for_all();
 }
 
 TEST_F(MirScreencastTest, executes_callback_on_next_buffer)
@@ -259,6 +372,7 @@ TEST_F(MirScreencastTest, executes_callback_on_next_buffer)
 
     MirScreencast screencast{
         default_mir_output, stub_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -283,6 +397,7 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_output)
     EXPECT_THROW({
         MirScreencast screencast(
             invalid_modes_output, stub_server,
+            stub_egl_native_window_factory,
             stub_client_buffer_factory,
             null_callback_func, nullptr);
     }, std::runtime_error);
@@ -294,6 +409,7 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_output)
     EXPECT_THROW({
         MirScreencast screencast(
             unused_output, stub_server,
+            stub_egl_native_window_factory,
             stub_client_buffer_factory,
             null_callback_func, nullptr);
     }, std::runtime_error);
@@ -303,6 +419,7 @@ TEST_F(MirScreencastTest, returns_correct_surface_parameters)
 {
     MirScreencast screencast{
         default_mir_output, stub_server,
+        stub_egl_native_window_factory,
         stub_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -332,8 +449,8 @@ TEST_F(MirScreencastTest, uses_buffer_message_from_server)
     buffer_package.stride = 768;
 
     EXPECT_CALL(mock_server,
-                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
-        .WillOnce(DoAll(SetResponseBufferFromPackage(buffer_package), RunClosure()));
+                create_screencast(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateBufferFromPackage(buffer_package), RunClosure()));
 
     EXPECT_CALL(*mock_client_buffer_factory,
                 create_buffer(BufferPackageSharedPtrMatches(buffer_package),_,_))
@@ -341,6 +458,7 @@ TEST_F(MirScreencastTest, uses_buffer_message_from_server)
 
     MirScreencast screencast{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         mock_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -351,15 +469,21 @@ TEST_F(MirScreencastTest, returns_current_client_buffer)
 {
     using namespace testing;
 
+    uint32_t const screencast_id = 88;
     int const buffer_id1 = 5;
     int const buffer_id2 = 6;
     auto const client_buffer1 = std::make_shared<mtd::NullClientBuffer>();
     auto const client_buffer2 = std::make_shared<mtd::NullClientBuffer>();
 
     EXPECT_CALL(mock_server,
-                screencast_buffer(_,RequestTargetsOutput(default_output_id),_,_))
-        .WillOnce(DoAll(SetResponseBufferId(buffer_id1), RunClosure()))
-        .WillOnce(DoAll(SetResponseBufferId(buffer_id2), RunClosure()));
+                create_screencast(_,WithOutputId(default_output_id),_,_))
+        .WillOnce(DoAll(SetCreateBufferId(buffer_id1),
+                        SetCreateScreencastId(screencast_id),
+                        RunClosure()));
+
+    EXPECT_CALL(mock_server,
+                screencast_buffer(_,WithScreencastId(screencast_id),_,_))
+        .WillOnce(DoAll(SetBufferId(buffer_id2), RunClosure()));
 
     EXPECT_CALL(*mock_client_buffer_factory, create_buffer(_,_,_))
         .WillOnce(Return(client_buffer1))
@@ -367,6 +491,7 @@ TEST_F(MirScreencastTest, returns_current_client_buffer)
 
     MirScreencast screencast{
         default_mir_output, mock_server,
+        stub_egl_native_window_factory,
         mock_client_buffer_factory,
         null_callback_func, nullptr};
 
@@ -378,4 +503,21 @@ TEST_F(MirScreencastTest, returns_current_client_buffer)
     wh->wait_for_all();
 
     EXPECT_EQ(client_buffer2, screencast.get_current_buffer());
+}
+
+TEST_F(MirScreencastTest, gets_egl_native_window)
+{
+    using namespace testing;
+
+    MirScreencast screencast{
+        default_mir_output, stub_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
+
+    screencast.creation_wait_handle()->wait_for_all();
+
+    auto egl_native_window = screencast.egl_native_window();
+
+    EXPECT_EQ(StubEGLNativeWindowFactory::egl_native_window, egl_native_window);
 }
