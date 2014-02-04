@@ -202,16 +202,16 @@ TEST_F(HWCLayersTest, normal_layer)
     hwc_rect_t crop
     {
         0,0,
-        static_cast<int>(buffer_size.width.as_uint32_t()),
-        static_cast<int>(buffer_size.height.as_uint32_t())
+        buffer_size.width.as_int(),
+        buffer_size.height.as_int()
     };
 
     hwc_rect_t screen_pos
     {
-        static_cast<int>(screen_position.top_left.x.as_uint32_t()),
-        static_cast<int>(screen_position.top_left.y.as_uint32_t()),
-        static_cast<int>(screen_position.size.width.as_uint32_t()),
-        static_cast<int>(screen_position.size.height.as_uint32_t())
+        screen_position.top_left.x.as_int(),
+        screen_position.top_left.y.as_int(),
+        screen_position.size.width.as_int(),
+        screen_position.size.height.as_int()
     };
 
     hwc_region_t visible_region {1, &screen_pos};

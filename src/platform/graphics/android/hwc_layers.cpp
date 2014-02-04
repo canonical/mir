@@ -81,8 +81,6 @@ bool mga::HWCLayer::needs_gl_render() const
 
 mga::NativeFence mga::HWCLayer::release_fence() const
 {
-    printf("REL FENCE %i\n",hwc_layer->releaseFenceFd);
-
     return hwc_layer->releaseFenceFd;
 }
 
