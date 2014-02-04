@@ -21,7 +21,9 @@
 
 #include "renderer.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/buffer_id.h"
 #include <GLES2/gl2.h>
+#include <unordered_map>
 
 namespace mir
 {
@@ -32,32 +34,37 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
+    virtual ~GLRenderer() noexcept;
 
+    // These are called with a valid GL context:
+    void begin(float rotation) const override;
     void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
-    void clear() const override;
+    void end() const override;
 
-    ~GLRenderer() noexcept {}
+    // This is called _without_ a GL context:
+    void suspend() override;
 
 private:
-    class Resources
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint program;
+    GLuint position_attr_loc;
+    GLuint texcoord_attr_loc;
+    GLuint display_transform_uniform_loc;
+    GLuint transform_uniform_loc;
+    GLuint alpha_uniform_loc;
+    GLuint vertex_attribs_vbo;
+
+    typedef CompositingCriteria const* SurfaceID;
+    struct Texture
     {
-    public:
-        Resources();
-        ~Resources();
-        void setup(geometry::Rectangle const& display_area);
-
-        GLuint vertex_shader;
-        GLuint fragment_shader;
-        GLuint program;
-        GLuint position_attr_loc;
-        GLuint texcoord_attr_loc;
-        GLuint transform_uniform_loc;
-        GLuint alpha_uniform_loc;
-        GLuint vertex_attribs_vbo;
-        GLuint texture;
+        GLuint id = 0;
+        graphics::BufferID origin;
+        bool used;
     };
+    mutable std::unordered_map<SurfaceID, Texture> textures;
+    mutable bool skipped = false;
 
-    Resources resources;
 };
 
 }

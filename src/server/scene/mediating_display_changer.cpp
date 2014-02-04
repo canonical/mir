@@ -136,7 +136,9 @@ void ms::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Ses
             conf->configure_output(output.id, output.used,
                                    output.top_left,
                                    output.current_mode_index,
-                                   mir_power_mode_on);
+                                   output.current_format,
+                                   mir_power_mode_on,
+                                   output.orientation);
         }
     });
     if (switched)

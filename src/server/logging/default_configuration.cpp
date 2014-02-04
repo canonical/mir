@@ -24,7 +24,9 @@
 #include "session_mediator_report.h"
 
 #include "mir/graphics/null_display_report.h"
+#include "compositor_report.h"
 
+using namespace mir;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
@@ -36,7 +38,7 @@ auto mir::DefaultServerConfiguration::the_connector_report()
     return connector_report([this]
         () -> std::shared_ptr<mf::ConnectorReport>
         {
-            auto opt = the_options()->get(connector_report_opt, off_opt_value);
+            auto opt = the_options()->get<std::string>(connector_report_opt);
 
             if (opt == log_opt_value)
             {
@@ -59,7 +61,7 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
     return display_report(
         [this]() -> std::shared_ptr<graphics::DisplayReport>
         {
-            if (the_options()->get(display_report_opt, off_opt_value) == log_opt_value)
+            if (the_options()->get<std::string>(display_report_opt) == log_opt_value)
             {
                 return std::make_shared<ml::DisplayReport>(the_logger());
             }
@@ -70,13 +72,31 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
+std::shared_ptr<compositor::CompositorReport>
+DefaultServerConfiguration::the_compositor_report()
+{
+    return compositor_report(
+        [this]() -> std::shared_ptr<compositor::CompositorReport>
+        {
+            if (the_options()->get<std::string>(compositor_report_opt) == log_opt_value)
+            {
+                return std::make_shared<ml::CompositorReport>(
+                    the_logger(), the_clock());
+            }
+            else
+            {
+                return std::make_shared<compositor::NullCompositorReport>();
+            }
+        });
+}
+
 std::shared_ptr<mf::SessionMediatorReport>
 mir::DefaultServerConfiguration::the_session_mediator_report()
 {
     return session_mediator_report(
         [this]() -> std::shared_ptr<mf::SessionMediatorReport>
         {
-            if (the_options()->get(session_mediator_report_opt, off_opt_value) == log_opt_value)
+            if (the_options()->get<std::string>(session_mediator_report_opt) == log_opt_value)
             {
                 return std::make_shared<ml::SessionMediatorReport>(the_logger());
             }

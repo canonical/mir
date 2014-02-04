@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_configuration_options.h"
+#include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
 namespace
@@ -66,10 +67,12 @@ void parse_environment(
 }
 }
 
-char const* const mir::ConfigurationOptions::server_socket_opt           = "file";
+char const* const mir::ConfigurationOptions::server_socket_opt           = "file,f";
 char const* const mir::ConfigurationOptions::no_server_socket_opt        = "no-file";
+char const* const mir::ConfigurationOptions::enable_input_opt            = "enable-input,i";
 char const* const mir::ConfigurationOptions::session_mediator_report_opt = "session-mediator-report";
 char const* const mir::ConfigurationOptions::msg_processor_report_opt    = "msg-processor-report";
+char const* const mir::ConfigurationOptions::compositor_report_opt       = "compositor-report";
 char const* const mir::ConfigurationOptions::display_report_opt          = "display-report";
 char const* const mir::ConfigurationOptions::legacy_input_report_opt     = "legacy-input-report";
 char const* const mir::ConfigurationOptions::connector_report_opt        = "connector-report";
@@ -77,7 +80,7 @@ char const* const mir::ConfigurationOptions::scene_report_opt            = "scen
 char const* const mir::ConfigurationOptions::input_report_opt            = "input-report";
 char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
-char const* const mir::ConfigurationOptions::frontend_threads            = "ipc-thread-pool";
+char const* const mir::ConfigurationOptions::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mir::ConfigurationOptions::name_opt                    = "name";
 char const* const mir::ConfigurationOptions::offscreen_opt               = "offscreen";
 
@@ -113,52 +116,52 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
-        ("file,f", po::value<std::string>(),
-            "Socket filename. [string:default=$XDG_RUNTIME_DIR/mir_socket]")
+        (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
+            "Socket filename.")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
-        (platform_graphics_lib, po::value<std::string>(),
-            "Library to use for platform graphics support [default=libmirplatformgraphics.so]")
-        ("enable-input,i", po::value<bool>(),
-            "Enable input. [bool:default=true]")
-        (connector_report_opt, po::value<std::string>(),
-            "How to handle the Connector report. [{log,off}:default=off]")
-        (display_report_opt, po::value<std::string>(),
-            "How to handle the Display report. [{log,off}:default=off]")
-        (input_report_opt, po::value<std::string>(),
-            "How to handle to Input report. [{log,lttng,off}:default=off]")
-        (legacy_input_report_opt, po::value<std::string>(),
-            "How to handle the Legacy Input report. [{log,off}:default=off]")
-        (session_mediator_report_opt, po::value<std::string>(),
-            "How to handle the SessionMediator report. [{log,off}:default=off]")
-        (msg_processor_report_opt, po::value<std::string>(),
-            "How to handle the MessageProcessor report. [{log,lttng,off}:default=off]")
-        (scene_report_opt, po::value<std::string>(),
-            "How to handle the scene report. [{log,off}:default=off]")
+        (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
+            "Library to use for platform graphics support")
+        (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
+            "Enable input.")
+        (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "Compositor reporting [{log,off}]")
+        (connector_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the Connector report. [{log,off}]")
+        (display_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the Display report. [{log,off}]")
+        (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle to Input report. [{log,lttng,off}]")
+        (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the Legacy Input report. [{log,off}]")
+        (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the SessionMediator report. [{log,off}]")
+        (msg_processor_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the MessageProcessor report. [{log,lttng,off}]")
+        (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the scene report. [{log,off}]")
         (glog,
             "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),
+        (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),
             "Copy log messages at or above this level "
             "to stderr in addition to logfiles. The numbers "
             "of severity levels INFO, WARNING, ERROR, and "
-            "FATAL are 0, 1, 2, and 3, respectively."
-            " [int:default=2]")
-        (glog_minloglevel, po::value<int>(),
+            "FATAL are 0, 1, 2, and 3, respectively.")
+        (glog_minloglevel, po::value<int>()->default_value(glog_minloglevel_default),
             "Log messages at or above this level. The numbers "
             "of severity levels INFO, WARNING, ERROR, and "
             "FATAL are 0, 1, 2, and 3, respectively."
             " [int:default=0]")
-        (glog_log_dir, po::value<std::string>(),
+        (glog_log_dir, po::value<std::string>()->default_value(glog_log_dir_default),
             "If specified, logfiles are written into this "
-            "directory instead of the default logging directory."
-            " [string:default=\"\"]")
-        ("ipc-thread-pool", po::value<int>(),
+            "directory instead of the default logging directory.")
+        (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
-        ("vt", po::value<int>(),
-            "VT to run on or 0 to use current. [int:default=0]");
+        ("vt", po::value<int>()->default_value(0), // TODO this not applicable on all graphics platforms
+            "VT to run on or 0 to use current.");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultConfigurationOptions::add_options()

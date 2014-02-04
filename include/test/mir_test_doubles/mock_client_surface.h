@@ -33,8 +33,8 @@ struct MockClientSurface : public client::ClientSurface
 {
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_callback, void*));
-    MOCK_METHOD2(configure, MirWaitHandle*(MirSurfaceAttrib, int));
+    MOCK_METHOD0(request_and_wait_for_next_buffer, void());
+    MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib,int));
 };
 
 }

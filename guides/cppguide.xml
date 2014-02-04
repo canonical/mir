@@ -16,7 +16,7 @@
 </ACKNOWLEDGEMENTS>
 -->
 <p align="right">
-Revision 4.1
+Revision 4.2
 </p>
 
 <address>
@@ -89,7 +89,7 @@ Thomas Voss
   <p>
     In general, every <code>.cpp</code> file should have an associated
     <code>.h</code> file. There are some common exceptions, such as
-    unittests and small <code>.cpp</code> files containing just a
+    unit tests and small <code>.cpp</code> files containing just a
     <code>main()</code> function.
   </p>
   <p>
@@ -181,7 +181,7 @@ Thomas Voss
       </p>
       <p>
         Sometimes it makes sense to have pointer (or better,
-        <code>scoped_ptr</code>)
+        <code>unique_ptr</code>)
         members instead of object members. However, this complicates code
         readability and imposes a performance penalty, so avoid doing
         this transformation if the only purpose is to minimize includes
@@ -380,7 +380,7 @@ Thomas Voss
       <p>
         <code><var>dir/foo</var>.cpp</code> and
         <code><var>dir2/foo2</var>.h</code> are often in the same
-        directory (e.g. <code>base/basictypes_test.cpp</code> and
+        directory (e.g. <code>base/test_basictypes.cpp</code> and
         <code>base/basictypes.h</code>), but can be in different
         directories too.
       </p>
@@ -507,9 +507,9 @@ Thomas Voss
                    // Notice the lack of indentation.
                    class MyClass
                    {
-                    public:
-                     ...
-                     void Foo();
+                   public:
+                       ...
+                       void foo();
                    };
 
                    }  // namespace mynamespace
@@ -520,9 +520,9 @@ Thomas Voss
                    {
 
                    // Definition of functions is within scope of the namespace.
-                   void MyClass::Foo()
+                   void MyClass::foo()
                    {
-                     ...
+                       ...
                    }
 
                    }  // namespace mynamespace
@@ -535,7 +535,7 @@ Thomas Voss
                  <CODE_SNIPPET>
                    #include "a.h"
 
-                   DEFINE_bool(someflag, false, "dummy flag");
+                   DEFINE_BOOL(someflag, false, "dummy flag");
 
                    class C;  // Forward declaration of class C in the global namespace.
                    namespace a { class A; }  // Forward declaration of a::A.
@@ -593,9 +593,9 @@ Thomas Voss
 
                    inline void my_inline_function()
                    {
-                     // namespace alias local to a function (or method).
-                     namespace fbz = ::foo::bar::baz;
-                     ...
+                       // namespace alias local to a function (or method).
+                       namespace fbz = ::foo::bar::baz;
+                       ...
                    }
                    }  // namespace librarian
                  </CODE_SNIPPET>
@@ -708,7 +708,7 @@ Thomas Voss
           If you must define a nonmember function and it is only
           needed in its <code>.cpp</code> file, use an unnamed
           <a HREF="#Namespaces">namespace</a> or <code>static</code>
-          linkage (eg <code>static int Foo() {...}</code>) to limit
+          linkage (eg <code>static int foo() {...}</code>) to limit
           its scope.
         </p>
       </DECISION>
@@ -758,8 +758,8 @@ Thomas Voss
         // Inefficient implementation:
         for (int i = 0; i &lt; 1000000; ++i)
         {
-          Foo f;  // My ctor and dtor get called 1000000 times each.
-          f.DoSomething(i);
+            Foo f;  // My ctor and dtor get called 1000000 times each.
+            f.do_something(i);
         }
       </BAD_CODE_SNIPPET>
       <p>
@@ -770,7 +770,7 @@ Thomas Voss
         Foo f;  // My ctor and dtor get called once each.
         for (int i = 0; i &lt; 1000000; ++i)
         {
-          f.DoSomething(i);
+            f.do_something(i);
         }
       </CODE_SNIPPET>
     </BODY>
@@ -861,7 +861,7 @@ Thomas Voss
         </p>
         <p>
           If your class has value semantics then consider making the
-          class invarients such that the default constructor is cheap.
+          class invariants such that the default constructor is cheap.
           For example, initialising member pointers to <code>nullptr</code>
           and allocating on first use.
         </p>
@@ -987,8 +987,8 @@ Thomas Voss
         fields rather than through method invocations. Methods should
         not provide behavior but should only be used to set up the
         data members, e.g., constructor, destructor,
-        <code>Initialize()</code>, <code>Reset()</code>,
-        <code>Validate()</code>.
+        <code>initialize()</code>, <code>reset()</code>,
+        <code>validate()</code>.
       </p>
       <p>
         If more functionality is required, a <code>class</code> is more
@@ -1152,7 +1152,7 @@ Thomas Voss
         behave in the same way as built-in types (such as
         <code>int</code>).  Overloaded operators are more playful
         names for functions that are less-colorfully named, such as
-        <code>Equals()</code> or <code>Add()</code>.  For some
+        <code>equals()</code> or <code>add()</code>.  For some
         template functions to work correctly, you may need to define
         operators.
       </PROS>
@@ -1205,8 +1205,8 @@ Thomas Voss
       called <code>foo</code> and the accessor function
       <code>get_foo()</code>.  You may also want a mutator function
       <code>set_foo()</code>.
-      Exception: <code>static const</code> data members (typically
-      called <code>kFoo</code>) need not be <code>private</code>.
+      Exception: <code>static const</code> data members need not 
+      be <code>private</code>.
     </SUMMARY>
     <BODY>
       <p>
@@ -1325,7 +1325,7 @@ Thomas Voss
           <code>const</code>:
         </p>
         <CODE_SNIPPET>
-          void Foo(string const&amp; in, string* out);
+          void foo(string const&amp; in, string* out);
         </CODE_SNIPPET>
         <p>
           In fact it is a very strong convention in Unity code that input
@@ -1366,8 +1366,8 @@ Thomas Voss
         <CODE_SNIPPET>
           class MyClass {
           public:
-              void Analyze(string const&amp; text);
-              void Analyze(char const* text, size_t textlen);
+              void analyze(string const&amp; text);
+              void analyze(char const* text, size_t textlen);
           };
         </CODE_SNIPPET>
       </DEFINITION>
@@ -1387,8 +1387,8 @@ Thomas Voss
       <DECISION>
         If you want to overload a function, consider qualifying the
         name with some information about the arguments, e.g.,
-        <code>AppendString()</code>, <code>AppendInt()</code> rather
-        than just <code>Append()</code>.
+        <code>append_string()</code>, <code>AppendInt()</code> rather
+        than just <code>append()</code>.
 
       </DECISION>
     </BODY>
@@ -1428,10 +1428,10 @@ Thomas Voss
         </p>
         <CODE_SNIPPET>
           // Support up to 4 params by using a default empty AlphaNum.
-          string StrCat(AlphaNum const&amp; a,
-                        AlphaNum const&amp; b = gEmptyAlphaNum,
-                        AlphaNum const&amp; c = gEmptyAlphaNum,
-                        AlphaNum const&amp; d = gEmptyAlphaNum);
+          string str_cat(AlphaNum const&amp; a,
+                         AlphaNum const&amp; b = gEmptyAlphaNum,
+                         AlphaNum const&amp; c = gEmptyAlphaNum,
+                         AlphaNum const&amp; d = gEmptyAlphaNum);
         </CODE_SNIPPET>
       </DECISION>
     </BODY>
@@ -1476,7 +1476,7 @@ Thomas Voss
         be a friend of <code>Foo</code> so that it can construct the
         inner state of <code>Foo</code> correctly, without exposing
         this state to the world.  In some cases it may be useful to
-        make a unittest class a friend of the class it tests.
+        make a unit test class a friend of the class it tests.
       </p>
       <p>
         Friends extend, but do not break, the encapsulation
@@ -1535,7 +1535,7 @@ Thomas Voss
                </li>
           <li> Do not use <code>dynamic_cast</code> except in test code.
                If you need to know type information at runtime in this way
-               outside of a unittest, you probably have a <A HREF="#Run-Time_Type_Information__RTTI_">design
+               outside of a unit test, you probably have a <A HREF="#Run-Time_Type_Information__RTTI_">design
                flaw</A>.
                </li>
         </ul>
@@ -1699,7 +1699,7 @@ Thomas Voss
         changed (e.g., <code>int const foo</code>).  Class functions
         can have the <code>const</code> qualifier to indicate the
         function does not change the state of the class member
-        variables (e.g., <code>class Foo { int Bar(char c) const;
+        variables (e.g., <code>class Foo { int bar(char c) const;
         };</code>).
       </DEFINITION>
       <PROS>
@@ -2187,7 +2187,7 @@ Thomas Voss
           my_useful_class.cpp<br/>
           my-useful-class.cpp<br/>
           myusefulclass.cpp<br/>
-          myusefulclass_test.cpp  // _unittest and _regtest are deprecated.<br/>
+          test_myusefulclass.cpp  // _unittest and _regtest are deprecated.<br/>
         </code>
       </p>
       <p>
@@ -2294,8 +2294,8 @@ Thomas Voss
         <CODE_SNIPPET>
           struct UrlTableProperties
           {
-            string name;
-            int num_entries;
+              string name;
+              int num_entries;
           }
         </CODE_SNIPPET>
         <p>
@@ -2409,9 +2409,9 @@ Thomas Voss
       <CODE_SNIPPET>
         enum class UrlTableErrors
         {
-          ok,
-          out_of_memory,
-          malformed_input,
+            ok,
+            out_of_memory,
+            malformed_input,
         };
       </CODE_SNIPPET>
     </BODY>
@@ -2552,9 +2552,10 @@ Thomas Voss
     <BODY>
       <CODE_SNIPPET>
         // Iterates over the contents of a GargantuanTable.  Sample usage:
-        //    GargantuanTableIterator* iter = table-&gt;NewIterator();
-        //    for (iter-&gt;Seek("foo"); !iter-&gt;done(); iter-&gt;Next()) {
-        //      process(iter-&gt;key(), iter-&gt;value());
+        //    GargantuanTableIterator* iter = table-&gt;new_iterator();
+        //    for (iter-&gt;seek("foo"); !iter-&gt;done(); iter-&gt;next())
+        //    {
+        //        process(iter-&gt;key(), iter-&gt;value());
         //    }
         //    delete iter;
         class GargantuanTableIterator
@@ -2630,13 +2631,13 @@ Thomas Voss
           // The iterator is initially positioned at the beginning of the table.
           //
           // This method is equivalent to:
-          //    Iterator* iter = table-&gt;NewIterator();
-          //    iter-&gt;Seek("");
+          //    Iterator* iter = table-&gt;new_iterator();
+          //    iter-&gt;seek("");
           //    return iter;
           // If you are going to immediately seek to another place in the
-          // returned iterator, it will be faster to use NewIterator()
+          // returned iterator, it will be faster to use new_iterator()
           // and avoid the extra seek.
-          Iterator* GetIterator() const;
+          Iterator* get_iterator() const;
         </CODE_SNIPPET>
         <p>
           However, do not be unnecessarily verbose or state the
@@ -2645,7 +2646,7 @@ Thomas Voss
         </p>
         <CODE_SNIPPET>
           // Returns true if the table cannot hold any more entries.
-          bool IsTableFull();
+          bool is_table_full();
         </CODE_SNIPPET>
         <p>
           When commenting constructors and destructors, remember that
@@ -2713,7 +2714,7 @@ Thomas Voss
         </p>
         <CODE_SNIPPET>
           // The total number of tests cases that we run through in this regression test.
-          const int kNumTestCases = 6;
+          const int number_of_test_cases = 6;
         </CODE_SNIPPET>
       </SUBSECTION>
     </BODY>
@@ -2735,9 +2736,9 @@ Thomas Voss
           // contains the carry from the add.
           for (int i = 0; i &lt; result-&gt;size(); i++)
           {
-            x = (x &lt;&lt; 8) + (*result)[i];
-            (*result)[i] = x &gt;&gt; 1;
-            x &amp;= 1;
+              x = (x &lt;&lt; 8) + (*result)[i];
+              (*result)[i] = x &gt;&gt; 1;
+              x &amp;= 1;
           }
         </CODE_SNIPPET>
       </SUBSECTION>
@@ -2750,8 +2751,8 @@ Thomas Voss
         <CODE_SNIPPET>
           // If we have enough memory, mmap the data portion too.
           mmap_budget = max&lt;int64&gt;(0, mmap_budget - index_-&gt;length());
-          if (mmap_budget &gt;= data_size_ &amp;&amp; !MmapData(mmap_chunk_bytes, mlock))
-            return;  // Error already logged.
+          if (mmap_budget &gt;= data_size_ &amp;&amp; !mmap_data(mmap_chunk_bytes, mlock))
+              return;  // Error already logged.
         </CODE_SNIPPET>
         <p>
           Note that there are both comments that describe what the
@@ -2763,48 +2764,48 @@ Thomas Voss
           often be more readable to line them up:
         </p>
         <CODE_SNIPPET>
-          DoSomething();                  // Comment here so the comments line up.
-          DoSomethingElseThatIsLonger();  // Comment here so there are two spaces between
-                                          // the code and the comment.
-          { // One space before comment when opening a new scope is allowed,
-            // thus the comment lines up with the following comments and code.
-            DoSomethingElse();  // Two spaces before line comments normally.
+          do_something();                      // Comment here so the comments line up.
+          do_Something_else_that_is_longer();  // Comment here so there are two spaces between
+                                               // the code and the comment.
+          {   // Three space before comment when opening a new scope is allowed,
+              // thus the comment lines up with the following comments and code.
+              do_something_else();  // Two spaces before line comments normally.
           }
         </CODE_SNIPPET>
       </SUBSECTION>
-      <SUBSECTION title="NULL, true/false, 1, 2, 3...">
+      <SUBSECTION title="nullptr, true/false, 1, 2, 3...">
         <p>
-          When you pass in <code>NULL</code>, boolean, or literal integer
+          When you pass in <code>nullptr</code>, boolean, or literal integer
           values to functions, you should consider adding a comment about
           what they are, or make your code self-documenting by using
           constants. For example, compare:
         </p>
         <BAD_CODE_SNIPPET>
-          bool success = CalculateSomething(interesting_value,
-                                            10,
-                                            false,
-                                            NULL);  // What are these arguments??
+          bool success = calculate_something(interesting_value,
+                                             10,
+                                             false,
+                                             nullptr);  // What are these arguments??
         </BAD_CODE_SNIPPET>
         <p>
           versus:
         </p>
         <CODE_SNIPPET>
-          bool success = CalculateSomething(interesting_value,
-                                            10,     // Default base value.
-                                            false,  // Not the first time we're calling this.
-                                            NULL);  // No callback.
+          bool success = calculate_something(interesting_value,
+                                             10,        // Default base value.
+                                             false,     // Not the first time we're calling this.
+                                             nullptr);  // No callback.
         </CODE_SNIPPET>
         <p>
           Or alternatively, constants or self-describing variables:
         </p>
         <CODE_SNIPPET>
-          int const kDefaultBaseValue = 10;
-          bool const kFirstTimeCalling = false;
-          Callback* null_callback = NULL;
-          bool success = CalculateSomething(interesting_value,
-                                            kDefaultBaseValue,
-                                            kFirstTimeCalling,
-                                            null_callback);
+          int const default_base_value = 10;
+          bool const first_time_calling = false;
+          Callback* null_callback = nullptr;
+          bool success = calculate_something(interesting_value,
+                                             default_base_value,
+                                             first_time_calling,
+                                             null_callback);
         </CODE_SNIPPET>
       </SUBSECTION>
 
@@ -2992,7 +2993,7 @@ Thomas Voss
         cases it is appropriate to include such words in your code.  For
         example, if your code parses data files from foreign sources,
         it may be appropriate to hard-code the non-ASCII string(s) used in
-        those data files as delimiters.  More commonly, unittest code
+        those data files as delimiters.  More commonly, unit test code
         (which does not
 
         need to be localized) might contain non-ASCII strings.  In such
@@ -3031,9 +3032,9 @@ Thomas Voss
         Functions look like this:
       </p>
       <CODE_SNIPPET>
-        ReturnType ClassName::FunctionName(Type par_name1, Type par_name2)
+        ReturnType ClassName::function_name(Type par_name1, Type par_name2)
         {
-            DoSomething();
+            do_something();
             ...
         }
       </CODE_SNIPPET>
@@ -3041,10 +3042,10 @@ Thomas Voss
         or:
       </p>
       <CODE_SNIPPET>
-        ReturnType ClassName::ReallyLongFunctionName(Type par_name1, Type par_name2,
-                                                     Type par_name3)
+        ReturnType ClassName::really_long_function_name(Type par_name1, Type par_name2,
+                                                        Type par_name3)
         {
-            DoSomething();
+            do_something();
             ...
         }
       </CODE_SNIPPET>
@@ -3052,12 +3053,12 @@ Thomas Voss
         or:
       </p>
       <CODE_SNIPPET>
-        ReturnType LongClassName::ReallyReallyReallyLongFunctionName(
+        ReturnType LongClassName::really_really_really_long_function_name(
             Type par_name1,  // 4 space indent
             Type par_name2,
             Type par_name3)
         {
-            DoSomething();  // 4 space indent
+            do_something();  // 4 space indent
             ...
         }
       </CODE_SNIPPET>
@@ -3087,11 +3088,16 @@ Thomas Voss
              declaration and implementation. (Except where unused parameters
              are suppressed in the implementation.)
              </li>
-        <li> All parameters should be aligned if possible.
-             </li>
-        <li> Default indentation is 4 spaces.
-             </li>
-        <li> Wrapped parameters have a 4 space indent.
+        <li> All parameters should be in a single line if possible, otherwise:
+            <ul>
+                <li> Wrap groups of parameters into the next line, and align the 
+                     first wrapped parameter to the first parameter in the previous 
+                     line.
+                     </li>
+                <li> Place each parameter in a separate line and indent each with 4 
+                     spaces.
+                     </li>
+            </ul>
              </li>
       </ul>
       <p>
@@ -3100,17 +3106,17 @@ Thomas Voss
       </p>
       <CODE_SNIPPET>
         // Everything in this function signature fits on a single line
-        ReturnType FunctionName(Type par) const
+        ReturnType function_name(Type par) const
         {
-          ...
+            ...
         }
 
         // This function signature requires multiple lines, but
         // the const keyword is on the line with the last parameter.
-        ReturnType ReallyLongFunctionName(Type par1,
-                                          Type par2) const
+        ReturnType really_long_function_name(Type par1,
+                                             Type par2) const
         {
-          ...
+            ...
         }
       </CODE_SNIPPET>
       <p>
@@ -3122,23 +3128,23 @@ Thomas Voss
         class Shape
         {
         public:
-            virtual void Rotate(double radians) = 0;
+            virtual void rotate(double radians) = 0;
         }
 
         // Always have named parameters in the declaration.
         class Circle : public Shape
         {
         public:
-            virtual void Rotate(double radians);
+            virtual void rotate(double radians);
         }
 
         // Comment out unused named parameters in definitions.
-        void Circle::Rotate(double /*radians*/) {}
+        void Circle::rotate(double /*radians*/) {}
       </CODE_SNIPPET>
       <BAD_CODE_SNIPPET>
         // Bad - if someone wants to implement later, it's not clear what the
         // variable means.
-        void Circle::Rotate(double) {}
+        void Circle::rotate(double) {}
       </BAD_CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -3153,7 +3159,7 @@ Thomas Voss
         Function calls have the following format:
       </p>
       <CODE_SNIPPET>
-        bool retval = DoSomething(argument1, argument2, argument3);
+        bool retval = do_something(argument1, argument2, argument3);
       </CODE_SNIPPET>
       <p>
         If the arguments do not all fit on one line, they should be
@@ -3162,18 +3168,18 @@ Thomas Voss
         open paren or before the close paren:
       </p>
       <CODE_SNIPPET>
-        bool retval = DoSomething(averyveryveryverylongargument1,
-                                  argument2, argument3);
+        bool retval = do_something(averyveryveryverylongargument1,
+                                   argument2, argument3);
       </CODE_SNIPPET>
       <p>
         If the function has many arguments, consider having one per
         line if this makes the code more readable:
       </p>
       <CODE_SNIPPET>
-        bool retval = DoSomething(argument1,
-                                  argument2,
-                                  argument3,
-                                  argument4);
+        bool retval = do_something(argument1,
+                                   argument2,
+                                   argument3,
+                                   argument4);
       </CODE_SNIPPET>
       <p>
         If the function signature is so long that it cannot fit within
@@ -3183,16 +3189,17 @@ Thomas Voss
       <CODE_SNIPPET>
         if (...)
         {
-          ...
-          ...
-          if (...)
-          {
-            DoSomethingThatRequiresALongFunctionName(
-                very_long_argument1,  // 4 space indent
-                argument2,
-                argument3,
-                argument4);
-          }
+            ...
+            ...
+            if (...)
+            {
+                do_something_that_requires_a_long_function_name(
+                    very_long_argument1,  // 4 space indent
+                    argument2,
+                    argument3,
+                    argument4);
+            }
+        }
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -3230,8 +3237,8 @@ Thomas Voss
         <code>else</code> clause.
       </p>
       <CODE_SNIPPET>
-        if (x == kFoo) return new Foo();
-        if (x == kBar) return new Bar();
+        if (x == foo) return new Foo();
+        if (x == bar) return new Bar();
       </CODE_SNIPPET>
       <p>
         This is not allowed when the if statement has an
@@ -3239,8 +3246,8 @@ Thomas Voss
       </p>
       <BAD_CODE_SNIPPET>
         // Not allowed - IF statement on one line when there is an ELSE clause
-        if (x) DoThis();
-        else DoThat();
+        if (x) do_this();
+        else do_that();
       </BAD_CODE_SNIPPET>
       <p>
         In general, curly braces are not required for single-line
@@ -3254,11 +3261,11 @@ Thomas Voss
       </p>
       <CODE_SNIPPET>
         if (condition)
-            DoSomething();  // 4 space indent.
+            do_something();  // 4 space indent.
 
         if (condition)
         {
-            DoSomething();  // 4 space indent.
+            do_something();  // 4 space indent.
         }
       </CODE_SNIPPET>
       <p>
@@ -3269,17 +3276,17 @@ Thomas Voss
         // Not allowed - curly on IF but not ELSE
         if (condition)
         {
-          foo;
+            foo;
         }
         else
-          bar;
+            bar;
 
         // Not allowed - curly on ELSE but not IF
         if (condition)
-          foo;
+            foo;
         else
         {
-          bar;
+            bar;
         }
       </BAD_CODE_SNIPPET>
       <CODE_SNIPPET>
@@ -3287,11 +3294,11 @@ Thomas Voss
         // one of the clauses used braces.
         if (condition)
         {
-          foo;
+            foo;
         }
         else
         {
-          bar;
+            bar;
         }
       </CODE_SNIPPET>
     </BODY>
@@ -3320,20 +3327,16 @@ Thomas Voss
       <CODE_SNIPPET>
         switch (var)
         {
-          case 0: // 2 space indent
-          {
+        case 0:      // no indent
             ...      // 4 space indent
             break;
-          }
-          case 1:
-          {
-            ...
-            break;
-          }
-          default:
-          {
+        case 1:
+            {
+                ...
+                break;
+            }
+        default:
             assert(false);
-          }
         }
       </CODE_SNIPPET>
       <p>
@@ -3343,9 +3346,9 @@ Thomas Voss
       <CODE_SNIPPET>
         while (condition)
         {
-          // Repeat test until it returns false.
+            // Repeat test until it returns false.
         }
-        for (int i = 0; i &lt; kSomeNumber; ++i) {}  // Good - empty body.
+        for (int i = 0; i &lt; some_number_with_descriptive_name; ++i) {}  // Good - empty body.
         while (condition) continue;  // Good - continue indicates no logic.
       </CODE_SNIPPET>
       <BAD_CODE_SNIPPET>
@@ -3419,7 +3422,7 @@ Thomas Voss
             a_third_thing == a_fourth_thing &amp;&amp;
             yet_another &amp;&amp; last_one)
         {
-          ...
+            ...
         }
       </CODE_SNIPPET>
       <p>
@@ -3494,24 +3497,26 @@ Thomas Voss
       </p>
       <CODE_SNIPPET>
         // Good - directives at beginning of line
-          if (lopsided_score) {
+        if (lopsided_score) 
+        {
         #if DISASTER_PENDING      // Correct -- Starts at beginning of line
-            DropEverything();
+            drop_everything();
         # if NOTIFY               // OK but not required -- Spaces after #
-            NotifyClient();
+            notify_client();
         # endif
         #endif
-            BackToNormal();
-          }
+            back_to_normal();
+        }
       </CODE_SNIPPET>
       <BAD_CODE_SNIPPET>
         // Bad - indented directives
-          if (lopsided_score) {
+        if (lopsided_score) 
+        {
             #if DISASTER_PENDING  // Wrong!  The "#if" should be at beginning of line
-            DropEverything();
+            drop_everything();
             #endif                // Wrong!  Do not indent "#endif"
-            BackToNormal();
-          }
+            back_to_normal();
+        }
       </BAD_CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -3535,8 +3540,8 @@ Thomas Voss
             explicit MyClass(int var);
             ~MyClass() {}
 
-            void SomeFunction();
-            void SomeFunctionThatDoesNothing() {}
+            void some_function();
+            void some_function_that_does_nothing() {}
 
             void set_some_var(int var) { some_var_ = var; }
             int some_var() const { return some_var_; }
@@ -3544,7 +3549,7 @@ Thomas Voss
         private:
             MyClass(MyClass const&amp;) = delete;
             MyClass&amp; operator=(MyClass const&amp;) = delete;
-            bool SomeInternalFunction();
+            bool some_internal_function();
   
             int some_var_;
             int some_other_var;
@@ -3599,9 +3604,9 @@ Thomas Voss
             some_var_(var),            // 4 space indent
             some_other_var_(var + 1)
         {
-          ...
-          DoSomething();
-          ...
+            ...
+            do_something();
+            ...
         }
       </CODE_SNIPPET>
     </BODY>
@@ -3622,7 +3627,7 @@ Thomas Voss
 
         void foo()  // Correct.  No extra indentation within namespace.
         {
-          ...
+            ...
         }
 
         }  // namespace
@@ -3663,18 +3668,19 @@ Thomas Voss
     <BODY>
       <SUBSECTION title="General">
         <CODE_SNIPPET>
-        int i = 0;  // Semicolons usually have no space before them.
+        int i = 0;        // Semicolons usually have no space before them.
         int x[] = { 0 };  // Spaces inside braces for array initialization are
         int x[] = {0};    // optional.  If you use them, put them on both sides!
+
         // Spaces around the colon in inheritance and initializer lists.
         class Foo : public Bar
         {
         public:
-          // For inline function implementations, put spaces between the braces
-          // and the implementation itself.
-          Foo(int b) : Bar(), baz_(b) {}  // No spaces inside empty braces.
-          void Reset() { baz_ = 0; }  // Spaces separating braces from implementation.
-          ...
+            // For inline function implementations, put spaces between the braces
+            // and the implementation itself.
+            Foo(int b) : Bar(), baz_(b) {}  // No spaces inside empty braces.
+            void reset() { baz_ = 0; }  // Spaces separating braces from implementation.
+            ...
         </CODE_SNIPPET>
         <p>
           Adding trailing whitespace can cause extra work for others editing
@@ -3705,9 +3711,9 @@ Thomas Voss
         vector&lt;string&gt; x;           // No spaces inside the angle
         y = static_cast&lt;char*&gt;(x);  // brackets (&lt; and &gt;), before
                                     // &lt;, or between &gt;( in a cast.
-        vector&lt;char*&gt; x;           // Spaces between type and pointer are
+        vector&lt;char*&gt; x;            // Spaces between type and pointer are
                                     // okay, but be consistent.
-        set&lt;list&lt;string&gt;&gt; x;       // C++11 now allows &gt;&gt; to close templates.
+        set&lt;list&lt;string&gt;&gt; x;        // C++11 now allows &gt;&gt; to close templates.
         set&lt;list&lt;string&gt; &gt; x;       // Older C++ requiree a space in &gt; &gt;, and is allowed.
         </CODE_SNIPPET>
       </SUBSECTION>

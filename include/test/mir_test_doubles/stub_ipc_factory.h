@@ -23,7 +23,6 @@
 #include "mir_test/fake_shared.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
-#include "mir/frontend/null_message_processor_report.h"
 
 namespace mir
 {
@@ -42,20 +41,15 @@ public:
     }
 
     std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<frontend::EventSink> const&, bool)
+        std::shared_ptr<frontend::EventSink> const&, bool) override
     {
         return server;
     }
 
 private:
-    virtual std::shared_ptr<frontend::ResourceCache> resource_cache()
+    virtual std::shared_ptr<frontend::ResourceCache> resource_cache() override
     {
         return cache;
-    }
-
-    virtual std::shared_ptr<frontend::MessageProcessorReport> report()
-    {
-        return std::make_shared<frontend::NullMessageProcessorReport>();
     }
 
     std::shared_ptr<protobuf::DisplayServer> server;

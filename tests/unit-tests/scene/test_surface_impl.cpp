@@ -326,6 +326,73 @@ TEST_F(SurfaceImpl, emits_resize_events)
     EXPECT_EQ(new_size, surf.size());
 }
 
+TEST_F(SurfaceImpl, emits_resize_events_only_on_change)
+{
+    using namespace testing;
+
+    geom::Size const new_size{123, 456};
+    geom::Size const new_size2{789, 1011};
+    auto sink = std::make_shared<MockEventSink>();
+    ms::SurfaceImpl surf(
+        mt::fake_shared(surface_builder),
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        msh::a_surface(),
+        stub_id,
+        sink);
+
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = stub_id.as_value();
+    e.resize.width = new_size.width.as_int();
+    e.resize.height = new_size.height.as_int();
+    EXPECT_CALL(*sink, handle_event(e))
+        .Times(1);
+
+    MirEvent e2;
+    memset(&e2, 0, sizeof e2);
+    e2.type = mir_event_type_resize;
+    e2.resize.surface_id = stub_id.as_value();
+    e2.resize.width = new_size2.width.as_int();
+    e2.resize.height = new_size2.height.as_int();
+    EXPECT_CALL(*sink, handle_event(e2))
+        .Times(1);
+
+    surf.resize(new_size);
+    EXPECT_EQ(new_size, surf.size());
+    surf.resize(new_size);
+    EXPECT_EQ(new_size, surf.size());
+
+    surf.resize(new_size2);
+    EXPECT_EQ(new_size2, surf.size());
+    surf.resize(new_size2);
+    EXPECT_EQ(new_size2, surf.size());
+}
+
+TEST_F(SurfaceImpl, remembers_alpha)
+{
+    ms::SurfaceImpl surf(
+        mt::fake_shared(surface_builder),
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        msh::a_surface(),
+        stub_id,
+        stub_sender);
+
+    EXPECT_FLOAT_EQ(1.0f, surf.alpha());
+
+    surf.set_alpha(0.5f);
+    EXPECT_FLOAT_EQ(0.5f, surf.alpha());
+
+    surf.set_alpha(0.25f);
+    EXPECT_FLOAT_EQ(0.25f, surf.alpha());
+
+    surf.set_alpha(0.0f);
+    EXPECT_FLOAT_EQ(0.0f, surf.alpha());
+
+    surf.set_alpha(1.0f);
+    EXPECT_FLOAT_EQ(1.0f, surf.alpha());
+}
+
 TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;

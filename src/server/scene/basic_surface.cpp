@@ -84,6 +84,11 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
     surface_data->apply_rotation(degrees, axis);
 }
 
+float ms::BasicSurface::alpha() const
+{
+    return surface_data->alpha();
+}
+
 void ms::BasicSurface::set_alpha(float alpha_v)
 {
     surface_data->apply_alpha(alpha_v);
@@ -160,8 +165,11 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
     surface_data->set_input_region(input_rectangles);
 }
 
-void ms::BasicSurface::resize(geom::Size const& size)
+bool ms::BasicSurface::resize(geom::Size const& size)
 {
+    if (size == this->size())
+        return false;
+
     if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
@@ -176,4 +184,6 @@ void ms::BasicSurface::resize(geom::Size const& size)
 
     // Now the buffer stream has successfully resized, update the state second;
     surface_data->resize(size);
+
+    return true;
 }

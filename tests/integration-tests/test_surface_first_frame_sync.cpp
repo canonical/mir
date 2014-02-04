@@ -96,13 +96,21 @@ public:
     {
     }
 
-    void clear() const override
+    void begin(float) const override
     {
     }
 
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
+    }
+
+    void end() const override
+    {
+    }
+
+    void suspend() override
+    {
     }
 
 private:

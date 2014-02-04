@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013, 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,13 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ *              Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "src/server/frontend/socket_session.h"
 #include "src/server/frontend/message_receiver.h"
-#include "src/server/frontend/message_processor.h"
+#include "mir/frontend/message_processor.h"
 
 #include "mir_test/fake_shared.h"
+
+#include "mir_protobuf_wire.pb.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -31,55 +34,76 @@ namespace mt = mir::test;
 
 namespace
 {
-struct MockReceiver : public mfd::MessageReceiver
+struct StubReceiver : public mfd::MessageReceiver
 {
-    MOCK_METHOD3(async_receive_msg, void(std::function<void(boost::system::error_code const&, size_t)> const&,
-                                         boost::asio::streambuf&, size_t));
+    void async_receive_msg(
+        std::function<void(boost::system::error_code const&, size_t)> const& callback,
+        boost::asio::streambuf& stream,
+        size_t size)
+    {
+        read_size = size;
+        pstream = &stream;
+        callback_function = callback;
+    }
+
+    void fake_receive_msg(char* buffer, size_t size)
+    {
+        using namespace testing;
+        ASSERT_NE(nullptr, callback_function);
+        ASSERT_THAT(pstream, NotNull());
+        ASSERT_THAT(read_size, Eq(size));
+
+        pstream->sputn(buffer, size);
+        pstream->commit(size);
+
+        boost::system::error_code code;
+        callback_function(code, size);
+    }
+
+private:
+    std::function<void(boost::system::error_code const&, size_t)> callback_function;
+    boost::asio::streambuf* pstream = nullptr;
+    size_t read_size = 0;
+
     MOCK_METHOD0(client_pid, pid_t());
 };
 
 struct MockProcessor : public mfd::MessageProcessor
 {
-    MOCK_METHOD1(process_message, bool(std::istream&));
+    MOCK_METHOD1(dispatch, bool(mir::protobuf::wire::Invocation const& invocation));
 };
 }
 struct SocketSessionTest : public ::testing::Test
 {
     testing::NiceMock<MockProcessor> mock_processor;
-    testing::NiceMock<MockReceiver> mock_receiver;
+    StubReceiver stub_receiver;
 };
 
-TEST_F(SocketSessionTest, basic_msg)
+TEST_F(SocketSessionTest, basic_msg_is_received_and_dispatched)
 {
+    int const header_size = 2;
+    char buffer[512];
+    mir::protobuf::wire::Invocation invocation;
+    invocation.set_id(1);
+    invocation.set_method_name("");
+    invocation.set_parameters(buffer, 0);
+    invocation.set_protocol_version(1);
+    auto const body_size = invocation.ByteSize();
+
     using namespace testing;
 
     std::shared_ptr<mfd::ConnectedSessions<mfd::SocketSession>> null_sessions;
-    std::function<void(boost::system::error_code const&, size_t)> header_read, body_read;
 
-    size_t header_size = 2;
-    EXPECT_CALL(mock_receiver, async_receive_msg(_,_, header_size))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&header_read));
+    mfd::SocketSession session(mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
 
-    mfd::SocketSession session(mt::fake_shared(mock_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(1).WillOnce(Return(true));
 
-    //trigger wait for header
     session.read_next_message();
-    testing::Mock::VerifyAndClearExpectations(&mock_receiver);
 
-    //trigger body read
-    EXPECT_CALL(mock_receiver, async_receive_msg(_,_,_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&body_read));
+    buffer[0] = body_size / 0x100;
+    buffer[1] = body_size % 0x100;
+    stub_receiver.fake_receive_msg(buffer, header_size);
 
-    boost::system::error_code code;
-    header_read(code, 2);
-
-    testing::Mock::VerifyAndClearExpectations(&mock_receiver);
-
-    //trigger message process
-    EXPECT_CALL(mock_processor, process_message(_))
-        .Times(1)
-        .WillOnce(Return(true));
-    body_read(code, 9);
+    invocation.SerializeToArray(buffer, sizeof buffer);
+    stub_receiver.fake_receive_msg(buffer, body_size);
 }

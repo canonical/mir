@@ -34,8 +34,11 @@ class Renderer
 public:
     virtual ~Renderer() = default;
 
-    virtual void clear() const = 0;
+    virtual void begin(float rotation = 0.0f) const = 0;
     virtual void render(CompositingCriteria const& info, graphics::Buffer& buffer) const = 0;
+    virtual void end() const = 0;
+
+    virtual void suspend() = 0; // called when begin/render/end skipped
 
 protected:
     Renderer() = default;

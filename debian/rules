@@ -21,6 +21,7 @@ override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
+          -DMIR_RUN_ACCEPTANCE_TESTS=OFF -DMIR_RUN_INTEGRATION_TESTS=OFF \
 	  -DMIR_PLATFORM=android 
 else
 ifeq ($(DEB_HOST_ARCH),powerpc)

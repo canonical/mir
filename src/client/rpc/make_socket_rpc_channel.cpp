@@ -39,7 +39,7 @@ struct Prefix
 } const fd_prefix("fd://");
 }
 
-std::shared_ptr<mclr::MirBasicRpcChannel>
+std::shared_ptr<google::protobuf::RpcChannel>
 mclr::make_rpc_channel(std::string const& name,
                        std::shared_ptr<mcl::SurfaceMap> const& map,
                        std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,

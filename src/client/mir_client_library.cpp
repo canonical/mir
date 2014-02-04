@@ -29,6 +29,7 @@
 #include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
 #include "lifecycle_control.h"
+#include "api_impl_types.h"
 
 #include <set>
 #include <unordered_set>
@@ -108,9 +109,8 @@ MirWaitHandle* mir_default_connect(
     }
     catch (std::exception const& x)
     {
-        MirConnection* error_connection = new MirConnection();
+        MirConnection* error_connection = new MirConnection(x.what());
         error_connections.insert(error_connection);
-        error_connection->set_error_message(x.what());
         callback(error_connection, context);
         return nullptr;
     }
@@ -137,10 +137,8 @@ void mir_default_connection_release(MirConnection * connection)
 
 //TODO: we could have a more comprehensive solution that allows us to substitute any of the functions
 //for test purposes, not just the connect functions
-MirWaitHandle* (*mir_connect_impl)(
-    char const *server, char const *app_name,
-    mir_connected_callback callback, void *context) = mir_default_connect;
-void (*mir_connection_release_impl) (MirConnection *connection) = mir_default_connection_release;
+mir_connect_impl_func mir_connect_impl = mir_default_connect;
+mir_connection_release_impl_func mir_connection_release_impl = mir_default_connection_release;
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {

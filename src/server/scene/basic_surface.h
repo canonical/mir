@@ -63,6 +63,7 @@ public:
     virtual std::string const& name() const;
     virtual void move_to(geometry::Point const& top_left);
     virtual void set_rotation(float degrees, glm::vec3 const& axis);
+    virtual float alpha() const;
     virtual void set_alpha(float alpha);
     virtual void set_hidden(bool is_hidden);
 
@@ -87,7 +88,13 @@ public:
     virtual std::shared_ptr<compositor::BufferStream> buffer_stream() const;
 
     virtual std::shared_ptr<input::Surface> input_surface() const;
-    virtual void resize(geometry::Size const& size);
+
+    /**
+     * Resize the surface.
+     * \returns true if the size changed, false if it was already that size.
+     * \throws std::logic_error For impossible sizes like {0,0}.
+     */
+    virtual bool resize(geometry::Size const& size);
 
 private:
     BasicSurface(BasicSurface const&) = delete;

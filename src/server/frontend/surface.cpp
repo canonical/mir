@@ -42,7 +42,7 @@ auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
             surface->swap_buffers(buffer);
         }
         virtual mir::geometry::Size size() const { return surface->size(); }
-        virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
+        virtual MirPixelFormat pixel_format() const { return surface->pixel_format(); }
 
         std::shared_ptr<Surface> const surface;
     };

@@ -78,13 +78,22 @@ geom::Size determine_hwc11_size(
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
     }
-    static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
-                                        HWC_DISPLAY_HEIGHT,
-                                        HWC_DISPLAY_NO_ATTRIBUTE};
 
-    int size_values[2];
+    /* note: some drivers (qcom msm8960) choke if this is not the same size array
+       as the one surfaceflinger submits */
+    static uint32_t const display_attribute_request[] =
+    {
+        HWC_DISPLAY_WIDTH,
+        HWC_DISPLAY_HEIGHT,
+        HWC_DISPLAY_VSYNC_PERIOD,
+        HWC_DISPLAY_DPI_X,
+        HWC_DISPLAY_DPI_Y,
+        HWC_DISPLAY_NO_ATTRIBUTE,
+    };
+
+    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])];
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
-                                     size_request, size_values);
+                                     display_attribute_request, size_values);
 
     return {size_values[0], size_values[1]};
 }

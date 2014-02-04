@@ -65,6 +65,7 @@ list(APPEND MIRSERVER_LINKS
   3rd_party
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
@@ -93,7 +94,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 12)
+set(MIRSERVER_ABI 14)
 
 set_target_properties(
   mirserver

@@ -26,12 +26,13 @@ Build-Depends: cmake,
                libglm-dev,
                libprotobuf-dev,
                pkg-config,
+               android-headers (>=4.2.2) [armhf],
                libhardware-dev [armhf],
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
-               libumockdev-dev,
-               umockdev,
+               libumockdev-dev [!armhf],
+               umockdev [!armhf],
                libudev-dev,
                google-mock (>= 1.6.0+svn437),
                valgrind [!arm64],
@@ -69,7 +70,7 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver12
+Package: libmirserver14
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -115,7 +116,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver12 (= ${binary:Version}),
+Depends: libmirserver14 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -127,7 +128,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient4
+Package: libmirclient6
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -145,7 +146,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient4 (= ${binary:Version}),
+Depends: libmirclient6 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          ${misc:Depends},
@@ -165,6 +166,16 @@ Description: Display server for Ubuntu - demonstration programs
  robust operation and a well-defined driver model.
  .
  Contains demo applications (with source) that use the Mir display server
+
+Package: mir-utils
+Architecture: i386 amd64 armhf arm64
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - utility programs
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains utility programs for probing and controling a Mir server.
 
 Package: mir-doc
 Section: doc

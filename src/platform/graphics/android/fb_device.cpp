@@ -43,7 +43,11 @@ mga::FBDevice::FBDevice(
     mode(mir_power_mode_on);
 }
 
-void mga::FBDevice::prepare_composition()
+void mga::FBDevice::prepare_gl()
+{
+}
+
+void mga::FBDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
 {
 }
 

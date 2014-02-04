@@ -20,6 +20,7 @@
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
+#include "mir/default_configuration.h"
 
 #include "mir/options/program_option.h"
 #include "mir/frontend/null_message_processor_report.h"
@@ -63,7 +64,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    auto socket_file = the_options()->get(server_socket_opt, mir::default_server_socket);
+    auto socket_file = the_options()->get<std::string>(server_socket_opt);
 
     // Record this for any children that want to know how to connect to us.
     // By both listening to this env var on startup and resetting it here,
@@ -89,7 +90,7 @@ mir::DefaultServerConfiguration::the_input_report()
     return input_report(
         [this]() -> std::shared_ptr<mi::InputReport>
         {
-            auto opt = the_options()->get(input_report_opt, off_opt_value);
+            auto opt = the_options()->get<std::string>(input_report_opt);
 
             if (opt == log_opt_value)
             {
@@ -180,10 +181,10 @@ mir::DefaultServerConfiguration::the_message_processor_report()
     return message_processor_report(
         [this]() -> std::shared_ptr<mf::MessageProcessorReport>
         {
-            auto mp_report = the_options()->get(msg_processor_report_opt, off_opt_value);
+            auto mp_report = the_options()->get<std::string>(msg_processor_report_opt);
             if (mp_report == log_opt_value)
             {
-                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_time_source());
+                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_clock());
             }
             else if (mp_report == lttng_opt_value)
             {
@@ -206,9 +207,9 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             {
                 return std::make_shared<ml::GlogLogger>(
                     "mir",
-                    the_options()->get(glog_stderrthreshold, glog_stderrthreshold_default),
-                    the_options()->get(glog_minloglevel, glog_minloglevel_default),
-                    the_options()->get(glog_log_dir, glog_log_dir_default));
+                    the_options()->get<int>(glog_stderrthreshold),
+                    the_options()->get<int>(glog_minloglevel),
+                    the_options()->get<std::string>(glog_log_dir));
             }
             else
             {
@@ -222,9 +223,9 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()
+std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
-    return time_source(
+    return clock(
         []()
         {
             return std::make_shared<mir::time::HighResolutionClock>();

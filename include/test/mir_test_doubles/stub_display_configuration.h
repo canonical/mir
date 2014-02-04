@@ -50,6 +50,16 @@ public:
     {
     }
 
+    StubDisplayConfig(std::vector<std::pair<bool,bool>> const& connected_used)
+        : StubDisplayConfig(connected_used.size())
+    {
+        for (auto i = 0u; i < outputs.size(); ++i)
+        {
+            outputs[i].connected = connected_used[i].first;
+            outputs[i].used = connected_used[i].second;
+        }
+    }
+
     StubDisplayConfig(unsigned int num_displays,
                       std::vector<MirPixelFormat> const& pfs)
     {
@@ -79,8 +89,9 @@ public:
                 ((i % 2) == 0),
                 ((i % 2) == 1),
                 top_left,
-                mode_index, 1u,
-                mir_power_mode_off
+                mode_index, pfs[0],
+                mir_power_mode_off,
+                mir_orientation_normal
             };
 
             outputs.push_back(output);
@@ -107,7 +118,9 @@ public:
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
-                0, geometry::Size{}, true, true, rect.top_left, 0, 0, mir_power_mode_on
+                0, geometry::Size{}, true, true, rect.top_left, 0,
+                mir_pixel_format_abgr_8888, mir_power_mode_on,
+                mir_orientation_normal
             };
 
             outputs.push_back(output);
@@ -122,13 +135,13 @@ public:
         cards.push_back(card);
     }
 
-    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
             f(card);
     }
 
-    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto& disp : outputs)
         {
@@ -136,7 +149,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPowerMode)
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode, MirOrientation) override
     {
     }
 

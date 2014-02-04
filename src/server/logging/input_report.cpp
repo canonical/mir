@@ -18,6 +18,7 @@
 
 #include "mir/logging/input_report.h"
 #include "mir/logging/logger.h"
+#include "mir/logging/input_timestamp.h"
 
 #include "std/MirLog.h"
 #include <std/Log.h>
@@ -108,7 +109,7 @@ void ml::InputReport::received_event_from_kernel(int64_t when, int type, int cod
     std::stringstream ss;
 
     ss << "Received event"
-       << " time=" << when
+       << " time=" << ml::input_timestamp(when)
        << " type=" << type
        << " code=" << code
        << " value=" << value;
@@ -122,7 +123,7 @@ void ml::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t 
 
     ss << "Published key event"
        << " seq_id=" << seq_id
-       << " time=" << event_time
+       << " time=" << ml::input_timestamp(event_time)
        << " dest_fd=" << dest_fd;
 
     logger->log(Logger::informational, ss.str(), component());
@@ -134,7 +135,7 @@ void ml::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64
 
     ss << "Published motion event"
        << " seq_id=" << seq_id
-       << " time=" << event_time
+       << " time=" << ml::input_timestamp(event_time)
        << " dest_fd=" << dest_fd;
 
     logger->log(Logger::informational, ss.str(), component());

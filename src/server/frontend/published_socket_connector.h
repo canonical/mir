@@ -62,6 +62,7 @@ public:
 protected:
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
     boost::asio::io_service mutable io_service;
+    boost::asio::io_service::work work;
     std::shared_ptr<ConnectorReport> const report;
 
 private:

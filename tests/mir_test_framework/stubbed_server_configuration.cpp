@@ -132,7 +132,9 @@ public:
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
-            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0,
+            mir_pixel_format_abgr_8888, mir_power_mode_on,
+            mir_orientation_normal};
 
         f(dummy_output_config);
     }
@@ -201,11 +203,19 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mc::Renderer
 {
 public:
+    void begin(float) const override
+    {
+    }
+
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
     }
 
-    void clear() const override
+    void end() const override
+    {
+    }
+
+    void suspend() override
     {
     }
 };
@@ -251,8 +261,8 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
     namespace po = boost::program_options;
 
     add_options()
-        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
-        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
+        ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
+        ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
 }
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
@@ -269,7 +279,7 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
 {
     auto options = the_options();
 
-    if (options->get("tests-use-real-graphics", false))
+    if (options->get<bool>("tests-use-real-graphics"))
         return DefaultServerConfiguration::the_renderer_factory();
     else
         return renderer_factory(
@@ -283,7 +293,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
 {
     auto options = the_options();
 
-    if (options->get("tests-use-real-input", false))
+    if (options->get<bool>("tests-use-real-input"))
         return DefaultServerConfiguration::the_input_configuration();
     else
         return std::make_shared<mi::NullInputConfiguration>();

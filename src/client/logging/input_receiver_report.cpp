@@ -19,6 +19,7 @@
 #include "input_receiver_report.h"
 
 #include "mir/logging/logger.h"
+#include "mir/logging/input_timestamp.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -53,7 +54,7 @@ static void format_key_event(std::stringstream &ss, MirKeyEvent const& ev)
     ss << "  scan_code: " << ev.scan_code << std::endl;
     ss << "  repeat_count: " << ev.repeat_count << std::endl;
     ss << "  down_time: " << ev.down_time << std::endl;
-    ss << "  event_time: " << ev.event_time << std::endl;
+    ss << "  event_time: " << ml::input_timestamp(ev.event_time) << std::endl;
     ss << "  is_system_key: " << ev.is_system_key << std::endl;
     ss << "}";
 }
@@ -73,7 +74,7 @@ static void format_motion_event(std::stringstream &ss, MirMotionEvent const& ev)
     ss << "  x_precision: " << ev.x_precision << std::endl;
     ss << "  y_precision: " << ev.y_precision << std::endl;
     ss << "  down_time: " << ev.down_time << std::endl;
-    ss << "  event_time: " << ev.event_time << std::endl;
+    ss << "  event_time: " << ml::input_timestamp(ev.event_time) << std::endl;
     ss << "  pointer_count: " << ev.pointer_count << std::endl;
     for (unsigned int i = 0; i < ev.pointer_count; i++)
     {

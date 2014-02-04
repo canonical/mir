@@ -49,7 +49,7 @@ pid_t mfd::SocketMessenger::client_pid()
 
 void mfd::SocketMessenger::send(std::string const& body)
 {
-    send(body, mf::FdSets());
+    send(body, {});
 }
 
 void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)

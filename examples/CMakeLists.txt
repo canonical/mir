@@ -1,3 +1,7 @@
+
+#its a bit troubling that these need to be included for demo_input_filter
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC
@@ -136,7 +140,11 @@ set (INSTALL_DEMOS
   mir_demo_client_eglplasma
   mir_demo_client_fingerpaint
   mir_demo_client_multiwin
+  mir_demo_client_display_config
+  mir_demo_client_progressbar
   mir_demo_standalone_input_filter
+  mir_demo_standalone_render_to_fb 
+  mir_demo_standalone_render_surfaces
 )
 
 add_subdirectory(demo-inprocess-surface-client)
@@ -146,6 +154,7 @@ install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
   basic_server.cpp
+  basic_server_configuration.cpp
   server_configuration.cpp
 )
 
@@ -158,3 +167,20 @@ install(TARGETS mir_demo_server_basic
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+
+add_executable(mir_demo_server_translucent
+  translucent_server.cpp
+  translucent_server_configuration.cpp
+  pixel_format_selector.cpp
+  basic_server_configuration.cpp
+  server_configuration.cpp
+)
+
+target_link_libraries(mir_demo_server_translucent
+  mirserver
+  ${Boost_LIBRARIES}
+)
+
+install(TARGETS mir_demo_server_translucent
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

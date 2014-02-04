@@ -38,6 +38,13 @@ public:
     {
         using namespace testing;
 
+        primary_prepare = false;
+        primary_set = false;
+        external_prepare = false;
+        external_set = false;
+        virtual_prepare = false;
+        virtual_set = false;
+
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
         registerProcs = hook_registerProcs;
@@ -69,30 +76,62 @@ public:
         fb_fence = fence;
     }
 
-    int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
+    int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t size, hwc_display_contents_1_t** displays)
     {
-        return save_args(&display0_prepare_content, displays);
+        if ((size == 0) || (!displays)) 
+            return -1;
+
+        switch (size)
+        {
+            case 3:
+                virtual_prepare = (!!displays[2]);
+            case 2:
+                external_prepare = (!!displays[1]);
+            case 1:
+                primary_prepare = (!!displays[0]);
+                for(auto i = 0u; i < displays[0]->numHwLayers; i++)
+                {
+                    prepare_layerlist.push_back(displays[0]->hwLayers[i]);
+                    prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
+                }
+                save_args(&display0_prepare_content, displays);
+            default:
+                break;
+        }
+        return 0;
     }
 
     int save_last_set_arguments(
-        struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
+        struct hwc_composer_device_1 *, size_t size, hwc_display_contents_1_t** displays)
     {
-        hwc_display_contents_1_t* primary_display = *displays;
-        if (!primary_display)
+
+        if ((size == 0) || (!displays)) 
             return -1;
 
-        for(auto i = 0u; i < primary_display->numHwLayers; i++)
+        switch (size)
         {
-            set_layerlist.push_back(primary_display->hwLayers[i]);
-            set_layerlist.back().visibleRegionScreen = {0, nullptr};
-        }
+            case 3:
+                virtual_set = (!!displays[2]);
+            case 2:
+                external_set = (!!displays[1]);
+            case 1:
+                primary_set = (!!displays[0]);
+                for(auto i = 0u; i < displays[0]->numHwLayers; i++)
+                {
+                    set_layerlist.push_back(displays[0]->hwLayers[i]);
+                    set_layerlist.back().visibleRegionScreen = {0, nullptr};
+                }
 
-        if (primary_display->numHwLayers >= 2)
-        {
-            primary_display->hwLayers[1].releaseFenceFd = fb_fence;
-        }
+                if (displays[0]->numHwLayers >= 2)
+                {
+                    displays[0]->hwLayers[1].releaseFenceFd = fb_fence;
+                }
 
-        return save_args(&display0_set_content, displays);
+                save_args(&display0_set_content, displays);
+            default:
+                break;
+        }
+        return 0;
     }
 
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
@@ -141,8 +180,10 @@ public:
     MOCK_METHOD4(getDisplayConfigs_interface, int(struct hwc_composer_device_1*, int, uint32_t*, size_t*));
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
 
+    bool primary_prepare, primary_set, external_prepare, external_set, virtual_prepare, virtual_set;
     hwc_display_contents_1_t display0_set_content;
     std::vector<hwc_layer_1> set_layerlist;
+    std::vector<hwc_layer_1> prepare_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
     int fb_fence;
 };

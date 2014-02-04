@@ -17,9 +17,11 @@
  */
 
 #include "socket_session.h"
-#include "message_processor.h"
 #include "message_sender.h"
 #include "message_receiver.h"
+#include "mir/frontend/message_processor.h"
+
+#include "mir_protobuf_wire.pb.h"
 
 #include <boost/signals2.hpp>
 #include <boost/throw_exception.hpp>
@@ -77,16 +79,21 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
+try
 {
     if (error)
     {
-        connected_sessions->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
     std::istream msg(&message);
+    mir::protobuf::wire::Invocation invocation;
+    invocation.ParseFromIstream(&msg);
 
-    if (processor->process_message(msg))
+    if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
+
+    if (processor->dispatch(invocation))
     {
         read_next_message();
     }
@@ -94,6 +101,11 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
     {
         connected_sessions->remove(id());
     }
+}
+catch (...)
+{
+    connected_sessions->remove(id());
+    throw;
 }
 
 void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)

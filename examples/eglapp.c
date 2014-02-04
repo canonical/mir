@@ -263,6 +263,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 case 'm':
                     mir_socket = argv[++i];
                     break;
+                case 'q':
+                    {
+                        FILE *unused = freopen("/dev/null", "a", stdout);
+                        (void)unused;
+                        break;
+                    }
                 case 'h':
                 default:
                     help = 1;
@@ -284,6 +290,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -n               Don't sync to vblank\n"
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
+                       "  -q               Quiet mode (no messages output)\n"
                        , argv[0]);
                 return 0;
             }

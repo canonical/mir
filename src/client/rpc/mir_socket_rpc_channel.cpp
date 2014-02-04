@@ -267,15 +267,14 @@ void mclr::MirSocketRpcChannel::CallMethod(
         google::protobuf::NewPermanentCallback(this, &MirSocketRpcChannel::receive_file_descriptors, response, complete));
 
     // Only save details after serialization succeeds
-    auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
+    pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    send_message(invocation, send_buffer, invocation);
+    send_message(invocation, invocation);
 }
 
 void mclr::MirSocketRpcChannel::send_message(
     mir::protobuf::wire::Invocation const& body,
-    detail::SendBuffer& send_buffer,
     mir::protobuf::wire::Invocation const& invocation)
 {
     const size_t size = body.ByteSize();
@@ -285,7 +284,7 @@ void mclr::MirSocketRpcChannel::send_message(
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    send_buffer.resize(sizeof header_bytes + size);
+    detail::SendBuffer send_buffer(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
     body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
 

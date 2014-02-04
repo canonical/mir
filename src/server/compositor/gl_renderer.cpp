@@ -25,6 +25,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cmath>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -38,10 +39,11 @@ const GLchar* vertex_shader_src =
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
     "uniform mat4 screen_to_gl_coords;\n"
+    "uniform mat4 display_transform;\n"
     "uniform mat4 transform;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_Position = screen_to_gl_coords * transform * vec4(position, 1.0);\n"
+    "   gl_Position = display_transform * screen_to_gl_coords * transform * vec4(position, 1.0);\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
@@ -117,7 +119,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 
 }
 
-mc::GLRenderer::Resources::Resources() :
+mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     vertex_shader(0),
     fragment_shader(0),
     program(0),
@@ -125,26 +127,7 @@ mc::GLRenderer::Resources::Resources() :
     texcoord_attr_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    vertex_attribs_vbo(0),
-    texture(0)
-{
-}
-
-mc::GLRenderer::Resources::~Resources()
-{
-    if (vertex_shader)
-        glDeleteShader(vertex_shader);
-    if (fragment_shader)
-        glDeleteShader(fragment_shader);
-    if (program)
-        glDeleteProgram(program);
-    if (vertex_attribs_vbo)
-        glDeleteBuffers(1, &vertex_attribs_vbo);
-    if (texture)
-        glDeleteTextures(1, &texture);
-}
-
-void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
+    vertex_attribs_vbo(0)
 {
     GLint param = 0;
 
@@ -191,6 +174,7 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
     /* Set up program variables */
     GLint mat_loc = glGetUniformLocation(program, "screen_to_gl_coords");
     GLint tex_loc = glGetUniformLocation(program, "tex");
+    display_transform_uniform_loc = glGetUniformLocation(program, "display_transform");
     transform_uniform_loc = glGetUniformLocation(program, "transform");
     alpha_uniform_loc = glGetUniformLocation(program, "alpha");
     position_attr_loc = glGetAttribLocation(program, "position");
@@ -214,14 +198,6 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
 
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
     glUniform1i(tex_loc, 0);
 
     /* Create VBO */
@@ -235,14 +211,23 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
     glUseProgram(0);
 }
 
-mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+mc::GLRenderer::~GLRenderer() noexcept
 {
-    resources.setup(display_area);
+    if (vertex_shader)
+        glDeleteShader(vertex_shader);
+    if (fragment_shader)
+        glDeleteShader(fragment_shader);
+    if (program)
+        glDeleteProgram(program);
+    if (vertex_attribs_vbo)
+        glDeleteBuffers(1, &vertex_attribs_vbo);
+    for (auto& t : textures)
+        glDeleteTextures(1, &t.second.id);
 }
 
 void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buffer) const
 {
-    glUseProgram(resources.program);
+    glUseProgram(program);
 
     if (criteria.shaped() || criteria.alpha() < 1.0f)
     {
@@ -255,32 +240,85 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     }
     glActiveTexture(GL_TEXTURE0);
 
-    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE,
+    glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
                        glm::value_ptr(criteria.transformation()));
-    glUniform1f(resources.alpha_uniform_loc, criteria.alpha());
+    glUniform1f(alpha_uniform_loc, criteria.alpha());
 
     /* Set up vertex attribute data */
-    glBindBuffer(GL_ARRAY_BUFFER, resources.vertex_attribs_vbo);
-    glVertexAttribPointer(resources.position_attr_loc, 3, GL_FLOAT,
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
+    glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes), 0);
-    glVertexAttribPointer(resources.texcoord_attr_loc, 2, GL_FLOAT,
+    glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    /* Use the renderable's texture */
-    glBindTexture(GL_TEXTURE_2D, resources.texture);
-
-    buffer.bind_to_texture();
+    SurfaceID surf = &criteria; // temporary hack till we rearrange classes
+    auto& tex = textures[surf];
+    bool changed = true;
+    auto const& buf_id = buffer.id();
+    if (!tex.id)
+    {
+        glGenTextures(1, &tex.id);
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        changed = (tex.origin != buf_id) || skipped;
+    }
+    tex.origin = buf_id;
+    tex.used = true;
+    if (changed)  // Don't upload a new texture unless the surface has changed
+        buffer.bind_to_texture();
 
     /* Draw */
-    glEnableVertexAttribArray(resources.position_attr_loc);
-    glEnableVertexAttribArray(resources.texcoord_attr_loc);
+    glEnableVertexAttribArray(position_attr_loc);
+    glEnableVertexAttribArray(texcoord_attr_loc);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glDisableVertexAttribArray(resources.texcoord_attr_loc);
-    glDisableVertexAttribArray(resources.position_attr_loc);
+    glDisableVertexAttribArray(texcoord_attr_loc);
+    glDisableVertexAttribArray(position_attr_loc);
 }
 
-void mc::GLRenderer::clear() const
+void mc::GLRenderer::begin(float rotation) const
 {
+    float rad = rotation * M_PI / 180.0f;
+    GLfloat cos = cosf(rad);
+    GLfloat sin = sinf(rad);
+    GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
+                       -sin, cos,  0.0f, 0.0f,
+                       0.0f, 0.0f, 1.0f, 0.0f,
+                       0.0f, 0.0f, 0.0f, 1.0f};
+    glUseProgram(program);
+    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
+    glUseProgram(0);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void mc::GLRenderer::end() const
+{
+    auto t = textures.begin();
+    while (t != textures.end())
+    {
+        auto& tex = t->second;
+        if (tex.used)
+        {
+            tex.used = false;
+            ++t;
+        }
+        else
+        {
+            glDeleteTextures(1, &tex.id);
+            t = textures.erase(t);
+        }
+    }
+    skipped = false;
+}
+
+void mc::GLRenderer::suspend()
+{
+    skipped = true;
 }

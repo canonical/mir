@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "default_display_buffer_compositor.h"
@@ -68,10 +69,12 @@ bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
-    std::shared_ptr<mc::Renderer> const& renderer)
+    std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<mc::CompositorReport> const& report)
     : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
+      report{report},
       local_frameno{global_frameno}
 {
 }
@@ -79,6 +82,8 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
+    report->began_frame(this);
+
     /*
      * Increment frame counts for each tick of the fastest instance of
      * DefaultDisplayBufferCompositor. This means for the fastest refresh
@@ -93,7 +98,11 @@ void mc::DefaultDisplayBufferCompositor::composite()
             local_frameno = global_frameno;
     }
 
-    static bool const bypass_env{[]{ auto const env = getenv("MIR_BYPASS"); return !env || env[0] != '0'; }()};
+    static bool const bypass_env{[]
+    {
+        auto const env = getenv("MIR_BYPASS");
+        return !env || env[0] != '0';
+    }()};
     bool bypassed = false;
 
     if (bypass_env && display_buffer.can_bypass())
@@ -117,6 +126,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
+                renderer->suspend();
             }
         }
     }
@@ -125,7 +135,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
     {
         // preserves buffers used in rendering until after post_update()
         std::vector<std::shared_ptr<void>> saved_resources;
-        auto save_resource = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
+        auto save_resource = [&](std::shared_ptr<void> const& r)
+        {
+            saved_resources.push_back(r);
+        };
 
         display_buffer.make_current();
 
@@ -135,12 +148,15 @@ void mc::DefaultDisplayBufferCompositor::composite()
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
 
-        renderer->clear();
+        renderer->begin(display_buffer.orientation());
         mc::RenderingOperator applicator(*renderer, save_resource, local_frameno);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
+        renderer->end();
 
         display_buffer.post_update();
     }
+
+    report->finished_frame(bypassed, this);
 }
 

@@ -41,10 +41,11 @@ mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
     geometry::Rectangle const& area,
-    std::shared_ptr<input::EventFilter> const& event_handler) :
+    std::shared_ptr<input::EventFilter> const& event_handler,
+    MirPixelFormat preferred_format) :
     egl_display(egl_display),
     mir_surface{mir_surface},
-    egl_config{egl_display.choose_config(nested_egl_config_attribs)},
+    egl_config{egl_display.choose_windowed_es_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     event_handler{event_handler},
@@ -79,6 +80,21 @@ bool mgn::detail::NestedOutput::can_bypass() const
 {
     // TODO we really should return "true" - but we need to support bypass properly then
     return false;
+}
+
+void mgn::detail::NestedOutput::render_and_post_update(
+    std::list<std::shared_ptr<Renderable>> const&,
+    std::function<void(Renderable const&)> const&)
+{
+}
+
+MirOrientation mgn::detail::NestedOutput::orientation() const
+{
+    /*
+     * Always normal orientation. The real rotation is handled by the
+     * native display.
+     */
+    return mir_orientation_normal;
 }
 
 mgn::detail::NestedOutput::~NestedOutput() noexcept

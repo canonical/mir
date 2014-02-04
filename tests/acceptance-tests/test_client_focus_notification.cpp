@@ -120,7 +120,8 @@ TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus
         {
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))).Times(1)
                 .WillOnce(mt::WakeUp(all_events_received));
-            EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))).Times(1);
+            // We may not see mir_surface_unfocused before connection closes
+            EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))).Times(AtMost(1));
         }
     } client_config;
     launch_client_process(client_config);
@@ -136,7 +137,7 @@ ACTION_P(SignalFence, fence)
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_losing_focus)
+TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
 
@@ -169,9 +170,9 @@ TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_lo
             // And regain it when the second surface is closed
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                 mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
-            // And then lose it as we are closed
+            // And then lose it as we are closed (but we may not see confirmation before connection closes)
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_unfocused)))).Times(1);
+                mir_surface_unfocused)))).Times(AtMost(1));
         }
 
     } client_one_config(ready_for_second_client);
@@ -196,9 +197,10 @@ TEST_F(BespokeDisplayServerTestFixture, two_scene_are_notified_of_gaining_and_lo
             EXPECT_CALL(*observer, see(Pointee(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused))))
                     .Times(1).WillOnce(mt::WakeUp(all_events_received));
+            // We may not see mir_surface_unfocused before connection closes
             EXPECT_CALL(*observer, see(Pointee(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused))))
-                    .Times(1);
+                    .Times(AtMost(1));
         }
     } client_two_config(ready_for_second_client);
 

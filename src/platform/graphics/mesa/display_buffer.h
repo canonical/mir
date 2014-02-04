@@ -48,6 +48,7 @@ public:
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMSurfaceUPtr surface_gbm,
                   geometry::Rectangle const& area,
+                  MirOrientation rot,
                   EGLContext shared_context);
     ~DisplayBuffer();
 
@@ -58,6 +59,9 @@ public:
 
     bool can_bypass() const override;
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
+    void render_and_post_update(std::list<std::shared_ptr<Renderable>> const& renderlist,
+                                std::function<void(Renderable const&)> const& render_fn);
+    MirOrientation orientation() const override;
     void schedule_set_crtc();
 
 private:
@@ -75,6 +79,8 @@ private:
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
     geometry::Rectangle area;
+    uint32_t fb_width, fb_height;
+    MirOrientation rotation;
     std::atomic<bool> needs_set_crtc;
 };
 

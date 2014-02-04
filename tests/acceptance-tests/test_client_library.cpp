@@ -885,7 +885,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
                 MirDisplayOutput* disp = &configuration->outputs[i];
                 ASSERT_NE(nullptr, disp);
                 EXPECT_GE(disp->num_modes, disp->current_mode);
-                EXPECT_GE(disp->num_output_formats, disp->current_output_format);
+                EXPECT_GE(disp->num_output_formats, disp->current_format);
             }
 
             mir_display_config_destroy(configuration);

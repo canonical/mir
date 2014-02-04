@@ -45,8 +45,9 @@ mg::DisplayConfigurationOutput const tmpl_output
     true,
     geom::Point(),
     2,
-    0,
-    mir_power_mode_on
+    mir_pixel_format_abgr_8888,
+    mir_power_mode_on,
+    mir_orientation_normal
 };
 
 }
@@ -215,4 +216,53 @@ TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_u
 
     EXPECT_NE(output1, output2);
     EXPECT_NE(output2, output1);
+}
+
+TEST(DisplayConfiguration, output_orientation_affects_equality)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(b, a);
+    a.orientation = mir_orientation_left;
+    b.orientation = mir_orientation_inverted;
+    EXPECT_NE(a, b);
+    EXPECT_NE(b, a);
+}
+
+TEST(DisplayConfiguration, output_extents_uses_current_mode)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    out.current_mode_index = 2;
+    ASSERT_NE(out.modes[0], out.modes[2]);
+
+    EXPECT_EQ(out.modes[out.current_mode_index].size, out.extents().size);
+}
+
+TEST(DisplayConfiguration, output_extents_rotates_with_orientation)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    auto const& size = out.modes[out.current_mode_index].size;
+    int w = size.width.as_int();
+    int h = size.height.as_int();
+
+    ASSERT_NE(w, h);
+
+    geom::Rectangle normal{out.top_left, {w, h}};
+    geom::Rectangle swapped{out.top_left, {h, w}};
+
+    out.orientation = mir_orientation_normal;
+    EXPECT_EQ(normal, out.extents());
+
+    out.orientation = mir_orientation_inverted;
+    EXPECT_EQ(normal, out.extents());
+
+    out.orientation = mir_orientation_left;
+    EXPECT_EQ(swapped, out.extents());
+
+    out.orientation = mir_orientation_right;
+    EXPECT_EQ(swapped, out.extents());
 }
