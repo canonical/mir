@@ -1,5 +1,6 @@
-mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.1.4 (https://launchpad.net/mir/+milestone/0.1.4)
     - Fixed snapshotting and flicker problems for Unity8 on various Nexus
       devices.
@@ -114,7 +115,10 @@ mir (0.1.4-0ubuntu1) UNRELEASED; urgency=medium
       . frontend: ensure that BasicConnector threads don't exit
         immediately. (LP: #1271655)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jan 2014 11:19:03 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 04 Feb 2014 14:49:07 +0000
 
 mir (0.1.3+14.04.20140108-0ubuntu3) trusty; urgency=medium
 
