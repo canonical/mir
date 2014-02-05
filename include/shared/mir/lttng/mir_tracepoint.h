@@ -27,7 +27,6 @@
  *
  * See: http://sourceware.org/bugzilla/show_bug.cgi?id=13974
  */
-
 #ifdef __clang__
 namespace mir_systemtap_bug_13974
 {

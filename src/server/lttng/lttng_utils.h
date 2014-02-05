@@ -35,13 +35,13 @@
 #define MIR_LTTNG_VOID_TRACE_CALL(klass, comp, name) \
     void mir::lttng::klass::name()                   \
     {                                                \
-        mir_tracepoint(comp, name);                  \
+        mir_tracepoint(comp, name, 0);               \
     }
 
 #define MIR_LTTNG_VOID_TRACE_CLASS(comp) \
-    TRACEPOINT_EVENT_CLASS(comp, dummy_event, TP_ARGS(void), TP_FIELDS(ctf_integer(int,empty,0)))
+    TRACEPOINT_EVENT_CLASS(comp, dummy_event, TP_ARGS(int,empty), TP_FIELDS(ctf_integer(int,empty,empty)))
 #define MIR_LTTNG_VOID_TRACE_POINT(comp, name) \
-    TRACEPOINT_EVENT_INSTANCE(comp, dummy_event, name, TP_ARGS(void))
+    TRACEPOINT_EVENT_INSTANCE(comp, dummy_event, name, TP_ARGS(int,empty))
 
 #endif
 
