@@ -22,8 +22,6 @@
 
 #include "mir/frontend/message_processor.h"
 
-#include "mir_protobuf_wire.pb.h"
-
 #include <google/protobuf/service.h>
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -54,7 +52,7 @@ void invoke(
         const ParameterMessage* request,
         ResultMessage* response,
         ::google::protobuf::Closure* done),
-    mir::protobuf::wire::Invocation const& invocation)
+        Invocation const& invocation)
 {
     ParameterMessage parameter_message;
     parameter_message.ParseFromString(invocation.parameters());
