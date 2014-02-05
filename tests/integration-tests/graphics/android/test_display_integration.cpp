@@ -24,7 +24,6 @@
 #include "src/platform/graphics/android/output_builder.h"
 
 #include "examples/graphics.h"
-#include "mir_test/draw/android_graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
 
 #include <gtest/gtest.h>
