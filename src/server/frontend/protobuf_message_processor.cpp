@@ -66,7 +66,7 @@ void invoke(
         const protobuf::SurfaceId* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
-    mir::protobuf::wire::Invocation const& invocation)
+        Invocation const& invocation)
 {
     protobuf::SurfaceId parameter_message;
     parameter_message.ParseFromString(invocation.parameters());
