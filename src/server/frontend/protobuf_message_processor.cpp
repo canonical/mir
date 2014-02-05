@@ -21,6 +21,8 @@
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
 
+#include "mir_protobuf_wire.pb.h"
+
 namespace mfd = mir::frontend::detail;
 
 namespace
@@ -100,7 +102,24 @@ void invoke(
 }
 }
 
-bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
+
+const std::string& mfd::Invocation::method_name() const
+{
+    return invocation.method_name();
+}
+
+const std::string& mfd::Invocation::parameters() const
+{
+    return invocation.parameters();
+}
+
+google::protobuf::uint32 mfd::Invocation::id() const
+{
+    return invocation.id();
+}
+
+
+bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
 {
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
 
