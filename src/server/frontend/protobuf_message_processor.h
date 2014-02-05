@@ -55,7 +55,7 @@ public:
     void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response);
 
 private:
-    bool dispatch(mir::protobuf::wire::Invocation const& invocation);
+    bool dispatch(Invocation const& invocation);
 
     std::shared_ptr<ProtobufMessageSender> const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
