@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/report_factory.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/default_configuration.h"
 
@@ -34,17 +35,16 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
-#include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
-#include "mir/logging/message_processor_report.h"
-#include "mir/lttng/message_processor_report.h"
-#include "mir/lttng/input_report.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 
-#include "logging/create_report.h"
+#include "lttng/report_factory.h"
+#include "logging/report_factory.h"
+
+#include "null_report_factory.h"
 
 #include <map>
 
@@ -59,7 +59,14 @@ namespace mi = mir::input;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     DefaultConfigurationOptions(argc, argv),
-    default_filter(std::make_shared<mi::VTFilter>())
+    default_filter(std::make_shared<mi::VTFilter>()),
+    null_report_factory(new NullReportFactory()),
+    lttng_report_factory(new mir::lttng::ReportFactory()),
+    logging_report_factory(new ml::ReportFactory(*this))
+{
+}
+
+mir::DefaultServerConfiguration::~DefaultServerConfiguration()
 {
 }
 
@@ -84,16 +91,6 @@ mir::DefaultServerConfiguration::the_shell_session_listener()
         {
             return std::make_shared<msh::NullSessionListener>();
         });
-}
-
-std::shared_ptr<mi::InputReport>
-mir::DefaultServerConfiguration::the_input_report()
-{
-    return input_report(
-        std::bind(&ml::create_report<mi::InputReport, ml::InputReport, mir::lttng::InputReport, mi::NullInputReport>,
-                  this,
-                  the_options(),
-                  input_report_opt));
 }
 
 std::shared_ptr<mi::CursorListener>
@@ -162,15 +159,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
         });
-}
-
-std::shared_ptr<mf::MessageProcessorReport>
-mir::DefaultServerConfiguration::the_message_processor_report()
-{
-    return message_processor_report(
-        std::bind(&ml::create_report_with_clock<mf::MessageProcessorReport, ml::MessageProcessorReport,
-                                                mir::lttng::MessageProcessorReport, mf::NullMessageProcessorReport>,
-                  this, the_options(), msg_processor_report_opt));
 }
 
 std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()

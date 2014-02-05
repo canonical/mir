@@ -17,9 +17,6 @@
  */
 
 #include "scene_report.h"
-
-#include "../scene/basic_surface.h"
-
 #include "mir/lttng/mir_tracepoint.h"
 
 #define TRACEPOINT_DEFINE
@@ -28,22 +25,22 @@
 
 namespace ms = mir::scene;
 
-void mir::lttng::SceneReport::surface_created(ms::BasicSurface* const surface)
+void mir::lttng::SceneReport::surface_created(BasicSurfaceId, std::string const& name)
 {
-    mir_tracepoint(mir_server_scene, surface_created, surface->name().c_str());
+    mir_tracepoint(mir_server_scene, surface_created, name.c_str());
 }
 
-void mir::lttng::SceneReport::surface_added(ms::BasicSurface* const surface)
+void mir::lttng::SceneReport::surface_added(BasicSurfaceId, std::string const& name)
 {
-    mir_tracepoint(mir_server_scene, surface_added, surface->name().c_str());
+    mir_tracepoint(mir_server_scene, surface_added, name.c_str());
 }
 
-void mir::lttng::SceneReport::surface_removed(ms::BasicSurface* const surface)
+void mir::lttng::SceneReport::surface_removed(BasicSurfaceId, std::string const& name)
 {
-    mir_tracepoint(mir_server_scene, surface_removed, surface->name().c_str());
+    mir_tracepoint(mir_server_scene, surface_removed, name.c_str());
 }
 
-void mir::lttng::SceneReport::surface_deleted(ms::BasicSurface* const surface)
+void mir::lttng::SceneReport::surface_deleted(BasicSurfaceId, std::string const& name)
 {
-    mir_tracepoint(mir_server_scene, surface_deleted, surface->name().c_str());
+    mir_tracepoint(mir_server_scene, surface_deleted, name.c_str());
 }

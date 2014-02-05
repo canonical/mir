@@ -16,32 +16,28 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#ifndef MIR_LTTNG_REPORT_FACTORY_H_
+#define MIR_LTTNG_REPORT_FACTORY_H_
 
-#ifndef MIR_LTTNG_SCENE_REPORT_H_
-#define MIR_LTTNG_SCENE_REPORT_H_
-
-#include "server_tracepoint_provider.h"
-
-#include "mir/scene/scene_report.h"
+#include "mir/report_factory.h"
 
 namespace mir
 {
 namespace lttng
 {
-
-class SceneReport : public scene::SceneReport
+class ReportFactory : public mir::ReportFactory
 {
 public:
-    void surface_created(BasicSurfaceId id, std::string const& name) override;
-    void surface_added(BasicSurfaceId id, std::string const& name) override;
-    void surface_removed(BasicSurfaceId id, std::string const& name) override;
-    void surface_deleted(BasicSurfaceId id, std::string const& name) override;
-private:
-    ServerTracepointProvider tp_provider;
+    std::shared_ptr<compositor::CompositorReport> create_compositor_report() override;
+    std::shared_ptr<graphics::DisplayReport> create_display_report() override;
+    std::shared_ptr<scene::SceneReport> create_scene_report() override;
+    std::shared_ptr<frontend::ConnectorReport> create_connector_report() override;
+    std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() override;
+    std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() override;
+    std::shared_ptr<input::InputReport> create_input_report() override;
 };
 }
 }
 
+#endif
 
-
-#endif /* MIR_LTTNG_SCENE_REPORT_H_ */

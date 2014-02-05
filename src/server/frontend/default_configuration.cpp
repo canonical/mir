@@ -25,6 +25,7 @@
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"
 
+#include "mir/report_factory.h"
 #include "mir/options/option.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
@@ -146,4 +147,24 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_graphics_platform(),
                 the_frontend_display_changer(), allocator);
         });
+}
+
+auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<mf::ConnectorReport>
+{
+    return connector_report([this]()->std::shared_ptr<mf::ConnectorReport>
+                            { return create_report(&ReportFactory::create_connector_report, connector_report_opt); });
+}
+
+auto mir::DefaultServerConfiguration::the_session_mediator_report() -> std::shared_ptr<mf::SessionMediatorReport>
+{
+    return session_mediator_report(
+        [this]()->std::shared_ptr<mf::SessionMediatorReport>
+        { return create_report(&ReportFactory::create_session_mediator_report, session_mediator_report_opt); });
+}
+
+auto mir::DefaultServerConfiguration::the_message_processor_report() -> std::shared_ptr<mf::MessageProcessorReport>
+{
+    return message_processor_report(
+        [this]()->std::shared_ptr<mf::MessageProcessorReport>
+        { return create_report(&ReportFactory::create_message_processor_report, msg_processor_report_opt); });
 }

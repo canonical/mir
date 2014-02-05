@@ -19,8 +19,9 @@
 #ifndef MIR_LTTNG_SESSION_MEDIATOR_REPORT_H_
 #define MIR_LTTNG_SESSION_MEDIATOR_REPORT_H_
 
+#include "server_tracepoint_provider.h"
+
 #include "mir/frontend/session_mediator_report.h"
-#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {

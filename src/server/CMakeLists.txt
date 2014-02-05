@@ -32,6 +32,7 @@ set(
   default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  null_report_factory.cpp
   shared_library.cpp
 )
 

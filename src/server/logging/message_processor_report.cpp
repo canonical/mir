@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/message_processor_report.h"
+#include "message_processor_report.h"
 #include "mir/logging/logger.h"
 
 #include <boost/exception/diagnostic_information.hpp>

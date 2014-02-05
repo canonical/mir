@@ -26,6 +26,7 @@
 #include "null_input_configuration.h"
 
 #include "mir/logging/input_report.h"
+#include "mir/report_factory.h"
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -125,4 +126,10 @@ auto mir::DefaultServerConfiguration::the_nested_event_filter()
 -> std::shared_ptr<mi::EventFilter>
 {
     return the_nested_input_relay();
+}
+
+auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::InputReport>
+{
+    return input_report([this]()->std::shared_ptr<mi::InputReport>
+                        { return create_report(&ReportFactory::create_input_report, input_report_opt); });
 }

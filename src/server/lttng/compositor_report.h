@@ -17,10 +17,11 @@
  */
 
 #ifndef MIR_LTTNG_COMPOSITOR_REPORT_H_
-#define MIR_LTTnG_COMPOSITOR_REPORT_H_
+#define MIR_LTTNG_COMPOSITOR_REPORT_H_
+
+#include "server_tracepoint_provider.h"
 
 #include "mir/compositor/compositor_report.h"
-#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {

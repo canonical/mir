@@ -27,6 +27,7 @@
 
 #include "mir/shared_library.h"
 #include "mir/abnormal_exit.h"
+#include "mir/report_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -158,4 +159,10 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                 BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
             }
         });
+}
+
+auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg::DisplayReport>
+{
+    return display_report([this]()->std::shared_ptr<mg::DisplayReport>
+                          { return create_report(&ReportFactory::create_display_report, display_report_opt); });
 }

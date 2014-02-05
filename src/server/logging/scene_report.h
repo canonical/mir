@@ -37,16 +37,16 @@ class SceneReport : public scene::SceneReport
 public:
     SceneReport(std::shared_ptr<Logger> const& log);
 
-    void surface_created(scene::BasicSurface* const surface);
-    void surface_added(scene::BasicSurface* const surface);
-    void surface_removed(scene::BasicSurface* const surface);
-    void surface_deleted(scene::BasicSurface* const surface);
+    void surface_created(BasicSurfaceId id, std::string const& name);
+    void surface_added(BasicSurfaceId id, std::string const& name);
+    void surface_removed(BasicSurfaceId id, std::string const& name);
+    void surface_deleted(BasicSurfaceId id, std::string const& name);
 
 private:
     std::shared_ptr<Logger> const logger;
 
     std::mutex mutex;
-    std::map<scene::BasicSurface*, std::string> surfaces;
+    std::map<BasicSurfaceId, std::string> surfaces;
 };
 }
 }

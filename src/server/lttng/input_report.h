@@ -19,8 +19,9 @@
 #ifndef MIR_LTTNG_INPUT_REPORT_H_
 #define MIR_LTTNG_INPUT_REPORT_H_
 
+#include "server_tracepoint_provider.h"
+
 #include "mir/input/input_report.h"
-#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {

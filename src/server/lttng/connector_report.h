@@ -19,8 +19,9 @@
 #ifndef MIR_LTTNG_CONNECTOR_REPORT_H_
 #define MIR_LTTNG_CONNECTOR_REPORT_H_
 
+#include "server_tracepoint_provider.h"
+
 #include "mir/frontend/connector_report.h"
-#include "mir/lttng/server_tracepoint_provider.h"
 
 #include <stdexcept>
 #include <string>

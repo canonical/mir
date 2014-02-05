@@ -19,8 +19,9 @@
 #ifndef MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_H_
 #define MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_H_
 
+#include "server_tracepoint_provider.h"
+
 #include "mir/frontend/message_processor_report.h"
-#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {

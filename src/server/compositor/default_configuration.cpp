@@ -17,10 +17,13 @@
  */
 
 #include "mir/default_server_configuration.h"
+
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "gl_renderer_factory.h"
+
+#include "mir/report_factory.h"
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -67,3 +70,13 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
             return std::make_shared<mc::GLRendererFactory>();
         });
 }
+
+auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
+{
+    return compositor_report(
+        [this]()->std::shared_ptr<mc::CompositorReport>
+        {
+            return create_report(&ReportFactory::create_compositor_report, compositor_report_opt);
+        });
+}
+

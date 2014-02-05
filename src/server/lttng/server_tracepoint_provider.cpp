@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/lttng/server_tracepoint_provider.h"
+#include "server_tracepoint_provider.h"
 
 namespace
 {

@@ -19,7 +19,6 @@
 #include "compositor_report.h"
 
 #include "mir/lttng/mir_tracepoint.h"
-#include "../scene/basic_surface.h"
 
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE

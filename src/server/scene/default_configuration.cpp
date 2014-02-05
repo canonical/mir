@@ -22,6 +22,7 @@
 #include "mir/input/input_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/shell/session.h"
+#include "mir/report_factory.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
@@ -32,12 +33,9 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
-#include "scene_report.h"
 #include "surface_source.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
-#include "../lttng/scene_report.h"
-#include "../logging/create_report.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -127,12 +125,10 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
         });
 }
 
-std::shared_ptr<ms::SceneReport>
-mir::DefaultServerConfiguration::the_scene_report()
+auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::SceneReport>
 {
-    return scene_report(
-        std::bind(&ml::create_report<ms::SceneReport, ml::SceneReport, mir::lttng::SceneReport, ms::NullSceneReport>,
-                  this, the_options(), scene_report_opt));
+    return scene_report([this]()->std::shared_ptr<ms::SceneReport>
+                        { return create_report(&ReportFactory::create_scene_report, scene_report_opt); });
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

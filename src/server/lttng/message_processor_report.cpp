@@ -16,7 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/lttng/message_processor_report.h"
+#include "message_processor_report.h"
+
 #include "mir/lttng/mir_tracepoint.h"
 
 #define TRACEPOINT_DEFINE

@@ -19,8 +19,9 @@
 #ifndef MIR_LTTNG_DISPLAY_REPORT_H_
 #define MIR_LTTNG_DISPLAY_REPORT_H_
 
+#include "server_tracepoint_provider.h"
+
 #include "mir/graphics/display_report.h"
-#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {

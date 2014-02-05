@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/message_processor_report.h"
+#include "src/server/logging/message_processor_report.h"
 #include "mir/logging/logger.h"
 
 #include "mir_test/fake_shared.h"
