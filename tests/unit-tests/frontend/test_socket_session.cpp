@@ -70,7 +70,7 @@ private:
 
 struct MockProcessor : public mfd::MessageProcessor
 {
-    MOCK_METHOD1(dispatch, bool(mir::protobuf::wire::Invocation const& invocation));
+    MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation));
 };
 }
 struct SocketSessionTest : public ::testing::Test

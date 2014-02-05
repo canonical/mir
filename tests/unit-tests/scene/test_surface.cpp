@@ -403,10 +403,11 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
     ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
     mg::Buffer* buffer{nullptr};
 
-    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
-    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
-    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
-    surf.swap_buffers(buffer, [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; });
+    auto const complete = [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; };
+    surf.swap_buffers(buffer, complete);
+    surf.swap_buffers(buffer, complete);
+    surf.swap_buffers(buffer, complete);
+    surf.swap_buffers(buffer, complete);
 
     EXPECT_EQ(3, notification_count); 
 }
