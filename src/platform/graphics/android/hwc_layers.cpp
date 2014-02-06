@@ -30,14 +30,18 @@ namespace geom=mir::geometry;
 
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
 {
-    memcpy(this, &layer, sizeof(HWCLayer));
+    memcpy(static_cast<void*>(this),
+           static_cast<void const*>(&layer),
+           sizeof(HWCLayer));
     this->visibleRegionScreen = {1, &this->visible_rect};
     return *this;
 }
 
 mga::HWCLayer::HWCLayer(HWCLayer const& layer)
 {
-    memcpy(this, &layer, sizeof(HWCLayer));
+    memcpy(static_cast<void*>(this),
+           static_cast<void const*>(&layer),
+           sizeof(HWCLayer));
     this->visibleRegionScreen = {1, &this->visible_rect};
 }
 
