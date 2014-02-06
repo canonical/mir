@@ -159,6 +159,11 @@ mu::Device const& mu::Enumerator::iterator::operator*() const
     return *current;
 }
 
+mu::Device const* mu::Enumerator::iterator::operator->() const
+{
+    return current.get();
+}
+
 mu::Enumerator::Enumerator(std::shared_ptr<Context> const& ctx) :
     ctx(ctx),
     enumerator(udev_enumerate_new(ctx->ctx())),

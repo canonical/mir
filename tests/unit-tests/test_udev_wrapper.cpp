@@ -277,6 +277,20 @@ TEST_F(UdevWrapperTest, DefreferencingEndThrows)
                  std::logic_error);
 }
 
+TEST_F(UdevWrapperTest, MemberDereferenceWorks)
+{
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
+
+    devices.scan_devices();
+    auto iter = devices.begin();
+
+    EXPECT_STREQ("drm", iter->subsystem());
+    EXPECT_STREQ("drm", iter->subsystem());
+}
+
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 {
     mir::udev::Monitor monitor{mir::udev::Context()};

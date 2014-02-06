@@ -93,7 +93,7 @@ public:
         bool operator!=(iterator const& rhs) const;
 
         Device const& operator*() const;
-
+        Device const* operator->() const;
     private:
         friend class Enumerator;
 
