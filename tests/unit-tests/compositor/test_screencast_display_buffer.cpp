@@ -21,6 +21,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/stub_renderable.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -28,9 +29,20 @@
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 namespace
 {
+
+struct MockRenderFunctor
+{
+    void operator()(mg::Renderable const& r)
+    {
+        operator_call(&r);
+    }
+
+    MOCK_METHOD1(operator_call, void(mg::Renderable const*));
+};
 
 struct ScreencastDisplayBufferTest : testing::Test
 {
@@ -127,4 +139,31 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_post_update)
     EXPECT_CALL(mock_gl, glFinish());
 
     db.post_update();
+}
+
+TEST_F(ScreencastDisplayBufferTest, renders_renderables_on_render_and_post_update)
+{
+    using namespace testing;
+
+    geom::Rectangle const rect{{100,100}, {800,600}};
+    mtd::StubBuffer stub_buffer;
+
+    std::list<std::shared_ptr<mg::Renderable>> renderables{
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()};
+
+    mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+
+    Mock::VerifyAndClearExpectations(&mock_gl);
+    MockRenderFunctor mock_render_functor;
+
+    InSequence s;
+
+    for (auto const& renderable : renderables)
+        EXPECT_CALL(mock_render_functor, operator_call(renderable.get()));
+
+    EXPECT_CALL(mock_gl, glFinish());
+
+    db.render_and_post_update(renderables, std::ref(mock_render_functor));
 }

@@ -83,9 +83,12 @@ void mc::ScreencastDisplayBuffer::release_current()
 }
 
 void mc::ScreencastDisplayBuffer::render_and_post_update(
-    std::list<std::shared_ptr<mg::Renderable>> const&,
-    std::function<void(mg::Renderable const&)> const&)
+    std::list<std::shared_ptr<mg::Renderable>> const& renderables,
+    std::function<void(mg::Renderable const&)> const& render)
 {
+    for (auto const& renderable : renderables)
+        render(*renderable);
+
     post_update();
 }
 
