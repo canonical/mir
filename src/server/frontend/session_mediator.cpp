@@ -38,6 +38,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/screencast.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -61,14 +62,16 @@ mf::SessionMediator::SessionMediator(
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<Screencast> const& screencast) :
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
     event_sink(sender),
-    resource_cache(resource_cache)
+    resource_cache(resource_cache),
+    screencast(screencast)
 {
 }
 
@@ -342,6 +345,59 @@ void mf::SessionMediator::configure_display(
         auto display_config = display_changer->active_configuration();
         mfd::pack_protobuf_display_configuration(*response, *display_config);
     }
+    done->Run();
+}
+
+void mf::SessionMediator::create_screencast(
+    google::protobuf::RpcController*,
+    const mir::protobuf::ScreencastParameters* parameters,
+    mir::protobuf::Screencast* protobuf_screencast,
+    google::protobuf::Closure* done)
+{
+    static bool const need_full_ipc{true};
+    mg::DisplayConfigurationOutputId const output_id{
+        static_cast<int>(parameters->output_id())};
+
+    auto screencast_session_id = screencast->create_session(output_id);
+    auto buffer = screencast->capture(screencast_session_id);
+
+    protobuf_screencast->mutable_screencast_id()->set_value(
+        screencast_session_id.as_value());
+    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer(),
+                         buffer.get(),
+                         need_full_ipc);
+
+    done->Run();
+}
+
+void mf::SessionMediator::release_screencast(
+    google::protobuf::RpcController*,
+    const mir::protobuf::ScreencastId* protobuf_screencast_id,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    ScreencastSessionId const screencast_session_id{
+        protobuf_screencast_id->value()};
+    screencast->destroy_session(screencast_session_id);
+    done->Run();
+}
+
+void mf::SessionMediator::screencast_buffer(
+    google::protobuf::RpcController*,
+    const mir::protobuf::ScreencastId* protobuf_screencast_id,
+    mir::protobuf::Buffer* protobuf_buffer,
+    google::protobuf::Closure* done)
+{
+    static bool const does_not_need_full_ipc{false};
+    ScreencastSessionId const screencast_session_id{
+        protobuf_screencast_id->value()};
+
+    auto buffer = screencast->capture(screencast_session_id);
+
+    pack_protobuf_buffer(*protobuf_buffer,
+                         buffer.get(),
+                         does_not_need_full_ipc);
+
     done->Run();
 }
 

@@ -39,6 +39,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/null_screencast.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/event_sink.h"
@@ -185,6 +186,16 @@ class MockPlatform : public mg::Platform
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
 };
 
+struct StubScreencast : mtd::NullScreencast
+{
+    std::shared_ptr<mg::Buffer> capture(mf::ScreencastSessionId)
+    {
+        return mt::fake_shared(stub_buffer);
+    }
+
+    mtd::StubBuffer stub_buffer;
+};
+
 struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
@@ -194,10 +205,11 @@ struct SessionMediatorTest : public ::testing::Test
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
+          stub_screencast{std::make_shared<StubScreencast>()},
           mediator{shell, graphics_platform, graphics_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache},
+                   resource_cache, stub_screencast},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -214,6 +226,7 @@ struct SessionMediatorTest : public ::testing::Test
     std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
+    std::shared_ptr<StubScreencast> const stub_screencast;
     mf::SessionMediator mediator;
     std::shared_ptr<StubbedSession> const stubbed_session;
 
@@ -360,7 +373,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         shell, graphics_platform, mock_display,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache);
+        resource_cache, std::make_shared<mtd::NullScreencast>());
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -591,7 +604,8 @@ TEST_F(SessionMediatorTest, display_config_request)
     mf::SessionMediator session_mediator{
         shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(), resource_cache};
+        std::make_shared<mtd::NullEventSink>(), resource_cache,
+        std::make_shared<mtd::NullScreencast>()};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -623,4 +637,39 @@ TEST_F(SessionMediatorTest, display_config_request)
     EXPECT_THAT(configuration_response, mt::DisplayConfigMatches(std::cref(stub_display_config)));
 
     session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediatorTest, fully_packs_buffer_for_create_screencast)
+{
+    using namespace testing;
+
+    mp::ScreencastParameters screencast_parameters;
+    mp::Screencast screencast;
+    auto const& stub_buffer = stub_screencast->stub_buffer;
+
+    EXPECT_CALL(*graphics_platform, fill_ipc_package(_, &stub_buffer));
+
+    mediator.create_screencast(nullptr, &screencast_parameters,
+                               &screencast, null_callback.get());
+
+    EXPECT_EQ(stub_buffer.id().as_uint32_t(),
+              screencast.buffer().buffer_id());
+}
+
+TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
+{
+    using namespace testing;
+
+    mp::ScreencastId screencast_id;
+    mp::Buffer protobuf_buffer;
+    auto const& stub_buffer = stub_screencast->stub_buffer;
+
+    EXPECT_CALL(*graphics_platform, fill_ipc_package(_, &stub_buffer))
+        .Times(0);
+
+    mediator.screencast_buffer(nullptr, &screencast_id,
+                               &protobuf_buffer, null_callback.get());
+
+    EXPECT_EQ(stub_buffer.id().as_uint32_t(),
+              protobuf_buffer.buffer_id());
 }
