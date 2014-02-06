@@ -125,6 +125,10 @@ void mu::Enumerator::iterator::increment()
             increment();
         }
     }
+    else
+    {
+        current.reset();
+    }
 }
 
 mu::Enumerator::iterator& mu::Enumerator::iterator::operator++()
