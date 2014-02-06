@@ -71,7 +71,7 @@ void mga::LayerListBase::update_representation(size_t needed_size)
     }
 
     std::swap(new_layers, layers);
-    std::swap(new_hwc_representation, hwc_representation);
+    hwc_representation = new_hwc_representation;
 }
 
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()

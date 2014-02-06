@@ -41,11 +41,12 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
 void mga::HwcFbDevice::prepare_gl()
 {
-    auto rc = 0u;
-    if (auto display_list = layerlist.native_list().lock())
+    auto rc = 0;
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
     {
         hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
-        hwc_device->prepare(hwc_device.get(), num_displays, displays);
+        rc = hwc_device->prepare(hwc_device.get(), num_displays, displays);
     }
 
     if ((rc != 0) || (!display_list))
@@ -61,16 +62,17 @@ void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Rendera
 
 void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
-    auto rc = 0u;
-    if (auto display_list = layerlist.native_list().lock())
+    auto rc = 0; 
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
     {
         display_list->dpy = dpy;
         display_list->sur = sur;
 
         //set() may affect EGL state by calling eglSwapBuffers.
         //HWC 1.0 is the only version of HWC that can do this.
-        hwc_display_contents_1_t* displays[num_displays] {&display_list};
-        hwc_device->set(hwc_device.get(), num_displays, displays)
+        hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
+        rc = hwc_device->set(hwc_device.get(), num_displays, displays);
     }
 
     if ((rc != 0) || (!display_list))

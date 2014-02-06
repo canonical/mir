@@ -43,15 +43,16 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 
 void mga::HwcDevice::prepare_gl()
 {
-    auto rc = 0u;
-    if (auto display_list = layerlist.native_list().lock())
+    auto rc = 0;
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
     {
         //note, although we only have a primary display right now,
         //      set the external and virtual displays to null as some drivers check for that
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-        hwc_device->prepare(hwc_device.get(), 1, displays);
+        rc = hwc_device->prepare(hwc_device.get(), 1, displays);
     }
-    
+
     if ((rc != 0) || (!display_list))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
@@ -77,11 +78,12 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     layer_list.set_fb_target(buffer);
 
-    auto rc = 0u;
-    if (auto display_list = layerlist.native_list().lock())
+    auto rc = 0;
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
     {
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-        hwc_device->set(hwc_device.get(), 1, displays);
+        rc = hwc_device->set(hwc_device.get(), 1, displays);
 
         mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
 

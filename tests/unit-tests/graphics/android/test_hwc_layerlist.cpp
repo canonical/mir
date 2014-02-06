@@ -132,10 +132,10 @@ TEST_F(HWCLayerListTest, list_defaults)
     mga::LayerList layerlist;
 
     auto list = layerlist.native_list().lock();
-    EXPECT_EQ(-1, list.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list.flags);
-    EXPECT_NE(nullptr, list.dpy);
-    EXPECT_NE(nullptr, list.sur);
+    EXPECT_EQ(-1, list->retireFenceFd);
+    EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
+    EXPECT_NE(nullptr, list->dpy);
+    EXPECT_NE(nullptr, list->sur);
 }
 
 /* Tests without HWC_FRAMEBUFFER_TARGET */
@@ -145,8 +145,8 @@ TEST_F(HWCLayerListTest, hwc10_list_defaults)
     mga::LayerList layerlist;
 
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(1, list.numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list.hwLayers[0]));
+    ASSERT_EQ(1, list->numHwLayers);
+    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
 }
 
 /* tests with a FRAMEBUFFER_TARGET present */
@@ -154,9 +154,9 @@ TEST_F(HWCLayerListTest, fbtarget_list_initialize)
 {
     mga::FBTargetLayerList layerlist;
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(2, list.numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list.hwLayers[0]));
-    EXPECT_THAT(target_layer, MatchesLayer(list.hwLayers[1]));
+    ASSERT_EQ(2, list->numHwLayers);
+    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
 TEST_F(HWCLayerListTest, fb_target_set)
@@ -166,9 +166,9 @@ TEST_F(HWCLayerListTest, fb_target_set)
     layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(2, list.numHwLayers);
-    EXPECT_THAT(set_skip_layer, MatchesLayer(list.hwLayers[0]));
-    EXPECT_THAT(set_target_layer, MatchesLayer(list.hwLayers[1]));
+    ASSERT_EQ(2, list->numHwLayers);
+    EXPECT_THAT(set_skip_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(set_target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
 TEST_F(HWCLayerListTest, fbtarget_list_update)
@@ -184,30 +184,29 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     layerlist.set_composition_layers(updated_list);
 
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(3, list.numHwLayers);
-    EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
-    EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-    EXPECT_THAT(target_layer, MatchesLayer(list.hwLayers[2]));
+    ASSERT_EQ(3, list->numHwLayers);
+    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[1]));
+    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[2]));
 
     /* update FB target */
     layerlist.set_fb_target(mock_buffer);
 
     list = layerlist.native_list().lock();
-    layerlist.with_native_list([this](hwc_display_contents_1_t& list)
     target_layer.handle = native_handle_1.handle();
-    ASSERT_EQ(3, list.numHwLayers);
-    EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[0]));
-    EXPECT_THAT(comp_layer, MatchesLayer(list.hwLayers[1]));
-    EXPECT_THAT(set_target_layer, MatchesLayer(list.hwLayers[2]));
+    ASSERT_EQ(3, list->numHwLayers);
+    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[1]));
+    EXPECT_THAT(set_target_layer, MatchesLayer(list->hwLayers[2]));
 
     /* reset default */
     layerlist.reset_composition_layers();
 
     list = layerlist.native_list().lock();
     target_layer.handle = nullptr;
-    ASSERT_EQ(2, list.numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list.hwLayers[0]));
-    EXPECT_THAT(target_layer, MatchesLayer(list.hwLayers[1]));
+    ASSERT_EQ(2, list->numHwLayers);
+    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
+    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
 TEST_F(HWCLayerListTest, fb_fence)
@@ -216,8 +215,8 @@ TEST_F(HWCLayerListTest, fb_fence)
     mga::FBTargetLayerList layerlist;
 
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(2, list.numHwLayers);
-    list.hwLayers[1].releaseFenceFd = release_fence;
+    ASSERT_EQ(2, list->numHwLayers);
+    list->hwLayers[1].releaseFenceFd = release_fence;
     EXPECT_EQ(release_fence, layerlist.fb_target_fence());
 }
 
@@ -227,6 +226,6 @@ TEST_F(HWCLayerListTest, retire_fence)
     mga::FBTargetLayerList layerlist;
 
     auto list = layerlist.native_list().lock();
-    list.retireFenceFd = release_fence;
+    list->retireFenceFd = release_fence;
     EXPECT_EQ(release_fence, layerlist.retirement_fence());
 }
