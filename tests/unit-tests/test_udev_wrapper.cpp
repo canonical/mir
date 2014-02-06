@@ -302,6 +302,9 @@ TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
     mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
 
     devices.scan_devices();
+
+    EXPECT_EXIT(devices.end()->subsystem(), testing::KilledBySignal(SIGSEGV), "");
+
     auto iter = devices.begin();
 
     while(iter != devices.end())
