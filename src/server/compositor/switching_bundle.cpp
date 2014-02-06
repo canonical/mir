@@ -401,6 +401,7 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
+    client_acquire_todo = nullptr;
     drop_frames(nready);
     force_drop = nbuffers + 1;
     cond.notify_all();

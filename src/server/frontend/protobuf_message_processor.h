@@ -53,6 +53,7 @@ public:
     void send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
     void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response);
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::Screencast* response);
 
 private:
     bool dispatch(Invocation const& invocation);

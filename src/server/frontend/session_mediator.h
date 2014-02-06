@@ -53,6 +53,7 @@ class ResourceCache;
 class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
+class Screencast;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
@@ -65,7 +66,8 @@ public:
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
-        std::shared_ptr<ResourceCache> const& resource_cache);
+        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<Screencast> const& screencast);
 
     ~SessionMediator() noexcept;
 
@@ -106,6 +108,21 @@ public:
                        ::mir::protobuf::DisplayConfiguration* response,
                        ::google::protobuf::Closure* done) override;
 
+    void create_screencast(google::protobuf::RpcController*,
+                           const mir::protobuf::ScreencastParameters*,
+                           mir::protobuf::Screencast*,
+                           google::protobuf::Closure* done);
+
+    void release_screencast(google::protobuf::RpcController*,
+                            const mir::protobuf::ScreencastId*,
+                            mir::protobuf::Void*,
+                            google::protobuf::Closure* done);
+
+    void screencast_buffer(google::protobuf::RpcController*,
+                           const mir::protobuf::ScreencastId*,
+                           mir::protobuf::Buffer*,
+                           google::protobuf::Closure* done);
+
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
@@ -127,6 +144,7 @@ private:
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<Screencast> const screencast;
 
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;

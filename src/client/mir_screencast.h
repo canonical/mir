@@ -49,6 +49,7 @@ public:
         mir_screencast_callback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
+    bool valid();
 
     MirWaitHandle* release(
         mir_screencast_callback callback, void* context);
