@@ -72,7 +72,7 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
-set(MIRCLIENT_ABI 6)
+set(MIRCLIENT_ABI 7)
 
 set_target_properties(
   mirclient
