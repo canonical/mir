@@ -157,6 +157,11 @@ TEST_F(HWCLayersTest, layer_types)
     expected_layer.flags = HWC_SKIP_LAYER;
     layer.set_layer_type(mga::LayerType::skip);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.flags = 0;
+    layer.set_layer_type(mga::LayerType::gl_rendered);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, buffer_updates)
