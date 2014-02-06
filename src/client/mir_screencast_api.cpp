@@ -64,14 +64,21 @@ MirScreencast* mir_connection_create_screencast_sync(
 
         auto const client_platform = connection->get_client_platform();
 
-        screencast = new MirScreencast{
-            find_display_output(*config, parameters->output_id),
-            connection->display_server(),
-            client_platform,
-            client_platform->create_buffer_factory(),
-            null_callback, nullptr};
+        std::unique_ptr<MirScreencast> screencast_uptr{
+            new MirScreencast{
+                find_display_output(*config, parameters->output_id),
+                connection->display_server(),
+                client_platform,
+                client_platform->create_buffer_factory(),
+                null_callback, nullptr}};
 
-        screencast->creation_wait_handle()->wait_for_all();
+        screencast_uptr->creation_wait_handle()->wait_for_all();
+
+        if (screencast_uptr->valid())
+        {
+            screencast = screencast_uptr.get();
+            screencast_uptr.release();
+        }
     }
     catch (std::exception const&)
     {
