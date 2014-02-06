@@ -41,16 +41,17 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
 void mga::HwcFbDevice::prepare_gl()
 {
-    layer_list.with_native_list(
-        [this](hwc_display_contents_1_t& display_list)
-        {
-            hwc_display_contents_1_t* displays[num_displays] {&display_list};
-            if (hwc_device->prepare(hwc_device.get(), num_displays, displays) != 0)
-            {
-                BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-            }
+    auto rc = 0u;
+    if (auto display_list = layerlist.native_list().lock())
+    {
+        hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
+        hwc_device->prepare(hwc_device.get(), num_displays, displays);
+    }
 
-        });
+    if ((rc != 0) || (!display_list))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+    }
 }
 
 void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
@@ -60,20 +61,22 @@ void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Rendera
 
 void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
-    layer_list.with_native_list(
-        [this, &dpy, &sur](hwc_display_contents_1_t& display_list)
-        { 
-            display_list.dpy = dpy;
-            display_list.sur = sur;
+    auto rc = 0u;
+    if (auto display_list = layerlist.native_list().lock())
+    {
+        display_list->dpy = dpy;
+        display_list->sur = sur;
 
-            //set() may affect EGL state by calling eglSwapBuffers.
-            //HWC 1.0 is the only version of HWC that can do this.
-            hwc_display_contents_1_t* displays[num_displays] {&display_list};
-            if (hwc_device->set(hwc_device.get(), num_displays, displays) != 0)
-            {
-                BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-            }
-    });
+        //set() may affect EGL state by calling eglSwapBuffers.
+        //HWC 1.0 is the only version of HWC that can do this.
+        hwc_display_contents_1_t* displays[num_displays] {&display_list};
+        hwc_device->set(hwc_device.get(), num_displays, displays)
+    }
+
+    if ((rc != 0) || (!display_list))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+    }
 }
 
 void mga::HwcFbDevice::post(mg::Buffer const& buffer)

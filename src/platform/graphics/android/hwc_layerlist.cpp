@@ -74,9 +74,9 @@ void mga::LayerListBase::update_representation(size_t needed_size)
     std::swap(new_hwc_representation, hwc_representation);
 }
 
-void mga::LayerListBase::with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn)
+std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
 {
-    fn(*hwc_representation);
+    return hwc_representation;
 }
 
 mga::NativeFence mga::LayerListBase::retirement_fence()

@@ -42,7 +42,7 @@ namespace android
 class LayerListBase
 {
 public:
-    void with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn);
+    std::weak_ptr<hwc_display_contents_1_t> native_list();
     NativeFence retirement_fence();
 
 protected:
@@ -70,9 +70,10 @@ public:
     FBTargetLayerList();
     void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
     void reset_composition_layers(); 
-
     NativeFence fb_target_fence();
     void set_fb_target(Buffer const&);
+
+private:
     bool skip_layers_present{true};
 };
 
