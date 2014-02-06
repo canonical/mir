@@ -178,22 +178,20 @@ struct EGLSetup
         egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
         if (egl_context == EGL_NO_CONTEXT)
             throw std::runtime_error("Failed to create EGL context for screencast");
-    }
 
-    ~EGLSetup()
-    {
-        eglDestroySurface(egl_display, egl_surface);
-        eglDestroyContext(egl_display, egl_context);
-        eglTerminate(egl_display);
-    }
-
-    void make_current()
-    {
         if (eglMakeCurrent(egl_display, egl_surface,
                            egl_surface, egl_context) != EGL_TRUE)
         {
             throw std::runtime_error("Failed to make screencast surface current");
         }
+    }
+
+    ~EGLSetup()
+    {
+        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroySurface(egl_display, egl_surface);
+        eglDestroyContext(egl_display, egl_context);
+        eglTerminate(egl_display);
     }
 
     void swap_buffers()
@@ -212,7 +210,6 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
                    uint32_t output_id)
 {
     static int const rgba_pixel_size{4};
-    EGLSetup egl_setup{connection, screencast};
 
     auto const frame_size = get_output_size(connection, output_id);
     auto const frame_size_bytes = rgba_pixel_size *
@@ -224,7 +221,7 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
     std::future<void> frame_written_future =
         std::async(std::launch::deferred, []{});
 
-    egl_setup.make_current();
+    EGLSetup egl_setup{connection, screencast};
 
     while (running)
     {
