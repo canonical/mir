@@ -256,8 +256,11 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     }
 }
 
-TEST_F(UdevWrapperTest, DefreferencingEndThrows)
+typedef UdevWrapperTest UdevWrapperDeathTest;
+
+TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
 {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     udev_environment.add_device("drm", "control64D", NULL, {}, {});
     udev_environment.add_device("drm", "card1", NULL, {}, {});
 
@@ -265,16 +268,15 @@ TEST_F(UdevWrapperTest, DefreferencingEndThrows)
 
     devices.scan_devices();
 
-    EXPECT_THROW({ *devices.end(); },
-                 std::logic_error);
+    EXPECT_EXIT((*devices.end()).subsystem(), testing::KilledBySignal(SIGSEGV), "");
 
     auto iter = devices.begin();
-    while (iter != devices.end())
+
+    while(iter != devices.end())
     {
         iter++;
     }
-    EXPECT_THROW({ *iter; },
-                 std::logic_error);
+    EXPECT_EXIT((*iter).subsystem(), testing::KilledBySignal(SIGSEGV), "");
 }
 
 TEST_F(UdevWrapperTest, MemberDereferenceWorks)
@@ -290,8 +292,6 @@ TEST_F(UdevWrapperTest, MemberDereferenceWorks)
     EXPECT_STREQ("drm", iter->subsystem());
     EXPECT_STREQ("drm", iter->subsystem());
 }
-
-typedef UdevWrapperTest UdevWrapperDeathTest;
 
 TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
 {
