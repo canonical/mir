@@ -152,6 +152,10 @@ bool mu::Enumerator::iterator::operator!=(mu::Enumerator::iterator const& rhs) c
 
 mu::Device const& mu::Enumerator::iterator::operator*() const
 {
+    if (entry == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempted to dereference udev::Enumerator.end()"));
+    }
     return *current;
 }
 

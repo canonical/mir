@@ -256,6 +256,27 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     }
 }
 
+TEST_F(UdevWrapperTest, DefreferencingEndThrows)
+{
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
+
+    devices.scan_devices();
+
+    EXPECT_THROW({ *devices.end(); },
+                 std::logic_error);
+
+    auto iter = devices.begin();
+    while (iter != devices.end())
+    {
+        iter++;
+    }
+    EXPECT_THROW({ *iter; },
+                 std::logic_error);
+}
+
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 {
     mir::udev::Monitor monitor{mir::udev::Context()};
