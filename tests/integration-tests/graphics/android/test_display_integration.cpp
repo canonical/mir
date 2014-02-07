@@ -38,7 +38,7 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
-class AndroidGPUDisplay : public ::testing::Test
+class AndroidDisplay : public ::testing::Test
 {
 protected:
     static void SetUpTestCase()
@@ -65,42 +65,17 @@ protected:
     static void (*original_sigterm_handler)(int);
 };
 
-void (*AndroidGPUDisplay::original_sigterm_handler)(int);
-std::shared_ptr<mga::ResourceFactory> AndroidGPUDisplay::display_resource_factory;
+void (*AndroidDisplay::original_sigterm_handler)(int);
+std::shared_ptr<mga::ResourceFactory> AndroidDisplay::display_resource_factory;
 }
 
-// disabled to unblock CI - see lp:1239955
-TEST_F(AndroidGPUDisplay, DISABLED_gpu_display_ok_with_gles)
+TEST_F(AndroidDisplay, display_can_post)
 {
-    auto should_use_fb_fallback = true;
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
-    auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, mock_display_report, should_use_fb_fallback);
-
-    mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
-    display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
-    {
-        buffer.make_current();
-        gl_animation.init_gl();
-
-        gl_animation.render_gl();
-        buffer.post_update();
-
-        gl_animation.render_gl();
-        buffer.post_update();
-    });
-}
-
-TEST_F(AndroidGPUDisplay, hwc_display_ok_with_gles)
-{
-    auto should_use_fb_fallback = false;
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, mock_display_report, should_use_fb_fallback);
+        fb_allocator, display_resource_factory, mock_display_report);
 
     mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
     display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
