@@ -87,9 +87,11 @@ public:
         f(display_buffer);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return config;
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new mtd::StubDisplayConfig(*config)
+        );
     }
 
     void register_configuration_change_handler(
@@ -112,7 +114,7 @@ public:
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
 
     void emit_configuration_change_event(
-        std::shared_ptr<mg::DisplayConfiguration> const& new_config)
+        std::shared_ptr<mtd::StubDisplayConfig> const& new_config)
     {
         config = new_config;
         if (write(p.write_fd(), "a", 1)) {}
@@ -125,7 +127,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mg::DisplayConfiguration> config;
+    std::shared_ptr<mtd::StubDisplayConfig> config;
     mtd::NullDisplayBuffer display_buffer;
     mt::Pipe p;
     std::atomic<bool> handler_called;

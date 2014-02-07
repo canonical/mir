@@ -19,6 +19,8 @@
 #include "screencast_display_buffer.h"
 #include "mir/graphics/buffer.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -49,7 +51,7 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
                               GL_RENDERBUFFER, depth_rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error("Failed to create FBO for buffer");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create FBO for buffer"));
 }
 
 mc::ScreencastDisplayBuffer::~ScreencastDisplayBuffer()
@@ -69,7 +71,7 @@ void mc::ScreencastDisplayBuffer::make_current()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, color_tex, 0);
 
-    auto const& buf_size = buffer.size();
+    auto const buf_size = buffer.size();
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glViewport(0, 0, buf_size.width.as_uint32_t(), buf_size.height.as_uint32_t());

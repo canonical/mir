@@ -27,6 +27,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/input/input_manager.h"
 
 #include <stdexcept>
@@ -134,7 +135,8 @@ struct mir::DisplayServer::Private
 
             if (configure_display_on_resume)
             {
-                auto conf = display->configuration();
+                std::shared_ptr<graphics::DisplayConfiguration> conf =
+                    display->configuration();
                 display_changer->configure_for_hardware_change(
                     conf, DisplayChanger::RetainSystemState);
                 configure_display_on_resume = false;
@@ -162,7 +164,8 @@ struct mir::DisplayServer::Private
     {
         if (!paused)
         {
-            auto conf = display->configuration();
+            std::shared_ptr<graphics::DisplayConfiguration> conf =
+                display->configuration();
             display_changer->configure_for_hardware_change(
                 conf, DisplayChanger::PauseResumeSystem);
         }

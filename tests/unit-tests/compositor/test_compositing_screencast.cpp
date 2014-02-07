@@ -52,13 +52,15 @@ class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay()
-        : stub_config{{{connected,!used}, {connected,used}}}
+        : connected_used_outputs{{connected,!used}, {connected,used}},
+          stub_config{connected_used_outputs}
     {
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return mt::fake_shared(stub_config);
+        return std::unique_ptr<mg::DisplayConfiguration>{
+            new mtd::StubDisplayConfig{connected_used_outputs}};
     }
 
     mg::DisplayConfigurationOutput const& output_with(mg::DisplayConfigurationOutputId id)
@@ -73,7 +75,8 @@ public:
     }
 
 private:
-    mtd::StubDisplayConfig stub_config;
+    std::vector<std::pair<bool,bool>> const connected_used_outputs;
+    mtd::StubDisplayConfig const stub_config;
     static bool const connected;
     static bool const used;
 };

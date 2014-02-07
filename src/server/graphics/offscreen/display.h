@@ -71,8 +71,8 @@ public:
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
-    std::shared_ptr<graphics::DisplayConfiguration> configuration();
-    void configure(graphics::DisplayConfiguration const& conf);
+    std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
+    void configure(graphics::DisplayConfiguration const& conf) override;
 
     void register_configuration_change_handler(
         EventHandlerRegister& handlers,
@@ -93,7 +93,7 @@ private:
     std::shared_ptr<BasicPlatform> const basic_platform;
     detail::EGLDisplayHandle const egl_display;
     SurfacelessEGLContext const egl_context_shared;
-    std::mutex configuration_mutex;
+    mutable std::mutex configuration_mutex;
     DisplayConfiguration current_display_configuration;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
 };

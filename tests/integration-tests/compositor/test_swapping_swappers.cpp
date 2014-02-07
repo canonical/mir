@@ -51,6 +51,31 @@ struct SwapperSwappingStress : public ::testing::Test
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;
     std::atomic<bool> client_thread_done;
 };
+
+auto client_acquire_blocking(std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
+-> mg::Buffer*
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool done = false;
+
+    mg::Buffer* result;
+    switching_bundle->client_acquire(
+        [&](mg::Buffer* new_buffer)
+         {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+
+            result = new_buffer;
+            done = true;
+            cv.notify_one();
+         });
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+
+    cv.wait(lock, [&]{ return done; });
+
+    return result;
+}
 }
 
 TEST_F(SwapperSwappingStress, swapper)
@@ -62,7 +87,7 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     for(auto i=0u; i < 400; i++)
                     {
-                        auto b = switching_bundle->client_acquire();
+                        auto b = client_acquire_blocking(switching_bundle);
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
@@ -107,7 +132,7 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     for(auto i=0u; i < 400; i++)
                     {
-                        auto b = switching_bundle->client_acquire();
+                        auto b = client_acquire_blocking(switching_bundle);
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }

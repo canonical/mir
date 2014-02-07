@@ -41,8 +41,7 @@ public:
     StubDisplay()
         : rects{{{0,0}, {800,600}},
                 {{0,600}, {100,100}},
-                {{800,0}, {100,100}}},
-          config{std::make_shared<mtd::StubDisplayConfig>(rects)}
+                {{800,0}, {100,100}}}
     {
         for (auto const& rect : rects)
         {
@@ -57,15 +56,16 @@ public:
             f(*db);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return config;
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new mtd::StubDisplayConfig(rects)
+        );
     }
 
 private:
     std::vector<geom::Rectangle> const rects;
     std::vector<std::shared_ptr<mtd::StubDisplayBuffer>> display_buffers;
-    std::shared_ptr<mtd::StubDisplayConfig> config;
 };
 
 }
