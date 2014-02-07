@@ -52,9 +52,11 @@ public:
     void send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
+    void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response);
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::Screencast* response);
 
 private:
-    bool dispatch(mir::protobuf::wire::Invocation const& invocation);
+    bool dispatch(Invocation const& invocation);
 
     std::shared_ptr<ProtobufMessageSender> const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;

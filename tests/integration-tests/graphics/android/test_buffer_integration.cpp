@@ -56,6 +56,30 @@ protected:
     std::shared_ptr<mtd::GraphicsRegionFactory> graphics_region_factory;
 };
 
+auto client_acquire_blocking(mc::SwitchingBundle& switching_bundle)
+-> mg::Buffer*
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool done = false;
+
+    mg::Buffer* result;
+    switching_bundle.client_acquire(
+        [&](mg::Buffer* new_buffer)
+         {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+
+            result = new_buffer;
+            done = true;
+            cv.notify_one();
+         });
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+
+    cv.wait(lock, [&]{ return done; });
+
+    return result;
+}
 }
 
 TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
@@ -94,7 +118,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
 
     mc::SwitchingBundle swapper(2, allocator, buffer_properties);
 
-    auto returned_buffer = swapper.client_acquire();
+    auto returned_buffer = client_acquire_blocking(swapper);
 
     EXPECT_NE(nullptr, returned_buffer);
 }
