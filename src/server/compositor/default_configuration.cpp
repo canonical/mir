@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/default_server_configuration-inl.h"
 
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"

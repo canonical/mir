@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/default_server_configuration-inl.h"
 #include "mir/frontend/protobuf_session_creator.h"
 
 #include "resource_cache.h"

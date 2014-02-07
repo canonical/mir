@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/default_server_configuration-inl.h"
 
 #include "default_display_configuration_policy.h"
 #include "nested/host_connection.h"

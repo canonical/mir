@@ -49,7 +49,7 @@ class SceneReport;
 class ReportFactory
 {
 public:
-    virtual ~ReportFactory(){};
+    virtual ~ReportFactory() = default;
     virtual std::shared_ptr<compositor::CompositorReport> create_compositor_report() = 0;
     virtual std::shared_ptr<graphics::DisplayReport> create_display_report() = 0;
     virtual std::shared_ptr<scene::SceneReport> create_scene_report() = 0;
@@ -57,6 +57,11 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() = 0;
     virtual std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() = 0;
     virtual std::shared_ptr<input::InputReport> create_input_report() = 0;
+
+protected:
+    ReportFactory() = default;
+    ReportFactory(ReportFactory const&) = delete;
+    ReportFactory& operator=(ReportFactory const &) = delete;
 };
 
 }

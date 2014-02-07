@@ -19,7 +19,6 @@
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
 
 #include "mir/cached_ptr.h"
-#include "mir/abnormal_exit.h"
 #include "mir/server_configuration.h"
 #include "mir/default_configuration_options.h"
 
@@ -319,30 +318,8 @@ private:
     std::function<void()> force_threads_to_unblock_callback();
 
     template <typename Report>
-    auto create_report(std::shared_ptr<Report>(ReportFactory::*factory_function)(), char const* report_opt)
-        -> std::shared_ptr<Report>
-    {
-        auto opt = the_options()->get<std::string>(report_opt);
+    std::shared_ptr<Report> create_report(std::shared_ptr<Report>(ReportFactory::*factory_function)(), char const* report_opt) const;
 
-        if (opt == log_opt_value)
-        {
-            return (logging_report_factory.get()->*factory_function)();
-        }
-        else if (opt == lttng_opt_value)
-        {
-            return (lttng_report_factory.get()->*factory_function)();
-        }
-        else if (opt == off_opt_value)
-        {
-            return (null_report_factory.get()->*factory_function)();
-        }
-        else
-        {
-            throw AbnormalExit(std::string("Invalid ") + report_opt + " option: " + opt + " (valid options are: \"" +
-                               ConfigurationOptions::off_opt_value + "\" and \"" + ConfigurationOptions::log_opt_value +
-                               "\" and \"" + ConfigurationOptions::lttng_opt_value + "\")");
-        }
-    }
     std::unique_ptr<ReportFactory> const null_report_factory;
     std::unique_ptr<ReportFactory> const lttng_report_factory;
     std::unique_ptr<ReportFactory> const logging_report_factory;

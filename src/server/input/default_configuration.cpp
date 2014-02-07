@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/default_server_configuration-inl.h"
 
 #include "display_input_region.h"
 #include "mir/input/android/default_android_input_configuration.h"

@@ -17,6 +17,8 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/default_server_configuration-inl.h"
+
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/input/input_configuration.h"
