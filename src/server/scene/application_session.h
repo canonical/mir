@@ -60,6 +60,7 @@ public:
     std::shared_ptr<shell::Surface> default_surface() const;
 
     std::string name() const;
+    pid_t process_id() const override;
 
     void force_requests_to_complete();
 

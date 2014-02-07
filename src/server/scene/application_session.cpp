@@ -125,6 +125,11 @@ std::string ms::ApplicationSession::name() const
     return session_name;
 }
 
+pid_t ms::ApplicationSession::process_id() const
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented")); // TODO{arg}
+}
+
 void ms::ApplicationSession::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);

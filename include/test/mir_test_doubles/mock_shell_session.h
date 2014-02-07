@@ -42,6 +42,7 @@ struct MockShellSession : public shell::Session
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<shell::Surface>());
 
     MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(process_id, pid_t());
     MOCK_METHOD0(force_requests_to_complete, void());
 
     MOCK_METHOD0(hide, void());

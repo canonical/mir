@@ -177,7 +177,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     app_session.destroy_surface(surf);
 }
 
-TEST(Session, get_invalid_surface_throw_behavior)
+TEST(ApplicationSession, get_invalid_surface_throw_behavior)
 {
     using namespace ::testing;
 
@@ -193,7 +193,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST(Session, destroy_invalid_surface_throw_behavior)
+TEST(ApplicationSession, destroy_invalid_surface_throw_behavior)
 {
     using namespace ::testing;
 
@@ -209,7 +209,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST(Session, uses_snapshot_strategy)
+TEST(ApplicationSession, uses_snapshot_strategy)
 {
     using namespace ::testing;
 
@@ -245,7 +245,7 @@ public:
     MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
 };
 }
-TEST(Session, display_config_sender)
+TEST(ApplicationSession, display_config_sender)
 {
     using namespace ::testing;
 
@@ -263,7 +263,7 @@ TEST(Session, display_config_sender)
     app_session.send_display_config(stub_config);
 }
 
-TEST(Session, lifecycle_event_sender)
+TEST(ApplicationSession, lifecycle_event_sender)
 {
     using namespace ::testing;
 
@@ -278,4 +278,20 @@ TEST(Session, lifecycle_event_sender)
     EXPECT_CALL(sender, handle_lifecycle_event(exp_state)).Times(1);
 
     app_session.set_lifecycle_state(mir_lifecycle_state_will_suspend);
+}
+
+TEST(ApplicationSession, process_id)
+{
+    using namespace ::testing;
+
+    pid_t const pid{__LINE__};
+
+    mtd::MockSurfaceFactory surface_factory;
+    MockEventSink sender;
+
+    ms::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
+                                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+
+    EXPECT_THAT(app_session.process_id(), Eq(pid));
 }

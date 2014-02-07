@@ -45,6 +45,11 @@ struct StubShellSession : public shell::Session
     {
         return std::string();
     }
+    pid_t process_id() const override
+    {
+        return -1;
+    }
+
     void force_requests_to_complete() override
     {
     }
