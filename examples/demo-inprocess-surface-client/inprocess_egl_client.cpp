@@ -41,6 +41,8 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <unistd.h>
+
 #include <functional>
 
 #include <assert.h>
@@ -93,7 +95,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(mir_pixel_format_argb_8888);
-    auto session = shell->open_session("Inprocess client", std::make_shared<NullEventSink>());
+    auto session = shell->open_session(getpid(), "Inprocess client", std::make_shared<NullEventSink>());
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(shell->create_surface_for(session, params));
 

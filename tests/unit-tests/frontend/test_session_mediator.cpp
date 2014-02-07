@@ -206,7 +206,7 @@ struct SessionMediatorTest : public ::testing::Test
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
-          mediator{shell, graphics_platform, graphics_changer,
+          mediator{__LINE__, shell, graphics_platform, graphics_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache, stub_screencast},
@@ -215,7 +215,7 @@ struct SessionMediatorTest : public ::testing::Test
     {
         using namespace ::testing;
 
-        ON_CALL(*shell, open_session(_, _)).WillByDefault(Return(stubbed_session));
+        ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
         ON_CALL(*shell, create_surface_for(_, _))
             .WillByDefault(WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
     }
@@ -370,7 +370,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         .Times(1)
         .WillOnce(Return(mt::fake_shared(config)));
     mf::SessionMediator mediator(
-        shell, graphics_platform, mock_display,
+        __LINE__, shell, graphics_platform, mock_display,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>());
@@ -602,7 +602,7 @@ TEST_F(SessionMediatorTest, display_config_request)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
 
     mf::SessionMediator session_mediator{
-        shell, graphics_platform, mock_display_selector,
+        __LINE__, shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>()};

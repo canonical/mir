@@ -45,6 +45,7 @@ class ApplicationSession : public shell::Session
 public:
     ApplicationSession(
         std::shared_ptr<shell::SurfaceFactory> const& surface_factory,
+        pid_t pid,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<shell::SessionListener> const& session_listener,
@@ -78,6 +79,7 @@ protected:
 
 private:
     std::shared_ptr<shell::SurfaceFactory> const surface_factory;
+    pid_t const pid;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<shell::SessionListener> const session_listener;

@@ -170,6 +170,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
 
     ms::ApplicationSession session{
         conf.the_shell_surface_factory(),
+        __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
         std::make_shared<msh::NullSessionListener>(),

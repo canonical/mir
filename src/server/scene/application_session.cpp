@@ -37,11 +37,13 @@ namespace mg = mir::graphics;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    pid_t pid,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<msh::SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_factory(surface_factory),
+    pid(pid),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
@@ -127,7 +129,7 @@ std::string ms::ApplicationSession::name() const
 
 pid_t ms::ApplicationSession::process_id() const
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented")); // TODO{arg}
+    return pid;
 }
 
 void ms::ApplicationSession::force_requests_to_complete()

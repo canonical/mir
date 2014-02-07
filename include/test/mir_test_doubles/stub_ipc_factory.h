@@ -41,7 +41,7 @@ public:
     }
 
     std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<frontend::EventSink> const&, bool) override
+        pid_t, std::shared_ptr<frontend::EventSink> const&, bool) override
     {
         return server;
     }

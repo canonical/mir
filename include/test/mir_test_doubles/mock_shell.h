@@ -34,8 +34,11 @@ namespace doubles
 
 struct MockShell : public frontend::Shell
 {
-    MOCK_METHOD2(open_session, std::shared_ptr<frontend::Session>(
-        std::string const&, std::shared_ptr<frontend::EventSink> const&));
+    MOCK_METHOD3(open_session, std::shared_ptr<frontend::Session>(
+        pid_t client_pid,
+        std::string const&,
+        std::shared_ptr<frontend::EventSink> const&));
+
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
 
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, shell::SurfaceCreationParameters const&));

@@ -55,7 +55,10 @@ public:
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
-        std::string const& name, std::shared_ptr<frontend::EventSink> const& sink);
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<frontend::EventSink> const& sink);
+
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
