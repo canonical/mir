@@ -40,6 +40,13 @@ public:
     {
     }
 
+    StubDisplayConfig(StubDisplayConfig const& other)
+        : graphics::DisplayConfiguration(),
+          cards(other.cards),
+          outputs(other.outputs)
+    {
+    }
+
     StubDisplayConfig(unsigned int num_displays)
         : StubDisplayConfig(num_displays,
                             {

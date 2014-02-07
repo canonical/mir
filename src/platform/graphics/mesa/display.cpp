@@ -115,13 +115,15 @@ void mgm::Display::for_each_display_buffer(
         f(*db_ptr);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mgm::Display::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration() const
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
     /* Give back a copy of the latest configuration information */
     current_display_configuration.update();
-    return std::make_shared<mgm::RealKMSDisplayConfiguration>(current_display_configuration);
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new mgm::RealKMSDisplayConfiguration(current_display_configuration)
+        );
 }
 
 void mgm::Display::configure(mg::DisplayConfiguration const& conf)
