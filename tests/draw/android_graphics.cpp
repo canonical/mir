@@ -48,28 +48,6 @@ struct RegionDeleter
     gralloc_module_t *grmod;
     native_handle_t const* handle;
 };
-
-static const char* proc_dir = "/proc";
-static const char* surface_flinger_executable_name = "surfaceflinger";
-int surface_flinger_filter(const struct dirent* d)
-{
-    if (fnmatch("[1-9]*", d->d_name, 0))
-        return 0;
-
-    char path[256];
-    snprintf(path, sizeof(path), "%s/%s/cmdline", proc_dir, d->d_name);
-
-    std::ifstream in(path);
-    std::string line;
-
-    while(std::getline(in, line))
-    {
-        if (line.find(surface_flinger_executable_name) != std::string::npos)
-            return 1;
-    }
-
-    return 0;
-}
 }
 
 mtd::TestGrallocMapper::TestGrallocMapper()
