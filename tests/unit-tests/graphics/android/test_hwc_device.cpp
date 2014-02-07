@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
@@ -112,6 +113,26 @@ TEST_F(HwcDevice, test_hwc_prepare)
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
 
+TEST_F(HwcDevice, test_hwc_prepare_resets_layers)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1);
+
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        std::make_shared<mtd::MockRenderable>(),
+        std::make_shared<mtd::MockRenderable>()
+    };
+    device.prepare_gl_and_overlays(renderlist);
+    EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
+
+    device.prepare_gl();
+    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
+}
+
 TEST_F(HwcDevice, test_hwc_prepare_with_overlays)
 {
     using namespace testing;
@@ -123,11 +144,12 @@ TEST_F(HwcDevice, test_hwc_prepare_with_overlays)
     {
         std::make_shared<mtd::MockRenderable>(),
         std::make_shared<mtd::MockRenderable>()
-    }
+    };
     device.prepare_gl_and_overlays(renderlist);
+    device.post(*mock_buffer);
 
     EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
-    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
+    EXPECT_EQ(3, mock_device->display0_set_content.numHwLayers);
 }
 
 TEST_F(HwcDevice, test_hwc_render)

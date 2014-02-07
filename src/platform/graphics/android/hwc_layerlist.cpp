@@ -113,9 +113,7 @@ void mga::FBTargetLayerList::reset_composition_layers()
     skip_layers_present = true;
 }
 
-void mga::FBTargetLayerList::set_composition_layers(
-    std::function<> prepare_fn,
-    std::list<std::shared_ptr<graphics::Renderable>> const& list)
+void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
     auto needed_size = list.size() + 1;
     update_representation(needed_size);
@@ -131,16 +129,6 @@ void mga::FBTargetLayerList::set_composition_layers(
 
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
-
-    hwc_dev->prepare();
-
-    for(auto i: list)
-    {
-        if (i.needs_gl_render())
-        {
-            render_fn(*renderable_it)
-        }
-    }
 }
 
 
