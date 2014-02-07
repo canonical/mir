@@ -73,7 +73,7 @@ public:
     virtual MirPixelFormat pixel_format() const;
 
     virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    virtual void swap_buffers(graphics::Buffer*&);
+    virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete);
     virtual void force_requests_to_complete();
 
     virtual bool supports_input() const;

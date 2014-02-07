@@ -1,3 +1,34 @@
+mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.1.5 (https://launchpad.net/mir/+milestone/0.1.5)
+    - frontend: Implement screencast rpc methods
+    - utils: Add mirscreencast utility
+    - Display::configuration() unique snapshot of the 
+      configuration, so return unique_ptr
+    - Bugs fixed:
+      . frontend: Add a level of indirection to hide 
+        use of mir::protobuf::wire::Invocation from 
+        public headers (LP: #1276162)
+      . graphics: android: remove wait on retireFenceFd. 
+        On some platforms (specifically the 4.4-based flo
+        and grouper), this wait was causing us to miss 
+        vsync. (LP: #1274189)
+      . frontend, compositor, scene: refactoring code to 
+        support a coming change to next_buffer
+        implementation. (LP: #1267323)
+      . client: Add include/client/mir to libmirclient-dev
+        install. (LP: #1276565)
+      . fix a test bug in AndroidInternalClient 
+        internal_client_creation_and_use which caused 
+        the integration tests to hang on the nexus 10 only 
+        (LP: #1270685)
+      . android,tests: Fix android build and unit tests 
+        on desktop. (LP: #1276621)
+      . tests: remove test disabled to workaround
+        (LP: #1239955)
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 06 Feb 2014 10:54:17 -0600
+
 mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
 
   [ Daniel van Vugt ]

@@ -26,6 +26,7 @@
 
 #include <gmock/gmock.h>
 
+#include <condition_variable>
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -38,6 +39,31 @@ namespace geom = mir::geometry;
 
 namespace
 {
+struct BufferStreamSurfaces : mc::BufferStreamSurfaces
+{
+    using mc::BufferStreamSurfaces::BufferStreamSurfaces;
+
+    // Convenient function to allow tests to be written in linear style
+    void swap_client_buffers_blocking(mg::Buffer*& buffer)
+    {
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool done = false;
+
+        swap_client_buffers(buffer,
+            [&](mg::Buffer* new_buffer)
+             {
+                std::unique_lock<decltype(mutex)> lock(mutex);
+                buffer = new_buffer;
+                done = true;
+                cv.notify_one();
+             });
+
+        std::unique_lock<decltype(mutex)> lock(mutex);
+
+        cv.wait(lock, [&]{ return done; });
+    }
+};
 
 struct BufferStreamTest : public ::testing::Test
 {
@@ -60,7 +86,7 @@ struct BufferStreamTest : public ::testing::Test
     }
 
     const int nbuffers;
-    mc::BufferStreamSurfaces buffer_stream;
+    BufferStreamSurfaces buffer_stream;
 };
 
 }
@@ -68,9 +94,9 @@ struct BufferStreamTest : public ::testing::Test
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
     mg::Buffer* client1{nullptr};
-    buffer_stream.swap_client_buffers(client1);
+    buffer_stream.swap_client_buffers_blocking(client1);
     auto client1_id = client1->id();
-    buffer_stream.swap_client_buffers(client1);
+    buffer_stream.swap_client_buffers_blocking(client1);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(1);
     auto comp2 = buffer_stream.lock_compositor_buffer(1);
@@ -80,7 +106,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 
     comp1.reset();
 
-    buffer_stream.swap_client_buffers(client1);
+    buffer_stream.swap_client_buffers_blocking(client1);
     auto comp3 = buffer_stream.lock_compositor_buffer(2);
 
     EXPECT_NE(client1_id, comp3->id());
@@ -97,7 +123,7 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
     mg::Buffer* client_buffer{nullptr};
     for (int i = 0; i !=  nbuffers; i++)
-        buffer_stream.swap_client_buffers(client_buffer);
+        buffer_stream.swap_client_buffers_blocking(client_buffer);
 
     auto first_monitor = buffer_stream.lock_compositor_buffer(1);
     auto first_compositor_id = first_monitor->id();
@@ -113,14 +139,14 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
     mg::Buffer* client_buffer{nullptr};
-    buffer_stream.swap_client_buffers(client_buffer);
+    buffer_stream.swap_client_buffers_blocking(client_buffer);
 
     if (nbuffers > 1)
     {
-        buffer_stream.swap_client_buffers(client_buffer);
+        buffer_stream.swap_client_buffers_blocking(client_buffer);
         auto comp1 = buffer_stream.lock_compositor_buffer(1);
 
-        buffer_stream.swap_client_buffers(client_buffer);
+        buffer_stream.swap_client_buffers_blocking(client_buffer);
         auto comp2 = buffer_stream.lock_compositor_buffer(2);
 
         EXPECT_NE(comp1->id(), comp2->id());
@@ -135,7 +161,7 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
     auto old_size = buffer_stream.stream_size();
 
     mg::Buffer* client{nullptr};
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
     EXPECT_EQ(old_size, client->size());
 
     geom::Size const new_size
@@ -146,13 +172,13 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
     buffer_stream.resize(new_size);
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
     EXPECT_EQ(new_size, client->size());
 
     buffer_stream.resize(old_size);
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
     EXPECT_EQ(old_size, client->size());
 }
 
@@ -161,7 +187,7 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     auto old_size = buffer_stream.stream_size();
 
     mg::Buffer* client{nullptr};
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
 
     geom::Size const new_size
     {
@@ -171,8 +197,8 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     buffer_stream.resize(new_size);
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
-    buffer_stream.swap_client_buffers(client);
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
+    buffer_stream.swap_client_buffers_blocking(client);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(1);
     EXPECT_EQ(old_size, comp1->size());
@@ -182,7 +208,7 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     EXPECT_EQ(new_size, comp2->size());
     comp2.reset();
 
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
 
     auto comp3 = buffer_stream.lock_compositor_buffer(3);
     EXPECT_EQ(new_size, comp3->size());
@@ -192,13 +218,13 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
     // No client frames "drawn" since resize(old_size), so compositor gets new_size
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
     auto comp4 = buffer_stream.lock_compositor_buffer(4);
     EXPECT_EQ(new_size, comp4->size());
     comp4.reset();
 
     // Generate a new frame, which should be back to old_size now
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
     auto comp5 = buffer_stream.lock_compositor_buffer(5);
     EXPECT_EQ(old_size, comp5->size());
     comp5.reset();
@@ -207,8 +233,8 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
     mg::Buffer* client{nullptr};
-    buffer_stream.swap_client_buffers(client);
-    buffer_stream.swap_client_buffers(client);
+    buffer_stream.swap_client_buffers_blocking(client);
+    buffer_stream.swap_client_buffers_blocking(client);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(123);
     auto comp2 = buffer_stream.lock_compositor_buffer(123);
@@ -225,12 +251,12 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 namespace
 {
 
-void client_loop(int nframes, mc::BufferStream& stream)
+void client_loop(int nframes, BufferStreamSurfaces& stream)
 {
     mg::Buffer* out_buffer{nullptr};
     for (int f = 0; f < nframes; f++)
     {
-        stream.swap_client_buffers(out_buffer);
+        stream.swap_client_buffers_blocking(out_buffer);
         ASSERT_NE(nullptr, out_buffer);
         std::this_thread::yield();
     }

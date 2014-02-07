@@ -189,7 +189,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
             for (int i = 0; i < 500; ++i)
             {
                 auto surface = session.default_surface();
-                surface->swap_buffers(buffer);
+                surface->swap_buffers_blocking(buffer);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};

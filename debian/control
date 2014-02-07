@@ -70,7 +70,7 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver14
+Package: libmirserver15
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -116,7 +116,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver14 (= ${binary:Version}),
+Depends: libmirserver15 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -128,7 +128,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient6
+Package: libmirclient7
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -146,7 +146,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient6 (= ${binary:Version}),
+Depends: libmirclient7 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          ${misc:Depends},

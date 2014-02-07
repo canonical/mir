@@ -50,9 +50,9 @@ public:
     virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
 
     /**
-     * Gets the current output configuration.
+     * Gets a copy of the current output configuration.
      */
-    virtual std::shared_ptr<DisplayConfiguration> configuration() = 0;
+    virtual std::unique_ptr<DisplayConfiguration> configuration() const = 0;
 
     /**
      * Sets a new output configuration.
