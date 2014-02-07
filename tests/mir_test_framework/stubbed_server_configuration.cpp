@@ -120,7 +120,7 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 class StubDisplayConfiguration : public mtd::NullDisplayConfiguration
 {
 public:
-    StubDisplayConfiguration(geom::Rectangle& rect)
+    StubDisplayConfiguration(geom::Rectangle const& rect)
          : modes{mg::DisplayConfigurationMode{rect.size, 1.0f}}
     {
     }
@@ -156,9 +156,11 @@ public:
         f(display_buffer);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return std::make_shared<StubDisplayConfiguration>(rect);
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new StubDisplayConfiguration(rect)
+        );
     }
 
 private:
