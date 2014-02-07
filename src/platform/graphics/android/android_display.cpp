@@ -49,9 +49,10 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
     f(*display_buffer);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() const
 {
-    return std::make_shared<mga::AndroidDisplayConfiguration>(display_buffer->configuration());
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new mga::AndroidDisplayConfiguration(display_buffer->configuration()));
 }
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)

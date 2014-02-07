@@ -65,8 +65,8 @@ private:
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;
     bool prepared;
-
     DisplayConfigurationOutput current_configuration;
+    MirOrientation rotation;
 };
 
 }

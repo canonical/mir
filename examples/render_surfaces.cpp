@@ -419,8 +419,9 @@ public:
              */
             {
                 mg::Buffer* buffer{nullptr};
-                s->swap_buffers(buffer);
-                s->swap_buffers(buffer);
+                auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
+                s->swap_buffers(buffer, complete);
+                s->swap_buffers(buffer, complete);
             }
 
             /*

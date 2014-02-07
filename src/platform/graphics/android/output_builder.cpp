@@ -33,22 +33,18 @@ namespace geom = mir::geometry;
 mga::OutputBuilder::OutputBuilder(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    bool should_use_fb_fallback)
+    std::shared_ptr<mg::DisplayReport> const& display_report)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       display_report(display_report),
-      force_backup_display(should_use_fb_fallback)
+      force_backup_display(false)
 {
-    if (!force_backup_display)
+    try
     {
-        try
-        {
-            hwc_native = res_factory->create_hwc_native_device();
-        } catch (...)
-        {
-            force_backup_display = true;
-        }
+        hwc_native = res_factory->create_hwc_native_device();
+    } catch (...)
+    {
+        force_backup_display = true;
     }
 
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)

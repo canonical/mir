@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
 #include "src/platform/graphics/android/hwc_fb_device.h"
 #include "src/platform/graphics/android/hwc_device.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
@@ -58,7 +59,8 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HwcDevice>(
     std::shared_ptr<framebuffer_device_t> const&,
     std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
-    return std::make_shared<mga::HwcDevice>(hwc_device, coordinator);
+    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
+    return std::make_shared<mga::HwcDevice>(hwc_device, coordinator, file_ops);
 }
 
 template<typename T>

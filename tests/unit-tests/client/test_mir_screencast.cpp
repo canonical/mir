@@ -67,12 +67,17 @@ public:
     void create_screencast(
         google::protobuf::RpcController* /*controller*/,
         mp::ScreencastParameters const* /*request*/,
-        mp::Screencast* /*response*/,
+        mp::Screencast* response,
         google::protobuf::Closure* done) override
     {
         if (server_thread.joinable())
             server_thread.join();
-        server_thread = std::thread{[done, this] { done->Run(); }};
+        server_thread = std::thread{
+            [response, done, this]
+            {
+                response->clear_error();
+                done->Run();
+            }};
     }
 
     void release_screencast(
@@ -151,6 +156,7 @@ MATCHER_P(WithScreencastId, value, "")
 
 ACTION_P(SetCreateScreencastId, screencast_id)
 {
+    arg2->clear_error();
     arg2->mutable_screencast_id()->set_value(screencast_id);
 }
 
@@ -166,6 +172,7 @@ ACTION_P(SetBufferId, buffer_id)
 
 ACTION_P(SetCreateBufferFromPackage, package)
 {
+    arg2->clear_error();
     auto buffer = arg2->mutable_buffer();
     for (int i = 0; i != package.data_items; ++i)
     {
@@ -178,6 +185,11 @@ ACTION_P(SetCreateBufferFromPackage, package)
     }
 
     buffer->set_stride(package.stride);
+}
+
+ACTION(SetCreateError)
+{
+    arg2->set_error("Test error");
 }
 
 ACTION(RunClosure)
@@ -520,4 +532,42 @@ TEST_F(MirScreencastTest, gets_egl_native_window)
     auto egl_native_window = screencast.egl_native_window();
 
     EXPECT_EQ(StubEGLNativeWindowFactory::egl_native_window, egl_native_window);
+}
+
+TEST_F(MirScreencastTest, is_invalid_if_server_create_screencast_fails)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_server, create_screencast(_,_,_,_))
+        .WillOnce(DoAll(SetCreateError(), RunClosure()));
+
+    MirScreencast screencast{
+        default_mir_output, mock_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        null_callback_func, nullptr};
+
+    screencast.creation_wait_handle()->wait_for_all();
+
+    EXPECT_FALSE(screencast.valid());
+}
+
+TEST_F(MirScreencastTest, calls_callback_on_creation_failure)
+{
+    using namespace testing;
+
+    MockCallback mock_cb;
+    EXPECT_CALL(mock_server, create_screencast(_,_,_,_))
+        .WillOnce(DoAll(SetCreateError(), RunClosure()));
+    EXPECT_CALL(mock_cb, call(_,&mock_cb));
+
+    MirScreencast screencast{
+        default_mir_output, mock_server,
+        stub_egl_native_window_factory,
+        stub_client_buffer_factory,
+        mock_callback_func, &mock_cb};
+
+    screencast.creation_wait_handle()->wait_for_all();
+
+    EXPECT_FALSE(screencast.valid());
 }
