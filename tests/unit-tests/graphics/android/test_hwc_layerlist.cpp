@@ -209,7 +209,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
-TEST_F(HWCLayerListTest, fb_fence)
+TEST_F(HWCLayerListTest, list_returns_fb_fence)
 {
     int release_fence = 381;
     mga::FBTargetLayerList layerlist;
@@ -220,7 +220,7 @@ TEST_F(HWCLayerListTest, fb_fence)
     EXPECT_EQ(release_fence, layerlist.fb_target_fence());
 }
 
-TEST_F(HWCLayerListTest, retire_fence)
+TEST_F(HWCLayerListTest, list_returns_retire_fence)
 {
     int release_fence = 381;
     mga::FBTargetLayerList layerlist;

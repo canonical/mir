@@ -64,7 +64,7 @@ public:
     size_t list_index;
 };
 
-TEST_F(HWCLayersTest, release_fences)
+TEST_F(HWCLayersTest, checking_release_fences)
 {
     int fence1 = 1, fence2 = -1;
     mga::HWCLayer layer(list, list_index);
@@ -76,7 +76,7 @@ TEST_F(HWCLayersTest, release_fences)
     EXPECT_EQ(layer.release_fence(), fence2);
 }
 
-TEST_F(HWCLayersTest, needs_gl_render)
+TEST_F(HWCLayersTest, check_if_layer_needs_gl_render)
 {
     mga::HWCLayer layer(list, list_index);
 
@@ -91,7 +91,7 @@ TEST_F(HWCLayersTest, needs_gl_render)
     EXPECT_TRUE(layer.needs_gl_render());
 }
 
-TEST_F(HWCLayersTest, layer_move)
+TEST_F(HWCLayersTest, move_layer_positions)
 {
     hwc_rect_t region = {0,0,0,0};
     hwc_region_t visible_region {1, &region};
@@ -119,7 +119,7 @@ TEST_F(HWCLayersTest, layer_move)
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayersTest, layer_types)
+TEST_F(HWCLayersTest, change_layer_types)
 {
     hwc_rect_t region = {0,0,0,0};
     hwc_region_t visible_region {1, &region};
@@ -164,7 +164,7 @@ TEST_F(HWCLayersTest, layer_types)
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayersTest, buffer_updates)
+TEST_F(HWCLayersTest, apply_buffer_updates_to_layers)
 {
     int fake_fence = 552;
     ON_CALL(*native_handle_1, copy_fence())
@@ -200,7 +200,7 @@ TEST_F(HWCLayersTest, buffer_updates)
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayersTest, normal_layer)
+TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
 {
     using namespace testing;
 
