@@ -119,10 +119,14 @@ TEST_F(HwcDevice, test_hwc_prepare_with_overlays)
         .Times(1);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        std::make_shared<mtd::MockRenderable>(),
+        std::make_shared<mtd::MockRenderable>()
+    }
     device.prepare_gl_and_overlays(renderlist);
 
-    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
+    EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
 
