@@ -28,6 +28,7 @@
 #include "graphics_region_factory.h"
 #include "patterns.h"
 
+#include <GLES2/gl2.h>
 #include <csignal>
 
 namespace mg=mir::graphics;
@@ -77,8 +78,8 @@ private:
 int main(int argc, char const** argv)
 try
 {
-    mir::test::draw::DrawPatternSolid fill_with_green(0x00FF00FF);
-    mir::test::draw::DrawPatternSolid fill_with_blue(0x0000FFFF);
+    mir::test::draw::DrawPatternSolid fill_with_green(0xFF00FF00);
+    mir::test::draw::DrawPatternSolid fill_with_blue(0xFFFF0000);
 
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
@@ -121,6 +122,7 @@ try
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
             buffer.make_current();
+
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
         });

@@ -53,25 +53,20 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 
 void mga::LayerListBase::update_representation(size_t needed_size)
 {
-    std::shared_ptr<hwc_display_contents_1_t> new_hwc_representation;
-    std::list<HWCLayer> new_layers;
-
     if (hwc_representation->numHwLayers != needed_size)
     {
-        new_hwc_representation = generate_hwc_list(needed_size);
-    }
-    else
-    {
-        new_hwc_representation = hwc_representation;
+        hwc_representation = generate_hwc_list(needed_size);
     }
 
-    for (auto i = 0u; i < needed_size; i++)
+    if (layers.size() != needed_size)
     {
-        new_layers.emplace_back(mga::HWCLayer(new_hwc_representation, i));
+        std::list<HWCLayer> new_layers;
+        for (auto i = 0u; i < needed_size; i++)
+        {
+            new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
+        }
+        std::swap(new_layers, layers);
     }
-
-    std::swap(new_layers, layers);
-    hwc_representation = new_hwc_representation;
 }
 
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
@@ -105,9 +100,13 @@ mga::FBTargetLayerList::FBTargetLayerList()
 
 void mga::FBTargetLayerList::reset_composition_layers()
 {
+    auto last = layers.back().handle();
     update_representation(2);
 
+    layers.front().set_handle(last);
     layers.front().set_layer_type(mga::LayerType::skip);
+
+    layers.back().set_handle(last);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 
     skip_layers_present = true;
@@ -116,7 +115,9 @@ void mga::FBTargetLayerList::reset_composition_layers()
 void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
     auto const needed_size = list.size() + 1;
+    auto last = layers.back().handle();
     update_representation(needed_size);
+    layers.back().set_handle(last);
 
     auto layers_it = layers.begin();
     for(auto const& renderable : list)
@@ -137,6 +138,7 @@ void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     if (skip_layers_present)
     {
+        printf("setty.\n");
         layers.front().set_render_parameters(disp_frame, false);
         layers.front().set_buffer(buffer);
     }

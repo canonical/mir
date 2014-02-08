@@ -127,10 +127,21 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     visible_rect = hwc_layer->displayFrame;
 }
 
+buffer_handle_t mga::HWCLayer::handle()
+{
+    return hwc_layer->handle;
+}
+
+void mga::HWCLayer::set_handle(buffer_handle_t han)
+{
+    hwc_layer->handle = han;
+}
+
 void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
     auto size = buffer.size();
     auto native_buffer = buffer.native_buffer_handle();
+    printf("LAYER SET BUFFER %i\n", (int) hwc_layer->handle);
     hwc_layer->handle = native_buffer->handle();
     hwc_layer->acquireFenceFd = native_buffer->copy_fence();
     hwc_layer->releaseFenceFd = -1;
