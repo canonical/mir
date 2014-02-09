@@ -19,32 +19,29 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
-#include "mir/report_factory.h"
+#include "mir/report/report_factory.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/default_configuration.h"
 
 #include "mir/options/program_option.h"
-#include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/null_input_report.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
-#include "mir/logging/logger.h"
-#include "mir/logging/dumb_console_logger.h"
-#include "mir/logging/glog_logger.h"
+#include "mir/report/logging/logger.h"
+#include "mir/report/logging/dumb_console_logger.h"
+#include "mir/report/logging/glog_logger.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 
-#include "lttng/report_factory.h"
-#include "logging/report_factory.h"
-
-#include "null_report_factory.h"
+#include "report/logging/report_factory.h"
+#include "report/lttng/report_factory.h"
+#include "report/null/report_factory.h"
 
 #include <map>
 
@@ -52,7 +49,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace ml = mir::logging;
+namespace mrl = mir::report::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
@@ -60,9 +57,12 @@ namespace mi = mir::input;
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     DefaultConfigurationOptions(argc, argv),
     default_filter(std::make_shared<mi::VTFilter>()),
-    null_report_factory(new NullReportFactory()),
-    lttng_report_factory(new mir::lttng::ReportFactory()),
-    logging_report_factory(new ml::ReportFactory(*this))
+    null_report_factory(new mir::report::null::ReportFactory()),
+    lttng_report_factory(new mir::report::lttng::ReportFactory()),
+    logging_report_factory(new mrl::ReportFactory(
+            [this]()->std::shared_ptr<mrl::Logger> { return the_logger(); },
+            [this]()->std::shared_ptr<mir::time::Clock> { return the_clock(); }
+            ))
 {
 }
 
@@ -161,14 +161,14 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
-std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
+std::shared_ptr<mrl::Logger> mir::DefaultServerConfiguration::the_logger()
 {
     return logger(
-        [this]() -> std::shared_ptr<ml::Logger>
+        [this]() -> std::shared_ptr<mrl::Logger>
         {
             if (the_options()->is_set(glog))
             {
-                return std::make_shared<ml::GlogLogger>(
+                return std::make_shared<mrl::GlogLogger>(
                     "mir",
                     the_options()->get<int>(glog_stderrthreshold),
                     the_options()->get<int>(glog_minloglevel),
@@ -176,7 +176,7 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             }
             else
             {
-                return std::make_shared<ml::DumbConsoleLogger>();
+                return std::make_shared<mrl::DumbConsoleLogger>();
             }
         });
 }

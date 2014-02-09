@@ -17,7 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/frontend/session_mediator_report.h"
+
+#include "src/server/report/null/session_mediator_report.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/test_protobuf_client.h"
@@ -26,12 +27,13 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mrn = mir::report::null;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
 namespace
 {
-struct MockApplicationMediatorReport : mf::NullSessionMediatorReport
+struct MockApplicationMediatorReport : mrn::SessionMediatorReport
 {
     MockApplicationMediatorReport()
     {

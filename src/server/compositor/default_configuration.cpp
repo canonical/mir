@@ -17,7 +17,6 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/default_server_configuration-inl.h"
 
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
@@ -25,7 +24,6 @@
 #include "gl_renderer_factory.h"
 
 #include "mir/frontend/screencast.h"
-#include "mir/report_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -76,14 +74,6 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         });
 }
 
-auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
-{
-    return compositor_report(
-        [this]()->std::shared_ptr<mc::CompositorReport>
-        {
-            return create_report(&ReportFactory::create_compositor_report, compositor_report_opt);
-        });
-}
 
 std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast()
 {

@@ -21,7 +21,7 @@
 #include "display_configuration.h"
 #include "rpc/make_rpc_channel.h"
 #include "rpc/null_rpc_report.h"
-#include "mir/logging/dumb_console_logger.h"
+#include "mir/report/logging/dumb_console_logger.h"
 #include "native_client_platform_factory.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/null_input_receiver_report.h"
@@ -67,13 +67,13 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         });
 }
 
-std::shared_ptr<mir::logging::Logger>
+std::shared_ptr<mir::report::logging::Logger>
 mcl::DefaultConnectionConfiguration::the_logger()
 {
     return logger(
         []
         {
-            return std::make_shared<mir::logging::DumbConsoleLogger>();
+            return std::make_shared<mir::report::logging::DumbConsoleLogger>();
         });
 }
 

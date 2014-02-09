@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_LTTNG_CLIENT_TRACEPOINT_PROVIDER_H_
 #define MIR_CLIENT_LTTNG_CLIENT_TRACEPOINT_PROVIDER_H_
 
-#include "mir/lttng/tracepoint_provider.h"
+#include "mir/report/lttng/tracepoint_provider.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace client
 namespace lttng
 {
 
-class ClientTracepointProvider : public mir::lttng::TracepointProvider
+class ClientTracepointProvider : public mir::report::lttng::TracepointProvider
 {
 public:
     ClientTracepointProvider();

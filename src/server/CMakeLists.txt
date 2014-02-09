@@ -5,8 +5,7 @@ include_directories(
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
-add_subdirectory(logging/)
-add_subdirectory(lttng/)
+add_subdirectory(report/)
 add_subdirectory(scene/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
@@ -32,7 +31,6 @@ set(
   default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
-  null_report_factory.cpp
   shared_library.cpp
 )
 
@@ -55,6 +53,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirscene
   mirtime
   mirlttng
+  mirreport
   mirnestedgraphics
   miroffscreengraphics
 )

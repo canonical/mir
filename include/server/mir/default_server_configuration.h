@@ -27,7 +27,6 @@
 
 namespace mir
 {
-class ReportFactory;
 namespace compositor
 {
 class Renderer;
@@ -110,9 +109,13 @@ class NestedInputRelay;
 class EventHandler;
 }
 
+namespace report
+{
+class ReportFactory;
 namespace logging
 {
 class Logger;
+}
 }
 
 class DefaultServerConfiguration : public virtual ServerConfiguration, protected DefaultConfigurationOptions
@@ -231,7 +234,7 @@ public:
     /** @name logging configuration - customization
      * configurable interfaces for modifying logging
      *  @{ */
-    virtual std::shared_ptr<logging::Logger> the_logger();
+    virtual std::shared_ptr<report::logging::Logger> the_logger();
     /** @} */
 
     virtual std::shared_ptr<time::Clock> the_clock();
@@ -289,7 +292,7 @@ protected:
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
-    CachedPtr<logging::Logger> logger;
+    CachedPtr<report::logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
@@ -317,12 +320,10 @@ private:
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
     std::function<void()> force_threads_to_unblock_callback();
 
-    template <typename Report>
-    std::shared_ptr<Report> create_report(std::shared_ptr<Report>(ReportFactory::*factory_function)(), char const* report_opt) const;
-
-    std::unique_ptr<ReportFactory> const null_report_factory;
-    std::unique_ptr<ReportFactory> const lttng_report_factory;
-    std::unique_ptr<ReportFactory> const logging_report_factory;
+    report::ReportFactory & select_factory(char const* report_opt);
+    std::unique_ptr<report::ReportFactory> const null_report_factory;
+    std::unique_ptr<report::ReportFactory> const lttng_report_factory;
+    std::unique_ptr<report::ReportFactory> const logging_report_factory;
 };
 }
 

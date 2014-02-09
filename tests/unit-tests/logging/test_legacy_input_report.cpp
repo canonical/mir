@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/input_report.h"
-#include "mir/logging/logger.h"
+#include "mir/report/legacy_input_report.h"
+#include "mir/report/logging/logger.h"
 
 #include <std/Log.h>
 
@@ -26,14 +26,14 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace ml  = mir::logging;
-namespace mli = mir::logging::legacy_input_report;
+namespace mrl = mir::report::logging;
+namespace mri = mir::report::legacy_input;
 
 using testing::_;
 
 namespace
 {
-class MockLogger : public ml::Logger
+class MockLogger : public mrl::Logger
 {
 public:
     MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
@@ -46,7 +46,7 @@ struct InputReport : public testing::Test
 
     InputReport()
     {
-        mli::initialize(mir::test::fake_shared(logger));
+        mri::initialize(mir::test::fake_shared(logger));
     }
 };
 
@@ -86,7 +86,7 @@ TEST_F(InputReport, verbose_message)
 TEST_F(InputReport, info_message)
 {
     EXPECT_CALL(logger, log(
-            ml::Logger::informational,
+            mrl::Logger::informational,
             "[Foo]Some informational message",
             component));
 
@@ -96,7 +96,7 @@ TEST_F(InputReport, info_message)
 TEST_F(InputReport, warning_message)
 {
     EXPECT_CALL(logger, log(
-            ml::Logger::warning,
+            mrl::Logger::warning,
             "[Foo]Warning!!!",
             component));
 
@@ -106,7 +106,7 @@ TEST_F(InputReport, warning_message)
 TEST_F(InputReport, error_message)
 {
     EXPECT_CALL(logger, log(
-            ml::Logger::error,
+            mrl::Logger::error,
             "[Foo]An error occurred!",
             component));
 

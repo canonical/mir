@@ -17,7 +17,7 @@
  */
 
 #include "input_receiver_report.h"
-#include "mir/lttng/mir_tracepoint.h"
+#include "mir/report/lttng/mir_tracepoint.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

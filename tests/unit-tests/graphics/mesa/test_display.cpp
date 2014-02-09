@@ -19,15 +19,15 @@
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/display.h"
 #include "src/platform/graphics/mesa/virtual_terminal.h"
-#include "src/server/logging/display_report.h"
-#include "mir/logging/logger.h"
+#include "src/server/report/logging/display_report.h"
+#include "mir/report/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/asio_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null/display_report.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -46,16 +46,17 @@
 
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
-namespace ml=mir::logging;
+namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir::mir_test_framework;
+namespace mrn=mir::report::null;
 
 namespace
 {
-struct MockLogger : public ml::Logger
+struct MockLogger : public mrl::Logger
 {
     MOCK_METHOD3(log,
-                 void(ml::Logger::Severity, const std::string&, const std::string&));
+                 void(mrl::Logger::Severity, const std::string&, const std::string&));
 
     ~MockLogger() noexcept(true) {}
 };
@@ -89,7 +90,7 @@ class MesaDisplayTest : public ::testing::Test
 public:
     MesaDisplayTest() :
         mock_report{std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>()},
-        null_report{std::make_shared<mg::NullDisplayReport>()}
+        null_report{std::make_shared<mrn::DisplayReport>()}
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -526,11 +527,11 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_re
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(mrl::Logger::informational),
             StrEq("Successfully setup native resources."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -542,11 +543,11 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_make_current_o
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(mrl::Logger::informational),
             StrEq("Successfully made egl context current on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -558,11 +559,11 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(mrl::Logger::informational),
             StrEq("Successfully performed egl buffer swap on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -574,11 +575,11 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(mrl::Logger::informational),
             StrEq("Successfully performed drm mode setup on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -725,7 +726,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    mir::AsioMainLoop ml;
+    mir::AsioMainLoop mrl;
     std::condition_variable done;
 
     int const device_add_count{1};
@@ -735,13 +736,13 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     std::mutex m;
 
     display->register_configuration_change_handler(
-        ml,
-        [&call_count, &ml, &done, &m]()
+        mrl,
+        [&call_count, &mrl, &done, &m]()
         {
             std::unique_lock<std::mutex> lock(m);
             if (++call_count == expected_call_count)
             {
-                ml.stop();
+                mrl.stop();
                 done.notify_all();
             }
         });
@@ -757,16 +758,16 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
         }};
 
     std::thread watchdog{
-        [this, &done, &m, &ml, &call_count]
+        [this, &done, &m, &mrl, &call_count]
         {
             std::unique_lock<std::mutex> lock(m);
             if (!done.wait_for (lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
                 ADD_FAILURE() << "Timeout waiting for change events";
-            ml.stop();
+            mrl.stop();
         }
     };
 
-    ml.run();
+    mrl.run();
 
     t.join();
     watchdog.join();

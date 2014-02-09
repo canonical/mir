@@ -20,6 +20,8 @@
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
+#include "src/server/frontend/session_mediator.h"
+#include "src/server/report/null/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
@@ -45,6 +47,7 @@ namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
+namespace mrn = mir::report::null;
 
 namespace
 {
@@ -68,7 +71,7 @@ struct SessionMediatorMesaTest : public ::testing::Test
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
-          report{std::make_shared<mf::NullSessionMediatorReport>()},
+          report{std::make_shared<mrn::SessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, display_changer,
                    surface_pixel_formats, report,

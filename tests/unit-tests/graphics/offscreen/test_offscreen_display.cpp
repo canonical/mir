@@ -1,8 +1,9 @@
 #include "mir/graphics/basic_platform.h"
-#include "src/server/graphics/offscreen/display.h"
-#include "mir/graphics/null_display_report.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/display_buffer.h"
+
+#include "src/server/graphics/offscreen/display.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
+#include "src/server/report/null/display_report.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -15,6 +16,7 @@
 namespace mg=mir::graphics;
 namespace mgo=mir::graphics::offscreen;
 namespace mtd=mir::test::doubles;
+namespace mrn=mir::report::null;
 
 namespace
 {
@@ -80,7 +82,7 @@ TEST_F(OffscreenDisplayTest, uses_basic_platform_egl_native_display)
     mgo::Display display{
         std::make_shared<StubBasicPlatform>(native_display),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-        std::make_shared<mg::NullDisplayReport>()};
+        std::make_shared<mrn::DisplayReport>()};
 }
 
 TEST_F(OffscreenDisplayTest, orientation_normal)
@@ -93,7 +95,7 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
     mgo::Display display{
         std::make_shared<StubBasicPlatform>(native_display),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-        std::make_shared<mg::NullDisplayReport>()};
+        std::make_shared<mrn::DisplayReport>()};
 
     int count = 0;
     display.for_each_display_buffer(
@@ -122,7 +124,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
     mgo::Display display{
         std::make_shared<StubBasicPlatform>(native_display),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-        std::make_shared<mg::NullDisplayReport>()};
+        std::make_shared<mrn::DisplayReport>()};
 
     Mock::VerifyAndClearExpectations(&mock_gl);
 
@@ -165,6 +167,6 @@ TEST_F(OffscreenDisplayTest, restores_previous_state_on_fbo_setup_failure)
         mgo::Display display(
             std::make_shared<StubBasicPlatform>(native_display),
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-            std::make_shared<mg::NullDisplayReport>());
+            std::make_shared<mrn::DisplayReport>());
     }, std::runtime_error);
 }

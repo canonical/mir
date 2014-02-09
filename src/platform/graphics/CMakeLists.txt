@@ -8,7 +8,6 @@ set(
   egl_extensions.cpp
   egl_resources.cpp
   display_configuration.cpp
-  null_display_report.cpp
   buffer_basic.cpp
   pixel_format_utils.cpp
 )

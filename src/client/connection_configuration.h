@@ -34,9 +34,12 @@ class InputPlatform;
 }
 }
 
+namespace report
+{
 namespace logging
 {
 class Logger;
+}
 }
 
 namespace client
@@ -55,7 +58,7 @@ public:
 
     virtual std::shared_ptr<ConnectionSurfaceMap> the_surface_map() = 0;
     virtual std::shared_ptr<google::protobuf::RpcChannel> the_rpc_channel() = 0;
-    virtual std::shared_ptr<mir::logging::Logger> the_logger() = 0;
+    virtual std::shared_ptr<mir::report::logging::Logger> the_logger() = 0;
     virtual std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() = 0;
     virtual std::shared_ptr<input::receiver::InputPlatform> the_input_platform() = 0;
     virtual std::shared_ptr<DisplayConfiguration> the_display_configuration() = 0;

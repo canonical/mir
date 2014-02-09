@@ -43,17 +43,7 @@ protected:
     SceneReport& operator=(SceneReport const&) = delete;
 };
 
-class NullSceneReport : public SceneReport
-{
-public:
-    virtual void surface_created(BasicSurfaceId /*id*/, std::string const& /*name*/) override;
-    virtual void surface_added(BasicSurfaceId /*id*/, std::string const& /*name*/) override;
-
-    virtual void surface_removed(BasicSurfaceId /*id*/, std::string const& /*name*/) override;
-    virtual void surface_deleted(BasicSurfaceId /*id*/, std::string const& /*name*/) override;
-};
 }
 }
-
 
 #endif /* MIR_SCENE_SCENE_REPORT_H_ */

@@ -26,9 +26,12 @@
 namespace mir
 {
 
+namespace report
+{
 namespace logging
 {
 class Logger;
+}
 }
 
 namespace client
@@ -39,12 +42,12 @@ namespace logging
 class InputReceiverReport : public input::receiver::InputReceiverReport
 {
 public:
-    InputReceiverReport(std::shared_ptr<mir::logging::Logger> const& logger);
+    InputReceiverReport(std::shared_ptr<mir::report::logging::Logger> const& logger);
 
     void received_event(MirEvent const& event) override;
 
 private:
-    std::shared_ptr<mir::logging::Logger> const logger;
+    std::shared_ptr<mir::report::logging::Logger> const logger;
 };
 
 }

@@ -29,9 +29,9 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 
-#include "mir/graphics/null_display_report.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 

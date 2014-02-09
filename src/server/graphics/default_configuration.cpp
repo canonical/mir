@@ -17,7 +17,6 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/default_server_configuration-inl.h"
 
 #include "default_display_configuration_policy.h"
 #include "nested/host_connection.h"
@@ -28,7 +27,6 @@
 
 #include "mir/shared_library.h"
 #include "mir/abnormal_exit.h"
-#include "mir/report_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -162,8 +160,3 @@ auto mir::DefaultServerConfiguration::the_host_connection()
         });
 }
 
-auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg::DisplayReport>
-{
-    return display_report([this]()->std::shared_ptr<mg::DisplayReport>
-                          { return create_report(&ReportFactory::create_display_report, display_report_opt); });
-}

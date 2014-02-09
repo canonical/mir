@@ -17,14 +17,12 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/default_server_configuration-inl.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/input/input_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/shell/session.h"
-#include "mir/report_factory.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
@@ -41,7 +39,6 @@
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
-namespace ml = mir::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -125,12 +122,6 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
             return std::make_shared<ms::SurfaceSource>(
                 the_surface_builder(), the_shell_surface_configurator());
         });
-}
-
-auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::SceneReport>
-{
-    return scene_report([this]()->std::shared_ptr<ms::SceneReport>
-                        { return create_report(&ReportFactory::create_scene_report, scene_report_opt); });
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

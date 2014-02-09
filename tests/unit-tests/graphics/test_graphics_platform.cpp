@@ -32,17 +32,18 @@
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/logging/dumb_console_logger.h"
+#include "mir/report/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
 
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null/display_report.h"
 
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
-namespace ml = mir::logging;
+namespace mrl = mir::report::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mrn = mir::report::null;
 namespace mo = mir::options;
 #ifndef ANDROID
 namespace mtf = mir::mir_test_framework;
@@ -51,7 +52,7 @@ namespace mtf = mir::mir_test_framework;
 class GraphicsPlatform : public ::testing::Test
 {
 public:
-    GraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
+    GraphicsPlatform() : logger(std::make_shared<mrl::DumbConsoleLogger>())
     {
         using namespace testing;
         buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
@@ -82,15 +83,15 @@ public:
     std::shared_ptr<mg::Platform> create_platform()
     {
 #ifdef ANDROID
-        return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mg::NullDisplayReport>());
+        return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mrn::DisplayReport>());
 #else
         return std::make_shared<mg::mesa::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            std::make_shared<mrn::DisplayReport>(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
     }
 
-    std::shared_ptr<ml::Logger> logger;
+    std::shared_ptr<mrl::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

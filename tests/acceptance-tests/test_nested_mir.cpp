@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 
+#include "src/server/report/null/session_mediator_report.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_gbm.h"
 #endif
@@ -32,13 +33,14 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mrn = mir::report::null;
 namespace mtf = mir_test_framework;
 
 using namespace testing;
 
 namespace
 {
-struct MockSessionMediatorReport : mf::NullSessionMediatorReport
+struct MockSessionMediatorReport : mrn::SessionMediatorReport
 {
     MockSessionMediatorReport()
     {

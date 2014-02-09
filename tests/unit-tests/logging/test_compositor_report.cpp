@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "src/server/logging/compositor_report.h"
-#include "mir/logging/logger.h"
+#include "src/server/report/logging/compositor_report.h"
+#include "mir/report/logging/logger.h"
 #include <gtest/gtest.h>
 #include <string>
 #include <cstdio>
@@ -43,7 +43,7 @@ private:
     time::Timestamp now;
 };
 
-class Recorder : public logging::Logger
+class Recorder : public report::logging::Logger
 {
 public:
     void log(Severity, string const& message, string const&)
@@ -80,7 +80,7 @@ TEST(LoggingCompositorReport, calculates_accurate_stats)
     auto recorder = make_shared<Recorder>();
     const void* const display_id = nullptr;
 
-    logging::CompositorReport report(recorder, clock);
+    report::logging::CompositorReport report(recorder, clock);
 
     int target_fps = 60;
     for (int frame = 0; frame < target_fps*3; frame++)
@@ -120,7 +120,7 @@ TEST(LoggingCompositorReport, survives_pause_resume)
     const void* const before = "before";
     const void* const after = "after";
 
-    logging::CompositorReport report(logger, clock);
+    report::logging::CompositorReport report(logger, clock);
 
     report.started();
 
@@ -152,7 +152,7 @@ TEST(LoggingCompositorReport, reports_bypass_only_when_changed)
     auto clock = make_shared<FakeClock>();
     auto logger = make_shared<Recorder>();
 
-    logging::CompositorReport report(logger, clock);
+    report::logging::CompositorReport report(logger, clock);
 
     report.started();
 

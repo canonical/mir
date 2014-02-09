@@ -20,13 +20,15 @@
 #include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir/frontend/connector_report.h"
-#include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/protobuf_session_creator.h"
 #include "src/server/frontend/published_socket_connector.h"
+#include "src/server/report/null/message_processor_report.h"
+#include "src/server/report/null/connector_report.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
+namespace mrn = mir::report::null;
 
 namespace
 {
@@ -40,7 +42,7 @@ std::shared_ptr<mf::Connector> make_connector(
         std::make_shared<mf::ProtobufSessionCreator>(
             factory,
             std::make_shared<mtd::StubSessionAuthorizer>(),
-            std::make_shared<mf::NullMessageProcessorReport>()),
+            std::make_shared<mrn::MessageProcessorReport>()),
         10,
         []{},
         report);
@@ -50,7 +52,7 @@ std::shared_ptr<mf::Connector> make_connector(
 mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
     const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    TestProtobufServer(socket_name, tool, std::make_shared<mf::NullConnectorReport>())
+    TestProtobufServer(socket_name, tool, std::make_shared<mrn::ConnectorReport>())
 {
 }
 
