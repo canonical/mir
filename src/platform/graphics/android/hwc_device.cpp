@@ -51,18 +51,7 @@ void mga::HwcDevice::prepare()
         //      set the external and virtual displays to null as some drivers check for that
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
 
-        printf("num! %i\n", display_list->numHwLayers);
-        for (auto i=0u; i < display_list->numHwLayers; i++)
-        {
-            printf("type: %i\n", display_list->hwLayers[i].compositionType);
-            printf("handle: 0x%X\n", (int) display_list->hwLayers[i].handle);
-        }
-
         rc = hwc_device->prepare(hwc_device.get(), 1, displays);
-        for (auto i=0u; i < display_list->numHwLayers; i++)
-        {
-            printf("type after: %i\n", display_list->hwLayers[i].compositionType);
-        }
     }
 
     if ((rc != 0) || (!display_list))
@@ -79,7 +68,6 @@ void mga::HwcDevice::prepare_gl()
 
 void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
 {
-    printf("prep overlay\n");
     layer_list.set_composition_layers(renderables);
     prepare();
 }

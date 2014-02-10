@@ -141,7 +141,6 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
     auto size = buffer.size();
     auto native_buffer = buffer.native_buffer_handle();
-    printf("LAYER SET BUFFER %i\n", (int) hwc_layer->handle);
     hwc_layer->handle = native_buffer->handle();
     hwc_layer->acquireFenceFd = native_buffer->copy_fence();
     hwc_layer->releaseFenceFd = -1;

@@ -28,7 +28,6 @@
 #include "graphics_region_factory.h"
 #include "patterns.h"
 
-#include <GLES2/gl2.h>
 #include <csignal>
 
 namespace mg=mir::graphics;
@@ -122,9 +121,6 @@ try
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
             buffer.make_current();
-
-            glClearColor(1.0, 1.0, 1.0, 1.0);
-            glClear(GL_COLOR_BUFFER_BIT);
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
         });

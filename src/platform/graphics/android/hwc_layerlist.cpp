@@ -138,7 +138,6 @@ void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     if (skip_layers_present)
     {
-        printf("setty.\n");
         layers.front().set_render_parameters(disp_frame, false);
         layers.front().set_buffer(buffer);
     }
