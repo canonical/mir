@@ -41,7 +41,7 @@ mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
         Galaxy Nexus and Nexus4 (LP: #1272597)
       . Android backend unit-tests FTBS on amd64 (LP: #1276621)
       . Erroneous use of last_consumed in SwitchingBundle::compositor_acquire
-       (LP: #1270964)
+        (LP: #1270964)
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 06 Feb 2014 10:54:17 -0600
 
