@@ -52,6 +52,7 @@ public:
     MOCK_METHOD1(glCreateShader, GLuint(GLenum));
     MOCK_METHOD2(glDeleteBuffers, void(GLsizei, const GLuint *));
     MOCK_METHOD2(glDeleteFramebuffers, void(GLsizei, const GLuint *));
+    MOCK_METHOD2(glDeleteRenderbuffers, void(GLsizei, const GLuint *));
     MOCK_METHOD1(glDeleteProgram, void(GLuint));
     MOCK_METHOD1(glDeleteShader, void(GLuint));
     MOCK_METHOD2(glDeleteTextures, void(GLsizei, const GLuint *));
@@ -100,6 +101,7 @@ public:
                  void(GLuint, GLint, GLenum, GLboolean, GLsizei,
                       const GLvoid *));
     MOCK_METHOD4(glViewport, void(GLint, GLint, GLsizei, GLsizei));
+    MOCK_METHOD0(glFinish, void());
 };
 
 }
