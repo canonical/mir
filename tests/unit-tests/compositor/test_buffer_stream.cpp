@@ -25,6 +25,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <condition_variable>
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -122,22 +124,50 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 
 TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
+    std::mutex mutex;
+    std::condition_variable cv;
+    mg::Buffer* buffer{nullptr};
+    bool done = false;
+
+    auto const callback =
+        [&](mg::Buffer* new_buffer)
+        {
+           std::unique_lock<decltype(mutex)> lock(mutex);
+           buffer = new_buffer;
+           done = true;
+           cv.notify_one();
+        };
+
     using namespace testing;
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    mg::Buffer* buffer{nullptr};
 
     InSequence seq;
-    EXPECT_CALL(*mock_bundle, client_acquire())
+    EXPECT_CALL(*mock_bundle, client_acquire(_))
         .Times(1)
-        .WillOnce(Return(mock_buffer.get()));
+        .WillOnce(InvokeArgument<0>(mock_buffer.get()));
     EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
-    EXPECT_CALL(*mock_bundle, client_acquire())
+    EXPECT_CALL(*mock_bundle, client_acquire(_))
         .Times(1)
-        .WillOnce(Return(mock_buffer.get()));
+        .WillOnce(InvokeArgument<0>(mock_buffer.get()));
 
-    buffer_stream.swap_client_buffers(buffer);
-    buffer_stream.swap_client_buffers(buffer);
+    buffer_stream.swap_client_buffers(buffer, callback);
+
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+
+        cv.wait(lock, [&]{ return done; });
+    }
+
+    done = false;
+
+    buffer_stream.swap_client_buffers(buffer, callback);
+
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+
+        cv.wait(lock, [&]{ return done; });
+    }
 }
 
 TEST_F(BufferStreamTest, allow_framedropping_device)

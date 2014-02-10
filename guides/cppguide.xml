@@ -1060,12 +1060,13 @@ Thomas Voss
           be private</a>.
         </p>
         <p>
-          When redefining an inherited virtual function, explicitly
-          declare it <code>virtual</code> in the declaration of the
-          derived class.  Rationale: If <code>virtual</code> is
-          omitted, the reader has to check all ancestors of the
-          class in question to determine if the function is virtual
-          or not.
+          When redefining an inherited virtual method (both pure
+          and non-pure), explicitly declare it <code>override</code>
+          in the declaration of the derived class. Rationale: using
+          <code>override</code> allows the compiler to consistently
+          detect attempts to override methods that have been changed
+          or completely removed. It also makes it straightforward for
+          a reader to determine if a method is virtual or not.
         </p>
       </DECISION>
     </BODY>

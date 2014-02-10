@@ -56,14 +56,22 @@ public:
     {
     }
 
-    void swap_client_buffers(mg::Buffer*& buffer) { buffer = &stub_buffer; }
-    std::shared_ptr<mg::Buffer> lock_compositor_buffer(unsigned long) { return std::make_shared<mtd::StubBuffer>(); }
-    std::shared_ptr<mg::Buffer> lock_snapshot_buffer() { return std::make_shared<mtd::StubBuffer>(); }
-    MirPixelFormat get_stream_pixel_format() { return mir_pixel_format_abgr_8888; }
-    geom::Size stream_size() { return geom::Size{}; }
+    void swap_client_buffers(mg::Buffer*, std::function<void(mg::Buffer* new_buffer)> complete) override
+        { complete(&stub_buffer); }
+
+    std::shared_ptr<mg::Buffer> lock_compositor_buffer(unsigned long) override
+        { return std::make_shared<mtd::StubBuffer>(); }
+
+    std::shared_ptr<mg::Buffer> lock_snapshot_buffer() override
+        { return std::make_shared<mtd::StubBuffer>(); }
+
+    MirPixelFormat get_stream_pixel_format() override
+        { return mir_pixel_format_abgr_8888; }
+
+    geom::Size stream_size() override { return geom::Size{}; }
     void resize(geom::Size const&) override {}
-    void force_requests_to_complete() {}
-    void allow_framedropping(bool)
+    void force_requests_to_complete() override {}
+    void allow_framedropping(bool) override
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }

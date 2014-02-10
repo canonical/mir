@@ -66,9 +66,11 @@ public:
             f(*db);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return std::make_shared<mtd::StubDisplayConfig>(rects);
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new mtd::StubDisplayConfig(rects)
+        );
     }
 
 private:

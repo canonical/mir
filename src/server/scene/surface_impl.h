@@ -70,7 +70,7 @@ public:
 
     virtual void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec);
-    virtual void swap_buffers(graphics::Buffer*& buffer);
+    virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;

@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/sync_fence.h"
 #include "src/platform/graphics/android/framebuffer_bundle.h"
 #include "src/platform/graphics/android/hwc_device.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
@@ -35,6 +36,16 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace
+{
+struct MockFileOps : public mga::SyncFileOps
+{
+    MOCK_METHOD3(ioctl, int(int,int,void*));
+    MOCK_METHOD1(dup, int(int));
+    MOCK_METHOD1(close, int(int));
+};
+}
+
 class HwcDevice : public ::testing::Test
 {
 protected:
@@ -48,10 +59,13 @@ protected:
         mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
+        mock_file_ops = std::make_shared<MockFileOps>();
 
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mock_native_buffer));
     }
+
+    std::shared_ptr<MockFileOps> mock_file_ops;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
@@ -69,7 +83,7 @@ TEST_F(HwcDevice, test_hwc_displays)
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
     device.prepare_gl();
     device.post(*mock_buffer);
 
@@ -90,7 +104,7 @@ TEST_F(HwcDevice, test_hwc_prepare)
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
     device.prepare_gl();
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
@@ -102,7 +116,7 @@ TEST_F(HwcDevice, test_hwc_prepare_with_overlays)
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
     std::list<std::shared_ptr<mg::Renderable>> renderlist;
     device.prepare_gl_and_overlays(renderlist);
 
@@ -114,7 +128,7 @@ TEST_F(HwcDevice, test_hwc_render)
 {
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(1);
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
     device.gpu_render(dpy, surf);
 }
 
@@ -125,7 +139,7 @@ TEST_F(HwcDevice, test_hwc_swapbuffers_failure)
         .Times(1)
         .WillOnce(Return(EGL_FALSE));
 
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
 
     EXPECT_THROW({
         device.gpu_render(dpy, surf);
@@ -136,14 +150,18 @@ TEST_F(HwcDevice, test_hwc_commit)
 {
     using namespace testing;
     int hwc_return_fence = 94;
+    int hwc_retire_fence = 74;
     mock_device->hwc_set_return_fence(hwc_return_fence);
+    mock_device->hwc_set_retire_fence(hwc_retire_fence);
 
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
 
     InSequence seq;
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
     EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
+        .Times(1);
+    EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
         .Times(1);
 
     device.post(*mock_buffer);
@@ -161,7 +179,7 @@ TEST_F(HwcDevice, test_hwc_commit_failure)
 {
     using namespace testing;
 
-    mga::HwcDevice device(mock_device, mock_vsync);
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
 
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), _, _))
         .Times(1)

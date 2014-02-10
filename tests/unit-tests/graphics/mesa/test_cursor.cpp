@@ -22,6 +22,7 @@
 #include "src/platform/graphics/mesa/kms_display_configuration.h"
 
 #include "mir_test_doubles/mock_gbm.h"
+#include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -32,28 +33,10 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+using mir::test::MockKMSOutput;
 
 namespace
 {
-
-struct MockKMSOutput : public mgm::KMSOutput
-{
-    MOCK_METHOD0(reset, void());
-    MOCK_METHOD2(configure, void(geom::Displacement, size_t));
-    MOCK_CONST_METHOD0(size, geom::Size());
-
-    MOCK_METHOD1(set_crtc, bool(uint32_t));
-    MOCK_METHOD0(clear_crtc, void());
-    MOCK_METHOD1(schedule_page_flip, bool(uint32_t));
-    MOCK_METHOD0(wait_for_page_flip, void());
-
-    MOCK_METHOD1(set_cursor, void(gbm_bo*));
-    MOCK_METHOD1(move_cursor, void(geom::Point));
-    MOCK_METHOD0(clear_cursor, void());
-    MOCK_CONST_METHOD0(has_cursor, bool());
-
-    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
-};
 
 struct StubKMSOutputContainer : public mgm::KMSOutputContainer
 {
