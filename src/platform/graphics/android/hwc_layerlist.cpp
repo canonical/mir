@@ -100,13 +100,9 @@ mga::FBTargetLayerList::FBTargetLayerList()
 
 void mga::FBTargetLayerList::reset_composition_layers()
 {
-    auto last = layers.back().handle();
     update_representation(2);
 
-    layers.front().set_handle(last);
     layers.front().set_layer_type(mga::LayerType::skip);
-
-    layers.back().set_handle(last);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 
     skip_layers_present = true;
@@ -115,9 +111,7 @@ void mga::FBTargetLayerList::reset_composition_layers()
 void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
     auto const needed_size = list.size() + 1;
-    auto last = layers.back().handle();
     update_representation(needed_size);
-    layers.back().set_handle(last);
 
     auto layers_it = layers.begin();
     for(auto const& renderable : list)

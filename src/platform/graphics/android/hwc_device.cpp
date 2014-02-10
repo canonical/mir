@@ -50,7 +50,6 @@ void mga::HwcDevice::prepare()
         //note, although we only have a primary display right now,
         //      set the external and virtual displays to null as some drivers check for that
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-
         rc = hwc_device->prepare(hwc_device.get(), 1, displays);
     }
 

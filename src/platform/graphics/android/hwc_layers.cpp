@@ -127,16 +127,6 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     visible_rect = hwc_layer->displayFrame;
 }
 
-buffer_handle_t mga::HWCLayer::handle()
-{
-    return hwc_layer->handle;
-}
-
-void mga::HWCLayer::set_handle(buffer_handle_t han)
-{
-    hwc_layer->handle = han;
-}
-
 void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
     auto size = buffer.size();

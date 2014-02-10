@@ -66,8 +66,6 @@ public:
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
     void set_buffer(Buffer const&);
 
-    buffer_handle_t handle();
-    void set_handle(buffer_handle_t handle);
     NativeFence release_fence() const;
     bool needs_gl_render() const;
 
