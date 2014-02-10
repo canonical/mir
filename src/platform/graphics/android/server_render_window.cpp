@@ -45,6 +45,7 @@ mga::ServerRenderWindow::ServerRenderWindow(
 
 mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
+    printf("REQUEST!\n");
     auto buffer = fb_bundle->buffer_for_render();
     auto handle = buffer->native_buffer_handle();
     resource_cache->store_buffer(buffer, handle);
@@ -53,6 +54,7 @@ mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
+    printf("RETURN!\n");
     resource_cache->update_native_fence(buffer, fence_fd);
     resource_cache->retrieve_buffer(buffer);
 }

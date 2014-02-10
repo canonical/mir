@@ -123,6 +123,8 @@ try
         {
             buffer.make_current();
 
+            glClearColor(1.0, 1.0, 1.0, 1.0);
+            glClear(GL_COLOR_BUFFER_BIT);
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
         });
