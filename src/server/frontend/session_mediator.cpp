@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -56,6 +56,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
+    pid_t client_pid,
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
@@ -64,6 +65,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast) :
+    client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
@@ -77,6 +79,7 @@ mf::SessionMediator::SessionMediator(
 
 mf::SessionMediator::~SessionMediator() noexcept
 {
+    std::unique_lock<std::mutex> lock(session_mutex);
     auto session = weak_session.lock();
     if (session)
     {
@@ -95,7 +98,7 @@ void mf::SessionMediator::connect(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(request->application_name(), event_sink);
+        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
     }
 
     auto ipc_package = graphics_platform->get_ipc_package();
@@ -129,7 +132,7 @@ void mf::SessionMediator::advance_buffer(
 
     auto& client_buffer = client_buffer_resource[surf_id];
     surface.swap_buffers(client_buffer,
-        [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
+        [this, &tracker, &client_buffer, complete](mg::Buffer* new_buffer)
         {
             client_buffer = new_buffer;
             auto id = client_buffer->id();

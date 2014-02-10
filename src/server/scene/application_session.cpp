@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -37,11 +37,13 @@ namespace mg = mir::graphics;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    pid_t pid,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<msh::SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_factory(surface_factory),
+    pid(pid),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
@@ -123,6 +125,11 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 std::string ms::ApplicationSession::name() const
 {
     return session_name;
+}
+
+pid_t ms::ApplicationSession::process_id() const
+{
+    return pid;
 }
 
 void ms::ApplicationSession::force_requests_to_complete()
