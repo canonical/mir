@@ -34,52 +34,46 @@ namespace graphics
 {
 
 class Renderable;
-class NativeBuffer;
+class Buffer;
 
 namespace android
 {
 
-struct HWCLayer : public hwc_layer_1
+enum LayerType
 {
-    virtual ~HWCLayer() = default;
+    gl_rendered,
+    overlay,
+    framebuffer_target,
+    skip
+};
 
-    HWCLayer& operator=(HWCLayer const& layer);
-    HWCLayer(HWCLayer const& layer);
+class HWCLayer
+{
+public:
+    HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
+    HWCLayer(LayerType,
+             geometry::Rectangle screen_position,
+             bool alpha_enabled,
+             std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
 
+    HWCLayer& operator=(HWCLayer && layer);
+    HWCLayer(HWCLayer && layer);
+
+    HWCLayer& operator=(HWCLayer const& layer) = delete;
+    HWCLayer(HWCLayer const& layer) = delete;
+    
+    void set_layer_type(LayerType type);
+    void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
+    void set_buffer(Buffer const&);
+
+    NativeFence release_fence() const;
     bool needs_gl_render() const;
 
-protected:
-    HWCLayer(
-        int type,
-        buffer_handle_t handle,
-        geometry::Rectangle position,
-        geometry::Size buffer_size,
-        bool skip, bool alpha
-    );
-
+private:
+    hwc_layer_1_t* hwc_layer;
+    std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
 };
-
-//layer could be GLES rendered, or overlaid by hwc.
-struct CompositionLayer : public HWCLayer
-{
-    CompositionLayer(graphics::Renderable const& renderable);
-};
-
-//used during compositions when we want to restrict to GLES render only
-struct ForceGLLayer : public HWCLayer
-{
-    ForceGLLayer();
-    ForceGLLayer(NativeBuffer const&);
-};
-
-//used as the target (lowest layer, fb)
-struct FramebufferLayer : public HWCLayer
-{
-    FramebufferLayer();
-    FramebufferLayer(NativeBuffer const&);
-};
-
 }
 }
 }
