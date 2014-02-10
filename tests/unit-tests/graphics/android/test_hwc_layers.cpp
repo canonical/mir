@@ -196,7 +196,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_layers)
 
     //must reset this to -1
     hwc_layer->releaseFenceFd = fake_fence;
-    layer.set_buffer(mt::fake_shared(mock_buffer));
+    layer.set_buffer(native_handle_1);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
@@ -208,7 +208,7 @@ TEST_F(HWCLayersTest, buffer_fence_update)
     type = mga::LayerType::framebuffer_target;
     mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
 
-    layer.set_buffer(mt::fake_shared(mock_buffer));
+    layer.set_buffer(native_handle_1);
     hwc_layer->releaseFenceFd = fake_fence;
     layer.update_buffer_fence();
 

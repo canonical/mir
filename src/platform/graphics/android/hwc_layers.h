@@ -64,7 +64,7 @@ public:
     
     void set_layer_type(LayerType type);
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
-    void set_buffer(Buffer const&);
+    void set_buffer(std::shared_ptr<Buffer> const& buffer);
 
     NativeFence release_fence() const;
     bool needs_gl_render() const;
