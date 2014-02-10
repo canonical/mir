@@ -255,7 +255,14 @@ void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex>& 
         ring[client].buf = ret;
     }
 
-    complete(ret.get());
+    try
+    {
+        complete(ret.get());
+    }
+    catch (...)
+    {
+        // TODO comms errors should not propagate to compositing threads
+    }
 }
 
 void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
@@ -401,10 +408,9 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
-    client_acquire_todo = nullptr;
     drop_frames(nready);
     force_drop = nbuffers + 1;
-    cond.notify_all();
+    if (client_acquire_todo) complete_client_acquire(lock);
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
