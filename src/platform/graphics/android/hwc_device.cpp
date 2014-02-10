@@ -61,7 +61,8 @@ void mga::HwcDevice::prepare()
 
 void mga::HwcDevice::prepare_gl()
 {
-    layer_list.reset_composition_layers();
+    printf("prep.\n");
+//    layer_list.reset_composition_layers();
     prepare();
 }
 
