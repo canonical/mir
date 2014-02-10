@@ -47,7 +47,8 @@ mga::HWCLayer::HWCLayer(HWCLayer && other)
 
 mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index)
     : hwc_layer(&list->hwLayers[layer_index]),
-      hwc_list(list)
+      hwc_list(list),
+      associated_buffer(nullptr) //todo: take this as a constructor param 
 {
     memset(hwc_layer, 0, sizeof(hwc_layer_1_t));
     memset(&visible_rect, 0, sizeof(hwc_rect_t));
@@ -130,6 +131,7 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
 
 void mga::HWCLayer::set_buffer(std::shared_ptr<NativeBuffer> const& buffer)
 {
+    associated_buffer = buffer;
     hwc_layer->handle = buffer->handle();
     hwc_layer->acquireFenceFd = buffer->copy_fence();
     hwc_layer->releaseFenceFd = -1;

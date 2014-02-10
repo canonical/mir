@@ -37,8 +37,7 @@ public:
     {
         using namespace testing;
 
-        native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-
+        native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>(buffer_size);
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
