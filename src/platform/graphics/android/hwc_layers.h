@@ -35,10 +35,10 @@ namespace graphics
 
 class Renderable;
 class Buffer;
+class NativeBuffer;
 
 namespace android
 {
-
 enum LayerType
 {
     gl_rendered,
@@ -64,15 +64,16 @@ public:
     
     void set_layer_type(LayerType type);
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
-    void set_buffer(std::shared_ptr<Buffer> const& buffer);
+    void set_buffer(std::shared_ptr<NativeBuffer> const& buffer);
 
-    NativeFence release_fence() const;
+    void update_buffer_fence();
     bool needs_gl_render() const;
 
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
+    std::shared_ptr<NativeBuffer> associated_buffer;
 };
 }
 }

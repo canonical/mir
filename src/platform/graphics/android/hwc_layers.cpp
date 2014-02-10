@@ -79,9 +79,10 @@ bool mga::HWCLayer::needs_gl_render() const
     return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
 }
 
-mga::NativeFence mga::HWCLayer::release_fence() const
+void mga::HWCLayer::update_buffer_fence()
 {
-    return hwc_layer->releaseFenceFd;
+    associated_buffer->update_fence(hwc_layer->releaseFenceFd);
+    hwc_layer->releaseFenceFd = -1;
 }
 
 void mga::HWCLayer::set_layer_type(LayerType type)
@@ -127,17 +128,15 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     visible_rect = hwc_layer->displayFrame;
 }
 
-void mga::HWCLayer::set_buffer(std::shared_ptr<Buffer> const& buffer)
+void mga::HWCLayer::set_buffer(std::shared_ptr<NativeBuffer> const& buffer)
 {
-    auto size = buffer->size();
-    auto native_buffer = buffer->native_buffer_handle();
-    hwc_layer->handle = native_buffer->handle();
-    hwc_layer->acquireFenceFd = native_buffer->copy_fence();
+    hwc_layer->handle = buffer->handle();
+    hwc_layer->acquireFenceFd = buffer->copy_fence();
     hwc_layer->releaseFenceFd = -1;
     hwc_layer->sourceCrop = 
     {
         0, 0,
-        size.width.as_int(),
-        size.height.as_int()
+        buffer->anwb()->width,
+        buffer->anwb()->height
     };
 }

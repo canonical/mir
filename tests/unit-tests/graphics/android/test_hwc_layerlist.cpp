@@ -209,14 +209,35 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
-TEST_F(HWCLayerListTest, list_returns_fb_fence)
+TEST_F(HWCLayerListTest, fence_updates)
 {
-    int release_fence = 381;
+    int release_fence1 = 381;
+    int release_fence2 = 382;
+    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
+        .Times(1);
+    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
+        .Times(1);
+
+    ON_CALL(mock_buffer, native_buffer_handle())
+        .WillOnce(Return(native_handle_1));
+    ON_CALL(mock_buffer, native_buffer_handle())
+        .WillOnce(Return(native_handle_2));
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        mt::fake_shared(mock_renderable),
+        mt::fake_shared(mock_renderable)
+    });
+
     mga::FBTargetLayerList layerlist;
+    layerlist.set_composition_layers(updated_list);
 
     auto list = layerlist.native_list().lock();
     ASSERT_EQ(2, list->numHwLayers);
-    list->hwLayers[1].releaseFenceFd = release_fence;
+    list->hwLayers[0].releaseFenceFd = release_fence1;
+    list->hwLayers[1].releaseFenceFd = release_fence2;
+
     EXPECT_EQ(release_fence, layerlist.fb_target_fence());
 }
 

@@ -64,18 +64,6 @@ public:
     size_t list_index;
 };
 
-TEST_F(HWCLayersTest, checking_release_fences)
-{
-    int fence1 = 1, fence2 = -1;
-    mga::HWCLayer layer(list, list_index);
-
-    hwc_layer->releaseFenceFd = fence1;
-    EXPECT_EQ(layer.release_fence(), fence1);
-
-    hwc_layer->releaseFenceFd = fence2;
-    EXPECT_EQ(layer.release_fence(), fence2);
-}
-
 TEST_F(HWCLayersTest, check_if_layer_needs_gl_render)
 {
     mga::HWCLayer layer(list, list_index);
@@ -252,7 +240,7 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
 
     mga::HWCLayer layer(list, list_index);
     layer.set_render_parameters(screen_position, true);
-    layer.set_buffer(mt::fake_shared(mock_buffer));
+    layer.set_buffer(native_handle_1);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     expected_layer.blending = HWC_BLENDING_NONE;
