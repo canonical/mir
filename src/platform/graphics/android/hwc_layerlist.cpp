@@ -71,12 +71,12 @@ void mga::LayerListBase::update_representation(size_t needed_size)
     }
 
     std::swap(new_layers, layers);
-    std::swap(new_hwc_representation, hwc_representation);
+    hwc_representation = new_hwc_representation;
 }
 
-void mga::LayerListBase::with_native_list(std::function<void(hwc_display_contents_1_t&)> const& fn)
+std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
 {
-    fn(*hwc_representation);
+    return hwc_representation;
 }
 
 mga::NativeFence mga::LayerListBase::retirement_fence()
@@ -115,11 +115,11 @@ void mga::FBTargetLayerList::reset_composition_layers()
 
 void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
 {
-    auto needed_size = list.size() + 1;
+    auto const needed_size = list.size() + 1;
     update_representation(needed_size);
 
     auto layers_it = layers.begin();
-    for(auto& renderable : list)
+    for(auto const& renderable : list)
     {
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
@@ -134,7 +134,7 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
 
 void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 {
-    geom::Rectangle disp_frame{{0,0}, {buffer.size()}};
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     if (skip_layers_present)
     {
         layers.front().set_render_parameters(disp_frame, false);

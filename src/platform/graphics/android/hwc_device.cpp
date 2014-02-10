@@ -43,17 +43,20 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 
 void mga::HwcDevice::prepare_gl()
 {
-    layer_list.with_native_list([this](hwc_display_contents_1_t& display_list)
+    auto rc = 0;
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
     {
         //note, although we only have a primary display right now,
         //      set the external and virtual displays to null as some drivers check for that
-        hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+        hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
+        rc = hwc_device->prepare(hwc_device.get(), 1, displays);
+    }
 
-        if (hwc_device->prepare(hwc_device.get(), 1, displays))
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-        }
-    });
+    if ((rc != 0) || (!display_list))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+    }
 }
 
 void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
@@ -75,19 +78,22 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     layer_list.set_fb_target(buffer);
 
-    layer_list.with_native_list([this](hwc_display_contents_1_t& display_list)
+    auto rc = 0;
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
     {
-        hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+        hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
+        rc = hwc_device->set(hwc_device.get(), 1, displays);
 
-        if (hwc_device->set(hwc_device.get(), 1, displays))
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-        }
-    });
+        mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
 
-    mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
+        int framebuffer_fence = layer_list.fb_target_fence();
+        auto native_buffer = buffer.native_buffer_handle();
+        native_buffer->update_fence(framebuffer_fence);
+    }
 
-    int framebuffer_fence = layer_list.fb_target_fence();
-    auto native_buffer = buffer.native_buffer_handle();
-    native_buffer->update_fence(framebuffer_fence);
+    if ((rc != 0) || (!display_list))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+    }
 }

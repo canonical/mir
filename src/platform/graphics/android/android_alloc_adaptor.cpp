@@ -69,7 +69,7 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     }
 
     AndroidBufferHandleDeleter del1(alloc_dev);
-    std::shared_ptr<native_handle_t> handle(buf_handle, del1);
+    std::shared_ptr<native_handle_t const> handle(buf_handle, del1);
 
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1);

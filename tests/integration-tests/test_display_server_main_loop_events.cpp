@@ -94,9 +94,11 @@ public:
         display->for_each_display_buffer(f);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return display->configuration();
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new mtd::NullDisplayConfiguration
+        );
     }
 
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));

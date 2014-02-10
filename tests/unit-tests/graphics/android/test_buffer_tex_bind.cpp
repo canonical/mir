@@ -101,7 +101,8 @@ TEST_F(AndroidBufferBinding, buffer_anwb_is_bound)
 TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
 {
     using namespace testing;
-    EGLDisplay second_fake_display = (EGLDisplay) ((int)mock_egl.fake_egl_display +1);
+    EGLDisplay second_fake_display =
+        reinterpret_cast<EGLDisplay>(&second_fake_display);
 
     /* return 1st fake display */
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
@@ -121,7 +122,8 @@ TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
 TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes)
 {
     using namespace testing;
-    EGLDisplay second_fake_display = (EGLDisplay) ((int)mock_egl.fake_egl_display +1);
+    EGLDisplay second_fake_display =
+        reinterpret_cast<EGLDisplay>(&second_fake_display);
 
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,_))
         .Times(Exactly(2));
@@ -141,9 +143,12 @@ TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes_with_proper_args)
     using namespace testing;
 
     EGLDisplay first_fake_display = mock_egl.fake_egl_display;
-    EGLImageKHR first_fake_egl_image = (EGLImageKHR) 0x84210;
-    EGLDisplay second_fake_display = (EGLDisplay) ((int)mock_egl.fake_egl_display +1);
-    EGLImageKHR second_fake_egl_image = (EGLImageKHR) 0x84211;
+    EGLImageKHR first_fake_egl_image =
+        reinterpret_cast<EGLImageKHR>(&first_fake_egl_image);
+    EGLDisplay second_fake_display =
+        reinterpret_cast<EGLDisplay>(&second_fake_display);
+    EGLImageKHR second_fake_egl_image =
+        reinterpret_cast<EGLImageKHR>(&second_fake_egl_image);
 
     /* actual expectations */
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(first_fake_display, first_fake_egl_image))
@@ -321,8 +326,10 @@ TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image)
 TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
 {
     using namespace testing;
-    EGLDisplay second_fake_display = (EGLDisplay) ((int)mock_egl.fake_egl_display +1);
-    EGLImageKHR second_fake_egl_image = (EGLImageKHR) 0x84211;
+    EGLDisplay second_fake_display =
+        reinterpret_cast<EGLDisplay>(&second_fake_display);
+    EGLImageKHR second_fake_egl_image =
+        reinterpret_cast<EGLImageKHR>(&second_fake_egl_image);
 
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
         .Times(Exactly(1));

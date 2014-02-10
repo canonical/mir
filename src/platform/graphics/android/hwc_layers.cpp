@@ -86,6 +86,7 @@ mga::NativeFence mga::HWCLayer::release_fence() const
 
 void mga::HWCLayer::set_layer_type(LayerType type)
 {
+    hwc_layer->flags = 0;
     switch(type)
     {
         case mga::LayerType::skip:

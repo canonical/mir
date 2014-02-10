@@ -50,6 +50,7 @@ class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
+class Screencast;
 }
 
 namespace shell
@@ -171,6 +172,7 @@ public:
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
+    virtual std::shared_ptr<frontend::Screencast>             the_screencast();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
@@ -266,6 +268,7 @@ protected:
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::SessionCreator>    session_creator;
+    CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<scene::SurfaceStack> surface_stack;
