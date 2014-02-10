@@ -4,6 +4,8 @@ mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
     - frontend, shell: provide the client process ID in the shell::Session
       interface (LP: #1276704)
   * New upstream release 0.1.5 (https://launchpad.net/mir/+milestone/0.1.5)
+    - mirclient ABI bumped to 7
+    - mirserver ABI bumped to 15
     - Refactoring to support client-controled RPC.
     - Add an translucent server example (use sparingly, this will kill
       performance!)
