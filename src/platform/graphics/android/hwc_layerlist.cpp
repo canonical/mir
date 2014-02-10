@@ -140,7 +140,7 @@ void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
     layers.back().set_buffer(buffer.native_buffer_handle());
 }
 
-mga::NativeFence mga::FBTargetLayerList::fb_target_fence()
+void mga::FBTargetLayerList::update_fences()
 {
-   return layers.back().release_fence();
+   //return layers.back().release_fence();
 }

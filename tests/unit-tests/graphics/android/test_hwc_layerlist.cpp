@@ -219,11 +219,9 @@ TEST_F(HWCLayerListTest, fence_updates)
         .Times(1);
     EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
         .Times(1);
-
-    ON_CALL(mock_buffer, native_buffer_handle())
-        .WillOnce(Return(native_handle_1));
-    ON_CALL(mock_buffer, native_buffer_handle())
-        .WillOnce(Return(native_handle_2));
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .WillOnce(Return(native_handle_1))
+        .WillRepeatedly(Return(native_handle_2));
 
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
         mt::fake_shared(mock_renderable),
@@ -238,7 +236,7 @@ TEST_F(HWCLayerListTest, fence_updates)
     list->hwLayers[0].releaseFenceFd = release_fence1;
     list->hwLayers[1].releaseFenceFd = release_fence2;
 
-    EXPECT_EQ(release_fence, layerlist.fb_target_fence());
+    layerlist.update_fences();
 }
 
 TEST_F(HWCLayerListTest, list_returns_retire_fence)

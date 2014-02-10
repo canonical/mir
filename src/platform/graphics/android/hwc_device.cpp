@@ -94,9 +94,10 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
         mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
 
-        int framebuffer_fence = layer_list.fb_target_fence();
-        auto native_buffer = buffer.native_buffer_handle();
-        native_buffer->update_fence(framebuffer_fence);
+        layer_list.update_fences();
+//        int framebuffer_fence = layer_list.fb_target_fence();
+//        auto native_buffer = buffer.native_buffer_handle();
+//        native_buffer->update_fence(framebuffer_fence);
     }
 
     if ((rc != 0) || (!display_list))
