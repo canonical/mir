@@ -57,6 +57,47 @@ template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::pro
 template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
+
+template<>
+void invoke(
+    ProtobufMessageProcessor* self,
+    protobuf::DisplayServer* server,
+    void (protobuf::DisplayServer::*function)(
+        ::google::protobuf::RpcController* controller,
+        const protobuf::SurfaceId* request,
+        protobuf::Buffer* response,
+        ::google::protobuf::Closure* done),
+        Invocation const& invocation)
+{
+    protobuf::SurfaceId parameter_message;
+    parameter_message.ParseFromString(invocation.parameters());
+    auto const result_message = std::make_shared<protobuf::Buffer>();
+
+    auto const callback =
+        google::protobuf::NewCallback<
+            ProtobufMessageProcessor,
+            ::google::protobuf::uint32,
+             std::shared_ptr<protobuf::Buffer>>(
+                self,
+                &ProtobufMessageProcessor::send_response,
+                invocation.id(),
+                result_message);
+
+    try
+    {
+        (server->*function)(
+            0,
+            &parameter_message,
+            result_message.get(),
+            callback);
+    }
+    catch (std::exception const& x)
+    {
+        delete callback;
+        result_message->set_error(boost::diagnostic_information(x));
+        self->send_response(invocation.id(), result_message);
+    }
+}
 }
 }
 }
@@ -163,6 +204,11 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 {
     const auto& fd = extract_fds_from(response);
     sender->send_response(id, response, {fd});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
+{
+    send_response(id, response.get());
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)

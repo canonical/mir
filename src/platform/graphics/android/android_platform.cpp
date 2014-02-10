@@ -107,13 +107,11 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
 
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<DisplayReport> const& display_report)
 {
-    //todo: could parse an option here
-    auto should_use_fb_fallback = false;
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report, should_use_fb_fallback);
+        fb_allocator, display_resource_factory, display_report);
     return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }
 

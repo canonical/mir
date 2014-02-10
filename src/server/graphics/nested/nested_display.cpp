@@ -152,9 +152,13 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
         f(*i.second);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration() const
 {
-    return std::make_shared<NestedDisplayConfiguration>(mir_connection_create_display_config(*connection));
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new NestedDisplayConfiguration(
+            mir_connection_create_display_config(*connection)
+        )
+    );
 }
 
 void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)

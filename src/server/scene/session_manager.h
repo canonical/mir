@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -55,7 +55,10 @@ public:
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
-        std::string const& name, std::shared_ptr<frontend::EventSink> const& sink);
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<frontend::EventSink> const& sink);
+
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,

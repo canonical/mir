@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -65,7 +65,9 @@ private:
     std::shared_ptr<mf::Screencast> const screencast;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
+        pid_t client_pid,
+        std::shared_ptr<mf::EventSink> const& sink,
+        bool authorized_to_resize_display) override
     {
         std::shared_ptr<mf::DisplayChanger> changer;
         if(authorized_to_resize_display)
@@ -78,6 +80,7 @@ private:
         }
 
         return std::make_shared<mf::SessionMediator>(
+            client_pid,
             shell,
             graphics_platform,
             changer,

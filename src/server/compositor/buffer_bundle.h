@@ -34,7 +34,7 @@ class BufferBundle
 {
 public:
     virtual ~BufferBundle() noexcept {}
-    virtual graphics::Buffer* client_acquire() = 0;
+    virtual void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) = 0;
     virtual void client_release(graphics::Buffer*) = 0;
     virtual std::shared_ptr<graphics::Buffer>
         compositor_acquire(unsigned long frameno) = 0;

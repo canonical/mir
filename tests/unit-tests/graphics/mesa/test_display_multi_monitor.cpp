@@ -350,8 +350,8 @@ TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_ids[i], fb_id,
                                               _, _))
-            .Times(1)
-            .WillOnce(DoAll(SaveArg<4>(&user_data[i]), Return(0)));
+            .Times(2)
+            .WillRepeatedly(DoAll(SaveArg<4>(&user_data[i]), Return(0)));
 
         /* Emit fake DRM page-flip events */
         EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
@@ -366,6 +366,14 @@ TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
 
     auto display = create_display_cloned(create_platform());
 
+    /* First frame: Page flips are scheduled, but not waited for */
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        buffer.post_update();
+    });
+
+    /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
+       are scheduled */
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         buffer.post_update();

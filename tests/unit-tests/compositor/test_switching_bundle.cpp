@@ -34,6 +34,8 @@ namespace mg = mir::graphics;
 
 using namespace testing;
 
+namespace
+{
 struct SwitchingBundleTest : public ::testing::Test
 {
     void SetUp()
@@ -51,6 +53,32 @@ struct SwitchingBundleTest : public ::testing::Test
 
     mg::BufferProperties basic_properties;
 };
+
+auto client_acquire_blocking(mc::SwitchingBundle& switching_bundle)
+-> mg::Buffer*
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool done = false;
+
+    mg::Buffer* result;
+    switching_bundle.client_acquire(
+        [&](mg::Buffer* new_buffer)
+         {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+
+            result = new_buffer;
+            done = true;
+            cv.notify_one();
+         });
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+
+    cv.wait(lock, [&]{ return done; });
+
+    return result;
+}
+}
 
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
@@ -100,7 +128,7 @@ TEST_F(SwitchingBundleTest, client_acquire_basic)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
-        auto buffer = bundle.client_acquire();
+        auto buffer = client_acquire_blocking(bundle);
         bundle.client_release(buffer);
     }
 }
@@ -132,7 +160,7 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
 
         for (int i = 0; i < 20; i++)
         {
-            auto client1 = bundle.client_acquire();
+            auto client1 = client_acquire_blocking(bundle);
             mg::BufferID expect_id = client1->id(), composited_id;
             bundle.client_release(client1);
 
@@ -173,7 +201,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
         {
             for (int j = 0; j < 100; j++)
             {
-                auto client = bundle.client_acquire();
+                auto client = client_acquire_blocking(bundle);
                 last_client_id = client->id();
                 bundle.client_release(client);
             }
@@ -197,11 +225,11 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
 {  // Regression test for LP: #1210042
     mc::SwitchingBundle bundle(3, allocator, basic_properties);
 
-    auto client1 = bundle.client_acquire();
+    auto client1 = client_acquire_blocking(bundle);
     auto client1_id = client1->id();
     bundle.client_release(client1);
 
-    auto client2 = bundle.client_acquire();
+    auto client2 = client_acquire_blocking(bundle);
     bundle.client_release(client2);
 
     auto compositor = bundle.compositor_acquire(1);
@@ -217,8 +245,8 @@ TEST_F(SwitchingBundleTest, out_of_order_client_release)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
-        auto client1 = bundle.client_acquire();
-        auto client2 = bundle.client_acquire();
+        auto client1 = client_acquire_blocking(bundle);
+        auto client2 = client_acquire_blocking(bundle);
         EXPECT_THROW(
             bundle.client_release(client2),
             std::logic_error
@@ -241,7 +269,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
 
-        auto client = bundle.client_acquire();
+        auto client = client_acquire_blocking(bundle);
         auto client_id = client->id();
         bundle.client_release(client);
 
@@ -291,7 +319,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
         {
             if (i % 10 == 0)
             {
-                auto client = bundle.client_acquire();
+                auto client = client_acquire_blocking(bundle);
                 client_id = client->id();
                 bundle.client_release(client);
             }
@@ -317,7 +345,7 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long frameno = 0;
 
-        auto client = bundle.client_acquire();
+        auto client = client_acquire_blocking(bundle);
         bundle.client_release(client);
 
         auto compositor1 = bundle.compositor_acquire(++frameno);
@@ -342,11 +370,11 @@ TEST_F(SwitchingBundleTest, compositor_client_interleaved)
     mg::Buffer* client_buffer = nullptr;
     std::shared_ptr<mg::Buffer> compositor_buffer = nullptr;
 
-    client_buffer = bundle.client_acquire();
+    client_buffer = client_acquire_blocking(bundle);
     mg::BufferID first_ready_buffer_id = client_buffer->id();
     bundle.client_release(client_buffer);
 
-    client_buffer = bundle.client_acquire();
+    client_buffer = client_acquire_blocking(bundle);
 
     // in the original bug, compositor would be given the wrong buffer here
     compositor_buffer = bundle.compositor_acquire(0 /*frameno*/);
@@ -371,11 +399,11 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
-        bundle.client_release(bundle.client_acquire());
+        bundle.client_release(client_acquire_blocking(bundle));
         compositor[0] = bundle.compositor_acquire(frameno);
 
         frameno++;
-        bundle.client_release(bundle.client_acquire());
+        bundle.client_release(client_acquire_blocking(bundle));
         compositor[1] = bundle.compositor_acquire(frameno);
 
         for (int i = 0; i < 20; i++)
@@ -386,7 +414,7 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
             // One of the compositors (the oldest one) gets a new buffer...
             int oldest = i & 1;
             bundle.compositor_release(compositor[oldest]);
-            bundle.client_release(bundle.client_acquire());
+            bundle.client_release(client_acquire_blocking(bundle));
             frameno++;
             compositor[oldest] = bundle.compositor_acquire(frameno);
         }
@@ -445,7 +473,7 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
             std::logic_error
         );
 
-        auto client = bundle.client_acquire();
+        auto client = client_acquire_blocking(bundle);
         auto snapshot = bundle.snapshot_acquire();
 
         EXPECT_EQ(compositor->id(), snapshot->id());
@@ -488,7 +516,7 @@ namespace
     {
         for (int i = 0; i < nframes; i++)
         {
-            bundle.client_release(bundle.client_acquire());
+            bundle.client_release(client_acquire_blocking(bundle));
             std::this_thread::yield();
         }
     }
@@ -499,12 +527,12 @@ namespace
         {
             bundle.allow_framedropping(false);
             for (int j = 0; j < 5; j++)
-                bundle.client_release(bundle.client_acquire());
+                bundle.client_release(client_acquire_blocking(bundle));
             std::this_thread::yield();
 
             bundle.allow_framedropping(true);
             for (int j = 0; j < 5; j++)
-                bundle.client_release(bundle.client_acquire());
+                bundle.client_release(client_acquire_blocking(bundle));
             std::this_thread::yield();
         }
     }
@@ -602,11 +630,11 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
-        bundle.client_release(bundle.client_acquire());
+        bundle.client_release(client_acquire_blocking(bundle));
         compositor[0] = bundle.compositor_acquire(frameno);
 
         frameno++;
-        bundle.client_release(bundle.client_acquire());
+        bundle.client_release(client_acquire_blocking(bundle));
         compositor[1] = bundle.compositor_acquire(frameno);
 
         for (int i = 0; i < 20; i++)
@@ -614,7 +642,7 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
             // Two compositors acquired, and they're always different...
             ASSERT_NE(compositor[0]->id(), compositor[1]->id());
 
-            auto client = bundle.client_acquire();
+            auto client = client_acquire_blocking(bundle);
             ASSERT_NE(compositor[0]->id(), client->id());
             ASSERT_NE(compositor[1]->id(), client->id());
             bundle.client_release(client);
@@ -648,7 +676,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 
         for (int b = 0; b < nbuffers; b++)
         {
-            buf[b] = bundle.client_acquire();
+            buf[b] = client_acquire_blocking(bundle);
             expect[b] = buf[b]->id();
 
             for (int p = 0; p < b; p++)
@@ -660,7 +688,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 
         for (int frame = 0; frame < nframes; frame++)
         {
-            auto client = bundle.client_acquire();
+            auto client = client_acquire_blocking(bundle);
             ASSERT_EQ(expect[frame % nbuffers], client->id());
             bundle.client_release(client);
         }
@@ -739,11 +767,11 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
             }
         });
 
-        bundle.client_release(bundle.client_acquire());
+        bundle.client_release(client_acquire_blocking(bundle));
 
         while (!done.load())
         {
-            bundle.client_release(bundle.client_acquire());
+            bundle.client_release(client_acquire_blocking(bundle));
             client_frames++;
         }
 
@@ -789,13 +817,13 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
             }
         });
 
-        bundle.client_release(bundle.client_acquire());
+        bundle.client_release(client_acquire_blocking(bundle));
 
         while (!done.load())
         {
             sync.lock();
             sync.unlock();
-            auto buf = bundle.client_acquire();
+            auto buf = client_acquire_blocking(bundle);
             std::this_thread::sleep_for(frame_time);
             bundle.client_release(buf);
             client_frames++;
@@ -825,7 +853,7 @@ TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
             for (int subframe = 0; subframe < 3; ++subframe)
             {
                 bundle.resize(expect_size);
-                auto client = bundle.client_acquire();
+                auto client = client_acquire_blocking(bundle);
                 ASSERT_EQ(expect_size, client->size());
                 bundle.client_release(client);
 
@@ -861,7 +889,7 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
             height += dy;
 
             bundle.resize(new_size);
-            auto client = bundle.client_acquire();
+            auto client = client_acquire_blocking(bundle);
             history[produce] = client->id();
             ASSERT_EQ(new_size, client->size());
             bundle.client_release(client);

@@ -22,6 +22,7 @@
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "gl_renderer_factory.h"
+#include "compositing_screencast.h"
 
 #include "mir/frontend/screencast.h"
 
@@ -77,28 +78,13 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
 
 std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast()
 {
-    struct NotImplementedScreencast : mf::Screencast
-    {
-        mf::ScreencastSessionId create_session(
-            graphics::DisplayConfigurationOutputId)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Screencast not implemented"));
-        }
-
-        void destroy_session(mf::ScreencastSessionId)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Screencast not implemented"));
-        }
-
-        std::shared_ptr<graphics::Buffer> capture(mf::ScreencastSessionId)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Screencast not implemented"));
-        }
-    };
-
     return screencast(
         [this]()
         {
-            return std::make_shared<NotImplementedScreencast>();
+            return std::make_shared<mc::CompositingScreencast>(
+                the_display(),
+                the_buffer_allocator(),
+                the_display_buffer_compositor_factory()
+                );
         });
 }

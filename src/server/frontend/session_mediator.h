@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -24,6 +24,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
+#include <functional>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -59,6 +60,7 @@ class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
     SessionMediator(
+        pid_t client_pid,
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
@@ -133,7 +135,8 @@ private:
                               graphics::Buffer* graphics_buffer,
                               bool need_full_ipc);
 
-    std::tuple<graphics::Buffer*, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
+    void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
+    pid_t client_pid;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
