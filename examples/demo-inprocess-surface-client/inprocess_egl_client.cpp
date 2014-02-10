@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -40,6 +40,8 @@
 #include <EGL/egl.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
+
+#include <unistd.h>
 
 #include <functional>
 
@@ -93,7 +95,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(mir_pixel_format_argb_8888);
-    auto session = shell->open_session("Inprocess client", std::make_shared<NullEventSink>());
+    auto session = shell->open_session(getpid(), "Inprocess client", std::make_shared<NullEventSink>());
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(shell->create_surface_for(session, params));
 
