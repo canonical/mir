@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
+#include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -33,8 +34,10 @@
 using namespace testing;
 using namespace mir;
 using namespace std;
+using namespace mir::test;
 using namespace mir::test::doubles;
 using namespace mir::mir_test_framework;
+using namespace mir::graphics;
 
 class MesaDisplayBufferTest : public Test
 {
@@ -66,6 +69,12 @@ public:
             .WillByDefault(Return(456));
 
         fake_devices.add_standard_drm_devices();
+
+        mock_kms_output = std::make_shared<NiceMock<MockKMSOutput>>();
+        ON_CALL(*mock_kms_output, set_crtc(_))
+            .WillByDefault(Return(true));
+        ON_CALL(*mock_kms_output, schedule_page_flip(_))
+            .WillByDefault(Return(true));
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -85,6 +94,7 @@ protected:
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
+    std::shared_ptr<MockKMSOutput> mock_kms_output;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
@@ -234,3 +244,55 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mir_orientation_right,
         mock_egl.fake_egl_context);
 }
+
+TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {mock_kms_output},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    db.post_update();
+}
+
+TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    InSequence seq;
+
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        make_shared<graphics::NullDisplayReport>(),
+        {mock_kms_output},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    db.post_update();
+    db.post_update();
+}
+
