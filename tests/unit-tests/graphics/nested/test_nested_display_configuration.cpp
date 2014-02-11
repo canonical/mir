@@ -280,26 +280,6 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
         });
 }
 
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_output)
-{
-    geom::Point const top_left{10,20};
-    mgn::NestedDisplayConfiguration config(build_trivial_configuration());
-
-    EXPECT_THROW(
-        {config.configure_output(
-             mg::DisplayConfigurationOutputId(default_output_id+1), true,
-             top_left, default_current_mode, default_current_output_format,
-             mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-
-    EXPECT_THROW(
-        {config.configure_output(
-             mg::DisplayConfigurationOutputId(default_output_id-1), true,
-             top_left, default_current_mode, default_current_output_format,
-             mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-}
-
 TEST_F(NestedDisplayConfiguration, non_trivial_configuration_has_two_cards)
 {
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
@@ -326,8 +306,16 @@ TEST_F(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
     geom::Point const top_left{100,200};
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
 
-    config.configure_output(id, true, top_left, 1, mir_pixel_format_argb_8888,
-                            mir_power_mode_on, mir_orientation_normal);
+    config.for_each_output([&](mg::DisplayConfigurationOutput& output)
+        {
+            if (output.id == id)
+            {
+                output.used = true;
+                output.top_left = top_left;
+                output.current_mode_index = 1;
+                output.current_format = mir_pixel_format_argb_8888;
+            }
+        });
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(3));
