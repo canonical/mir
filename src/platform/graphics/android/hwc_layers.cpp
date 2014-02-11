@@ -22,55 +22,101 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <cstring>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
+mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 {
-    memcpy(static_cast<void*>(this),
-           static_cast<void const*>(&layer),
-           sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
+    hwc_layer = other.hwc_layer;
+    hwc_list = std::move(other.hwc_list);
+    visible_rect = std::move(other.visible_rect);
     return *this;
 }
 
-mga::HWCLayer::HWCLayer(HWCLayer const& layer)
+mga::HWCLayer::HWCLayer(HWCLayer && other)
+    : hwc_layer(std::move(other.hwc_layer)),
+      hwc_list(std::move(other.hwc_list)),
+      visible_rect(std::move(other.visible_rect))
 {
-    memcpy(static_cast<void*>(this),
-           static_cast<void const*>(&layer),
-           sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
+}
+
+mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index)
+    : hwc_layer(&list->hwLayers[layer_index]),
+      hwc_list(list)
+{
+    memset(hwc_layer, 0, sizeof(hwc_layer_1_t));
+    memset(&visible_rect, 0, sizeof(hwc_rect_t));
+
+    hwc_layer->hints = 0;
+    hwc_layer->transform = 0;
+    hwc_layer->acquireFenceFd = -1;
+    hwc_layer->releaseFenceFd = -1;
+    hwc_layer->blending = HWC_BLENDING_NONE;
+
+    hwc_layer->visibleRegionScreen.numRects=1;
+    hwc_layer->visibleRegionScreen.rects= &visible_rect;
 }
 
 mga::HWCLayer::HWCLayer(
-        int type,
-        buffer_handle_t buffer_handle,
-        geom::Rectangle position,
-        geom::Size buffer_size,
-        bool skip, bool alpha)
+    LayerType type,
+    geometry::Rectangle position,
+    bool alpha_enabled,
+    std::shared_ptr<hwc_display_contents_1_t> list,
+    size_t layer_index)
+     : HWCLayer(list, layer_index)
 {
-    (skip) ? flags = HWC_SKIP_LAYER : flags = 0;
-    (alpha) ? blending = HWC_BLENDING_COVERAGE : blending = HWC_BLENDING_NONE;
-    compositionType = type;
-    hints = 0;
-    transform = 0;
-    //TODO: acquireFenceFd should be buffer.fence()
-    acquireFenceFd = -1;
-    releaseFenceFd = -1;
+    set_layer_type(type);
+    set_render_parameters(position, alpha_enabled);
+}
 
-    sourceCrop = 
+bool mga::HWCLayer::needs_gl_render() const
+{
+    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
+}
+
+mga::NativeFence mga::HWCLayer::release_fence() const
+{
+    return hwc_layer->releaseFenceFd;
+}
+
+void mga::HWCLayer::set_layer_type(LayerType type)
+{
+    hwc_layer->flags = 0;
+    switch(type)
     {
-        0, 0,
-        buffer_size.width.as_int(),
-        buffer_size.height.as_int()
-    };
+        case mga::LayerType::skip:
+            hwc_layer->compositionType = HWC_FRAMEBUFFER;
+            hwc_layer->flags = HWC_SKIP_LAYER;
+        break;
 
+        case mga::LayerType::gl_rendered:
+            hwc_layer->compositionType = HWC_FRAMEBUFFER;
+        break;
+
+        case mga::LayerType::framebuffer_target:
+            hwc_layer->compositionType = HWC_FRAMEBUFFER_TARGET;
+        break;
+
+        case mga::LayerType::overlay: //driver is the only one who can set to overlay
+        default:
+            BOOST_THROW_EXCEPTION(std::logic_error("invalid layer type"));
+    }
+}
+
+void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alpha_enabled)
+{
+    if (alpha_enabled)
+        hwc_layer->blending = HWC_BLENDING_COVERAGE;
+    else
+        hwc_layer->blending = HWC_BLENDING_NONE;
 
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
-    displayFrame = 
+    hwc_layer->displayFrame = 
     {
         position.top_left.x.as_int(),
         position.top_left.y.as_int(),
@@ -78,65 +124,20 @@ mga::HWCLayer::HWCLayer(
         position.size.height.as_int()
     };
 
-    visible_rect = displayFrame;
-    visibleRegionScreen.numRects=1;
-    visibleRegionScreen.rects= &visible_rect;
-
-    handle = buffer_handle;
-    memset(&reserved, 0, sizeof(reserved));
+    visible_rect = hwc_layer->displayFrame;
 }
 
-bool mga::HWCLayer::needs_gl_render() const
+void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
-    return ((compositionType == HWC_FRAMEBUFFER) || (flags == HWC_SKIP_LAYER));
-}
-
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
-               nullptr,
-               geom::Rectangle{{0,0}, {0,0}},
-               geom::Size{0,0},
-               false,
-               false)
-{
-}
-
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET,
-               buffer.handle(),
-               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
-               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
-               false,
-               false)
-{
-}
-
-mga::ForceGLLayer::ForceGLLayer()
-    : HWCLayer(HWC_FRAMEBUFFER,
-               nullptr,
-               geom::Rectangle{{0,0}, {0,0}},
-               geom::Size{0,0},
-               true,
-               false)
-{
-}
-
-mga::ForceGLLayer::ForceGLLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER,
-               buffer.handle(),
-               geom::Rectangle{{0,0}, {buffer.anwb()->width, buffer.anwb()->height}},
-               geom::Size{buffer.anwb()->width, buffer.anwb()->height},
-               true,
-               false)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(mg::Renderable const& renderable)
-    : HWCLayer(HWC_FRAMEBUFFER,
-               renderable.buffer()->native_buffer_handle()->handle(),
-               renderable.screen_position(),
-               renderable.buffer()->size(),
-               false,
-               renderable.alpha_enabled())
-{
+    auto size = buffer.size();
+    auto native_buffer = buffer.native_buffer_handle();
+    hwc_layer->handle = native_buffer->handle();
+    hwc_layer->acquireFenceFd = native_buffer->copy_fence();
+    hwc_layer->releaseFenceFd = -1;
+    hwc_layer->sourceCrop = 
+    {
+        0, 0,
+        size.width.as_int(),
+        size.height.as_int()
+    };
 }

@@ -22,7 +22,6 @@
 #include "android_client_buffer_factory.h"
 #include "client_surface_interpreter.h"
 #include "../mir_connection.h"
-#include "../native_client_platform_factory.h"
 
 #include <EGL/egl.h>
 
@@ -42,12 +41,6 @@ struct EmptyDeleter
     }
 };
 
-}
-
-std::shared_ptr<mcl::ClientPlatform>
-mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*context*/)
-{
-    return std::make_shared<mcla::AndroidClientPlatform>();
 }
 
 std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_buffer_factory()
