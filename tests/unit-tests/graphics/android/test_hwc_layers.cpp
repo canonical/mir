@@ -145,9 +145,9 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_framebuffer_layer)
         .Times(0);
 
     hwc_rect_t region = {0,0,buffer_size.width.as_int(), buffer_size.height.as_int()};
-    memset(&expected_layer, 0, sizeof(expected_layer));
     expected_layer.handle = native_handle_1->handle();
     expected_layer.visibleRegionScreen = {1, &region};
+    expected_layer.sourceCrop = region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
@@ -165,10 +165,10 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
         .WillOnce(testing::Return(fake_fence));
 
     hwc_rect_t region = {0,0,buffer_size.width.as_int(), buffer_size.height.as_int()};
-    memset(&expected_layer, 0, sizeof(expected_layer));
     expected_layer.compositionType = HWC_OVERLAY;
     expected_layer.handle = native_handle_1->handle();
     expected_layer.visibleRegionScreen = {1, &region};
+    expected_layer.sourceCrop = region;
     expected_layer.acquireFenceFd = fake_fence;
     expected_layer.releaseFenceFd = -1;
 
@@ -182,6 +182,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
 
     //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
     //after the first.
+    hwc_layer->acquireFenceFd = -1;
     expected_layer.acquireFenceFd = -1;
     layer.set_buffer(native_handle_1); 
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
@@ -195,15 +196,15 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         .WillOnce(testing::Return(fake_fence));
 
     hwc_rect_t region = {0,0,buffer_size.width.as_int(), buffer_size.height.as_int()};
-    memset(&expected_layer, 0, sizeof(expected_layer));
     expected_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
     expected_layer.handle = native_handle_1->handle();
     expected_layer.visibleRegionScreen = {1, &region};
+    expected_layer.sourceCrop = region;
     expected_layer.acquireFenceFd = fake_fence;
     expected_layer.releaseFenceFd = -1;
 
-    type = mga::LayerType::framebuffer_target;
-    mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
+    mga::HWCLayer layer(
+        mga::LayerType::framebuffer_target, screen_position, alpha_enabled, list, list_index);
 
     //mir must reset releaseFenceFd to -1 if hwc has changed it
     hwc_layer->releaseFenceFd = fake_fence;
