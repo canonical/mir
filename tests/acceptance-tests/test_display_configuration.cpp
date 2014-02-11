@@ -248,10 +248,8 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
         {
             auto configuration = mir_connection_create_display_config(connection);
 
-#if 1  // FIXME
             EXPECT_THAT(*configuration,
                         mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
-#endif
             mir_display_config_destroy(configuration);
 
             auto client_config = static_cast<SubscribedClient*>(context);
