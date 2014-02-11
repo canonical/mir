@@ -51,11 +51,6 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 {
 }
 
-mir::DefaultServerConfiguration::~DefaultServerConfiguration()
-{
-}
-
-
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
     auto socket_file = the_options()->get<std::string>(server_socket_opt);
