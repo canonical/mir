@@ -150,6 +150,8 @@ public:
                                   MirPowerMode power_mode,
                                   MirOrientation orientation) = 0;
 
+    virtual bool valid() const;
+
 protected:
     DisplayConfiguration() = default;
     DisplayConfiguration(DisplayConfiguration const& c) = delete;

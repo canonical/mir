@@ -214,3 +214,16 @@ bool mg::DisplayConfigurationOutput::valid() const
 
     return true;
 }
+
+bool mg::DisplayConfiguration::valid() const
+{
+    bool all_valid = true;
+
+    for_each_output([&all_valid](DisplayConfigurationOutput const& out)
+        {
+            if (!out.valid())
+                all_valid = false;
+        });
+
+    return all_valid;
+}
