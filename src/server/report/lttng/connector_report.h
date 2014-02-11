@@ -17,7 +17,7 @@
  */
 
 #ifndef MIR_REPORT_LTTNG_CONNECTOR_REPORT_H_
-#define MIR_LREPORT_TTNG_CONNECTOR_REPORT_H_
+#define MIR_REPORT_LTTNG_CONNECTOR_REPORT_H_
 
 #include "server_tracepoint_provider.h"
 
