@@ -200,8 +200,8 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 
 bool mg::DisplayConfigurationOutput::valid() const
 {
-    if (used && !connected)
-        return false;
+    if (!connected)
+        return !used;
 
     auto const& f = std::find(pixel_formats.begin(), pixel_formats.end(),
                               current_format);
