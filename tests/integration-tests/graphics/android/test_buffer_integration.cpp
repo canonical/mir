@@ -23,7 +23,7 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 
-#include "mir_test/draw/android_graphics.h"
+#include "mir_test/draw/graphics_region_factory.h"
 #include "mir_test/draw/patterns.h"
 
 #include <gtest/gtest.h>
@@ -46,13 +46,14 @@ protected:
         pf  = mir_pixel_format_abgr_8888;
         buffer_properties = mg::BufferProperties{size, pf, mg::BufferUsage::software};
         null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+        graphics_region_factory = mtd::create_graphics_region_factory();
     }
 
     std::shared_ptr<mg::BufferInitializer> null_buffer_initializer;
     geom::Size size;
     MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
-    mtd::TestGrallocMapper sw_renderer;
+    std::shared_ptr<mtd::GraphicsRegionFactory> graphics_region_factory;
 };
 
 auto client_acquire_blocking(mc::SwitchingBundle& switching_bundle)
@@ -90,7 +91,8 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
     mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto test_buffer = allocator->alloc_buffer(sw_properties);
 
-    auto region = sw_renderer.graphic_region_from_handle(test_buffer->native_buffer_handle()->anwb());
+    auto region = graphics_region_factory->graphic_region_from_handle(
+        *test_buffer->native_buffer_handle());
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     red_pattern.draw(*region);
     EXPECT_TRUE(red_pattern.check(*region));

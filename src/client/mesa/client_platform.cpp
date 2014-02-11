@@ -20,14 +20,9 @@
 #include "client_platform.h"
 #include "client_buffer_factory.h"
 #include "mesa_native_display_container.h"
-#include "buffer_file_ops.h"
 #include "native_surface.h"
 #include "../mir_connection.h"
 #include "../client_buffer_factory.h"
-#include "../native_client_platform_factory.h"
-
-#include <sys/mman.h>
-#include <unistd.h>
 
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;
@@ -35,31 +30,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-
-struct RealBufferFileOps : public mclm::BufferFileOps
-{
-    int close(int fd) const
-    {
-        while (::close(fd) == -1)
-        {
-            // Retry on EINTR, return error on anything else
-            if (errno != EINTR)
-                return errno;
-        }
-        return 0;
-    }
-
-    void* map(int fd, off_t offset, size_t size) const
-    {
-        return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    fd, offset);
-    }
-
-    void unmap(void* addr, size_t size) const
-    {
-        munmap(addr, size);
-    }
-};
 
 struct NativeDisplayDeleter
 {
@@ -77,14 +47,6 @@ struct NativeDisplayDeleter
     mcl::EGLNativeDisplayContainer& container;
 };
 
-}
-
-std::shared_ptr<mcl::ClientPlatform>
-mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
-{
-    auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
-    return std::make_shared<mclm::ClientPlatform>(
-        context, buffer_file_ops, mcl::EGLNativeDisplayContainer::instance());
 }
 
 mclm::ClientPlatform::ClientPlatform(

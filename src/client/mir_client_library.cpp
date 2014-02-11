@@ -25,7 +25,6 @@
 #include "mir_connection.h"
 #include "display_configuration.h"
 #include "mir_surface.h"
-#include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
 #include "lifecycle_control.h"
