@@ -191,16 +191,18 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_layers)
     expected_layer.releaseFenceFd = -1;
 
     type = mga::LayerType::framebuffer_target;
-
     mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
 
     //must reset this to -1
     hwc_layer->releaseFenceFd = fake_fence;
-    layer.set_buffer(mock_buffer, true);
+    layer.set_buffer(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
+    type = mga::LayerType::gl_rendered;
+    mga::HWCLayer gl_layer(type, screen_position, alpha_enabled, list, list_index);
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.acquireFenceFd = -1;
-    layer.set_buffer(mock_buffer, false);
+    gl_layer.set_buffer(mock_buffer);
 }
 
 TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
@@ -239,7 +241,7 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
 
     mga::HWCLayer layer(list, list_index);
     layer.set_render_parameters(screen_position, true);
-    layer.set_buffer(mock_buffer, true);
+    layer.set_buffer(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     expected_layer.blending = HWC_BLENDING_NONE;
