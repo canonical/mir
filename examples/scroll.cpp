@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 
     EGLNativeDisplayType native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
-    assert(native_window != NULL);
+    assert(native_window != (EGLNativeWindowType)NULL);
 
     disp = eglGetDisplay(native_display);
     assert(disp != EGL_NO_DISPLAY);

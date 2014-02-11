@@ -18,11 +18,11 @@ include_directories(
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
 
-if(MIR_PLATFORM STREQUAL "android")
+if(MIR_BUILD_PLATFORM_ANDROID)
 add_subdirectory(android/)
 endif()
 
-if(MIR_PLATFORM STREQUAL "mesa")
+if(MIR_BUILD_PLATFORM_MESA)
 add_subdirectory(mesa/)
 endif()
 

@@ -58,8 +58,10 @@ libhardware-dev,\
 libgflags-dev,\
 libgoogle-glog-dev,\
 libprotobuf-dev,\
+libdrm-dev,\
 libegl1-mesa-dev,\
 libgles2-mesa-dev,\
+libgbm-dev,\
 libxkbcommon-dev,\
 libumockdev-dev,\
 libudev-dev,\

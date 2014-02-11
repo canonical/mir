@@ -22,7 +22,7 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
 
   if(VALGRIND_EXECUTABLE)
-    if(MIR_PLATFORM STREQUAL "android")
+    if(MIR_TEST_PLATFORM STREQUAL "android")
 	  # don't exit with an error when valgrind find errors
       #set(VALGRIND_ARGS "--error-exitcode=1")
     else()

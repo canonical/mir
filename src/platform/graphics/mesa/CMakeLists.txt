@@ -9,10 +9,11 @@ include_directories(
 # gbm.h and drm.h have trailing commas at the end of enum definitions
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
 string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
 
 
 add_library(
-  mirplatformgraphics SHARED
+  mirplatformgraphicsmesa SHARED
 
   platform.cpp
   buffer_allocator.cpp
@@ -37,8 +38,14 @@ add_library(
   shm_buffer.cpp
 )
 
+set_target_properties(
+  mirplatformgraphicsmesa PROPERTIES
+  OUTPUT_NAME mirplatformgraphics
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
+)
+
 target_link_libraries(
-  mirplatformgraphics
+  mirplatformgraphicsmesa
   mirplatform
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
@@ -47,4 +54,13 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
-install(TARGETS mirplatformgraphics LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (MIR_TEST_PLATFORM STREQUAL "mesa")
+  add_custom_command(TARGET mirplatformgraphicsmesa
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove libmirplatformgraphics.so
+    COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirplatformgraphicsmesa> libmirplatformgraphics.so
+    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+  )
+endif()
+
+install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

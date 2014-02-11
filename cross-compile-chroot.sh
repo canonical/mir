@@ -33,7 +33,7 @@ pushd ${BUILD_DIR} > /dev/null
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
       -DBoost_COMPILER=-gcc \
-      -DMIR_PLATFORM=android \
+      -DMIR_PLATFORM=android\;mesa \
       .. 
 
     cmake --build . -- -j${NUM_JOBS}
