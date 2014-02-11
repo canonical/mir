@@ -32,7 +32,6 @@ set(
   default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
-  shared_library.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -51,6 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedgeometry
   mirsharedlogging
   mirsharedenv
+  mirsharedsharedlibrary
   mirscene
   mirtime
   mirlttng

@@ -178,16 +178,29 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_layers)
     expected_layer.releaseFenceFd = -1;
 
     type = mga::LayerType::framebuffer_target;
-
     mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
 
-    //must reset this to -1
+    //mir must reset releaseFenceFd to -1
     hwc_layer->releaseFenceFd = fake_fence;
     layer.set_buffer(native_handle_1);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+
+    //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
+    //after the first.
+    expected_layer.acquireFenceFd = -1;
+    layer.set_buffer(native_handle_1); 
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+
+    //mir must set acquireFenceFd to -1 if we are not an overlay layer
+    type = mga::LayerType::gl_rendered;
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.acquireFenceFd = -1;
+    mga::HWCLayer gl_layer(type, screen_position, alpha_enabled, list, list_index);
+    gl_layer.set_buffer(native_handle_1);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
-TEST_F(HWCLayersTest, buffer_fence_update)
+TEST_F(HWCLayersTest, buffer_fence_updates)
 {
     int fake_fence = 552;
     EXPECT_CALL(*native_handle_1, update_fence(fake_fence))

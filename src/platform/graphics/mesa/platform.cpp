@@ -148,7 +148,7 @@ void mgm::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buff
     packer->pack_size(buffer->size());
 }
 
-void mgm::Platform::drm_auth_magic(drm_magic_t magic)
+void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
     drm.auth_magic(magic);
 }

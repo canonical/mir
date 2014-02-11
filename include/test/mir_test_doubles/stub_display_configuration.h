@@ -93,8 +93,8 @@ public:
                 graphics::DisplayConfigurationOutputType::vga,
                 pfs, modes, i,
                 physical_size,
-                ((i % 2) == 0),
-                ((i % 2) == 1),
+                ((i % 2) == 0),  // even numbers have connected==true
+                ((i % 4) == 0),  // only every second even has used==true
                 top_left,
                 mode_index, pfs[0],
                 mir_power_mode_off,

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -36,6 +36,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/drm_authenticator.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -44,6 +45,8 @@
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <mutex>
@@ -56,6 +59,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
+    pid_t client_pid,
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
@@ -64,6 +68,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast) :
+    client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
@@ -95,7 +100,7 @@ void mf::SessionMediator::connect(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(request->application_name(), event_sink);
+        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
     }
 
     auto ipc_package = graphics_platform->get_ipc_package();
@@ -397,6 +402,45 @@ void mf::SessionMediator::screencast_buffer(
     pack_protobuf_buffer(*protobuf_buffer,
                          buffer.get(),
                          does_not_need_full_ipc);
+
+    done->Run();
+}
+
+void mf::SessionMediator::drm_auth_magic(
+    google::protobuf::RpcController* /*controller*/,
+    const mir::protobuf::DRMMagic* request,
+    mir::protobuf::DRMAuthMagicStatus* response,
+    google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_drm_auth_magic_called(session->name());
+    }
+
+    auto const magic = static_cast<unsigned int>(request->magic());
+    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
+    if (!authenticator)
+        BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the active platform"));
+
+    try
+    {
+        authenticator->drm_auth_magic(magic);
+        response->set_status_code(0);
+    }
+    catch (std::exception const& e)
+    {
+        auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+
+        if (errno_ptr != nullptr)
+            response->set_status_code(*errno_ptr);
+        else
+            throw;
+    }
 
     done->Run();
 }
