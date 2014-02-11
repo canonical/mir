@@ -61,6 +61,12 @@ std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() c
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    if (!configuration.valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Invalid or inconsistent display configuration"));
+    }
+
     MirOrientation orientation = mir_orientation_normal;
 
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
