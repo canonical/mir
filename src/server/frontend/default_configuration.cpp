@@ -25,7 +25,6 @@
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"
 
-#include "mir/report/report_factory.h"
 #include "mir/options/option.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 

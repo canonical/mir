@@ -17,7 +17,7 @@
  */
 
 #include "src/server/report/logging/message_processor_report.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -36,7 +36,7 @@ public:
     ~MockClock() noexcept(true) {}
 };
 
-class MockLogger : public mir::report::logging::Logger
+class MockLogger : public mir::logging::Logger
 {
 public:
     MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
@@ -54,7 +54,7 @@ struct MessageProcessorReport : public Test
         report(mir::test::fake_shared(logger), mir::test::fake_shared(clock))
     {
         EXPECT_CALL(logger, log(
-            mir::report::logging::Logger::debug,
+            mir::logging::Logger::debug,
             _,
             "frontend::MessageProcessor")).Times(AnyNumber());
     }
@@ -66,7 +66,7 @@ TEST_F(MessageProcessorReport, everything_fine)
     mir::time::Timestamp a_time;
     EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         EndsWith(": a_function(), elapsed=0µs"),
         "frontend::MessageProcessor")).Times(1);
 
@@ -83,7 +83,7 @@ TEST_F(MessageProcessorReport, slow_call)
     .WillOnce(Return(a_time)).WillOnce(Return(another_time));
 
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         EndsWith("elapsed=1234µs"),
         "frontend::MessageProcessor")).Times(1);
 
@@ -96,7 +96,7 @@ TEST_F(MessageProcessorReport, reports_disconnect)
     mir::time::Timestamp a_time;
     EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         HasSubstr("(disconnecting)"),
         "frontend::MessageProcessor")).Times(1);
 
@@ -111,7 +111,7 @@ TEST_F(MessageProcessorReport, reports_error_during_call)
     mir::time::Timestamp a_time;
     EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         HasSubstr(testError),
         "frontend::MessageProcessor")).Times(1);
 
@@ -124,7 +124,7 @@ TEST_F(MessageProcessorReport, reports_unknown_method)
 {
     EXPECT_CALL(clock, sample()).Times(0);
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::warning,
+        mir::logging::Logger::warning,
         HasSubstr("UNKNOWN method=\"unknown_function_name\""),
         "frontend::MessageProcessor")).Times(1);
 
@@ -136,7 +136,7 @@ TEST_F(MessageProcessorReport, reports_error_deserializing_call)
     const char* testError = "***Test error***";
 
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         HasSubstr(testError),
         "frontend::MessageProcessor")).Times(1);
 
@@ -148,12 +148,12 @@ TEST_F(MessageProcessorReport, logs_a_debug_message_when_invocation_starts)
     mir::time::Timestamp a_time;
     EXPECT_CALL(clock, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         HasSubstr("Calls outstanding on exit:"),
         "frontend::MessageProcessor")).Times(AnyNumber());
 
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::debug,
+        mir::logging::Logger::debug,
         _,
         "frontend::MessageProcessor")).Times(1);
 
@@ -166,7 +166,7 @@ TEST_F(MessageProcessorReport, logs_incomplete_calls_on_destruction)
     EXPECT_CALL(clock, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
 
     EXPECT_CALL(logger, log(
-        mir::report::logging::Logger::informational,
+        mir::logging::Logger::informational,
         HasSubstr("Calls outstanding on exit:"),
         "frontend::MessageProcessor")).Times(1);
 

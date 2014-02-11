@@ -60,12 +60,9 @@ class InputPlatform;
 }
 }
 
-namespace report
-{
 namespace logging
 {
 class Logger;
-}
 }
 }
 
@@ -138,7 +135,7 @@ private:
 
     std::shared_ptr<google::protobuf::RpcChannel> const channel;
     mir::protobuf::DisplayServer::Stub server;
-    std::shared_ptr<mir::report::logging::Logger> const logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;

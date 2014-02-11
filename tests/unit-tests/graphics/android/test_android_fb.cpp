@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 #include "src/platform/graphics/android/android_display.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"

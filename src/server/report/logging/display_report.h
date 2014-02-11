@@ -26,11 +26,14 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
 {
-class Logger;
 
 class DisplayReport : public graphics::DisplayReport
 {
@@ -38,7 +41,7 @@ class DisplayReport : public graphics::DisplayReport
 
     static const char* component();
 
-    DisplayReport(const std::shared_ptr<Logger>& logger);
+    DisplayReport(const std::shared_ptr<mir::logging::Logger>& logger);
     virtual ~DisplayReport();
 
     void report_successful_setup_of_native_resources() override;
@@ -58,7 +61,7 @@ class DisplayReport : public graphics::DisplayReport
     DisplayReport& operator=(const DisplayReport&) = delete;
 
   private:
-    std::shared_ptr<logging::Logger> logger;
+    std::shared_ptr<mir::logging::Logger> logger;
 };
 }
 }

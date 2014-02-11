@@ -26,7 +26,7 @@
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 
 #include <algorithm>
 #include <cstddef>

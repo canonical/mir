@@ -17,7 +17,7 @@
  */
 
 #include "src/server/report/logging/compositor_report.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 #include <gtest/gtest.h>
 #include <string>
 #include <cstdio>
@@ -43,7 +43,7 @@ private:
     time::Timestamp now;
 };
 
-class Recorder : public report::logging::Logger
+class Recorder : public logging::Logger
 {
 public:
     void log(Severity, string const& message, string const&)

@@ -6,7 +6,7 @@ add_library(
     display_report.cpp
     input_report.cpp
     message_processor_report.cpp
-    report_factory.cpp
+    null_report_factory.cpp
     scene_report.cpp
     session_mediator_report.cpp
     )

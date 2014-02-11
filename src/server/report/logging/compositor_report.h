@@ -28,17 +28,19 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
 {
 
-class Logger;
-
 class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
-    CompositorReport(std::shared_ptr<Logger> const& logger,
+    CompositorReport(std::shared_ptr<mir::logging::Logger> const& logger,
                      std::shared_ptr<time::Clock> const& clock);
     void added_display(int width, int height, int x, int y, SubCompositorId id) override;
     void began_frame(SubCompositorId id) override;
@@ -48,7 +50,7 @@ public:
     void scheduled() override;
 
 private:
-    std::shared_ptr<Logger> const logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
     std::shared_ptr<time::Clock> const clock;
 
     typedef time::Timestamp TimePoint;
@@ -71,7 +73,7 @@ private:
         long last_reported_nframes = 0;
         long last_reported_bypassed = 0;
 
-        void log(Logger& logger, SubCompositorId id);
+        void log(mir::logging::Logger& logger, SubCompositorId id);
     };
 
     std::mutex mutex; // Protects the following...

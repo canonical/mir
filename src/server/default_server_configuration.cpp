@@ -19,7 +19,6 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
-#include "mir/report/report_factory.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/default_configuration.h"
 
@@ -32,16 +31,9 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
-#include "mir/report/logging/logger.h"
-#include "mir/report/logging/dumb_console_logger.h"
-#include "mir/report/logging/glog_logger.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
-
-#include "report/logging/report_factory.h"
-#include "report/lttng/report_factory.h"
-#include "report/null/report_factory.h"
 
 #include <map>
 
@@ -49,20 +41,13 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mrl = mir::report::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     DefaultConfigurationOptions(argc, argv),
-    default_filter(std::make_shared<mi::VTFilter>()),
-    null_report_factory(new mir::report::null::ReportFactory()),
-    lttng_report_factory(new mir::report::lttng::ReportFactory()),
-    logging_report_factory(new mrl::ReportFactory(
-            [this]()->std::shared_ptr<mrl::Logger> { return the_logger(); },
-            [this]()->std::shared_ptr<mir::time::Clock> { return the_clock(); }
-            ))
+    default_filter(std::make_shared<mi::VTFilter>())
 {
 }
 
@@ -158,26 +143,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         [&]()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
-        });
-}
-
-std::shared_ptr<mrl::Logger> mir::DefaultServerConfiguration::the_logger()
-{
-    return logger(
-        [this]() -> std::shared_ptr<mrl::Logger>
-        {
-            if (the_options()->is_set(glog))
-            {
-                return std::make_shared<mrl::GlogLogger>(
-                    "mir",
-                    the_options()->get<int>(glog_stderrthreshold),
-                    the_options()->get<int>(glog_minloglevel),
-                    the_options()->get<std::string>(glog_log_dir));
-            }
-            else
-            {
-                return std::make_shared<mrl::DumbConsoleLogger>();
-            }
         });
 }
 

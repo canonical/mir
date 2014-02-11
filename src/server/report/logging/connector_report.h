@@ -26,16 +26,19 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
 {
-class Logger;
 
 class ConnectorReport : public frontend::ConnectorReport
 {
 public:
-    ConnectorReport(std::shared_ptr<Logger> const& log);
+    ConnectorReport(std::shared_ptr<mir::logging::Logger> const& log);
 
     void thread_start() override;
     void thread_end() override;
@@ -50,7 +53,7 @@ public:
     void error(std::exception const& error) override;
 
 private:
-    std::shared_ptr<Logger> const logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
 };
 }
 }

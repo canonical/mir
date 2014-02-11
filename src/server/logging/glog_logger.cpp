@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/report/logging/glog_logger.h"
+#include "mir/logging/glog_logger.h"
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>
@@ -53,7 +53,7 @@ struct google_gflag_guard_t
 }
 
 
-mir::report::logging::GlogLogger::GlogLogger(
+mir::logging::GlogLogger::GlogLogger(
     const char* argv0,
     int stderrthreshold,
     int minloglevel,
@@ -66,7 +66,7 @@ mir::report::logging::GlogLogger::GlogLogger(
     static google_glog_guard_t guard(argv0);
 }
 
-void mir::report::logging::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
+void mir::logging::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
 {
     static int glog_level[] =
     {

@@ -16,17 +16,17 @@
  * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#include "mir/report/logging/dumb_console_logger.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include <iostream>
 #include <ctime>
 #include <cstdio>
 
-namespace mrl = mir::report::logging;
+namespace ml = mir::logging;
 
-void mrl::DumbConsoleLogger::log(mrl::Logger::Severity severity,
-                                 const std::string& message,
-                                 const std::string& component)
+void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
+                                const std::string& message,
+                                const std::string& component)
 {
 
     static const char* lut[5] =

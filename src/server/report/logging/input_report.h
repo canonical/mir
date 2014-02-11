@@ -25,16 +25,19 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
 {
-class Logger;
 
 class InputReport : public input::InputReport
 {
 public:
-    InputReport(std::shared_ptr<Logger> const& logger);
+    InputReport(std::shared_ptr<mir::logging::Logger> const& logger);
     virtual ~InputReport() noexcept(true) = default;
 
     void received_event_from_kernel(int64_t when, int type, int code, int value) override;
@@ -46,7 +49,7 @@ public:
 
 private:
     char const* component();
-    std::shared_ptr<Logger> const logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
 };
 
 }

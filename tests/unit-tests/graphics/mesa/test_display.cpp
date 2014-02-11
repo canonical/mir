@@ -20,7 +20,7 @@
 #include "src/platform/graphics/mesa/display.h"
 #include "src/platform/graphics/mesa/virtual_terminal.h"
 #include "src/server/report/logging/display_report.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/asio_main_loop.h"
@@ -46,6 +46,7 @@
 
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
+namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir::mir_test_framework;
@@ -53,10 +54,10 @@ namespace mrn=mir::report::null;
 
 namespace
 {
-struct MockLogger : public mrl::Logger
+struct MockLogger : public ml::Logger
 {
     MOCK_METHOD3(log,
-                 void(mrl::Logger::Severity, const std::string&, const std::string&));
+                 void(ml::Logger::Severity, const std::string&, const std::string&));
 
     ~MockLogger() noexcept(true) {}
 };
@@ -529,7 +530,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_re
 
     EXPECT_CALL(
         *logger,
-        log(Eq(mrl::Logger::informational),
+        log(Eq(ml::Logger::informational),
             StrEq("Successfully setup native resources."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -545,7 +546,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_make_current_o
 
     EXPECT_CALL(
         *logger,
-        log(Eq(mrl::Logger::informational),
+        log(Eq(ml::Logger::informational),
             StrEq("Successfully made egl context current on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -561,7 +562,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on
 
     EXPECT_CALL(
         *logger,
-        log(Eq(mrl::Logger::informational),
+        log(Eq(ml::Logger::informational),
             StrEq("Successfully performed egl buffer swap on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -577,7 +578,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
 
     EXPECT_CALL(
         *logger,
-        log(Eq(mrl::Logger::informational),
+        log(Eq(ml::Logger::informational),
             StrEq("Successfully performed drm mode setup on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 

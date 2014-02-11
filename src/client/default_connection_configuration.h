@@ -49,7 +49,7 @@ public:
 
     std::shared_ptr<ConnectionSurfaceMap> the_surface_map();
     std::shared_ptr<google::protobuf::RpcChannel> the_rpc_channel();
-    std::shared_ptr<mir::report::logging::Logger> the_logger();
+    std::shared_ptr<mir::logging::Logger> the_logger();
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory();
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform();
     std::shared_ptr<DisplayConfiguration> the_display_configuration();
@@ -61,7 +61,7 @@ public:
 
 protected:
     CachedPtr<google::protobuf::RpcChannel> rpc_channel;
-    CachedPtr<mir::report::logging::Logger> logger;
+    CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
     CachedPtr<input::receiver::InputPlatform> input_platform;
     CachedPtr<ConnectionSurfaceMap> surface_map;

@@ -17,7 +17,7 @@
  */
 
 #include "mir/report/legacy_input_report.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 
 #include <std/Log.h>
 
@@ -26,14 +26,14 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mrl = mir::report::logging;
+namespace ml = mir::logging;
 namespace mri = mir::report::legacy_input;
 
 using testing::_;
 
 namespace
 {
-class MockLogger : public mrl::Logger
+class MockLogger : public ml::Logger
 {
 public:
     MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
@@ -86,7 +86,7 @@ TEST_F(InputReport, verbose_message)
 TEST_F(InputReport, info_message)
 {
     EXPECT_CALL(logger, log(
-            mrl::Logger::informational,
+            ml::Logger::informational,
             "[Foo]Some informational message",
             component));
 
@@ -96,7 +96,7 @@ TEST_F(InputReport, info_message)
 TEST_F(InputReport, warning_message)
 {
     EXPECT_CALL(logger, log(
-            mrl::Logger::warning,
+            ml::Logger::warning,
             "[Foo]Warning!!!",
             component));
 
@@ -106,7 +106,7 @@ TEST_F(InputReport, warning_message)
 TEST_F(InputReport, error_message)
 {
     EXPECT_CALL(logger, log(
-            mrl::Logger::error,
+            ml::Logger::error,
             "[Foo]An error occurred!",
             component));
 

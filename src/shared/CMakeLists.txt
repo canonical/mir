@@ -8,7 +8,7 @@ endif()
 
 add_subdirectory(geometry)
 add_subdirectory(input)
-add_subdirectory(report/logging)
+add_subdirectory(logging)
 add_subdirectory(report/lttng)
 add_subdirectory(env)
 

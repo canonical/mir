@@ -17,9 +17,10 @@
  */
 
 #include "compositor_report.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 
 using namespace mir::time;
+namespace ml = mir::logging;
 namespace mrl = mir::report::logging;
 
 namespace
@@ -29,7 +30,7 @@ namespace
 }
 
 mrl::CompositorReport::CompositorReport(
-    std::shared_ptr<Logger> const& logger,
+    std::shared_ptr<ml::Logger> const& logger,
     std::shared_ptr<Clock> const& clock)
     : logger(logger),
       clock(clock),
@@ -47,7 +48,7 @@ void mrl::CompositorReport::added_display(int width, int height, int x, int y, S
     char msg[128];
     snprintf(msg, sizeof msg, "Added display %p: %dx%d %+d%+d",
              id, width, height, x, y);
-    logger->log(Logger::informational, msg, component);
+    logger->log(ml::Logger::informational, msg, component);
 }
 
 void mrl::CompositorReport::began_frame(SubCompositorId id)
@@ -60,7 +61,7 @@ void mrl::CompositorReport::began_frame(SubCompositorId id)
     inst.latency_sum += t - last_scheduled;
 }
 
-void mrl::CompositorReport::Instance::log(Logger& logger, SubCompositorId id)
+void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id)
 {
     // The first report is a valid sample, but don't log anything because
     // we need at least two samples for valid deltas.
@@ -108,7 +109,7 @@ void mrl::CompositorReport::Instance::log(Logger& logger, SubCompositorId id)
                  bypass_percent
                  );
 
-        logger.log(Logger::informational, msg, component);
+        logger.log(ml::Logger::informational, msg, component);
     }
 
     last_reported_total_time_sum = total_time_sum;
@@ -149,19 +150,19 @@ void mrl::CompositorReport::finished_frame(bool bypassed,
         char msg[128];
         snprintf(msg, sizeof msg, "Display %p bypass %s",
                  id, bypassed ? "ON" : "OFF");
-        logger->log(Logger::informational, msg, component);
+        logger->log(ml::Logger::informational, msg, component);
     }
     inst.prev_bypassed = bypassed;
 }
 
 void mrl::CompositorReport::started()
 {
-    logger->log(Logger::informational, "Started", component);
+    logger->log(ml::Logger::informational, "Started", component);
 }
 
 void mrl::CompositorReport::stopped()
 {
-    logger->log(Logger::informational, "Stopped", component);
+    logger->log(ml::Logger::informational, "Stopped", component);
 
     std::lock_guard<std::mutex> lock(mutex);
     instance.clear();

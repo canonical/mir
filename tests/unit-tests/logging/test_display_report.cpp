@@ -17,19 +17,20 @@
  */
 
 #include "src/server/report/logging/display_report.h"
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 #include "mir_test_doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <string>
 
-namespace mrl  = mir::report::logging;
+namespace ml  = mir::logging;
+namespace mrl = mir::report::logging;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
-class MockLogger : public mrl::Logger
+class MockLogger : public ml::Logger
 {
 public:
     MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
@@ -111,13 +112,13 @@ TEST_F(DisplayReport, eglconfig)
         .WillRepeatedly(DoAll(SetArgPointee<3>(dummy_value),Return(EGL_TRUE)));
 
     EXPECT_CALL(*logger, log(
-        mrl::Logger::informational,
+        ml::Logger::informational,
         "Display EGL Configuration:",
         component));
     for(auto &i : egl_string_mapping)
     {
         EXPECT_CALL(*logger, log(
-            mrl::Logger::informational,
+            ml::Logger::informational,
             "    [" + i + "] : " + std::to_string(dummy_value),
             component));
     }

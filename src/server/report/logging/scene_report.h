@@ -28,16 +28,19 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
 {
-class Logger;
 
 class SceneReport : public scene::SceneReport
 {
 public:
-    SceneReport(std::shared_ptr<Logger> const& log);
+    SceneReport(std::shared_ptr<mir::logging::Logger> const& log);
 
     void surface_created(BasicSurfaceId id, std::string const& name) override;
     void surface_added(BasicSurfaceId id, std::string const& name) override;
@@ -45,7 +48,7 @@ public:
     void surface_deleted(BasicSurfaceId id, std::string const& name) override;
 
 private:
-    std::shared_ptr<Logger> const logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
 
     std::mutex mutex;
     std::map<BasicSurfaceId, std::string> surfaces;

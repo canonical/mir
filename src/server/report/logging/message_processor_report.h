@@ -28,6 +28,10 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
@@ -51,13 +55,11 @@ struct MediatorDetails
 typedef std::unordered_map<void const*, MediatorDetails> Mediators;
 }
 
-class Logger;
-
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
 public:
     MessageProcessorReport(
-        std::shared_ptr<Logger> const& log,
+        std::shared_ptr<mir::logging::Logger> const& log,
         std::shared_ptr<time::Clock> const& clock);
 
     void received_invocation(void const* mediator, int id, std::string const& method) override;
@@ -75,7 +77,7 @@ public:
     ~MessageProcessorReport() noexcept(true);
 
 private:
-    std::shared_ptr<Logger> const log;
+    std::shared_ptr<mir::logging::Logger> const log;
     std::shared_ptr<time::Clock> const clock;
     std::mutex mutex;
     detail::Mediators mediators;

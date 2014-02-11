@@ -16,11 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 
 namespace mir
-{
-namespace report
 {
 namespace logging
 {
@@ -39,6 +37,5 @@ private:
         const std::string& message,
         const std::string& component) override;
 };
-}
 }
 }

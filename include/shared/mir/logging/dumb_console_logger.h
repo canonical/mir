@@ -16,14 +16,12 @@
  * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_REPORT_LOGGING_DUMB_CONSOLE_LOGGER_H_
-#define MIR_REPORT_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 
 namespace mir
-{
-namespace report
 {
 namespace logging
 {
@@ -34,7 +32,6 @@ public:
 protected:
     void log(Severity severity, const std::string& message, const std::string& component) override;
 };
-}
 }
 }
 

@@ -16,29 +16,18 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_REPORT_LOGGING_REPORT_FACTORY_H_
-#define MIR_REPORT_LOGGING_REPORT_FACTORY_H_
+#ifndef MIR_REPORT_NULL_REPORT_FACTORY_H_
+#define MIR_REPORT_NULL_REPORT_FACTORY_H_
 
-#include "mir/report/report_factory.h"
+#include "report_factory.h"
 
 namespace mir
 {
-namespace time
-{
-class Clock;
-}
-class DefaultServerConfiguration;
 namespace report
 {
-namespace logging
-{
-class Logger;
-
-class ReportFactory : public report::ReportFactory
+class NullReportFactory : public mir::report::ReportFactory
 {
 public:
-    ReportFactory(std::function<std::shared_ptr<Logger>()> && the_logger,
-                  std::function<std::shared_ptr<mir::time::Clock>()> && the_clock);
     std::shared_ptr<compositor::CompositorReport> create_compositor_report() override;
     std::shared_ptr<graphics::DisplayReport> create_display_report() override;
     std::shared_ptr<scene::SceneReport> create_scene_report() override;
@@ -46,14 +35,8 @@ public:
     std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() override;
     std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() override;
     std::shared_ptr<input::InputReport> create_input_report() override;
-
-private:
-    std::function<std::shared_ptr<Logger>()> the_logger;
-    std::function<std::shared_ptr<mir::time::Clock>()> the_clock;
 };
-}
 }
 }
 
 #endif
-

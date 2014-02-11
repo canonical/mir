@@ -23,15 +23,15 @@
 
 namespace mir
 {
-namespace report
-{
 namespace logging
 {
 class Logger;
 }
+namespace report
+{
 namespace legacy_input
 {
-void initialize(std::shared_ptr<logging::Logger> const& logger);
+void initialize(std::shared_ptr<mir::logging::Logger> const& logger);
 }
 }
 }

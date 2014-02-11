@@ -26,16 +26,20 @@
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace report
 {
 namespace logging
 {
-class Logger;
+
 
 class SessionMediatorReport : public frontend::SessionMediatorReport
 {
 public:
-    SessionMediatorReport(std::shared_ptr<Logger> const& log);
+    SessionMediatorReport(std::shared_ptr<mir::logging::Logger> const& log);
 
     void session_connect_called(std::string const& app_name) override;
 
@@ -59,7 +63,7 @@ public:
         std::string const& what) override;
 
 private:
-    std::shared_ptr<Logger> const log;
+    std::shared_ptr<mir::logging::Logger> const log;
 };
 
 }

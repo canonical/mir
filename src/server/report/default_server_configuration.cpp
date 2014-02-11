@@ -18,9 +18,9 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "lttng/report_factory.h"
-#include "logging/report_factory.h"
-#include "null/report_factory.h"
+#include "lttng_report_factory.h"
+#include "logging_report_factory.h"
+#include "null_report_factory.h"
 
 #include "mir/abnormal_exit.h"
 
@@ -30,21 +30,21 @@ namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 
-mir::report::ReportFactory & mir::DefaultServerConfiguration::select_factory(char const* report_opt)
+std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::report_factory(char const* report_opt)
 {
     auto opt = the_options()->get<std::string>(report_opt);
 
     if (opt == log_opt_value)
     {
-        return *logging_report_factory.get();
+        return std::unique_ptr<mir::report::ReportFactory>(new report::LoggingReportFactory(the_logger(), the_clock()));
     }
     else if (opt == lttng_opt_value)
     {
-        return *lttng_report_factory.get();
+        return std::unique_ptr<mir::report::ReportFactory>(new report::LttngReportFactory());
     }
     else if (opt == off_opt_value)
     {
-        return *null_report_factory.get();
+        return std::unique_ptr<mir::report::ReportFactory>(new report::NullReportFactory());
     }
     else
     {
@@ -59,7 +59,7 @@ auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr
     return compositor_report(
         [this]()->std::shared_ptr<mc::CompositorReport>
         {
-            return select_factory(compositor_report_opt).create_compositor_report();
+            return report_factory(compositor_report_opt)->create_compositor_report();
         });
 }
 
@@ -68,7 +68,7 @@ auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<
     return connector_report(
         [this]()->std::shared_ptr<mf::ConnectorReport>
         {
-            return select_factory(connector_report_opt).create_connector_report();
+            return report_factory(connector_report_opt)->create_connector_report();
         });
 }
 
@@ -77,7 +77,7 @@ auto mir::DefaultServerConfiguration::the_session_mediator_report() -> std::shar
     return session_mediator_report(
         [this]()->std::shared_ptr<mf::SessionMediatorReport>
         {
-            return select_factory(session_mediator_report_opt).create_session_mediator_report();
+            return report_factory(session_mediator_report_opt)->create_session_mediator_report();
         });
 }
 
@@ -86,7 +86,7 @@ auto mir::DefaultServerConfiguration::the_message_processor_report() -> std::sha
     return message_processor_report(
         [this]()->std::shared_ptr<mf::MessageProcessorReport>
         {
-            return select_factory(msg_processor_report_opt).create_message_processor_report();
+            return report_factory(msg_processor_report_opt)->create_message_processor_report();
         });
 }
 
@@ -95,7 +95,7 @@ auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg
     return display_report(
         [this]()->std::shared_ptr<mg::DisplayReport>
         {
-            return select_factory(display_report_opt).create_display_report();
+            return report_factory(display_report_opt)->create_display_report();
         });
 }
 
@@ -104,7 +104,7 @@ auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::
     return input_report(
         [this]()->std::shared_ptr<mi::InputReport>
         {
-            return select_factory(input_report_opt).create_input_report();
+            return report_factory(input_report_opt)->create_input_report();
         });
 }
 
@@ -113,7 +113,7 @@ auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::
     return scene_report(
         [this]()->std::shared_ptr<ms::SceneReport>
         {
-            return select_factory(scene_report_opt).create_scene_report();
+            return report_factory(scene_report_opt)->create_scene_report();
         });
 }
 

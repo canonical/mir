@@ -16,14 +16,12 @@
  * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_REPORT_LOGGING_LOGGER_H_
-#define MIR_REPORT_LOGGING_LOGGER_H_
+#ifndef MIR_LOGGING_LOGGER_H_
+#define MIR_LOGGING_LOGGER_H_
 
 #include <string>
 
 namespace mir
-{
-namespace report
 {
 namespace logging
 {
@@ -52,7 +50,6 @@ protected:
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 };
-}
 }
 }
 

@@ -26,12 +26,9 @@
 namespace mir
 {
 
-namespace report
-{
 namespace logging
 {
 class Logger;
-}
 }
 
 namespace client
@@ -42,7 +39,7 @@ namespace logging
 class RpcReport : public rpc::RpcReport
 {
 public:
-    RpcReport(std::shared_ptr<mir::report::logging::Logger> const& logger);
+    RpcReport(std::shared_ptr<mir::logging::Logger> const& logger);
 
     void invocation_requested(mir::protobuf::wire::Invocation const& invocation) override;
     void invocation_succeeded(mir::protobuf::wire::Invocation const& invocation) override;
@@ -68,7 +65,7 @@ public:
     void connection_failure(std::exception const& ex) override;
 
 private:
-    std::shared_ptr<mir::report::logging::Logger> const logger;
+    std::shared_ptr<mir::logging::Logger> const logger;
 };
 
 }

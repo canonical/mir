@@ -8,7 +8,7 @@ set(
   display_report.cpp
   input_report.cpp
   message_processor_report.cpp
-  report_factory.cpp
+  lttng_report_factory.cpp
   session_mediator_report.cpp
   scene_report.cpp
   server_tracepoint_provider.cpp

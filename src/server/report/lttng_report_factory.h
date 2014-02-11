@@ -19,15 +19,13 @@
 #ifndef MIR_REPORT_LTTNG_REPORT_FACTORY_H_
 #define MIR_REPORT_LTTNG_REPORT_FACTORY_H_
 
-#include "mir/report/report_factory.h"
+#include "report_factory.h"
 
 namespace mir
 {
 namespace report
 {
-namespace lttng
-{
-class ReportFactory : public report::ReportFactory
+class LttngReportFactory : public report::ReportFactory
 {
 public:
     std::shared_ptr<compositor::CompositorReport> create_compositor_report() override;
@@ -38,7 +36,6 @@ public:
     std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() override;
     std::shared_ptr<input::InputReport> create_input_report() override;
 };
-}
 }
 }
 

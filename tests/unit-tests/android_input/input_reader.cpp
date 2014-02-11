@@ -24,18 +24,18 @@
 #include <gmock/gmock.h>
 #include <math.h>
 
-#include "mir/report/logging/logger.h"
+#include "mir/logging/logger.h"
 #include "mir/report/legacy_input_report.h"
 #include "mir_test/fake_event_hub.h"
 
-namespace mrl  = mir::report::logging;
+namespace ml   = mir::logging;
 
 using std::string;
 using mir::input::android::FakeEventHub;
 
 namespace
 {
-class TestLogger : public mrl::Logger
+class TestLogger : public ml::Logger
 {
 public:
     void log(Severity severity, const string& message, const string& component) override {

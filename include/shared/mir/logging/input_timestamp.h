@@ -16,26 +16,18 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/report/logging/input_timestamp.h"
-#include <ctime>
-#include <cstdio>
+#ifndef MIR_LOGGING_INPUT_TIMESTAMP_H_
+#define MIR_LOGGING_INPUT_TIMESTAMP_H_
+
+#include "mir_toolkit/event.h"
 #include <string>
 
-std::string mir::report::logging::input_timestamp(nsecs_t when)
+namespace mir
 {
-    // Input events use CLOCK_REALTIME, and so we must...
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    nsecs_t now = ts.tv_sec * 1000000000LL + ts.tv_nsec;
-    nsecs_t age = now - when;
-
-    char str[64];
-    snprintf(str, sizeof str, "%lld (%ld.%06ld ms ago)",
-             static_cast<long long>(when),
-             static_cast<long>(age / 1000000LL),
-             static_cast<long>(age % 1000000LL));
-
-    return std::string(str);
+namespace logging
+{
+std::string input_timestamp(nsecs_t when);
+}
 }
 
+#endif // MIR_LOGGING_INPUT_TIMESTAMP_H_
