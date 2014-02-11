@@ -290,6 +290,13 @@ int mu::Monitor::fd(void) const
     return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
 }
 
+void mu::Monitor::filter_by_subsystem(std::string const& subsystem)
+{
+    udev_monitor_filter_add_match_subsystem_devtype(monitor, subsystem.c_str(), nullptr);
+    if (enabled)
+        udev_monitor_filter_update(monitor);
+}
+
 void mu::Monitor::filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype)
 {
     udev_monitor_filter_add_match_subsystem_devtype(monitor, subsystem.c_str(), devtype.c_str());
