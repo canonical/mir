@@ -130,14 +130,15 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
 void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 {
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto buf = buffer.native_buffer_handle();
     if (skip_layers_present)
     {
         layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buffer.native_buffer_handle());
+        layers.front().set_buffer(buf);
     }
 
     layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buffer.native_buffer_handle());
+    layers.back().set_buffer(buf);
 }
 
 void mga::FBTargetLayerList::update_fences()

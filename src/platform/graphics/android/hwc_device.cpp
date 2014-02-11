@@ -42,6 +42,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 
 void mga::HwcDevice::prepare()
 {
+    printf("zuuf\n");
     auto rc = 0;
     auto display_list = layer_list.native_list().lock();
     if (display_list)
@@ -56,6 +57,7 @@ void mga::HwcDevice::prepare()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
     }
+    printf("buuuf\n");
 }
 
 void mga::HwcDevice::prepare_gl()
@@ -72,16 +74,19 @@ void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderabl
 
 void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
+    printf("beeef\n");
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
     }
+    printf("biiiif\n");
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
+    printf("zif...\n");
     layer_list.set_fb_target(buffer);
 
     printf("POST!\n");

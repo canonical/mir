@@ -85,6 +85,8 @@ void mga::HWCLayer::update_buffer_fence()
     printf("update layer %i\n", hwc_layer->releaseFenceFd);
     associated_buffer->update_fence(hwc_layer->releaseFenceFd);
     hwc_layer->releaseFenceFd = -1;
+    hwc_layer->acquireFenceFd = -1;
+    associated_buffer = nullptr;
 }
 
 void mga::HWCLayer::set_layer_type(LayerType type)
@@ -113,6 +115,7 @@ void mga::HWCLayer::set_layer_type(LayerType type)
 
 void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alpha_enabled)
 {
+    printf("set renparm\n");
     if (alpha_enabled)
         hwc_layer->blending = HWC_BLENDING_COVERAGE;
     else
@@ -128,10 +131,12 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     };
 
     visible_rect = hwc_layer->displayFrame;
+    printf("and done.\n");
 }
 
 void mga::HWCLayer::set_buffer(std::shared_ptr<NativeBuffer> const& buffer)
 {
+    printf("setbuf\n");
     associated_buffer = buffer;
     hwc_layer->handle = buffer->handle();
     hwc_layer->acquireFenceFd = buffer->copy_fence();
