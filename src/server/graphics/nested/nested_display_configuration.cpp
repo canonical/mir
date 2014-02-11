@@ -154,27 +154,3 @@ void mgn::NestedDisplayConfiguration::for_each_output(
         });
 }
 
-void mgn::NestedDisplayConfiguration::configure_output(
-    DisplayConfigurationOutputId id, bool used, geometry::Point top_left,
-    size_t mode_index, MirPixelFormat format, MirPowerMode power_mode,
-    MirOrientation orientation)
-{
-    for (auto mir_output = display_config->outputs;
-        mir_output != display_config->outputs+display_config->num_outputs;
-        ++mir_output)
-    {
-        if (DisplayConfigurationOutputId(mir_output->output_id) == id)
-        {
-            mir_output->used = used;
-            mir_output->position_x = top_left.x.as_uint32_t();
-            mir_output->position_y = top_left.y.as_uint32_t();
-            mir_output->current_mode = mode_index;
-            mir_output->current_format = format;
-            mir_output->power_mode = power_mode;
-            mir_output->orientation = orientation;
-            return;
-        }
-    }
-    BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
-}
-

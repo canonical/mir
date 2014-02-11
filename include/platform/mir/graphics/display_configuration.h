@@ -143,13 +143,6 @@ public:
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput&)> f) = 0;
 
-    /** Configures an output. */
-    virtual void configure_output(DisplayConfigurationOutputId id, bool used,
-                                  geometry::Point top_left, size_t mode_index,
-                                  MirPixelFormat format,
-                                  MirPowerMode power_mode,
-                                  MirOrientation orientation) = 0;
-
     virtual bool valid() const;
 
 protected:

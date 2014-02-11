@@ -114,30 +114,6 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
         f(output);
 }
 
-void mgm::RealKMSDisplayConfiguration::configure_output(
-    DisplayConfigurationOutputId id, bool used,
-    geometry::Point top_left, size_t mode_index,
-    MirPixelFormat format, MirPowerMode power_mode, MirOrientation orientation)
-{
-    auto iter = find_output_with_id(id);
-
-    if (iter != outputs.end())
-    {
-        auto& output = *iter;
-
-        output.used = used;
-        output.top_left = top_left;
-        output.current_mode_index = mode_index;
-        output.current_format = format;
-        output.power_mode = power_mode;
-        output.orientation = orientation;
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
-    }
-}
-
 uint32_t mgm::RealKMSDisplayConfiguration::get_kms_connector_id(
     DisplayConfigurationOutputId id) const
 {

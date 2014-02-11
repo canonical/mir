@@ -131,12 +131,6 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
             f(output);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
-                          MirOrientation) override
-    {
-    }
-
     uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const override
     {
         return id.as_value();

@@ -164,10 +164,6 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode, MirOrientation) override
-    {
-    }
-
     std::vector<graphics::DisplayConfigurationCard> cards;
     std::vector<graphics::DisplayConfigurationOutput> outputs;
 };

@@ -182,12 +182,6 @@ public:
             f(output);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
-                          MirOrientation) override
-    {
-    }
-
 private:
     std::vector<mg::DisplayConfigurationCard> cards;
     std::vector<mg::DisplayConfigurationOutput> outputs;

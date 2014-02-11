@@ -110,12 +110,6 @@ public:
         void(std::function<void(mg::DisplayConfigurationOutput const&)>));
     MOCK_METHOD1(for_each_output,
         void(std::function<void(mg::DisplayConfigurationOutput&)>));
-    MOCK_METHOD7(configure_output,
-        void(mg::DisplayConfigurationOutputId id, bool used,
-             mir::geometry::Point top_left, size_t mode_index,
-             MirPixelFormat format,
-             MirPowerMode power_mode,
-             MirOrientation orientation));
     MOCK_CONST_METHOD0(valid, bool());
 };
 

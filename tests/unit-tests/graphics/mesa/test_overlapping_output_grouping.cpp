@@ -95,12 +95,6 @@ public:
     {
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
-                          MirOrientation) override
-    {
-    }
-
     std::vector<OutputInfo> outputs;
 };
 

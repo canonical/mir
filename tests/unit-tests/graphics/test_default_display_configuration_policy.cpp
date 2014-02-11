@@ -67,10 +67,6 @@ public:
             f(output);
     }
 
-    MOCK_METHOD7(configure_output, void(DisplayConfigurationOutputId, bool,
-                                        Point, size_t, MirPixelFormat,
-                                        MirPowerMode, MirOrientation));
-
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
 private:
     size_t max_simultaneous_outputs;
