@@ -203,6 +203,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_layers)
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.acquireFenceFd = -1;
     gl_layer.set_buffer(mock_buffer);
+    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
