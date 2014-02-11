@@ -159,4 +159,3 @@ auto mir::DefaultServerConfiguration::the_host_connection()
             }
         });
 }
-

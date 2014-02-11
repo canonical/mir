@@ -156,5 +156,3 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_screencast());
         });
 }
-
-

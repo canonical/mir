@@ -108,22 +108,20 @@ class InputRegion;
 class NestedInputRelay;
 class EventHandler;
 }
+
 namespace logging
 {
 class Logger;
 }
-
 namespace report
 {
 class ReportFactory;
-
 }
 
 class DefaultServerConfiguration : public virtual ServerConfiguration, protected DefaultConfigurationOptions
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
-    ~DefaultServerConfiguration();
 
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir

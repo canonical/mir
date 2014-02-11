@@ -53,4 +53,4 @@ protected:
 }
 }
 
-#endif // MIR_REPORT_LOGGING_LOGGER_H_
+#endif // MIR_LOGGING_LOGGER_H_

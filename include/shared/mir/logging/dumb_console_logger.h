@@ -35,4 +35,4 @@ protected:
 }
 }
 
-#endif // MIR_REPORT_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#endif // MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
