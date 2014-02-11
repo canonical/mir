@@ -75,7 +75,6 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         });
 }
 
-
 std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast()
 {
     return screencast(
