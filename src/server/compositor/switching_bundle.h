@@ -28,6 +28,8 @@
 
 #include <boost/optional/optional.hpp>
 
+#include <boost/optional/optional.hpp>
+
 namespace mir
 {
 namespace graphics
