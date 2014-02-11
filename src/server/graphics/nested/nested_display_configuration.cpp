@@ -87,23 +87,37 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
         });
 }
 
-void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput&)> f)
+void mgn::NestedDisplayConfiguration::for_each_output(
+    std::function<void(DisplayConfigurationOutput&)> f)
 {
-    // XXX copied and pasted from above. Revisit this.
+    // This is mostly copied and pasted from the const version above, but this
+    // mutable version copies user-changes to the output structure at the end.
+
     std::for_each(
         display_config->outputs,
         display_config->outputs+display_config->num_outputs,
-        [&f](MirDisplayOutput const& mir_output)
+        [&f](MirDisplayOutput& mir_output)
         {
             std::vector<MirPixelFormat> formats;
             formats.reserve(mir_output.num_output_formats);
-            for (auto p = mir_output.output_formats; p != mir_output.output_formats+mir_output.num_output_formats; ++p)
+            for (auto p = mir_output.output_formats;
+                 p != mir_output.output_formats+mir_output.num_output_formats;
+                 ++p)
+            {
                 formats.push_back(MirPixelFormat(*p));
+            }
 
             std::vector<DisplayConfigurationMode> modes;
             modes.reserve(mir_output.num_modes);
-            for (auto p = mir_output.modes; p != mir_output.modes+mir_output.num_modes; ++p)
-                modes.push_back(DisplayConfigurationMode{{p->horizontal_resolution, p->vertical_resolution}, p->refresh_rate});
+            for (auto p = mir_output.modes;
+                 p != mir_output.modes+mir_output.num_modes;
+                 ++p)
+            {
+                modes.push_back(
+                    DisplayConfigurationMode{
+                        {p->horizontal_resolution, p->vertical_resolution},
+                        p->refresh_rate});
+            }
 
             DisplayConfigurationOutput output{
                 DisplayConfigurationOutputId(mir_output.output_id),
@@ -112,7 +126,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 std::move(formats),
                 std::move(modes),
                 mir_output.preferred_mode,
-                geometry::Size{mir_output.physical_width_mm, mir_output.physical_height_mm},
+                geometry::Size{mir_output.physical_width_mm,
+                               mir_output.physical_height_mm},
                 !!mir_output.connected,
                 !!mir_output.used,
                 geometry::Point{mir_output.position_x, mir_output.position_y},
@@ -123,6 +138,19 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
             };
 
             f(output);
+
+            // Slightly more than the fields users are expected to change...
+            // as some test cases change immutable fields like output_id
+            mir_output.preferred_mode = output.preferred_mode_index;
+            mir_output.current_mode = output.current_mode_index;
+            mir_output.current_format = output.current_format;
+            mir_output.output_id = output.id.as_value();
+            mir_output.position_x = output.top_left.x.as_int();
+            mir_output.position_y = output.top_left.y.as_int();
+            mir_output.connected = output.connected;
+            mir_output.used = output.used;
+            mir_output.power_mode = output.power_mode;
+            mir_output.orientation = output.orientation;
         });
 }
 

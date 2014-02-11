@@ -257,13 +257,15 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_has_one_output)
 
 TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
 {
-    geom::Point const top_left{10,20};
+    geom::Point const new_top_left{10,20};
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
-    config.configure_output(
-        mg::DisplayConfigurationOutputId(default_output_id), true,
-        top_left, default_current_mode, default_current_output_format,
-        mir_power_mode_on, mir_orientation_normal);
+    config.for_each_output([&](mg::DisplayConfigurationOutput& output)
+        {
+            output.connected = true;
+            output.used = true;
+            output.top_left = new_top_left;
+        });
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(1));
@@ -272,7 +274,7 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
         {
             ov.f(output);
             EXPECT_EQ(true, output.used);
-            EXPECT_EQ(top_left, output.top_left);
+            EXPECT_EQ(new_top_left, output.top_left);
             EXPECT_EQ(0, output.current_mode_index);
             EXPECT_EQ(default_current_output_format, output.current_format);
         });
