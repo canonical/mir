@@ -29,16 +29,6 @@
 namespace mg = mir::graphics;
 namespace mgn = mg::nested;
 
-namespace
-{
-bool format_valid_for_output(MirDisplayOutput const& output, MirPixelFormat format)
-{
-    MirPixelFormat * end = output.output_formats + output.num_output_formats;
-    return end != std::find(output.output_formats, end, format);
-}
-
-}
-
 mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
 display_config{connection}
 {
@@ -147,15 +137,6 @@ void mgn::NestedDisplayConfiguration::configure_output(
     {
         if (DisplayConfigurationOutputId(mir_output->output_id) == id)
         {
-            if (used && mode_index >= mir_output->num_modes)
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
-
-            if (used && !mg::valid_pixel_format(format))
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
-
-            if (used && !format_valid_for_output(*mir_output, format))
-                BOOST_THROW_EXCEPTION(std::runtime_error("Format not available for used output"));
-
             mir_output->used = used;
             mir_output->position_x = top_left.x.as_uint32_t();
             mir_output->position_y = top_left.y.as_uint32_t();

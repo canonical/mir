@@ -27,6 +27,8 @@
 #include "display_device.h"
 #include "mir/geometry/rectangle.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;

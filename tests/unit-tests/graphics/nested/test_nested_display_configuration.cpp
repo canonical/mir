@@ -278,47 +278,6 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
         });
 }
 
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_mode)
-{
-    geom::Point const top_left{10,20};
-    size_t const too_big_mode_index = 1;
-    mgn::NestedDisplayConfiguration config(build_trivial_configuration());
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, -1, default_current_output_format,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, too_big_mode_index, default_current_output_format,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-}
-
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_format)
-{
-    geom::Point const top_left{10,20};
-    mgn::NestedDisplayConfiguration config(build_trivial_configuration());
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, default_current_mode, mir_pixel_format_invalid,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, default_current_mode, mir_pixel_formats,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-}
-
 TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_output)
 {
     geom::Point const top_left{10,20};
