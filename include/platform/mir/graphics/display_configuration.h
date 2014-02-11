@@ -114,6 +114,7 @@ struct DisplayConfigurationOutput
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
+    bool valid() const;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
@@ -147,6 +148,8 @@ public:
                                   MirPixelFormat format,
                                   MirPowerMode power_mode,
                                   MirOrientation orientation) = 0;
+
+    virtual bool valid() const;
 
 protected:
     DisplayConfiguration() = default;
