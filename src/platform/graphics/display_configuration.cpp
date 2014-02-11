@@ -19,6 +19,7 @@
 #include "mir/graphics/display_configuration.h"
 
 #include <ostream>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 
@@ -195,4 +196,21 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
     {
         return {top_left, {size.height.as_int(), size.width.as_int()}};
     }
+}
+
+bool mg::DisplayConfigurationOutput::valid() const
+{
+    if (used && !connected)
+        return false;
+
+    auto const& f = std::find(pixel_formats.begin(), pixel_formats.end(),
+                              current_format);
+    if (f == pixel_formats.end())
+        return false;
+
+    auto nmodes = modes.size();
+    if (preferred_mode_index >= nmodes || current_mode_index >= nmodes)
+        return false;
+
+    return true;
 }
