@@ -117,7 +117,7 @@ TEST_F(HwcDevice, test_hwc_prepare_resets_layers)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1);
+        .Times(2);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
 
@@ -186,6 +186,8 @@ TEST_F(HwcDevice, test_hwc_commit)
 
     InSequence seq;
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_native_buffer, update_fence(_))
         .Times(1);
     EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
         .Times(1);

@@ -22,7 +22,6 @@
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer.h"
 
 #include <EGL/eglext.h>
@@ -85,6 +84,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     layer_list.set_fb_target(buffer);
 
+    printf("POST!\n");
     auto rc = 0;
     auto display_list = layer_list.native_list().lock();
     if (display_list)
@@ -92,12 +92,8 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
         rc = hwc_device->set(hwc_device.get(), 1, displays);
 
-        mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
-
         layer_list.update_fences();
-//        int framebuffer_fence = layer_list.fb_target_fence();
-//        auto native_buffer = buffer.native_buffer_handle();
-//        native_buffer->update_fence(framebuffer_fence);
+        mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
     }
 
     if ((rc != 0) || (!display_list))

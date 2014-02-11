@@ -82,6 +82,7 @@ bool mga::HWCLayer::needs_gl_render() const
 
 void mga::HWCLayer::update_buffer_fence()
 {
+    printf("update layer %i\n", hwc_layer->releaseFenceFd);
     associated_buffer->update_fence(hwc_layer->releaseFenceFd);
     hwc_layer->releaseFenceFd = -1;
 }
