@@ -24,7 +24,6 @@
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 
-#include "src/server/report/null/session_mediator_report.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_gbm.h"
 #endif
@@ -33,14 +32,13 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-namespace mrn = mir::report::null;
 namespace mtf = mir_test_framework;
 
 using namespace testing;
 
 namespace
 {
-struct MockSessionMediatorReport : mrn::SessionMediatorReport
+struct MockSessionMediatorReport : mf::SessionMediatorReport
 {
     MockSessionMediatorReport()
     {
@@ -58,6 +56,11 @@ struct MockSessionMediatorReport : mrn::SessionMediatorReport
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
+
+    void session_drm_auth_magic_called(const std::string&) override {};
+    void session_configure_surface_called(std::string const&) override {};
+    void session_configure_display_called(std::string const&) override {};
+    void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
 struct HostServerConfiguration : public mtf::TestingServerConfiguration

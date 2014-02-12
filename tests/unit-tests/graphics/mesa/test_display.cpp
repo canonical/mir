@@ -725,7 +725,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    mir::AsioMainLoop mrl;
+    mir::AsioMainLoop ml;
     std::condition_variable done;
 
     int const device_add_count{1};
@@ -735,13 +735,13 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     std::mutex m;
 
     display->register_configuration_change_handler(
-        mrl,
-        [&call_count, &mrl, &done, &m]()
+        ml,
+        [&call_count, &ml, &done, &m]()
         {
             std::unique_lock<std::mutex> lock(m);
             if (++call_count == expected_call_count)
             {
-                mrl.stop();
+                ml.stop();
                 done.notify_all();
             }
         });
@@ -757,16 +757,16 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
         }};
 
     std::thread watchdog{
-        [this, &done, &m, &mrl, &call_count]
+        [this, &done, &m, &ml, &call_count]
         {
             std::unique_lock<std::mutex> lock(m);
             if (!done.wait_for (lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
                 ADD_FAILURE() << "Timeout waiting for change events";
-            mrl.stop();
+            ml.stop();
         }
     };
 
-    mrl.run();
+    ml.run();
 
     t.join();
     watchdog.join();

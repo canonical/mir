@@ -319,7 +319,7 @@ private:
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
     std::function<void()> force_threads_to_unblock_callback();
 
-    virtual auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+    auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 };
 }
 
