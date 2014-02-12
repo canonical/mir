@@ -91,7 +91,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 
             conf_output.used = true;
             conf_output.top_left = geom::Point{0, 0};
-            conf_output.preferred_mode_index = preferred_mode_index;
+            conf_output.current_mode_index = preferred_mode_index;
             conf_output.current_format = format;
             conf_output.power_mode = default_power_state;
             conf_output.orientation = mir_orientation_normal;
