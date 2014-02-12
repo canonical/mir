@@ -91,7 +91,7 @@ public:
         }
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput&)>)
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput&)>) override
     {
     }
 

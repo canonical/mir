@@ -55,7 +55,7 @@ public:
         f({DisplayConfigurationCardId{1}, max_simultaneous_outputs});
     }
 
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override
     {
         for (auto const& output : outputs)
             f(output);
