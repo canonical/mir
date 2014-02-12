@@ -280,6 +280,10 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
         });
 }
 
+// Validation tests once stood here. They've now been replaced by more
+// portable validation logic which can be found in:
+// TEST(DisplayConfiguration, ...
+
 TEST_F(NestedDisplayConfiguration, non_trivial_configuration_has_two_cards)
 {
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
