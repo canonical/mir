@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,6 +20,9 @@
 #define MIR_FRONTEND_SHELL_H_
 
 #include "mir/frontend/surface_id.h"
+
+#include <sys/types.h>
+
 #include <memory>
 
 namespace mir
@@ -39,7 +42,10 @@ public:
     virtual ~Shell() = default;
 
     virtual std::shared_ptr<Session> open_session(
-        std::string const& name, std::shared_ptr<EventSink> const& sink) = 0;
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<EventSink> const& sink) = 0;
+
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,

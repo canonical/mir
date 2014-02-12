@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -73,12 +73,14 @@ ms::SessionManager::~SessionManager()
         close_session(session);
 }
 
-std::shared_ptr<mf::Session> ms::SessionManager::open_session(std::string const& name,
-                                                std::shared_ptr<mf::EventSink> const& sender)
+std::shared_ptr<mf::Session> ms::SessionManager::open_session(
+    pid_t client_pid,
+    std::string const& name,
+    std::shared_ptr<mf::EventSink> const& sender)
 {
     std::shared_ptr<msh::Session> new_session =
         std::make_shared<ApplicationSession>(
-            surface_factory, name, snapshot_strategy, session_listener, sender);
+            surface_factory, client_pid, name, snapshot_strategy, session_listener, sender);
 
     app_container->insert_session(new_session);
 

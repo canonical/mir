@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -170,6 +170,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
 
     ms::ApplicationSession session{
         conf.the_shell_surface_factory(),
+        __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
         std::make_shared<msh::NullSessionListener>(),
