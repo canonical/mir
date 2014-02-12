@@ -1,5 +1,6 @@
-mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.1.5+14.04.20140212-0ubuntu1) trusty; urgency=medium
 
+  [ Kevin Gunn ]
   * Cherry-picked from future release 0.1.6:
     - frontend, shell: provide the client process ID in the shell::Session
       interface (LP: #1276704)
@@ -45,7 +46,7 @@ mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
       . Erroneous use of last_consumed in SwitchingBundle::compositor_acquire
         (LP: #1270964)
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 06 Feb 2014 10:54:17 -0600
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 12 Feb 2014 18:29:29 +0000
 
 mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
 
