@@ -173,6 +173,7 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
         {
             EXPECT_TRUE(output.used);
             EXPECT_EQ(Point(), output.top_left);
+            EXPECT_EQ(output.preferred_mode_index, output.current_mode_index);
         }
         else
         {
