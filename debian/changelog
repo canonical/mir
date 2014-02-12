@@ -1,3 +1,52 @@
+mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Cherry-picked from future release 0.1.6:
+    - frontend, shell: provide the client process ID in the shell::Session
+      interface (LP: #1276704)
+  * New upstream release 0.1.5 (https://launchpad.net/mir/+milestone/0.1.5)
+    - mirclient ABI bumped to 7
+    - mirserver ABI bumped to 15
+    - Refactoring to support client-controled RPC.
+    - Add an translucent server example (use sparingly, this will kill
+      performance!)
+    - Add workaround for Qualcomm Snapdragon 8960 driver bug.
+    - android-input: Improve debug output
+    - Screen rotation support half done (rotation of the screen works but input
+      rotation not implemented yet).
+    - Add groundwork for overlay support to take better advantage of mobile
+      hardware features and optimize composition in future.
+    - Add support for HWC 1.2 (Android 4.4)
+    - Add groundwork for screencasting (screen recording).
+    - Optimized surface resizing, significantly reducing event flooding for
+      some input configurations like touch.
+    - Bugs fixed:
+      . Surfaces no longer visible at all on Nexus 10 (LP: #1271853)
+      . mir nested server failure: what(): error binding buffer to texture
+        (LP: #1272041)
+      . Unity does not process events from evdev device created before unity is
+        restarted (autopilot tests) (LP: #1238417)
+      . mir_unit_tests can't run on touch images any more (missing
+        libumockdev.so.0) (LP: #1271434)
+      . chmod 777 /tmp/mir_socket is no longer sufficient for non-root clients
+        to connect to a root server (LP: #1272143)
+      . Nexus7(2013) flo framerate maxes out at 30fps (LP: #1274189)
+      . libmirserver user is unable to #include
+         <mir/frontend/template_protobuf_message_processor.h> (LP: #1276162)
+      . libmirclient user cannot "#include <mir/client/private.h>"
+        (LP: #1276565)
+      . AndroidInternalClient.internal_client_creation_and_use hangs on Nexus
+        10 (LP: #1270685)
+      . Tests that use the InProcessServer bind the default socket file
+        (LP: #1271604)
+      . BasicConnector threads exit immediately (LP: #1271655)
+      . Integration tests TestClientIPCRender.test_accelerated_render fails on
+        Galaxy Nexus and Nexus4 (LP: #1272597)
+      . Android backend unit-tests FTBS on amd64 (LP: #1276621)
+      . Erroneous use of last_consumed in SwitchingBundle::compositor_acquire
+        (LP: #1270964)
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 06 Feb 2014 10:54:17 -0600
+
 mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
 
   [ Daniel van Vugt ]

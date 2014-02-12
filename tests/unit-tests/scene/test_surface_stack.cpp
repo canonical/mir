@@ -67,7 +67,7 @@ namespace
 class NullBufferBundle : public mc::BufferBundle
 {
 public:
-    virtual mg::Buffer* client_acquire() { return nullptr; }
+    virtual void client_acquire(std::function<void(mg::Buffer* buffer)> complete) { complete(nullptr); }
     virtual void client_release(mg::Buffer*) {}
     virtual std::shared_ptr<mg::Buffer> compositor_acquire(unsigned long)
         { return std::shared_ptr<mg::Buffer>(); };

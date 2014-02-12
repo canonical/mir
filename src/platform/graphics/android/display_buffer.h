@@ -61,7 +61,6 @@ private:
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;
-    bool prepared;
     MirOrientation rotation;
 };
 

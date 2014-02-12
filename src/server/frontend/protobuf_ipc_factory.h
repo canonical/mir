@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,6 +19,8 @@
 #ifndef MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
 #define MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
 
+#include <sys/types.h>
+
 #include <memory>
 
 namespace mir
@@ -37,7 +39,10 @@ class ProtobufIpcFactory
 {
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<EventSink> const& sink, bool authorized_to_resize_display) = 0;
+        pid_t client_pid,
+        std::shared_ptr<EventSink> const& sink,
+        bool authorized_to_resize_display) = 0;
+
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
 
 protected:

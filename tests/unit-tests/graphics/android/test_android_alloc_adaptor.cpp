@@ -236,7 +236,7 @@ TEST_F(AdaptorICSTest, handle_has_right_magic)
 
 TEST_F(AdaptorICSTest, handle_has_version)
 {
-    int version = 96;  /* version value shared by JB and ICS */
+    int version = sizeof(ANativeWindowBuffer);  /* version value shared by JB and ICS */
     auto native_handle = alloc_adaptor->alloc_buffer(size, pf, usage);
     auto anwb = native_handle->anwb();
     EXPECT_EQ(version, anwb->common.version);

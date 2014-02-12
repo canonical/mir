@@ -76,6 +76,11 @@ public:
         fb_fence = fence;
     }
 
+    void hwc_set_retire_fence(int fence)
+    {
+        retire_fence = fence;
+    }
+
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t size, hwc_display_contents_1_t** displays)
     {
         if ((size == 0) || (!displays)) 
@@ -122,12 +127,14 @@ public:
                     set_layerlist.back().visibleRegionScreen = {0, nullptr};
                 }
 
+                save_args(&display0_set_content, displays);
+
                 if (displays[0]->numHwLayers >= 2)
                 {
                     displays[0]->hwLayers[1].releaseFenceFd = fb_fence;
+                    displays[0]->retireFenceFd = retire_fence;
                 }
 
-                save_args(&display0_set_content, displays);
             default:
                 break;
         }
@@ -186,6 +193,7 @@ public:
     std::vector<hwc_layer_1> prepare_layerlist;
     hwc_display_contents_1_t display0_prepare_content;
     int fb_fence;
+    int retire_fence;
 };
 
 }

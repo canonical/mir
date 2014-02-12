@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -69,7 +69,7 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
+            ipc_factory->make_ipc_server(client_pid, event_sink, authorized_to_resize_display),
             report);
 
         const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);

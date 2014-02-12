@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -38,6 +38,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/screencast.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -55,20 +56,24 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
+    pid_t client_pid,
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<Screencast> const& screencast) :
+    client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
     event_sink(sender),
-    resource_cache(resource_cache)
+    resource_cache(resource_cache),
+    screencast(screencast)
 {
 }
 
@@ -92,7 +97,7 @@ void mf::SessionMediator::connect(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(request->application_name(), event_sink);
+        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
     }
 
     auto ipc_package = graphics_platform->get_ipc_package();
@@ -116,19 +121,25 @@ void mf::SessionMediator::connect(
     done->Run();
 }
 
-std::tuple<mg::Buffer*, bool>
-mf::SessionMediator::advance_buffer(SurfaceId surf_id, Surface& surface)
+void mf::SessionMediator::advance_buffer(
+    SurfaceId surf_id,
+    Surface& surface,
+    std::function<void(graphics::Buffer*, bool)> complete)
 {
     auto& tracker = client_buffer_tracker[surf_id];
     if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
 
     auto& client_buffer = client_buffer_resource[surf_id];
-    surface.swap_buffers(client_buffer);
-    auto id = client_buffer->id();
-    auto need_full_ipc = !tracker->client_has(id);
-    tracker->add(id);
+    surface.swap_buffers(client_buffer,
+        [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
+        {
+            client_buffer = new_buffer;
+            auto id = client_buffer->id();
+            auto need_full_ipc = !tracker->client_has(id);
+            tracker->add(id);
 
-    return std::tie(client_buffer, need_full_ipc);
+            complete(client_buffer, need_full_ipc);
+        });
 }
 
 
@@ -138,49 +149,48 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    bool need_full_ipc;
-    graphics::Buffer* client_buffer{nullptr};
-    std::shared_ptr<Session> session;
 
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
 
-        session = weak_session.lock();
+    auto const session = weak_session.lock();
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_create_surface_called(session->name());
+    report->session_create_surface_called(session->name());
 
-        auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
-            .of_name(request->surface_name())
-            .of_size(request->width(), request->height())
-            .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-            .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
-            .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
+    auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
+        .of_name(request->surface_name())
+        .of_size(request->width(), request->height())
+        .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
+        .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
+        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
 
-        auto surface = session->get_surface(surf_id);
-        response->mutable_id()->set_value(surf_id.as_value());
-        response->set_width(surface->size().width.as_uint32_t());
-        response->set_height(surface->size().height.as_uint32_t());
-        response->set_pixel_format((int)surface->pixel_format());
-        response->set_buffer_usage(request->buffer_usage());
+    auto surface = session->get_surface(surf_id);
+    response->mutable_id()->set_value(surf_id.as_value());
+    response->set_width(surface->size().width.as_uint32_t());
+    response->set_height(surface->size().height.as_uint32_t());
+    response->set_pixel_format((int)surface->pixel_format());
+    response->set_buffer_usage(request->buffer_usage());
 
-        if (surface->supports_input())
-            response->add_fd(surface->client_input_fd());
+    if (surface->supports_input())
+        response->add_fd(surface->client_input_fd());
 
-        std::tie(client_buffer, need_full_ipc) = advance_buffer(surf_id, *surface);
-    }
+    advance_buffer(surf_id, *surface,
+        [lock, this, response, done, session](graphics::Buffer* client_buffer, bool need_full_ipc)
+        {
+            lock->unlock();
 
-    auto buffer = response->mutable_buffer();
-    pack_protobuf_buffer(*buffer, client_buffer, need_full_ipc);
+            auto buffer = response->mutable_buffer();
+            pack_protobuf_buffer(*buffer, client_buffer, need_full_ipc);
 
-    // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
-    // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
-    // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
-    // this will require additional synchronization if mfd::SocketMessenger::send changes.
-    done->Run();
-    shell->handle_surface_created(session);
+            // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
+            // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
+            // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
+            // this will require additional synchronization if mfd::SocketMessenger::send changes.
+            done->Run();
+            shell->handle_surface_created(session);
+        });
 }
 
 void mf::SessionMediator::next_buffer(
@@ -189,34 +199,34 @@ void mf::SessionMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    bool need_full_ipc;
     SurfaceId const surf_id{request->value()};
-    graphics::Buffer* client_buffer{nullptr};
 
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
+    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
 
-        auto session = weak_session.lock();
+    auto const session = weak_session.lock();
 
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_next_buffer_called(session->name());
+    report->session_next_buffer_called(session->name());
 
-        // We ensure the client has not powered down the outputs, so that
-        // swap_buffer will not block indefinitely, leaving the client
-        // in a position where it can not turn back on the
-        // outputs.
-        display_changer->ensure_display_powered(session);
+    // We ensure the client has not powered down the outputs, so that
+    // swap_buffer will not block indefinitely, leaving the client
+    // in a position where it can not turn back on the
+    // outputs.
+    display_changer->ensure_display_powered(session);
 
-        auto surface = session->get_surface(surf_id);
+    auto surface = session->get_surface(surf_id);
 
-        std::tie(client_buffer, need_full_ipc) = advance_buffer(surf_id, *surface);
-    }
+    advance_buffer(surf_id, *surface,
+        [lock, this, response, done, session](graphics::Buffer* client_buffer, bool need_full_ipc)
+        {
+            lock->unlock();
 
-    pack_protobuf_buffer(*response, client_buffer, need_full_ipc);
+            pack_protobuf_buffer(*response, client_buffer, need_full_ipc);
 
-    done->Run();
+            done->Run();
+        });
 }
 
 void mf::SessionMediator::release_surface(
@@ -337,6 +347,59 @@ void mf::SessionMediator::configure_display(
         auto display_config = display_changer->active_configuration();
         mfd::pack_protobuf_display_configuration(*response, *display_config);
     }
+    done->Run();
+}
+
+void mf::SessionMediator::create_screencast(
+    google::protobuf::RpcController*,
+    const mir::protobuf::ScreencastParameters* parameters,
+    mir::protobuf::Screencast* protobuf_screencast,
+    google::protobuf::Closure* done)
+{
+    static bool const need_full_ipc{true};
+    mg::DisplayConfigurationOutputId const output_id{
+        static_cast<int>(parameters->output_id())};
+
+    auto screencast_session_id = screencast->create_session(output_id);
+    auto buffer = screencast->capture(screencast_session_id);
+
+    protobuf_screencast->mutable_screencast_id()->set_value(
+        screencast_session_id.as_value());
+    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer(),
+                         buffer.get(),
+                         need_full_ipc);
+
+    done->Run();
+}
+
+void mf::SessionMediator::release_screencast(
+    google::protobuf::RpcController*,
+    const mir::protobuf::ScreencastId* protobuf_screencast_id,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    ScreencastSessionId const screencast_session_id{
+        protobuf_screencast_id->value()};
+    screencast->destroy_session(screencast_session_id);
+    done->Run();
+}
+
+void mf::SessionMediator::screencast_buffer(
+    google::protobuf::RpcController*,
+    const mir::protobuf::ScreencastId* protobuf_screencast_id,
+    mir::protobuf::Buffer* protobuf_buffer,
+    google::protobuf::Closure* done)
+{
+    static bool const does_not_need_full_ipc{false};
+    ScreencastSessionId const screencast_session_id{
+        protobuf_screencast_id->value()};
+
+    auto buffer = screencast->capture(screencast_session_id);
+
+    pack_protobuf_buffer(*protobuf_buffer,
+                         buffer.get(),
+                         does_not_need_full_ipc);
+
     done->Run();
 }
 
