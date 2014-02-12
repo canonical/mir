@@ -65,7 +65,7 @@ void mga::LayerListBase::update_representation(size_t needed_size)
         {
             new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
         }
-        std::swap(new_layers, layers);
+        layers = std::move(new_layers);
     }
 }
 
