@@ -104,7 +104,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                  p != mir_output.output_formats+mir_output.num_output_formats;
                  ++p)
             {
-                formats.push_back(MirPixelFormat(*p));
+                formats.push_back(*p);
             }
 
             std::vector<DisplayConfigurationMode> modes;
