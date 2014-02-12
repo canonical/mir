@@ -82,7 +82,6 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
                 available_outputs_for_card[conf_output.card_id] == 0)
             {
                 conf_output.used = false;
-                // XXX Why not mir_power_mode_off?
                 conf_output.power_mode = default_power_state;
                 return;
             }

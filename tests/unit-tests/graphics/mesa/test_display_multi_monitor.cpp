@@ -65,7 +65,7 @@ public:
                 else
                 {
                     conf_output.used = false;
-                    conf_output.power_mode = mir_power_mode_on; // ???
+                    conf_output.power_mode = mir_power_mode_off;
                 }
             });
     }
@@ -94,7 +94,7 @@ public:
                 else
                 {
                     conf_output.used = false;
-                    conf_output.power_mode = mir_power_mode_on; // ???
+                    conf_output.power_mode = mir_power_mode_off;
                 }
             });
     }
