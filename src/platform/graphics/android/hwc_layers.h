@@ -66,7 +66,7 @@ public:
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
     void set_buffer(std::shared_ptr<NativeBuffer> const& buffer);
 
-    void update_buffer_fence();
+    void update_fence_and_release_buffer();
     bool needs_gl_render() const;
 
 private:

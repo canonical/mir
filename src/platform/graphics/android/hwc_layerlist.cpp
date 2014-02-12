@@ -145,6 +145,6 @@ void mga::FBTargetLayerList::update_fences()
 {
     for( auto& layer : layers)
     {
-        layer.update_buffer_fence();
+        layer.update_fence_and_release_buffer();
     }
 }
