@@ -151,5 +151,10 @@ void mga::FBTargetLayerList::update_fences()
 
 bool mga::FBTargetLayerList::needs_gl_render() const
 {
-    return true;
+    bool gl_needed = false;
+    for(auto& layer : layers)
+    {
+        gl_needed |= layer.needs_gl_render();
+    } 
+    return gl_needed;
 }
