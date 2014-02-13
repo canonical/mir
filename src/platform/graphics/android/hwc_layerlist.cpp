@@ -117,6 +117,7 @@ bool mga::FBTargetLayerList::prepare_composition_layers(
     auto const needed_size = list.size() + 1;
     update_representation(needed_size);
 
+    //pack layer list from renderables
     auto layers_it = layers.begin();
     for(auto const& renderable : list)
     {
@@ -125,9 +126,20 @@ bool mga::FBTargetLayerList::prepare_composition_layers(
         layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
         layers_it++;
     }
-
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
+
+    prepare_fn(*native_list().lock());
+
+    //if a layer cannot be drawn, draw with GL here
+    layers_it = layers.begin(); 
+    for(auto const& renderable : list)
+    {
+        if ((layers_it++)->needs_gl_render())
+        {
+            render_fn(*renderable);
+        }
+    }
 
     return true;
 }

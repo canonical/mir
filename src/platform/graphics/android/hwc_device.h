@@ -49,7 +49,7 @@ public:
     void post(Buffer const& buffer);
 
 private:
-    void prepare();
+    void prepare(hwc_display_contents_1_t& display_list);
 
     FBTargetLayerList layer_list;
 
