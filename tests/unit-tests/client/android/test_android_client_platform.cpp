@@ -17,7 +17,7 @@
  */
 
 #include "src/client/client_platform.h"
-#include "src/client/native_client_platform_factory.h"
+#include "src/client/android/client_platform_factory.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
@@ -32,7 +32,7 @@ namespace mtd = mt::doubles;
 TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 {
     mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
+    mcl::android::ClientPlatformFactory factory;
     mtd::MockClientSurface surface;
     auto platform = factory.create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
@@ -43,7 +43,7 @@ TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 TEST(AndroidClientPlatformTest, egl_native_window_is_set)
 {
     mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
+    mcl::android::ClientPlatformFactory factory;
     mtd::MockClientSurface surface;
     auto platform = factory.create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();

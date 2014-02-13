@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,34 +16,26 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
-#define MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
+#ifndef MIR_CLIENT_ANDROID_CLIENT_PLATFORM_FACTORY_H_
+#define MIR_CLIENT_ANDROID_CLIENT_PLATFORM_FACTORY_H_
 
-#include "client_platform_factory.h"
+#include "../client_platform_factory.h"
 
 namespace mir
 {
 namespace client
 {
+namespace android
+{
 
-/**
- * Factory for creating the native client platform.
- * \ingroup platform_enablement
- */
-class NativeClientPlatformFactory : public ClientPlatformFactory
+class ClientPlatformFactory : public client::ClientPlatformFactory
 {
 public:
-    /**
-     * Creates a client platform.
-     *
-     * This method needs to be implemented by each platform.
-     *
-     * \param [in] context information about the client
-     */
-    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
+    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context) override;
 };
 
 }
 }
+}
 
-#endif /* MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_ */
+#endif /* MIR_CLIENT_ANDROID_CLIENT_PLATFORM_FACTORY_H_ */
