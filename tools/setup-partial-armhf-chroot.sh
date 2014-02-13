@@ -47,10 +47,10 @@ rm var/cache/apt/archives/libc-dev*.deb
 rm var/cache/apt/archives/libc6*.deb
 
 for deb in var/cache/apt/archives/* ; do
-if [ ! -d ${deb} ] ; then
-    echo "unpacking: ${deb}"
-    dpkg -x ${deb} .
-fi
+    if [ ! -d ${deb} ] ; then
+        echo "unpacking: ${deb}"
+        dpkg -x ${deb} .
+    fi
 done
 
 # Fix up symlinks which asssumed the usual root path
