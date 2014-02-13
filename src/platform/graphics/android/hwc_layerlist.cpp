@@ -148,7 +148,6 @@ bool mga::FBTargetLayerList::prepare_composition_layers(
     return true;
 }
 
-
 void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 {
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};

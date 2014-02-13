@@ -342,6 +342,6 @@ TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
     EXPECT_EQ(call_count, 2);
 
     call_count = 0;
-    EXPECT_TRUE(layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn));
+    EXPECT_FALSE(layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn));
     EXPECT_EQ(call_count, 0);
 }
