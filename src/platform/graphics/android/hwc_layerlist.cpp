@@ -136,16 +136,18 @@ bool mga::FBTargetLayerList::prepare_composition_layers(
     prepare_fn(*native_list().lock());
 
     //if a layer cannot be drawn, draw with GL here
-    layers_it = layers.begin(); 
+    layers_it = layers.begin();
+    bool gl_render_needed = false;
     for(auto const& renderable : list)
     {
         if ((layers_it++)->needs_gl_render())
         {
+            gl_render_needed = true;
             render_fn(*renderable);
         }
     }
 
-    return true;
+    return gl_render_needed;
 }
 
 void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
