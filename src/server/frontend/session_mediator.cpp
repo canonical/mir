@@ -330,7 +330,7 @@ void mf::SessionMediator::configure_display(
 
         auto config = display_changer->active_configuration();
 
-        config->for_each_output([&](mg::DisplayConfigurationOutput& dest){
+        config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
             int id = dest.id.as_value();
             if (id < 0 || id >= request->display_output_size())
                 return;

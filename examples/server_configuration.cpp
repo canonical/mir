@@ -55,7 +55,7 @@ public:
             });
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0 &&
                     available_outputs_for_card[conf_output.card_id] > 0)
@@ -86,7 +86,7 @@ public:
         bool done{false};
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (!done && conf_output.connected && conf_output.modes.size() > 0)
                 {

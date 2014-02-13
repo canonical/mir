@@ -68,8 +68,9 @@ void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::Di
     f(configuration);
 }
 
-void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput&)> f)
+void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
-    f(configuration);
+    mg::UserDisplayConfigurationOutput user(configuration);
+    f(user);
 }
 

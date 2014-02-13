@@ -40,7 +40,7 @@ void PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
 {
     base_policy->apply_to(conf);
     conf.for_each_output(
-        [&](graphics::DisplayConfigurationOutput& conf_output)
+        [&](graphics::UserDisplayConfigurationOutput& conf_output)
         {
             if (!conf_output.connected || !conf_output.used) return;
 

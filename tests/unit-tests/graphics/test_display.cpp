@@ -109,7 +109,7 @@ public:
     MOCK_CONST_METHOD1(for_each_output,
         void(std::function<void(mg::DisplayConfigurationOutput const&)>));
     MOCK_METHOD1(for_each_output,
-        void(std::function<void(mg::DisplayConfigurationOutput&)>));
+        void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
     MOCK_CONST_METHOD0(valid, bool());
 };
 

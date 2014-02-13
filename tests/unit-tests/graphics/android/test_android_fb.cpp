@@ -253,25 +253,25 @@ TEST_F(AndroidDisplayTest, test_dpms_configuration_changes_reach_device)
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 
     auto configuration = display.configuration();
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
         output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
         output.power_mode = mir_power_mode_suspend;
     });

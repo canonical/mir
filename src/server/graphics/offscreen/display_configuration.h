@@ -35,7 +35,7 @@ public:
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
-    void for_each_output(std::function<void(DisplayConfigurationOutput&)> f) override;
+    void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
 private:
     DisplayConfigurationOutput output;

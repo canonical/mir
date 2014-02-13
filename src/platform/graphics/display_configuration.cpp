@@ -227,3 +227,22 @@ bool mg::DisplayConfiguration::valid() const
 
     return all_valid;
 }
+
+mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
+    DisplayConfigurationOutput& master) :
+        id(master.id),
+        card_id(master.card_id),
+        type(master.type),
+        pixel_formats(master.pixel_formats),
+        modes(master.modes),
+        preferred_mode_index(master.preferred_mode_index),
+        physical_size_mm(master.physical_size_mm),
+        connected(master.connected),
+        used(master.used),
+        top_left(master.top_left),
+        current_mode_index(master.current_mode_index),
+        current_format(master.current_format),
+        power_mode(master.power_mode),
+        orientation(master.orientation)
+{
+}

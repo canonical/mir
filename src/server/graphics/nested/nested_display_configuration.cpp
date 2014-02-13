@@ -88,7 +88,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
 }
 
 void mgn::NestedDisplayConfiguration::for_each_output(
-    std::function<void(DisplayConfigurationOutput&)> f)
+    std::function<void(UserDisplayConfigurationOutput&)> f)
 {
     // This is mostly copied and pasted from the const version above, but this
     // mutable version copies user-changes to the output structure at the end.
@@ -136,8 +136,9 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                 mir_output.power_mode,
                 mir_output.orientation
             };
+            UserDisplayConfigurationOutput user(output);
 
-            f(output);
+            f(user);
 
             // Slightly more than the fields users are expected to change...
             // as some test cases change immutable fields like output_id

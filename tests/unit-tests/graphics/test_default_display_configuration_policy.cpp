@@ -61,10 +61,13 @@ public:
             f(output);
     }
 
-    void for_each_output(std::function<void(DisplayConfigurationOutput&)> f)
+    void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f)
     {
         for (auto& output : outputs)
-            f(output);
+        {
+            UserDisplayConfigurationOutput user(output);
+            f(user);
+        }
     }
 
     static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};

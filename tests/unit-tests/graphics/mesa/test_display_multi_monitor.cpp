@@ -52,7 +52,7 @@ public:
     void apply_to(mg::DisplayConfiguration& conf)
     {
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
@@ -79,7 +79,7 @@ public:
         int max_x = 0;
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
@@ -484,7 +484,7 @@ TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
     auto conf = display->configuration();
 
     conf->for_each_output(
-        [&](mg::DisplayConfigurationOutput& output)
+        [&](mg::UserDisplayConfigurationOutput& output)
         {
             output.used = false;
             output.current_mode_index = output.preferred_mode_index;
@@ -522,7 +522,7 @@ TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
     auto conf = display->configuration();
 
     conf->for_each_output(
-        [&](mg::DisplayConfigurationOutput& output)
+        [&](mg::UserDisplayConfigurationOutput& output)
         {
             output.used = false;
             output.current_mode_index = output.preferred_mode_index;

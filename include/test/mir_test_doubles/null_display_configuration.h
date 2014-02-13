@@ -35,7 +35,7 @@ class NullDisplayConfiguration : public graphics::DisplayConfiguration
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const override
     {
     }
-    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput&)>) override
+    void for_each_output(std::function<void(graphics::UserDisplayConfigurationOutput&)>) override
     {
     }
 };

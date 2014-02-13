@@ -125,10 +125,13 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
             f(output);
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput&)> f) override
+    void for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f) override
     {
         for (auto& output : outputs)
-            f(output);
+        {
+            mg::UserDisplayConfigurationOutput user(output);
+            f(user);
+        }
     }
 
     uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const override

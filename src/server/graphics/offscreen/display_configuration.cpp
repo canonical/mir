@@ -70,8 +70,9 @@ void mgo::DisplayConfiguration::for_each_output(
 }
 
 void mgo::DisplayConfiguration::for_each_output(
-    std::function<void(mg::DisplayConfigurationOutput&)> f)
+    std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
-    f(output);
+    mg::UserDisplayConfigurationOutput user(output);
+    f(user);
 }
 

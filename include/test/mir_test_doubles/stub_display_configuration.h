@@ -156,11 +156,12 @@ public:
         }
     }
 
-    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput&)> f) override
+    void for_each_output(std::function<void(graphics::UserDisplayConfigurationOutput&)> f) override
     {
         for (auto& disp : outputs)
         {
-            f(disp);
+            graphics::UserDisplayConfigurationOutput user(disp);
+            f(user);
         }
     }
 

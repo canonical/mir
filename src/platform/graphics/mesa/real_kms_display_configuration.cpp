@@ -108,10 +108,13 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
 }
 
 void mgm::RealKMSDisplayConfiguration::for_each_output(
-    std::function<void(DisplayConfigurationOutput&)> f)
+    std::function<void(UserDisplayConfigurationOutput&)> f)
 {
     for (auto& output : outputs)
-        f(output);
+    {
+        UserDisplayConfigurationOutput user(output);
+        f(user);
+    }
 }
 
 uint32_t mgm::RealKMSDisplayConfiguration::get_kms_connector_id(

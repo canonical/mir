@@ -126,7 +126,7 @@ void ms::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Ses
     if (it == config_map.end())
         return;
     auto conf = it->second;
-    conf->for_each_output([&](mg::DisplayConfigurationOutput& output) -> void
+    conf->for_each_output([&](mg::UserDisplayConfigurationOutput& output) -> void
     {
         if (!output.used) return;
 

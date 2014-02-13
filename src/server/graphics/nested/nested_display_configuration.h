@@ -36,7 +36,7 @@ public:
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const override;
-    void for_each_output(std::function<void(DisplayConfigurationOutput&)>) override;
+    void for_each_output(std::function<void(UserDisplayConfigurationOutput&)>) override;
 
     operator MirDisplayConfiguration*() const { return display_config; }
 private:

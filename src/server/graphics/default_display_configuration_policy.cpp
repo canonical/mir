@@ -76,7 +76,7 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
         });
 
     conf.for_each_output(
-        [&](DisplayConfigurationOutput& conf_output)
+        [&](UserDisplayConfigurationOutput& conf_output)
         {
             if (!conf_output.connected || conf_output.modes.empty() ||
                 available_outputs_for_card[conf_output.card_id] == 0)

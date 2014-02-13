@@ -39,7 +39,7 @@ public:
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
-    void for_each_output(std::function<void(DisplayConfigurationOutput&)> f) override;
+    void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
     uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
     size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const;

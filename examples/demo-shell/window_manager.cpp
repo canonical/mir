@@ -143,7 +143,7 @@ bool me::WindowManager::handle(MirEvent const& event)
             MirPowerMode new_power_mode = display_off ?
                 mir_power_mode_on : mir_power_mode_off;
             conf->for_each_output(
-                [&](mg::DisplayConfigurationOutput& output) -> void
+                [&](mg::UserDisplayConfigurationOutput& output) -> void
                 {
                     output.power_mode = new_power_mode;
                 }
@@ -175,7 +175,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 compositor->stop();
                 auto conf = display->configuration();
                 conf->for_each_output(
-                    [&](mg::DisplayConfigurationOutput& output) -> void
+                    [&](mg::UserDisplayConfigurationOutput& output) -> void
                     {
                         output.orientation = orientation;
                     }
