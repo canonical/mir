@@ -78,7 +78,7 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-TEST_F(HwcDevice, test_hwc_displays)
+TEST_F(HwcDevice, hwc_displays)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(),_,_))
@@ -101,7 +101,7 @@ TEST_F(HwcDevice, test_hwc_displays)
     EXPECT_FALSE(mock_device->virtual_set);
 }
 
-TEST_F(HwcDevice, test_hwc_prepare)
+TEST_F(HwcDevice, hwc_prepare)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
@@ -113,7 +113,7 @@ TEST_F(HwcDevice, test_hwc_prepare)
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
 
-TEST_F(HwcDevice, test_hwc_prepare_resets_layers)
+TEST_F(HwcDevice, hwc_prepare_resets_layers)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
@@ -133,7 +133,7 @@ TEST_F(HwcDevice, test_hwc_prepare_resets_layers)
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
 }
 
-TEST_F(HwcDevice, test_hwc_prepare_with_overlays)
+TEST_F(HwcDevice, hwc_prepare_with_overlays)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
@@ -152,7 +152,7 @@ TEST_F(HwcDevice, test_hwc_prepare_with_overlays)
     EXPECT_EQ(3, mock_device->display0_set_content.numHwLayers);
 }
 
-TEST_F(HwcDevice, test_hwc_render)
+TEST_F(HwcDevice, hwc_render)
 {
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
         .Times(1);
@@ -160,7 +160,7 @@ TEST_F(HwcDevice, test_hwc_render)
     device.gpu_render(dpy, surf);
 }
 
-TEST_F(HwcDevice, test_hwc_swapbuffers_failure)
+TEST_F(HwcDevice, hwc_swapbuffers_failure)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
@@ -174,7 +174,7 @@ TEST_F(HwcDevice, test_hwc_swapbuffers_failure)
     }, std::runtime_error);
 }
 
-TEST_F(HwcDevice, test_hwc_commit)
+TEST_F(HwcDevice, hwc_commit)
 {
     using namespace testing;
     int hwc_return_fence = 94;
@@ -205,7 +205,7 @@ TEST_F(HwcDevice, test_hwc_commit)
     EXPECT_EQ(0, mock_device->set_layerlist[1].flags);
 }
 
-TEST_F(HwcDevice, test_hwc_commit_failure)
+TEST_F(HwcDevice, hwc_commit_failure)
 {
     using namespace testing;
 

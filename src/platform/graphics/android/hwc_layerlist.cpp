@@ -143,7 +143,7 @@ void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 
 void mga::FBTargetLayerList::update_fences()
 {
-    for( auto& layer : layers)
+    for(auto& layer : layers)
     {
         layer.update_fence_and_release_buffer();
     }
