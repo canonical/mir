@@ -67,4 +67,15 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     return !(::testing::Test::HasFailure());
 }
 
+MATCHER_P(MatchesList, value, std::string(""))
+{
+    EXPECT_EQ(arg.numHwLayers, value.size());
+    auto i = 0u;
+    for(auto layer : value)
+    {
+        EXPECT_THAT(arg.hwLayers[i++], MatchesLayer(*layer));
+    }
+    return !(::testing::Test::HasFailure());
+}
+
 #endif /* MIR_TEST_HWC_STRUCT_HELPERS_H_ */

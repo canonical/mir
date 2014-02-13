@@ -28,6 +28,8 @@
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test/fake_shared.h"
+#include "hwc_struct_helpers.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -36,6 +38,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
+namespace mt=mir::test;
 
 namespace
 {
@@ -75,6 +78,27 @@ struct MockFileOps : public mga::SyncFileOps
     MOCK_METHOD1(dup, int(int));
     MOCK_METHOD1(close, int(int));
 };
+
+class HwcFunctions
+{
+public:
+    virtual ~HwcFunctions() = default;
+
+    virtual void prepare(hwc_display_contents_1_t&) const = 0;
+    virtual void set(hwc_display_contents_1_t&) const = 0;
+
+protected:
+    HwcFunctions() = default;
+    HwcFunctions& operator=(HwcFunctions const&) = delete;
+    HwcFunctions(HwcFunctions const&) = delete;
+};
+
+struct MockHWCDeviceWrapper : public HwcFunctions
+{
+    MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
+    MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));
+};
+
 }
 
 class HwcDevice : public ::testing::Test
@@ -87,27 +111,113 @@ protected:
         dpy = mock_egl.fake_egl_display;
         surf = mock_egl.fake_egl_surface;
         mock_native_buffer = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
-        mock_buffer = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_file_ops = std::make_shared<MockFileOps>();
 
-        ON_CALL(*mock_buffer, size())
-            .WillByDefault(Return(geom::Size{0,0}));
-        ON_CALL(*mock_buffer, native_buffer_handle())
+        ON_CALL(mock_buffer, size())
+            .WillByDefault(Return(buffer_size));
+        ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mock_native_buffer));
+
+
+        empty_region = {0,0,0,0};
+        set_region = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
+        screen_pos = {
+            screen_position.top_left.x.as_int(),
+            screen_position.top_left.y.as_int(),
+            screen_position.size.width.as_int(),
+            screen_position.size.height.as_int()
+        };
+
+        comp_layer.compositionType = HWC_FRAMEBUFFER;
+        comp_layer.hints = 0;
+        comp_layer.flags = 0;
+        comp_layer.handle = native_handle_1.handle();
+        comp_layer.transform = 0;
+        comp_layer.blending = HWC_BLENDING_NONE;
+        comp_layer.sourceCrop = set_region;
+        comp_layer.displayFrame = screen_pos;
+        comp_layer.visibleRegionScreen = {1, &set_region};
+        comp_layer.acquireFenceFd = -1;
+        comp_layer.releaseFenceFd = -1;
+
+        target_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
+        target_layer.hints = 0;
+        target_layer.flags = 0;
+        target_layer.handle = 0;
+        target_layer.transform = 0;
+        target_layer.blending = HWC_BLENDING_NONE;
+        target_layer.sourceCrop = empty_region;
+        target_layer.displayFrame = empty_region;
+        target_layer.visibleRegionScreen = {1, &set_region};
+        target_layer.acquireFenceFd = -1;
+        target_layer.releaseFenceFd = -1;
+
+        skip_layer.compositionType = HWC_FRAMEBUFFER;
+        skip_layer.hints = 0;
+        skip_layer.flags = HWC_SKIP_LAYER;
+        skip_layer.handle = 0;
+        skip_layer.transform = 0;
+        skip_layer.blending = HWC_BLENDING_NONE;
+        skip_layer.sourceCrop = empty_region;
+        skip_layer.displayFrame = empty_region;
+        skip_layer.visibleRegionScreen = {1, &set_region};
+        skip_layer.acquireFenceFd = -1;
+        skip_layer.releaseFenceFd = -1;
+
+        set_skip_layer = skip_layer;
+        set_skip_layer.handle = native_handle_1.handle();
+        set_skip_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
+        set_skip_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
+
+        set_target_layer = target_layer;
+        set_target_layer.handle = native_handle_1.handle();
+        set_target_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
+        set_target_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
+
+        stub_renderable1 = std::make_shared<StubRenderable>(
+                                mt::fake_shared(mock_buffer), screen_position);
+        stub_renderable2 = std::make_shared<StubRenderable>(
+                                mt::fake_shared(mock_buffer), screen_position);
+
+        empty_prepare_fn = [] (hwc_display_contents_1_t&) {};
+        empty_render_fn = [] (mg::Renderable const&) {};
+
+        mock_hwc_device_wrapper = std::make_shared<MockHWCDeviceWrapper>();
     }
 
     std::shared_ptr<MockFileOps> mock_file_ops;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
     EGLDisplay dpy;
     EGLSurface surf;
     testing::NiceMock<mtd::MockEGL> mock_egl;
+
+    hwc_rect_t screen_pos;
+    hwc_rect_t empty_region;
+    hwc_rect_t set_region;
+    hwc_layer_1_t skip_layer;
+    hwc_layer_1_t target_layer;
+    hwc_layer_1_t set_skip_layer;
+    hwc_layer_1_t set_target_layer;
+    hwc_layer_1_t comp_layer;
+
+    geom::Size buffer_size{333, 444};
+    geom::Rectangle screen_position{{9,8},{245, 250}};
+    mtd::StubAndroidNativeBuffer native_handle_1{buffer_size};
+    testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<StubRenderable> stub_renderable1;
+    std::shared_ptr<StubRenderable> stub_renderable2;
+    std::shared_ptr<MockHWCDeviceWrapper> mock_hwc_device_wrapper;
+
+    std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
+    std::function<void(mg::Renderable const&)> empty_render_fn;
 };
 
+
+#if 0
 TEST_F(HwcDevice, hwc_displays)
 {
     using namespace testing;
@@ -116,9 +226,11 @@ TEST_F(HwcDevice, hwc_displays)
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.prepare_gl();
-    device.post(*mock_buffer);
+    mga::HwcDeviceWrapper device(mock_device);
+
+    hwc_display_contents_1_t contents;
+    device.prepare(contents);
+    device.set(contents);
 
     /* primary phone display */
     EXPECT_TRUE(mock_device->primary_prepare);
@@ -130,22 +242,26 @@ TEST_F(HwcDevice, hwc_displays)
     EXPECT_FALSE(mock_device->virtual_prepare);
     EXPECT_FALSE(mock_device->virtual_set);
 }
+#endif
 
 TEST_F(HwcDevice, hwc_prepare)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+
+    std::list<hwc_layer_1_t*> expected_list
+    {
+        &skip_layer,
+        &target_layer
+    };
+
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
         .Times(1);
 
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
     device.prepare_gl();
-
-    ASSERT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
-    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
-    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
 
+#if 0
 TEST_F(HwcDevice, hwc_default_set)
 {
     using namespace testing;
@@ -240,34 +356,6 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays)
     EXPECT_EQ(call_count, 0);
 }
 
-TEST_F(HWCLayerListTest, list_prepares_and_renders)
-{
-
-}
-#if 0
-TEST_F(HwcDevice, hwc_prepare_resets_layers)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(2);
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
-    {
-        std::make_shared<mtd::MockRenderable>(),
-        std::make_shared<mtd::MockRenderable>()
-    };
-    device.prepare_gl_and_overlays(renderlist);
-    EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
-
-    device.prepare_gl();
-    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
-}
-#endif
-
-
-
 TEST_F(HwcDevice, hwc_swapbuffers)
 {
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
@@ -328,9 +416,36 @@ TEST_F(HwcDevice, hwc_commit_failure)
         device.post(*mock_buffer);
     }, std::runtime_error);
 }
+#endif
+
+
 
 /* tests with a FRAMEBUFFER_TARGET present
    NOT PORTEDDDDDDDDDDDDDDDDDDDd */
+#if 0
+TEST_F(HwcDevice, hwc_prepare_resets_layers)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(2);
+
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        std::make_shared<mtd::MockRenderable>(),
+        std::make_shared<mtd::MockRenderable>()
+    };
+    device.prepare_gl_and_overlays(renderlist);
+    EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
+
+    device.prepare_gl();
+    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
+}
+#endif
+
+
+
 #if 0
 TEST_F(HWCLayerListTest, fbtarget_list_update)
 {
