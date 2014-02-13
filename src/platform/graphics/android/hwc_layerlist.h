@@ -68,8 +68,10 @@ class FBTargetLayerList : public LayerListBase
 {
 public:
     FBTargetLayerList();
-    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
-    bool render_unsupported_surfaces(updated_list, render_fn) const;
+    bool prepare_composition_layers(
+        std::function<void(hwc_display_contents_1_t&)> const& prepare_fn,
+        std::list<std::shared_ptr<graphics::Renderable>> const& list,
+        std::function<void(Renderable const&)> const& render_fn);
 
     void reset_composition_layers(); 
     void update_fences();

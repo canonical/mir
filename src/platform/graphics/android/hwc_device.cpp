@@ -66,7 +66,9 @@ void mga::HwcDevice::prepare_gl()
 
 void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
 {
-    layer_list.set_composition_layers(renderables);
+    auto render_fn = [](mg::Renderable const&){};
+    auto prepare_fn = [](hwc_display_contents_1_t const&) {};
+    layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
     prepare();
 }
 

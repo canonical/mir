@@ -108,8 +108,12 @@ void mga::FBTargetLayerList::reset_composition_layers()
     skip_layers_present = true;
 }
 
-void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
+bool mga::FBTargetLayerList::prepare_composition_layers(
+    std::function<void(hwc_display_contents_1_t&)> const& prepare_fn,
+    std::list<std::shared_ptr<graphics::Renderable>> const& list,
+    std::function<void(Renderable const&)> const& render_fn)
 {
+    (void) render_fn; (void) prepare_fn;
     auto const needed_size = list.size() + 1;
     update_representation(needed_size);
 
@@ -124,6 +128,8 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
 
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
+
+    return true;
 }
 
 
@@ -147,14 +153,4 @@ void mga::FBTargetLayerList::update_fences()
     {
         layer.update_fence_and_release_buffer();
     }
-}
-
-bool mga::FBTargetLayerList::needs_gl_render() const
-{
-    bool gl_needed = false;
-    for(auto& layer : layers)
-    {
-        gl_needed |= layer.needs_gl_render();
-    } 
-    return gl_needed;
 }

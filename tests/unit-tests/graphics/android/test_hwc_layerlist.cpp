@@ -36,6 +36,7 @@ namespace
 
 class StubRenderable : public mg::Renderable
 {
+public:
     StubRenderable(std::shared_ptr<mg::Buffer> const& buffer, geom::Rectangle screen_pos)
         : buf(buffer),
           screen_pos(screen_pos)
@@ -136,8 +137,8 @@ public:
         set_target_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
         set_target_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
 
-        empty_prepare_fn = [] (hwc_display_contents_1_t const& list) {};
-        empty_render_fn = [&call_count] (Renderable const& renderable) {};
+        empty_prepare_fn = [] (hwc_display_contents_1_t&) {};
+        empty_render_fn = [] (mg::Renderable const&) {};
     }
 
     geom::Size buffer_size{333, 444};
@@ -147,8 +148,8 @@ public:
     std::shared_ptr<StubRenderable> stub_renderable1;
     std::shared_ptr<StubRenderable> stub_renderable2;
 
-    std::function<void(hwc_display_contents_1_t const&)> empty_prepare_fn;
-    std::function<void(Renderable const&)> empty_render_fn;
+    std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
+    std::function<void(mg::Renderable const&)> empty_render_fn;
 
     hwc_rect_t screen_pos;
     hwc_rect_t empty_region;
@@ -297,7 +298,7 @@ TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
         stub_renderable2
     });
 
-    auto prepare_fn_all_gl = [] (hwc_display_contents_1_t const& list)
+    auto prepare_fn_all_gl = [] (hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(3, list.numHwLayers);
         list.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
@@ -305,24 +306,24 @@ TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
         list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
     };
 
-    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t const& list)
+    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(3, list.numHwLayers);
-        list->hwLayers[0].compositionType = HWC_OVERLAY;
-        list->hwLayers[1].compositionType = HWC_OVERLAY;
+        list.hwLayers[0].compositionType = HWC_OVERLAY;
+        list.hwLayers[1].compositionType = HWC_OVERLAY;
         list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
     };
 
-    auto prepare_fn_mixed = [] (hwc_display_contents_1_t const& list)
+    auto prepare_fn_mixed = [] (hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(3, list.numHwLayers);
-        list->hwLayers[0].compositionType = HWC_OVERLAY;
-        list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
-        list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+        list.hwLayers[0].compositionType = HWC_OVERLAY;
+        list.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
     };
 
     auto call_count = 0;
-    auto render_fn = [&call_count] (Renderable const& renderable)
+    auto render_fn = [&call_count, this] (mg::Renderable const& renderable)
     {
         if (call_count == 0)
             EXPECT_EQ(&renderable, stub_renderable1.get());
