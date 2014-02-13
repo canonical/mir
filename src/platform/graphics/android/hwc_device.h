@@ -55,6 +55,8 @@ private:
 
     std::shared_ptr<SyncFileOps> const sync_ops;
     static size_t const num_displays{3}; //primary, external, virtual
+
+    bool needs_swapbuffers;
 };
 
 }

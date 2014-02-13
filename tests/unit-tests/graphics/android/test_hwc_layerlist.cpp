@@ -96,7 +96,7 @@ public:
         comp_layer.flags = 0;
         comp_layer.handle = native_handle_1.handle();
         comp_layer.transform = 0;
-        comp_layer.blending = HWC_BLENDING_COVERAGE;
+        comp_layer.blending = HWC_BLENDING_NONE;
         comp_layer.sourceCrop = set_region;
         comp_layer.displayFrame = screen_pos;
         comp_layer.visibleRegionScreen = {1, &set_region};
@@ -234,7 +234,7 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     EXPECT_THAT(set_target_layer, MatchesLayer(list->hwLayers[2]));
 
     /* reset default */
-    layerlist.reset_composition_layers();
+    EXPECT_TRUE(layerlist.prepare_default_layers(empty_prepare_fn));
 
     list = layerlist.native_list().lock();
     target_layer.handle = nullptr;

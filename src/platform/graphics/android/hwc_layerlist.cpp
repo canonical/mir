@@ -98,7 +98,8 @@ mga::FBTargetLayerList::FBTargetLayerList()
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
-void mga::FBTargetLayerList::reset_composition_layers()
+bool mga::FBTargetLayerList::prepare_default_layers( 
+        std::function<void(hwc_display_contents_1_t&)> const& prepare_fn)
 {
     update_representation(2);
 
@@ -106,6 +107,9 @@ void mga::FBTargetLayerList::reset_composition_layers()
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 
     skip_layers_present = true;
+
+    prepare_fn(*native_list().lock());
+    return true;
 }
 
 bool mga::FBTargetLayerList::prepare_composition_layers(

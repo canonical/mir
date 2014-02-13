@@ -36,7 +36,8 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      sync_ops(sync_ops)
+      sync_ops(sync_ops),
+      needs_swapbuffers(true)
 {
 }
 
@@ -53,9 +54,11 @@ void mga::HwcDevice::prepare(hwc_display_contents_1_t & display_list)
 
 void mga::HwcDevice::prepare_gl()
 {
-    layer_list.reset_composition_layers();
-    auto display_list = layer_list.native_list().lock();
-    prepare(*display_list);
+    auto prepare_fn = [this](hwc_display_contents_1_t& prep)
+    {
+        prepare(prep);
+    };
+    needs_swapbuffers = layer_list.prepare_default_layers(prepare_fn);
 }
 
 void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
@@ -65,12 +68,13 @@ void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderabl
     {
         prepare(prep);
     };
-    layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
+    needs_swapbuffers = layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
 }
 
 void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
-    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    if ((needs_swapbuffers) && 
+        (eglSwapBuffers(dpy, sur) == EGL_FALSE))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
     }
