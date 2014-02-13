@@ -117,7 +117,6 @@ bool mga::FBTargetLayerList::prepare_composition_layers(
     std::list<std::shared_ptr<graphics::Renderable>> const& list,
     std::function<void(Renderable const&)> const& render_fn)
 {
-    (void) render_fn; (void) prepare_fn;
     auto const needed_size = list.size() + 1;
     update_representation(needed_size);
 

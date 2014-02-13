@@ -291,7 +291,7 @@ TEST_F(HWCLayerListTest, list_returns_retire_fence)
     EXPECT_EQ(release_fence, layerlist.retirement_fence());
 }
 
-TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
+TEST_F(HWCLayerListTest, list_prepares_and_renders)
 {
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
         stub_renderable1,
