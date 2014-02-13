@@ -126,7 +126,7 @@ TEST_F(DisplayTest, configure_disallows_invalid_configuration)
 
     EXPECT_THROW({display->configure(config);}, std::logic_error);
 
-    // Determining what counts as a valid configuration is a much tricker
+    // Determining what counts as a valid configuration is a much trickier
     // platform-dependent exercise, so won't be tested here.
 }
 
