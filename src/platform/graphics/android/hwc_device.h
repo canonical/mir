@@ -49,6 +49,8 @@ public:
     void post(Buffer const& buffer);
 
 private:
+    void prepare();
+
     FBTargetLayerList layer_list;
 
     std::shared_ptr<SyncFileOps> const sync_ops;

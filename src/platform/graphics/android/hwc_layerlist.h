@@ -70,8 +70,8 @@ public:
     FBTargetLayerList();
     void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
     void reset_composition_layers(); 
-    NativeFence fb_target_fence();
-    void set_fb_target(Buffer const&);
+    void update_fences();
+    void set_fb_target(Buffer const& buffer);
 
 private:
     bool skip_layers_present{true};

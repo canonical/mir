@@ -53,25 +53,20 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 
 void mga::LayerListBase::update_representation(size_t needed_size)
 {
-    std::shared_ptr<hwc_display_contents_1_t> new_hwc_representation;
-    std::list<HWCLayer> new_layers;
-
     if (hwc_representation->numHwLayers != needed_size)
     {
-        new_hwc_representation = generate_hwc_list(needed_size);
-    }
-    else
-    {
-        new_hwc_representation = hwc_representation;
+        hwc_representation = generate_hwc_list(needed_size);
     }
 
-    for (auto i = 0u; i < needed_size; i++)
+    if (layers.size() != needed_size)
     {
-        new_layers.emplace_back(mga::HWCLayer(new_hwc_representation, i));
+        std::list<HWCLayer> new_layers;
+        for (auto i = 0u; i < needed_size; i++)
+        {
+            new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
+        }
+        layers = std::move(new_layers);
     }
-
-    std::swap(new_layers, layers);
-    hwc_representation = new_hwc_representation;
 }
 
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
@@ -123,7 +118,7 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
     {
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(*renderable->buffer());
+        layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
         layers_it++;
     }
 
@@ -135,17 +130,21 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
 void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 {
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto buf = buffer.native_buffer_handle();
     if (skip_layers_present)
     {
         layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buffer);
+        layers.front().set_buffer(buf);
     }
 
     layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buffer);
+    layers.back().set_buffer(buf);
 }
 
-mga::NativeFence mga::FBTargetLayerList::fb_target_fence()
+void mga::FBTargetLayerList::update_fences()
 {
-   return layers.back().release_fence();
+    for(auto& layer : layers)
+    {
+        layer.update_fence_and_release_buffer();
+    }
 }

@@ -77,8 +77,8 @@ private:
 int main(int argc, char const** argv)
 try
 {
-    mir::test::draw::DrawPatternSolid fill_with_green(0x00FF00FF);
-    mir::test::draw::DrawPatternSolid fill_with_blue(0x0000FFFF);
+    mir::test::draw::DrawPatternSolid fill_with_green(0xFF00FF00);
+    mir::test::draw::DrawPatternSolid fill_with_blue(0xFFFF0000);
 
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;

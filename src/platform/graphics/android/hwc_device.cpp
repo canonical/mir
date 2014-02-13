@@ -22,7 +22,6 @@
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer.h"
 
 #include <EGL/eglext.h>
@@ -41,7 +40,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 {
 }
 
-void mga::HwcDevice::prepare_gl()
+void mga::HwcDevice::prepare()
 {
     auto rc = 0;
     auto display_list = layer_list.native_list().lock();
@@ -59,9 +58,16 @@ void mga::HwcDevice::prepare_gl()
     }
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
+void mga::HwcDevice::prepare_gl()
 {
-    prepare_gl();
+    layer_list.reset_composition_layers();
+    prepare();
+}
+
+void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
+{
+    layer_list.set_composition_layers(renderables);
+    prepare();
 }
 
 void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
@@ -85,11 +91,8 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
         rc = hwc_device->set(hwc_device.get(), 1, displays);
 
+        layer_list.update_fences();
         mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
-
-        int framebuffer_fence = layer_list.fb_target_fence();
-        auto native_buffer = buffer.native_buffer_handle();
-        native_buffer->update_fence(framebuffer_fence);
     }
 
     if ((rc != 0) || (!display_list))

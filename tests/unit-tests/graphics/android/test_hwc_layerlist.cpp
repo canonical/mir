@@ -38,9 +38,6 @@ public:
     {
         using namespace testing;
 
-        native_handle_1.anwb()->width = width;
-        native_handle_1.anwb()->height = height;
-
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
@@ -111,9 +108,7 @@ public:
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
     bool alpha_enabled{true};
-    int width{432};
-    int height{876};
-    mtd::StubAndroidNativeBuffer native_handle_1;
+    mtd::StubAndroidNativeBuffer native_handle_1{buffer_size};
     testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 
@@ -209,15 +204,42 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
 }
 
-TEST_F(HWCLayerListTest, list_returns_fb_fence)
+TEST_F(HWCLayerListTest, fence_updates)
 {
-    int release_fence = 381;
+    int release_fence1 = 381;
+    int release_fence2 = 382;
+    int release_fence3 = 383;
+    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
+        .Times(1);
+    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
+        .Times(1);
+    EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
+        .Times(1);
+
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .WillOnce(Return(native_handle_1))
+        .WillOnce(Return(native_handle_2))
+        .WillRepeatedly(Return(native_handle_3));
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        mt::fake_shared(mock_renderable),
+        mt::fake_shared(mock_renderable)
+    });
+
     mga::FBTargetLayerList layerlist;
+    layerlist.set_composition_layers(updated_list);
+    layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(2, list->numHwLayers);
-    list->hwLayers[1].releaseFenceFd = release_fence;
-    EXPECT_EQ(release_fence, layerlist.fb_target_fence());
+    ASSERT_EQ(3, list->numHwLayers);
+    list->hwLayers[0].releaseFenceFd = release_fence1;
+    list->hwLayers[1].releaseFenceFd = release_fence2;
+    list->hwLayers[2].releaseFenceFd = release_fence3;
+
+    layerlist.update_fences();
 }
 
 TEST_F(HWCLayerListTest, list_returns_retire_fence)
