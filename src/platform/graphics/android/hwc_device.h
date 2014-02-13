@@ -36,7 +36,8 @@ namespace android
 class HWCVsyncCoordinator;
 class SyncFileOps;
 
-class HwcDevice : public HWCCommonDevice
+class HwcDevice : public HWCCommonDevice,
+                  private LayerListBase
 {
 public:
     HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
@@ -51,12 +52,11 @@ public:
 private:
     void prepare(hwc_display_contents_1_t& display_list);
 
-    FBTargetLayerList layer_list;
-
     std::shared_ptr<SyncFileOps> const sync_ops;
     static size_t const num_displays{3}; //primary, external, virtual
 
     bool needs_swapbuffers;
+    bool skip_layers_present{true};
 };
 
 }

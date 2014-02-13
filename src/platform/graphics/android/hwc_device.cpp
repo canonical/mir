@@ -35,10 +35,13 @@ namespace geom = mir::geometry;
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
-    : HWCCommonDevice(hwc_device, coordinator),
+    : HWCCommonDevice(hwc_device, coordinator), 
+      LayerListBase{2},
       sync_ops(sync_ops),
       needs_swapbuffers(true)
 {
+    layers.front().set_layer_type(mga::LayerType::skip);
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
 void mga::HwcDevice::prepare(hwc_display_contents_1_t & display_list)
@@ -58,7 +61,15 @@ void mga::HwcDevice::prepare_gl()
     {
         prepare(prep);
     };
-    needs_swapbuffers = layer_list.prepare_default_layers(prepare_fn);
+
+    update_representation(2);
+    layers.front().set_layer_type(mga::LayerType::skip);
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+
+    skip_layers_present = true;
+
+    prepare_fn(*native_list().lock());
+    needs_swapbuffers = true;
 }
 
 void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
@@ -68,7 +79,36 @@ void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderabl
     {
         prepare(prep);
     };
-    needs_swapbuffers = layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
+    auto const needed_size = renderables.size() + 1;
+    update_representation(needed_size);
+
+    //pack layer list from renderables
+    auto layers_it = layers.begin();
+    for(auto const& renderable : renderables)
+    {
+        layers_it->set_layer_type(mga::LayerType::gl_rendered);
+        layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
+        layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
+        layers_it++;
+    }
+    layers_it->set_layer_type(mga::LayerType::framebuffer_target);
+    skip_layers_present = false;
+
+    prepare_fn(*native_list().lock());
+
+    //if a layer cannot be drawn, draw with GL here
+    layers_it = layers.begin();
+    bool gl_render_needed = false;
+    for(auto const& renderable : renderables)
+    {
+        if ((layers_it++)->needs_gl_render())
+        {
+            gl_render_needed = true;
+            render_fn(*renderable);
+        }
+    }
+
+    needs_swapbuffers = gl_render_needed;
 }
 
 void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
@@ -84,17 +124,30 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
-    layer_list.set_fb_target(buffer);
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto buf = buffer.native_buffer_handle();
+    if (skip_layers_present)
+    {
+        layers.front().set_render_parameters(disp_frame, false);
+        layers.front().set_buffer(buf);
+    }
+
+    layers.back().set_render_parameters(disp_frame, false);
+    layers.back().set_buffer(buf);
 
     auto rc = 0;
-    auto display_list = layer_list.native_list().lock();
+    auto display_list = native_list().lock();
     if (display_list)
     {
+
         hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
         rc = hwc_device->set(hwc_device.get(), 1, displays);
 
-        layer_list.update_fences();
-        mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
+        for(auto& layer : layers)
+        {
+            layer.update_fence_and_release_buffer();
+        }
+        mga::SyncFence retire_fence(sync_ops, retirement_fence());
     }
 
     if ((rc != 0) || (!display_list))

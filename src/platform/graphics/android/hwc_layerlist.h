@@ -79,7 +79,6 @@ public:
     void update_fences();
     void set_fb_target(Buffer const& buffer);
 private:
-    bool skip_layers_present{true};
 };
 
 }
