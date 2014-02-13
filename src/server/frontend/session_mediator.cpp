@@ -135,7 +135,7 @@ void mf::SessionMediator::advance_buffer(
 
     auto& client_buffer = client_buffer_resource[surf_id];
     surface.swap_buffers(client_buffer,
-        [this, &tracker, &client_buffer, complete](mg::Buffer* new_buffer)
+        [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
         {
             client_buffer = new_buffer;
             auto id = client_buffer->id();
