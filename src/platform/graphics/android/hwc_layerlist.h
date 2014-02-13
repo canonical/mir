@@ -72,7 +72,7 @@ public:
     void reset_composition_layers(); 
     void update_fences();
     void set_fb_target(Buffer const& buffer);
-
+    bool needs_gl_render() const;
 private:
     bool skip_layers_present{true};
 };

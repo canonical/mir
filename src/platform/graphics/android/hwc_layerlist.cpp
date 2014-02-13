@@ -148,3 +148,8 @@ void mga::FBTargetLayerList::update_fences()
         layer.update_fence_and_release_buffer();
     }
 }
+
+bool mga::FBTargetLayerList::needs_gl_render() const
+{
+    return true;
+}
