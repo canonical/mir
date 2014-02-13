@@ -140,15 +140,10 @@ void mgn::NestedDisplayConfiguration::for_each_output(
 
             f(user);
 
-            // Slightly more than the fields users are expected to change...
-            // as some test cases change immutable fields like output_id
-            mir_output.preferred_mode = output.preferred_mode_index;
             mir_output.current_mode = output.current_mode_index;
             mir_output.current_format = output.current_format;
-            mir_output.output_id = output.id.as_value();
             mir_output.position_x = output.top_left.x.as_int();
             mir_output.position_y = output.top_left.y.as_int();
-            mir_output.connected = output.connected;
             mir_output.used = output.used;
             mir_output.power_mode = output.power_mode;
             mir_output.orientation = output.orientation;
