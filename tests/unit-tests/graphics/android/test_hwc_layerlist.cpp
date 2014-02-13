@@ -251,3 +251,35 @@ TEST_F(HWCLayerListTest, list_returns_retire_fence)
     list->retireFenceFd = release_fence;
     EXPECT_EQ(release_fence, layerlist.retirement_fence());
 }
+
+TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
+{
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        mt::fake_shared(mock_renderable),
+        mt::fake_shared(mock_renderable)
+    });
+    mga::FBTargetLayerList layerlist;
+    layerlist.set_composition_layers(updated_list);
+    layerlist.set_fb_target(mock_buffer);
+
+    auto list = layerlist.native_list().lock();
+    ASSERT_EQ(3, list->numHwLayers);
+
+    //if all layers are HWC_FRAMEBUFFER, so we need gl render 
+    list->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+    list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+    list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    EXPECT_TRUE(layerlist.needs_gl_render());
+
+    //if one layer is HWC_FRAMEBUFFER, we need gl render
+    list->hwLayers[0].compositionType = HWC_OVERLAY;
+    list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+    list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    EXPECT_TRUE(layerlist.needs_gl_render());
+
+    //if all layers are HWC_OVERLAY, we need gl render
+    list->hwLayers[0].compositionType = HWC_OVERLAY;
+    list->hwLayers[1].compositionType = HWC_OVERLAY;
+    list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    EXPECT_FALSE(layerlist.needs_gl_render());
+}
