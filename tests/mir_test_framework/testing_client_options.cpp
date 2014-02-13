@@ -94,13 +94,13 @@ struct StubClientPlatform : public mcl::ClientPlatform
 
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface*)
     {
-        auto fake_window = reinterpret_cast<EGLNativeWindowType>(0x12345678);
+        auto fake_window = reinterpret_cast<EGLNativeWindowType>(0x12345678lu);
         return std::make_shared<EGLNativeWindowType>(fake_window);
     }
 
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
-        auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678);
+        auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678lu);
         return std::make_shared<EGLNativeDisplayType>(fake_display);
     }
 

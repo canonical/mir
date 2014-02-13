@@ -4,7 +4,7 @@ include_directories(
 )
 
 add_library(
-  mirclientplatform SHARED
+  mirclientplatformmesa SHARED
 
   client_platform_factory.cpp
   client_platform.cpp
@@ -14,12 +14,27 @@ add_library(
   native_surface.cpp
 )
 
+set_target_properties(
+  mirclientplatformmesa PROPERTIES
+  OUTPUT_NAME mirclientplatform
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
+)
+
 target_link_libraries(
-  mirclientplatform
+  mirclientplatformmesa
   mirclient
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 
-install(TARGETS mirclientplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (MIR_TEST_PLATFORM STREQUAL "mesa")
+  add_custom_command(TARGET mirclientplatformmesa
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove libmirclientplatform.so
+    COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirclientplatformmesa> libmirclientplatform.so
+    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+  )
+endif()
+
+install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
