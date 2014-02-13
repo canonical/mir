@@ -88,12 +88,49 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
     return std::make_shared<mga::FBDevice>(fb_native_device);
 }
 
+namespace
+{
+class RealHWCWrapper : public mga::HwcWrapper
+{
+public:
+    RealHWCWrapper(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
+        : hwc_device(hwc_device)
+    {
+    }
+
+    void prepare(hwc_display_contents_1_t& display_list) const override
+    {
+        //note, although we only have a primary display right now,
+        //      set the external and virtual displays to null as some drivers check for that
+        hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+        if (hwc_device->prepare(hwc_device.get(), 1, displays))
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+        }
+    }
+
+    void set(hwc_display_contents_1_t& display_list) const override
+    {
+        hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+        if (hwc_device->prepare(hwc_device.get(), 1, displays))
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+        }
+    }
+
+private:
+    static size_t const num_displays{3}; //primary, external, virtual
+    std::shared_ptr<hwc_composer_device_1> const hwc_device;
+};
+}
+
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(hwc_native_device, syncer, file_ops);
+    auto wrapper = std::make_shared<RealHWCWrapper>(hwc_native_device); 
+    return std::make_shared<mga::HwcDevice>(hwc_native_device, wrapper, syncer, file_ops);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(

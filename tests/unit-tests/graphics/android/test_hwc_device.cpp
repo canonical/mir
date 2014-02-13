@@ -79,21 +79,7 @@ struct MockFileOps : public mga::SyncFileOps
     MOCK_METHOD1(close, int(int));
 };
 
-class HwcFunctions
-{
-public:
-    virtual ~HwcFunctions() = default;
-
-    virtual void prepare(hwc_display_contents_1_t&) const = 0;
-    virtual void set(hwc_display_contents_1_t&) const = 0;
-
-protected:
-    HwcFunctions() = default;
-    HwcFunctions& operator=(HwcFunctions const&) = delete;
-    HwcFunctions(HwcFunctions const&) = delete;
-};
-
-struct MockHWCDeviceWrapper : public HwcFunctions
+struct MockHWCDeviceWrapper : public mga::HwcWrapper
 {
     MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
     MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));

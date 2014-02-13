@@ -33,10 +33,12 @@ namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                          std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator), 
       LayerListBase{2},
+      hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops),
       needs_swapbuffers(true)
 {
@@ -44,15 +46,8 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
-void mga::HwcDevice::prepare(hwc_display_contents_1_t & display_list)
+void mga::HwcDevice::prepare(hwc_display_contents_1_t &)
 {
-    //note, although we only have a primary display right now,
-    //      set the external and virtual displays to null as some drivers check for that
-    hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
-    if (hwc_device->prepare(hwc_device.get(), 1, displays))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-    }
 }
 
 void mga::HwcDevice::prepare_gl()
@@ -140,8 +135,6 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     if (display_list)
     {
 
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-        rc = hwc_device->set(hwc_device.get(), 1, displays);
 
         for(auto& layer : layers)
         {

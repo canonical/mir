@@ -38,6 +38,22 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace
+{
+class StubHWCWrapper : public mga::HwcWrapper
+{
+public:
+
+    void prepare(hwc_display_contents_1_t&) const override
+    {
+    }
+
+    void set(hwc_display_contents_1_t&) const override
+    {
+    }
+};
+}
+
 template<class T>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_device,
@@ -60,7 +76,8 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HwcDevice>(
     std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(hwc_device, coordinator, file_ops);
+    auto stub_wrapper = std::make_shared<StubHWCWrapper>();
+    return std::make_shared<mga::HwcDevice>(hwc_device, stub_wrapper, coordinator, file_ops);
 }
 
 template<typename T>
