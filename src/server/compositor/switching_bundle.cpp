@@ -215,10 +215,10 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
             return;
     }
 
-    complete_client_acquire(lock);
+    complete_client_acquire(std::move(lock));
 }
 
-void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex>& lock)
+void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex> lock)
 {
     auto complete = std::move(client_acquire_todo);
 
@@ -254,6 +254,8 @@ void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex>& 
         ret = gralloc->alloc_buffer(bundle_properties);
         ring[client].buf = ret;
     }
+
+    lock.unlock();
 
     try
     {
@@ -355,7 +357,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
             ncompositors--;
         }
 
-        if (client_acquire_todo) complete_client_acquire(lock);
+        if (client_acquire_todo) complete_client_acquire(std::move(lock));
     }
 }
 
@@ -410,7 +412,7 @@ void mc::SwitchingBundle::force_requests_to_complete()
     std::unique_lock<std::mutex> lock(guard);
     drop_frames(nready);
     force_drop = nbuffers + 1;
-    if (client_acquire_todo) complete_client_acquire(lock);
+    if (client_acquire_todo) complete_client_acquire(std::move(lock));
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
