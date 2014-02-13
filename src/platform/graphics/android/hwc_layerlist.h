@@ -69,10 +69,11 @@ class FBTargetLayerList : public LayerListBase
 public:
     FBTargetLayerList();
     void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    bool render_unsupported_surfaces(updated_list, render_fn) const;
+
     void reset_composition_layers(); 
     void update_fences();
     void set_fb_target(Buffer const& buffer);
-    bool needs_gl_render() const;
 private:
     bool skip_layers_present{true};
 };

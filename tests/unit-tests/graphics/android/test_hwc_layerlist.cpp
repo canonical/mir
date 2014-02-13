@@ -135,6 +135,9 @@ public:
         set_target_layer.handle = native_handle_1.handle();
         set_target_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
         set_target_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
+
+        empty_prepare_fn = [] (hwc_display_contents_1_t const& list) {};
+        empty_render_fn = [&call_count] (Renderable const& renderable) {};
     }
 
     geom::Size buffer_size{333, 444};
@@ -143,6 +146,9 @@ public:
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<StubRenderable> stub_renderable1;
     std::shared_ptr<StubRenderable> stub_renderable2;
+
+    std::function<void(hwc_display_contents_1_t const&)> empty_prepare_fn;
+    std::function<void(Renderable const&)> empty_render_fn;
 
     hwc_rect_t screen_pos;
     hwc_rect_t empty_region;
@@ -208,8 +214,8 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
         stub_renderable1,
         stub_renderable1
     });
-    layerlist.set_composition_layers(updated_list);
 
+    layerlist.prepare_composition_layers(empty_prepare_fn, updated_list, empty_render_fn);
     auto list = layerlist.native_list().lock();
     ASSERT_EQ(3, list->numHwLayers);
     EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[0]));
@@ -262,7 +268,7 @@ TEST_F(HWCLayerListTest, fence_updates)
     });
 
     mga::FBTargetLayerList layerlist;
-    layerlist.set_composition_layers(updated_list);
+    layerlist.prepare_composition_layers(empty_prepare_fn, updated_list, empty_render_fn);
     layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list().lock();
@@ -291,15 +297,29 @@ TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
         stub_renderable2
     });
 
-    mga::FBTargetLayerList layerlist;
-    layerlist.set_composition_layers(updated_list);
+    auto prepare_fn_all_gl = [] (hwc_display_contents_1_t const& list)
+    {
+        ASSERT_EQ(3, list.numHwLayers);
+        list.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+        list.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    };
 
-    auto list = layerlist.native_list().lock();
-    //if all layers are HWC_FRAMEBUFFER, so we need gl render 
-    ASSERT_EQ(3, list->numHwLayers);
-    list->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
-    list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
-    list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t const& list)
+    {
+        ASSERT_EQ(3, list.numHwLayers);
+        list->hwLayers[0].compositionType = HWC_OVERLAY;
+        list->hwLayers[1].compositionType = HWC_OVERLAY;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    };
+
+    auto prepare_fn_mixed = [] (hwc_display_contents_1_t const& list)
+    {
+        ASSERT_EQ(3, list.numHwLayers);
+        list->hwLayers[0].compositionType = HWC_OVERLAY;
+        list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+        list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    };
 
     auto call_count = 0;
     auto render_fn = [&call_count] (Renderable const& renderable)
@@ -310,22 +330,17 @@ TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
             EXPECT_EQ(&renderable, stub_renderable2.get());
         call_count++;
     };
-    EXPECT_TRUE(layerlist.render_unsupported_surfaces(updated_list, render_fn));
-    EXPECT_EQ(call_count, 2);
 
-    //if one layer is HWC_FRAMEBUFFER, we need gl render
-    list->hwLayers[0].compositionType = HWC_OVERLAY;
-    list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
-    list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    mga::FBTargetLayerList layerlist;
+    call_count = 0;
+    EXPECT_TRUE(layerlist.prepare_composition_layers(prepare_fn_all_gl, updated_list, render_fn));
+    EXPECT_EQ(call_count, 2);
 
     call_count = 1;
-    EXPECT_TRUE(layerlist.render_unsupported_surfaces(updated_list, render_fn));
+    EXPECT_TRUE(layerlist.prepare_composition_layers(prepare_fn_mixed, updated_list, render_fn));
     EXPECT_EQ(call_count, 2);
 
-    //if all layers are HWC_OVERLAY, we dont need gl render
-    list->hwLayers[0].compositionType = HWC_OVERLAY;
-    list->hwLayers[1].compositionType = HWC_OVERLAY;
-    list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    EXPECT_TRUE(layerlist.render_unsupported_surfaces(updated_list, render_fn));
+    call_count = 0;
+    EXPECT_TRUE(layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn));
     EXPECT_EQ(call_count, 0);
 }
