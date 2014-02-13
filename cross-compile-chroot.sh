@@ -78,6 +78,6 @@ pushd ${BUILD_DIR} > /dev/null
       -DMIR_PLATFORM=android \
       .. 
 
-    cmake --build . -- -j${NUM_JOBS}
+    make -j${NUM_JOBS}
 
 popd ${BUILD_DIR} > /dev/null 
