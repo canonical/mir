@@ -287,8 +287,10 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
+    glUseProgram(program);
     GLint mat_loc = glGetUniformLocation(program, "screen_to_gl_coords");
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
+    glUseProgram(0);
 
     viewport = rect;
 }
