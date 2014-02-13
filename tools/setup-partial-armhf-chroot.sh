@@ -2,92 +2,60 @@
 
 set -e
 
-if [ -z $1 ]; then
+if [ -z ${1} ]; then
     echo "please supply directory to create partial chroot in. (eg, ./setup-partial-armhf-chroot.sh mychroot-dir)"
     exit
 fi
 
-echo "creating phablet-compatible armhf partial chroot for mir compiles in directory ${1}"
+echo "creating phablet-compatible armhf partial chroot for mir compilation in directory ${1}"
 
 if [ ! -d ${1} ]; then
     mkdir -p ${1} 
 fi
 
-download_and_extract_packages()
-{
-    declare -a PACKAGES=$1[@]
-    local ARCHITECTURE=$2
-
-    for i in ${!PACKAGES}; do
-
-        PACKAGE_VERSION=`apt-cache show --no-all-versions ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
-        PACKAGE_FILENAME="${i}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
-
-        if [ ! -f ${PACKAGE_FILENAME} ]; then
-            echo "Downloading mir dependency: ${i}"
-            apt-get download "${i}:${ARCHITECTURE}"
-        else
-            echo "already downloaded: ${PACKAGE_FILENAME}"
-        fi
-
-        #quick sanity check
-        if [ ! -f ${PACKAGE_FILENAME} ]; then
-            echo "error: did not download expected file (${PACKAGE_FILENAME}. script is malformed!"; exit 1        
-        fi
-
-        echo "Extracting: ${PACKAGE_FILENAME}"
-        dpkg -x ${PACKAGE_FILENAME} . 
-    done
-}
+DEBCONTROL=$(pwd)/../debian/control
 
 pushd ${1} > /dev/null
 
-# TODO: Parse the build-dependencies out of debian/control
-    BUILD_DEPENDS=google-mock,\
-libboost1.54-dev,\
-libboost-chrono1.54-dev,\
-libboost-chrono1.54-dev,\
-libboost-date-time1.54-dev,\
-libboost-filesystem1.54-dev,\
-libboost-program-options1.54-dev,\
-libboost-system1.54-dev,\
-libboost-thread1.54-dev,\
-libboost-regex1.54-dev,\
-android-headers,\
-libhardware-dev,\
-libgflags-dev,\
-libgoogle-glog-dev,\
-libprotobuf-dev,\
-libdrm-dev,\
-libegl1-mesa-dev,\
-libgles2-mesa-dev,\
-libgbm-dev,\
-libxkbcommon-dev,\
-libumockdev-dev,\
-libudev-dev,\
-liblttng-ust-dev,\
-systemtap-sdt-dev,\
-libglm-dev
+# Empty dpkg status file, so that ALL dependencies are listed with dpkg-checkbuilddeps
+echo "" > status
 
-    fakeroot debootstrap --include=$BUILD_DEPENDS --arch=armhf --download-only --variant=buildd trusty .
+# Manual error code checking is needed for dpkg-checkbuilddeps
+set +e
+
+# Parse dependencies from debian/control
+# dpkg-checkbuilddeps returns 1 when dependencies are not met and the list is sent to stderr
+builddeps=$(dpkg-checkbuilddeps -a armhf --admindir=. ${DEBCONTROL} 2>&1 )
+if [ $? -ne 1 ] ; then
+    echo "${builddeps}"
+    exit 2
+fi
+
+# now turn exit on error option
+set -e
+
+# Sanitize dependencies list for submission to debootstrap
+# build-essential is not needed as we are cross-compiling
+builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' -e 's/Unmet build dependencies://g' -e 's/build-essential:native//g')
+builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
+builddeps=$(echo ${builddeps} | sed 's/ /,/g')
+
+fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd trusty .
 
 # Remove libc libraries that confuse the cross-compiler
-    rm var/cache/apt/archives/libc-dev*.deb
-    rm var/cache/apt/archives/libc6*.deb
+rm var/cache/apt/archives/libc-dev*.deb
+rm var/cache/apt/archives/libc6*.deb
 
-    for I in var/cache/apt/archives/* ; do
-	if [ ! -d $I ] ; then
-	    echo "unpacking: $I"
-	    dpkg -x $I .
-	fi
-    done
+for deb in var/cache/apt/archives/* ; do
+    if [ ! -d ${deb} ] ; then
+        echo "unpacking: ${deb}"
+        dpkg -x ${deb} .
+    fi
+done
 
-# Fix up absolute symlinks from /usr/lib/*/*.so to /lib/*/*.so
-    OLDIFS=$IFS
-    IFS="
-"
-    for broken_symlink in $(find -L . -name \*.so -type l -printf "%l %p\n") ; do
-	IFS=$OLDIFS
-	ln -sf $(pwd)$broken_symlink
-    done
+# Fix up symlinks which asssumed the usual root path
+for broken_symlink in $(find . -name \*.so -type l -xtype l) ; do
+    ln -sf $(pwd)$(readlink ${broken_symlink}) ${broken_symlink}
+done
+
 popd > /dev/null 
