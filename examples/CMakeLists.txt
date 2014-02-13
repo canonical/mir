@@ -93,12 +93,12 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/test/mir_test/draw
   ${GLESv2_INCLUDE_DIRS}
 )
 
-set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
-add_executable(mir_demo_standalone_render_to_fb 
-  ${RENDER_TO_FB_SOURCES}
+add_executable(mir_demo_standalone_render_to_fb
+    render_to_fb.cpp
 )
 
 target_link_libraries(mir_demo_standalone_render_to_fb
@@ -106,6 +106,17 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     mirlogging
     mirdraw
     ${Boost_LIBRARIES}
+)
+
+add_executable(mir_demo_standalone_render_overlays
+    render_overlays.cpp
+)
+
+target_link_libraries(mir_demo_standalone_render_overlays
+    mirserver
+    mirlogging
+    mirdraw
+    mirtestdraw
 )
 
 set(RENDER_SURFACES_SOURCES

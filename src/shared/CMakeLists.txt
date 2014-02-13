@@ -11,6 +11,7 @@ add_subdirectory(input)
 add_subdirectory(logging)
 add_subdirectory(lttng)
 add_subdirectory(env)
+add_subdirectory(sharedlibrary)
 
 set(
   MIR_COMMON_PLATFORM_LIBRARIES

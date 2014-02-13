@@ -61,6 +61,8 @@ protected:
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_file_ops = std::make_shared<MockFileOps>();
 
+        ON_CALL(*mock_buffer, size())
+            .WillByDefault(Return(geom::Size{0,0}));
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mock_native_buffer));
     }

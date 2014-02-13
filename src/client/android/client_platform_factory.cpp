@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,28 +16,19 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DRM_AUTHENTICATOR_H_
-#define MIR_GRAPHICS_DRM_AUTHENTICATOR_H_
+#include "client_platform_factory.h"
+#include "android_client_platform.h"
 
-namespace mir
+namespace mcl = mir::client;
+namespace mcla = mcl::android;
+
+std::shared_ptr<mcl::ClientPlatform>
+mcla::ClientPlatformFactory::create_client_platform(mcl::ClientContext* /*context*/)
 {
-namespace graphics
-{
-
-class DRMAuthenticator
-{
-public:
-    virtual ~DRMAuthenticator() {}
-
-    virtual void drm_auth_magic(unsigned int magic) = 0;
-
-protected:
-    DRMAuthenticator() = default;
-    DRMAuthenticator(const DRMAuthenticator&) = delete;
-    DRMAuthenticator& operator=(const DRMAuthenticator&) = delete;
-};
-
-}
+    return std::make_shared<mcla::AndroidClientPlatform>();
 }
 
-#endif /* MIR_GRAPHICS_DRM_AUTHENTICATOR_H_ */
+extern "C" std::shared_ptr<mcl::ClientPlatformFactory> mcl::create_client_platform_factory()
+{
+    return std::make_shared<mcla::ClientPlatformFactory>();
+}
