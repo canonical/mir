@@ -78,13 +78,29 @@ TEST_F(HwcFbDevice, hwc10_prepare_gl_only)
 TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 {
     using namespace testing;
+    struct MockRenderOperator
+    {
+        MOCK_METHOD0(called, void());
+    };
+    MockRenderOperator mock_call_counter;
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        std::make_shared<mtd::MockRenderable>(),
+        std::make_shared<mtd::MockRenderable>()
+    };
+
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
         .Times(1);
+    EXPECT_CALL(mock_call_counter, called())
+        .Times(renderlist.size());
 
     mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist;
-    device.prepare_gl_and_overlays(renderlist);
+    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const&)
+    {
+        mock_call_counter.called();
+    });
 
     EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_prepare_content.flags);

@@ -136,16 +136,28 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
 TEST_F(HwcDevice, hwc_prepare_with_overlays)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1);
+    struct MockRenderOperator
+    {
+        MOCK_METHOD0(called, void());
+    };
+    MockRenderOperator mock_call_counter;
 
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
         std::make_shared<mtd::MockRenderable>(),
         std::make_shared<mtd::MockRenderable>()
     };
-    device.prepare_gl_and_overlays(renderlist);
+
+    EXPECT_CALL(mock_call_counter, called())
+        .Times(renderlist.size());
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1);
+
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const&)
+    {
+        mock_call_counter.called();
+    });
     device.post(*mock_buffer);
 
     EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);

@@ -60,6 +60,30 @@ struct FBDevice : public ::testing::Test
     mtd::MockEGL mock_egl;
 };
 
+TEST_F(FBDevice, render_overlays_via_gl)
+{
+    struct MockRenderOperator
+    {
+        MOCK_METHOD0(called, void());
+    };
+    MockRenderOperator mock_call_counter;
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()
+    };
+
+    EXPECT_CALL(mock_call_counter, called())
+        .Times(renderlist.size());
+
+    mga::FBDevice fbdev(fb_hal_mock);
+    fbdev.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const&)
+    {
+        mock_call_counter.called();
+    });
+}
+
 TEST_F(FBDevice, render)
 {
     using namespace testing;
