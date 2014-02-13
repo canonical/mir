@@ -108,6 +108,11 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
+    void set_viewport(geom::Rectangle const& rect) override
+    {
+        renderer->set_viewport(rect);
+    }
+
     void begin(float rotation) const override
     {
         renderer->begin(rotation);
