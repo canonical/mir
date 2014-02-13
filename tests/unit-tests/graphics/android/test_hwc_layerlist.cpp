@@ -31,6 +31,39 @@ namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace
+{
+
+class StubRenderable : public mg::Renderable
+{
+    StubRenderable(std::shared_ptr<mg::Buffer> const& buffer, geom::Rectangle screen_pos)
+        : buf(buffer),
+          screen_pos(screen_pos)
+    {
+    }
+
+    std::shared_ptr<mg::Buffer> buffer() const
+    {
+        return buf;
+    }
+
+    bool alpha_enabled() const
+    {
+        return false;
+    }
+
+    geom::Rectangle screen_position() const override
+    {
+        return screen_pos;
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> buf;
+    geom::Rectangle screen_pos;
+};
+
+}
+
 class HWCLayerListTest : public ::testing::Test
 {
 public:
@@ -42,12 +75,11 @@ public:
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mt::fake_shared(native_handle_1)));
-        ON_CALL(mock_renderable, buffer())
-            .WillByDefault(Return(mt::fake_shared(mock_buffer)));
-        ON_CALL(mock_renderable, alpha_enabled())
-            .WillByDefault(Return(alpha_enabled));
-        ON_CALL(mock_renderable, screen_position())
-            .WillByDefault(Return(screen_position));
+
+        stub_renderable1 = std::make_shared<StubRenderable>(
+                                mt::fake_shared(mock_buffer), screen_position);
+        stub_renderable2 = std::make_shared<StubRenderable>(
+                                mt::fake_shared(mock_buffer), screen_position);
 
         empty_region = {0,0,0,0};
         set_region = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
@@ -107,10 +139,10 @@ public:
 
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
-    bool alpha_enabled{true};
     mtd::StubAndroidNativeBuffer native_handle_1{buffer_size};
-    testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<StubRenderable> stub_renderable1;
+    std::shared_ptr<StubRenderable> stub_renderable2;
 
     hwc_rect_t screen_pos;
     hwc_rect_t empty_region;
@@ -173,8 +205,8 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
 
     /* set non-default renderlist */
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
+        stub_renderable1,
+        stub_renderable1
     });
     layerlist.set_composition_layers(updated_list);
 
@@ -225,8 +257,8 @@ TEST_F(HWCLayerListTest, fence_updates)
         .WillRepeatedly(Return(native_handle_3));
 
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
+        stub_renderable1,
+        stub_renderable2
     });
 
     mga::FBTargetLayerList layerlist;
@@ -255,31 +287,45 @@ TEST_F(HWCLayerListTest, list_returns_retire_fence)
 TEST_F(HWCLayerListTest, list_reports_if_gl_needed)
 {
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
+        stub_renderable1,
+        stub_renderable2
     });
+
     mga::FBTargetLayerList layerlist;
     layerlist.set_composition_layers(updated_list);
-    layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list().lock();
-    ASSERT_EQ(3, list->numHwLayers);
-
     //if all layers are HWC_FRAMEBUFFER, so we need gl render 
+    ASSERT_EQ(3, list->numHwLayers);
     list->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
     list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
     list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    EXPECT_TRUE(layerlist.needs_gl_render());
+
+    auto call_count = 0;
+    auto render_fn = [&call_count] (Renderable const& renderable)
+    {
+        if (call_count == 0)
+            EXPECT_EQ(&renderable, stub_renderable1.get());
+        if (call_count == 1)
+            EXPECT_EQ(&renderable, stub_renderable2.get());
+        call_count++;
+    };
+    EXPECT_TRUE(layerlist.render_unsupported_surfaces(updated_list, render_fn));
+    EXPECT_EQ(call_count, 2);
 
     //if one layer is HWC_FRAMEBUFFER, we need gl render
     list->hwLayers[0].compositionType = HWC_OVERLAY;
     list->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
     list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    EXPECT_TRUE(layerlist.needs_gl_render());
 
-    //if all layers are HWC_OVERLAY, we need gl render
+    call_count = 1;
+    EXPECT_TRUE(layerlist.render_unsupported_surfaces(updated_list, render_fn));
+    EXPECT_EQ(call_count, 2);
+
+    //if all layers are HWC_OVERLAY, we dont need gl render
     list->hwLayers[0].compositionType = HWC_OVERLAY;
     list->hwLayers[1].compositionType = HWC_OVERLAY;
     list->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    EXPECT_FALSE(layerlist.needs_gl_render());
+    EXPECT_TRUE(layerlist.render_unsupported_surfaces(updated_list, render_fn));
+    EXPECT_EQ(call_count, 0);
 }
