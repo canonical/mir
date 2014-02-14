@@ -35,8 +35,6 @@ public:
     UdevEnvironment();
     ~UdevEnvironment() noexcept;
 
-    void add_standard_drm_devices();
-
     std::string add_device(char const* subsystem,
                            char const* name,
                            char const* parent,

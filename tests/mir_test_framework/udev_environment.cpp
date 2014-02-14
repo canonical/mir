@@ -44,18 +44,6 @@ mtf::UdevEnvironment::~UdevEnvironment() noexcept
     g_object_unref(testbed);
 }
 
-void mtf::UdevEnvironment::add_standard_drm_devices()
-{
-    // Temporary, until umockdev grows add_from_file
-    std::ifstream udev_dump(UDEVMOCK_DIR"/standard-drm-devices.umockdev");
-    std::stringstream buffer;
-    buffer<<udev_dump.rdbuf();
-
-    umockdev_testbed_add_from_string(testbed,
-                                     buffer.str().c_str(),
-                                     NULL);
-}
-
 std::string mtf::UdevEnvironment::add_device(char const* subsystem,
                                              char const* name,
                                              char const* parent,

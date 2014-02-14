@@ -56,7 +56,7 @@ public:
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mg::Platform> create_platform()
