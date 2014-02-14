@@ -63,7 +63,7 @@ TEST(InternalClient, native_surface_sanity)
     mgm::InternalClient client(stub_display);
 
     auto stub_window = std::make_shared<StubInternalSurface>();
-    auto native_window = static_cast<mgm::InternalNativeSurface*>(client.egl_native_window(stub_window));
+    auto native_window = reinterpret_cast<mgm::InternalNativeSurface*>(client.egl_native_window(stub_window));
 
     ASSERT_NE(nullptr, native_window->surface_advance_buffer);
     ASSERT_NE(nullptr, native_window->surface_get_parameters);

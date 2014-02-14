@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_H_
+#define MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 
 #include "src/server/compositor/renderer.h"
 
@@ -29,17 +29,17 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceRenderer : public compositor::Renderer
+struct MockRenderer : public compositor::Renderer
 {
     MOCK_CONST_METHOD1(begin, void(float));
     MOCK_CONST_METHOD2(render, void(compositor::CompositingCriteria const&, graphics::Buffer&));
     MOCK_CONST_METHOD0(end, void());
     MOCK_METHOD0(suspend, void());
 
-    ~MockSurfaceRenderer() noexcept {}
+    ~MockRenderer() noexcept {}
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_RENDERER_H_ */
