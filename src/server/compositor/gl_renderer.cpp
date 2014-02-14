@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
+#include <mutex>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -129,6 +130,15 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     alpha_uniform_loc(0),
     vertex_attribs_vbo(0)
 {
+    /*
+     * We need to serialize renderer creation because some GL calls used
+     * during renderer construction that create unique resource ids
+     * (e.g. glCreateProgram) are not thread-safe when the threads are
+     * have the same or shared EGL contexts.
+     */
+    static std::mutex mutex;
+    std::lock_guard<std::mutex> lock(mutex);
+
     GLint param = 0;
 
     /* Create shaders and program */
