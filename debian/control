@@ -26,13 +26,13 @@ Build-Depends: cmake,
                libglm-dev,
                libprotobuf-dev,
                pkg-config,
-               android-headers (>=4.2.2) [armhf],
-               libhardware-dev [armhf],
+               android-headers (>=4.2.2),
+               libhardware-dev,
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
-               libumockdev-dev [!armhf],
-               umockdev [!armhf],
+               libumockdev-dev,
+               umockdev,
                libudev-dev,
                google-mock (>= 1.6.0+svn437),
                valgrind [!arm64],
@@ -78,6 +78,8 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          libmirplatform (= ${binary:Version}),
+         libmirplatformgraphics-mesa (= ${binary:Version}) |
+           libmirplatformgraphics-android (= ${binary:Version}),
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -98,6 +100,36 @@ Description: Display server for Ubuntu - platform library
  .
  Contains the shared libraries required for the Mir server to interact with
  the underlying hardware platform.
+
+Package: libmirplatformgraphics-mesa
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libmirplatform (= ${binary:Version}),
+Description: Display server for Ubuntu - platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the hardware platform using the Mesa drivers.
+
+Package: libmirplatformgraphics-android
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libmirplatform (= ${binary:Version}),
+Description: Display server for Ubuntu - platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the hardware platform using the Android drivers.
 
 Package: mircommon-dev
 Section: libdevel
@@ -135,7 +167,8 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirclientplatform (= ${binary:Version}),
+         libmirclientplatform-mesa (= ${binary:Version}) |
+           libmirclientplatform-android (= ${binary:Version}),
 Description: Display server for Ubuntu - client library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -157,19 +190,35 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to develop against Mir.
 
-Package: libmirclientplatform
+Package: libmirclientplatform-mesa
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends}
+Replaces: libmirclientplatform
 Description: Display server for Ubuntu - client platform library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the shared libraries required for the Mir clients to interact with
- the underlying hardware platform.
+ the underlying hardware platform using the Mesa drivers.
+
+Package: libmirclientplatform-android
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Replaces: libmirclientplatform
+Description: Display server for Ubuntu - client platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir clients to interact with
+ the underlying hardware platform using the Android drivers.
 
 Package: mir-demos
 Architecture: i386 amd64 armhf arm64
