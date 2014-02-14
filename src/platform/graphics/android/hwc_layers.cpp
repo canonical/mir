@@ -132,7 +132,8 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
     auto size = buffer.size();
     auto native_buffer = buffer.native_buffer_handle();
     hwc_layer->handle = native_buffer->handle();
-    hwc_layer->acquireFenceFd = native_buffer->copy_fence();
+    if (!needs_gl_render())
+        hwc_layer->acquireFenceFd = native_buffer->copy_fence();
     hwc_layer->releaseFenceFd = -1;
     hwc_layer->sourceCrop = 
     {

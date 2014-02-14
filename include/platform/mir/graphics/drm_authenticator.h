@@ -19,8 +19,6 @@
 #ifndef MIR_GRAPHICS_DRM_AUTHENTICATOR_H_
 #define MIR_GRAPHICS_DRM_AUTHENTICATOR_H_
 
-#include <xf86drm.h>
-
 namespace mir
 {
 namespace graphics
@@ -31,7 +29,7 @@ class DRMAuthenticator
 public:
     virtual ~DRMAuthenticator() {}
 
-    virtual void drm_auth_magic(drm_magic_t magic) = 0;
+    virtual void drm_auth_magic(unsigned int magic) = 0;
 
 protected:
     DRMAuthenticator() = default;
