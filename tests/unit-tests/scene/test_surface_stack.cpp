@@ -26,7 +26,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "src/server/scene/basic_surface.h"

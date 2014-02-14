@@ -20,7 +20,7 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "src/server/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"

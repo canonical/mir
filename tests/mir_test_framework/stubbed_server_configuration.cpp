@@ -34,7 +34,7 @@
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #endif
 
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "src/server/compositor/renderer_factory.h"
 #include "src/server/input/null_input_configuration.h"
 

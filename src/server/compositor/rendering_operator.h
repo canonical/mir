@@ -18,7 +18,7 @@
 #ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 #define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
-#include "renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/scene.h"
 
 #include <functional>

@@ -40,8 +40,9 @@ namespace mir
 namespace examples
 {
 
-struct DemoServerConfiguration : mir::examples::ServerConfiguration
+class DemoServerConfiguration : public mir::examples::ServerConfiguration
 {
+public:
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
       : ServerConfiguration(argc, argv),
@@ -75,6 +76,15 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
         return composite_filter;
     }
 
+#if 0
+    std::shared_ptr<compositor::RendererFactory> the_renderer_factory()
+    {
+        std::shared_ptr<compositor::RendererFactory> ret;
+        return ret;
+    }
+#endif
+
+private:
     std::vector<std::shared_ptr<mi::EventFilter>> const filter_list;
 };
 

@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "src/server/compositor/renderer_factory.h"
 #include "mir/input/composite_event_filter.h"
 

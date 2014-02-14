@@ -19,9 +19,9 @@
 #ifndef MIR_COMPOSITOR_GL_RENDERER_H_
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
-#include "renderer.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/buffer_id.h"
+#include <mir/compositor/renderer.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/buffer_id.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 
