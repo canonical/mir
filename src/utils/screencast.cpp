@@ -156,6 +156,21 @@ struct EGLSetup
         {
             throw std::runtime_error("Failed to make screencast surface current");
         }
+
+        GLint format;
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &format);
+        GLint type;
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &type);
+
+        if (type == GL_UNSIGNED_BYTE)
+            read_pixel_format = static_cast<GLenum>(format);
+        else
+            read_pixel_format = GL_RGBA;
+
+        uint32_t a_pixel;
+        glReadPixels(0, 0, 1, 1, read_pixel_format, GL_UNSIGNED_BYTE, &a_pixel);
+        if (glGetError() != GL_NO_ERROR)
+            throw std::runtime_error("Failed to find proper pixel read format");
     }
 
     ~EGLSetup()
@@ -174,15 +189,14 @@ struct EGLSetup
 
     GLenum pixel_read_format()
     {
-        GLint format;
-        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &format);
-        return static_cast<GLenum>(format);
+        return read_pixel_format;
     }
 
     EGLDisplay egl_display;
     EGLContext egl_context;
     EGLSurface egl_surface;
     EGLConfig egl_config;
+    GLenum read_pixel_format;
 };
 
 void do_screencast(MirConnection* connection, MirScreencast* screencast,
@@ -204,12 +218,12 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
     ss << "/tmp/mir_screencast_" ;
     ss << frame_size.width << "x" << frame_size.height;
     ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
-    std::ofstream videoFile(ss.str());
+    std::ofstream video_file(ss.str());
 
     while (running)
     {
         read_pixels(format, frame_size, frame_data.data());
-        videoFile.write(frame_data.data(), frame_data.size());
+        video_file.write(frame_data.data(), frame_data.size());
 
         egl_setup.swap_buffers();
     }
