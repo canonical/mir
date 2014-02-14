@@ -117,7 +117,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
     std::list<std::shared_ptr<mg::Renderable>> renderlist{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
-    auto render_fn = [&](mg::Renderable const&){};
+    std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
     EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist), Ref(render_fn)))
