@@ -22,11 +22,11 @@ add_subdirectory(shell/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_PLATFORM STREQUAL "mesa")
+if(MIR_TEST_PLATFORM STREQUAL "mesa")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
@@ -38,6 +38,7 @@ if(MIR_PLATFORM STREQUAL "mesa")
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
+link_directories(${LIBRARY_OUTPUT_PATH})
 add_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS})

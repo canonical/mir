@@ -87,14 +87,28 @@ add_definitions(
 )
 endif(MIR_DISABLE_EPOLL_REACTOR)
 
+add_definitions(-DMESA_EGL_NO_X11_HEADERS)
+
 # Default to mesa backend
 set(
   MIR_PLATFORM
   mesa
   CACHE
   STRING
-  "graphics backend to build (options are 'mesa' or 'android')"
+  "a list of graphics backends to build (options are 'mesa' or 'android')"
 )
+
+list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
+
+foreach(platform IN LISTS MIR_PLATFORM)
+  if (platform STREQUAL "mesa")
+    set(MIR_BUILD_PLATFORM_MESA TRUE)
+  endif()
+  if (platform STREQUAL "android")
+     set(MIR_BUILD_PLATFORM_ANDROID TRUE)
+  endif()
+endforeach(platform)
+message(STATUS "${MIR_TEST_PLATFORM} ${MIR_BUILD_PLATFORM_MESA} ${MIR_BUILD_PLATFORM_ANDROID}")
 
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
@@ -110,24 +124,14 @@ include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})
 include_directories (${GLM_INCLUDE_DIRS})
 
-if (MIR_PLATFORM STREQUAL "android")
-
-  #android headers use 'int foo[0]' as struct members
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-
-  add_definitions( -DANDROID )
- 
+if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(LibHardware REQUIRED)
+endif()
 
-  #ctest does not work for android, so turn test discovery off
-  set(DISABLE_GTEST_TEST_DISCOVERY ON)
-elseif (MIR_PLATFORM STREQUAL "mesa")
+if (MIR_BUILD_PLATFORM_MESA)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
-else ()
-  message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'mesa'")
 endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
