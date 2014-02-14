@@ -21,7 +21,7 @@
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
-#include "src/server/compositor/renderer_factory.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_renderer.h"
