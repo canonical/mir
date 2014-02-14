@@ -31,6 +31,10 @@ namespace doubles
 class StubRenderer : public compositor::Renderer
 {
 public:
+    void set_viewport(geometry::Rectangle const&) override
+    {
+    }
+
     void begin(float) const override
     {
     }
