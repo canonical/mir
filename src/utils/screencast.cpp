@@ -157,20 +157,12 @@ struct EGLSetup
             throw std::runtime_error("Failed to make screencast surface current");
         }
 
-        GLint format;
-        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &format);
-        GLint type;
-        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &type);
-
-        if (type == GL_UNSIGNED_BYTE)
-            read_pixel_format = static_cast<GLenum>(format);
+        uint32_t a_pixel;
+        glReadPixels(0, 0, 1, 1, GL_BGRA_EXT, GL_UNSIGNED_BYTE, &a_pixel);
+        if (glGetError() == GL_NO_ERROR)
+            read_pixel_format = GL_BGRA_EXT;
         else
             read_pixel_format = GL_RGBA;
-
-        uint32_t a_pixel;
-        glReadPixels(0, 0, 1, 1, read_pixel_format, GL_UNSIGNED_BYTE, &a_pixel);
-        if (glGetError() != GL_NO_ERROR)
-            throw std::runtime_error("Failed to find proper pixel read format");
     }
 
     ~EGLSetup()
