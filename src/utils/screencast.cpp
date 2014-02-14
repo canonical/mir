@@ -47,40 +47,12 @@ void shutdown(int)
     running = 0;
 }
 
-std::future<void> write_frame_to_file(
-    std::vector<char> const& frame_data, int frame_number, GLenum format)
-{
-    return std::async(
-        std::launch::async,
-        [&frame_data, frame_number, format]
-        {
-            std::stringstream ss;
-            ss << "/tmp/mir_" ;
-            ss.width(5);
-            ss.fill('0');
-            ss << frame_number;
-            ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
-            std::ofstream f(ss.str());
-            f.write(frame_data.data(), frame_data.size());
-        });
-}
-
-GLenum read_pixels(mir::geometry::Size const& size, void* buffer)
+void read_pixels(GLenum format, mir::geometry::Size const& size, void* buffer)
 {
     auto width = size.width.as_uint32_t();
     auto height = size.height.as_uint32_t();
 
-    GLenum format = GL_BGRA_EXT;
-
     glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, buffer);
-
-    if (glGetError() != GL_NO_ERROR)
-    {
-        format = GL_RGBA;
-        glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, buffer);
-    }
-
-    return format;
 }
 
 
@@ -200,6 +172,13 @@ struct EGLSetup
             throw std::runtime_error("Failed to swap screencast surface buffers");
     }
 
+    GLenum pixel_read_format()
+    {
+        GLint format;
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &format);
+        return static_cast<GLenum>(format);
+    }
+
     EGLDisplay egl_display;
     EGLContext egl_context;
     EGLSurface egl_surface;
@@ -216,22 +195,23 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
                                   frame_size.width.as_uint32_t() *
                                   frame_size.height.as_uint32_t();
 
-    int frame_number{0};
     std::vector<char> frame_data(frame_size_bytes, 0);
-    std::future<void> frame_written_future =
-        std::async(std::launch::deferred, []{});
 
     EGLSetup egl_setup{connection, screencast};
+    auto format = egl_setup.pixel_read_format();
+
+    std::stringstream ss;
+    ss << "/tmp/mir_screencast_" ;
+    ss << frame_size.width << "x" << frame_size.height;
+    ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
+    std::ofstream videoFile(ss.str());
 
     while (running)
     {
-        frame_written_future.wait();
-
-        auto format = read_pixels(frame_size, frame_data.data());
-        frame_written_future = write_frame_to_file(frame_data, frame_number, format);
+        read_pixels(format, frame_size, frame_data.data());
+        videoFile.write(frame_data.data(), frame_data.size());
 
         egl_setup.swap_buffers();
-        ++frame_number;
     }
 }
 
