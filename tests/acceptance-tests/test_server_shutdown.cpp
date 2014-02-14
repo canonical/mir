@@ -24,6 +24,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_framework/cross_process_sync.h"
+#include "mir_test_doubles/stub_renderer.h"
 
 #include <gtest/gtest.h>
 
@@ -45,37 +46,12 @@ namespace
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class NullRenderer : public mc::Renderer
-{
-public:
-    void begin(float) const override
-    {
-    }
-
-    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
-    {
-        /*
-         * Do nothing, so that the surface's buffers are not consumed
-         * by the server, thus causing the client to block when asking for
-         * the second buffer (assuming double-buffering).
-         */
-        std::this_thread::yield();
-    }
-
-    void end() const override
-    {
-    }
-    void suspend() override
-    {
-    }
-};
-
-class NullRendererFactory : public mc::RendererFactory
+class StubRendererFactory : public mc::RendererFactory
 {
 public:
     std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
     {
-        return std::unique_ptr<mc::Renderer>(new NullRenderer());
+        return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
 };
 
@@ -133,7 +109,7 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
     {
         std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
         {
-            return renderer_factory([] { return std::make_shared<NullRendererFactory>(); });
+            return renderer_factory([] { return std::make_shared<StubRendererFactory>(); });
         }
     } server_config;
 
