@@ -276,9 +276,6 @@ public:
 
         EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
             .WillOnce(Return(screen_to_gl_coords_uniform_location));
-        EXPECT_CALL(mock_gl,
-                    glUniformMatrix4fv(screen_to_gl_coords_uniform_location,
-                                       1, GL_FALSE, _));
 
         mc::GLRendererFactory gl_renderer_factory;
         display_area = {{1, 2}, {3, 4}};
@@ -307,7 +304,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     InSequence seq;
 
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(display_transform_uniform_location, 1, GL_FALSE, _));
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(criteria, shaped())
