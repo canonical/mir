@@ -47,8 +47,6 @@ public:
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
                     const graphics::BufferProperties &);
 
-    ~SwitchingBundle() noexcept;
-
     graphics::BufferProperties properties() const;
 
     void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) override;
@@ -82,7 +80,7 @@ private:
     int last_compositor() const;
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
-    void complete_client_acquire(std::unique_lock<std::mutex>& lock);
+    void complete_client_acquire(std::unique_lock<std::mutex> lock);
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
