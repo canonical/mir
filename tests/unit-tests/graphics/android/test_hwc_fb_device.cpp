@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -86,8 +87,8 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<mtd::MockRenderable>(),
-        std::make_shared<mtd::MockRenderable>()
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()
     };
 
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))

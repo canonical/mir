@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <gtest/gtest.h>

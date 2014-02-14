@@ -126,7 +126,7 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
         std::make_shared<mtd::MockRenderable>(),
         std::make_shared<mtd::MockRenderable>()
     };
-    device.prepare_gl_and_overlays(renderlist);
+    device.prepare_gl_and_overlays(renderlist, [](mg::Renderable const&){});
     EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
 
     device.prepare_gl();
