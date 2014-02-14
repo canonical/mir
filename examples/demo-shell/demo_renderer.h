@@ -16,6 +16,9 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#ifndef MIR_EXAMPLES_DEMO_RENDERER_H_
+#define MIR_EXAMPLES_DEMO_RENDERER_H_
+
 #include "mir/compositor/gl_renderer.h"
 
 namespace mir
@@ -32,3 +35,5 @@ public:
 
 } // namespace examples
 } // namespace mir
+
+#endif // MIR_EXAMPLES_DEMO_RENDERER_H_
