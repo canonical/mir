@@ -312,7 +312,7 @@ void mc::GLRenderer::set_rotation(float degrees)
     if (degrees == rotation)
         return;
 
-    float rad = rotation * M_PI / 180.0f;
+    float rad = degrees * M_PI / 180.0f;
     GLfloat cos = cosf(rad);
     GLfloat sin = sinf(rad);
     GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
