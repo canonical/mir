@@ -28,8 +28,8 @@ DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
 {
 }
 
-void DemoRenderer::begin(float rotation) const
+void DemoRenderer::begin() const
 {
     glClearColor(DARK_GREY_4F);
-    GLRenderer::begin(rotation);
+    GLRenderer::begin();
 }

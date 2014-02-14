@@ -30,7 +30,7 @@ class DemoRenderer : public compositor::GLRenderer
 {
 public:
     DemoRenderer(geometry::Rectangle const& display_area);
-    void begin(float rotation) const;
+    void begin() const override;
 };
 
 } // namespace examples
