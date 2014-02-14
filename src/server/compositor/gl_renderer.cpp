@@ -189,8 +189,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     position_attr_loc = glGetAttribLocation(program, "position");
     texcoord_attr_loc = glGetAttribLocation(program, "texcoord");
 
-    set_viewport(display_area);
-
     glUniform1i(tex_loc, 0);
 
     /* Create VBO */
@@ -202,6 +200,8 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
+
+    set_viewport(display_area);
 }
 
 mc::GLRenderer::~GLRenderer() noexcept
