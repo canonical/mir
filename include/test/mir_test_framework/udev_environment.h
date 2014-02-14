@@ -45,6 +45,18 @@ public:
     void remove_device(std::string const& device_path);
     void emit_device_changed(std::string const& device_path);
 
+    /**
+     * Add a device from the set of standard device traces
+     *
+     * Looks for a <tt>name</tt>.umockdev file, and adds a UMockDev device
+     * from that description.
+     *
+     * If <tt>name</tt>.ioctl exists, it loads that ioctl script for the device
+     *
+     * @param name The unadorned filename of the device traces to add.
+     */
+    void add_standard_device(std::string const& name);
+
     UMockdevTestbed *testbed;
 };
 
