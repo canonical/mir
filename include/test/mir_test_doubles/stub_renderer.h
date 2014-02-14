@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERER_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 
 namespace mir
 {
