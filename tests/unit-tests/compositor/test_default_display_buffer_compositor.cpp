@@ -108,9 +108,19 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
-    void begin(float rotation) const override
+    void set_viewport(geom::Rectangle const& rect) override
     {
-        renderer->begin(rotation);
+        renderer->set_viewport(rect);
+    }
+
+    void set_rotation(float degrees) override
+    {
+        renderer->set_rotation(degrees);
+    }
+
+    void begin() const override
+    {
+        renderer->begin();
     }
 
     void render(mc::CompositingCriteria const& criteria, mg::Buffer& buffer) const override
@@ -260,7 +270,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     EXPECT_CALL(renderer_factory.mock_renderer, suspend())
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, begin(_))
+    EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
         .Times(0);
@@ -322,7 +332,9 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     EXPECT_CALL(display_buffer, orientation())
         .InSequence(render_seq)
         .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(renderer_factory.mock_renderer, begin(_))
+    EXPECT_CALL(renderer_factory.mock_renderer, set_rotation(_))
+        .InSequence(render_seq);
+    EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .InSequence(render_seq);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(big),_))
         .InSequence(render_seq);
