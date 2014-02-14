@@ -21,8 +21,15 @@
 using namespace mir;
 using namespace mir::examples;
 
+#define DARK_GREY_4F 0.2f, 0.2f, 0.2f, 1.0f
 
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
+}
+
+void DemoRenderer::begin(float rotation) const
+{
+    glClearColor(DARK_GREY_4F);
+    GLRenderer::begin(rotation);
 }
