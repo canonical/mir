@@ -66,7 +66,7 @@ public:
 
 protected:
 
-    int default_ipc_threads = 10;
+    int default_ipc_threads = 1;
 
     ConfigurationOptions() = default;
     virtual ~ConfigurationOptions() = default;
