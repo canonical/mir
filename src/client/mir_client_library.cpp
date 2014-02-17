@@ -396,7 +396,7 @@ void mir_wait_for_one(MirWaitHandle* wait_handle)
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
-    return surface->generate_native_window();
+    return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,

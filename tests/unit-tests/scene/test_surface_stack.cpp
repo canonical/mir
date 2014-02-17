@@ -32,7 +32,6 @@
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
-#include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/stub_input_channel.h"
