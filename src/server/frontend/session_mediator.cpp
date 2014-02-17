@@ -332,11 +332,17 @@ void mf::SessionMediator::configure_display(
         auto config = display_changer->active_configuration();
 
         config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
-            int id = dest.id.as_value();
-            if (id < 0 || id >= request->display_output_size())
+            unsigned id = dest.id.as_value();
+            int n = 0;
+            for (; n < request->display_output_size(); ++n)
+            {
+                if (request->display_output(n).output_id() == id)
+                    break;
+            }
+            if (n >= request->display_output_size())
                 return;
 
-            auto& src = request->display_output(id);
+            auto& src = request->display_output(n);
             dest.used = src.used();
             dest.top_left = geom::Point{src.position_x(),
                                         src.position_y()};
