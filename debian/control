@@ -118,7 +118,7 @@ Description: Display server for Ubuntu - platform library
 
 Package: libmirplatformgraphics-android
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -207,7 +207,7 @@ Description: Display server for Ubuntu - client platform library
 
 Package: libmirclientplatform-android
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
