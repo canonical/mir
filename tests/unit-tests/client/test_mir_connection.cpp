@@ -454,7 +454,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
 
     MirDisplayOutput output;
     output.output_id = 0;
-    output.current_mode = 0;
+    output.current_mode = mir_pixel_format_xbgr_8888;
     output.used = 0;
     output.position_x = 4;
     output.position_y = 6;
@@ -466,10 +466,17 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
         ASSERT_NE(nullptr, config);
         ASSERT_EQ(1, config->display_output_size());
         auto const& disp1 = config->display_output(0);
+        EXPECT_TRUE(disp1.has_output_id());
         EXPECT_EQ(output.output_id, disp1.output_id());
+        EXPECT_TRUE(disp1.has_used());
         EXPECT_EQ(output.used, disp1.used());
+        EXPECT_TRUE(disp1.has_current_mode());
         EXPECT_EQ(output.current_mode, disp1.current_mode());
+        EXPECT_TRUE(disp1.has_current_format());
+        EXPECT_EQ(output.current_format, disp1.current_format());
+        EXPECT_TRUE(disp1.has_position_x());
         EXPECT_EQ(output.position_x, disp1.position_x());
+        EXPECT_TRUE(disp1.has_position_y());
         EXPECT_EQ(output.position_y, disp1.position_y());
     };
 
