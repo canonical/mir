@@ -117,7 +117,13 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceRemovedOnHotunplug)
 
     for (auto& device : devices)
     {
-        if (device.devnode())
+        /*
+         * Remove just the device providing dev/input/event*
+         * If we remove more, it's possible that we'll remove the parent of the
+         * /dev/input device, and umockdev will not generate a remove event
+         * in that case.
+         */
+        if (device.devnode() && (std::string(device.devnode()).find("input/event") != std::string::npos))
         {
             env.remove_device((std::string("/sys") + device.devpath()).c_str());
         }
@@ -133,6 +139,10 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceRemovedOnHotunplug)
 
 }
 
-INSTANTIATE_TEST_CASE_P(VariousDevice,
+INSTANTIATE_TEST_CASE_P(VariousDevices,
                         EventHubDeviceEnumerationTest,
-                        ::testing::Values(std::string("synaptics-touchpad")));
+                        ::testing::Values(std::string("synaptics-touchpad"),
+                                          std::string("usb-keyboard"),
+                                          std::string("usb-mouse"),
+                                          std::string("laptop-keyboard"),
+                                          std::string("bluetooth-magic-trackpad")));

@@ -1,0 +1,74 @@
+P: /devices/platform/i8042/serio0/input/input4/event4
+N: input/event4
+S: input/by-path/platform-i8042-serio-0-event-kbd
+E: DEVLINKS=/dev/input/by-path/platform-i8042-serio-0-event-kbd
+E: DEVNAME=/dev/input/event4
+E: ID_INPUT=1
+E: ID_INPUT_KEY=1
+E: ID_INPUT_KEYBOARD=1
+E: ID_PATH=platform-i8042-serio-0
+E: ID_PATH_TAG=platform-i8042-serio-0
+E: ID_SERIAL=noserial
+E: MAJOR=13
+E: MINOR=68
+E: SUBSYSTEM=input
+E: XKBLAYOUT=us
+E: XKBMODEL=pc105
+E: XKBOPTIONS=compose:menu,ctrl:nocaps
+E: XKBVARIANT=dvorak
+A: dev=13:68
+L: device=../../input4
+
+P: /devices/platform/i8042/serio0/input/input4
+E: EV=120013
+E: ID_FOR_SEAT=input-platform-i8042-serio-0
+E: ID_INPUT=1
+E: ID_INPUT_KEY=1
+E: ID_INPUT_KEYBOARD=1
+E: ID_PATH=platform-i8042-serio-0
+E: ID_PATH_TAG=platform-i8042-serio-0
+E: ID_SERIAL=noserial
+E: KEY=402000000 3803078f800d001 feffffdfffefffff fffffffffffffffe
+E: LED=7
+E: MODALIAS=input:b0011v0001p0001eAB83-e0,1,4,11,14,k71,72,73,74,75,76,77,79,7A,7B,7C,7D,7E,7F,80,8C,8E,8F,9B,9C,9D,9E,9F,A3,A4,A5,A6,AC,AD,B7,B8,B9,D9,E2,ram4,l0,1,2,sfw
+E: MSC=10
+E: NAME="AT Translated Set 2 keyboard"
+E: PHYS="isa0060/serio0/input0"
+E: PRODUCT=11/1/1/ab83
+E: PROP=0
+E: SUBSYSTEM=input
+E: TAGS=:seat:
+L: device=../../../serio0
+A: modalias=input:b0011v0001p0001eAB83-e0,1,4,11,14,k71,72,73,74,75,76,77,79,7A,7B,7C,7D,7E,7F,80,8C,8E,8F,9B,9C,9D,9E,9F,A3,A4,A5,A6,AC,AD,B7,B8,B9,D9,E2,ram4,l0,1,2,sfw
+A: name=AT Translated Set 2 keyboard
+A: phys=isa0060/serio0/input0
+A: properties=0
+A: uniq=
+
+P: /devices/platform/i8042/serio0
+E: DRIVER=atkbd
+E: MODALIAS=serio:ty06pr00id00ex00
+E: SERIO_EXTRA=00
+E: SERIO_ID=00
+E: SERIO_PROTO=00
+E: SERIO_TYPE=06
+E: SUBSYSTEM=serio
+A: bind_mode=auto
+A: description=i8042 KBD port
+L: driver=../../../../bus/serio/drivers/atkbd
+A: err_count=0
+A: extra=0
+A: force_release=369-370
+A: modalias=serio:ty06pr00id00ex00
+A: scroll=0
+A: set=2
+A: softraw=1
+A: softrepeat=0
+
+P: /devices/platform/i8042
+E: DRIVER=i8042
+E: MODALIAS=platform:i8042
+E: SUBSYSTEM=platform
+L: driver=../../../bus/platform/drivers/i8042
+A: modalias=platform:i8042
+
