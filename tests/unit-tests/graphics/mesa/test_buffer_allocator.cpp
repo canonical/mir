@@ -53,7 +53,7 @@ protected:
         using namespace testing;
         unsetenv("MIR_BYPASS");
 
-        fake_devices.add_standard_device("standard-drm-device");
+        fake_devices.add_standard_device("standard-drm-devices");
 
         size = geom::Size{300, 200};
         pf = mir_pixel_format_argb_8888;
