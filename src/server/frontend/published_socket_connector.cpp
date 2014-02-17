@@ -123,12 +123,6 @@ void mf::BasicConnector::stop()
     /* Stop processing new requests */
     io_service.stop();
 
-    /*
-     * Ensure that any pending requests will complete (i.e., that they
-     * will not block indefinitely waiting for a resource from the server)
-     */
-    force_calls_to_complete();
-
     report->stopping_threads(io_service_threads.size());
 
     /* Wait for all io processing threads to finish */
