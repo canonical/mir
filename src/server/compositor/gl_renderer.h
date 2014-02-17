@@ -37,6 +37,7 @@ public:
     virtual ~GLRenderer() noexcept;
 
     // These are called with a valid GL context:
+    void set_viewport(geometry::Rectangle const& rect);
     void begin(float rotation) const override;
     void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
     void end() const override;
@@ -54,6 +55,8 @@ private:
     GLuint transform_uniform_loc;
     GLuint alpha_uniform_loc;
     GLuint vertex_attribs_vbo;
+
+    geometry::Rectangle viewport;
 
     typedef CompositingCriteria const* SurfaceID;
     struct Texture

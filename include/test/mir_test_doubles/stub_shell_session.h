@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -45,6 +45,11 @@ struct StubShellSession : public shell::Session
     {
         return std::string();
     }
+    pid_t process_id() const override
+    {
+        return -1;
+    }
+
     void force_requests_to_complete() override
     {
     }

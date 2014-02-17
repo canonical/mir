@@ -19,6 +19,8 @@
 #ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 
+#include <google/protobuf/service.h>
+
 namespace mir
 {
 namespace protobuf
@@ -32,11 +34,23 @@ namespace frontend
 {
 namespace detail
 {
+class Invocation
+{
+public:
+    Invocation(mir::protobuf::wire::Invocation const& invocation) :
+        invocation(invocation) {}
+
+    const ::std::string& method_name() const;
+    const ::std::string& parameters() const;
+    ::google::protobuf::uint32 id() const;
+private:
+    mir::protobuf::wire::Invocation const& invocation;
+};
 
 class MessageProcessor
 {
 public:
-    virtual bool dispatch(mir::protobuf::wire::Invocation const& invocation) = 0;
+    virtual bool dispatch(Invocation const& invocation) = 0;
 
 protected:
     MessageProcessor() = default;

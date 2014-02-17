@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -45,6 +45,7 @@ class ApplicationSession : public shell::Session
 public:
     ApplicationSession(
         std::shared_ptr<shell::SurfaceFactory> const& surface_factory,
+        pid_t pid,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<shell::SessionListener> const& session_listener,
@@ -60,6 +61,7 @@ public:
     std::shared_ptr<shell::Surface> default_surface() const;
 
     std::string name() const;
+    pid_t process_id() const override;
 
     void force_requests_to_complete();
 
@@ -77,6 +79,7 @@ protected:
 
 private:
     std::shared_ptr<shell::SurfaceFactory> const surface_factory;
+    pid_t const pid;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<shell::SessionListener> const session_listener;

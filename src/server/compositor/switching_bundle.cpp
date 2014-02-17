@@ -177,9 +177,10 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
     return ring[slot].buf;
 }
 
-mg::Buffer* mc::SwitchingBundle::client_acquire()
+void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* buffer)> complete)
 {
     std::unique_lock<std::mutex> lock(guard);
+    client_acquire_todo = std::move(complete);
 
     if ((framedropping || force_drop) && nbuffers > 1)
     {
@@ -210,9 +211,16 @@ mg::Buffer* mc::SwitchingBundle::client_acquire()
             1;
 #endif
 
-        while (nfree() < min_free)
-            cond.wait(lock);
+        if (nfree() < min_free)
+            return;
     }
+
+    complete_client_acquire(std::move(lock));
+}
+
+void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex> lock)
+{
+    auto complete = std::move(client_acquire_todo);
 
     if (force_drop > 0)
         force_drop--;
@@ -247,7 +255,16 @@ mg::Buffer* mc::SwitchingBundle::client_acquire()
         ring[client].buf = ret;
     }
 
-    return ret.get();
+    lock.unlock();
+
+    try
+    {
+        complete(ret.get());
+    }
+    catch (...)
+    {
+        // TODO comms errors should not propagate to compositing threads
+    }
 }
 
 void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
@@ -339,7 +356,8 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
             first_compositor = next(first_compositor);
             ncompositors--;
         }
-        cond.notify_all();
+
+        if (client_acquire_todo) complete_client_acquire(std::move(lock));
     }
 }
 
@@ -394,7 +412,7 @@ void mc::SwitchingBundle::force_requests_to_complete()
     std::unique_lock<std::mutex> lock(guard);
     drop_frames(nready);
     force_drop = nbuffers + 1;
-    cond.notify_all();
+    if (client_acquire_todo) complete_client_acquire(std::move(lock));
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)

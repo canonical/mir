@@ -289,7 +289,7 @@ TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     /* Test body */
     auto display = create_display(create_platform());
 
-    auto conf = display->configuration();
+    std::shared_ptr<mg::DisplayConfiguration> conf = display->configuration();
     auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
 
     size_t output_count{0};
@@ -332,7 +332,7 @@ TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     /* Test body */
     auto display = create_display(create_platform());
 
-    auto conf = display->configuration();
+    std::shared_ptr<mg::DisplayConfiguration> conf = display->configuration();
     auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
 
     EXPECT_THROW({

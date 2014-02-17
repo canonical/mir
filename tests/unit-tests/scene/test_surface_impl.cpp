@@ -149,7 +149,8 @@ struct SurfaceImpl : testing::Test
 
         ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
         ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(mir_pixel_format_abgr_8888));
-        ON_CALL(*buffer_stream, swap_client_buffers(_)).WillByDefault(SetArg<0>(nullptr));
+        ON_CALL(*buffer_stream, swap_client_buffers(_, _))
+            .WillByDefault(InvokeArgument<1>(nullptr));
     }
     mf::SurfaceId stub_id;
     std::shared_ptr<mf::EventSink> stub_sender;

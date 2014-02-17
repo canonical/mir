@@ -40,6 +40,13 @@ public:
     {
     }
 
+    StubDisplayConfig(StubDisplayConfig const& other)
+        : graphics::DisplayConfiguration(),
+          cards(other.cards),
+          outputs(other.outputs)
+    {
+    }
+
     StubDisplayConfig(unsigned int num_displays)
         : StubDisplayConfig(num_displays,
                             {
@@ -48,6 +55,16 @@ public:
                                 mir_pixel_format_xbgr_8888
                             })
     {
+    }
+
+    StubDisplayConfig(std::vector<std::pair<bool,bool>> const& connected_used)
+        : StubDisplayConfig(connected_used.size())
+    {
+        for (auto i = 0u; i < outputs.size(); ++i)
+        {
+            outputs[i].connected = connected_used[i].first;
+            outputs[i].used = connected_used[i].second;
+        }
     }
 
     StubDisplayConfig(unsigned int num_displays,
@@ -76,8 +93,8 @@ public:
                 graphics::DisplayConfigurationOutputType::vga,
                 pfs, modes, i,
                 physical_size,
-                ((i % 2) == 0),
-                ((i % 2) == 1),
+                ((i % 2) == 0),  // even numbers have connected==true
+                ((i % 4) == 0),  // only every second even has used==true
                 top_left,
                 mode_index, pfs[0],
                 mir_power_mode_off,

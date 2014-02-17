@@ -66,15 +66,6 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
-        typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
-
         fake_devices.add_standard_device("standard-drm-devices");
 #endif
     }

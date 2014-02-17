@@ -24,7 +24,7 @@
 #include "src/server/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -108,6 +108,11 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
+    void set_viewport(geom::Rectangle const& rect) override
+    {
+        renderer->set_viewport(rect);
+    }
+
     void begin(float rotation) const override
     {
         renderer->begin(rotation);
@@ -139,7 +144,7 @@ struct StubRendererFactory : mc::RendererFactory
             new WrappingRenderer{&mock_renderer});
     }
 
-    testing::NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
+    testing::NiceMock<mtd::MockRenderer> mock_renderer;
 };
 
 ACTION_P(InvokeArgWithParam, param)

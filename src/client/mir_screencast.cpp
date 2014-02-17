@@ -19,6 +19,7 @@
 #include "mir_screencast.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "egl_native_window_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -87,20 +88,40 @@ void populate_buffer_package(
 MirScreencast::MirScreencast(
     MirDisplayOutput const& output,
     mir::protobuf::DisplayServer& server,
+    std::shared_ptr<mcl::EGLNativeWindowFactory> const& egl_native_window_factory,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     mir_screencast_callback callback, void* context)
     : server(server),
       output_id{output.output_id},
       output_size{mir_output_get_size(output)},
       output_format{output.current_format},
+      egl_native_window_factory{egl_native_window_factory},
       buffer_depository{factory, mir::frontend::client_buffer_cache_size}
 {
-    next_buffer(callback, context);
+    protobuf_screencast.set_error("Not initialized");
+
+    mir::protobuf::ScreencastParameters parameters;
+    parameters.set_output_id(output_id);
+    parameters.set_width(output_size.width.as_uint32_t());
+    parameters.set_height(output_size.height.as_uint32_t());
+
+    server.create_screencast(
+        nullptr,
+        &parameters,
+        &protobuf_screencast,
+        google::protobuf::NewCallback(
+            this, &MirScreencast::screencast_created,
+            callback, context));
 }
 
 MirWaitHandle* MirScreencast::creation_wait_handle()
 {
-    return &next_buffer_wait_handle;
+    return &create_screencast_wait_handle;
+}
+
+bool MirScreencast::valid()
+{
+    return !protobuf_screencast.has_error();
 }
 
 MirSurfaceParameters MirScreencast::get_parameters() const
@@ -119,21 +140,42 @@ std::shared_ptr<mcl::ClientBuffer> MirScreencast::get_current_buffer()
     return buffer_depository.current_buffer();
 }
 
+MirWaitHandle* MirScreencast::release(
+        mir_screencast_callback callback, void* context)
+{
+    mir::protobuf::ScreencastId screencast_id;
+    screencast_id.set_value(protobuf_screencast.screencast_id().value());
+
+    server.release_screencast(
+        nullptr,
+        &screencast_id,
+        &protobuf_void,
+        google::protobuf::NewCallback(
+            this, &MirScreencast::released, callback, context));
+
+    return &release_wait_handle;
+}
+
 MirWaitHandle* MirScreencast::next_buffer(
     mir_screencast_callback callback, void* context)
 {
-    mir::protobuf::ScreencastRequest request;
-    request.set_output_id(output_id);
+    mir::protobuf::ScreencastId screencast_id;
+    screencast_id.set_value(protobuf_screencast.screencast_id().value());
 
     server.screencast_buffer(
         nullptr,
-        &request,
+        &screencast_id,
         &protobuf_buffer,
         google::protobuf::NewCallback(
             this, &MirScreencast::next_buffer_received,
             callback, context));
 
     return &next_buffer_wait_handle;
+}
+
+EGLNativeWindowType MirScreencast::egl_native_window()
+{
+    return *egl_native_window_;
 }
 
 void MirScreencast::request_and_wait_for_next_buffer()
@@ -145,22 +187,47 @@ void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
 {
 }
 
-void MirScreencast::next_buffer_received(
-    mir_screencast_callback callback, void* context)
+void MirScreencast::process_buffer(mir::protobuf::Buffer const& buffer)
 {
     auto buffer_package = std::make_shared<MirBufferPackage>();
-    populate_buffer_package(*buffer_package, protobuf_buffer);
+    populate_buffer_package(*buffer_package, buffer);
 
     try
     {
         buffer_depository.deposit_package(buffer_package,
-                                          protobuf_buffer.buffer_id(),
+                                          buffer.buffer_id(),
                                           output_size, output_format);
     }
     catch (const std::runtime_error& err)
     {
         // TODO: Report the error
     }
+}
+
+void MirScreencast::screencast_created(
+    mir_screencast_callback callback, void* context)
+{
+    if (!protobuf_screencast.has_error())
+    {
+        egl_native_window_ = egl_native_window_factory->create_egl_native_window(this);
+        process_buffer(protobuf_screencast.buffer());
+    }
+
+    callback(this, context);
+    create_screencast_wait_handle.result_received();
+}
+
+void MirScreencast::released(
+    mir_screencast_callback callback, void* context)
+{
+    callback(this, context);
+    release_wait_handle.result_received();
+}
+
+void MirScreencast::next_buffer_received(
+    mir_screencast_callback callback, void* context)
+{
+    process_buffer(protobuf_buffer);
 
     callback(this, context);
     next_buffer_wait_handle.result_received();

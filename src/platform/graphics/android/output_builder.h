@@ -40,8 +40,7 @@ public:
     OutputBuilder(
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
-        std::shared_ptr<DisplayReport> const& display_report,
-        bool should_use_fb_fallback);
+        std::shared_ptr<DisplayReport> const& display_report);
 
     MirPixelFormat display_format();
     std::shared_ptr<DisplayDevice> create_display_device();
