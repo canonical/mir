@@ -15,45 +15,36 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DRAW_ANDROID_GRAPHICS
-#define MIR_TEST_DRAW_ANDROID_GRAPHICS
+#ifndef MIR_TEST_DRAW_GRAPHICS_REGION_FACTORY
+#define MIR_TEST_DRAW_GRAPHICS_REGION_FACTORY
 
+#include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/geometry/size.h"
-
-#include <hardware/gralloc.h>
 #include <memory>
 
 namespace mir
 {
-namespace compositor
-{
-    class BufferIPCPackage;
-}
 namespace test
 {
 namespace draw
 {
 
-class TestGrallocMapper
+class GraphicsRegionFactory
 {
 public:
-    TestGrallocMapper();
-    TestGrallocMapper(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
-    ~TestGrallocMapper();
-    std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(ANativeWindowBuffer* package);
+    virtual ~GraphicsRegionFactory() {}
+    virtual std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
+        graphics::NativeBuffer const& native_buffer) = 0;
 
-private:
-    TestGrallocMapper(TestGrallocMapper const&) = delete;
-    TestGrallocMapper& operator=(TestGrallocMapper const&) = delete;
-
-    const bool gralloc_ownership;
-    gralloc_module_t* module;
-    alloc_device_t* alloc_dev;
+protected:
+    GraphicsRegionFactory() = default;
+    GraphicsRegionFactory(GraphicsRegionFactory const&) = delete;
+    GraphicsRegionFactory& operator=(GraphicsRegionFactory const&) = delete;
 };
 
+std::shared_ptr<GraphicsRegionFactory> create_graphics_region_factory();
+
 }
 }
 }
-#endif /* MIR_TEST_DRAW_ANDROID_GRAPHICS */
+#endif /* MIR_TEST_DRAW_GRAPHICS_REGION_FACTORY */

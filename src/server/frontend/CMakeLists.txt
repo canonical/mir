@@ -22,13 +22,6 @@ set(
   ${PROTO_HDRS}
 )
 
-if (MIR_PLATFORM STREQUAL "android")
-  list(APPEND FRONTEND_SOURCES session_mediator_android.cpp)
-elseif (MIR_PLATFORM STREQUAL "mesa")
-  include_directories(${DRM_INCLUDE_DIRS})
-  list(APPEND FRONTEND_SOURCES session_mediator_mesa.cpp)
-endif()
-
 add_library(
   mirfrontend STATIC
 

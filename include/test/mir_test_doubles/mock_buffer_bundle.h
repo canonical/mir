@@ -37,7 +37,7 @@ public:
     ~MockBufferBundle() noexcept
     {}
 
-    MOCK_METHOD0(client_acquire,     graphics::Buffer*());
+    MOCK_METHOD1(client_acquire,     void(std::function<void(graphics::Buffer*)>));
     MOCK_METHOD1(client_release,     void(graphics::Buffer*));
     MOCK_METHOD1(compositor_acquire, std::shared_ptr<graphics::Buffer>(unsigned long));
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<graphics::Buffer> const&));

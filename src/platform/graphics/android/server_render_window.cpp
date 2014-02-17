@@ -28,6 +28,7 @@
 #include <system/window.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <sstream>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -81,7 +82,11 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
             return 1;
         default:
-            BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
+            {
+            std::stringstream sstream;
+            sstream << "driver requests info we dont provide. key: " << key;
+            BOOST_THROW_EXCEPTION(std::runtime_error(sstream.str()));
+            }
     }
 }
 

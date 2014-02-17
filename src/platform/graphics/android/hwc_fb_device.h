@@ -45,6 +45,7 @@ public:
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
+    static int const num_displays{1};
     LayerList layer_list;
 };
 

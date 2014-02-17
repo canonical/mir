@@ -122,7 +122,7 @@ TEST_F(OutputBuilder, hwc_version_10_success)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     factory.create_display_device();
 }
 
@@ -143,7 +143,7 @@ TEST_F(OutputBuilder, hwc_version_10_failure_uses_gpu)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     factory.create_display_device();
 }
 
@@ -161,7 +161,7 @@ TEST_F(OutputBuilder, hwc_version_11_success)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     factory.create_display_device();
 }
 
@@ -182,7 +182,7 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_failure)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     factory.create_display_device();
 }
 
@@ -201,7 +201,7 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
 
     EXPECT_THROW({
         mga::OutputBuilder factory(
-            mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+            mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     }, std::runtime_error);
 }
 
@@ -219,7 +219,7 @@ TEST_F(OutputBuilder, hwc_version_12)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     factory.create_display_device();
 }
 
@@ -233,6 +233,6 @@ TEST_F(OutputBuilder, db_creation)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report, false);
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mock_display_report);
     factory.create_display_buffer(mt::fake_shared(stub_device), gl_context);
 }

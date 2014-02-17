@@ -128,6 +128,8 @@ public:
         return channel;
     }
 
+    mir::protobuf::DisplayServer& display_server();
+
 private:
     std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 

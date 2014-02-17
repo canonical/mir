@@ -34,7 +34,7 @@ struct StubShell : public frontend::Shell
     StubShell() : stub_session(std::make_shared<StubSession>())
     {
     }
-    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */, std::shared_ptr<frontend::EventSink> const& /* sink */) override
+    std::shared_ptr<frontend::Session> open_session(pid_t, std::string const& /* name */, std::shared_ptr<frontend::EventSink> const& /* sink */) override
     {
         return stub_session;
     }

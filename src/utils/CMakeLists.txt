@@ -13,8 +13,17 @@ target_link_libraries(mirping mirclient)
 add_executable(mirout out.c)
 target_link_libraries(mirout mirclient)
 
+add_executable(mirscreencast screencast.cpp)
+
+target_link_libraries(mirscreencast
+  mirclient
+  ${EGL_LIBRARIES}
+  ${GLESv2_LIBRARIES}
+)
+
 install(TARGETS
   mirping
   mirout
+  mirscreencast
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
