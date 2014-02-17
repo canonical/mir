@@ -454,7 +454,8 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
 
     MirDisplayOutput output;
     output.output_id = 0;
-    output.current_mode = mir_pixel_format_xbgr_8888;
+    output.current_mode = 0;
+    output.current_format = mir_pixel_format_xbgr_8888;
     output.used = 0;
     output.position_x = 4;
     output.position_y = 6;
