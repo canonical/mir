@@ -29,6 +29,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_renderer.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/mock_android_native_buffer.h"
@@ -202,32 +203,12 @@ class StubGraphicPlatform : public mtd::NullPlatform
     }
 };
 
-class StubRenderer : public mc::Renderer
-{
-public:
-    void begin(float) const override
-    {
-    }
-
-    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
-    {
-    }
-
-    void end() const override
-    {
-    }
-
-    void suspend() override
-    {
-    }
-};
-
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
     std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
     {
-        return std::unique_ptr<StubRenderer>(new StubRenderer());
+        return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
 };
 

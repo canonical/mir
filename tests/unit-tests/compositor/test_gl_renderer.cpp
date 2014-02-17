@@ -125,8 +125,6 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
 
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        .WillOnce(Return(screen_to_gl_coords_uniform_location));
-    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
         .WillOnce(Return(tex_uniform_location));
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
         .WillOnce(Return(display_transform_uniform_location));
@@ -138,8 +136,6 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
         .WillOnce(Return(position_attr_location));
     EXPECT_CALL(mock_gl, glGetAttribLocation(stub_program, _))
         .WillOnce(Return(texcoord_attr_location));
-
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(screen_to_gl_coords_uniform_location, 1, GL_FALSE, _));
 }
 
 void FillMockVertexBuffer(mtd::MockGL &mock_gl)
@@ -278,7 +274,14 @@ public:
         EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_location, 0));
         FillMockVertexBuffer(mock_gl);
 
+        EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+            .WillOnce(Return(screen_to_gl_coords_uniform_location));
+        EXPECT_CALL(mock_gl,
+                    glUniformMatrix4fv(screen_to_gl_coords_uniform_location,
+                                       1, GL_FALSE, _));
+
         mc::GLRendererFactory gl_renderer_factory;
+        display_area = {{1, 2}, {3, 4}};
         renderer = gl_renderer_factory.create_renderer_for(display_area);
 
         EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
