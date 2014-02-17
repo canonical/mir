@@ -21,8 +21,6 @@
 using namespace mir;
 using namespace mir::examples;
 
-#define DARK_GREY_4F 0.2f, 0.2f, 0.2f, 1.0f
-
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
@@ -30,6 +28,6 @@ DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
 
 void DemoRenderer::begin() const
 {
-    glClearColor(DARK_GREY_4F);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     GLRenderer::begin();
 }
