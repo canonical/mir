@@ -42,6 +42,12 @@ namespace
 
 volatile sig_atomic_t running = 1;
 
+//In android, waiting for a future is causing the gl/egl context to become invalid
+//possibly due to assumptions in libhybris/android linker.
+//A TLS allocation in the main thread is forced with this variable which seems to push
+//the gl/egl context TLS into a slot where the future wait code does not overwrite it.
+thread_local int tls_hack[2];
+
 void shutdown(int)
 {
     running = 0;
@@ -215,9 +221,16 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
     while (running)
     {
         read_pixels(format, frame_size, frame_data.data());
-        video_file.write(frame_data.data(), frame_data.size());
+
+        auto write_out_future = std::async(
+                std::launch::async,
+                [&video_file, &frame_data] {
+                    video_file.write(frame_data.data(), frame_data.size());
+                });
 
         egl_setup.swap_buffers();
+
+        write_out_future.wait();
     }
 }
 
@@ -230,6 +243,9 @@ try
     opterr = 0;
     char const* socket_file = nullptr;
     uint32_t output_id = mir_display_output_id_invalid;
+
+    //avoid unused warning/error
+    tls_hack[0] = 0;
 
     while ((arg = getopt (argc, argv, "hm:o:")) != -1)
     {
