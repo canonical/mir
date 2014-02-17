@@ -107,7 +107,8 @@ EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelForma
 
 EGLNativeWindowType mgn::detail::EGLDisplayHandle::native_window(EGLConfig /*egl_config*/, MirSurface* mir_surface) const
 {
-    auto const native_window = static_cast<EGLNativeWindowType>(mir_surface_get_egl_native_window(mir_surface));
+    auto const native_window =
+        reinterpret_cast<EGLNativeWindowType>(mir_surface_get_egl_native_window(mir_surface));
     if (!native_window)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
 
@@ -152,9 +153,13 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
         f(*i.second);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration() const
 {
-    return std::make_shared<NestedDisplayConfiguration>(mir_connection_create_display_config(*connection));
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new NestedDisplayConfiguration(
+            mir_connection_create_display_config(*connection)
+        )
+    );
 }
 
 void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)

@@ -75,7 +75,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
         sender(sender),
         wrapped(wrapped) {}
 
-    bool dispatch(mir::protobuf::wire::Invocation const& invocation)
+    bool dispatch(mfd::Invocation const& invocation)
     {
         if ("function" == invocation.method_name())
         {

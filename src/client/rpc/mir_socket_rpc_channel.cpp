@@ -143,6 +143,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
     if (!disconnected.load())
     {
         auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+        mir::protobuf::Screencast* screencast{nullptr};
         if (surface)
         {
             surface->clear_fd();
@@ -157,12 +158,18 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
                 rpc_report->file_descriptors_received(*response, fds);
             }
         }
+        else
+        {
+            screencast = dynamic_cast<mir::protobuf::Screencast*>(response);
+        }
 
         auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
         if (!buffer)
         {
             if (surface && surface->has_buffer())
                 buffer = surface->mutable_buffer();
+            else if (screencast && screencast->has_buffer())
+                buffer = screencast->mutable_buffer();
         }
 
         if (buffer)

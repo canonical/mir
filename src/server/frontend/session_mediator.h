@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -24,6 +24,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
+#include <functional>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -52,19 +53,22 @@ class ResourceCache;
 class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
+class Screencast;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
     SessionMediator(
+        pid_t client_pid,
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
-        std::shared_ptr<ResourceCache> const& resource_cache);
+        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<Screencast> const& screencast);
 
     ~SessionMediator() noexcept;
 
@@ -105,6 +109,21 @@ public:
                        ::mir::protobuf::DisplayConfiguration* response,
                        ::google::protobuf::Closure* done) override;
 
+    void create_screencast(google::protobuf::RpcController*,
+                           const mir::protobuf::ScreencastParameters*,
+                           mir::protobuf::Screencast*,
+                           google::protobuf::Closure* done);
+
+    void release_screencast(google::protobuf::RpcController*,
+                            const mir::protobuf::ScreencastId*,
+                            mir::protobuf::Void*,
+                            google::protobuf::Closure* done);
+
+    void screencast_buffer(google::protobuf::RpcController*,
+                           const mir::protobuf::ScreencastId*,
+                           mir::protobuf::Buffer*,
+                           google::protobuf::Closure* done);
+
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
@@ -116,7 +135,8 @@ private:
                               graphics::Buffer* graphics_buffer,
                               bool need_full_ipc);
 
-    std::tuple<graphics::Buffer*, bool> advance_buffer(SurfaceId surf_id, Surface& surface);
+    void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
+    pid_t client_pid;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
@@ -126,6 +146,7 @@ private:
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<Screencast> const screencast;
 
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;

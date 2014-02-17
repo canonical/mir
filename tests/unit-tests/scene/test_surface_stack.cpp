@@ -32,7 +32,6 @@
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
-#include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/stub_input_channel.h"
@@ -67,7 +66,7 @@ namespace
 class NullBufferBundle : public mc::BufferBundle
 {
 public:
-    virtual mg::Buffer* client_acquire() { return nullptr; }
+    virtual void client_acquire(std::function<void(mg::Buffer* buffer)> complete) { complete(nullptr); }
     virtual void client_release(mg::Buffer*) {}
     virtual std::shared_ptr<mg::Buffer> compositor_acquire(unsigned long)
         { return std::shared_ptr<mg::Buffer>(); };

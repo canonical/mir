@@ -485,3 +485,8 @@ bool MirConnection::set_extra_platform_data(
     extra_platform_data = extra_platform_data_arg;
     return true;
 }
+
+mir::protobuf::DisplayServer& MirConnection::display_server()
+{ 
+    return server;
+}

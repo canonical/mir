@@ -31,7 +31,7 @@ namespace doubles
 {
 struct MockBufferStream : public compositor::BufferStream
 {
-    MOCK_METHOD1(swap_client_buffers, void(graphics::Buffer*&));
+    MOCK_METHOD2(swap_client_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> completee));
     MOCK_METHOD1(lock_compositor_buffer,
                  std::shared_ptr<graphics::Buffer>(unsigned long));
     MOCK_METHOD0(lock_snapshot_buffer, std::shared_ptr<graphics::Buffer>());

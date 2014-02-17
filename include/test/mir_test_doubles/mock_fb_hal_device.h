@@ -37,7 +37,7 @@ public:
     MockFBHalDevice(unsigned int const width, unsigned int const height,
                     int const pf, int const numfbs)
         : framebuffer_device_t({
-            empty_module,
+            hw_device_t(),
             0,
             width,
             height,
@@ -86,8 +86,6 @@ public:
     MOCK_METHOD2(enableScreen_interface, int(struct framebuffer_device_t*, int));
     MOCK_METHOD2(post_interface, int(struct framebuffer_device_t*, buffer_handle_t));
     MOCK_METHOD2(setSwapInterval_interface, int(struct framebuffer_device_t*, int));
-
-    hw_device_t empty_module;
 };
 
 }

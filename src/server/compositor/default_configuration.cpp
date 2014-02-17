@@ -17,13 +17,18 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/frontend/screencast.h"
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "gl_renderer_factory.h"
+#include "compositing_screencast.h"
+
+#include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 
 std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_stream_factory()
@@ -65,5 +70,18 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         []()
         {
             return std::make_shared<mc::GLRendererFactory>();
+        });
+}
+
+std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast()
+{
+    return screencast(
+        [this]()
+        {
+            return std::make_shared<mc::CompositingScreencast>(
+                the_display(),
+                the_buffer_allocator(),
+                the_display_buffer_compositor_factory()
+                );
         });
 }
