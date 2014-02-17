@@ -19,12 +19,12 @@
 
 #include "mir/frontend/connector.h"
 
-#include "src/server/report/null/message_processor_report.h"
-#include "src/server/report/null/connector_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/published_socket_connector.h"
 
 #include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/connector_report.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -46,7 +46,7 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mrn = mir::report::null;
+namespace mr = mir::report;
 
 namespace
 {
@@ -371,10 +371,10 @@ TEST_F(PublishedSocketConnector, forces_requests_to_complete_when_stopping)
         std::make_shared<mf::ProtobufSessionCreator>(
                     ipc_factory,
                     std::make_shared<mtd::StubSessionAuthorizer>(),
-                    std::make_shared<mrn::MessageProcessorReport>()),
+                    mr::null_message_processor_report()),
         10,
         std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
-        std::make_shared<mrn::ConnectorReport>());
+        mr::null_connector_report());
 
     comms->start();
     comms->stop();

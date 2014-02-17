@@ -60,3 +60,33 @@ std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_
 {
     return std::make_shared<null::InputReport>();
 }
+
+std::shared_ptr<mir::compositor::CompositorReport> mir::report::null_compositor_report()
+{
+    return NullReportFactory{}.create_compositor_report();
+}
+
+std::shared_ptr<mir::graphics::DisplayReport> mir::report::null_display_report()
+{
+    return NullReportFactory{}.create_display_report();
+}
+std::shared_ptr<mir::scene::SceneReport> mir::report::null_scene_report()
+{
+    return NullReportFactory{}.create_scene_report();
+}
+std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_report()
+{
+    return NullReportFactory{}.create_connector_report();
+}
+std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::null_session_mediator_report()
+{
+    return NullReportFactory{}.create_session_mediator_report();
+}
+std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::null_message_processor_report()
+{
+    return NullReportFactory{}.create_message_processor_report();
+}
+std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
+{
+    return NullReportFactory{}.create_input_report();
+}

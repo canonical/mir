@@ -29,17 +29,17 @@ namespace null
 {
 class MessageProcessorReport : public frontend::MessageProcessorReport
 {
-    void received_invocation(void const*, int, std::string const&) override;
+    void received_invocation(void const*, int, std::string const&);
 
-    void completed_invocation(void const*, int, bool) override;
+    void completed_invocation(void const*, int, bool);
 
-    void unknown_method(void const*, int, std::string const&) override;
+    void unknown_method(void const*, int, std::string const&);
 
-    void exception_handled(void const*, int, std::exception const&) override;
+    void exception_handled(void const*, int, std::exception const&);
 
-    void exception_handled(void const*, std::exception const&) override;
+    void exception_handled(void const*, std::exception const&);
 
-    void sent_event(void const*, MirSurfaceEvent const& e) override;
+    void sent_event(void const*, MirSurfaceEvent const& e);
 };
 }
 }

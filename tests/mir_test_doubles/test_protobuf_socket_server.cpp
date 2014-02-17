@@ -22,13 +22,13 @@
 #include "mir/frontend/connector_report.h"
 #include "mir/frontend/protobuf_session_creator.h"
 #include "src/server/frontend/published_socket_connector.h"
-#include "src/server/report/null/message_processor_report.h"
-#include "src/server/report/null/connector_report.h"
+#include "src/server/report/null_report_factory.h"
+#include "src/server/report/null_report_factory.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
-namespace mrn = mir::report::null;
+namespace mr = mir::report;
 
 namespace
 {
@@ -42,7 +42,7 @@ std::shared_ptr<mf::Connector> make_connector(
         std::make_shared<mf::ProtobufSessionCreator>(
             factory,
             std::make_shared<mtd::StubSessionAuthorizer>(),
-            std::make_shared<mrn::MessageProcessorReport>()),
+            mr::null_message_processor_report()),
         10,
         []{},
         report);
@@ -52,7 +52,7 @@ std::shared_ptr<mf::Connector> make_connector(
 mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
     const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    TestProtobufServer(socket_name, tool, std::make_shared<mrn::ConnectorReport>())
+    TestProtobufServer(socket_name, tool, mr::null_connector_report())
 {
 }
 

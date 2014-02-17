@@ -24,7 +24,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
 
-#include "src/server/report/null/input_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
@@ -58,7 +58,7 @@ namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mrn = mir::report::null;
+namespace mr = mir::report;
 
 using mtd::MockEventFilter;
 
@@ -98,7 +98,7 @@ public:
                 event_filter,
                 mt::fake_shared(input_region),
                 null_cursor_listener,
-                std::make_shared<mrn::InputReport>());
+                mr::null_input_report());
 
         fake_event_hub = configuration->the_fake_event_hub();
 
@@ -270,7 +270,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<TestingInputConfiguration>(
             event_filter,
-            mt::fake_shared(input_region), null_cursor_listener, std::make_shared<mrn::InputReport>());
+            mt::fake_shared(input_region), null_cursor_listener, mr::null_input_report());
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();

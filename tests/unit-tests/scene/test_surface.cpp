@@ -18,7 +18,7 @@
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/surface_data.h"
-#include "src/server/report/null/scene_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/input_channel.h"
 
@@ -41,7 +41,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace mrn = mir::report::null;
+namespace mr = mir::report;
 
 namespace
 {
@@ -187,7 +187,7 @@ struct SurfaceCreation : public ::testing::Test
     geom::Stride stride;
     geom::Size size;
     geom::Rectangle rect;
-    std::shared_ptr<ms::SceneReport> const report = std::make_shared<mrn::SceneReport>();
+    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     std::function<void()> change_notification;
     int notification_count;
     mtd::StubBuffer stub_buffer;

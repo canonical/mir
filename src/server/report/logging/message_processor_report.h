@@ -62,17 +62,17 @@ public:
         std::shared_ptr<mir::logging::Logger> const& log,
         std::shared_ptr<time::Clock> const& clock);
 
-    void received_invocation(void const* mediator, int id, std::string const& method) override;
+    void received_invocation(void const* mediator, int id, std::string const& method);
 
-    void completed_invocation(void const* mediator, int id, bool result) override;
+    void completed_invocation(void const* mediator, int id, bool result);
 
-    void unknown_method(void const* mediator, int id, std::string const& method) override;
+    void unknown_method(void const* mediator, int id, std::string const& method);
 
-    void exception_handled(void const* mediator, int id, std::exception const& error) override;
+    void exception_handled(void const* mediator, int id, std::exception const& error);
 
-    void exception_handled(void const* mediator, std::exception const& error) override;
+    void exception_handled(void const* mediator, std::exception const& error);
 
-    void sent_event(void const* mediator, MirSurfaceEvent const& event) override;
+    void sent_event(void const* mediator, MirSurfaceEvent const& event);
 
     ~MessageProcessorReport() noexcept(true);
 

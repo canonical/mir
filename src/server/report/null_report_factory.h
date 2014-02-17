@@ -36,6 +36,15 @@ public:
     std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() override;
     std::shared_ptr<input::InputReport> create_input_report() override;
 };
+
+std::shared_ptr<compositor::CompositorReport> null_compositor_report();
+std::shared_ptr<graphics::DisplayReport> null_display_report();
+std::shared_ptr<scene::SceneReport> null_scene_report();
+std::shared_ptr<frontend::ConnectorReport> null_connector_report();
+std::shared_ptr<frontend::SessionMediatorReport> null_session_mediator_report();
+std::shared_ptr<frontend::MessageProcessorReport> null_message_processor_report();
+std::shared_ptr<input::InputReport> null_input_report();
+
 }
 }
 

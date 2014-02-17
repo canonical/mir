@@ -42,10 +42,10 @@ class SceneReport : public scene::SceneReport
 public:
     SceneReport(std::shared_ptr<mir::logging::Logger> const& log);
 
-    void surface_created(BasicSurfaceId id, std::string const& name) override;
-    void surface_added(BasicSurfaceId id, std::string const& name) override;
-    void surface_removed(BasicSurfaceId id, std::string const& name) override;
-    void surface_deleted(BasicSurfaceId id, std::string const& name) override;
+    void surface_created(BasicSurfaceId id, std::string const& name);
+    void surface_added(BasicSurfaceId id, std::string const& name);
+    void surface_removed(BasicSurfaceId id, std::string const& name);
+    void surface_deleted(BasicSurfaceId id, std::string const& name);
 
 private:
     std::shared_ptr<mir::logging::Logger> const logger;

@@ -27,7 +27,7 @@
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "src/server/report/null/display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -50,7 +50,7 @@ namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir::mir_test_framework;
-namespace mrn=mir::report::null;
+namespace mr=mir::report;
 
 namespace
 {
@@ -91,7 +91,7 @@ class MesaDisplayTest : public ::testing::Test
 public:
     MesaDisplayTest() :
         mock_report{std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>()},
-        null_report{std::make_shared<mrn::DisplayReport>()}
+        null_report{mr::null_display_report()}
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))

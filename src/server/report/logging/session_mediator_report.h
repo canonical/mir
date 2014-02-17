@@ -41,26 +41,26 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 public:
     SessionMediatorReport(std::shared_ptr<mir::logging::Logger> const& log);
 
-    void session_connect_called(std::string const& app_name) override;
+    virtual void session_connect_called(std::string const& app_name);
 
-    void session_create_surface_called(std::string const& app_name) override;
+    virtual void session_create_surface_called(std::string const& app_name);
 
-    void session_next_buffer_called(std::string const& app_name) override;
+    virtual void session_next_buffer_called(std::string const& app_name);
 
-    void session_release_surface_called(std::string const& app_name) override;
+    virtual void session_release_surface_called(std::string const& app_name);
 
-    void session_disconnect_called(std::string const& app_name) override;
+    virtual void session_disconnect_called(std::string const& app_name);
 
-    void session_drm_auth_magic_called(std::string const& app_name) override;
+    virtual void session_drm_auth_magic_called(std::string const& app_name);
 
-    void session_configure_surface_called(std::string const& app_name) override;
+    virtual void session_configure_surface_called(std::string const& app_name);
 
-    void session_configure_display_called(std::string const& app_name) override;
+    virtual void session_configure_display_called(std::string const& app_name);
 
-    void session_error(
+    virtual void session_error(
         std::string const& app_name,
         char const* method,
-        std::string const& what) override;
+        std::string const& what);
 
 private:
     std::shared_ptr<mir::logging::Logger> const log;

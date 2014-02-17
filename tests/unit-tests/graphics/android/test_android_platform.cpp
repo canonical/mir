@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/report/null/display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/graphics/native_platform.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
@@ -35,7 +35,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
-namespace mrn=mir::report::null;
+namespace mr=mir::report;
 namespace geom=mir::geometry;
 namespace mo=mir::options;
 
@@ -47,7 +47,7 @@ protected:
         using namespace testing;
 
         stub_display_builder = std::make_shared<mtd::StubDisplayBuilder>();
-        stub_display_report = std::make_shared<mrn::DisplayReport>();
+        stub_display_report = mr::null_display_report();
         stride = geom::Stride(300*4);
 
         num_ints = 43;
@@ -120,7 +120,7 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
     mga::AndroidPlatform platform(
         std::make_shared<mtd::StubDisplayBuilder>(),
-        std::make_shared<mrn::DisplayReport>());
+        mr::null_display_report());
 
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
 }
