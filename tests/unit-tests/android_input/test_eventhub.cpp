@@ -51,10 +51,15 @@ public:
 
 }
 
-TEST(EventHubTest, ScansOnConstruction)
+class EventHubDeviceEnumerationTest : public ::testing::TestWithParam<std::string>
+{
+    // Don't actually need any shared state at the moment
+};
+
+TEST_P(EventHubDeviceEnumerationTest, ScansOnConstruction)
 {
     mir::mir_test_framework::UdevEnvironment env;
-    env.add_standard_device("synaptics-touchpad");
+    env.add_standard_device(GetParam());
 
     auto hub = new android::EventHub{std::make_shared<NullInputReport>()};
 
@@ -70,7 +75,7 @@ TEST(EventHubTest, ScansOnConstruction)
     EXPECT_EQ(android::EventHub::FINISHED_DEVICE_SCAN, buffer[2].type);
 }
 
-TEST(EventHubTest, GeneratesDeviceAddedOnHotplug)
+TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceAddedOnHotplug)
 {
     mir::mir_test_framework::UdevEnvironment env;
 
@@ -85,7 +90,7 @@ TEST(EventHubTest, GeneratesDeviceAddedOnHotplug)
     EXPECT_EQ(android::VIRTUAL_KEYBOARD_ID, buffer[0].deviceId);
     EXPECT_EQ(android::EventHub::FINISHED_DEVICE_SCAN, buffer[1].type);
 
-    env.add_standard_device("synaptics-touchpad");
+    env.add_standard_device(GetParam());
 
     memset(buffer, 0, sizeof(buffer));
     num_events = hub->getEvents(0, buffer, 10);
@@ -96,10 +101,10 @@ TEST(EventHubTest, GeneratesDeviceAddedOnHotplug)
     EXPECT_EQ(android::EventHub::FINISHED_DEVICE_SCAN, buffer[1].type);
 }
 
-TEST(EventHubTest, GeneratesDeviceRemovedOnHotunplug)
+TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceRemovedOnHotunplug)
 {
     mir::mir_test_framework::UdevEnvironment env;
-    env.add_standard_device("synaptics-touchpad");
+    env.add_standard_device(GetParam());
 
     auto hub = new android::EventHub{std::make_shared<NullInputReport>()};
 
@@ -112,7 +117,7 @@ TEST(EventHubTest, GeneratesDeviceRemovedOnHotunplug)
 
     for (auto& device : devices)
     {
-        if (device.devnode() && (strcmp(device.devnode(), "/dev/input/event12") == 0))
+        if (device.devnode())
         {
             env.remove_device((std::string("/sys") + device.devpath()).c_str());
         }
@@ -127,3 +132,7 @@ TEST(EventHubTest, GeneratesDeviceRemovedOnHotunplug)
     EXPECT_EQ(android::EventHub::FINISHED_DEVICE_SCAN, buffer[1].type);
 
 }
+
+INSTANTIATE_TEST_CASE_P(VariousDevice,
+                        EventHubDeviceEnumerationTest,
+                        ::testing::Values(std::string("synaptics-touchpad")));
