@@ -40,14 +40,10 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
       LayerListBase{2},
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops),
-      needs_swapbuffers(true)
+      needs_swapbuffers{true}
 {
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-}
-
-void mga::HwcDevice::prepare(hwc_display_contents_1_t &)
-{
 }
 
 void mga::HwcDevice::prepare_gl()
@@ -58,6 +54,7 @@ void mga::HwcDevice::prepare_gl()
     skip_layers_present = true;
 
     hwc_wrapper->prepare(*native_list().lock());
+
     needs_swapbuffers = true;
 }
 
@@ -65,10 +62,6 @@ void mga::HwcDevice::prepare_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(mg::Renderable const&)> const& render_fn) 
 {
-    auto prepare_fn = [this](hwc_display_contents_1_t& prep)
-    {
-        prepare(prep);
-    };
     auto const needed_size = renderables.size() + 1;
     update_representation(needed_size);
 
@@ -84,7 +77,7 @@ void mga::HwcDevice::prepare_gl_and_overlays(
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
 
-    prepare_fn(*native_list().lock());
+    hwc_wrapper->prepare(*native_list().lock());
 
     //if a layer cannot be drawn, draw with GL here
     layers_it = layers.begin();
@@ -97,8 +90,7 @@ void mga::HwcDevice::prepare_gl_and_overlays(
             render_fn(*renderable);
         }
     }
-
-    needs_swapbuffers = gl_render_needed;
+    needs_swapbuffers = gl_render_needed; 
 }
 
 void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
