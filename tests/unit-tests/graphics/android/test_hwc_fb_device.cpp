@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/stub_renderable.h"
+#include "mir_test_doubles/mock_render_function.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -79,28 +80,28 @@ TEST_F(HwcFbDevice, hwc10_prepare_gl_only)
 TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 {
     using namespace testing;
-    struct MockRenderOperator
-    {
-        MOCK_METHOD0(called, void());
-    };
-    MockRenderOperator mock_call_counter;
-
+    auto renderable1 = std::make_shared<mtd::StubRenderable>();
+    auto renderable2 = std::make_shared<mtd::StubRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<mtd::StubRenderable>(),
-        std::make_shared<mtd::StubRenderable>()
+        renderable1,
+        renderable2
     };
 
+    mtd::MockRenderFunction mock_call_counter;
+    testing::Sequence seq;
     EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
-        .Times(1);
-    EXPECT_CALL(mock_call_counter, called())
-        .Times(renderlist.size());
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
+        .InSequence(seq);
 
     mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
-    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const&)
+    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const& renderable)
     {
-        mock_call_counter.called();
+        mock_call_counter.called(renderable);
     });
 
     EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);

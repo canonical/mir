@@ -25,6 +25,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/mock_render_function.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -63,25 +64,25 @@ struct FBDevice : public ::testing::Test
 
 TEST_F(FBDevice, render_overlays_via_gl)
 {
-    struct MockRenderOperator
-    {
-        MOCK_METHOD0(called, void());
-    };
-    MockRenderOperator mock_call_counter;
-
+    auto renderable1 = std::make_shared<mtd::StubRenderable>();
+    auto renderable2 = std::make_shared<mtd::StubRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<mtd::StubRenderable>(),
-        std::make_shared<mtd::StubRenderable>()
+        renderable1,
+        renderable2
     };
 
-    EXPECT_CALL(mock_call_counter, called())
-        .Times(renderlist.size());
+    mtd::MockRenderFunction mock_call_counter;
+    testing::Sequence seq;
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
+        .InSequence(seq);
 
     mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const&)
+    fbdev.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const& renderable)
     {
-        mock_call_counter.called();
+        mock_call_counter.called(renderable);
     });
 }
 

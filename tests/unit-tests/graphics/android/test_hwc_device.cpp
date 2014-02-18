@@ -25,9 +25,10 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_render_function.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -123,8 +124,8 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<mtd::MockRenderable>(),
-        std::make_shared<mtd::MockRenderable>()
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()
     };
     device.prepare_gl_and_overlays(renderlist, [](mg::Renderable const&){});
     EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
@@ -136,27 +137,28 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
 TEST_F(HwcDevice, hwc_prepare_with_overlays)
 {
     using namespace testing;
-    struct MockRenderOperator
-    {
-        MOCK_METHOD0(called, void());
-    };
-    MockRenderOperator mock_call_counter;
+    mtd::MockRenderFunction mock_call_counter;
 
+    auto renderable1 = std::make_shared<mtd::StubRenderable>();
+    auto renderable2 = std::make_shared<mtd::StubRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<mtd::MockRenderable>(),
-        std::make_shared<mtd::MockRenderable>()
+        renderable1,
+        renderable2
     };
 
-    EXPECT_CALL(mock_call_counter, called())
-        .Times(renderlist.size());
+    testing::Sequence seq;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
+        .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const&)
+    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const& renderable)
     {
-        mock_call_counter.called();
+        mock_call_counter.called(renderable);
     });
     device.post(*mock_buffer);
 
