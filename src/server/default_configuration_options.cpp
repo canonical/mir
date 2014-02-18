@@ -81,7 +81,6 @@ char const* const mir::ConfigurationOptions::input_report_opt            = "inpu
 char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
 char const* const mir::ConfigurationOptions::frontend_threads_opt        = "ipc-thread-pool";
-int const mir::ConfigurationOptions::default_ipc_threads = 1;
 char const* const mir::ConfigurationOptions::name_opt                    = "name";
 char const* const mir::ConfigurationOptions::offscreen_opt               = "offscreen";
 
@@ -89,19 +88,21 @@ char const* const mir::ConfigurationOptions::glog                 = "glog";
 char const* const mir::ConfigurationOptions::glog_stderrthreshold = "glog-stderrthreshold";
 char const* const mir::ConfigurationOptions::glog_minloglevel     = "glog-minloglevel";
 char const* const mir::ConfigurationOptions::glog_log_dir         = "glog-log-dir";
-int const mir::ConfigurationOptions::glog_stderrthreshold_default = 2;
-int const mir::ConfigurationOptions::glog_minloglevel_default     = 0;
-char const* const mir::ConfigurationOptions::glog_log_dir_default = "";
-
-bool const mir::ConfigurationOptions::enable_input_default = true;
-
 char const* const mir::ConfigurationOptions::off_opt_value = "off";
 char const* const mir::ConfigurationOptions::log_opt_value = "log";
 char const* const mir::ConfigurationOptions::lttng_opt_value = "lttng";
 
 char const* const mir::ConfigurationOptions::platform_graphics_lib = "platform-graphics-lib";
-char const* const mir::ConfigurationOptions::default_platform_graphics_lib = "libmirplatformgraphics.so";
 
+namespace
+{
+int const default_ipc_threads          = 1;
+int const glog_stderrthreshold_default = 2;
+int const glog_minloglevel_default     = 0;
+char const* const glog_log_dir_default = "";
+bool const enable_input_default        = true;
+char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+}
 
 mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char const* argv[]) :
     argc(argc),

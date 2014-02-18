@@ -42,7 +42,6 @@ public:
     static char const* const host_socket_opt;
     static char const* const standalone_opt;
     static char const* const frontend_threads_opt;
-    static int const default_ipc_threads;
 
     static char const* const name_opt;
     static char const* const offscreen_opt;
@@ -51,23 +50,16 @@ public:
     static char const* const glog_stderrthreshold;
     static char const* const glog_minloglevel;
     static char const* const glog_log_dir;
-    static char const* const glog_log_dir_default;
-    static int const glog_stderrthreshold_default;
-    static int const glog_minloglevel_default;
-
-    static bool const enable_input_default;
 
     static char const* const off_opt_value;
     static char const* const log_opt_value;
     static char const* const lttng_opt_value;
 
     static char const* const platform_graphics_lib;
-    static char const* const default_platform_graphics_lib;
 
     virtual std::shared_ptr<options::Option> the_options() const = 0;
 
 protected:
-
 
     ConfigurationOptions() = default;
     virtual ~ConfigurationOptions() = default;
