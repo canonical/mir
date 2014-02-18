@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -70,7 +70,7 @@ struct SessionMediatorMesaTest : public ::testing::Test
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{shell, mock_platform, display_changer,
+          mediator{__LINE__, shell, mock_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache, std::make_shared<mtd::NullScreencast>()},

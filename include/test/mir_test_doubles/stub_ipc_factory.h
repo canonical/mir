@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -41,7 +41,7 @@ public:
     }
 
     std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<frontend::EventSink> const&, bool) override
+        pid_t, std::shared_ptr<frontend::EventSink> const&, bool) override
     {
         return server;
     }
