@@ -1229,10 +1229,6 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         return -1;
     }
 
-    // Enable wake-lock behavior on kernels that support it.
-    // TODO: Only need this for devices that can really wake the system.
-    bool usingSuspendBlockIoctl = !ioctl(fd, EVIOCSSUSPENDBLOCK, 1);
-
     // Tell the kernel that we want to use the monotonic clock for reporting timestamps
     // associated with input events.  This is important because the input system
     // uses the timestamps extensively and assumes they were recorded using the monotonic
@@ -1253,14 +1249,14 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
 
     ALOGI("New device: id=%d, fd=%d, path='%s', name='%s', classes=0x%x, "
             "configuration='%s', keyLayout='%s', keyCharacterMap='%s', builtinKeyboard=%s, "
-            "usingSuspendBlockIoctl=%s, usingClockIoctl=%s",
+            "usingClockIoctl=%s",
          deviceId, fd, devicePath, c_str(device->identifier.name),
          device->classes,
          c_str(device->configurationFile),
          c_str(device->keyMap.keyLayoutFile),
          c_str(device->keyMap.keyCharacterMapFile),
          toString(mBuiltInKeyboardId == deviceId),
-         toString(usingSuspendBlockIoctl), toString(usingClockIoctl));
+         toString(usingClockIoctl));
 
     addDeviceLocked(device);
     return 0;
