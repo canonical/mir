@@ -21,6 +21,9 @@
 
 #include <umockdev.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -39,18 +42,6 @@ mtf::UdevEnvironment::UdevEnvironment()
 mtf::UdevEnvironment::~UdevEnvironment() noexcept
 {
     g_object_unref(testbed);
-}
-
-void mtf::UdevEnvironment::add_standard_drm_devices()
-{
-    // Temporary, until umockdev grows add_from_file
-    std::ifstream udev_dump(UDEVMOCK_DIR"/standard-drm-devices.umockdev");
-    std::stringstream buffer;
-    buffer<<udev_dump.rdbuf();
-
-    umockdev_testbed_add_from_string(testbed,
-                                     buffer.str().c_str(),
-                                     NULL);
 }
 
 std::string mtf::UdevEnvironment::add_device(char const* subsystem,
@@ -89,4 +80,29 @@ void mtf::UdevEnvironment::remove_device(std::string const& device_path)
 void mtf::UdevEnvironment::emit_device_changed(std::string const& device_path)
 {
     umockdev_testbed_uevent(testbed, device_path.c_str(), "change");
+}
+
+void mtf::UdevEnvironment::add_standard_device(std::string const& name)
+{
+    auto descriptor_filename = std::string(UDEVMOCK_DIR) + "/" + name + ".umockdev";
+    GError* err = nullptr;
+    if (!umockdev_testbed_add_from_file(testbed, descriptor_filename.c_str(), &err))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to create mock udev device: ") +
+                                                 err->message));
+    }
+    
+    auto ioctls_filename = std::string(UDEVMOCK_DIR) + "/" + name + ".ioctl";
+    struct stat sb;
+    if (stat(ioctls_filename.c_str(), &sb) == 0)
+    {
+        if (S_ISREG(sb.st_mode) || S_ISLNK(sb.st_mode))
+        {
+            if (!umockdev_testbed_load_ioctl(testbed, NULL, ioctls_filename.c_str(), &err))
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load ioctl recording: ") +
+                                                         err->message));
+            }
+        }
+    }
 }

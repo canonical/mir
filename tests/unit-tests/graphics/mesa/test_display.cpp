@@ -114,7 +114,7 @@ public:
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
         .Times(AtLeast(0));
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mgm::Platform> create_platform()
