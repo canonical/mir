@@ -58,7 +58,7 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
         return std::shared_ptr<mg::GraphicBufferAllocator>();
     }
 
-    MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
+    MOCK_METHOD1(drm_auth_magic, void(unsigned int));
 };
 
 struct SessionMediatorMesaTest : public ::testing::Test
@@ -96,7 +96,7 @@ TEST_F(SessionMediatorMesaTest, drm_auth_magic_uses_drm_authenticator)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
-    drm_magic_t const drm_magic{0x10111213};
+    unsigned int const drm_magic{0x10111213};
     int const no_error{0};
 
     EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))
@@ -120,7 +120,7 @@ TEST_F(SessionMediatorMesaTest, drm_auth_magic_sets_status_code_on_error)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
-    drm_magic_t const drm_magic{0x10111213};
+    unsigned int const drm_magic{0x10111213};
     int const error_number{667};
 
     EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))

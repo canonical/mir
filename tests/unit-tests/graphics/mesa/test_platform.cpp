@@ -56,7 +56,7 @@ public:
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mg::Platform> create_platform()
@@ -185,7 +185,7 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
 {
     using namespace testing;
 
-    drm_magic_t const magic{0x10111213};
+    unsigned int const magic{0x10111213};
 
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(0));
@@ -199,7 +199,7 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
 {
     using namespace testing;
 
-    drm_magic_t const magic{0x10111213};
+    unsigned int const magic{0x10111213};
 
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(-1));
