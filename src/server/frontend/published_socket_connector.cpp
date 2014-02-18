@@ -35,9 +35,8 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
-    std::function<void()> const& force_threads_to_unblock,
     std::shared_ptr<ConnectorReport> const& report)
-:   BasicConnector(session_creator, threads, force_threads_to_unblock, report),
+:   BasicConnector(session_creator, threads, report),
     socket_file(socket_file),
     acceptor(io_service, socket_file)
 {
@@ -83,12 +82,10 @@ void mf::PublishedSocketConnector::on_new_connection(
 mf::BasicConnector::BasicConnector(
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
-    std::function<void()> const& force_calls_to_complete,
     std::shared_ptr<ConnectorReport> const& report)
 :   work(io_service),
     report(report),
     io_service_threads(threads),
-    force_calls_to_complete(force_calls_to_complete),
     session_creator{session_creator}
 {
 }
