@@ -254,12 +254,13 @@ TEST_F(HwcDevice, hwc_prepare)
 TEST_F(HwcDevice, hwc_default_set)
 {
     using namespace testing;
-    int hwc_return_fence = 94;
+    int skip_release_fence = -1;
+    int fb_release_fence = 94;
     int hwc_retire_fence = 74;
     auto set_fences_fn = [&](hwc_display_contents_1_t& contents)
     {
         ASSERT_EQ(contents.numHwLayers, 2);
-        contents.hwLayers[1].releaseFenceFd = hwc_return_fence;
+        contents.hwLayers[1].releaseFenceFd = fb_release_fence;
         contents.retireFenceFd = hwc_retire_fence;
     };
 
@@ -269,14 +270,16 @@ TEST_F(HwcDevice, hwc_default_set)
         &set_target_layer
     };
 
-    InSequence seq;
+    Sequence seq;
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
-        .Times(1)
+        .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer, update_fence(hwc_return_fence))
-        .Times(1);
+    EXPECT_CALL(*mock_native_buffer, update_fence(skip_release_fence))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_native_buffer, update_fence(fb_release_fence))
+        .InSequence(seq);
     EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
-        .Times(1);
+        .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
     device.post(mock_buffer);
@@ -297,7 +300,7 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
         &target_layer
     };
 
-    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
         .Times(1)
         .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
         {

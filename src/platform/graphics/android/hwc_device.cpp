@@ -118,10 +118,10 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     layers.back().set_buffer(buf);
 
     hwc_wrapper->set(*native_list().lock());
-
     for(auto& layer : layers)
     {
         layer.update_fence_and_release_buffer();
     }
+
     mga::SyncFence retire_fence(sync_ops, retirement_fence());
 }
