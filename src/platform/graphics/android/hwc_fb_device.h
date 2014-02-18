@@ -41,7 +41,7 @@ public:
     void prepare_gl();
     void prepare_gl_and_overlays(
         std::list<std::shared_ptr<Renderable>> const& list,
-        std::function<void(Renderable const&)> const& render_fn); 
+        std::function<void(Renderable const&)> const& render_fn);
     void gpu_render(EGLDisplay dpy, EGLSurface sur);
     void post(Buffer const& buffer);
 

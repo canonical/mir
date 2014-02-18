@@ -60,7 +60,7 @@ void mga::HwcDevice::prepare_gl()
 
 void mga::HwcDevice::prepare_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
-    std::function<void(mg::Renderable const&)> const& render_fn) 
+    std::function<void(Renderable const&)> const& render_fn)
 {
     auto const needed_size = renderables.size() + 1;
     update_representation(needed_size);

@@ -48,9 +48,11 @@ void mga::FBDevice::prepare_gl()
 }
 
 void mga::FBDevice::prepare_gl_and_overlays(
-    std::list<std::shared_ptr<Renderable>> const&,
-    std::function<void(Renderable const&)> const&) 
+    std::list<std::shared_ptr<Renderable>> const& renderables,
+    std::function<void(Renderable const&)> const& render_fn) 
 {
+    for(auto const& renderable : renderables)
+        render_fn(*renderable);
 }
 
 void mga::FBDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)

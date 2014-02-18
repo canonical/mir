@@ -25,11 +25,12 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 #include "hwc_struct_helpers.h"
+#include "mir_test_doubles/mock_render_function.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -237,7 +238,6 @@ TEST_F(HwcDevice, hwc_displays)
 TEST_F(HwcDevice, hwc_prepare)
 {
     using namespace testing;
-
     std::list<hwc_layer_1_t*> expected_list
     {
         &skip_layer,
