@@ -40,7 +40,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 {
 }
 
-void mga::HwcDevice::prepare(hwc_display_contents_1_t & display_list)
+void mga::HwcDevice::prepare(hwc_display_contents_1_t& display_list)
 {
     //note, although we only have a primary display right now,
     //      set the external and virtual displays to null as some drivers check for that
