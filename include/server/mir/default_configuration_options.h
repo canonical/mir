@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,57 +19,11 @@
 #ifndef MIR_DEFAULT_CONFIGURATION_OPTIONS_H_
 #define MIR_DEFAULT_CONFIGURATION_OPTIONS_H_
 
-#include "mir/options/program_option.h"
+#include "mir/configuration_options.h"
 
-#include <memory>
 
 namespace mir
 {
-namespace configuration_options
-{
-extern char const* const server_socket_opt;
-extern char const* const no_server_socket_opt;
-extern char const* const enable_input_opt;
-extern char const* const session_mediator_report_opt;
-extern char const* const msg_processor_report_opt;
-extern char const* const compositor_report_opt;
-extern char const* const display_report_opt;
-extern char const* const legacy_input_report_opt;
-extern char const* const connector_report_opt;
-extern char const* const scene_report_opt;
-extern char const* const input_report_opt;
-extern char const* const host_socket_opt;
-extern char const* const standalone_opt;
-extern char const* const frontend_threads_opt;
-
-extern char const* const name_opt;
-extern char const* const offscreen_opt;
-
-extern char const* const glog;
-extern char const* const glog_stderrthreshold;
-extern char const* const glog_minloglevel;
-extern char const* const glog_log_dir;
-
-extern char const* const off_opt_value;
-extern char const* const log_opt_value;
-extern char const* const lttng_opt_value;
-
-extern char const* const platform_graphics_lib;
-}
-
-class ConfigurationOptions
-{
-public:
-    virtual std::shared_ptr<options::Option> the_options() const = 0;
-
-protected:
-
-    ConfigurationOptions() = default;
-    virtual ~ConfigurationOptions() = default;
-    ConfigurationOptions(ConfigurationOptions const&) = delete;
-    ConfigurationOptions& operator=(ConfigurationOptions const&) = delete;
-};
-
 class DefaultConfigurationOptions : public ConfigurationOptions
 {
 public:
@@ -77,18 +31,20 @@ public:
     virtual ~DefaultConfigurationOptions() = default;
 
     // add_options() allows users to add their own options. This MUST be called
-    // before the first invocation of the_options() - typically during construction.
+    // before the first invocation of the_options() - typically during initialization.
     boost::program_options::options_description_easy_init add_options();
-    virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
 
 private:
-    virtual std::shared_ptr<options::Option> the_options() const;
+    // accessed via the base interface, when access to add_options() has been "lost"
+    std::shared_ptr<options::Option> the_options() const override;
+
+    void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
+
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
     std::shared_ptr<options::Option> mutable options;
 };
 }
-
 
 #endif /* MIR_DEFAULT_CONFIGURATION_OPTIONS_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 
+#include "mir/default_configuration_options.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/input/input_channel.h"

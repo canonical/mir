@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,7 +20,7 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
-#include "mir/default_configuration_options.h"
+#include "mir/configuration_options.h"
 
 #include <memory>
 #include <string>

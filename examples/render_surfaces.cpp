@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,6 +18,7 @@
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/default_configuration_options.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/connector.h"
 #include "mir/shell/surface_creation_parameters.h"
