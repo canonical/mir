@@ -32,6 +32,8 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
+using namespace mir::configuration_options;
+
 namespace
 {
 class DefaultIpcFactory : public mf::ProtobufIpcFactory

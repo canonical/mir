@@ -43,6 +43,8 @@ namespace ml = mir::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+using namespace mir::configuration_options;
+
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {

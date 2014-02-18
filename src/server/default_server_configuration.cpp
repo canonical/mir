@@ -55,10 +55,23 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
+using namespace mir::configuration_options;
+
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-    DefaultConfigurationOptions(argc, argv),
+    DefaultServerConfiguration(std::make_shared<DefaultConfigurationOptions>(argc, argv))
+{
+}
+
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<ConfigurationOptions> const& configuration_options) :
+    configuration_options(configuration_options),
     default_filter(std::make_shared<mi::VTFilter>())
 {
+}
+
+auto mir::DefaultServerConfiguration::the_options() const
+->std::shared_ptr<options::Option>
+{
+    return configuration_options->the_options();
 }
 
 

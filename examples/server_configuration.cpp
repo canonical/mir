@@ -145,14 +145,19 @@ private:
 
 }
 
-me::ServerConfiguration::ServerConfiguration(int argc, char const** argv)
-    : DefaultServerConfiguration(argc, argv)
+me::ServerConfiguration::ServerConfiguration(std::shared_ptr<mir::DefaultConfigurationOptions> const& configuration_options) :
+    DefaultServerConfiguration(configuration_options)
 {
     namespace po = boost::program_options;
 
-    add_options()
+    configuration_options->add_options()
         (display_config_opt, po::value<std::string>()->default_value(clone_opt_val),
             "Display configuration [{clone,sidebyside,single}]");
+}
+
+me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
+    ServerConfiguration(std::make_shared<mir::DefaultConfigurationOptions>(argc, argv))
+{
 }
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>

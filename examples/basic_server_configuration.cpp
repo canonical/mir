@@ -34,14 +34,19 @@ namespace mir
 namespace examples
 {
 
-BasicServerConfiguration::BasicServerConfiguration(int argc, char const** argv)
-    : ServerConfiguration(argc, argv)
-{
-    namespace po = boost::program_options;
+BasicServerConfiguration::BasicServerConfiguration(int argc, char const** argv) :
+    ServerConfiguration([argc, argv]
+    {
+        auto result = std::make_shared<mir::DefaultConfigurationOptions>(argc, argv);
 
-    add_options()
-        (launch_child_opt, po::value<std::string>(), "system() command to launch client");
-;
+        namespace po = boost::program_options;
+
+        result->add_options()
+            (launch_child_opt, po::value<std::string>(), "system() command to launch client");
+
+        return result;
+    }())
+{
 }
 
 void BasicServerConfiguration::launch_client()

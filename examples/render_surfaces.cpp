@@ -57,6 +57,9 @@ namespace geom = mir::geometry;
 namespace mt = mir::tools;
 namespace me = mir::examples;
 
+using namespace mir::configuration_options;
+
+
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
 ///render_surfaces shows the use of mir to render some moving surfaces
@@ -252,16 +255,22 @@ private:
 class RenderSurfacesServerConfiguration : public me::ServerConfiguration
 {
 public:
-    RenderSurfacesServerConfiguration(int argc, char const** argv)
-        : ServerConfiguration(argc, argv)
-    {
-        namespace po = boost::program_options;
+    RenderSurfacesServerConfiguration(int argc, char const** argv) :
+        ServerConfiguration([argc, argv]
+        {
+            auto result = std::make_shared<mir::DefaultConfigurationOptions>(argc, argv);
 
-        add_options()
-            (surfaces_to_render, po::value<int>()->default_value(5),
-                "Number of surfaces to render")
-            (display_cursor, po::value<bool>()->default_value(false),
-                "Display test cursor. (If input is disabled it gets animated.)");
+            namespace po = boost::program_options;
+
+            result->add_options()
+                (surfaces_to_render, po::value<int>()->default_value(5),
+                    "Number of surfaces to render")
+                (display_cursor, po::value<bool>()->default_value(false),
+                    "Display test cursor. (If input is disabled it gets animated.)");
+
+            return result;
+        }())
+    {
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]

@@ -44,14 +44,20 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
-      : ServerConfiguration(argc, argv),
+      : ServerConfiguration([argc, argv]
+        {
+            auto result = std::make_shared<mir::DefaultConfigurationOptions>(argc, argv);
+
+            namespace po = boost::program_options;
+
+            result->add_options()
+                ("fullscreen-surfaces", po::value<bool>(),
+                    "Make all surfaces fullscreen [bool:default=false]");
+
+            return result;
+        }()),
         filter_list(filter_list)
     {
-        namespace po = boost::program_options;
-
-        add_options()
-            ("fullscreen-surfaces", po::value<bool>(),
-                "Make all surfaces fullscreen [bool:default=false]");
     }
 
     std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override

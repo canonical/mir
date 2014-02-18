@@ -114,10 +114,11 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public virtual ServerConfiguration, protected DefaultConfigurationOptions
+class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
+    explicit DefaultServerConfiguration(std::shared_ptr<ConfigurationOptions> const& configuration_options);
 
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
@@ -235,9 +236,7 @@ public:
     virtual std::shared_ptr<time::Clock> the_clock();
 
 protected:
-    using DefaultConfigurationOptions::the_options;
-    using DefaultConfigurationOptions::add_options;
-    using DefaultConfigurationOptions::parse_options;
+    std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -297,6 +296,7 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
 
 private:
+    std::shared_ptr<ConfigurationOptions> const configuration_options;
     std::shared_ptr<input::EventFilter> const default_filter;
 
     virtual std::string the_socket_file() const;

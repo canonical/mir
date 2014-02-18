@@ -32,6 +32,9 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::scene;
 
+using namespace mir::configuration_options;
+
+
 auto mir::DefaultServerConfiguration::the_connector_report()
     -> std::shared_ptr<mf::ConnectorReport>
 {

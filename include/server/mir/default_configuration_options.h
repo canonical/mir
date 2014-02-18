@@ -25,38 +25,41 @@
 
 namespace mir
 {
+namespace configuration_options
+{
+extern char const* const server_socket_opt;
+extern char const* const no_server_socket_opt;
+extern char const* const enable_input_opt;
+extern char const* const session_mediator_report_opt;
+extern char const* const msg_processor_report_opt;
+extern char const* const compositor_report_opt;
+extern char const* const display_report_opt;
+extern char const* const legacy_input_report_opt;
+extern char const* const connector_report_opt;
+extern char const* const scene_report_opt;
+extern char const* const input_report_opt;
+extern char const* const host_socket_opt;
+extern char const* const standalone_opt;
+extern char const* const frontend_threads_opt;
+
+extern char const* const name_opt;
+extern char const* const offscreen_opt;
+
+extern char const* const glog;
+extern char const* const glog_stderrthreshold;
+extern char const* const glog_minloglevel;
+extern char const* const glog_log_dir;
+
+extern char const* const off_opt_value;
+extern char const* const log_opt_value;
+extern char const* const lttng_opt_value;
+
+extern char const* const platform_graphics_lib;
+}
+
 class ConfigurationOptions
 {
 public:
-    static char const* const server_socket_opt;
-    static char const* const no_server_socket_opt;
-    static char const* const enable_input_opt;
-    static char const* const session_mediator_report_opt;
-    static char const* const msg_processor_report_opt;
-    static char const* const compositor_report_opt;
-    static char const* const display_report_opt;
-    static char const* const legacy_input_report_opt;
-    static char const* const connector_report_opt;
-    static char const* const scene_report_opt;
-    static char const* const input_report_opt;
-    static char const* const host_socket_opt;
-    static char const* const standalone_opt;
-    static char const* const frontend_threads_opt;
-
-    static char const* const name_opt;
-    static char const* const offscreen_opt;
-
-    static char const* const glog;
-    static char const* const glog_stderrthreshold;
-    static char const* const glog_minloglevel;
-    static char const* const glog_log_dir;
-
-    static char const* const off_opt_value;
-    static char const* const log_opt_value;
-    static char const* const lttng_opt_value;
-
-    static char const* const platform_graphics_lib;
-
     virtual std::shared_ptr<options::Option> the_options() const = 0;
 
 protected:
@@ -73,15 +76,13 @@ public:
     DefaultConfigurationOptions(int argc, char const* argv[]);
     virtual ~DefaultConfigurationOptions() = default;
 
-protected:
-    // add_options() allows configuration specializations to add their
-    // own options. This MUST be called before the first invocation of
-    // the_options() - typically during construction.
+    // add_options() allows users to add their own options. This MUST be called
+    // before the first invocation of the_options() - typically during construction.
     boost::program_options::options_description_easy_init add_options();
     virtual void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
-    virtual std::shared_ptr<options::Option> the_options() const;
 
 private:
+    virtual std::shared_ptr<options::Option> the_options() const;
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;

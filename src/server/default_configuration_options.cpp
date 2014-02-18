@@ -67,32 +67,32 @@ void parse_environment(
 }
 }
 
-char const* const mir::ConfigurationOptions::server_socket_opt           = "file,f";
-char const* const mir::ConfigurationOptions::no_server_socket_opt        = "no-file";
-char const* const mir::ConfigurationOptions::enable_input_opt            = "enable-input,i";
-char const* const mir::ConfigurationOptions::session_mediator_report_opt = "session-mediator-report";
-char const* const mir::ConfigurationOptions::msg_processor_report_opt    = "msg-processor-report";
-char const* const mir::ConfigurationOptions::compositor_report_opt       = "compositor-report";
-char const* const mir::ConfigurationOptions::display_report_opt          = "display-report";
-char const* const mir::ConfigurationOptions::legacy_input_report_opt     = "legacy-input-report";
-char const* const mir::ConfigurationOptions::connector_report_opt        = "connector-report";
-char const* const mir::ConfigurationOptions::scene_report_opt            = "scene-report";
-char const* const mir::ConfigurationOptions::input_report_opt            = "input-report";
-char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
-char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
-char const* const mir::ConfigurationOptions::frontend_threads_opt        = "ipc-thread-pool";
-char const* const mir::ConfigurationOptions::name_opt                    = "name";
-char const* const mir::ConfigurationOptions::offscreen_opt               = "offscreen";
+char const* const mir::configuration_options::server_socket_opt           = "file,f";
+char const* const mir::configuration_options::no_server_socket_opt        = "no-file";
+char const* const mir::configuration_options::enable_input_opt            = "enable-input,i";
+char const* const mir::configuration_options::session_mediator_report_opt = "session-mediator-report";
+char const* const mir::configuration_options::msg_processor_report_opt    = "msg-processor-report";
+char const* const mir::configuration_options::compositor_report_opt       = "compositor-report";
+char const* const mir::configuration_options::display_report_opt          = "display-report";
+char const* const mir::configuration_options::legacy_input_report_opt     = "legacy-input-report";
+char const* const mir::configuration_options::connector_report_opt        = "connector-report";
+char const* const mir::configuration_options::scene_report_opt            = "scene-report";
+char const* const mir::configuration_options::input_report_opt            = "input-report";
+char const* const mir::configuration_options::host_socket_opt             = "host-socket";
+char const* const mir::configuration_options::standalone_opt              = "standalone";
+char const* const mir::configuration_options::frontend_threads_opt        = "ipc-thread-pool";
+char const* const mir::configuration_options::name_opt                    = "name";
+char const* const mir::configuration_options::offscreen_opt               = "offscreen";
 
-char const* const mir::ConfigurationOptions::glog                 = "glog";
-char const* const mir::ConfigurationOptions::glog_stderrthreshold = "glog-stderrthreshold";
-char const* const mir::ConfigurationOptions::glog_minloglevel     = "glog-minloglevel";
-char const* const mir::ConfigurationOptions::glog_log_dir         = "glog-log-dir";
-char const* const mir::ConfigurationOptions::off_opt_value = "off";
-char const* const mir::ConfigurationOptions::log_opt_value = "log";
-char const* const mir::ConfigurationOptions::lttng_opt_value = "lttng";
+char const* const mir::configuration_options::glog                 = "glog";
+char const* const mir::configuration_options::glog_stderrthreshold = "glog-stderrthreshold";
+char const* const mir::configuration_options::glog_minloglevel     = "glog-minloglevel";
+char const* const mir::configuration_options::glog_log_dir         = "glog-log-dir";
+char const* const mir::configuration_options::off_opt_value = "off";
+char const* const mir::configuration_options::log_opt_value = "log";
+char const* const mir::configuration_options::lttng_opt_value = "lttng";
 
-char const* const mir::ConfigurationOptions::platform_graphics_lib = "platform-graphics-lib";
+char const* const mir::configuration_options::platform_graphics_lib = "platform-graphics-lib";
 
 namespace
 {
@@ -111,6 +111,7 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
     "Command-line options.\n"
     "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
 {
+    using namespace configuration_options;
     namespace po = boost::program_options;
 
     add_options()

@@ -33,6 +33,8 @@ namespace ml = mir::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+using namespace mir::configuration_options;
+
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
     return input_region(

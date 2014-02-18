@@ -239,13 +239,19 @@ class StubInputManager : public mi::InputManager
 }
 
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
-    DefaultServerConfiguration(::argc, ::argv)
-{
-    namespace po = boost::program_options;
+    DefaultServerConfiguration([]
+    {
+        auto result = std::make_shared<mir::DefaultConfigurationOptions>(::argc, ::argv);
 
-    add_options()
-        ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
-        ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
+        namespace po = boost::program_options;
+
+        result->add_options()
+                ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
+                ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
+
+        return result;
+    }())
+{
 }
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
