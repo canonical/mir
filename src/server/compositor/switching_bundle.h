@@ -80,7 +80,7 @@ private:
     int last_compositor() const;
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
-
+    void complete_client_acquire(std::unique_lock<std::mutex> lock);
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
@@ -107,6 +107,8 @@ private:
 
     bool framedropping;
     int force_drop;
+
+    std::function<void(graphics::Buffer* buffer)> client_acquire_todo;
 
     friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 };

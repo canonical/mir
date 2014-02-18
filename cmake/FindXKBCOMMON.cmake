@@ -3,13 +3,8 @@ pkg_check_modules( PC_XKBCOMMON QUIET xkbcommon )
 find_path(XKBCOMMON_INCLUDE_DIR xkbcommon/xkbcommon.h
           HINTS ${PC_XKBCOMMON_INCLUDEDIR} ${PC_XKBCOMMON_INCLUDE_DIRS})
 
-if (MIR_PLATFORM STREQUAL "android")
-find_library(XKBCOMMON_LIBRARY libxkbcommon.so
-             HINTS /usr/lib/arm-linux-gnueabihf/)
-else()
 find_library(XKBCOMMON_LIBRARY xkbcommon
              HINTS ${PC_XKBCOMMON_LIBDIR} ${PC_XKBCOMMON_LIBRARY_DIRS})
-endif()
 
 set(XKBCOMMON_LIBRARIES ${XKBCOMMON_LIBRARY})
 set(XKBCOMMON_INCLUDE_DIRS ${XKBCOMMON_INCLUDE_DIR})

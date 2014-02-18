@@ -82,6 +82,7 @@ mf::SessionMediator::SessionMediator(
 
 mf::SessionMediator::~SessionMediator() noexcept
 {
+    std::unique_lock<std::mutex> lock(session_mutex);
     auto session = weak_session.lock();
     if (session)
     {
