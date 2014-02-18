@@ -22,6 +22,7 @@
 #include "hwc_struct_helpers.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_render_function.h"
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
@@ -294,6 +295,13 @@ TEST_F(HWCLayerListTest, list_returns_retire_fence)
 
 TEST_F(HWCLayerListTest, list_prepares_and_renders)
 {
+    using namespace testing;
+    mtd::MockRenderFunction mock_call_counter;
+    auto render_fn = [&] (mg::Renderable const& renderable)
+    {
+        mock_call_counter.called(renderable);
+    };
+
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
         stub_renderable1,
         stub_renderable2
@@ -307,14 +315,6 @@ TEST_F(HWCLayerListTest, list_prepares_and_renders)
         list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
     };
 
-    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(3, list.numHwLayers);
-        list.hwLayers[0].compositionType = HWC_OVERLAY;
-        list.hwLayers[1].compositionType = HWC_OVERLAY;
-        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    };
-
     auto prepare_fn_mixed = [] (hwc_display_contents_1_t& list)
     {
         ASSERT_EQ(3, list.numHwLayers);
@@ -323,29 +323,30 @@ TEST_F(HWCLayerListTest, list_prepares_and_renders)
         list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
     };
 
-    auto call_count = 0;
-    auto render_fn = [&call_count, this] (mg::Renderable const& renderable)
+    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t& list)
     {
-        if (call_count == 0)
-            EXPECT_EQ(&renderable, stub_renderable1.get());
-        if (call_count == 1)
-            EXPECT_EQ(&renderable, stub_renderable2.get());
-        call_count++;
+        ASSERT_EQ(3, list.numHwLayers);
+        list.hwLayers[0].compositionType = HWC_OVERLAY;
+        list.hwLayers[1].compositionType = HWC_OVERLAY;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
     };
 
     mga::FBTargetLayerList layerlist;
-    call_count = 0;
+
+    Sequence seq;
+    EXPECT_CALL(mock_call_counter, called(Ref(*stub_renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(Ref(*stub_renderable2)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(Ref(*stub_renderable2)))
+        .InSequence(seq);
+
     layerlist.prepare_composition_layers(prepare_fn_all_gl, updated_list, render_fn);
     EXPECT_TRUE(layerlist.needs_swapbuffers());
-    EXPECT_EQ(call_count, 2);
 
-    call_count = 1;
     layerlist.prepare_composition_layers(prepare_fn_mixed, updated_list, render_fn);
     EXPECT_TRUE(layerlist.needs_swapbuffers());
-    EXPECT_EQ(call_count, 2);
 
-    call_count = 0;
     layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn);
     EXPECT_FALSE(layerlist.needs_swapbuffers());
-    EXPECT_EQ(call_count, 0);
 }
