@@ -52,24 +52,19 @@ void mga::HwcDevice::prepare(hwc_display_contents_1_t &)
 
 void mga::HwcDevice::prepare_gl()
 {
-    auto prepare_fn = [this](hwc_display_contents_1_t& prep)
-    {
-        prepare(prep);
-    };
-
     update_representation(2);
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-
     skip_layers_present = true;
 
-    prepare_fn(*native_list().lock());
+    hwc_wrapper->prepare(*native_list().lock());
     needs_swapbuffers = true;
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
+void mga::HwcDevice::prepare_gl_and_overlays(
+    std::list<std::shared_ptr<Renderable>> const& renderables,
+    std::function<void(mg::Renderable const&)> const& render_fn) 
 {
-    auto render_fn = [](mg::Renderable const&){};
     auto prepare_fn = [this](hwc_display_contents_1_t& prep)
     {
         prepare(prep);
@@ -130,21 +125,11 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     layers.back().set_render_parameters(disp_frame, false);
     layers.back().set_buffer(buf);
 
-    auto rc = 0;
-    auto display_list = native_list().lock();
-    if (display_list)
+    hwc_wrapper->set(*native_list().lock());
+
+    for(auto& layer : layers)
     {
-
-
-        for(auto& layer : layers)
-        {
-            layer.update_fence_and_release_buffer();
-        }
-        mga::SyncFence retire_fence(sync_ops, retirement_fence());
+        layer.update_fence_and_release_buffer();
     }
-
-    if ((rc != 0) || (!display_list))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-    }
+    mga::SyncFence retire_fence(sync_ops, retirement_fence());
 }

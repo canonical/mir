@@ -74,12 +74,7 @@ void mga::DisplayBuffer::render_and_post_update(
     }
     else
     {
-        display_device->prepare_gl_and_overlays(renderlist);
-    }
-
-    for(auto& renderable : renderlist)
-    {
-        render_fn(*renderable);
+        display_device->prepare_gl_and_overlays(renderlist, render_fn);
     }
 
     render_and_post();
