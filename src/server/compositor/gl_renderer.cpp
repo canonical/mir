@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
+#include <cstddef>
 #include <mutex>
 
 namespace mg = mir::graphics;
@@ -63,8 +64,8 @@ const GLchar* fragment_shader_src =
 
 struct VertexAttributes
 {
-    glm::vec3 position;
-    glm::vec2 texcoord;
+    GLfloat position[3];
+    GLfloat texcoord[2];
 };
 
 /*
@@ -74,23 +75,23 @@ struct VertexAttributes
  * whereas our renderables provide data in rows starting from the top and
  * moving down the image.
  */
-VertexAttributes vertex_attribs[4] =
+const VertexAttributes vertex_attribs[4] =
 {
     {
-        glm::vec3{-0.5f, -0.5f, 0.0f},
-        glm::vec2{0.0f, 0.0f}
+        {-0.5f, -0.5f, 0.0f},
+        {0.0f, 0.0f}
     },
     {
-        glm::vec3{-0.5f, 0.5f, 0.0f},
-        glm::vec2{0.0f, 1.0f},
+        {-0.5f, 0.5f, 0.0f},
+        {0.0f, 1.0f},
     },
     {
-        glm::vec3{0.5f, -0.5f, 0.0f},
-        glm::vec2{1.0f, 0.0f},
+        {0.5f, -0.5f, 0.0f},
+        {1.0f, 0.0f},
     },
     {
-        glm::vec3{0.5f, 0.5f, 0.0f},
-        glm::vec2{1.0f, 1.0f}
+        {0.5f, 0.5f, 0.0f},
+        {1.0f, 1.0f}
     }
 };
 
@@ -197,7 +198,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
 
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
-            glm::value_ptr(vertex_attribs[0].position), GL_STATIC_DRAW);
+                 vertex_attribs, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
@@ -242,10 +243,11 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     /* Set up vertex attribute data */
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                          GL_FALSE, sizeof(VertexAttributes), 0);
+                          GL_FALSE, sizeof(VertexAttributes),
+                          (GLbyte*)0+offsetof(VertexAttributes, position));
     glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes),
-                          reinterpret_cast<void*>(sizeof(glm::vec3)));
+                          (GLbyte*)0+offsetof(VertexAttributes, texcoord));
 
     SurfaceID surf = &criteria; // temporary hack till we rearrange classes
     auto& tex = textures[surf];
