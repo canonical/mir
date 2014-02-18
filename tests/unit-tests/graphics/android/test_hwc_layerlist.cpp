@@ -234,7 +234,8 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     EXPECT_THAT(set_target_layer, MatchesLayer(list->hwLayers[2]));
 
     /* reset default */
-    EXPECT_TRUE(layerlist.prepare_default_layers(empty_prepare_fn));
+    layerlist.prepare_default_layers(empty_prepare_fn);
+    EXPECT_TRUE(layerlist.needs_swapbuffers());
 
     list = layerlist.native_list().lock();
     target_layer.handle = nullptr;
@@ -334,14 +335,17 @@ TEST_F(HWCLayerListTest, list_prepares_and_renders)
 
     mga::FBTargetLayerList layerlist;
     call_count = 0;
-    EXPECT_TRUE(layerlist.prepare_composition_layers(prepare_fn_all_gl, updated_list, render_fn));
+    layerlist.prepare_composition_layers(prepare_fn_all_gl, updated_list, render_fn);
+    EXPECT_TRUE(layerlist.needs_swapbuffers());
     EXPECT_EQ(call_count, 2);
 
     call_count = 1;
-    EXPECT_TRUE(layerlist.prepare_composition_layers(prepare_fn_mixed, updated_list, render_fn));
+    layerlist.prepare_composition_layers(prepare_fn_mixed, updated_list, render_fn);
+    EXPECT_TRUE(layerlist.needs_swapbuffers());
     EXPECT_EQ(call_count, 2);
 
     call_count = 0;
-    EXPECT_FALSE(layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn));
+    layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn);
+    EXPECT_FALSE(layerlist.needs_swapbuffers());
     EXPECT_EQ(call_count, 0);
 }
