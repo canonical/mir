@@ -89,22 +89,22 @@ TEST_F(HwcFbDevice, hwc10_render_gl_only)
     device.render_gl(stub_context);
 
     //prepare expectations
-    EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_prepare_content.flags);
-    EXPECT_EQ(1u, mock_hwc_device->display0_prepare_content.numHwLayers);
-    ASSERT_NE(nullptr, mock_hwc_device->display0_prepare_content.hwLayers);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->prepare_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
+    EXPECT_THAT(mock_hwc_device->display0_prepare_content.retireFenceFd, Eq(-1));
+    EXPECT_THAT(mock_hwc_device->display0_prepare_content.flags, Eq(HWC_GEOMETRY_CHANGED)); 
+    EXPECT_THAT(mock_hwc_device->display0_prepare_content.numHwLayers, Eq(1u));
+    ASSERT_THAT(mock_hwc_device->display0_prepare_content.hwLayers, Ne(nullptr));
+    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
+    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
 
     //set expectations
-    EXPECT_EQ(dpy, mock_hwc_device->display0_set_content.dpy);
-    EXPECT_EQ(sur, mock_hwc_device->display0_set_content.sur);
-    EXPECT_EQ(-1, mock_hwc_device->display0_set_content.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_set_content.flags);
-    EXPECT_EQ(1u, mock_hwc_device->display0_set_content.numHwLayers);
-    ASSERT_NE(nullptr, mock_hwc_device->display0_set_content.hwLayers);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->set_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->set_layerlist[0].flags);
+    EXPECT_THAT(mock_hwc_device->display0_set_content.dpy, Eq(dpy));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.sur, Eq(sur));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.retireFenceFd, Eq(-1));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.flags, Eq(HWC_GEOMETRY_CHANGED));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.numHwLayers, Eq(1u));
+    ASSERT_THAT(mock_hwc_device->display0_set_content.hwLayers, Ne(nullptr));
+    EXPECT_THAT(mock_hwc_device->set_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
+    EXPECT_THAT(mock_hwc_device->set_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
 }
 
 TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
@@ -143,22 +143,22 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     });
 
     //prepare expectations
-    EXPECT_EQ(-1, mock_hwc_device->display0_prepare_content.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_prepare_content.flags);
-    EXPECT_EQ(1u, mock_hwc_device->display0_prepare_content.numHwLayers);
-    ASSERT_NE(nullptr, mock_hwc_device->display0_prepare_content.hwLayers);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->prepare_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->prepare_layerlist[0].flags);
+    EXPECT_THAT(mock_hwc_device->display0_prepare_content.retireFenceFd, Eq(-1));
+    EXPECT_THAT(mock_hwc_device->display0_prepare_content.flags, Eq(HWC_GEOMETRY_CHANGED)); 
+    EXPECT_THAT(mock_hwc_device->display0_prepare_content.numHwLayers, Eq(1u));
+    ASSERT_THAT(mock_hwc_device->display0_prepare_content.hwLayers, Ne(nullptr));
+    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
+    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
 
     //set expectations
-    EXPECT_EQ(dpy, mock_hwc_device->display0_set_content.dpy);
-    EXPECT_EQ(sur, mock_hwc_device->display0_set_content.sur);
-    EXPECT_EQ(-1, mock_hwc_device->display0_set_content.retireFenceFd);
-    EXPECT_EQ(HWC_GEOMETRY_CHANGED, mock_hwc_device->display0_set_content.flags);
-    EXPECT_EQ(1u, mock_hwc_device->display0_set_content.numHwLayers);
-    ASSERT_NE(nullptr, mock_hwc_device->display0_set_content.hwLayers);
-    EXPECT_EQ(HWC_FRAMEBUFFER, mock_hwc_device->set_layerlist[0].compositionType);
-    EXPECT_EQ(HWC_SKIP_LAYER, mock_hwc_device->set_layerlist[0].flags);
+    EXPECT_THAT(mock_hwc_device->display0_set_content.dpy, Eq(dpy));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.sur, Eq(sur));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.retireFenceFd, Eq(-1));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.flags, Eq(HWC_GEOMETRY_CHANGED));
+    EXPECT_THAT(mock_hwc_device->display0_set_content.numHwLayers, Eq(1u));
+    ASSERT_THAT(mock_hwc_device->display0_set_content.hwLayers, Ne(nullptr));
+    EXPECT_THAT(mock_hwc_device->set_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
+    EXPECT_THAT(mock_hwc_device->set_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
 }
 
 TEST_F(HwcFbDevice, hwc10_prepare_frame_failure)
