@@ -50,7 +50,6 @@ public:
     explicit BasicConnector(
         std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
-        std::function<void()> const& force_threads_to_unblock,
         std::shared_ptr<ConnectorReport> const& report);
     ~BasicConnector() noexcept;
     void start() override;
@@ -67,7 +66,6 @@ protected:
 
 private:
     std::vector<std::thread> io_service_threads;
-    std::function<void()> const force_threads_to_unblock;
     std::shared_ptr<SessionCreator> const session_creator;
 };
 
@@ -79,7 +77,6 @@ public:
         const std::string& socket_file,
         std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
-        std::function<void()> const& force_threads_to_unblock,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
 
