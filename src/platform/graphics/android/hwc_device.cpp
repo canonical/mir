@@ -64,10 +64,15 @@ void mga::HwcDevice::prepare_gl()
     prepare();
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& renderables)
+void mga::HwcDevice::prepare_gl_and_overlays(
+    std::list<std::shared_ptr<Renderable>> const& renderables,
+    std::function<void(Renderable const&)> const& render_fn)
 {
     layer_list.set_composition_layers(renderables);
     prepare();
+    //TODO: filter this list based on the results of the preparation
+    for(auto const& renderable : renderables)
+        render_fn(*renderable);
 }
 
 void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)

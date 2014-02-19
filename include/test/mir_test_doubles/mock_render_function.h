@@ -16,12 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
-#define MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
+#define MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
 
-#include "mir_test_doubles/stub_buffer.h"
 #include <mir/graphics/renderable.h>
-#include <memory>
 
 namespace mir
 {
@@ -30,25 +28,13 @@ namespace test
 namespace doubles
 {
 
-class StubRenderable : public graphics::Renderable
+struct MockRenderFunction
 {
-public:
-    std::shared_ptr<graphics::Buffer> buffer() const
-    {
-        return std::make_shared<StubBuffer>();
-    }
-    bool alpha_enabled() const
-    {
-        return false;
-    }
-    geometry::Rectangle screen_position() const
-    {
-        return {{},{}};
-    }
+    MOCK_METHOD1(called, void(graphics::Renderable const&));
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_STUB_RENDERABLE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_ */

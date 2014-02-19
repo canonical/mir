@@ -23,7 +23,9 @@
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/mock_render_function.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -59,6 +61,30 @@ struct FBDevice : public ::testing::Test
     mtd::HardwareAccessMock hw_access_mock;
     mtd::MockEGL mock_egl;
 };
+
+TEST_F(FBDevice, render_overlays_via_gl)
+{
+    auto renderable1 = std::make_shared<mtd::StubRenderable>();
+    auto renderable2 = std::make_shared<mtd::StubRenderable>();
+    std::list<std::shared_ptr<mg::Renderable>> renderlist
+    {
+        renderable1,
+        renderable2
+    };
+
+    mtd::MockRenderFunction mock_call_counter;
+    testing::Sequence seq;
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
+        .InSequence(seq);
+
+    mga::FBDevice fbdev(fb_hal_mock);
+    fbdev.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const& renderable)
+    {
+        mock_call_counter.called(renderable);
+    });
+}
 
 TEST_F(FBDevice, render)
 {
