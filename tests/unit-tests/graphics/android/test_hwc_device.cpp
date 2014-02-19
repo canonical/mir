@@ -288,6 +288,90 @@ TEST_F(HwcDevice, hwc_default_set)
 TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
 {
     using namespace testing;
+    mtd::MockRenderFunction mock_render_fn;
+    auto render_fn = [&](mg::Renderable const& renderable)
+    {
+        mock_render_fn.called(renderable);
+    };
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable2
+    });
+
+    std::list<hwc_layer_1_t*> expected_list
+    {
+        &comp_layer,
+        &comp_layer,
+        &target_layer
+    };
+
+    Sequence seq;
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_EQ(contents.numHwLayers, 3);
+            contents.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+    EXPECT_CALL(mock_render_fn, called(Ref(*stub_renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_render_fn, called(Ref(*stub_renderable2)))
+        .InSequence(seq);
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+    device.prepare_gl_and_overlays(updated_list, render_fn);
+}
+
+TEST_F(HwcDevice, hwc_prepare_with_overlays_some_rejected)
+{
+    using namespace testing;
+    mtd::MockRenderFunction mock_render_fn;
+    auto render_fn = [&](mg::Renderable const& renderable)
+    {
+        mock_render_fn.called(renderable);
+    };
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable2
+    });
+
+    std::list<hwc_layer_1_t*> expected_list
+    {
+        &comp_layer,
+        &comp_layer,
+        &target_layer
+    };
+
+    Sequence seq;
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_EQ(contents.numHwLayers, 3);
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+    EXPECT_CALL(mock_render_fn, called(Ref(*stub_renderable2)))
+        .InSequence(seq);
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+    device.prepare_gl_and_overlays(updated_list, render_fn);
+}
+
+TEST_F(HwcDevice, hwc_prepare_with_overlays_all_accepted)
+{
+    using namespace testing;
+    mtd::MockRenderFunction mock_render_fn;
+    auto render_fn = [&](mg::Renderable const& renderable)
+    {
+        mock_render_fn.called(renderable);
+    };
+
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
         stub_renderable1,
         stub_renderable2
@@ -305,74 +389,18 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
         .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
         {
             ASSERT_EQ(contents.numHwLayers, 3);
-            contents.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
-            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_OVERLAY;
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
+    EXPECT_CALL(mock_render_fn, called(_))
+        .Times(0);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    auto render_fn = [](mg::Renderable const&) {};
     device.prepare_gl_and_overlays(updated_list, render_fn);
 }
+
 #if 0
-
-TEST_F(HwcDevice, hwc_prepare_with_overlays)
-{
-    using namespace testing;
-    auto prepare_fn_all_gl = [] (hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(3, list.numHwLayers);
-        list.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
-        list.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
-        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    };
-
-    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(3, list.numHwLayers);
-        list.hwLayers[0].compositionType = HWC_OVERLAY;
-        list.hwLayers[1].compositionType = HWC_OVERLAY;
-        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    };
-
-    auto prepare_fn_mixed = [] (hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(3, list.numHwLayers);
-        list.hwLayers[0].compositionType = HWC_OVERLAY;
-        list.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
-        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    };
-
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(3)
-        .WillOnce(Invoke(prepare_fn_all_gl))
-        .WillOnce(Invoke(prepare_fn_all_overlay))
-        .WillOnce(Invoke(prepare_fn_mixed))
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    auto call_count = 0;
-    auto render_fn = [&call_count, this] (mg::Renderable const& renderable)
-    {
-        if (call_count == 0)
-            EXPECT_EQ(&renderable, stub_renderable1.get());
-        if (call_count == 1)
-            EXPECT_EQ(&renderable, stub_renderable2.get());
-        call_count++;
-    };
-
-    call_count = 0;
-    layerlist.prepare_composition_layers(updated_list, render_fn);
-    EXPECT_EQ(call_count, 2);
-
-    call_count = 1;
-    layerlist.prepare_composition_layers(updated_list, render_fn);
-    EXPECT_EQ(call_count, 2);
-
-    call_count = 0;
-    layerlist.prepare_composition_layers(updated_list, render_fn);
-    EXPECT_EQ(call_count, 0);
-}
 
 TEST_F(HwcDevice, hwc_swapbuffers)
 {
@@ -418,8 +446,10 @@ TEST_F(HwcDevice, hwc_swapbuffers_failure)
         device.gpu_render(dpy, surf);
     }, std::runtime_error);
 }
+#endif 
 
-
+#if 0
+//to hwc device adaptor
 TEST_F(HwcDevice, hwc_commit_failure)
 {
     using namespace testing;
