@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,12 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
-#define MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_STUB_RENDERER_H_
+#define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
-#include "src/platform/graphics/android/display_device.h"
+#include "src/server/compositor/renderer.h"
 
 namespace mir
 {
@@ -27,34 +28,38 @@ namespace test
 namespace doubles
 {
 
-struct StubDisplayDevice : public graphics::android::DisplayDevice
+class StubRenderer : public compositor::Renderer
 {
-    StubDisplayDevice()
+public:
+    void set_viewport(geometry::Rectangle const&) override
     {
     }
 
-    ~StubDisplayDevice() noexcept {}
+    void set_rotation(float) override
+    {
+    }
 
-    void mode(MirPowerMode)
+    void begin() const override
     {
     }
-    void prepare_gl_and_overlays(
-        std::list<std::shared_ptr<graphics::Renderable>> const&,
-        std::function<void(graphics::Renderable const&)> const&)
+
+    void render(compositor::CompositingCriteria const&,
+                graphics::Buffer&) const override
     {
     }
-    void prepare_gl()
+
+    void end() const override
     {
     }
-    void gpu_render(EGLDisplay, EGLSurface)
-    {
-    }
-    void post(graphics::Buffer const&)
+
+    void suspend() override
     {
     }
 };
 
-}
-}
-}
-#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_DEVICE_H_ */
+
+} // namespace doubles
+} // namespace test
+} // namespace mir
+
+#endif // MIR_TEST_DOUBLES_STUB_RENDERER_H_

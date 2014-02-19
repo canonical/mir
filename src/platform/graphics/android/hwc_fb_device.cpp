@@ -55,9 +55,14 @@ void mga::HwcFbDevice::prepare_gl()
     }
 }
 
-void mga::HwcFbDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
+void mga::HwcFbDevice::prepare_gl_and_overlays(
+    std::list<std::shared_ptr<Renderable>> const& renderables,
+    std::function<void(Renderable const&)> const& render_fn)
 {
     prepare_gl();
+    //TODO: filter this list based on the results of the preparation
+    for(auto const& renderable : renderables)
+        render_fn(*renderable);
 }
 
 void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)

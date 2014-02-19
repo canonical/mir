@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -15,13 +15,12 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_H_
+#define MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 
-#ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
-#define MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
+#include "src/server/compositor/renderer.h"
 
-#include "mir_test_doubles/stub_buffer.h"
-#include <mir/graphics/renderable.h>
-#include <memory>
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -30,25 +29,19 @@ namespace test
 namespace doubles
 {
 
-class StubRenderable : public graphics::Renderable
+struct MockRenderer : public compositor::Renderer
 {
-public:
-    std::shared_ptr<graphics::Buffer> buffer() const
-    {
-        return std::make_shared<StubBuffer>();
-    }
-    bool alpha_enabled() const
-    {
-        return false;
-    }
-    geometry::Rectangle screen_position() const
-    {
-        return {{},{}};
-    }
+    MOCK_METHOD1(set_viewport, void(geometry::Rectangle const&));
+    MOCK_METHOD1(set_rotation, void(float));
+    MOCK_CONST_METHOD0(begin, void());
+    MOCK_CONST_METHOD2(render, void(compositor::CompositingCriteria const&, graphics::Buffer&));
+    MOCK_CONST_METHOD0(end, void());
+    MOCK_METHOD0(suspend, void());
+
+    ~MockRenderer() noexcept {}
 };
 
 }
 }
 }
-
-#endif /* MIR_TEST_DOUBLES_STUB_RENDERABLE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_RENDERER_H_ */

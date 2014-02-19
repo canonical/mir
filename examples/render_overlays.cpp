@@ -29,6 +29,7 @@
 #include "patterns.h"
 
 #include <csignal>
+#include <iostream>
 
 namespace mg=mir::graphics;
 namespace ml=mir::logging;

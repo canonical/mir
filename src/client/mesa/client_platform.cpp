@@ -87,7 +87,7 @@ std::shared_ptr<EGLNativeWindowType> mclm::ClientPlatform::create_egl_native_win
     //TODO: this is awkward on both android and gbm...
     auto native_window = new NativeSurface(*client_surface);
     auto egl_native_window = new EGLNativeWindowType;
-    *egl_native_window = native_window;
+    *egl_native_window = reinterpret_cast<EGLNativeWindowType>(native_window);
     NativeWindowDeleter deleter(native_window);
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }

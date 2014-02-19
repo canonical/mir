@@ -148,7 +148,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
 
-        renderer->begin(display_buffer.orientation());
+        renderer->set_rotation(display_buffer.orientation());
+        renderer->begin();
         mc::RenderingOperator applicator(*renderer, save_resource, local_frameno);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
