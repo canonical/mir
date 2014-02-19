@@ -51,16 +51,20 @@ void mga::HwcDevice::prepare(hwc_display_contents_1_t& display_list)
     }
 }
 
-void mga::HwcDevice::prepare_gl()
+void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
     auto prepare_fn = [this](hwc_display_contents_1_t& prep)
     {
         prepare(prep);
     };
     layer_list.prepare_default_layers(prepare_fn);
+
+    (void) context;
+    //context.swap_buffers();
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(
+void mga::HwcDevice::render_gl_and_overlays(
+    SwappingGLContext const& context,
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
@@ -69,15 +73,8 @@ void mga::HwcDevice::prepare_gl_and_overlays(
         prepare(prep);
     };
     layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
-}
-
-void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
-{
-    if ((layer_list.needs_swapbuffers()) && 
-        (eglSwapBuffers(dpy, sur) == EGL_FALSE))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
-    }
+    (void) context;
+    //context.swap_buffers();
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)

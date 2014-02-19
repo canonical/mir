@@ -43,18 +43,25 @@ mga::FBDevice::FBDevice(
     mode(mir_power_mode_on);
 }
 
-void mga::FBDevice::prepare_gl()
+void mga::FBDevice::render_gl(SwappingGLContext const& context)
 {
+    (void) context;
+    //context.swap_buffers();
 }
 
-void mga::FBDevice::prepare_gl_and_overlays(
+void mga::FBDevice::render_gl_and_overlays(
+    SwappingGLContext const& context,
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn) 
 {
     for(auto const& renderable : renderables)
         render_fn(*renderable);
+
+    (void) context;
+    //context.swap_buffers();
 }
 
+#if 0
 void mga::FBDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
 {
     if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
@@ -62,6 +69,7 @@ void mga::FBDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
     }
 }
+#endif
 
 void mga::FBDevice::post(mg::Buffer const& buffer)
 {

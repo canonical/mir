@@ -26,6 +26,7 @@
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_render_function.h"
+#include "mir_test_doubles/mock_swapping_gl_context.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -59,7 +60,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
-    mtd::MockEGL mock_egl;
+    mtd::MockSwappingGLContext mock_context;
 };
 
 TEST_F(FBDevice, render_overlays_via_gl)
@@ -78,32 +79,14 @@ TEST_F(FBDevice, render_overlays_via_gl)
         .InSequence(seq);
     EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
         .InSequence(seq);
+    EXPECT_CALL(mock_context, swap_buffers())
+        .InSequence(seq);
 
     mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const& renderable)
+    fbdev.render_gl_and_overlays(mock_context, renderlist, [&](mg::Renderable const& renderable)
     {
         mock_call_counter.called(renderable);
     });
-}
-
-TEST_F(FBDevice, render)
-{
-    using namespace testing;
-    int bad = 0xdfefefe;
-    EGLDisplay dpy = static_cast<EGLDisplay>(&bad);
-    EGLSurface surf = static_cast<EGLSurface>(&bad);
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(2)
-        .WillOnce(Return(EGL_FALSE))
-        .WillOnce(Return(EGL_TRUE));
-
-    mga::FBDevice fbdev(fb_hal_mock);
-
-    EXPECT_THROW({
-        fbdev.gpu_render(dpy, surf);
-    }, std::runtime_error);
-
-    fbdev.gpu_render(dpy, surf);
 }
 
 TEST_F(FBDevice, commit_frame)

@@ -20,6 +20,7 @@
 #include "src/platform/graphics/android/framebuffer_bundle.h"
 #include "src/platform/graphics/android/hwc_device.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
+#include "src/platform/graphics/android/gl_context.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -28,6 +29,8 @@
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_render_function.h"
+#include "mir_test_doubles/mock_swapping_gl_context.h"
+#include "mir_test_doubles/stub_swapping_gl_context.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -39,20 +42,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-
-struct MockSwappingContext
-{
-    MOCK_CONST_METHOD0(make_current, void());
-    MOCK_CONST_METHOD0(release_current, void());
-    MOCK_CONST_METHOD0(swap_buffers, void());
-};
-
-struct StubSwappingContext
-{
-    void make_current() const {}
-    void release_current() const {}
-    void swap_buffers() const {}
-};
 
 struct MockFileOps : public mga::SyncFileOps
 {
@@ -86,8 +75,8 @@ protected:
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    MockSwappingContext mock_context;
-    StubSwappingContext stub_context;
+    mtd::MockSwappingGLContext mock_context;
+    mtd::StubSwappingGLContext stub_context;
 };
 
 TEST_F(HwcDevice, hwc_displays)
@@ -99,7 +88,7 @@ TEST_F(HwcDevice, hwc_displays)
         .Times(1);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.prepare_gl(stub_context);
+    device.render_gl(stub_context);
     device.post(*mock_buffer);
 
     /* primary phone display */
@@ -124,7 +113,7 @@ TEST_F(HwcDevice, hwc_prepare)
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.prepare_gl(mock_context);
+    device.render_gl(mock_context);
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
 }
@@ -142,10 +131,10 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()
     };
-    device.prepare_gl_and_overlays(stub_context, renderlist, [](mg::Renderable const&){});
+    device.render_gl_and_overlays(stub_context, renderlist, [](mg::Renderable const&){});
     EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
 
-    device.prepare_gl(stub_context);
+    device.render_gl(stub_context);
     EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
 }
 
@@ -164,14 +153,16 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays)
 
     testing::Sequence seq;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1);
+        .InSequence(seq);
     EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
         .InSequence(seq);
     EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
         .InSequence(seq);
+    EXPECT_CALL(mock_context, swap_buffers())
+        .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.prepare_gl_and_overlays(renderlist, [&](mg::Renderable const& renderable)
+    device.render_gl_and_overlays(mock_context, renderlist, [&](mg::Renderable const& renderable)
     {
         mock_call_counter.called(renderable);
     });

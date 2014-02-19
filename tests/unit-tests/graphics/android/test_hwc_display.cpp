@@ -74,7 +74,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update)
     using namespace testing;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl(_))
+    EXPECT_CALL(*mock_display_device, render_gl(_))
         .Times(Exactly(1));
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -94,7 +94,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_empty_list)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl(_))
+    EXPECT_CALL(*mock_display_device, render_gl(_))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -116,7 +116,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
     std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(_, Ref(renderlist), Ref(render_fn)))
+    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist), Ref(render_fn)))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)

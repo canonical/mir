@@ -70,25 +70,24 @@ void mga::DisplayBuffer::render_and_post_update(
 {
     if (renderlist.empty())
     {
-        display_device->prepare_gl();
+        display_device->render_gl(gl_context);
     }
     else
     {
-        display_device->prepare_gl_and_overlays(renderlist, render_fn);
+        display_device->render_gl_and_overlays(gl_context, renderlist, render_fn);
     }
 
-    render_and_post();
+    post();
 }
 
 void mga::DisplayBuffer::post_update()
 {
-    display_device->prepare_gl();
-    render_and_post();
+    display_device->render_gl(gl_context);
+    post();
 }
 
-void mga::DisplayBuffer::render_and_post()
+void mga::DisplayBuffer::post()
 {
-    display_device->gpu_render(gl_context.display(), gl_context.surface());
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
 }
