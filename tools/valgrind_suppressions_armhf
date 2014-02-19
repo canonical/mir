@@ -1,0 +1,111 @@
+# ld
+
+{
+    ld_value4
+    Memcheck:Value4
+    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+}
+
+{
+    ld_cond
+    Memcheck:Cond
+    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+}
+
+
+{
+    ld_open
+    Memcheck:Param
+    open(filename)
+    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+}
+
+{
+    ld_getcwd
+    Memcheck:Param
+    getcwd(buf)
+    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+}
+
+# Android libs
+
+{
+    android_cond
+    Memcheck:Cond
+    obj:/android/system/*.so
+}
+
+# libc
+
+{
+    libc_freeres_value4
+    Memcheck:Value4
+    ...
+    fun:__libc_freeres
+    ...
+}
+
+{
+    libc_freeres_cond
+    Memcheck:Cond
+    ...
+    fun:__libc_freeres
+    ...
+}
+
+# libgcc_s
+
+{
+    libgcc_s_value4
+    Memcheck:Value4
+    ...
+    obj:/lib/arm-linux-gnueabihf/libgcc_s.so.1
+}
+
+{
+    libgcc_s_cond
+    Memcheck:Cond
+    ...
+    obj:/lib/arm-linux-gnueabihf/libgcc_s.so.1
+}
+
+# libdl
+# Valgrind thinks that dlopen returns an uninitialized
+# value, so all dlsym calls cause spurious memory errors
+# since they use that value.
+
+{
+    dlopen_cond
+    Memcheck:Cond
+    ...
+    fun:dlopen@@GLIBC_2.4
+    ...
+}
+
+{
+    dlsym_value4
+    Memcheck:Value4
+    ...
+    fun:dlsym
+    ...
+}
+
+{
+    dlsym_cond
+    Memcheck:Cond
+    ...
+    fun:dlsym
+    ...
+}
+
+# mir::SharedLibrary
+# Valgrind thinks that dlopen returns an uninitialized
+# value, so all checks using that value cause spurious
+# memory errors.
+
+{
+    mir_sharedlibrary_cond
+    Memcheck:Cond
+    fun:_ZN3mir13SharedLibraryC1EPKc
+    ...
+}
