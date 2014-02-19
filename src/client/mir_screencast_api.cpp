@@ -96,5 +96,5 @@ void mir_screencast_release_sync(MirScreencast* screencast)
 
 MirEGLNativeWindowType mir_screencast_egl_native_window(MirScreencast* screencast)
 {
-    return screencast->egl_native_window();
+    return reinterpret_cast<MirEGLNativeWindowType>(screencast->egl_native_window());
 }

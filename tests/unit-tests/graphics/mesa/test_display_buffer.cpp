@@ -68,7 +68,7 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
             .WillByDefault(Return(456));
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
 
         mock_kms_output = std::make_shared<NiceMock<MockKMSOutput>>();
         ON_CALL(*mock_kms_output, set_crtc(_))
