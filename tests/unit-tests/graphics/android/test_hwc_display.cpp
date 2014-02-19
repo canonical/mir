@@ -156,7 +156,7 @@ TEST_F(AndroidDisplayBufferTest, defaults_to_normal_orientation)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
                           *gl_context);
 
-    EXPECT_EQ(mir_orientation_normal, db.orientation());
+    EXPECT_EQ(db.orientation(), mir_orientation_normal);
 }
 
 TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
@@ -172,7 +172,7 @@ TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
         auto config = db.configuration();
         config.orientation = ori;
         db.configure(config);
-        EXPECT_EQ(ori, db.orientation());
+        EXPECT_EQ(db.orientation(), ori);
     }
 }
 
@@ -191,21 +191,21 @@ TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
                           *gl_context);
 
-    EXPECT_EQ(normal, db.view_area().size);
+    EXPECT_EQ(db.view_area().size, normal);
 
     auto config = db.configuration();
 
     config.orientation = mir_orientation_right;
     db.configure(config);
-    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(db.view_area().size, transposed);
 
     config.orientation = mir_orientation_inverted;
     db.configure(config);
-    EXPECT_EQ(normal, db.view_area().size);
+    EXPECT_EQ(db.view_area().size, normal);
 
     config.orientation = mir_orientation_left;
     db.configure(config);
-    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(db.view_area().size, transposed);
 }
 
 TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
@@ -402,17 +402,16 @@ TEST_F(AndroidDisplayBufferTest, android_display_configuration_info)
 
     ASSERT_EQ(1u, disp_conf.modes.size());
     auto& disp_mode = disp_conf.modes[0];
-    EXPECT_EQ(display_size, disp_mode.size);
+    EXPECT_EQ(disp_mode.size, display_size);
 
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
-    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
+    EXPECT_EQ(disp_conf.id, mg::DisplayConfigurationOutputId{1});
+    EXPECT_EQ(disp_conf.card_id, mg::DisplayConfigurationCardId{0});
     EXPECT_TRUE(disp_conf.connected);
     EXPECT_TRUE(disp_conf.used);
     auto origin = geom::Point{0,0};
-    EXPECT_EQ(origin, disp_conf.top_left);
-    EXPECT_EQ(0, disp_conf.current_mode_index);
+    EXPECT_EQ(disp_conf.top_left, origin);
+    EXPECT_EQ(disp_conf.current_mode_index, 0);
 
     //TODO fill refresh rate accordingly
     //TODO fill physical_size_mm fields accordingly;
 }
-
