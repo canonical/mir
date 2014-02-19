@@ -81,6 +81,7 @@ char const* const mir::ConfigurationOptions::input_report_opt            = "inpu
 char const* const mir::ConfigurationOptions::host_socket_opt             = "host-socket";
 char const* const mir::ConfigurationOptions::standalone_opt              = "standalone";
 char const* const mir::ConfigurationOptions::frontend_threads_opt        = "ipc-thread-pool";
+int const mir::ConfigurationOptions::default_ipc_threads = 1;
 char const* const mir::ConfigurationOptions::name_opt                    = "name";
 char const* const mir::ConfigurationOptions::offscreen_opt               = "offscreen";
 
