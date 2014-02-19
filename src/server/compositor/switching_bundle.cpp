@@ -90,6 +90,11 @@ mc::SwitchingBundle::SwitchingBundle(
     }
 }
 
+mc::SwitchingBundle::~SwitchingBundle() noexcept
+{
+    force_requests_to_complete();
+}
+
 int mc::SwitchingBundle::nfree() const
 {
     return nbuffers - ncompositors - nready - nclients;
