@@ -60,4 +60,4 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   )
 endif()
 
-install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/android)

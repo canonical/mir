@@ -125,6 +125,10 @@ void mu::Enumerator::iterator::increment()
             increment();
         }
     }
+    else
+    {
+        current.reset();
+    }
 }
 
 mu::Enumerator::iterator& mu::Enumerator::iterator::operator++()
@@ -153,6 +157,11 @@ bool mu::Enumerator::iterator::operator!=(mu::Enumerator::iterator const& rhs) c
 mu::Device const& mu::Enumerator::iterator::operator*() const
 {
     return *current;
+}
+
+mu::Device const* mu::Enumerator::iterator::operator->() const
+{
+    return current.get();
 }
 
 mu::Enumerator::Enumerator(std::shared_ptr<Context> const& ctx) :
@@ -279,6 +288,13 @@ void mu::Monitor::process_events(std::function<void(mu::Monitor::EventType,
 int mu::Monitor::fd(void) const
 {
     return udev_monitor_get_fd(const_cast<udev_monitor*>(monitor));
+}
+
+void mu::Monitor::filter_by_subsystem(std::string const& subsystem)
+{
+    udev_monitor_filter_add_match_subsystem_devtype(monitor, subsystem.c_str(), nullptr);
+    if (enabled)
+        udev_monitor_filter_update(monitor);
 }
 
 void mu::Monitor::filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype)
