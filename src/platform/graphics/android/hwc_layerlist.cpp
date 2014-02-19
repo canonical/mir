@@ -92,13 +92,15 @@ mga::LayerList::LayerList()
 }
 
 mga::FBTargetLayerList::FBTargetLayerList()
-    : LayerListBase{2}
+    : LayerListBase{2},
+      needs_gl_draw{true}
 {
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
-void mga::FBTargetLayerList::reset_composition_layers()
+void mga::FBTargetLayerList::prepare_default_layers( 
+        std::function<void(hwc_display_contents_1_t&)> const& prepare_fn)
 {
     update_representation(2);
 
@@ -106,13 +108,20 @@ void mga::FBTargetLayerList::reset_composition_layers()
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 
     skip_layers_present = true;
+
+    prepare_fn(*native_list().lock());
+    needs_gl_draw = true;
 }
 
-void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
+void mga::FBTargetLayerList::prepare_composition_layers(
+    std::function<void(hwc_display_contents_1_t&)> const& prepare_fn,
+    std::list<std::shared_ptr<graphics::Renderable>> const& list,
+    std::function<void(Renderable const&)> const& render_fn)
 {
     auto const needed_size = list.size() + 1;
     update_representation(needed_size);
 
+    //pack layer list from renderables
     auto layers_it = layers.begin();
     for(auto const& renderable : list)
     {
@@ -121,11 +130,30 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
         layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
         layers_it++;
     }
-
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
+
+    prepare_fn(*native_list().lock());
+
+    //if a layer cannot be drawn, draw with GL here
+    layers_it = layers.begin();
+    bool gl_render_needed = false;
+    for(auto const& renderable : list)
+    {
+        if ((layers_it++)->needs_gl_render())
+        {
+            gl_render_needed = true;
+            render_fn(*renderable);
+        }
+    }
+
+    needs_gl_draw = gl_render_needed;
 }
 
+bool mga::FBTargetLayerList::needs_swapbuffers() const
+{
+    return needs_gl_draw;
+}
 
 void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
 {

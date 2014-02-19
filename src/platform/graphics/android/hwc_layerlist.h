@@ -68,13 +68,19 @@ class FBTargetLayerList : public LayerListBase
 {
 public:
     FBTargetLayerList();
-    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
-    void reset_composition_layers(); 
+    void prepare_composition_layers(
+        std::function<void(hwc_display_contents_1_t&)> const& prepare_fn,
+        std::list<std::shared_ptr<graphics::Renderable>> const& list,
+        std::function<void(Renderable const&)> const& render_fn);
+    void prepare_default_layers( 
+        std::function<void(hwc_display_contents_1_t&)> const& prepare_fn);
+
+    bool needs_swapbuffers() const;
     void update_fences();
     void set_fb_target(Buffer const& buffer);
-
 private:
     bool skip_layers_present{true};
+    bool needs_gl_draw;
 };
 
 }

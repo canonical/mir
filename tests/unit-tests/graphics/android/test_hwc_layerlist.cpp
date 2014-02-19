@@ -22,6 +22,7 @@
 #include "hwc_struct_helpers.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_render_function.h"
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
 
@@ -30,6 +31,40 @@ namespace mga=mir::graphics::android;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
+
+namespace
+{
+
+class StubRenderable : public mg::Renderable
+{
+public:
+    StubRenderable(std::shared_ptr<mg::Buffer> const& buffer, geom::Rectangle screen_pos)
+        : buf(buffer),
+          screen_pos(screen_pos)
+    {
+    }
+
+    std::shared_ptr<mg::Buffer> buffer() const
+    {
+        return buf;
+    }
+
+    bool alpha_enabled() const
+    {
+        return false;
+    }
+
+    geom::Rectangle screen_position() const override
+    {
+        return screen_pos;
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> buf;
+    geom::Rectangle screen_pos;
+};
+
+}
 
 class HWCLayerListTest : public ::testing::Test
 {
@@ -42,12 +77,11 @@ public:
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mt::fake_shared(native_handle_1)));
-        ON_CALL(mock_renderable, buffer())
-            .WillByDefault(Return(mt::fake_shared(mock_buffer)));
-        ON_CALL(mock_renderable, alpha_enabled())
-            .WillByDefault(Return(alpha_enabled));
-        ON_CALL(mock_renderable, screen_position())
-            .WillByDefault(Return(screen_position));
+
+        stub_renderable1 = std::make_shared<StubRenderable>(
+                                mt::fake_shared(mock_buffer), screen_position);
+        stub_renderable2 = std::make_shared<StubRenderable>(
+                                mt::fake_shared(mock_buffer), screen_position);
 
         empty_region = {0,0,0,0};
         set_region = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
@@ -63,7 +97,7 @@ public:
         comp_layer.flags = 0;
         comp_layer.handle = native_handle_1.handle();
         comp_layer.transform = 0;
-        comp_layer.blending = HWC_BLENDING_COVERAGE;
+        comp_layer.blending = HWC_BLENDING_NONE;
         comp_layer.sourceCrop = set_region;
         comp_layer.displayFrame = screen_pos;
         comp_layer.visibleRegionScreen = {1, &set_region};
@@ -103,14 +137,20 @@ public:
         set_target_layer.handle = native_handle_1.handle();
         set_target_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
         set_target_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
+
+        empty_prepare_fn = [] (hwc_display_contents_1_t&) {};
+        empty_render_fn = [] (mg::Renderable const&) {};
     }
 
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
-    bool alpha_enabled{true};
     mtd::StubAndroidNativeBuffer native_handle_1{buffer_size};
-    testing::NiceMock<mtd::MockRenderable> mock_renderable;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<StubRenderable> stub_renderable1;
+    std::shared_ptr<StubRenderable> stub_renderable2;
+
+    std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
+    std::function<void(mg::Renderable const&)> empty_render_fn;
 
     hwc_rect_t screen_pos;
     hwc_rect_t empty_region;
@@ -173,11 +213,11 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
 
     /* set non-default renderlist */
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
+        stub_renderable1,
+        stub_renderable1
     });
-    layerlist.set_composition_layers(updated_list);
 
+    layerlist.prepare_composition_layers(empty_prepare_fn, updated_list, empty_render_fn);
     auto list = layerlist.native_list().lock();
     ASSERT_EQ(3, list->numHwLayers);
     EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[0]));
@@ -195,7 +235,8 @@ TEST_F(HWCLayerListTest, fbtarget_list_update)
     EXPECT_THAT(set_target_layer, MatchesLayer(list->hwLayers[2]));
 
     /* reset default */
-    layerlist.reset_composition_layers();
+    layerlist.prepare_default_layers(empty_prepare_fn);
+    EXPECT_TRUE(layerlist.needs_swapbuffers());
 
     list = layerlist.native_list().lock();
     target_layer.handle = nullptr;
@@ -225,12 +266,12 @@ TEST_F(HWCLayerListTest, fence_updates)
         .WillRepeatedly(Return(native_handle_3));
 
     std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        mt::fake_shared(mock_renderable),
-        mt::fake_shared(mock_renderable)
+        stub_renderable1,
+        stub_renderable2
     });
 
     mga::FBTargetLayerList layerlist;
-    layerlist.set_composition_layers(updated_list);
+    layerlist.prepare_composition_layers(empty_prepare_fn, updated_list, empty_render_fn);
     layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list().lock();
@@ -250,4 +291,62 @@ TEST_F(HWCLayerListTest, list_returns_retire_fence)
     auto list = layerlist.native_list().lock();
     list->retireFenceFd = release_fence;
     EXPECT_EQ(release_fence, layerlist.retirement_fence());
+}
+
+TEST_F(HWCLayerListTest, list_prepares_and_renders)
+{
+    using namespace testing;
+    mtd::MockRenderFunction mock_call_counter;
+    auto render_fn = [&] (mg::Renderable const& renderable)
+    {
+        mock_call_counter.called(renderable);
+    };
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable2
+    });
+
+    auto prepare_fn_all_gl = [] (hwc_display_contents_1_t& list)
+    {
+        ASSERT_EQ(3, list.numHwLayers);
+        list.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+        list.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    };
+
+    auto prepare_fn_mixed = [] (hwc_display_contents_1_t& list)
+    {
+        ASSERT_EQ(3, list.numHwLayers);
+        list.hwLayers[0].compositionType = HWC_OVERLAY;
+        list.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    };
+
+    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t& list)
+    {
+        ASSERT_EQ(3, list.numHwLayers);
+        list.hwLayers[0].compositionType = HWC_OVERLAY;
+        list.hwLayers[1].compositionType = HWC_OVERLAY;
+        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+    };
+
+    mga::FBTargetLayerList layerlist;
+
+    Sequence seq;
+    EXPECT_CALL(mock_call_counter, called(Ref(*stub_renderable1)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(Ref(*stub_renderable2)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_call_counter, called(Ref(*stub_renderable2)))
+        .InSequence(seq);
+
+    layerlist.prepare_composition_layers(prepare_fn_all_gl, updated_list, render_fn);
+    EXPECT_TRUE(layerlist.needs_swapbuffers());
+
+    layerlist.prepare_composition_layers(prepare_fn_mixed, updated_list, render_fn);
+    EXPECT_TRUE(layerlist.needs_swapbuffers());
+
+    layerlist.prepare_composition_layers(prepare_fn_all_overlay, updated_list, render_fn);
+    EXPECT_FALSE(layerlist.needs_swapbuffers());
 }
