@@ -17,6 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
@@ -24,7 +25,6 @@
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
 
-#include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -58,9 +58,7 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
         prepare(prep);
     };
     layer_list.prepare_default_layers(prepare_fn);
-
-    (void) context;
-    //context.swap_buffers();
+    context.swap_buffers();
 }
 
 void mga::HwcDevice::render_gl_and_overlays(
@@ -73,8 +71,7 @@ void mga::HwcDevice::render_gl_and_overlays(
         prepare(prep);
     };
     layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
-    (void) context;
-    //context.swap_buffers();
+    context.swap_buffers();
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
