@@ -69,12 +69,10 @@ public:
     void post(Buffer const& buffer);
 
 private:
-    std::shared_ptr<HwcWrapper> const hwc_wrapper;
-
     void prepare(hwc_display_contents_1_t& display_list);
 
+    std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
-
     bool needs_swapbuffers;
     bool skip_layers_present{true};
 };

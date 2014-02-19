@@ -205,19 +205,6 @@ mir::DefaultServerConfiguration::the_display_changer()
     return the_mediating_display_changer();
 }
 
-std::function<void()>
-mir::DefaultServerConfiguration::force_threads_to_unblock_callback()
-{
-    auto shell_sessions = the_session_container();
-    return [shell_sessions]
-    {
-        shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-        {
-            session->force_requests_to_complete();
-        });
-    };
-}
-
 std::shared_ptr<mf::EventSink>
 mir::DefaultServerConfiguration::the_global_event_sink()
 {

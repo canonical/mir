@@ -44,6 +44,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 {
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+{
 }
 
 void mga::HwcDevice::prepare_gl()

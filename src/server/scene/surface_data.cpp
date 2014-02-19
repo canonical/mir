@@ -175,6 +175,7 @@ void ms::SurfaceData::resize(geom::Size const& size)
 
 bool ms::SurfaceData::contains(geom::Point const& point) const
 {
+    std::unique_lock<std::mutex> lock(guard);
     if (hidden)
         return false;
 
@@ -190,5 +191,6 @@ bool ms::SurfaceData::contains(geom::Point const& point) const
 
 void ms::SurfaceData::set_input_region(std::vector<geom::Rectangle> const& rectangles)
 {
+    std::unique_lock<std::mutex> lock(guard);
     input_rectangles = rectangles;
 }

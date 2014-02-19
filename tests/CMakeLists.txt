@@ -1,5 +1,5 @@
 
-if (MIR_PLATFORM STREQUAL "mesa")
+if (MIR_TEST_PLATFORM STREQUAL "mesa")
   set (UMOCKDEV_REQUIRED YES)
 endif()
 
@@ -19,9 +19,10 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
 endif()
 
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_TEST_PLATFORM STREQUAL "android")
   #avoid complaints about poor quality android headers
   include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+  add_definitions(-DANDROID)
 endif()
 
 include_directories(

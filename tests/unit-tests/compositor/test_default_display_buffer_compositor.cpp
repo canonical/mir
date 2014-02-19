@@ -24,7 +24,7 @@
 #include "src/server/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -108,9 +108,19 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
-    void begin(float rotation) const override
+    void set_viewport(geom::Rectangle const& rect) override
     {
-        renderer->begin(rotation);
+        renderer->set_viewport(rect);
+    }
+
+    void set_rotation(float degrees) override
+    {
+        renderer->set_rotation(degrees);
+    }
+
+    void begin() const override
+    {
+        renderer->begin();
     }
 
     void render(mc::CompositingCriteria const& criteria, mg::Buffer& buffer) const override
@@ -139,7 +149,7 @@ struct StubRendererFactory : mc::RendererFactory
             new WrappingRenderer{&mock_renderer});
     }
 
-    testing::NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
+    testing::NiceMock<mtd::MockRenderer> mock_renderer;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -260,7 +270,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     EXPECT_CALL(renderer_factory.mock_renderer, suspend())
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, begin(_))
+    EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
         .Times(0);
@@ -322,7 +332,9 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     EXPECT_CALL(display_buffer, orientation())
         .InSequence(render_seq)
         .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(renderer_factory.mock_renderer, begin(_))
+    EXPECT_CALL(renderer_factory.mock_renderer, set_rotation(_))
+        .InSequence(render_seq);
+    EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .InSequence(render_seq);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(big),_))
         .InSequence(render_seq);

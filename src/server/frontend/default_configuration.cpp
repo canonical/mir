@@ -117,14 +117,11 @@ mir::DefaultServerConfiguration::the_connector()
         {
             auto const threads = the_options()->get<int>(frontend_threads_opt);
 
-            auto const& force_threads_to_unblock = force_threads_to_unblock_callback();
-
             if (the_options()->is_set(no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_session_creator(),
                     threads,
-                    force_threads_to_unblock,
                     the_connector_report());
             }
             else
@@ -133,7 +130,6 @@ mir::DefaultServerConfiguration::the_connector()
                     the_socket_file(),
                     the_session_creator(),
                     threads,
-                    force_threads_to_unblock,
                     the_connector_report());
             }
         });

@@ -18,7 +18,7 @@
 
 #include "src/server/compositor/rendering_operator.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_renderer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_compositing_criteria.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -37,7 +37,7 @@ TEST(RenderingOperator, render_operator_saves_resources)
     using namespace testing;
 
     unsigned long frameno = 84;
-    mtd::MockSurfaceRenderer mock_renderer;
+    mtd::MockRenderer mock_renderer;
     mtd::MockCompositingCriteria mock_criteria;
     mtd::MockBufferStream mock_stream;
     auto stub_buffer0 = std::make_shared<mtd::StubBuffer>();
