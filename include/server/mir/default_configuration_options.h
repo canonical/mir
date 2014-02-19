@@ -42,6 +42,8 @@ public:
     static char const* const host_socket_opt;
     static char const* const standalone_opt;
     static char const* const frontend_threads_opt;
+    static int const default_ipc_threads;
+
     static char const* const name_opt;
     static char const* const offscreen_opt;
 
@@ -66,7 +68,6 @@ public:
 
 protected:
 
-    int default_ipc_threads = 1;
 
     ConfigurationOptions() = default;
     virtual ~ConfigurationOptions() = default;
