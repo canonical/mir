@@ -172,34 +172,3 @@ mf::BasicConnector::~BasicConnector() noexcept
     stop();
 }
 
-void mf::NullConnectorReport::thread_start()
-{
-}
-
-void mf::NullConnectorReport::thread_end()
-{
-}
-
-void mf::NullConnectorReport::starting_threads(int /*count*/)
-{
-}
-
-void mf::NullConnectorReport::stopping_threads(int /*count*/)
-{
-}
-
-void mf::NullConnectorReport::creating_session_for(int /*socket_handle*/)
-{
-}
-
-void mf::NullConnectorReport::creating_socket_pair(int /*server_handle*/, int /*client_handle*/)
-{
-}
-
-void mf::NullConnectorReport::listening_on(std::string const& /*endpoint*/)
-{
-}
-
-void mf::NullConnectorReport::error(std::exception const& /*error*/)
-{
-}

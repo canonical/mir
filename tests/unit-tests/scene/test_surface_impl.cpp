@@ -18,7 +18,7 @@
 
 #include "src/server/scene/surface_impl.h"
 #include "src/server/scene/basic_surface.h"
-#include "mir/scene/scene_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/surface_stack_model.h"
 #include "src/server/scene/surface_data.h"
@@ -55,6 +55,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -108,7 +109,7 @@ private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
     std::shared_ptr<ms::SurfaceData> const stub_data;
     std::shared_ptr<ms::BasicSurface> dummy_surface;
-    std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
+    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
 class MockSurfaceBuilder : public ms::SurfaceBuilder

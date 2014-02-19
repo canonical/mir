@@ -17,6 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+
 #include "mir/frontend/session_mediator_report.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -31,7 +32,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-struct MockApplicationMediatorReport : mf::NullSessionMediatorReport
+struct MockApplicationMediatorReport : mf::SessionMediatorReport
 {
     MockApplicationMediatorReport()
     {
@@ -56,6 +57,11 @@ struct MockApplicationMediatorReport : mf::NullSessionMediatorReport
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
+
+    void session_drm_auth_magic_called(const std::string&) override {};
+    void session_configure_surface_called(std::string const&) override {};
+    void session_configure_display_called(std::string const&) override {};
+    void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
 const int rpc_timeout_ms{100000};
