@@ -10,7 +10,7 @@ set(
   patterns.cpp
 )
 
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_TEST_PLATFORM STREQUAL "android")
   include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
   set(DRAW_SRCS
     android_graphics_region_factory.cpp

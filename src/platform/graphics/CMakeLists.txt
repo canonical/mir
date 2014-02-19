@@ -25,11 +25,11 @@ target_link_libraries(
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
 )
 
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_BUILD_PLATFORM_ANDROID)
   add_subdirectory(android/)
 endif()
 
-if (MIR_PLATFORM STREQUAL "mesa")
+if (MIR_BUILD_PLATFORM_MESA)
   add_subdirectory(mesa/)
 endif()
 

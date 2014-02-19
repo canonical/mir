@@ -67,7 +67,7 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
 #endif
     }
 

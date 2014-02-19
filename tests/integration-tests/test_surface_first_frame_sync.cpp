@@ -28,6 +28,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_renderer.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -88,7 +89,7 @@ private:
     std::unordered_map<mg::DisplayBuffer*,std::unique_ptr<mc::DisplayBufferCompositor>> display_buffer_compositor_map;
 };
 
-class StubRenderer : public mc::Renderer
+class StubRenderer : public mtd::StubRenderer
 {
 public:
     StubRenderer(int render_operations_fd)
@@ -96,21 +97,9 @@ public:
     {
     }
 
-    void begin(float) const override
-    {
-    }
-
     void render(mc::CompositingCriteria const&, mg::Buffer&) const override
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
-    }
-
-    void end() const override
-    {
-    }
-
-    void suspend() override
-    {
     }
 
 private:

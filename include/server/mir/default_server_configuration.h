@@ -317,7 +317,6 @@ private:
     std::shared_ptr<scene::SessionManager>       the_session_manager();
     std::shared_ptr<scene::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
-    std::function<void()> force_threads_to_unblock_callback();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 };

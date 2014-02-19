@@ -356,30 +356,6 @@ public:
 
 }
 
-TEST_F(PublishedSocketConnector, forces_requests_to_complete_when_stopping)
-{
-    MockForceRequests mock_force_requests;
-    auto stub_server_tool = std::make_shared<mt::StubServerTool>();
-    auto ipc_factory = std::make_shared<mtd::StubIpcFactory>(*stub_server_tool);
-
-    /* Once for the explicit stop() and once when the communicator is destroyed */
-    EXPECT_CALL(mock_force_requests, force_requests_to_complete())
-        .Times(2);
-
-    auto comms = std::make_shared<mf::PublishedSocketConnector>(
-        "./test_socket1",
-        std::make_shared<mf::ProtobufSessionCreator>(
-                    ipc_factory,
-                    std::make_shared<mtd::StubSessionAuthorizer>(),
-                    mr::null_message_processor_report()),
-        10,
-        std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
-        mr::null_connector_report());
-
-    comms->start();
-    comms->stop();
-}
-
 TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
 {
     using namespace testing;

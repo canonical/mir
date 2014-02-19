@@ -67,7 +67,7 @@ public:
             .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
 
 #ifndef ANDROID
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
 #endif
     }
 

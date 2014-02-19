@@ -256,6 +256,64 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     }
 }
 
+typedef UdevWrapperTest UdevWrapperDeathTest;
+
+TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
+{
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
+
+    devices.scan_devices();
+
+    EXPECT_EXIT((*devices.end()).subsystem(), testing::KilledBySignal(SIGSEGV), "");
+
+    auto iter = devices.begin();
+
+    while(iter != devices.end())
+    {
+        iter++;
+    }
+    EXPECT_EXIT((*iter).subsystem(), testing::KilledBySignal(SIGSEGV), "");
+}
+
+TEST_F(UdevWrapperTest, MemberDereferenceWorks)
+{
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
+
+    devices.scan_devices();
+    auto iter = devices.begin();
+
+    EXPECT_STREQ("drm", iter->subsystem());
+    EXPECT_STREQ("drm", iter->subsystem());
+}
+
+TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
+{
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
+
+    devices.scan_devices();
+
+    EXPECT_EXIT(devices.end()->subsystem(), testing::KilledBySignal(SIGSEGV), "");
+
+    auto iter = devices.begin();
+
+    while(iter != devices.end())
+    {
+        iter++;
+    }
+    EXPECT_EXIT(iter->subsystem(), testing::KilledBySignal(SIGSEGV), "");
+}
+
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
 {
     mir::udev::Monitor monitor{mir::udev::Context()};

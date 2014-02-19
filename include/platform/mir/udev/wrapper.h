@@ -93,7 +93,7 @@ public:
         bool operator!=(iterator const& rhs) const;
 
         Device const& operator*() const;
-
+        Device const* operator->() const;
     private:
         friend class Enumerator;
 
@@ -135,6 +135,7 @@ public:
     void enable(void);
     int fd(void) const;
 
+    void filter_by_subsystem(std::string const& subsystem);
     void filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype);
 
     void process_events(std::function<void(EventType, Device const&)> const& handler) const;

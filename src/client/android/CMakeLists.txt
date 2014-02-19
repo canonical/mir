@@ -1,7 +1,8 @@
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+add_definitions(-DANDROID)
 
 add_library(
-  mirclientplatform SHARED
+  mirclientplatformandroid SHARED
 
   android_client_buffer.cpp
   android_client_buffer_factory.cpp
@@ -12,11 +13,26 @@ add_library(
   android_native_display_container.cpp
 )
 
+set_target_properties(
+  mirclientplatformandroid PROPERTIES
+  OUTPUT_NAME mirclientplatform
+  LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
+)
+
 target_link_libraries(
-  mirclientplatform
+  mirclientplatformandroid
   mirclient
 
   ${LIBHARDWARE_LIBRARIES}
 )
 
-install(TARGETS mirclientplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (MIR_TEST_PLATFORM STREQUAL "android")
+  add_custom_command(TARGET mirclientplatformandroid
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove libmirclientplatform.so
+    COMMAND ${CMAKE_COMMAND} -E create_symlink android/$<TARGET_FILE_NAME:mirclientplatformandroid> libmirclientplatform.so
+    WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+  )
+endif()
+
+install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/android)

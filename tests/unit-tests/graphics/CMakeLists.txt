@@ -14,11 +14,11 @@ add_subdirectory(nested/)
 add_subdirectory(offscreen/)
 
 add_subdirectory(egl_mock/)
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_TEST_PLATFORM STREQUAL "android")
 add_subdirectory(android/)
 endif()
 
-if (MIR_PLATFORM STREQUAL "mesa")
+if (MIR_TEST_PLATFORM STREQUAL "mesa")
 add_subdirectory(mesa/)
 endif()
 
