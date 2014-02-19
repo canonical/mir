@@ -145,6 +145,14 @@ void mga::GLContext::release_current() const
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
+void mga::GLContext::swap_buffers() const
+{
+    if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
+    }
+}
+
 mga::GLContext::~GLContext()
 {
     if (eglGetCurrentContext() == egl_context)

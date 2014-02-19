@@ -36,7 +36,19 @@ namespace android
 EGLSurface create_dummy_pbuffer_surface(EGLDisplay, EGLConfig);
 EGLSurface create_window_surface(EGLDisplay, EGLConfig, EGLNativeWindowType);
 
-class GLContext : public graphics::GLContext
+class SwappingGLContext : public graphics::GLContext
+{
+public:
+    virtual ~SwappingGLContext() = default;
+    virtual void swap_buffers() const = 0;
+
+protected:
+    SwappingGLContext() = default;
+    SwappingGLContext(SwappingGLContext const&) = delete;
+    SwappingGLContext& operator=(SwappingGLContext const&) = delete;
+};
+
+class GLContext : public SwappingGLContext
 {
 public:
     //For creating a gl context
@@ -49,18 +61,8 @@ public:
     ~GLContext();
 
     void make_current() const override;
-    void swap_buffers();
+    void swap_buffers() const override;
     void release_current() const override;
-
-    /* TODO: (kdub) remove these two functions once HWC1.0 construction is sorted out. */
-    EGLDisplay display()
-    {
-        return egl_display;
-    }
-    EGLSurface surface()
-    {
-        return egl_surface;
-    }
 
 private:
     EGLDisplay const egl_display;

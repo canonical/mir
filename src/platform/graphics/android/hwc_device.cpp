@@ -17,6 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
@@ -24,7 +25,6 @@
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
 
-#include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -39,15 +39,13 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
     : HWCCommonDevice(hwc_device, coordinator), 
       LayerListBase{2},
       hwc_wrapper(hwc_wrapper), 
-      sync_ops(sync_ops),
-      needs_swapbuffers{true}
+      sync_ops(sync_ops)
 {
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-{
 }
 
-void mga::HwcDevice::prepare_gl()
+void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
     update_representation(2);
     layers.front().set_layer_type(mga::LayerType::skip);
@@ -56,10 +54,11 @@ void mga::HwcDevice::prepare_gl()
 
     hwc_wrapper->prepare(*native_list().lock());
 
-    needs_swapbuffers = true;
+    context.swap_buffers();
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(
+void mga::HwcDevice::render_gl_and_overlays(
+    SwappingGLContext const& context,
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
@@ -75,6 +74,7 @@ void mga::HwcDevice::prepare_gl_and_overlays(
         layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
         layers_it++;
     }
+
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
 
@@ -82,25 +82,18 @@ void mga::HwcDevice::prepare_gl_and_overlays(
 
     //if a layer cannot be drawn, draw with GL here
     layers_it = layers.begin();
-    bool gl_render_needed = false;
+    bool needs_swapbuffers = false;
     for(auto const& renderable : renderables)
     {
         if ((layers_it++)->needs_gl_render())
         {
-            gl_render_needed = true;
+            needs_swapbuffers = true;
             render_fn(*renderable);
         }
     }
-    needs_swapbuffers = gl_render_needed; 
-}
 
-void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
-{
-    if ((needs_swapbuffers) && 
-        (eglSwapBuffers(dpy, sur) == EGL_FALSE))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
-    }
+    if (needs_swapbuffers)
+        context.swap_buffers();
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
