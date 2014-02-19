@@ -172,29 +172,6 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays)
     EXPECT_EQ(3, mock_device->display0_set_content.numHwLayers);
 }
 
-#if 0
-TEST_F(HwcDevice, hwc_render)
-{
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(1);
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.gpu_render(dpy, surf);
-}
-
-TEST_F(HwcDevice, hwc_swapbuffers_failure)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(1)
-        .WillOnce(Return(EGL_FALSE));
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    EXPECT_THROW({
-        device.gpu_render(dpy, surf);
-    }, std::runtime_error);
-}
-#endif
 TEST_F(HwcDevice, hwc_commit)
 {
     using namespace testing;

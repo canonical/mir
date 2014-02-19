@@ -71,7 +71,9 @@ void mga::HwcDevice::render_gl_and_overlays(
         prepare(prep);
     };
     layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
-    context.swap_buffers();
+
+    if (layer_list.needs_swapbuffers())
+        context.swap_buffers();
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)

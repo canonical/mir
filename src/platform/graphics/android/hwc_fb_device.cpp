@@ -88,11 +88,9 @@ void mga::HwcFbDevice::render_gl_and_overlays(
     std::function<void(Renderable const&)> const& render_fn)
 {
     prepare();
-
     //TODO: filter this list based on the results of the preparation
     for(auto const& renderable : renderables)
         render_fn(*renderable);
-
     gpu_render();
 }
 
