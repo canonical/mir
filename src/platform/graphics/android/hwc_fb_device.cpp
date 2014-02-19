@@ -39,19 +39,14 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HwcFbDevice::gpu_render(SwappingGLContext const& context)
+void mga::HwcFbDevice::gpu_render()
 {
-    (void) context;
-    //context.ensure_current()
-
     auto rc = 0; 
     auto display_list = layer_list.native_list().lock();
     if (display_list)
     {
-//        display_list->dpy = eglGetCurrentDisplay();
-//        display_list->sur = eglGetCurrentSurface(EGL_DRAW);
-        display_list->dpy = 0;
-        display_list->sur = 0;
+        display_list->dpy = eglGetCurrentDisplay();
+        display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
         //set() may affect EGL state by calling eglSwapBuffers.
         //HWC 1.0 is the only version of HWC that can do this.
@@ -81,14 +76,14 @@ void mga::HwcFbDevice::prepare()
     }
 }
 
-void mga::HwcFbDevice::render_gl(SwappingGLContext const& context)
+void mga::HwcFbDevice::render_gl(SwappingGLContext const&)
 {
     prepare();
-    gpu_render(context);
+    gpu_render();
 }
 
 void mga::HwcFbDevice::render_gl_and_overlays(
-    SwappingGLContext const& context,
+    SwappingGLContext const&,
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
@@ -98,7 +93,7 @@ void mga::HwcFbDevice::render_gl_and_overlays(
     for(auto const& renderable : renderables)
         render_fn(*renderable);
 
-    gpu_render(context);
+    gpu_render();
 }
 
 void mga::HwcFbDevice::post(mg::Buffer const& buffer)
