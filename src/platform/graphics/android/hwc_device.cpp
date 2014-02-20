@@ -25,9 +25,6 @@
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
 
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
