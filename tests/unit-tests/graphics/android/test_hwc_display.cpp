@@ -156,7 +156,7 @@ TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
                           *gl_context);
 
-    EXPECT_EQ(db.orientation(), mir_orientation_normal);
+    EXPECT_EQ(mir_orientation_normal, db.orientation());
 }
 
 TEST_F(AndroidDisplayBuffer, orientation_is_passed_through)
@@ -172,7 +172,7 @@ TEST_F(AndroidDisplayBuffer, orientation_is_passed_through)
         auto config = db.configuration();
         config.orientation = ori;
         db.configure(config);
-        EXPECT_EQ(db.orientation(), ori);
+        EXPECT_EQ(ori, db.orientation());
     }
 }
 
@@ -191,21 +191,21 @@ TEST_F(AndroidDisplayBuffer, rotation_transposes_dimensions)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
                           *gl_context);
 
-    EXPECT_EQ(db.view_area().size, normal);
+    EXPECT_EQ(normal, db.view_area().size);
 
     auto config = db.configuration();
 
     config.orientation = mir_orientation_right;
     db.configure(config);
-    EXPECT_EQ(db.view_area().size, transposed);
+    EXPECT_EQ(transposed, db.view_area().size);
 
     config.orientation = mir_orientation_inverted;
     db.configure(config);
-    EXPECT_EQ(db.view_area().size, normal);
+    EXPECT_EQ(normal, db.view_area().size);
 
     config.orientation = mir_orientation_left;
     db.configure(config);
-    EXPECT_EQ(db.view_area().size, transposed);
+    EXPECT_EQ(transposed, db.view_area().size);
 }
 
 TEST_F(AndroidDisplayBuffer, reports_correct_size)
@@ -217,8 +217,8 @@ TEST_F(AndroidDisplayBuffer, reports_correct_size)
     auto view_area = db.view_area();
 
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};
-    EXPECT_EQ(view_area.size, display_size);
-    EXPECT_EQ(view_area.top_left, origin_pt);
+    EXPECT_EQ(display_size, view_area.size);
+    EXPECT_EQ(origin_pt, view_area.top_left);
 }
 
 TEST_F(AndroidDisplayBuffer, creates_egl_context_from_shared_context)
@@ -308,7 +308,7 @@ TEST_F(AndroidDisplayBuffer, sets_display_power_mode_to_on_at_start)
     using namespace testing;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     auto config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_on);
+    EXPECT_EQ(mir_power_mode_on, config.power_mode);
 }
 
 TEST_F(AndroidDisplayBuffer, changes_display_power_mode)
@@ -364,7 +364,7 @@ TEST_F(AndroidDisplayBuffer, display_orientation_supported)
     db.configure(config); 
 
     config = db.configuration();
-    EXPECT_EQ(config.orientation, mir_orientation_normal);
+    EXPECT_EQ(mir_orientation_normal, config.orientation);
 }
 
 TEST_F(AndroidDisplayBuffer, display_orientation_not_supported)
@@ -381,7 +381,7 @@ TEST_F(AndroidDisplayBuffer, display_orientation_not_supported)
     db.configure(config); 
 
     config = db.configuration();
-    EXPECT_EQ(config.orientation, mir_orientation_left);
+    EXPECT_EQ(mir_orientation_left, config.orientation);
 }
 
 TEST_F(AndroidDisplayBuffer, incorrect_display_configure_throws)
