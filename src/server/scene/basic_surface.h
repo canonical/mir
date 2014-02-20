@@ -70,30 +70,30 @@ public:
 
     ~BasicSurface();
 
-    virtual std::string const& name() const;
-    virtual void move_to(geometry::Point const& top_left);
-    virtual void set_rotation(float degrees, glm::vec3 const& axis);
-    virtual float alpha() const;
-    virtual void set_alpha(float alpha);
-    virtual void set_hidden(bool is_hidden);
+    std::string const& name() const override;
+    void move_to(geometry::Point const& top_left) override;
+    void set_rotation(float degrees, glm::vec3 const& axis);
+    float alpha() const override;
+    void set_alpha(float alpha);
+    void set_hidden(bool is_hidden) override;
 
-    virtual geometry::Point top_left() const;
-    virtual geometry::Size size() const;
+    geometry::Point top_left() const;
+    geometry::Size size() const override;
 
-    virtual MirPixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const;
 
-    virtual std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete);
-    virtual void force_requests_to_complete();
+    std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
+    void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete);
+    void force_requests_to_complete();
 
-    virtual bool supports_input() const;
-    virtual int client_input_fd() const;
-    virtual void allow_framedropping(bool);
-    virtual std::shared_ptr<input::InputChannel> input_channel() const;
+    bool supports_input() const;
+    int client_input_fd() const;
+    void allow_framedropping(bool);
+    std::shared_ptr<input::InputChannel> input_channel() const;
 
-    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
+    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
-    virtual std::shared_ptr<compositor::BufferStream> buffer_stream() const;
+    std::shared_ptr<compositor::BufferStream> buffer_stream() const;
 
     /**
      * Resize the surface.
