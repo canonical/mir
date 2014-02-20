@@ -82,7 +82,6 @@ void mga::HwcDevice::render_gl_and_overlays(
     bool needs_swapbuffers = false;
     for(auto const& renderable : renderables)
     {
-        layers_it->set_acquire_fence();
         if ((layers_it++)->needs_gl_render())
         {
             needs_swapbuffers = true;
@@ -98,6 +97,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
+printf("post.\n");
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     auto buf = buffer.native_buffer_handle();
     if (skip_layers_present)
@@ -108,7 +108,6 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     layers.back().set_render_parameters(disp_frame, false);
     layers.back().set_buffer(buf);
-    layers.back().set_acquire_fence();
 
     hwc_wrapper->set(*native_list().lock());
     for(auto& layer : layers)

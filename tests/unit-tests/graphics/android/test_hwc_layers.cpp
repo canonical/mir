@@ -178,7 +178,6 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     //mir must reset releaseFenceFd to -1
     hwc_layer->releaseFenceFd = fake_fence;
     layer.set_buffer(native_handle_1);
-    layer.set_acquire_fence();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
@@ -186,7 +185,6 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     hwc_layer->acquireFenceFd = -1;
     expected_layer.acquireFenceFd = -1;
     layer.set_buffer(native_handle_1); 
-    layer.set_acquire_fence();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
@@ -211,7 +209,6 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
     //mir must reset releaseFenceFd to -1 if hwc has changed it
     hwc_layer->releaseFenceFd = fake_fence;
     layer.set_buffer(native_handle_1);
-    layer.set_acquire_fence();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //hwc will set this to -1 to acknowledge that its adopted this layer's fence.
@@ -220,7 +217,6 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
     hwc_layer->acquireFenceFd = -1;
     expected_layer.acquireFenceFd = -1;
     layer.set_buffer(native_handle_1); 
-    layer.set_acquire_fence();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //TODO: we have to know if the fb target is needed or not. if it is not, we should not copy the fd. 
