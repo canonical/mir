@@ -143,18 +143,19 @@ void mga::HWCLayer::set_buffer(std::shared_ptr<NativeBuffer> const& buffer)
     {
         hwc_layer->handle = buffer->handle();
 
+        //hwc will not adopt the fence unless it is one of these types
+        if ((hwc_layer->compositionType == HWC_OVERLAY) ||
+            (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))
+        {
+            hwc_layer->acquireFenceFd = buffer->copy_fence();
+        }
+        
+        hwc_layer->releaseFenceFd = -1;
         hwc_layer->sourceCrop = 
         {
             0, 0,
             buffer->anwb()->width,
             buffer->anwb()->height
         };
-        hwc_layer->releaseFenceFd = -1;
-
-        if ((hwc_layer->compositionType == HWC_OVERLAY) ||
-           (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))
-        {
-            hwc_layer->acquireFenceFd = associated_buffer->copy_fence();
-        } 
     }
 }

@@ -97,7 +97,6 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
-printf("post.\n");
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     auto buf = buffer.native_buffer_handle();
     if (skip_layers_present)
