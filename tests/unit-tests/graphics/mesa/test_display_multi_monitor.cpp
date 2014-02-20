@@ -20,10 +20,10 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "src/platform/graphics/mesa/platform.h"
+#include "src/server/report/null_report_factory.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir/graphics/null_display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -42,6 +42,7 @@ namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
+namespace mr = mir::report;
 
 namespace
 {
@@ -145,7 +146,7 @@ public:
     std::shared_ptr<mgm::Platform> create_platform()
     {
         return std::make_shared<mgm::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 

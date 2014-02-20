@@ -128,7 +128,8 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     texcoord_attr_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    vertex_attribs_vbo(0)
+    vertex_attribs_vbo(0),
+    rotation(NAN) // ensure the first set_rotation succeeds
 {
     /*
      * We need to serialize renderer creation because some GL calls used
@@ -202,6 +203,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     glUseProgram(0);
 
     set_viewport(display_area);
+    set_rotation(0.0f);
 }
 
 mc::GLRenderer::~GLRenderer() noexcept
@@ -305,9 +307,12 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mc::GLRenderer::begin(float rotation) const
+void mc::GLRenderer::set_rotation(float degrees)
 {
-    float rad = rotation * M_PI / 180.0f;
+    if (degrees == rotation)
+        return;
+
+    float rad = degrees * M_PI / 180.0f;
     GLfloat cos = cosf(rad);
     GLfloat sin = sinf(rad);
     GLfloat rot[16] = {cos,  sin,  0.0f, 0.0f,
@@ -317,6 +322,12 @@ void mc::GLRenderer::begin(float rotation) const
     glUseProgram(program);
     glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
     glUseProgram(0);
+
+    rotation = degrees;
+}
+
+void mc::GLRenderer::begin() const
+{
     glClear(GL_COLOR_BUFFER_BIT);
 }
 

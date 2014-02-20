@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/input_report.h"
+#include "mir/report/legacy_input_report.h"
 #include "mir/logging/logger.h"
 
 #include <std/Log.h>
@@ -26,8 +26,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace ml  = mir::logging;
-namespace mli = mir::logging::legacy_input_report;
+namespace ml = mir::logging;
+namespace mri = mir::report::legacy_input;
 
 using testing::_;
 
@@ -46,7 +46,7 @@ struct InputReport : public testing::Test
 
     InputReport()
     {
-        mli::initialize(mir::test::fake_shared(logger));
+        mri::initialize(mir::test::fake_shared(logger));
     }
 };
 

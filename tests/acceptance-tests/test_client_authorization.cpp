@@ -116,6 +116,8 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
 
             EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid)).Times(1)
                 .WillOnce(Return(true));
+            EXPECT_CALL(mock_authorizer, configure_display_is_allowed(client_pid)).Times(1)
+                .WillOnce(Return(false));
             connect_sync.try_signal_ready_for();
         }
 
