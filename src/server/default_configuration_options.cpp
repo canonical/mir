@@ -125,21 +125,21 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
             "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "Compositor reporting [{log,off}]")
+            "Compositor reporting [{log,lttng,off}]")
         (connector_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Connector report. [{log,off}]")
+            "How to handle the Connector report. [{log,lttng,off}]")
         (display_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Display report. [{log,off}]")
+            "How to handle the Display report. [{log,lttng,off}]")
         (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Input report. [{log,lttng,off}]")
         (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the Legacy Input report. [{log,off}]")
         (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the SessionMediator report. [{log,off}]")
+            "How to handle the SessionMediator report. [{log,lttng,off}]")
         (msg_processor_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the scene report. [{log,off}]")
+            "How to handle the scene report. [{log,lttng,off}]")
         (glog,
             "Use google::GLog for logging")
         (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),

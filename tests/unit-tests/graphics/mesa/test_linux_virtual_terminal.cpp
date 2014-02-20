@@ -17,7 +17,7 @@
  */
 
 #include "src/platform/graphics/mesa/linux_virtual_terminal.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/main_loop.h"
 
 #include "mir_test/fake_shared.h"
@@ -35,6 +35,7 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -247,7 +248,7 @@ TEST_F(LinuxVirtualTerminalTest, use_provided_vt)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt{fops, vt_num, null_report};
 }
@@ -265,7 +266,7 @@ TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt{fops, 0, null_report};
 }
@@ -290,7 +291,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
         .WillOnce(Return(-1));
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     EXPECT_THROW({
         mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
@@ -310,7 +311,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_mode_if_vt_process)
     set_up_expectations_for_vt_teardown(fake_vt_mode_process);
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
 }
@@ -332,7 +333,7 @@ TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
     vt.set_graphics_mode();
@@ -355,7 +356,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
     EXPECT_THROW({
@@ -378,7 +379,7 @@ TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
 
@@ -404,7 +405,7 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto null_report = std::make_shared<mg::NullDisplayReport>();
+    auto null_report = mr::null_display_report();
 
     mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
 

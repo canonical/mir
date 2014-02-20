@@ -36,13 +36,14 @@
 #include "mir_test_doubles/mock_display_device.h"
 #endif
 
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 #ifndef ANDROID
 namespace mtf = mir::mir_test_framework;
 #endif
@@ -75,7 +76,7 @@ public:
     std::shared_ptr<mg::Display> create_display()
     {
         auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-        auto report = std::make_shared<mg::NullDisplayReport>();
+        auto report = mr::null_display_report();
 #ifdef ANDROID
         auto platform = mg::create_platform(
             std::make_shared<mir::options::ProgramOption>(),
