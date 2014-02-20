@@ -34,11 +34,6 @@ class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 public:
     virtual DisplayConfigurationOutput configuration() const = 0;
     virtual void configure(DisplayConfigurationOutput const&) = 0;
-
-protected:
-    ConfigurableDisplayBuffer() = default;
-    ConfigurableDisplayBuffer& operator=(ConfigurableDisplayBuffer const&) = delete;
-    ConfigurableDisplayBuffer(ConfigurableDisplayBuffer const&) = delete;
 };
 
 }
