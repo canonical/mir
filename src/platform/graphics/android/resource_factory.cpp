@@ -112,7 +112,7 @@ public:
     void set(hwc_display_contents_1_t& display_list) const override
     {
         hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
-        if (hwc_device->prepare(hwc_device.get(), 1, displays))
+        if (hwc_device->set(hwc_device.get(), 1, displays))
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
         }

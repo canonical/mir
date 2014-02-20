@@ -68,12 +68,14 @@ public:
 
     void update_fence_and_release_buffer();
     bool needs_gl_render() const;
+    void set_acquire_fence();
 
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
     std::shared_ptr<NativeBuffer> associated_buffer;
+    bool changed{true};
 };
 }
 }
