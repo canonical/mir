@@ -44,7 +44,7 @@ struct DummyGPUDisplayType {};
 struct DummyHWCDisplayType {};
 
 
-class AndroidDisplayTest : public ::testing::Test
+class AndroidDisplay : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -68,7 +68,7 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-TEST_F(AndroidDisplayTest, display_creation)
+TEST_F(AndroidDisplay, creation_creates_egl_resources_properly)
 {
     using namespace testing;
     EGLSurface fake_surface = (EGLSurface) 0x715;
@@ -109,7 +109,7 @@ TEST_F(AndroidDisplayTest, display_creation)
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 }
 
-TEST_F(AndroidDisplayTest, display_egl_config_selection)
+TEST_F(AndroidDisplay, selects_usable_configuration)
 {
     using namespace testing;
     int const incorrect_visual_id = 2;
@@ -150,7 +150,7 @@ TEST_F(AndroidDisplayTest, display_egl_config_selection)
     EXPECT_EQ(correct_config, selected_config);
 }
 
-TEST_F(AndroidDisplayTest, display_logging)
+TEST_F(AndroidDisplay, logs_creation_events)
 {
     using namespace testing;
     EXPECT_CALL(*mock_display_report, report_successful_setup_of_native_resources())
@@ -165,7 +165,7 @@ TEST_F(AndroidDisplayTest, display_logging)
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 }
 
-TEST_F(AndroidDisplayTest, eglMakeCurrent_failure)
+TEST_F(AndroidDisplay, throws_on_eglMakeCurrent_failure)
 {
     using namespace testing;
 
@@ -184,7 +184,7 @@ TEST_F(AndroidDisplayTest, eglMakeCurrent_failure)
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_failure)
+TEST_F(AndroidDisplay, logs_error_because_of_surface_creation_failure)
 {
     using namespace testing;
 
@@ -204,7 +204,7 @@ TEST_F(AndroidDisplayTest, startup_logging_error_because_of_surface_creation_fai
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplayTest, test_configure_gets_to_display_buffer)
+TEST_F(AndroidDisplay, configures_display_buffer)
 {
     using namespace testing;
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
@@ -244,7 +244,7 @@ TEST_F(AndroidDisplayTest, test_configure_gets_to_display_buffer)
 }
 
 //we only have single display and single mode on android for the time being
-TEST_F(AndroidDisplayTest, android_display_configuration_info)
+TEST_F(AndroidDisplay, supports_one_output_configuration)
 {
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
     auto config = display.configuration();

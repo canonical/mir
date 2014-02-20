@@ -36,7 +36,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
-class AndroidDisplayBufferTest : public ::testing::Test
+class AndroidDisplayBuffer : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -74,7 +74,7 @@ protected:
     geom::Size const display_size{433,232};
 };
 
-TEST_F(AndroidDisplayBufferTest, test_post_update)
+TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
 {
     using namespace testing;
 
@@ -94,7 +94,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update)
     db.post_update();
 }
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_empty_list)
+TEST_F(AndroidDisplayBuffer, performs_default_post_if_empty_list)
 {
     using namespace testing;
 
@@ -116,7 +116,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_empty_list)
     db.render_and_post_update(renderlist, render_fn);
 }
 
-TEST_F(AndroidDisplayBufferTest, test_post_update_list)
+TEST_F(AndroidDisplayBuffer, posts_overlay_list)
 {
     using namespace testing;
 
@@ -151,7 +151,7 @@ TEST_F(AndroidDisplayBufferTest, test_post_update_list)
     });
 }
 
-TEST_F(AndroidDisplayBufferTest, defaults_to_normal_orientation)
+TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)
 {
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
                           *gl_context);
@@ -159,7 +159,7 @@ TEST_F(AndroidDisplayBufferTest, defaults_to_normal_orientation)
     EXPECT_EQ(db.orientation(), mir_orientation_normal);
 }
 
-TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
+TEST_F(AndroidDisplayBuffer, orientation_is_passed_through)
 {
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
                           *gl_context);
@@ -176,7 +176,7 @@ TEST_F(AndroidDisplayBufferTest, orientation_is_passed_through)
     }
 }
 
-TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
+TEST_F(AndroidDisplayBuffer, rotation_transposes_dimensions)
 {
     using namespace testing;
 
@@ -208,7 +208,7 @@ TEST_F(AndroidDisplayBufferTest, rotation_transposes_dimensions)
     EXPECT_EQ(db.view_area().size, transposed);
 }
 
-TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
+TEST_F(AndroidDisplayBuffer, reports_correct_size)
 {
     using namespace testing;
 
@@ -221,7 +221,7 @@ TEST_F(AndroidDisplayBufferTest, test_db_forwards_size_along)
     EXPECT_EQ(view_area.top_left, origin_pt);
 }
 
-TEST_F(AndroidDisplayBufferTest, db_egl_context_from_shared)
+TEST_F(AndroidDisplayBuffer, creates_egl_context_from_shared_context)
 {
     using namespace testing;
 
@@ -244,7 +244,7 @@ TEST_F(AndroidDisplayBufferTest, db_egl_context_from_shared)
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
-TEST_F(AndroidDisplayBufferTest, egl_resource_creation_failure)
+TEST_F(AndroidDisplayBuffer, fails_on_egl_resource_creation)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
@@ -266,7 +266,7 @@ TEST_F(AndroidDisplayBufferTest, egl_resource_creation_failure)
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplayBufferTest, make_current)
+TEST_F(AndroidDisplayBuffer, can_make_current)
 {
     using namespace testing;
     EGLContext fake_ctxt = reinterpret_cast<EGLContext>(0x4422);
@@ -292,7 +292,7 @@ TEST_F(AndroidDisplayBufferTest, make_current)
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplayBufferTest, release_current)
+TEST_F(AndroidDisplayBuffer, release_current)
 {
     using namespace testing;
 
@@ -303,7 +303,7 @@ TEST_F(AndroidDisplayBufferTest, release_current)
     db.release_current();
 }
 
-TEST_F(AndroidDisplayBufferTest, display_power_mode_on_at_start)
+TEST_F(AndroidDisplayBuffer, sets_display_power_mode_to_on_at_start)
 {
     using namespace testing;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
@@ -311,7 +311,7 @@ TEST_F(AndroidDisplayBufferTest, display_power_mode_on_at_start)
     EXPECT_EQ(config.power_mode, mir_power_mode_on);
 }
 
-TEST_F(AndroidDisplayBufferTest, display_power_mode)
+TEST_F(AndroidDisplayBuffer, changes_display_power_mode)
 {
     using namespace testing;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
@@ -331,7 +331,7 @@ TEST_F(AndroidDisplayBufferTest, display_power_mode)
     db.configure(config); 
 }
 
-TEST_F(AndroidDisplayBufferTest, display_power_mode_disregards_double)
+TEST_F(AndroidDisplayBuffer, disregards_double_display_power_mode_request)
 {
     using namespace testing;
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
@@ -349,7 +349,7 @@ TEST_F(AndroidDisplayBufferTest, display_power_mode_disregards_double)
 }
 
 //configuration tests
-TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
+TEST_F(AndroidDisplayBuffer, display_orientation_supported)
 {
     using namespace testing;
 
@@ -367,7 +367,7 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_supported)
     EXPECT_EQ(config.orientation, mir_orientation_normal);
 }
 
-TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
+TEST_F(AndroidDisplayBuffer, display_orientation_not_supported)
 {
     using namespace testing;
     EXPECT_CALL(*mock_display_device, apply_orientation(mir_orientation_left))
@@ -384,7 +384,7 @@ TEST_F(AndroidDisplayBufferTest, display_orientation_not_supported)
     EXPECT_EQ(config.orientation, mir_orientation_left);
 }
 
-TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
+TEST_F(AndroidDisplayBuffer, incorrect_display_configure_throws)
 {
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     auto config = db.configuration();
@@ -395,7 +395,7 @@ TEST_F(AndroidDisplayBufferTest, incorrect_display_configure_throws)
     }, std::runtime_error); 
 }
 
-TEST_F(AndroidDisplayBufferTest, android_display_configuration_info)
+TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
 {
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     auto disp_conf = db.configuration();
