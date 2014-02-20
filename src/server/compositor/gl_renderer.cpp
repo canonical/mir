@@ -244,10 +244,12 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes),
-                          (GLbyte*)0+offsetof(VertexAttributes, position));
+                          static_cast<GLbyte*>(0) +
+                              offsetof(VertexAttributes, position));
     glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes),
-                          (GLbyte*)0+offsetof(VertexAttributes, texcoord));
+                          static_cast<GLbyte*>(0) +
+                              offsetof(VertexAttributes, texcoord));
 
     SurfaceID surf = &criteria; // temporary hack till we rearrange classes
     auto& tex = textures[surf];
