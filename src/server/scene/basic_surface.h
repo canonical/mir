@@ -19,20 +19,24 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
-#include "mir_toolkit/common.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/input/surface.h"
+
+#include "mutable_surface_state.h"
+#include "mir_toolkit/common.h"
 
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace mir
 {
 namespace compositor
 {
-class CompositingCriteria;
 struct BufferIPCPackage;
 class BufferStream;
 }
@@ -47,18 +51,24 @@ class Surface;
 }
 namespace scene
 {
-class SurfaceData;
 class SceneReport;
 
-class BasicSurface
+class BasicSurface :
+    public compositor::CompositingCriteria,
+    public input::Surface,
+    public MutableSurfaceState
 {
 public:
-    BasicSurface(std::shared_ptr<SurfaceData> const& surface_data,
+    BasicSurface(
+        std::string const& name,
+        geometry::Rectangle rect,
+        std::function<void()> change_cb,
+        bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<SceneReport> const& report);
 
-    virtual ~BasicSurface();
+    ~BasicSurface();
 
     virtual std::string const& name() const;
     virtual void move_to(geometry::Point const& top_left);
@@ -83,24 +93,43 @@ public:
 
     virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
-    virtual std::shared_ptr<compositor::CompositingCriteria> compositing_criteria();
-
     virtual std::shared_ptr<compositor::BufferStream> buffer_stream() const;
-
-    virtual std::shared_ptr<input::Surface> input_surface() const;
 
     /**
      * Resize the surface.
      * \returns true if the size changed, false if it was already that size.
      * \throws std::logic_error For impossible sizes like {0,0}.
      */
-    virtual bool resize(geometry::Size const& size);
+    bool resize(geometry::Size const& size) override;
+    geometry::Point position() const override;
+    bool contains(geometry::Point const& point) const override;
+    void frame_posted() override;
+    void apply_alpha(float alpha) override;
+    void apply_rotation(float degrees, glm::vec3 const&) override;
+    glm::mat4 const& transformation() const override;
+    bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
+    bool shaped() const  override;  // meaning the pixel format has alpha
 
 private:
     BasicSurface(BasicSurface const&) = delete;
     BasicSurface& operator=(BasicSurface const&) = delete;
 
-    std::shared_ptr<SurfaceData> surface_data;
+    // Members originally from SurfaceData
+    std::mutex mutable guard;
+    std::function<void()> notify_change;
+    std::string surface_name;
+    geometry::Rectangle surface_rect;
+    glm::mat4 rotation_matrix;
+    mutable glm::mat4 transformation_matrix;
+    mutable geometry::Size transformation_size;
+    mutable bool transformation_dirty;
+    float surface_alpha;
+    bool first_frame_posted;
+    bool hidden;
+    const bool nonrectangular;
+    std::vector<geometry::Rectangle> input_rectangles;
+    // End of members originally from SurfaceData
+
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SceneReport> const report;

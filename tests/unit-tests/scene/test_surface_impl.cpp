@@ -73,8 +73,6 @@ class StubSurfaceBuilder : public ms::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
-        stub_data(std::make_shared<ms::SurfaceData>( 
-            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false)),
         dummy_surface()
     {
     }
@@ -82,7 +80,10 @@ public:
     std::weak_ptr<ms::BasicSurface> create_surface(msh::SurfaceCreationParameters const& ) override
     {
         dummy_surface = std::make_shared<ms::BasicSurface>(
-            stub_data, 
+            std::string("stub"), 
+            geom::Rectangle{{},{}}, 
+            [](){},
+            false, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);

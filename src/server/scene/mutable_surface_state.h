@@ -31,8 +31,8 @@ namespace scene
 class MutableSurfaceState
 {
 public:
-    virtual void move_to(geometry::Point) = 0;
-    virtual void resize(geometry::Size const& size) = 0;
+    virtual void move_to(geometry::Point const&) = 0;
+    virtual bool resize(geometry::Size const& size) = 0;
     virtual void frame_posted() = 0;
     virtual void set_hidden(bool hidden) = 0;
     virtual void apply_alpha(float alpha) = 0;

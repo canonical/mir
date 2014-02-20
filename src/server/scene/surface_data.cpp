@@ -163,7 +163,7 @@ void ms::SurfaceData::move_to(geom::Point new_pt)
     notify_change();
 }
 
-void ms::SurfaceData::resize(geom::Size const& size)
+bool ms::SurfaceData::resize(geom::Size const& size)
 {
     {
         std::unique_lock<std::mutex> lock(guard);
@@ -171,6 +171,7 @@ void ms::SurfaceData::resize(geom::Size const& size)
         transformation_dirty = true;
     }
     notify_change();
+    return true;
 }
 
 bool ms::SurfaceData::contains(geom::Point const& point) const

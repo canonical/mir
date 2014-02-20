@@ -40,8 +40,10 @@ class StubSurfaceBuilder : public scene::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         dummy_surface(std::make_shared<scene::BasicSurface>(
-            std::make_shared<scene::SurfaceData>( 
-                std::string("stub"), geometry::Rectangle{{},{}}, [](){}, false),
+            std::string("stub"),
+            geometry::Rectangle{{},{}},
+            [](){},
+            false,
             std::make_shared<StubBufferStream>(),
             std::shared_ptr<input::InputChannel>(),
             mir::report::null_scene_report()))

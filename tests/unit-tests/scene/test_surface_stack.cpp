@@ -174,11 +174,32 @@ struct SurfaceStack : public ::testing::Test
         using namespace testing;
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
-        auto stub_data = std::make_shared<ms::SurfaceData>( 
-            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false);
-        stub_surface1 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
-        stub_surface2 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
-        stub_surface3 = std::make_shared<ms::BasicSurface>(stub_data, std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>(), report);
+        stub_surface1 = std::make_shared<ms::BasicSurface>(
+            std::string("stub"),
+            geom::Rectangle{{},{}},
+            [](){},
+            false,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            report);
+
+        stub_surface2 = std::make_shared<ms::BasicSurface>(
+            std::string("stub"),
+            geom::Rectangle{{},{}},
+            [](){},
+            false,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            report);
+
+        stub_surface3 = std::make_shared<ms::BasicSurface>(
+            std::string("stub"),
+            geom::Rectangle{{},{}},
+            [](){},
+            false,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            report);
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
             .WillByDefault(Return(stub_surface1));
@@ -237,13 +258,13 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     MockFilterForScene filter;
@@ -282,13 +303,13 @@ TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     MockFilterForScene filter;
@@ -329,13 +350,13 @@ TEST_F(SurfaceStack, stacking_order_reverse)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForScene filter;
@@ -369,13 +390,13 @@ TEST_F(SurfaceStack, stacking_order)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForScene filter;
@@ -423,13 +444,13 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForScene filter;
@@ -502,13 +523,13 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForScene filter;
@@ -549,13 +570,13 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
         report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForScene filter;
@@ -645,13 +666,13 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock()->compositing_criteria();
+    auto criteria1 = s1.lock();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock()->compositing_criteria();
+    auto criteria2 = s2.lock();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock()->compositing_criteria();
+    auto criteria3 = s3.lock();
     auto stream3 = s3.lock()->buffer_stream();
 
     MockFilterForScene filter;
