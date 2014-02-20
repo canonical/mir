@@ -17,6 +17,8 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 
 #include "default_display_configuration_policy.h"
 #include "nested/host_connection.h"
@@ -29,6 +31,8 @@
 #include "mir/abnormal_exit.h"
 
 #include <boost/throw_exception.hpp>
+
+#include <map>
 
 namespace mg = mir::graphics;
 using namespace mir::options;

@@ -25,6 +25,8 @@
 #include "null_input_configuration.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir/report/legacy_input_report.h"
 
 

@@ -55,7 +55,6 @@ extern char const* const log_opt_value;
 extern char const* const lttng_opt_value;
 
 extern char const* const platform_graphics_lib;
-}
 
 class ConfigurationOptions
 {
@@ -69,6 +68,7 @@ protected:
     ConfigurationOptions(ConfigurationOptions const&) = delete;
     ConfigurationOptions& operator=(ConfigurationOptions const&) = delete;
 };
+}
 }
 
 #endif /* MIR_OPTIONS_CONFIGURATION_H_ */
