@@ -202,46 +202,13 @@ protected:
 
     std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
     std::function<void(mg::Renderable const&)> empty_render_fn;
-    mtd::MockBuffer mock_buffer;
+    testing::NiceMock<mtd::MockBuffer> mock_buffer;
     mtd::MockSwappingGLContext mock_context;
     mtd::StubSwappingGLContext stub_context;
 };
 
 
-#if 0
-TEST_F(HwcDevice, hwc_displays)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(),_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
-        .Times(1);
-
-<<<<<<< TREE
-    mga::HwcDeviceWrapper device(mock_device);
-
-    hwc_display_contents_1_t contents;
-    device.prepare(contents);
-    device.set(contents);
-=======
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.render_gl(stub_context);
-    device.post(*mock_buffer);
->>>>>>> MERGE-SOURCE
-
-    /* primary phone display */
-    EXPECT_TRUE(mock_device->primary_prepare);
-    EXPECT_TRUE(mock_device->primary_set);
-    /* external monitor display not supported yet */
-    EXPECT_FALSE(mock_device->external_prepare);
-    EXPECT_FALSE(mock_device->external_set);
-    /* virtual monitor display not supported yet */
-    EXPECT_FALSE(mock_device->virtual_prepare);
-    EXPECT_FALSE(mock_device->virtual_set);
-}
-#endif
-
-TEST_F(HwcDevice, hwc_prepare)
+TEST_F(HwcDevice, hwc_default_prepare)
 {
     using namespace testing;
     std::list<hwc_layer_1_t*> expected_list
@@ -255,40 +222,6 @@ TEST_F(HwcDevice, hwc_prepare)
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
     device.render_gl(stub_context);
-}
-
-TEST_F(HwcDevice, hwc_default_set)
-{
-    using namespace testing;
-    int skip_release_fence = -1;
-    int fb_release_fence = 94;
-    int hwc_retire_fence = 74;
-    auto set_fences_fn = [&](hwc_display_contents_1_t& contents)
-    {
-        ASSERT_EQ(contents.numHwLayers, 2);
-        contents.hwLayers[1].releaseFenceFd = fb_release_fence;
-        contents.retireFenceFd = hwc_retire_fence;
-    };
-
-    std::list<hwc_layer_1_t*> expected_list
-    {
-        &set_skip_layer,
-        &set_target_layer
-    };
-
-    Sequence seq;
-    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
-        .InSequence(seq)
-        .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer, update_fence(skip_release_fence))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer, update_fence(fb_release_fence))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
-        .InSequence(seq);
-
-    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    device.post(mock_buffer);
 }
 
 TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
@@ -326,9 +259,11 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
         .InSequence(seq);
     EXPECT_CALL(mock_render_fn, called(Ref(*stub_renderable2)))
         .InSequence(seq);
+    EXPECT_CALL(mock_context, swap_buffers())
+        .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    device.render_gl_and_overlays(stub_context, updated_list, render_fn);
+    device.render_gl_and_overlays(mock_context, updated_list, render_fn);
 }
 
 TEST_F(HwcDevice, hwc_prepare_with_overlays_some_rejected)
@@ -364,9 +299,11 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_some_rejected)
         }));
     EXPECT_CALL(mock_render_fn, called(Ref(*stub_renderable2)))
         .InSequence(seq);
+    EXPECT_CALL(mock_context, swap_buffers())
+        .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    device.render_gl_and_overlays(stub_context, updated_list, render_fn);
+    device.render_gl_and_overlays(mock_context, updated_list, render_fn);
 }
 
 TEST_F(HwcDevice, hwc_prepare_with_overlays_all_accepted)
@@ -401,58 +338,78 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_all_accepted)
         }));
     EXPECT_CALL(mock_render_fn, called(_))
         .Times(0);
+    EXPECT_CALL(mock_context, swap_buffers())
+        .Times(0);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    device.render_gl_and_overlays(stub_context, updated_list, render_fn);
+    device.render_gl_and_overlays(mock_context, updated_list, render_fn);
 }
 
-#if 0
-
-TEST_F(HwcDevice, hwc_swapbuffers)
-{
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(1);
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1)
-        .WillOnce(Invoke(prepare_fn_all_gl));
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    device.gpu_render(dpy, surf);
-}
-
-TEST_F(HwcDevice, hwc_swapbuffers_skipped_if_not_needed)
-{
-    auto prepare_fn_all_overlay = [] (hwc_display_contents_1_t& list)
-    {
-        ASSERT_EQ(3, list.numHwLayers);
-        list.hwLayers[0].compositionType = HWC_OVERLAY;
-        list.hwLayers[1].compositionType = HWC_OVERLAY;
-        list.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
-    };
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1)
-        .WillOnce(Invoke(prepare_fn_all_overlay));
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(0);
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.gpu_render(dpy, surf);
-}
-
-TEST_F(HwcDevice, hwc_swapbuffers_failure)
+TEST_F(HwcDevice, hwc_prepare_resets_layers)
 {
     using namespace testing;
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
-        .Times(1)
-        .WillOnce(Return(EGL_FALSE));
+    std::list<hwc_layer_1_t*> expected_list1
+    {
+        &comp_layer,
+        &comp_layer,
+        &target_layer
+    };
 
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+    std::list<hwc_layer_1_t*> expected_list2
+    {
+        &skip_layer,
+        &target_layer
+    };
 
-    EXPECT_THROW({
-        device.gpu_render(dpy, surf);
-    }, std::runtime_error);
+    Sequence seq;
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list1)))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list2)))
+        .InSequence(seq);
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable2
+    });
+
+    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
+    device.render_gl(stub_context);
 }
-#endif 
+
+TEST_F(HwcDevice, hwc_default_set)
+{
+    using namespace testing;
+    int skip_release_fence = -1;
+    int fb_release_fence = 94;
+    int hwc_retire_fence = 74;
+    auto set_fences_fn = [&](hwc_display_contents_1_t& contents)
+    {
+        ASSERT_EQ(contents.numHwLayers, 2);
+        contents.hwLayers[1].releaseFenceFd = fb_release_fence;
+        contents.retireFenceFd = hwc_retire_fence;
+    };
+
+    std::list<hwc_layer_1_t*> expected_list
+    {
+        &set_skip_layer,
+        &set_target_layer
+    };
+
+    Sequence seq;
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
+        .InSequence(seq)
+        .WillOnce(Invoke(set_fences_fn));
+    EXPECT_CALL(*mock_native_buffer, update_fence(skip_release_fence))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_native_buffer, update_fence(fb_release_fence))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
+        .InSequence(seq);
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+    device.post(mock_buffer);
+}
 
 #if 0
 //to hwc device adaptor
@@ -470,35 +427,45 @@ TEST_F(HwcDevice, hwc_commit_failure)
         device.post(*mock_buffer);
     }, std::runtime_error);
 }
+
+TEST_F(HwcDevice, hwc_displays)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(),_,_))
+        .Times(1);
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
+        .Times(1);
+
+<<<<<<< TREE
+    mga::HwcDeviceWrapper device(mock_device);
+
+    hwc_display_contents_1_t contents;
+    device.prepare(contents);
+    device.set(contents);
+=======
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+    device.render_gl(stub_context);
+    device.post(*mock_buffer);
+>>>>>>> MERGE-SOURCE
+
+    /* primary phone display */
+    EXPECT_TRUE(mock_device->primary_prepare);
+    EXPECT_TRUE(mock_device->primary_set);
+    /* external monitor display not supported yet */
+    EXPECT_FALSE(mock_device->external_prepare);
+    EXPECT_FALSE(mock_device->external_set);
+    /* virtual monitor display not supported yet */
+    EXPECT_FALSE(mock_device->virtual_prepare);
+    EXPECT_FALSE(mock_device->virtual_set);
+}
 #endif
+
+
 
 
 
 /* tests with a FRAMEBUFFER_TARGET present
    NOT PORTEDDDDDDDDDDDDDDDDDDDd */
-#if 0
-TEST_F(HwcDevice, hwc_prepare_resets_layers)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(2);
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    std::list<std::shared_ptr<mg::Renderable>> renderlist
-    {
-        std::make_shared<mtd::MockRenderable>(),
-        std::make_shared<mtd::MockRenderable>()
-    };
-    device.render_gl_and_overlays(renderlist);
-    EXPECT_EQ(3, mock_device->display0_prepare_content.numHwLayers);
-
-    device.render_gl();
-    EXPECT_EQ(2, mock_device->display0_prepare_content.numHwLayers);
-}
-#endif
-
-
 
 #if 0
 TEST_F(HWCLayerListTest, fbtarget_list_update)
