@@ -21,8 +21,9 @@
 #include "src/platform/graphics/android/interpreter_cache.h"
 #include "src/platform/graphics/android/internal_client.h"
 #include "src/server/compositor/buffer_stream_factory.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/internal_client.h"
@@ -56,6 +57,7 @@ namespace msh=mir::shell;
 namespace mf=mir::frontend;
 namespace mi=mir::input;
 namespace mtd=mir::test::doubles;
+namespace mr = mir::report;
 namespace mo=mir::options;
 
 namespace
@@ -93,7 +95,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
-    auto scene_report = std::make_shared<ms::NullSceneReport>();
+    auto scene_report = mr::null_scene_report();
     auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, scene_report);
     auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar, scene_report);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
@@ -103,7 +105,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto mir_surface = as_internal_surface(surface);
 
     auto options = std::shared_ptr<mo::ProgramOption>();
-    auto report = std::shared_ptr<mg::NullDisplayReport>();
+    auto report = mr::null_display_report();
     auto internal_client = std::make_shared<mga::InternalClient>();
 
     int major, minor, n;

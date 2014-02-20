@@ -35,9 +35,8 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
-    std::function<void()> const& force_threads_to_unblock,
     std::shared_ptr<ConnectorReport> const& report)
-:   BasicConnector(session_creator, threads, force_threads_to_unblock, report),
+:   BasicConnector(session_creator, threads, report),
     socket_file(socket_file),
     acceptor(io_service, socket_file)
 {
@@ -83,12 +82,10 @@ void mf::PublishedSocketConnector::on_new_connection(
 mf::BasicConnector::BasicConnector(
     std::shared_ptr<SessionCreator> const& session_creator,
     int threads,
-    std::function<void()> const& force_threads_to_unblock,
     std::shared_ptr<ConnectorReport> const& report)
 :   work(io_service),
     report(report),
     io_service_threads(threads),
-    force_threads_to_unblock(force_threads_to_unblock),
     session_creator{session_creator}
 {
 }
@@ -122,12 +119,6 @@ void mf::BasicConnector::stop()
 {
     /* Stop processing new requests */
     io_service.stop();
-
-    /*
-     * Ensure that any pending requests will complete (i.e., that they
-     * will not block indefinitely waiting for a resource from the server)
-     */
-    force_threads_to_unblock();
 
     report->stopping_threads(io_service_threads.size());
 
@@ -181,34 +172,3 @@ mf::BasicConnector::~BasicConnector() noexcept
     stop();
 }
 
-void mf::NullConnectorReport::thread_start()
-{
-}
-
-void mf::NullConnectorReport::thread_end()
-{
-}
-
-void mf::NullConnectorReport::starting_threads(int /*count*/)
-{
-}
-
-void mf::NullConnectorReport::stopping_threads(int /*count*/)
-{
-}
-
-void mf::NullConnectorReport::creating_session_for(int /*socket_handle*/)
-{
-}
-
-void mf::NullConnectorReport::creating_socket_pair(int /*server_handle*/, int /*client_handle*/)
-{
-}
-
-void mf::NullConnectorReport::listening_on(std::string const& /*endpoint*/)
-{
-}
-
-void mf::NullConnectorReport::error(std::exception const& /*error*/)
-{
-}

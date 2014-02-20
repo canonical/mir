@@ -82,9 +82,7 @@ mf::SessionMediator::SessionMediator(
 
 mf::SessionMediator::~SessionMediator() noexcept
 {
-    std::unique_lock<std::mutex> lock(session_mutex);
-    auto session = weak_session.lock();
-    if (session)
+    if (auto session = weak_session.lock())
     {
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
         shell->close_session(session);

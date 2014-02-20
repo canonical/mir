@@ -35,4 +35,4 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   )
 endif()
 
-install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/android)

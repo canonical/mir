@@ -24,11 +24,11 @@
 #include <gmock/gmock.h>
 #include <math.h>
 
-#include <mir/logging/logger.h>
-#include <mir/logging/input_report.h>
-#include <mir_test/fake_event_hub.h>
+#include "mir/logging/logger.h"
+#include "mir/report/legacy_input_report.h"
+#include "mir_test/fake_event_hub.h"
 
-namespace ml  = mir::logging;
+namespace ml   = mir::logging;
 
 using std::string;
 using mir::input::android::FakeEventHub;
@@ -568,7 +568,7 @@ protected:
     sp<InstrumentedInputReader> mReader;
 
     virtual void SetUp() {
-        mir::logging::legacy_input_report::initialize(std::make_shared<TestLogger>());
+        mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
         mFakeEventHub = new FakeEventHub();
         mFakePolicy = new FakeInputReaderPolicy();
         mFakeListener = new FakeInputListener();
@@ -797,7 +797,7 @@ protected:
     InputDevice* mDevice;
 
     virtual void SetUp() {
-        mir::logging::legacy_input_report::initialize(std::make_shared<TestLogger>());
+        mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
         mFakeEventHub = new FakeEventHub();
         mFakePolicy = new FakeInputReaderPolicy();
         mFakeListener = new FakeInputListener();
@@ -987,7 +987,7 @@ protected:
     InputDevice* mDevice;
 
     virtual void SetUp() {
-        mir::logging::legacy_input_report::initialize(std::make_shared<TestLogger>());
+        mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
         mFakeEventHub = new FakeEventHub();
         mFakePolicy = new FakeInputReaderPolicy();
         mFakeListener = new FakeInputListener();

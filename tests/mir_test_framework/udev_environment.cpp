@@ -66,8 +66,6 @@ std::string mtf::UdevEnvironment::add_device(char const* subsystem,
     if (syspath == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create mock udev device"));
 
-    umockdev_testbed_uevent(testbed, syspath, "add");
-
     std::string retval(syspath);
     g_free(syspath);
     return retval;

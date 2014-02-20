@@ -50,21 +50,6 @@ protected:
     ConnectorReport& operator=(const ConnectorReport&) = delete;
 };
 
-class NullConnectorReport : public ConnectorReport
-{
-public:
-    void thread_start() override;
-    void thread_end() override;
-    void starting_threads(int count) override;
-    void stopping_threads(int count) override;
-
-    void creating_session_for(int socket_handle) override;
-    void creating_socket_pair(int server_handle, int client_handle) override;
-
-    void listening_on(std::string const& endpoint) override;
-
-    void error(std::exception const& error) override;
-};
 }
 }
 
