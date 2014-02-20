@@ -413,6 +413,9 @@ TEST_F(HwcDevice, hwc_default_set)
 TEST_F(HwcDevice, can_set_with_overlays)
 {
     using namespace testing;
+    int acquire_fence1 = 85;
+    int acquire_fence2 = 83;
+    int acquire_fence3 = 82;
     int release_fence1 = 381;
     int release_fence2 = 382;
     int release_fence3 = 383;
@@ -426,12 +429,6 @@ TEST_F(HwcDevice, can_set_with_overlays)
     native_handle_3->anwb()->width = buffer_size.width.as_int();
     native_handle_3->anwb()->height = buffer_size.height.as_int();
 
-    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
-        .Times(1);
-    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
-        .Times(1);
-    EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
-        .Times(1);
     EXPECT_CALL(mock_buffer, native_buffer_handle())
         .WillOnce(Return(native_handle_1))
         .WillOnce(Return(native_handle_2))
@@ -453,7 +450,7 @@ TEST_F(HwcDevice, can_set_with_overlays)
     });
 
     hwc_layer_1_t comp_layer1, comp_layer2;
-    comp_layer1.compositionType = HWC_FRAMEBUFFER;
+    comp_layer1.compositionType = HWC_OVERLAY;
     comp_layer1.hints = 0;
     comp_layer1.flags = 0;
     comp_layer1.handle = native_handle_1->handle();
@@ -462,10 +459,10 @@ TEST_F(HwcDevice, can_set_with_overlays)
     comp_layer1.sourceCrop = set_region;
     comp_layer1.displayFrame = screen_pos;
     comp_layer1.visibleRegionScreen = {1, &set_region};
-    comp_layer1.acquireFenceFd = -1;
+    comp_layer1.acquireFenceFd = acquire_fence1;
     comp_layer1.releaseFenceFd = -1;
 
-    comp_layer2.compositionType = HWC_FRAMEBUFFER;
+    comp_layer2.compositionType = HWC_OVERLAY;
     comp_layer2.hints = 0;
     comp_layer2.flags = 0;
     comp_layer2.handle = native_handle_2->handle();
@@ -474,9 +471,10 @@ TEST_F(HwcDevice, can_set_with_overlays)
     comp_layer2.sourceCrop = set_region;
     comp_layer2.displayFrame = screen_pos;
     comp_layer2.visibleRegionScreen = {1, &set_region};
-    comp_layer2.acquireFenceFd = -1;
+    comp_layer2.acquireFenceFd = acquire_fence2;
     comp_layer2.releaseFenceFd = -1;
 
+    set_target_layer.acquireFenceFd = acquire_fence3;
     set_target_layer.handle = native_handle_3->handle();
 
     std::list<hwc_layer_1_t*> expected_list
@@ -488,9 +486,40 @@ TEST_F(HwcDevice, can_set_with_overlays)
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
+    //all accepted
+    Sequence seq; 
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_EQ(contents.numHwLayers, 3);
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_OVERLAY;
+            contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+
+    //set fences
+    EXPECT_CALL(*native_handle_1, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence1));
+    EXPECT_CALL(*native_handle_2, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence2));
+    EXPECT_CALL(*native_handle_3, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence3));
+
+    //set
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
-        .Times(1)
+        .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
+    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
+        .InSequence(seq);
+    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
+        .InSequence(seq);
+    EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
+        .InSequence(seq);
+
     device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
 }
