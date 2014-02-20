@@ -5,8 +5,8 @@ include_directories(
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
+add_subdirectory(report/)
 add_subdirectory(logging/)
-add_subdirectory(lttng/)
 add_subdirectory(scene/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
@@ -54,6 +54,8 @@ list(APPEND MIRSERVER_ARCHIVES
   mirscene
   mirtime
   mirlttng
+  mirreport
+  mirlogger
   mirnestedgraphics
   miroffscreengraphics
 )

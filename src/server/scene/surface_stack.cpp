@@ -110,7 +110,7 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceC
 
     input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.input_mode);
 
-    report->surface_added(surface.get());
+    report->surface_added(surface.get(), surface.get()->name());
     emit_change_notification();
 
     return surface;
@@ -141,7 +141,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surfac
     if (found_surface)
         input_registrar->input_channel_closed(keep_alive->input_channel());
 
-    report->surface_removed(keep_alive.get());
+    report->surface_removed(keep_alive.get(), keep_alive.get()->name());
 
     emit_change_notification();
     // TODO: error logging when surface not found

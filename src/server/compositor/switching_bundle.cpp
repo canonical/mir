@@ -90,6 +90,11 @@ mc::SwitchingBundle::SwitchingBundle(
     }
 }
 
+mc::SwitchingBundle::~SwitchingBundle() noexcept
+{
+    force_requests_to_complete();
+}
+
 int mc::SwitchingBundle::nfree() const
 {
     return nbuffers - ncompositors - nready - nclients;
@@ -410,9 +415,12 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
-    drop_frames(nready);
-    force_drop = nbuffers + 1;
-    if (client_acquire_todo) complete_client_acquire(std::move(lock));
+    if (client_acquire_todo)
+    {
+        drop_frames(nready);
+        force_drop = nbuffers + 1;
+        complete_client_acquire(std::move(lock));
+    }
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)

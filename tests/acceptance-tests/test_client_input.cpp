@@ -64,11 +64,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-namespace
-{
 typedef std::map<std::string, geom::Rectangle> GeometryMap;
 typedef std::map<std::string, ms::DepthId> DepthMap;
 

@@ -46,7 +46,7 @@ ms::BasicSurface::BasicSurface(
     server_input_channel(input_channel),
     report(report)
 {
-    report->surface_created(this);
+    report->surface_created(this, surface_data->name());
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -56,7 +56,7 @@ void ms::BasicSurface::force_requests_to_complete()
 
 ms::BasicSurface::~BasicSurface()
 {
-    report->surface_deleted(this);
+    report->surface_deleted(this, surface_data->name());
 }
 
 std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const

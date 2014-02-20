@@ -27,7 +27,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/compositor/renderer.h"
-#include "mir/scene/scene_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -59,6 +59,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -190,7 +191,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
 
-    std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
+    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
 }

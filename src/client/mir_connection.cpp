@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir/logging/logger.h"
-
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "client_platform.h"
@@ -27,6 +25,8 @@
 #include "display_configuration.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
+
+#include "mir/logging/logger.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -458,6 +458,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
             display_request->set_output_id(output.output_id);
             display_request->set_used(output.used);
             display_request->set_current_mode(output.current_mode);
+            display_request->set_current_format(output.current_format);
             display_request->set_position_x(output.position_x);
             display_request->set_position_y(output.position_y);
             display_request->set_power_mode(output.power_mode);
