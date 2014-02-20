@@ -94,7 +94,7 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    auto wrapper = std::make_shared<mga::RealHWCWrapper>(hwc_native_device); 
+    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device); 
     return std::make_shared<mga::HwcDevice>(hwc_native_device, wrapper, syncer, file_ops);
 }
 

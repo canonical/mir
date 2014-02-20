@@ -16,71 +16,104 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/platform/graphics/android/real_hwc_wrapper.h"
+#include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-class HwcWrapper : public ::testing::Test
+namespace mga=mir::graphics::android;
+namespace mtd=mir::test::doubles;
+
+struct HwcWrapper : public ::testing::Test
 {
-protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
+        virtual_display = nullptr;
+        external_display = nullptr;
+        primary_display = nullptr;
+
     }
+
+    int display_saving_fn(
+        struct hwc_composer_device_1*, size_t sz, hwc_display_contents_1_t** displays)
+    {
+        switch (sz)
+        {
+            case 3:
+                virtual_display = displays[2];
+            case 2:
+                external_display = displays[1];
+            case 1:
+                primary_display = displays[0];
+            default:
+                break;
+        }
+        return 0;
+    }
+
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
+    hwc_display_contents_1_t list;
+
+    hwc_display_contents_1_t* virtual_display, *external_display, *primary_display;
 };
 
-TEST_F(HwcWrapper, uses_commit_and_throws_if_failure)
+TEST_F(HwcWrapper, submits_correct_prepare_paramters)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1)
+        .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
+
+    mga::RealHwcWrapper wrapper(mock_device);
+    wrapper.prepare(list);
+
+    EXPECT_EQ(&list, primary_display);
+    EXPECT_EQ(nullptr, virtual_display);
+    EXPECT_EQ(nullptr, external_display);
+}
+
+TEST_F(HwcWrapper, throws_on_prepare_failure)
 {
     using namespace testing;
 
-    mga::HwcWrapper device(mock_device, mock_vsync, mock_file_ops);
+    mga::RealHwcWrapper wrapper(mock_device);
+
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), _, _))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        wrapper.prepare(list);
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, submits_correct_set_paramters)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1)
+        .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
+
+    mga::RealHwcWrapper wrapper(mock_device);
+    wrapper.set(list);
+
+    EXPECT_EQ(&list, primary_display);
+    EXPECT_EQ(nullptr, virtual_display);
+    EXPECT_EQ(nullptr, external_display);
+}
+
+TEST_F(HwcWrapper, throws_on_set_failure)
+{
+    using namespace testing;
+
+    mga::RealHwcWrapper wrapper(mock_device);
 
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), _, _))
         .Times(1)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        device.post(*mock_buffer);
+        wrapper.set(list);
     }, std::runtime_error);
 }
-
-
-/* tests with a FRAMEBUFFER_TARGET present
-   NOT PORTEDDDDDDDDDDDDDDDDDDDd */
-#if 0
-//to hwc device adaptor
-TEST_F(HwcWrapper, hwc_displays)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(),_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
-        .Times(1);
-
-<<<<<<< TREE
-    mga::HwcWrapperWrapper device(mock_device);
-
-    hwc_display_contents_1_t contents;
-    device.prepare(contents);
-    device.set(contents);
-=======
-    mga::HwcWrapper device(mock_device, mock_vsync, mock_file_ops);
-    device.render_gl(stub_context);
-    device.post(*mock_buffer);
->>>>>>> MERGE-SOURCE
-
-    /* primary phone display */
-    EXPECT_TRUE(mock_device->primary_prepare);
-    EXPECT_TRUE(mock_device->primary_set);
-    /* external monitor display not supported yet */
-    EXPECT_FALSE(mock_device->external_prepare);
-    EXPECT_FALSE(mock_device->external_set);
-    /* virtual monitor display not supported yet */
-    EXPECT_FALSE(mock_device->virtual_prepare);
-    EXPECT_FALSE(mock_device->virtual_set);
-}
-#endif
-
-
-
-
