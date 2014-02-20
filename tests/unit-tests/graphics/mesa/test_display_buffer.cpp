@@ -17,7 +17,7 @@
  */
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/display_buffer.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/null_platform.h"
@@ -38,6 +38,7 @@ using namespace mir::test;
 using namespace mir::test::doubles;
 using namespace mir::mir_test_framework;
 using namespace mir::graphics;
+using mir::report::null_display_report;
 
 class MesaDisplayBufferTest : public Test
 {
@@ -82,7 +83,7 @@ public:
     shared_ptr<graphics::mesa::Platform> create_platform()
     {
         return make_shared<graphics::mesa::Platform>(
-                      make_shared<graphics::NullDisplayReport>(),
+                      null_display_report(),
                       make_shared<NullVirtualTerminal>());
     }
 
@@ -103,7 +104,7 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -119,7 +120,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -135,7 +136,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -151,7 +152,7 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -174,7 +175,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -195,7 +196,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -216,7 +217,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -237,7 +238,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -256,7 +257,7 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {mock_kms_output},
         nullptr,
         area,
@@ -285,7 +286,7 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {mock_kms_output},
         nullptr,
         area,

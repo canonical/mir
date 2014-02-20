@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/logging/display_report.h"
+#include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir_test_doubles/mock_egl.h"
 
@@ -25,6 +25,7 @@
 #include <string>
 
 namespace ml  = mir::logging;
+namespace mrl = mir::report::logging;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -122,6 +123,6 @@ TEST_F(DisplayReport, eglconfig)
             component));
     }
 
-    ml::DisplayReport report(logger);
+    mrl::DisplayReport report(logger);
     report.report_egl_configuration(disp, config);
 }

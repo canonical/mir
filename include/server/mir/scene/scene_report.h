@@ -26,16 +26,15 @@ namespace mir
 {
 namespace scene
 {
-class BasicSurface;
-
 class SceneReport
 {
 public:
-    virtual void surface_created(BasicSurface* const surface) = 0;
-    virtual void surface_added(BasicSurface* const surface) = 0;
+    typedef void* BasicSurfaceId;
+    virtual void surface_created(BasicSurfaceId id, std::string const& name) = 0;
+    virtual void surface_added(BasicSurfaceId id, std::string const& name) = 0;
 
-    virtual void surface_removed(BasicSurface* const surface) = 0;
-    virtual void surface_deleted(BasicSurface* const surface) = 0;
+    virtual void surface_removed(BasicSurfaceId id, std::string const& name) = 0;
+    virtual void surface_deleted(BasicSurfaceId id, std::string const& name) = 0;
 
 protected:
     SceneReport() = default;
@@ -44,17 +43,7 @@ protected:
     SceneReport& operator=(SceneReport const&) = delete;
 };
 
-class NullSceneReport : public SceneReport
-{
-public:
-    virtual void surface_created(BasicSurface* const /*surface*/) override;
-    virtual void surface_added(BasicSurface* const /*surface*/) override;
-
-    virtual void surface_removed(BasicSurface* const /*surface*/) override;
-    virtual void surface_deleted(BasicSurface* const /*surface*/) override;
-};
 }
 }
-
 
 #endif /* MIR_SCENE_SCENE_REPORT_H_ */

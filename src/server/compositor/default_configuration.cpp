@@ -17,12 +17,14 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/frontend/screencast.h"
+
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "gl_renderer_factory.h"
 #include "compositing_screencast.h"
+
+#include "mir/frontend/screencast.h"
 
 #include <boost/throw_exception.hpp>
 
