@@ -16,8 +16,6 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir/logging/logger.h"
-
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "client_platform.h"
@@ -27,6 +25,8 @@
 #include "display_configuration.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
+
+#include "mir/logging/logger.h"
 
 #include <algorithm>
 #include <cstddef>
