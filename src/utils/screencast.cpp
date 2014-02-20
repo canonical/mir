@@ -258,7 +258,7 @@ try
         switch (arg)
         {
         case 'n':
-            number_of_captures = atoi(optarg);
+            number_of_captures = std::stoi(std::string(optarg)); 
             break;
         case 'm':
             socket_file = optarg;
@@ -316,9 +316,14 @@ try
 
     return EXIT_SUCCESS;
 }
+catch(std::invalid_argument const& e)
+{
+    std::cerr << "Invalid Argument" << std::endl;
+    print_usage();
+    return EXIT_FAILURE;
+}
 catch(std::exception const& e)
 {
     std::cerr << e.what() << std::endl;
-
     return EXIT_FAILURE;
 }
