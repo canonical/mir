@@ -21,7 +21,6 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/surface_stack_model.h"
-#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -108,7 +107,6 @@ public:
 
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
-    std::shared_ptr<ms::SurfaceData> const stub_data;
     std::shared_ptr<ms::BasicSurface> dummy_surface;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };

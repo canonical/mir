@@ -16,7 +16,6 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_stack.h"
 #include "src/server/scene/basic_surface_factory.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"

@@ -17,7 +17,6 @@
  */
 
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/surface_data.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/input_channel.h"
@@ -178,7 +177,6 @@ struct SurfaceCreation : public ::testing::Test
             .WillByDefault(InvokeArgument<1>(&stub_buffer));
     }
 
-    std::shared_ptr<ms::SurfaceData> stub_data;
     std::string surface_name;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream;
     MirPixelFormat pf;

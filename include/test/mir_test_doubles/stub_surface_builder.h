@@ -22,7 +22,6 @@
 
 #include "src/server/scene/surface_builder.h"
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/surface_data.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 

@@ -20,7 +20,6 @@
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
-#include "surface_data.h"
 #include "basic_surface.h"
 
 namespace geom=mir::geometry;

@@ -19,7 +19,6 @@
  */
 
 #include "basic_surface.h"
-#include "surface_data.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
