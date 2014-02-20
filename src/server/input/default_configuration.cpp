@@ -34,7 +34,7 @@ namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-using namespace mir::configuration_options;
+using namespace mir::options;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {

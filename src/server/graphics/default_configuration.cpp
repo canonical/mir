@@ -31,7 +31,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
-using namespace mir::configuration_options;
+using namespace mir::options;
 
 namespace
 {

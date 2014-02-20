@@ -46,7 +46,7 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
-using namespace mir::configuration_options;
+using namespace mir::options;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
     DefaultServerConfiguration(std::make_shared<DefaultConfigurationOptions>(argc, argv))

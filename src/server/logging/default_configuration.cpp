@@ -24,7 +24,7 @@
 
 namespace ml = mir::logging;
 
-using namespace mir::configuration_options;
+using namespace mir::options;
 
 auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>

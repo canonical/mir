@@ -58,7 +58,7 @@ namespace geom = mir::geometry;
 namespace mt = mir::tools;
 namespace me = mir::examples;
 
-using namespace mir::configuration_options;
+using namespace mir::options;
 
 
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.

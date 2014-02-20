@@ -19,7 +19,7 @@
 #ifndef MIR_DEFAULT_CONFIGURATION_OPTIONS_H_
 #define MIR_DEFAULT_CONFIGURATION_OPTIONS_H_
 
-#include "mir/configuration_options.h"
+#include "mir/options/configuration.h"
 
 
 namespace mir

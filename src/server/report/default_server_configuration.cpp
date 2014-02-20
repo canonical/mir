@@ -17,7 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/configuration_options.h"
+#include "mir/options/configuration.h"
 
 #include "lttng_report_factory.h"
 #include "logging_report_factory.h"
@@ -31,7 +31,7 @@ namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 
-using namespace mir::configuration_options;
+using namespace mir::options;
 
 std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::report_factory(char const* report_opt)
 {
