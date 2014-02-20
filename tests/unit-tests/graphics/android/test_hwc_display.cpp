@@ -402,15 +402,15 @@ TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
 
     ASSERT_EQ(1u, disp_conf.modes.size());
     auto& disp_mode = disp_conf.modes[0];
-    EXPECT_EQ(disp_mode.size, display_size);
+    EXPECT_EQ(display_size, disp_mode.size);
 
-    EXPECT_EQ(disp_conf.id, mg::DisplayConfigurationOutputId{1});
-    EXPECT_EQ(disp_conf.card_id, mg::DisplayConfigurationCardId{0});
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
     EXPECT_TRUE(disp_conf.connected);
     EXPECT_TRUE(disp_conf.used);
     auto origin = geom::Point{0,0};
-    EXPECT_EQ(disp_conf.top_left, origin);
-    EXPECT_EQ(disp_conf.current_mode_index, 0);
+    EXPECT_EQ(origin, disp_conf.top_left);
+    EXPECT_EQ(0, disp_conf.current_mode_index);
 
     //TODO fill refresh rate accordingly
     //TODO fill physical_size_mm fields accordingly;
