@@ -26,6 +26,7 @@
 #include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
+#include <sstream>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
@@ -45,9 +46,11 @@ void mga::HwcDevice::prepare(hwc_display_contents_1_t& display_list)
     //note, although we only have a primary display right now,
     //      set the external and virtual displays to null as some drivers check for that
     hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
-    if (hwc_device->prepare(hwc_device.get(), 1, displays))
+    if (auto rc = hwc_device->prepare(hwc_device.get(), 1, displays))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+        std::stringstream ss;
+        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
@@ -95,6 +98,8 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     if ((rc != 0) || (!display_list))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+        std::stringstream ss;
+        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
