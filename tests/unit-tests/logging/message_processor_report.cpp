@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/message_processor_report.h"
+#include "src/server/report/logging/message_processor_report.h"
 #include "mir/logging/logger.h"
 
 #include "mir_test/fake_shared.h"
@@ -48,7 +48,7 @@ struct MessageProcessorReport : public Test
     MockLogger logger;
     MockClock clock;
 
-    mir::logging::MessageProcessorReport report;
+    mir::report::logging::MessageProcessorReport report;
 
     MessageProcessorReport() :
         report(mir::test::fake_shared(logger), mir::test::fake_shared(clock))

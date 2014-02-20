@@ -36,5 +36,5 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa")
   )
 endif()
 
-install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/mesa)
 

@@ -20,6 +20,7 @@
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
@@ -44,6 +45,7 @@ namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -55,7 +57,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           graphics_platform{std::make_shared<mtd::NullPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
-          report{std::make_shared<mf::NullSessionMediatorReport>()},
+          report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{__LINE__, shell, graphics_platform, display_changer,
                    surface_pixel_formats, report,

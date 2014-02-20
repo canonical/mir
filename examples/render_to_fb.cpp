@@ -27,7 +27,6 @@
 #include <iostream>
 
 namespace mg=mir::graphics;
-namespace ml=mir::logging;
 namespace mo=mir::options;
 
 namespace
