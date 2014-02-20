@@ -109,7 +109,6 @@ protected:
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mock_native_buffer));
 
-
         empty_region = {0,0,0,0};
         set_region = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
         screen_pos = {
@@ -411,6 +410,94 @@ TEST_F(HwcDevice, hwc_default_set)
     device.post(mock_buffer);
 }
 
+TEST_F(HwcDevice, can_set_with_overlays)
+{
+    using namespace testing;
+    int release_fence1 = 381;
+    int release_fence2 = 382;
+    int release_fence3 = 383;
+    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    native_handle_1->anwb()->width = buffer_size.width.as_int();
+    native_handle_1->anwb()->height = buffer_size.height.as_int();
+    native_handle_2->anwb()->width = buffer_size.width.as_int();
+    native_handle_2->anwb()->height = buffer_size.height.as_int();
+    native_handle_3->anwb()->width = buffer_size.width.as_int();
+    native_handle_3->anwb()->height = buffer_size.height.as_int();
+
+    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
+        .Times(1);
+    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
+        .Times(1);
+    EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
+        .Times(1);
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .WillOnce(Return(native_handle_1))
+        .WillOnce(Return(native_handle_2))
+        .WillRepeatedly(Return(native_handle_3));
+
+    auto set_fences_fn = [&](hwc_display_contents_1_t& contents)
+    {
+        ASSERT_EQ(contents.numHwLayers, 3);
+        contents.hwLayers[0].releaseFenceFd = release_fence1;
+        contents.hwLayers[1].releaseFenceFd = release_fence2;
+        contents.hwLayers[2].releaseFenceFd = release_fence3;
+        contents.retireFenceFd = -1;
+    };
+
+    /* set non-default renderlist */
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable1
+    });
+
+    hwc_layer_1_t comp_layer1, comp_layer2;
+    comp_layer1.compositionType = HWC_FRAMEBUFFER;
+    comp_layer1.hints = 0;
+    comp_layer1.flags = 0;
+    comp_layer1.handle = native_handle_1->handle();
+    comp_layer1.transform = 0;
+    comp_layer1.blending = HWC_BLENDING_NONE;
+    comp_layer1.sourceCrop = set_region;
+    comp_layer1.displayFrame = screen_pos;
+    comp_layer1.visibleRegionScreen = {1, &set_region};
+    comp_layer1.acquireFenceFd = -1;
+    comp_layer1.releaseFenceFd = -1;
+
+    comp_layer2.compositionType = HWC_FRAMEBUFFER;
+    comp_layer2.hints = 0;
+    comp_layer2.flags = 0;
+    comp_layer2.handle = native_handle_2->handle();
+    comp_layer2.transform = 0;
+    comp_layer2.blending = HWC_BLENDING_NONE;
+    comp_layer2.sourceCrop = set_region;
+    comp_layer2.displayFrame = screen_pos;
+    comp_layer2.visibleRegionScreen = {1, &set_region};
+    comp_layer2.acquireFenceFd = -1;
+    comp_layer2.releaseFenceFd = -1;
+
+    set_target_layer.handle = native_handle_3->handle();
+
+    std::list<hwc_layer_1_t*> expected_list
+    {
+        &comp_layer1,
+        &comp_layer2,
+        &set_target_layer
+    };
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
+        .Times(1)
+        .WillOnce(Invoke(set_fences_fn));
+    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
+    device.post(mock_buffer);
+}
+
+
+/* tests with a FRAMEBUFFER_TARGET present
+   NOT PORTEDDDDDDDDDDDDDDDDDDDd */
 #if 0
 //to hwc device adaptor
 TEST_F(HwcDevice, hwc_commit_failure)
@@ -463,85 +550,3 @@ TEST_F(HwcDevice, hwc_displays)
 
 
 
-
-/* tests with a FRAMEBUFFER_TARGET present
-   NOT PORTEDDDDDDDDDDDDDDDDDDDd */
-
-#if 0
-TEST_F(HWCLayerListTest, fbtarget_list_update)
-{
-    using namespace testing;
-    mga::FBTargetLayerList layerlist;
-
-    /* set non-default renderlist */
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        stub_renderable1,
-        stub_renderable1
-    });
-
-    layerlist.prepare_composition_layers(empty_prepare_fn, updated_list, empty_render_fn);
-    auto list = layerlist.native_list().lock();
-    ASSERT_EQ(3, list->numHwLayers);
-    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[0]));
-    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[1]));
-    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[2]));
-
-    /* update FB target */
-    layerlist.set_fb_target(mock_buffer);
-
-    list = layerlist.native_list().lock();
-    target_layer.handle = native_handle_1.handle();
-    ASSERT_EQ(3, list->numHwLayers);
-    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[0]));
-    EXPECT_THAT(comp_layer, MatchesLayer(list->hwLayers[1]));
-    EXPECT_THAT(set_target_layer, MatchesLayer(list->hwLayers[2]));
-
-    /* reset default */
-    EXPECT_TRUE(layerlist.prepare_default_layers(empty_prepare_fn));
-
-    list = layerlist.native_list().lock();
-    target_layer.handle = nullptr;
-    ASSERT_EQ(2, list->numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
-    EXPECT_THAT(target_layer, MatchesLayer(list->hwLayers[1]));
-}
-
-TEST_F(HWCLayerListTest, fence_updates)
-{
-    int release_fence1 = 381;
-    int release_fence2 = 382;
-    int release_fence3 = 383;
-    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
-        .Times(1);
-    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
-        .Times(1);
-    EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
-        .Times(1);
-
-    EXPECT_CALL(mock_buffer, native_buffer_handle())
-        .WillOnce(Return(native_handle_1))
-        .WillOnce(Return(native_handle_2))
-        .WillRepeatedly(Return(native_handle_3));
-
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
-        stub_renderable1,
-        stub_renderable2
-    });
-
-    mga::FBTargetLayerList layerlist;
-    layerlist.prepare_composition_layers(empty_prepare_fn, updated_list, empty_render_fn);
-    layerlist.set_fb_target(mock_buffer);
-
-    auto list = layerlist.native_list().lock();
-    ASSERT_EQ(3, list->numHwLayers);
-    list->hwLayers[0].releaseFenceFd = release_fence1;
-    list->hwLayers[1].releaseFenceFd = release_fence2;
-    list->hwLayers[2].releaseFenceFd = release_fence3;
-
-    layerlist.update_fences();
-}
-
-#endif
