@@ -100,7 +100,6 @@ protected:
         mock_native_buffer->anwb()->width = buffer_size.width.as_int();
         mock_native_buffer->anwb()->height =  buffer_size.height.as_int();
 
-        mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_file_ops = std::make_shared<MockFileOps>();
 
@@ -177,7 +176,6 @@ protected:
 
     std::shared_ptr<MockFileOps> mock_file_ops;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
-    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
 
@@ -523,59 +521,3 @@ TEST_F(HwcDevice, can_set_with_overlays)
     device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
 }
-
-
-/* tests with a FRAMEBUFFER_TARGET present
-   NOT PORTEDDDDDDDDDDDDDDDDDDDd */
-#if 0
-//to hwc device adaptor
-TEST_F(HwcDevice, hwc_commit_failure)
-{
-    using namespace testing;
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), _, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_THROW({
-        device.post(*mock_buffer);
-    }, std::runtime_error);
-}
-
-TEST_F(HwcDevice, hwc_displays)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(),_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
-        .Times(1);
-
-<<<<<<< TREE
-    mga::HwcDeviceWrapper device(mock_device);
-
-    hwc_display_contents_1_t contents;
-    device.prepare(contents);
-    device.set(contents);
-=======
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.render_gl(stub_context);
-    device.post(*mock_buffer);
->>>>>>> MERGE-SOURCE
-
-    /* primary phone display */
-    EXPECT_TRUE(mock_device->primary_prepare);
-    EXPECT_TRUE(mock_device->primary_set);
-    /* external monitor display not supported yet */
-    EXPECT_FALSE(mock_device->external_prepare);
-    EXPECT_FALSE(mock_device->external_set);
-    /* virtual monitor display not supported yet */
-    EXPECT_FALSE(mock_device->virtual_prepare);
-    EXPECT_FALSE(mock_device->virtual_set);
-}
-#endif
-
-
-
-
