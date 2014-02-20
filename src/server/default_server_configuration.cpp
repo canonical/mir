@@ -42,6 +42,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
@@ -49,11 +50,11 @@ namespace mi = mir::input;
 using namespace mir::options;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-    DefaultServerConfiguration(std::make_shared<DefaultConfigurationOptions>(argc, argv))
+        DefaultServerConfiguration(std::make_shared<DefaultConfigurationOptions>(argc, argv))
 {
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<ConfigurationOptions> const& configuration_options) :
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
     configuration_options(configuration_options),
     default_filter(std::make_shared<mi::VTFilter>())
 {

@@ -56,17 +56,17 @@ extern char const* const lttng_opt_value;
 
 extern char const* const platform_graphics_lib;
 
-class ConfigurationOptions
+class Configuration
 {
 public:
     virtual std::shared_ptr<options::Option> the_options() const = 0;
 
 protected:
 
-    ConfigurationOptions() = default;
-    virtual ~ConfigurationOptions() = default;
-    ConfigurationOptions(ConfigurationOptions const&) = delete;
-    ConfigurationOptions& operator=(ConfigurationOptions const&) = delete;
+    Configuration() = default;
+    virtual ~Configuration() = default;
+    Configuration(Configuration const&) = delete;
+    Configuration& operator=(Configuration const&) = delete;
 };
 }
 }

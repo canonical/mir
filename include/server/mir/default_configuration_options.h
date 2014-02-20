@@ -24,7 +24,7 @@
 
 namespace mir
 {
-class DefaultConfigurationOptions : public options::ConfigurationOptions
+class DefaultConfigurationOptions : public options::Configuration
 {
 public:
     DefaultConfigurationOptions(int argc, char const* argv[]);

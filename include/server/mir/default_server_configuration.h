@@ -116,7 +116,7 @@ class Logger;
 namespace options
 {
 class Option;
-class ConfigurationOptions;
+class Configuration;
 }
 
 namespace report
@@ -128,7 +128,7 @@ class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
-    explicit DefaultServerConfiguration(std::shared_ptr<options::ConfigurationOptions> const& configuration_options);
+    explicit DefaultServerConfiguration(std::shared_ptr<options::Configuration> const& configuration_options);
 
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
@@ -306,7 +306,7 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
 
 private:
-    std::shared_ptr<options::ConfigurationOptions> const configuration_options;
+    std::shared_ptr<options::Configuration> const configuration_options;
     std::shared_ptr<input::EventFilter> const default_filter;
 
     virtual std::string the_socket_file() const;
