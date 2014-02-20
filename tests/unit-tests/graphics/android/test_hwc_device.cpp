@@ -413,9 +413,7 @@ TEST_F(HwcDevice, hwc_default_set)
 TEST_F(HwcDevice, can_set_with_overlays)
 {
     using namespace testing;
-    int acquire_fence1 = 85;
-    int acquire_fence2 = 83;
-    int acquire_fence3 = 82;
+    int fb_acquire_fence = 82;
     int release_fence1 = 381;
     int release_fence2 = 382;
     int release_fence3 = 383;
@@ -459,7 +457,7 @@ TEST_F(HwcDevice, can_set_with_overlays)
     comp_layer1.sourceCrop = set_region;
     comp_layer1.displayFrame = screen_pos;
     comp_layer1.visibleRegionScreen = {1, &set_region};
-    comp_layer1.acquireFenceFd = acquire_fence1;
+    comp_layer1.acquireFenceFd = -1; //todo: should set this fence
     comp_layer1.releaseFenceFd = -1;
 
     comp_layer2.compositionType = HWC_OVERLAY;
@@ -471,10 +469,10 @@ TEST_F(HwcDevice, can_set_with_overlays)
     comp_layer2.sourceCrop = set_region;
     comp_layer2.displayFrame = screen_pos;
     comp_layer2.visibleRegionScreen = {1, &set_region};
-    comp_layer2.acquireFenceFd = acquire_fence2;
+    comp_layer2.acquireFenceFd = -1; //todo: should set this fence
     comp_layer2.releaseFenceFd = -1;
 
-    set_target_layer.acquireFenceFd = acquire_fence3;
+    set_target_layer.acquireFenceFd = fb_acquire_fence;
     set_target_layer.handle = native_handle_3->handle();
 
     std::list<hwc_layer_1_t*> expected_list
@@ -498,16 +496,10 @@ TEST_F(HwcDevice, can_set_with_overlays)
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
 
-    //set fences
-    EXPECT_CALL(*native_handle_1, copy_fence())
-        .InSequence(seq)
-        .WillOnce(Return(acquire_fence1));
-    EXPECT_CALL(*native_handle_2, copy_fence())
-        .InSequence(seq)
-        .WillOnce(Return(acquire_fence2));
+    //set fb fences
     EXPECT_CALL(*native_handle_3, copy_fence())
         .InSequence(seq)
-        .WillOnce(Return(acquire_fence3));
+        .WillOnce(Return(fb_acquire_fence));
 
     //set
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
@@ -523,59 +515,3 @@ TEST_F(HwcDevice, can_set_with_overlays)
     device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
 }
-
-
-/* tests with a FRAMEBUFFER_TARGET present
-   NOT PORTEDDDDDDDDDDDDDDDDDDDd */
-#if 0
-//to hwc device adaptor
-TEST_F(HwcDevice, hwc_commit_failure)
-{
-    using namespace testing;
-
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), _, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_THROW({
-        device.post(*mock_buffer);
-    }, std::runtime_error);
-}
-
-TEST_F(HwcDevice, hwc_displays)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(),_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(),_,_))
-        .Times(1);
-
-<<<<<<< TREE
-    mga::HwcDeviceWrapper device(mock_device);
-
-    hwc_display_contents_1_t contents;
-    device.prepare(contents);
-    device.set(contents);
-=======
-    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
-    device.render_gl(stub_context);
-    device.post(*mock_buffer);
->>>>>>> MERGE-SOURCE
-
-    /* primary phone display */
-    EXPECT_TRUE(mock_device->primary_prepare);
-    EXPECT_TRUE(mock_device->primary_set);
-    /* external monitor display not supported yet */
-    EXPECT_FALSE(mock_device->external_prepare);
-    EXPECT_FALSE(mock_device->external_set);
-    /* virtual monitor display not supported yet */
-    EXPECT_FALSE(mock_device->virtual_prepare);
-    EXPECT_FALSE(mock_device->virtual_set);
-}
-#endif
-
-
-
-
