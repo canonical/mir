@@ -23,7 +23,7 @@
 #include "src/server/scene/surface_builder.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/surface_data.h"
-#include "mir/scene/scene_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
@@ -44,7 +44,7 @@ public:
                 std::string("stub"), geometry::Rectangle{{},{}}, [](){}, false),
             std::make_shared<StubBufferStream>(),
             std::shared_ptr<input::InputChannel>(),
-            std::make_shared<scene::NullSceneReport>()))
+            mir::report::null_scene_report()))
     {
     }
 

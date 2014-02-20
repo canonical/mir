@@ -20,7 +20,7 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/compositor_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
@@ -39,6 +39,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -308,7 +309,7 @@ public:
     }
 };
 
-auto const null_report = std::make_shared<mc::NullCompositorReport>();
+auto const null_report = mr::null_compositor_report();
 
 }
 
