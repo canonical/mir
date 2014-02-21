@@ -54,30 +54,6 @@ public:
         std::string const& what) = 0;
 };
 
-// Do-nothing implementation to satisfy dependencies
-class NullSessionMediatorReport : public SessionMediatorReport
-{
-    virtual void session_connect_called(std::string const& app_name);
-
-    virtual void session_create_surface_called(std::string const& app_name);
-
-    virtual void session_next_buffer_called(std::string const& app_name);
-
-    virtual void session_release_surface_called(std::string const& app_name);
-
-    virtual void session_disconnect_called(std::string const& app_name);
-
-    virtual void session_drm_auth_magic_called(std::string const& app_name);
-
-    virtual void session_configure_surface_called(std::string const& app_name);
-
-    virtual void session_configure_display_called(std::string const& app_name);
-
-    virtual void session_error(
-        std::string const& app_name,
-        char const* method,
-        std::string const& what);
-};
 }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,93 +16,32 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/logging/logger.h"
+#include "mir/logging/glog_logger.h"
 #include "mir/default_server_configuration.h"
-#include "mir/abnormal_exit.h"
+#include "mir/logging/dumb_console_logger.h"
 
-#include "connector_report.h"
-#include "display_report.h"
-#include "session_mediator_report.h"
-
-#include "mir/graphics/null_display_report.h"
-#include "compositor_report.h"
-
-using namespace mir;
-namespace mf = mir::frontend;
-namespace mg = mir::graphics;
 namespace ml = mir::logging;
-namespace ms = mir::scene;
 
-auto mir::DefaultServerConfiguration::the_connector_report()
-    -> std::shared_ptr<mf::ConnectorReport>
+auto mir::DefaultServerConfiguration::the_logger()
+    -> std::shared_ptr<ml::Logger>
 {
-    return connector_report([this]
-        () -> std::shared_ptr<mf::ConnectorReport>
+    return logger(
+        [this]() -> std::shared_ptr<ml::Logger>
         {
-            auto opt = the_options()->get<std::string>(connector_report_opt);
-
-            if (opt == log_opt_value)
+            if (the_options()->is_set(glog))
             {
-                return std::make_shared<ml::ConnectorReport>(the_logger());
-            }
-            else if (opt == off_opt_value)
-            {
-                return std::make_shared<mf::NullConnectorReport>();
+                return std::make_shared<ml::GlogLogger>(
+                    "mir",
+                    the_options()->get<int>(glog_stderrthreshold),
+                    the_options()->get<int>(glog_minloglevel),
+                    the_options()->get<std::string>(glog_log_dir));
             }
             else
             {
-                throw AbnormalExit(std::string("Invalid ") + connector_report_opt + " option: " + opt +
-                    " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
+                return std::make_shared<ml::DumbConsoleLogger>();
             }
         });
 }
 
-std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_report()
-{
-    return display_report(
-        [this]() -> std::shared_ptr<graphics::DisplayReport>
-        {
-            if (the_options()->get<std::string>(display_report_opt) == log_opt_value)
-            {
-                return std::make_shared<ml::DisplayReport>(the_logger());
-            }
-            else
-            {
-                return std::make_shared<mg::NullDisplayReport>();
-            }
-        });
-}
 
-std::shared_ptr<compositor::CompositorReport>
-DefaultServerConfiguration::the_compositor_report()
-{
-    return compositor_report(
-        [this]() -> std::shared_ptr<compositor::CompositorReport>
-        {
-            if (the_options()->get<std::string>(compositor_report_opt) == log_opt_value)
-            {
-                return std::make_shared<ml::CompositorReport>(
-                    the_logger(), the_clock());
-            }
-            else
-            {
-                return std::make_shared<compositor::NullCompositorReport>();
-            }
-        });
-}
-
-std::shared_ptr<mf::SessionMediatorReport>
-mir::DefaultServerConfiguration::the_session_mediator_report()
-{
-    return session_mediator_report(
-        [this]() -> std::shared_ptr<mf::SessionMediatorReport>
-        {
-            if (the_options()->get<std::string>(session_mediator_report_opt) == log_opt_value)
-            {
-                return std::make_shared<ml::SessionMediatorReport>(the_logger());
-            }
-            else
-            {
-                return std::make_shared<mf::NullSessionMediatorReport>();
-            }
-        });
-}
