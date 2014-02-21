@@ -112,8 +112,8 @@ private:
     BasicSurface& operator=(BasicSurface const&) = delete;
 
     std::mutex mutable guard;
-    std::function<void()> notify_change;
-    std::string surface_name;
+    std::function<void()> const notify_change;
+    std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;
@@ -124,7 +124,7 @@ private:
     bool hidden;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
-    std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
+    std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SceneReport> const report;
 };
