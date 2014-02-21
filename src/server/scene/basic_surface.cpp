@@ -66,7 +66,7 @@ void ms::BasicSurface::force_requests_to_complete()
     surface_buffer_stream->force_requests_to_complete();
 }
 
-ms::BasicSurface::~BasicSurface()
+ms::BasicSurface::~BasicSurface() noexcept
 {
     report->surface_deleted(this, surface_name);
 }

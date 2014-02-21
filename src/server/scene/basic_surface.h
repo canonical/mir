@@ -68,7 +68,7 @@ public:
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<SceneReport> const& report);
 
-    ~BasicSurface();
+    ~BasicSurface() noexcept;
 
     std::string const& name() const override;
     void move_to(geometry::Point const& top_left) override;
@@ -111,7 +111,6 @@ private:
     BasicSurface(BasicSurface const&) = delete;
     BasicSurface& operator=(BasicSurface const&) = delete;
 
-    // Members originally from SurfaceData
     std::mutex mutable guard;
     std::function<void()> notify_change;
     std::string surface_name;
@@ -125,8 +124,6 @@ private:
     bool hidden;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
-    // End of members originally from SurfaceData
-
     std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SceneReport> const report;
