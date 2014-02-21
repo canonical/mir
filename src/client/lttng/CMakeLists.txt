@@ -5,13 +5,10 @@ add_library(
 
   client_tracepoint_provider.cpp
   rpc_report.cpp
+  input_receiver_report.cpp
 )
 
-add_library(
-  mirclientlttng SHARED
-
-  rpc_report_tp.c
-)
+add_library(mirclientlttng SHARED tracepoints.c)
 
 # Don't treat missing-field-initializers as an error, since
 # the LTTng macros contain code that triggers this (but it's

@@ -23,23 +23,14 @@
 #include "mir/default_configuration.h"
 
 #include "mir/options/program_option.h"
-#include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/shell/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/null_input_report.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
-#include "mir/logging/logger.h"
-#include "mir/logging/input_report.h"
-#include "mir/logging/dumb_console_logger.h"
-#include "mir/logging/glog_logger.h"
-#include "mir/logging/message_processor_report.h"
-#include "mir/lttng/message_processor_report.h"
-#include "mir/lttng/input_report.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
@@ -50,7 +41,6 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace ml = mir::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
@@ -60,7 +50,6 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     default_filter(std::make_shared<mi::VTFilter>())
 {
 }
-
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
@@ -81,29 +70,6 @@ mir::DefaultServerConfiguration::the_shell_session_listener()
         [this]
         {
             return std::make_shared<msh::NullSessionListener>();
-        });
-}
-
-std::shared_ptr<mi::InputReport>
-mir::DefaultServerConfiguration::the_input_report()
-{
-    return input_report(
-        [this]() -> std::shared_ptr<mi::InputReport>
-        {
-            auto opt = the_options()->get<std::string>(input_report_opt);
-
-            if (opt == log_opt_value)
-            {
-                return std::make_shared<ml::InputReport>(the_logger());
-            }
-            else if (opt == lttng_opt_value)
-            {
-                return std::make_shared<mir::lttng::InputReport>();
-            }
-            else
-            {
-                return std::make_shared<mi::NullInputReport>();
-            }
         });
 }
 
@@ -172,49 +138,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         [&]()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
-        });
-}
-
-std::shared_ptr<mf::MessageProcessorReport>
-mir::DefaultServerConfiguration::the_message_processor_report()
-{
-    return message_processor_report(
-        [this]() -> std::shared_ptr<mf::MessageProcessorReport>
-        {
-            auto mp_report = the_options()->get<std::string>(msg_processor_report_opt);
-            if (mp_report == log_opt_value)
-            {
-                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_clock());
-            }
-            else if (mp_report == lttng_opt_value)
-            {
-                return std::make_shared<mir::lttng::MessageProcessorReport>();
-            }
-            else
-            {
-                return std::make_shared<mf::NullMessageProcessorReport>();
-            }
-        });
-}
-
-
-std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
-{
-    return logger(
-        [this]() -> std::shared_ptr<ml::Logger>
-        {
-            if (the_options()->is_set(glog))
-            {
-                return std::make_shared<ml::GlogLogger>(
-                    "mir",
-                    the_options()->get<int>(glog_stderrthreshold),
-                    the_options()->get<int>(glog_minloglevel),
-                    the_options()->get<std::string>(glog_log_dir));
-            }
-            else
-            {
-                return std::make_shared<ml::DumbConsoleLogger>();
-            }
         });
 }
 

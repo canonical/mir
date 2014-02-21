@@ -22,8 +22,12 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
 
   if(VALGRIND_EXECUTABLE)
-    set(VALGRIND_ARGS "--error-exitcode=1 --trace-children=yes")
-    set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
+    set(VALGRIND_ARGS "--error-exitcode=1" "--trace-children=yes")
+    set(DISCOVER_FLAGS "--enable-memcheck")
+    if (TARGET_ARCH STREQUAL "arm-linux-gnueabihf")
+        set(VALGRIND_ARGS ${VALGRIND_ARGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
+        set(DISCOVER_FLAGS ${DISCOVER_FLAGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
+    endif()
   else(VALGRIND_EXECUTABLE)
     message("Not enabling memcheck as valgrind is missing on your system")
   endif(VALGRIND_EXECUTABLE)
@@ -56,7 +60,7 @@ function (mir_discover_tests EXECUTABLE)
 
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${DISCOVER_FLAGS}
       ${EXTRA_ENV_FLAGS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
@@ -82,7 +86,7 @@ function (mir_add_memcheck_test)
       else()
         add_custom_target(
           memcheck_test ALL
-          ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error --memcheck-test
+          ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error --memcheck-test ${DISCOVER_FLAGS}
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "Adding memcheck test" VERBATIM)
 

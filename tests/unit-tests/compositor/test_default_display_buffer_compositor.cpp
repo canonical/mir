@@ -18,7 +18,7 @@
 
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/compositor_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
 #include "src/server/compositor/renderer.h"
 #include "src/server/compositor/renderer_factory.h"
@@ -43,6 +43,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -191,7 +192,7 @@ TEST(DefaultDisplayBufferCompositor, render)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -236,7 +237,7 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -354,7 +355,7 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -454,7 +455,7 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -504,7 +505,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -552,7 +553,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -632,7 +633,7 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
         mt::fake_shared(renderer_factory),
-        std::make_shared<mc::NullCompositorReport>());
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
