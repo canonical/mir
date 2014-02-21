@@ -106,7 +106,7 @@ bool const enable_input_default        = true;
 char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 }
 
-mo::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char const* argv[]) :
+mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     argc(argc),
     argv(argv),
     program_options(std::make_shared<boost::program_options::options_description>(
@@ -169,7 +169,7 @@ mo::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char cons
             "VT to run on or 0 to use current.");
 }
 
-boost::program_options::options_description_easy_init mo::DefaultConfigurationOptions::add_options()
+boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()
 {
     if (options)
         BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
@@ -177,13 +177,13 @@ boost::program_options::options_description_easy_init mo::DefaultConfigurationOp
     return program_options->add_options();
 }
 
-void mo::DefaultConfigurationOptions::parse_options(boost::program_options::options_description& options_description, ProgramOption& options) const
+void mo::DefaultConfiguration::parse_options(boost::program_options::options_description& options_description, ProgramOption& options) const
 {
     parse_arguments(options_description, options, argc, argv);
     parse_environment(options_description, options);
 }
 
-std::shared_ptr<mo::Option> mo::DefaultConfigurationOptions::the_options() const
+std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
 {
     if (!options)
     {

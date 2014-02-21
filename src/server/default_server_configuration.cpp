@@ -50,7 +50,7 @@ namespace mi = mir::input;
 using namespace mir::options;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-        DefaultServerConfiguration(std::make_shared<DefaultConfigurationOptions>(argc, argv))
+        DefaultServerConfiguration(std::make_shared<DefaultConfiguration>(argc, argv))
 {
 }
 

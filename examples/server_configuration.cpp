@@ -146,7 +146,7 @@ private:
 
 }
 
-me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfigurationOptions> const& configuration_options) :
+me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
     DefaultServerConfiguration(configuration_options)
 {
     namespace po = boost::program_options;
@@ -157,7 +157,7 @@ me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultCon
 }
 
 me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
-    ServerConfiguration(std::make_shared<options::DefaultConfigurationOptions>(argc, argv))
+    ServerConfiguration(std::make_shared<options::DefaultConfiguration>(argc, argv))
 {
 }
 

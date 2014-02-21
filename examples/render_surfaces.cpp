@@ -260,7 +260,7 @@ public:
     RenderSurfacesServerConfiguration(int argc, char const** argv) :
         ServerConfiguration([argc, argv]
         {
-            auto result = std::make_shared<mo::DefaultConfigurationOptions>(argc, argv);
+            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
             namespace po = boost::program_options;
 

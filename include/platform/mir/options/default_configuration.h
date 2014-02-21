@@ -26,11 +26,11 @@ namespace mir
 {
 namespace options
 {
-class DefaultConfigurationOptions : public Configuration
+class DefaultConfiguration : public Configuration
 {
 public:
-    DefaultConfigurationOptions(int argc, char const* argv[]);
-    virtual ~DefaultConfigurationOptions() = default;
+    DefaultConfiguration(int argc, char const* argv[]);
+    virtual ~DefaultConfiguration() = default;
 
     // add_options() allows users to add their own options. This MUST be called
     // before the first invocation of the_options() - typically during initialization.
