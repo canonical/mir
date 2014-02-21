@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer.h"
 #include "src/platform/graphics/android/display_device.h"
+#include "src/platform/graphics/android/gl_context.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -34,11 +35,11 @@ class MockDisplayDevice : public graphics::android::DisplayDevice
 public:
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD1(mode, void(MirPowerMode));
-    MOCK_METHOD0(prepare_gl, void());
-    MOCK_METHOD2(prepare_gl_and_overlays, void(
+    MOCK_METHOD1(render_gl, void(graphics::android::SwappingGLContext const&));
+    MOCK_METHOD3(render_gl_and_overlays, void(
+        graphics::android::SwappingGLContext const&,
         std::list<std::shared_ptr<graphics::Renderable>> const&,
         std::function<void(graphics::Renderable const&)> const&));
-    MOCK_METHOD2(gpu_render, void(EGLDisplay, EGLSurface));
     MOCK_METHOD1(post, void(graphics::Buffer const&));
 };
 }

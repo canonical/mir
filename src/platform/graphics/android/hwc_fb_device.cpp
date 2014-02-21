@@ -25,6 +25,7 @@
 #include "mir/graphics/android/native_buffer.h"
 
 #include <boost/throw_exception.hpp>
+#include <sstream>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
@@ -39,7 +40,30 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 {
 }
 
-void mga::HwcFbDevice::prepare_gl()
+void mga::HwcFbDevice::gpu_render()
+{
+    auto rc = 0; 
+    auto display_list = layer_list.native_list().lock();
+    if (display_list)
+    {
+        display_list->dpy = eglGetCurrentDisplay();
+        display_list->sur = eglGetCurrentSurface(EGL_DRAW);
+
+        //set() may affect EGL state by calling eglSwapBuffers.
+        //HWC 1.0 is the only version of HWC that can do this.
+        hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
+        rc = hwc_device->set(hwc_device.get(), num_displays, displays);
+    }
+
+    if ((rc != 0) || (!display_list))
+    {
+        std::stringstream ss;
+        ss << "error during hwc set(). rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+}
+
+void mga::HwcFbDevice::prepare()
 {
     auto rc = 0;
     auto display_list = layer_list.native_list().lock();
@@ -51,39 +75,28 @@ void mga::HwcFbDevice::prepare_gl()
 
     if ((rc != 0) || (!display_list))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+        std::stringstream ss;
+        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
-void mga::HwcFbDevice::prepare_gl_and_overlays(
+void mga::HwcFbDevice::render_gl(SwappingGLContext const&)
+{
+    prepare();
+    gpu_render();
+}
+
+void mga::HwcFbDevice::render_gl_and_overlays(
+    SwappingGLContext const&,
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
-    prepare_gl();
+    prepare();
     //TODO: filter this list based on the results of the preparation
     for(auto const& renderable : renderables)
         render_fn(*renderable);
-}
-
-void mga::HwcFbDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
-{
-    auto rc = 0; 
-    auto display_list = layer_list.native_list().lock();
-    if (display_list)
-    {
-        display_list->dpy = dpy;
-        display_list->sur = sur;
-
-        //set() may affect EGL state by calling eglSwapBuffers.
-        //HWC 1.0 is the only version of HWC that can do this.
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
-        rc = hwc_device->set(hwc_device.get(), num_displays, displays);
-    }
-
-    if ((rc != 0) || (!display_list))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-    }
+    gpu_render();
 }
 
 void mga::HwcFbDevice::post(mg::Buffer const& buffer)
