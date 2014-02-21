@@ -84,13 +84,13 @@ public:
     {
     }
 
-    void set(T v)
+    void operator=(T const& v)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         val = v;
     }
 
-    T get() const
+    operator T() const
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         return val;
@@ -116,14 +116,14 @@ TEST_F(SwapperSwappingStress, swapper)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    done.set(true);
+                    done = true;
                 });
 
     auto g = std::async(std::launch::async,
                 [&]
                 {
                     unsigned long count = 0;
-                    while (!done.get())
+                    while (!done)
                     {
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
@@ -161,14 +161,14 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    done.set(true);
+                    done = true;
                 });
 
     auto g = std::async(std::launch::async,
                 [&]
                 {
                     unsigned long count = 0;
-                    while (!done.get())
+                    while (!done)
                     {
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
