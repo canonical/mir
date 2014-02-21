@@ -38,7 +38,7 @@ namespace examples
 BasicServerConfiguration::BasicServerConfiguration(int argc, char const** argv) :
     ServerConfiguration([argc, argv]
     {
-        auto result = std::make_shared<mir::DefaultConfigurationOptions>(argc, argv);
+        auto result = std::make_shared<options::DefaultConfigurationOptions>(argc, argv);
 
         namespace po = boost::program_options;
 

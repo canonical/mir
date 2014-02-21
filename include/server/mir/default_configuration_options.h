@@ -16,13 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_DEFAULT_CONFIGURATION_OPTIONS_H_
-#define MIR_DEFAULT_CONFIGURATION_OPTIONS_H_
+#ifndef MIR_OPTIONS_DEFAULT_CONFIGURATION_H_
+#define MIR_OPTIONS_DEFAULT_CONFIGURATION_H_
 
 #include "mir/options/configuration.h"
 
 
 namespace mir
+{
+namespace options
 {
 class DefaultConfigurationOptions : public options::Configuration
 {
@@ -46,5 +48,6 @@ private:
     std::shared_ptr<options::Option> mutable options;
 };
 }
+}
 
-#endif /* MIR_DEFAULT_CONFIGURATION_OPTIONS_H_ */
+#endif /* MIR_OPTIONS_DEFAULT_CONFIGURATION_H_ */

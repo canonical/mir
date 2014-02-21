@@ -35,6 +35,7 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
+namespace mo = mir::options;
 
 namespace mir
 {
@@ -47,7 +48,7 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
       : ServerConfiguration([argc, argv]
         {
-            auto result = std::make_shared<mir::DefaultConfigurationOptions>(argc, argv);
+            auto result = std::make_shared<mo::DefaultConfigurationOptions>(argc, argv);
 
             namespace po = boost::program_options;
 

@@ -52,6 +52,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
+namespace mo = mir::options;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
@@ -259,7 +260,7 @@ public:
     RenderSurfacesServerConfiguration(int argc, char const** argv) :
         ServerConfiguration([argc, argv]
         {
-            auto result = std::make_shared<mir::DefaultConfigurationOptions>(argc, argv);
+            auto result = std::make_shared<mo::DefaultConfigurationOptions>(argc, argv);
 
             namespace po = boost::program_options;
 

@@ -20,11 +20,13 @@
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
+namespace mo = mir::options;
+
 namespace
 {
 void parse_arguments(
     boost::program_options::options_description desc,
-    mir::options::ProgramOption& options,
+    mo::ProgramOption& options,
     int argc,
     char const* argv[])
 {
@@ -54,7 +56,7 @@ void parse_arguments(
 
 void parse_environment(
     boost::program_options::options_description& desc,
-    mir::options::ProgramOption& options)
+    mo::ProgramOption& options)
 {
     // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
     // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
@@ -67,32 +69,32 @@ void parse_environment(
 }
 }
 
-char const* const mir::options::server_socket_opt           = "file,f";
-char const* const mir::options::no_server_socket_opt        = "no-file";
-char const* const mir::options::enable_input_opt            = "enable-input,i";
-char const* const mir::options::session_mediator_report_opt = "session-mediator-report";
-char const* const mir::options::msg_processor_report_opt    = "msg-processor-report";
-char const* const mir::options::compositor_report_opt       = "compositor-report";
-char const* const mir::options::display_report_opt          = "display-report";
-char const* const mir::options::legacy_input_report_opt     = "legacy-input-report";
-char const* const mir::options::connector_report_opt        = "connector-report";
-char const* const mir::options::scene_report_opt            = "scene-report";
-char const* const mir::options::input_report_opt            = "input-report";
-char const* const mir::options::host_socket_opt             = "host-socket";
-char const* const mir::options::standalone_opt              = "standalone";
-char const* const mir::options::frontend_threads_opt        = "ipc-thread-pool";
-char const* const mir::options::name_opt                    = "name";
-char const* const mir::options::offscreen_opt               = "offscreen";
+char const* const mo::server_socket_opt           = "file,f";
+char const* const mo::no_server_socket_opt        = "no-file";
+char const* const mo::enable_input_opt            = "enable-input,i";
+char const* const mo::session_mediator_report_opt = "session-mediator-report";
+char const* const mo::msg_processor_report_opt    = "msg-processor-report";
+char const* const mo::compositor_report_opt       = "compositor-report";
+char const* const mo::display_report_opt          = "display-report";
+char const* const mo::legacy_input_report_opt     = "legacy-input-report";
+char const* const mo::connector_report_opt        = "connector-report";
+char const* const mo::scene_report_opt            = "scene-report";
+char const* const mo::input_report_opt            = "input-report";
+char const* const mo::host_socket_opt             = "host-socket";
+char const* const mo::standalone_opt              = "standalone";
+char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
+char const* const mo::name_opt                    = "name";
+char const* const mo::offscreen_opt               = "offscreen";
 
-char const* const mir::options::glog                 = "glog";
-char const* const mir::options::glog_stderrthreshold = "glog-stderrthreshold";
-char const* const mir::options::glog_minloglevel     = "glog-minloglevel";
-char const* const mir::options::glog_log_dir         = "glog-log-dir";
-char const* const mir::options::off_opt_value = "off";
-char const* const mir::options::log_opt_value = "log";
-char const* const mir::options::lttng_opt_value = "lttng";
+char const* const mo::glog                 = "glog";
+char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
+char const* const mo::glog_minloglevel     = "glog-minloglevel";
+char const* const mo::glog_log_dir         = "glog-log-dir";
+char const* const mo::off_opt_value = "off";
+char const* const mo::log_opt_value = "log";
+char const* const mo::lttng_opt_value = "lttng";
 
-char const* const mir::options::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_graphics_lib = "platform-graphics-lib";
 
 namespace
 {
@@ -104,7 +106,7 @@ bool const enable_input_default        = true;
 char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 }
 
-mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char const* argv[]) :
+mo::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char const* argv[]) :
     argc(argc),
     argv(argv),
     program_options(std::make_shared<boost::program_options::options_description>(
@@ -167,7 +169,7 @@ mir::DefaultConfigurationOptions::DefaultConfigurationOptions(int argc, char con
             "VT to run on or 0 to use current.");
 }
 
-boost::program_options::options_description_easy_init mir::DefaultConfigurationOptions::add_options()
+boost::program_options::options_description_easy_init mo::DefaultConfigurationOptions::add_options()
 {
     if (options)
         BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
@@ -175,17 +177,17 @@ boost::program_options::options_description_easy_init mir::DefaultConfigurationO
     return program_options->add_options();
 }
 
-void mir::DefaultConfigurationOptions::parse_options(boost::program_options::options_description& options_description, mir::options::ProgramOption& options) const
+void mo::DefaultConfigurationOptions::parse_options(boost::program_options::options_description& options_description, ProgramOption& options) const
 {
     parse_arguments(options_description, options, argc, argv);
     parse_environment(options_description, options);
 }
 
-std::shared_ptr<mir::options::Option> mir::DefaultConfigurationOptions::the_options() const
+std::shared_ptr<mo::Option> mo::DefaultConfigurationOptions::the_options() const
 {
     if (!options)
     {
-        auto options = std::make_shared<mir::options::ProgramOption>();
+        auto options = std::make_shared<ProgramOption>();
         parse_options(*program_options, *options);
         this->options = options;
     }

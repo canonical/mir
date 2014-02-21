@@ -51,6 +51,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mo = mir::options;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -242,7 +243,7 @@ class StubInputManager : public mi::InputManager
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
     DefaultServerConfiguration([]
     {
-        auto result = std::make_shared<mir::DefaultConfigurationOptions>(::argc, ::argv);
+        auto result = std::make_shared<mo::DefaultConfigurationOptions>(::argc, ::argv);
 
         namespace po = boost::program_options;
 
