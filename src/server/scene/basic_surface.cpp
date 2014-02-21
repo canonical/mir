@@ -91,16 +91,6 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
     notify_change();
 }
 
-void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
-        transformation_dirty = true;
-    }
-    notify_change();
-}
-
 float ms::BasicSurface::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -262,7 +252,7 @@ void ms::BasicSurface::apply_alpha(float alpha)
 }
 
 
-void ms::BasicSurface::apply_rotation(float degrees, glm::vec3 const& axis)
+void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     {
         std::unique_lock<std::mutex> lk(guard);

@@ -151,7 +151,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
 
     auto original_transformation = storage.transformation();
 
-    storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+    storage.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
     auto rotated_transformation = storage.transformation();
     EXPECT_NE(original_transformation, rotated_transformation);
 }
@@ -178,7 +178,7 @@ TEST_F(BasicSurfaceTest, test_surface_transformation_cache_refreshes)
     storage.move_to(origin.top_left);
     EXPECT_EQ(t0, storage.transformation());
 
-    storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+    storage.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
     glm::mat4 t1 = storage.transformation();
     EXPECT_NE(t0, t1);
 }
@@ -233,7 +233,7 @@ TEST_F(BasicSurfaceTest, test_surface_apply_rotation)
         std::shared_ptr<mi::InputChannel>(),
         report};
 
-    surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+    surface_state.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
 TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
