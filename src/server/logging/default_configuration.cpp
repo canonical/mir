@@ -19,7 +19,7 @@
 #include "mir/logging/logger.h"
 #include "mir/logging/glog_logger.h"
 #include "mir/default_server_configuration.h"
-#include "mir/default_configuration_options.h"
+#include "mir/options/default_configuration.h"
 #include "mir/logging/dumb_console_logger.h"
 
 namespace ml = mir::logging;

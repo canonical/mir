@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 
-#include "mir/default_configuration_options.h"
+#include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/input/input_channel.h"

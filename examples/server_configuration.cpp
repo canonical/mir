@@ -17,7 +17,7 @@
  */
 
 #include "server_configuration.h"
-#include "mir/default_configuration_options.h"
+#include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/composite_event_filter.h"

@@ -22,7 +22,7 @@
 #include "fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
-#include "mir/default_configuration_options.h"
+#include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"

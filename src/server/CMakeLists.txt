@@ -28,7 +28,6 @@ set(
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
-  default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
 )

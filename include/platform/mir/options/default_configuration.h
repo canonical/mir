@@ -2,15 +2,15 @@
  * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -26,7 +26,7 @@ namespace mir
 {
 namespace options
 {
-class DefaultConfigurationOptions : public options::Configuration
+class DefaultConfigurationOptions : public Configuration
 {
 public:
     DefaultConfigurationOptions(int argc, char const* argv[]);
@@ -40,12 +40,12 @@ private:
     // accessed via the base interface, when access to add_options() has been "lost"
     std::shared_ptr<options::Option> the_options() const override;
 
-    void parse_options(boost::program_options::options_description& options_description, options::ProgramOption& options) const;
+    virtual void parse_options(boost::program_options::options_description& options_description, ProgramOption& options) const;
 
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
-    std::shared_ptr<options::Option> mutable options;
+    std::shared_ptr<Option> mutable options;
 };
 }
 }

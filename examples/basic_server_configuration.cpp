@@ -17,7 +17,7 @@
  */
 
 #include "basic_server_configuration.h"
-#include "mir/default_configuration_options.h"
+#include "mir/options/default_configuration.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/frontend/connector.h"

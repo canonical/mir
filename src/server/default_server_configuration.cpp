@@ -17,7 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/default_configuration_options.h"
+#include "mir/options/default_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
