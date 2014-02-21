@@ -114,6 +114,8 @@ void print_usage()
     std::cout << "Usage " << std::endl
               << "    -m <Mir server socket>" << std::endl
               << "    -o <Output id>" << std::endl
+              << "    -n <Number of frames to capture>" << std::endl
+              << "        default (-1) is to capture infinite frames" << std::endl
               << "    -h: this help text" << std::endl;
 }
 
@@ -198,7 +200,7 @@ struct EGLSetup
 };
 
 void do_screencast(MirConnection* connection, MirScreencast* screencast,
-                   uint32_t output_id)
+                   uint32_t output_id, int32_t number_of_captures)
 {
     static int const rgba_pixel_size{4};
 
@@ -218,7 +220,7 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
     ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
     std::ofstream video_file(ss.str());
 
-    while (running)
+    while (running && (number_of_captures != 0))
     {
         read_pixels(format, frame_size, frame_data.data());
 
@@ -231,6 +233,9 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
         egl_setup.swap_buffers();
 
         write_out_future.wait();
+
+        if (number_of_captures > 0)
+            number_of_captures--;
     }
 }
 
@@ -243,14 +248,18 @@ try
     opterr = 0;
     char const* socket_file = nullptr;
     uint32_t output_id = mir_display_output_id_invalid;
+    int32_t number_of_captures = -1;
 
     //avoid unused warning/error
     tls_hack[0] = 0;
 
-    while ((arg = getopt (argc, argv, "hm:o:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:o:n:")) != -1)
     {
         switch (arg)
         {
+        case 'n':
+            number_of_captures = std::stoi(std::string(optarg)); 
+            break;
         case 'm':
             socket_file = optarg;
             break;
@@ -303,13 +312,18 @@ try
     if (screencast == nullptr)
         throw std::runtime_error("Failed to create screencast");
 
-    do_screencast(connection.get(), screencast.get(), output_id);
+    do_screencast(connection.get(), screencast.get(), output_id, number_of_captures);
 
     return EXIT_SUCCESS;
+}
+catch(std::invalid_argument const& e)
+{
+    std::cerr << "Invalid Argument" << std::endl;
+    print_usage();
+    return EXIT_FAILURE;
 }
 catch(std::exception const& e)
 {
     std::cerr << e.what() << std::endl;
-
     return EXIT_FAILURE;
 }
