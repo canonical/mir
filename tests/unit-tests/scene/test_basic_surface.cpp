@@ -84,11 +84,11 @@ TEST_F(BasicSurfaceTest, basics)
 
     EXPECT_EQ(name, data.name());
     EXPECT_EQ(rect.size, data.size());
-    EXPECT_EQ(rect.top_left, data.position());
+    EXPECT_EQ(rect.top_left, data.top_left());
     EXPECT_FALSE(data.shaped());
 }
 
-TEST_F(BasicSurfaceTest, update_position)
+TEST_F(BasicSurfaceTest, update_top_left)
 {
     EXPECT_CALL(mock_callback, call())
         .Times(1);
@@ -102,11 +102,11 @@ TEST_F(BasicSurfaceTest, update_position)
         std::shared_ptr<mi::InputChannel>(),
         report};
 
-    EXPECT_EQ(rect.top_left, storage.position());
+    EXPECT_EQ(rect.top_left, storage.top_left());
 
     auto new_top_left = geom::Point{geom::X{6}, geom::Y{10}};
     storage.move_to(new_top_left);
-    EXPECT_EQ(new_top_left, storage.position());
+    EXPECT_EQ(new_top_left, storage.top_left());
 }
 
 TEST_F(BasicSurfaceTest, update_size)

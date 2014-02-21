@@ -75,7 +75,6 @@ public:
     float alpha() const override;
     void set_hidden(bool is_hidden) override;
 
-    geometry::Point top_left() const;
     geometry::Size size() const override;
 
     MirPixelFormat pixel_format() const;
@@ -99,7 +98,7 @@ public:
      * \throws std::logic_error For impossible sizes like {0,0}.
      */
     bool resize(geometry::Size const& size) override;
-    geometry::Point position() const override;
+    geometry::Point top_left() const override;
     bool contains(geometry::Point const& point) const override;
     void frame_posted() override;
     void set_alpha(float alpha) override;

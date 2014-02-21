@@ -106,12 +106,6 @@ void ms::BasicSurface::set_hidden(bool hide)
     notify_change();
 }
 
-geom::Point ms::BasicSurface::top_left() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return surface_rect.top_left;
-}
-
 mir::geometry::Size ms::BasicSurface::size() const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -158,7 +152,7 @@ bool ms::BasicSurface::supports_input() const
 
 int ms::BasicSurface::client_input_fd() const
 {
-    if (!supports_input())
+    if (!server_input_channel)
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return server_input_channel->client_fd();
 }
@@ -202,7 +196,7 @@ bool ms::BasicSurface::resize(geom::Size const& size)
     return true;
 }
 
-geom::Point ms::BasicSurface::position() const
+geom::Point ms::BasicSurface::top_left() const
 {
     std::unique_lock<std::mutex> lk(guard);
     return surface_rect.top_left;
