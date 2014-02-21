@@ -152,7 +152,7 @@ bool ms::BasicSurface::supports_input() const
 
 int ms::BasicSurface::client_input_fd() const
 {
-    if (!server_input_channel)
+    if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return server_input_channel->client_fd();
 }
