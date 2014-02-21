@@ -515,3 +515,61 @@ TEST_F(HwcDevice, can_set_with_overlays)
     device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
 }
+
+TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
+{
+    using namespace testing;
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable2
+    });
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    //all accepted
+    ON_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .WillByDefault(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_EQ(contents.numHwLayers, 3);
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_OVERLAY;
+            contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+
+    //set
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
+        .Times(1);
+
+    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
+    device.post(mock_buffer);
+    device.post(mock_buffer);
+}
+
+TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
+{
+    using namespace testing;
+    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+        stub_renderable1,
+        stub_renderable2
+    });
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    //all accepted
+    ON_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .WillByDefault(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_EQ(contents.numHwLayers, 3);
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+
+    //set
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
+        .Times(2);
+
+    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
+    device.post(mock_buffer);
+    device.post(mock_buffer);
+}
