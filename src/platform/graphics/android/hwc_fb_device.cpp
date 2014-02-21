@@ -25,6 +25,7 @@
 #include "mir/graphics/android/native_buffer.h"
 
 #include <boost/throw_exception.hpp>
+#include <sstream>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
@@ -56,7 +57,9 @@ void mga::HwcFbDevice::gpu_render()
 
     if ((rc != 0) || (!display_list))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+        std::stringstream ss;
+        ss << "error during hwc set(). rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
@@ -72,7 +75,9 @@ void mga::HwcFbDevice::prepare()
 
     if ((rc != 0) || (!display_list))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
+        std::stringstream ss;
+        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
