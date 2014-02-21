@@ -27,6 +27,7 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <mutex>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -76,12 +77,35 @@ struct SwapperSwappingStress : public ::testing::Test
     }
 };
 
+template<typename T> class Atomic   // a helgrind-friendly std::atomic
+{
+public:
+    Atomic(T init) : val(init)
+    {
+    }
+
+    void set(T v)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        val = v;
+    }
+
+    T get() const
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        return val;
+    }
+
+private:
+    T val;
+    mutable std::mutex mutex;
+};
+
 } // namespace
 
 TEST_F(SwapperSwappingStress, swapper)
 {
-    bool done = false;
-    std::mutex done_mutex;
+    Atomic<bool> done(false);
 
     auto f = std::async(std::launch::async,
                 [&]
@@ -92,25 +116,15 @@ TEST_F(SwapperSwappingStress, swapper)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    done_mutex.lock();
-                    done = true;
-                    done_mutex.unlock();
+                    done.set(true);
                 });
 
     auto g = std::async(std::launch::async,
                 [&]
                 {
                     unsigned long count = 0;
-                    for (;;)
+                    while (!done.get())
                     {
-                        done_mutex.lock();
-                        if (done)
-                        {
-                            done_mutex.unlock();
-                            break;
-                        }
-                        done_mutex.unlock();
-
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
@@ -136,8 +150,7 @@ TEST_F(SwapperSwappingStress, swapper)
 
 TEST_F(SwapperSwappingStress, different_swapper_types)
 {
-    bool done = false;
-    std::mutex done_mutex;
+    Atomic<bool> done(false);
 
     auto f = std::async(std::launch::async,
                 [&]
@@ -148,25 +161,15 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    done_mutex.lock();
-                    done = true;
-                    done_mutex.unlock();
+                    done.set(true);
                 });
 
     auto g = std::async(std::launch::async,
                 [&]
                 {
                     unsigned long count = 0;
-                    for (;;)
+                    while (!done.get())
                     {
-                        done_mutex.lock();
-                        if (done)
-                        {
-                            done_mutex.unlock();
-                            break;
-                        }
-                        done_mutex.unlock();
-
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
