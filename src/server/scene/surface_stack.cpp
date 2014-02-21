@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -67,7 +67,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
+            mc::CompositingCriteria& info = **it;
             mc::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }
@@ -85,7 +85,7 @@ void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
         auto surfaces = layer->second;
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
-            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
+            mc::CompositingCriteria& info = **it;
             mc::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }
@@ -108,7 +108,7 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(shell::SurfaceC
         layers_by_depth[params.depth].push_back(surface);
     }
 
-    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.input_mode);
+    input_registrar->input_channel_opened(surface->input_channel(), surface, params.input_mode);
 
     report->surface_added(surface.get(), surface.get()->name());
     emit_change_notification();
