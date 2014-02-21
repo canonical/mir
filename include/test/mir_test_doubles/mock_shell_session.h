@@ -21,6 +21,7 @@
 
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/trusted_session_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
 
 #include <gmock/gmock.h>
@@ -52,6 +53,9 @@ struct MockShellSession : public shell::Session
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
+
+    MOCK_CONST_METHOD0(get_trusted_session, std::shared_ptr<shell::TrustedSession>());
+    MOCK_METHOD1(set_trusted_session, void(std::shared_ptr<shell::TrustedSession> const&));
 };
 
 }

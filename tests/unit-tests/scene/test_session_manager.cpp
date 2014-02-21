@@ -55,8 +55,10 @@ struct MockSessionContainer : public ms::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD0(clear, void());
     MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
     MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
+    MOCK_CONST_METHOD2(for_each, void(std::function<bool(std::shared_ptr<msh::Session> const&)>, bool));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
     ~MockSessionContainer() noexcept {}

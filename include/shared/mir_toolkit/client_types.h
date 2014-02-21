@@ -46,6 +46,7 @@ typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 typedef struct MirScreencast MirScreencast;
+typedef struct MirTrustedPromptSession MirTrustedPromptSession;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -102,6 +103,13 @@ typedef void (*mir_lifecycle_event_callback)(
 
 typedef void (*mir_display_config_callback)(
     MirConnection* connection, void* context);
+
+/**
+ * Callback member of MirTrustedPromptSession for handling of trusted sessions.
+ *   \param [in] tps            The prompt session associated with the callback
+ *   \param [in,out] context    The context provided by the client
+ */
+typedef void (*mir_tps_callback)(MirTrustedPromptSession* tps, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -285,6 +293,16 @@ typedef struct MirScreencastParameters
  *   \param [in,out] client_context  context provided by the client
  */
 typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
+
+/**
+ * MirTrustedPromptSessionAddApplicationResult specifies the result of a
+ * call to add an app id to a trusted prompt session
+ */
+typedef enum
+{
+    mir_trusted_prompt_session_app_addition_succeeded,
+    mir_trusted_prompt_session_app_already_part_of_trusted_session
+} MirTrustedPromptSessionAddApplicationResult;
 
 #ifdef __cplusplus
 }

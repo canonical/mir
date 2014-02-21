@@ -28,6 +28,7 @@ set(
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
+  mir_trusted_prompt_session.cpp
   logging/rpc_report.cpp
   logging/input_receiver_report.cpp
   default_connection_configuration.cpp

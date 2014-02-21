@@ -86,6 +86,8 @@ public:
             mir_surface_callback callback,
             void *context);
 
+    MirTrustedPromptSession* create_trusted_prompt_session();
+
     char const * get_error_message();
 
     MirWaitHandle* connect(

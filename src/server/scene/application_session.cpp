@@ -17,11 +17,14 @@
  */
 
 #include "application_session.h"
+#include "trusted_session_impl.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
 #include "mir/frontend/event_sink.h"
+#include "default_session_container.h"
+#include "mir/shell/trusted_session.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -48,7 +51,8 @@ ms::ApplicationSession::ApplicationSession(
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
-    next_surface_id(0)
+    next_surface_id(0),
+    children(std::make_shared<DefaultSessionContainer>())
 {
     assert(surface_factory);
 }
@@ -60,6 +64,8 @@ ms::ApplicationSession::~ApplicationSession()
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
     }
+
+    printf("DESTROY session %s\n", session_name.c_str());
 }
 
 mf::SurfaceId ms::ApplicationSession::next_id()
@@ -106,10 +112,36 @@ std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
+    std::shared_ptr<msh::Surface> child_surface;
+    children->for_each(
+        [&child_surface]
+        (std::shared_ptr<shell::Session> const& child_session)
+        {
+            child_surface = child_session->default_surface();
+            if (child_surface)
+            {
+                printf("returning child surface from %s\n", child_session->name().c_str());
+                return false;
+            }
+            printf("no surface for %s\n", child_session->name().c_str());
+            return true;
+        },
+        true // reverse for_each
+    );
+
+    if (child_surface)
+        return child_surface;
+
     if (surfaces.size())
+    {
+        printf("returning main surface from %s\n", name().c_str());
         return surfaces.begin()->second;
+    }
     else
+    {
+        printf("no surface for %s\n", name().c_str());
         return std::shared_ptr<msh::Surface>();
+    }
 }
 
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
@@ -177,4 +209,44 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
+    children->for_each(
+        [state]
+        (std::shared_ptr<shell::Session> const& child_session)
+        {
+            child_session->set_lifecycle_state(state);
+        }
+    );
+}
+
+std::shared_ptr<msh::Session> ms::ApplicationSession::get_parent() const
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    return parent;
+}
+
+void ms::ApplicationSession::set_parent(std::shared_ptr<msh::Session> const& new_parent)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    parent = new_parent;
+}
+
+std::shared_ptr<ms::SessionContainer> ms::ApplicationSession::get_children() const
+{
+    return children;
+}
+
+std::shared_ptr<msh::TrustedSession> ms::ApplicationSession::get_trusted_session() const
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    return trusted_session;
+}
+
+void ms::ApplicationSession::set_trusted_session(std::shared_ptr<msh::TrustedSession> const& _trusted_session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    trusted_session = _trusted_session;
 }

@@ -49,6 +49,17 @@ struct StubShell : public frontend::Shell
     void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
+    frontend::SessionId start_trusted_session_for(std::string& /* error */,
+                                                std::shared_ptr<frontend::Session> const& /* session */,
+                                                shell::TrustedSessionCreationParameters const& /* params */)
+    {
+        return frontend::SessionId{0};
+    }
+    void stop_trusted_session_for(std::shared_ptr<frontend::Session> const& /* session */,
+                                frontend::SessionId /* trusted_session */)
+    {
+    }
+
     std::shared_ptr<StubSession> const stub_session;
 };
 

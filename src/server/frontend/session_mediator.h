@@ -124,6 +124,16 @@ public:
                            mir::protobuf::Buffer*,
                            google::protobuf::Closure* done);
 
+    void start_trusted_session(::google::protobuf::RpcController* controller,
+                               const ::mir::protobuf::TrustedSessionParameters* request,
+                               ::mir::protobuf::TrustedSession* response,
+                               ::google::protobuf::Closure* done) override;
+
+    void stop_trusted_session(::google::protobuf::RpcController* controller,
+                              const ::mir::protobuf::TrustedSessionId* request,
+                              ::mir::protobuf::Void* response,
+                              ::google::protobuf::Closure* done) override;
+
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,

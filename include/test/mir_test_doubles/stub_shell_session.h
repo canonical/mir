@@ -80,6 +80,15 @@ struct StubShellSession : public shell::Session
     void set_lifecycle_state(MirLifecycleState /*state*/)
     {
     }
+
+    std::shared_ptr<shell::TrustedSession> get_trusted_session() const override
+    {
+        return std::shared_ptr<shell::TrustedSession>();
+    }
+
+    void set_trusted_session(std::shared_ptr<shell::TrustedSession> const& /* trusted_session */) override
+    {
+    }
 };
 
 }

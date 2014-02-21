@@ -26,6 +26,7 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_client_library_drm.cpp
+  test_client_library_tps.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
   ${GENERATED_PROTOBUF_SRCS}

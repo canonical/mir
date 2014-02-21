@@ -19,6 +19,7 @@
 #include "default_session_container.h"
 
 #include <boost/throw_exception.hpp>
+#include <mir/shell/session.h>
 
 #include <memory>
 #include <cassert>
@@ -33,6 +34,7 @@ void ms::DefaultSessionContainer::insert_session(std::shared_ptr<msh::Session> c
     std::unique_lock<std::mutex> lk(guard);
 
     apps.push_back(session);
+    printf("DefaultSessionContainer::insert_session( %s ) -> count = %d\n", session->name().c_str(), (int)apps.size());
 }
 
 void ms::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> const& session)
@@ -48,6 +50,14 @@ void ms::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> c
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid Session"));
     }
+    printf("DefaultSessionContainer::remove_session( %s ) -> count = %d\n", session->name().c_str(), (int)apps.size());
+}
+
+void ms::DefaultSessionContainer::clear()
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    apps.clear();
 }
 
 void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<msh::Session> const&)> f) const
@@ -57,6 +67,28 @@ void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<ms
     for (auto const ptr : apps)
     {
         f(ptr);
+    }
+}
+
+void ms::DefaultSessionContainer::for_each(std::function<bool(std::shared_ptr<msh::Session> const&)> f, bool reverse) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    if (reverse)
+    {
+        for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
+        {
+            if (!f(*rit))
+                break;
+        }
+    }
+    else
+    {
+        for (auto it = apps.begin(); it != apps.end(); ++it)
+        {
+            if (!f(*it))
+                break;
+        }
     }
 }
 

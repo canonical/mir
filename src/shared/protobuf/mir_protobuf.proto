@@ -100,7 +100,7 @@ message Surface {
   optional int32 pixel_format = 4;
   optional int32 buffer_usage = 5;
   optional Buffer buffer = 6;
-  
+
   repeated sint32 fd = 7;
   optional int32 fds_on_side_channel = 8;
 
@@ -167,6 +167,23 @@ message Screencast {
   optional string error = 127;
 }
 
+message TrustedSessionApplication {
+  required int32 pid = 1;
+}
+
+message TrustedSessionParameters {
+  repeated TrustedSessionApplication application = 2;
+}
+
+message TrustedSessionId {
+  required int32 value = 1;
+}
+
+message TrustedSession {
+  optional TrustedSessionId id = 1;
+  optional string error = 127;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -186,5 +203,8 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
+
+  rpc start_trusted_session(TrustedSessionParameters) returns (TrustedSession);
+  rpc stop_trusted_session(TrustedSessionId) returns (Void);
 }
 

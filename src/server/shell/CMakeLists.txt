@@ -7,6 +7,7 @@ set(
   surface_creation_parameters.cpp
   graphics_display_layout.cpp
   default_configuration.cpp
+  trusted_session_creation_parameters.cpp
 )
 
 add_library(

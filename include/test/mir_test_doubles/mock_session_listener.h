@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SESSION_LISTENER_H_
 
 #include "mir/shell/session_listener.h"
+#include "mir/shell/trusted_session.h"
 
 #include <gmock/gmock.h>
 
@@ -41,6 +42,9 @@ struct MockSessionListener : public shell::SessionListener
 
     MOCK_METHOD2(surface_created, void(shell::Session&, std::shared_ptr<shell::Surface> const&));
     MOCK_METHOD2(destroying_surface, void(shell::Session&, std::shared_ptr<shell::Surface> const&));
+
+    MOCK_METHOD2(trusted_session_started, void(std::shared_ptr<shell::Session> const&, std::shared_ptr<shell::TrustedSession> const&));
+    MOCK_METHOD1(trusted_session_stopped, void(std::shared_ptr<shell::Session> const&));
 };
 
 }

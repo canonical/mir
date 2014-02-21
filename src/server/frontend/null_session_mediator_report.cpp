@@ -50,6 +50,14 @@ void mir::frontend::NullSessionMediatorReport::session_configure_display_called(
 {
 }
 
+void mir::frontend::NullSessionMediatorReport::session_start_trusted_session_called(std::string const&)
+{
+}
+
+void mir::frontend::NullSessionMediatorReport::session_stop_trusted_session_called(std::string const&)
+{
+}
+
 void mir::frontend::NullSessionMediatorReport::session_error(
         std::string const&,
         char const* ,

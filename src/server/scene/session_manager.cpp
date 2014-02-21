@@ -18,13 +18,16 @@
 
 #include "session_manager.h"
 #include "application_session.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
 #include "session_event_sink.h"
+#include "trusted_session_impl.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <memory>
 #include <cassert>
@@ -84,6 +87,22 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     app_container->insert_session(new_session);
 
+    {
+        std::unique_lock<std::mutex> lock(trusted_sessions_mutex);
+
+        for (auto const& trusted_session : trusted_sessions)
+        {
+            for (pid_t application_pid : trusted_session.second->get_applications())
+            {
+                if (application_pid == client_pid)
+                {
+                    trusted_session.second->add_child_session(new_session);
+                    new_session->set_trusted_session(trusted_session.second);
+                }
+            }
+        }
+    }
+
     session_listener->starting(new_session);
 
     set_focus_to(new_session);
@@ -119,8 +138,23 @@ void ms::SessionManager::set_focus_to(std::shared_ptr<msh::Session> const& shell
 void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+    auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
     session_event_sink->handle_session_stopping(shell_session);
+
+    if (scene_session->get_parent())
+    {
+        auto scene_session_parent = std::dynamic_pointer_cast<ms::Session>(scene_session->get_parent());
+        scene_session->set_parent(NULL);
+        scene_session_parent->get_children()->remove_session(shell_session);
+    }
+
+    auto trusted_session = scene_session->get_trusted_session();
+    if (trusted_session && trusted_session->get_trusted_helper() == scene_session)
+    {
+        stop_trusted_session_for(session, trusted_session->id());
+    }
+
     session_listener->stopping(shell_session);
 
     app_container->remove_session(shell_session);
@@ -168,4 +202,61 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
 
     set_focus_to(shell_session);
+}
+
+mf::SessionId ms::SessionManager::start_trusted_session_for(std::string& error,
+                                            std::shared_ptr<mf::Session> const& session,
+                                            shell::TrustedSessionCreationParameters const& params)
+{
+    std::unique_lock<std::mutex> lock(trusted_sessions_mutex);
+
+    for (auto const& trusted_session : trusted_sessions)
+    {
+        if (trusted_session.second->get_trusted_helper() == session)
+        {
+            error = "Trusted session already started";
+            return mf::SessionId(-1);
+        }
+    }
+
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+    std::shared_ptr<msh::TrustedSession> trusted_session = TrustedSessionImpl::create_for(shell_session, app_container, params);
+    trusted_sessions[trusted_session->id()] = trusted_session;
+
+    session_listener->trusted_session_started(shell_session, trusted_session);
+
+    set_focus_to(shell_session);
+
+    return trusted_session->id();
+}
+
+void ms::SessionManager::stop_trusted_session_for(std::shared_ptr<mf::Session> const& session,
+                                          mf::SessionId trusted_session_id)
+{
+    std::unique_lock<std::mutex> lock(trusted_sessions_mutex);
+    auto p = checked_find(trusted_session_id);
+
+    p->second->stop();
+
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+    session_listener->trusted_session_stopped(shell_session);
+
+    trusted_sessions.erase(p);
+}
+
+std::shared_ptr<msh::TrustedSession> ms::SessionManager::get_trusted_session(mf::SessionId id) const
+{
+    std::unique_lock<std::mutex> lock(trusted_sessions_mutex);
+
+    return checked_find(id)->second;
+}
+
+ms::SessionManager::TrustedSessions::const_iterator ms::SessionManager::checked_find(mf::SessionId id) const
+{
+    auto p = trusted_sessions.find(id);
+    if (p == trusted_sessions.end())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SessionId"));
+    }
+    return p;
 }

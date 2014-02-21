@@ -23,7 +23,7 @@
 #include <memory>
 #include <mutex>
 
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 
 namespace mir
 {
@@ -34,7 +34,9 @@ class DefaultSessionContainer : public SessionContainer
 public:
     void insert_session(std::shared_ptr<shell::Session> const& session);
     void remove_session(std::shared_ptr<shell::Session> const& session);
+    void clear();
     void for_each(std::function<void(std::shared_ptr<shell::Session> const&)> f) const;
+    void for_each(std::function<bool(std::shared_ptr<shell::Session> const&)> f, bool reverse) const;
 
     std::shared_ptr<shell::Session> successor_of(std::shared_ptr<shell::Session> const& session) const;
 

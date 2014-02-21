@@ -21,6 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_debug.h"
+#include "mir_toolkit/mir_client_library_tps.h"
 
 #include "mir_connection.h"
 #include "display_configuration.h"
@@ -30,6 +31,7 @@
 #include "default_connection_configuration.h"
 #include "lifecycle_control.h"
 #include "api_impl_types.h"
+#include "mir_trusted_prompt_session.h"
 
 #include <set>
 #include <unordered_set>
@@ -536,3 +538,50 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
 
     return connection->set_extra_platform_data(extra_data);
 }
+
+/**************************
+ * Trusted prompt session specific functions *
+ **************************/
+
+MirTrustedPromptSession* mir_trusted_prompt_session_create(MirConnection* connection)
+{
+    return connection->create_trusted_prompt_session();
+}
+
+MirTrustedPromptSessionAddApplicationResult mir_trusted_prompt_session_add_app_with_pid(MirTrustedPromptSession *session,
+                                                                                        pid_t pid)
+{
+    return session->add_app_with_pid(pid);
+}
+
+MirWaitHandle *mir_trusted_prompt_session_start(MirTrustedPromptSession *session, mir_tps_callback callback, void* context)
+{
+    try
+    {
+        return session->start(callback, context);
+    }
+    catch (std::exception const&)
+    {
+        // TODO callback with an error
+        return nullptr;
+    }
+}
+
+MirWaitHandle *mir_trusted_prompt_session_stop(MirTrustedPromptSession *session, mir_tps_callback callback, void* context)
+{
+    try
+    {
+        return session->stop(callback, context);
+    }
+    catch (std::exception const&)
+    {
+        // TODO callback with an error
+        return nullptr;
+    }
+}
+
+void mir_trusted_prompt_session_release(MirTrustedPromptSession* trusted_session)
+{
+    delete trusted_session;
+}
+

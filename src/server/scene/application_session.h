@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 #include <map>
 
@@ -40,7 +40,7 @@ namespace scene
 {
 class SnapshotStrategy;
 
-class ApplicationSession : public shell::Session
+class ApplicationSession : public scene::Session
 {
 public:
     ApplicationSession(
@@ -73,6 +73,14 @@ public:
 
     void set_lifecycle_state(MirLifecycleState state);
 
+    std::shared_ptr<shell::Session> get_parent() const;
+    void set_parent(std::shared_ptr<shell::Session> const& parent);
+
+    std::shared_ptr<SessionContainer> get_children() const;
+
+    std::shared_ptr<shell::TrustedSession> get_trusted_session() const;
+    void set_trusted_session(std::shared_ptr<shell::TrustedSession> const& trusted_session);
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -93,6 +101,12 @@ private:
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
+
+    // trusted sessions
+    std::mutex mutable mutex;
+    std::shared_ptr<shell::TrustedSession> trusted_session;
+    std::shared_ptr<shell::Session> parent;
+    std::shared_ptr<SessionContainer> children;
 };
 
 }

@@ -20,6 +20,7 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
+#include "mir_trusted_prompt_session.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
@@ -191,6 +192,11 @@ MirWaitHandle* MirConnection::release_surface(
 
 
     return new_wait_handle;
+}
+
+MirTrustedPromptSession* MirConnection::create_trusted_prompt_session()
+{
+    return new MirTrustedPromptSession(this, server);
 }
 
 namespace

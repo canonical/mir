@@ -24,6 +24,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/trusted_session_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -403,6 +404,57 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustedSessionParameters* request,
+    ::mir::protobuf::TrustedSession* response,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_start_trusted_session_called(session->name());
+
+        msh::TrustedSessionCreationParameters parameters;
+        for (auto i=0; i < request->application_size(); i++)
+        {
+            auto& application = request->application(i);
+            parameters.add_application(application.pid());
+        }
+
+        std::string error;
+        auto const session_id = shell->start_trusted_session_for(error, session, parameters);
+
+        if (!error.empty())
+            response->set_error(error);
+        response->mutable_id()->set_value(session_id.as_value());
+    }
+    done->Run();
+}
+
+void mf::SessionMediator::stop_trusted_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustedSessionId* request,
+    ::mir::protobuf::Void*,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_stop_trusted_session_called(session->name());
+
+        auto const id = SessionId(request->value());
+
+        shell->stop_trusted_session_for(session, id);
+    }
+    done->Run();
+}
 void mf::SessionMediator::pack_protobuf_buffer(
     protobuf::Buffer& protobuf_buffer,
     graphics::Buffer* graphics_buffer,

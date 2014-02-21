@@ -29,6 +29,8 @@ namespace mir
 namespace shell
 {
 class Surface;
+class SessionContainer;
+class TrustedSession;
 
 class Session : public frontend::Session
 {
@@ -40,6 +42,9 @@ public:
     virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
+
+    virtual std::shared_ptr<TrustedSession> get_trusted_session() const = 0;
+    virtual void set_trusted_session(std::shared_ptr<TrustedSession> const& trusted_session) = 0;
 };
 }
 }
