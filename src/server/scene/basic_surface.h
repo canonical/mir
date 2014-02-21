@@ -73,7 +73,6 @@ public:
     std::string const& name() const override;
     void move_to(geometry::Point const& top_left) override;
     float alpha() const override;
-    void set_alpha(float alpha);
     void set_hidden(bool is_hidden) override;
 
     geometry::Point top_left() const;
@@ -103,7 +102,7 @@ public:
     geometry::Point position() const override;
     bool contains(geometry::Point const& point) const override;
     void frame_posted() override;
-    void apply_alpha(float alpha) override;
+    void set_alpha(float alpha) override;
     void set_rotation(float degrees, glm::vec3 const&) override;
     glm::mat4 const& transformation() const override;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;

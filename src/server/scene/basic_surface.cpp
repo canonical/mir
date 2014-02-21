@@ -97,15 +97,6 @@ float ms::BasicSurface::alpha() const
     return surface_alpha;
 }
 
-void ms::BasicSurface::set_alpha(float alpha_v)
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        surface_alpha = alpha_v;
-    }
-    notify_change();
-}
-
 void ms::BasicSurface::set_hidden(bool hide)
 {
     {
@@ -242,7 +233,7 @@ void ms::BasicSurface::frame_posted()
     notify_change();
 }
 
-void ms::BasicSurface::apply_alpha(float alpha)
+void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);

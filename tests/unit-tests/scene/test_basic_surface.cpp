@@ -199,7 +199,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         report};
 
     float alpha = 0.5f;
-    surface_state.apply_alpha(0.5f);
+    surface_state.set_alpha(0.5f);
     EXPECT_THAT(alpha, FloatEq(surface_state.alpha()));
 }
 
