@@ -34,7 +34,6 @@
 #include <unordered_set>
 #include <algorithm>
 
-namespace ml=mir::logging;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;

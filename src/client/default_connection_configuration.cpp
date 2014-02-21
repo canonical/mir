@@ -27,6 +27,7 @@
 #include "logging/rpc_report.h"
 #include "logging/input_receiver_report.h"
 #include "lttng/rpc_report.h"
+#include "lttng/input_receiver_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 #include "mir/shared_library.h"
@@ -157,6 +158,8 @@ mcl::DefaultConnectionConfiguration::the_input_receiver_report()
 
             if (val == log_opt_val)
                 return std::make_shared<mcl::logging::InputReceiverReport>(the_logger());
+            else if (val == lttng_opt_val)
+                return std::make_shared<mcl::lttng::InputReceiverReport>();
             else
                 return std::make_shared<mir::input::receiver::NullInputReceiverReport>();
         });

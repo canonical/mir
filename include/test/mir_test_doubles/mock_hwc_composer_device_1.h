@@ -44,6 +44,8 @@ public:
         external_set = false;
         virtual_prepare = false;
         virtual_set = false;
+        fb_fence = -1;
+        retire_fence = -1;
 
         common.version = HWC_DEVICE_API_VERSION_1_1;
 

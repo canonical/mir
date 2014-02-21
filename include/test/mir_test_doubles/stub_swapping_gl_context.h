@@ -30,8 +30,6 @@ namespace doubles
 
 struct StubSwappingGLContext : public graphics::android::SwappingGLContext
 {
-    void make_current() const {}
-    void release_current() const {}
     void swap_buffers() const {}
 };
 

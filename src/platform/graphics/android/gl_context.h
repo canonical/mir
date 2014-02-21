@@ -36,7 +36,7 @@ namespace android
 EGLSurface create_dummy_pbuffer_surface(EGLDisplay, EGLConfig);
 EGLSurface create_window_surface(EGLDisplay, EGLConfig, EGLNativeWindowType);
 
-class SwappingGLContext : public graphics::GLContext
+class SwappingGLContext
 {
 public:
     virtual ~SwappingGLContext() = default;
@@ -48,7 +48,8 @@ protected:
     SwappingGLContext& operator=(SwappingGLContext const&) = delete;
 };
 
-class GLContext : public SwappingGLContext
+class GLContext : public SwappingGLContext,
+                  public graphics::GLContext
 {
 public:
     //For creating a gl context
