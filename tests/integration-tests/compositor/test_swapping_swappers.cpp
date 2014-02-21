@@ -49,38 +49,39 @@ struct SwapperSwappingStress : public ::testing::Test
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;
-    std::atomic<bool> client_thread_done;
+    bool done;
+    std::mutex mutex;  // must live longer than our callback/lambda
+
+    mg::Buffer* client_acquire_blocking(
+        std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
+    {
+        std::condition_variable cv;
+        bool done = false;
+    
+        mg::Buffer* result;
+        switching_bundle->client_acquire(
+            [&](mg::Buffer* new_buffer)
+             {
+                std::unique_lock<decltype(mutex)> lock(mutex);
+    
+                result = new_buffer;
+                done = true;
+                cv.notify_one();
+             });
+    
+        std::unique_lock<decltype(mutex)> lock(mutex);
+    
+        cv.wait(lock, [&]{ return done; });
+    
+        return result;
+    }
 };
 
-auto client_acquire_blocking(std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
--> mg::Buffer*
-{
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-
-    mg::Buffer* result;
-    switching_bundle->client_acquire(
-        [&](mg::Buffer* new_buffer)
-         {
-            std::unique_lock<decltype(mutex)> lock(mutex);
-
-            result = new_buffer;
-            done = true;
-            cv.notify_one();
-         });
-
-    std::unique_lock<decltype(mutex)> lock(mutex);
-
-    cv.wait(lock, [&]{ return done; });
-
-    return result;
-}
-}
+} // namespace
 
 TEST_F(SwapperSwappingStress, swapper)
 {
-    client_thread_done = false;
+    done = false;
 
     auto f = std::async(std::launch::async,
                 [this]
@@ -91,15 +92,25 @@ TEST_F(SwapperSwappingStress, swapper)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    client_thread_done = true;
+                    mutex.lock();
+                    done = true;
+                    mutex.unlock();
                 });
 
     auto g = std::async(std::launch::async,
                 [this]
                 {
                     unsigned long count = 0;
-                    while(!client_thread_done)
+                    for (;;)
                     {
+                        mutex.lock();
+                        if (done)
+                        {
+                            mutex.unlock();
+                            break;
+                        }
+                        mutex.unlock();
+
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
@@ -125,7 +136,7 @@ TEST_F(SwapperSwappingStress, swapper)
 
 TEST_F(SwapperSwappingStress, different_swapper_types)
 {
-    client_thread_done = false;
+    done = false;
 
     auto f = std::async(std::launch::async,
                 [this]
@@ -136,15 +147,25 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    client_thread_done = true;
+                    mutex.lock();
+                    done = true;
+                    mutex.unlock();
                 });
 
     auto g = std::async(std::launch::async,
                 [this]
                 {
                     unsigned long count = 0;
-                    while(!client_thread_done)
+                    for (;;)
                     {
+                        mutex.lock();
+                        if (done)
+                        {
+                            mutex.unlock();
+                            break;
+                        }
+                        mutex.unlock();
+
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
