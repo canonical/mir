@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/input/input_configuration.h"
@@ -32,14 +33,12 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
-#include "scene_report.h"
 #include "surface_source.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
-namespace ml = mir::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -123,29 +122,6 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
             return std::make_shared<ms::SurfaceSource>(
                 the_surface_builder(), the_shell_surface_configurator());
         });
-}
-
-std::shared_ptr<ms::SceneReport>
-mir::DefaultServerConfiguration::the_scene_report()
-{
-    return scene_report([this]() -> std::shared_ptr<ms::SceneReport>
-    {
-        auto opt = the_options()->get<std::string>(scene_report_opt);
-
-        if (opt == log_opt_value)
-        {
-            return std::make_shared<ml::SceneReport>(the_logger());
-        }
-        else if (opt == off_opt_value)
-        {
-            return std::make_shared<ms::NullSceneReport>();
-        }
-        else
-        {
-            throw AbnormalExit(std::string("Invalid ") + scene_report_opt + " option: " + opt +
-                " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
-        }
-    });
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

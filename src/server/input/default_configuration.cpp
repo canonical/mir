@@ -19,17 +19,18 @@
 #include "mir/default_server_configuration.h"
 
 #include "display_input_region.h"
-#include "mir/input/android/default_android_input_configuration.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
 #include "null_input_configuration.h"
 
-#include "mir/logging/input_report.h"
+#include "mir/input/android/default_android_input_configuration.h"
+#include "mir/report/legacy_input_report.h"
+
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace ml = mir::logging;
+namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -92,7 +93,7 @@ mir::DefaultServerConfiguration::the_input_manager()
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
             if (the_options()->get<std::string>(legacy_input_report_opt) == log_opt_value)
-                    ml::legacy_input_report::initialize(the_logger());
+                    mr::legacy_input::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
         });
 }
@@ -126,3 +127,4 @@ auto mir::DefaultServerConfiguration::the_nested_event_filter()
 {
     return the_nested_input_relay();
 }
+

@@ -41,17 +41,6 @@ protected:
     CompositorReport& operator=(CompositorReport const&) = delete;
 };
 
-class NullCompositorReport : public CompositorReport
-{
-public:
-    void added_display(int width, int height, int x, int y, SubCompositorId id);
-    void began_frame(SubCompositorId id);
-    void finished_frame(bool bypassed, SubCompositorId id);
-    void started();
-    void stopped();
-    void scheduled();
-};
-
 } // namespace compositor
 } // namespace mir
 

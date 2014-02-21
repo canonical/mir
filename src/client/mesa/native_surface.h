@@ -39,6 +39,7 @@ public:
     int set_swapinterval(int interval);
 
 private:
+    bool starting;
     ClientSurface& surface;
 };
 

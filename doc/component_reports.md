@@ -18,13 +18,13 @@ are prefixed with `MIR_SERVER_` and contain underscores ('_') instead of dashes
 
 Report                  | Handlers
 ----------------------- | --------
-connector-report        | log
-display-report          | log
+connector-report        | log,lttng
+display-report          | log,lttng
 input-report            | log,lttng
 legacy-input-report     | log
 msg-processor-report    | log,lttng
-session-mediator-report | log
-scene-report            | log
+session-mediator-report | log,lttng
+scene-report            | log,lttng
 
 For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the
@@ -40,7 +40,7 @@ underscores. The available reports and handlers for the client are:
 Report              | Handlers
 ------------------- | --------
 rpc-report          | log,lttng
-input-receiver      | log
+input-receiver      | log,lttng
 
 For example, to enable the logging RPC report, one should set the
 `MIR_CLIENT_RPC_REPORT=log` environment variable.

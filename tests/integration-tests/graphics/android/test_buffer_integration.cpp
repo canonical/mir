@@ -19,7 +19,7 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 
