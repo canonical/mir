@@ -21,7 +21,6 @@
 
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/input/surface.h"
 
 #include "mutable_surface_state.h"
