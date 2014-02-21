@@ -59,8 +59,6 @@ namespace geom = mir::geometry;
 namespace mt = mir::tools;
 namespace me = mir::examples;
 
-using namespace mir::options;
-
 
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
@@ -454,7 +452,7 @@ public:
 
     bool input_is_on()
     {
-        return the_options()->get<bool>(enable_input_opt);
+        return the_options()->get<bool>(mo::enable_input_opt);
     }
 
     std::weak_ptr<mg::Cursor> the_cursor()

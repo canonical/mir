@@ -33,8 +33,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
-using namespace mir::options;
-
 namespace
 {
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
@@ -118,9 +116,9 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            auto const threads = the_options()->get<int>(frontend_threads_opt);
+            auto const threads = the_options()->get<int>(options::frontend_threads_opt);
 
-            if (the_options()->is_set(no_server_socket_opt))
+            if (the_options()->is_set(options::no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_session_creator(),

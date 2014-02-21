@@ -47,10 +47,8 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
-using namespace mir::options;
-
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-        DefaultServerConfiguration(std::make_shared<DefaultConfiguration>(argc, argv))
+        DefaultServerConfiguration(std::make_shared<mo::DefaultConfiguration>(argc, argv))
 {
 }
 
@@ -68,7 +66,7 @@ auto mir::DefaultServerConfiguration::the_options() const
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    auto socket_file = the_options()->get<std::string>(server_socket_opt);
+    auto socket_file = the_options()->get<std::string>(options::server_socket_opt);
 
     // Record this for any children that want to know how to connect to us.
     // By both listening to this env var on startup and resetting it here,
