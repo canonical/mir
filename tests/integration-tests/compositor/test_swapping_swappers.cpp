@@ -49,8 +49,7 @@ struct SwapperSwappingStress : public ::testing::Test
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;
-    bool done;
-    std::mutex mutex;  // must live longer than our callback/lambda
+    std::mutex acquire_mutex;  // must live longer than our callback/lambda
 
     mg::Buffer* client_acquire_blocking(
         std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
@@ -62,14 +61,14 @@ struct SwapperSwappingStress : public ::testing::Test
         switching_bundle->client_acquire(
             [&](mg::Buffer* new_buffer)
              {
-                std::unique_lock<decltype(mutex)> lock(mutex);
+                std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
     
                 result = new_buffer;
                 done = true;
                 cv.notify_one();
              });
     
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
     
         cv.wait(lock, [&]{ return done; });
     
@@ -81,10 +80,11 @@ struct SwapperSwappingStress : public ::testing::Test
 
 TEST_F(SwapperSwappingStress, swapper)
 {
-    done = false;
+    bool done = false;
+    std::mutex done_mutex;
 
     auto f = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     for(auto i=0u; i < 400; i++)
                     {
@@ -92,24 +92,24 @@ TEST_F(SwapperSwappingStress, swapper)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    mutex.lock();
+                    done_mutex.lock();
                     done = true;
-                    mutex.unlock();
+                    done_mutex.unlock();
                 });
 
     auto g = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     unsigned long count = 0;
                     for (;;)
                     {
-                        mutex.lock();
+                        done_mutex.lock();
                         if (done)
                         {
-                            mutex.unlock();
+                            done_mutex.unlock();
                             break;
                         }
-                        mutex.unlock();
+                        done_mutex.unlock();
 
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
@@ -136,10 +136,11 @@ TEST_F(SwapperSwappingStress, swapper)
 
 TEST_F(SwapperSwappingStress, different_swapper_types)
 {
-    done = false;
+    bool done = false;
+    std::mutex done_mutex;
 
     auto f = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     for(auto i=0u; i < 400; i++)
                     {
@@ -147,24 +148,24 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    mutex.lock();
+                    done_mutex.lock();
                     done = true;
-                    mutex.unlock();
+                    done_mutex.unlock();
                 });
 
     auto g = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     unsigned long count = 0;
                     for (;;)
                     {
-                        mutex.lock();
+                        done_mutex.lock();
                         if (done)
                         {
-                            mutex.unlock();
+                            done_mutex.unlock();
                             break;
                         }
-                        mutex.unlock();
+                        done_mutex.unlock();
 
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
