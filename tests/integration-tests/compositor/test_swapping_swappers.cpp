@@ -55,7 +55,7 @@ struct SwapperSwappingStress : public ::testing::Test
         std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
     {
         std::condition_variable cv;
-        bool done = false;
+        bool acquired = false;
     
         mg::Buffer* result;
         switching_bundle->client_acquire(
@@ -64,13 +64,13 @@ struct SwapperSwappingStress : public ::testing::Test
                 std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
     
                 result = new_buffer;
-                done = true;
+                acquired = true;
                 cv.notify_one();
              });
     
         std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
     
-        cv.wait(lock, [&]{ return done; });
+        cv.wait(lock, [&]{ return acquired; });
     
         return result;
     }
