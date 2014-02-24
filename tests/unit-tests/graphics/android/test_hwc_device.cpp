@@ -385,6 +385,7 @@ TEST_F(HwcDevice, hwc_default_set)
     auto set_fences_fn = [&](hwc_display_contents_1_t& contents)
     {
         ASSERT_EQ(contents.numHwLayers, 2);
+        contents.hwLayers[0].releaseFenceFd = skip_release_fence;
         contents.hwLayers[1].releaseFenceFd = fb_release_fence;
         contents.retireFenceFd = hwc_retire_fence;
     };
@@ -407,12 +408,15 @@ TEST_F(HwcDevice, hwc_default_set)
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+    device.render_gl(stub_context);
     device.post(mock_buffer);
 }
 
 TEST_F(HwcDevice, can_set_with_overlays)
 {
     using namespace testing;
+    int overlay_acquire_fence1 = 80;
+    int overlay_acquire_fence2 = 81;
     int fb_acquire_fence = 82;
     int release_fence1 = 381;
     int release_fence2 = 382;
@@ -457,7 +461,7 @@ TEST_F(HwcDevice, can_set_with_overlays)
     comp_layer1.sourceCrop = set_region;
     comp_layer1.displayFrame = screen_pos;
     comp_layer1.visibleRegionScreen = {1, &set_region};
-    comp_layer1.acquireFenceFd = -1; //todo: should set this fence
+    comp_layer1.acquireFenceFd = overlay_acquire_fence1;
     comp_layer1.releaseFenceFd = -1;
 
     comp_layer2.compositionType = HWC_OVERLAY;
@@ -469,7 +473,7 @@ TEST_F(HwcDevice, can_set_with_overlays)
     comp_layer2.sourceCrop = set_region;
     comp_layer2.displayFrame = screen_pos;
     comp_layer2.visibleRegionScreen = {1, &set_region};
-    comp_layer2.acquireFenceFd = -1; //todo: should set this fence
+    comp_layer2.acquireFenceFd = overlay_acquire_fence2;
     comp_layer2.releaseFenceFd = -1;
 
     set_target_layer.acquireFenceFd = fb_acquire_fence;
@@ -496,7 +500,13 @@ TEST_F(HwcDevice, can_set_with_overlays)
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
 
-    //set fb fences
+    //copy all fb fences for OVERLAY or FRAMEBUFFER_TARGET in preparation of set
+    EXPECT_CALL(*native_handle_1, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(overlay_acquire_fence1));
+    EXPECT_CALL(*native_handle_2, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(overlay_acquire_fence2));
     EXPECT_CALL(*native_handle_3, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(fb_acquire_fence));

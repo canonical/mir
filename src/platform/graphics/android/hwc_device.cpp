@@ -81,6 +81,7 @@ void mga::HwcDevice::render_gl_and_overlays(
     //nothing has changed in this list, so no need to anything more
     if(!list_is_settable)
     {
+        printf("not settable, returning.\n");
         return;
     }
 
@@ -93,11 +94,13 @@ void mga::HwcDevice::render_gl_and_overlays(
     {
         if (layers_it->needs_gl_render())
         {
+            printf("GL NEED\n");
             render_fn(*renderable);
             needs_swapbuffers = true;
         }
         else
         {
+            printf("SHOULD PREP.\n");
             layers_it->prepare_non_gl_layer();
         }
         layers_it++;
@@ -126,6 +129,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     layers.back().set_render_parameters(disp_frame, false);
     layers.back().set_buffer(buffer);
+    layers.back().prepare_non_gl_layer();
 
     hwc_wrapper->set(*native_list().lock());
 

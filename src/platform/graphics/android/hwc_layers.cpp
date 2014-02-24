@@ -160,7 +160,9 @@ void mga::HWCLayer::prepare_non_gl_layer()
     if (updated && (((hwc_layer->compositionType == HWC_OVERLAY) ||
         (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))))
     {
-        hwc_layer->acquireFenceFd = associated_buffer->copy_fence();
+        auto f = associated_buffer->copy_fence();
+        printf("COPYING FENCE! %i\n", f);
+        hwc_layer->acquireFenceFd = f; 
     }
     else
     {
