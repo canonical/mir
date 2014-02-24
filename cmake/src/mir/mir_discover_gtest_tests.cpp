@@ -58,26 +58,34 @@ string ordinary_cmd_line_pattern()
     return pattern;
 }
 
-vector<string> valgrind_cmd_patterns()
+vector<string> valgrind_cmd_patterns(vector<string> const& suppressions)
 {
     vector<string> patterns{
         "valgrind",
         "--error-exitcode=1",
-        "--trace-children=yes",
+        "--trace-children=yes"
+    };
+
+    for (auto const& sup : suppressions)
+        patterns.push_back(std::string("--suppressions=") + sup);
+
+    vector<string> gtest_patterns{
         "%s",
         "--gtest_death_test_use_fork",
         "--gtest_filter=%s"
     };
 
+    patterns.insert(patterns.end(), gtest_patterns.begin(), gtest_patterns.end());
+
     return patterns;
 }
 
-string memcheck_cmd_line_pattern()
+string memcheck_cmd_line_pattern(vector<string> const& suppressions)
 {
     stringstream ss;
 
     ss << "ADD_TEST(\"memcheck(%s.%s)\"";
-    for (auto& s : valgrind_cmd_patterns())
+    for (auto& s : valgrind_cmd_patterns(suppressions))
         ss << " \"" << s << "\"";
     ss << ")" << endl;
 
@@ -112,6 +120,7 @@ struct Configuration
     bool enable_memcheck;
     bool memcheck_test;
     std::vector<std::pair<std::string, std::string>> extra_environment;
+    std::vector<std::string> suppressions;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
@@ -121,6 +130,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         {"enable-memcheck", no_argument, 0, 0},
         {"memcheck-test", no_argument, 0, 0},
         {"add-environment", required_argument, 0, 0},
+        {"suppressions", required_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
@@ -161,17 +171,21 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
                 return false;
             config.extra_environment.push_back(std::make_pair(std::string(optarg, equal_pos - optarg), std::string(equal_pos + 1)));
         }
+        else if (!strcmp(optname, "suppressions"))
+        {
+            config.suppressions.push_back(std::string(optarg));
+        }
     }
 
     return true;
 }
 
-string prepareMemcheckTestLine(string const& exe)
+string prepareMemcheckTestLine(string const& exe, vector<string> const& suppressions)
 {
     stringstream ss;
 
     ss << "ADD_TEST(\"memcheck-test\" \"sh\" \"-c\" \"";
-    for (auto& s : valgrind_cmd_patterns())
+    for (auto& s : valgrind_cmd_patterns(suppressions))
         ss << s << " ";
     ss << "; if [ $? != 0 ]; then exit 0; else exit 1; fi\")";
 
@@ -186,13 +200,13 @@ string prepareMemcheckTestLine(string const& exe)
     return cmd_line;
 }
 
-void emitMemcheckTest(string const& exe)
+void emitMemcheckTest(string const& exe, vector<string> const& suppressions)
 {
     ifstream CTestTestfile("CTestTestfile.cmake", ifstream::in);
     bool need_memcheck_test = true;
     string line;
 
-    string memcheckTestLine = prepareMemcheckTestLine(exe);
+    string memcheckTestLine = prepareMemcheckTestLine(exe, suppressions);
 
     if (CTestTestfile.is_open())
     {
@@ -238,7 +252,7 @@ int main (int argc, char **argv)
 
     if (config.memcheck_test)
     {
-        emitMemcheckTest(config.executable);
+        emitMemcheckTest(config.executable, config.suppressions);
         return 0;
     }
 
@@ -277,7 +291,7 @@ int main (int argc, char **argv)
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
-                config.enable_memcheck ? memcheck_cmd_line_pattern().c_str() :
+                config.enable_memcheck ? memcheck_cmd_line_pattern(config.suppressions).c_str() :
                                          ordinary_cmd_line_pattern().c_str(),
                 test_suite.c_str(),
                 elide_string_left(*test, output_width/2).c_str(),

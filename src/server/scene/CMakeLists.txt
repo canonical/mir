@@ -11,7 +11,6 @@ ADD_LIBRARY(
   mediating_display_changer.cpp
   session_manager.cpp
   surface_allocator.cpp
-  surface_data.cpp
   surface_stack.cpp
   surface_controller.cpp
   surface_source.cpp
