@@ -30,7 +30,7 @@ namespace doubles
 {
 struct MockRenderable : public graphics::Renderable
 {
-    MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_CONST_METHOD1(buffer, std::shared_ptr<graphics::Buffer>(unsigned long));
     MOCK_CONST_METHOD0(alpha_enabled, bool());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(alpha, float());

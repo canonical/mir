@@ -34,7 +34,7 @@ mc::RenderingOperator::RenderingOperator(
 
 void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
 {
-    auto compositor_buffer = renderable.buffer(); // TODO: frameno
+    auto compositor_buffer = renderable.buffer(frameno);
     renderer.render(renderable, *compositor_buffer);
     save_resource(compositor_buffer);
 }

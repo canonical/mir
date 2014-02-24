@@ -32,7 +32,7 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
-    std::shared_ptr<graphics::Buffer> buffer() const
+    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
     {
         return {};
     }

@@ -118,7 +118,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
         if (filter.fullscreen_on_top())
         {
             auto bypass_buf =
-                match.topmost_fullscreen()->buffer(); // FIXME local_frameno);
+                match.topmost_fullscreen()->buffer(local_frameno);
 
             if (bypass_buf->can_bypass())
             {

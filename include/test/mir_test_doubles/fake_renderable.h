@@ -19,7 +19,6 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 #define MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 
-#include "mir_test_doubles/stub_buffer.h"
 #include "mir/graphics/renderable.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
@@ -71,9 +70,9 @@ public:
         return !rectangular;
     }
 
-    std::shared_ptr<graphics::Buffer> buffer() const override
+    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
     {
-        return std::make_shared<StubBuffer>();
+        return {};
     }
 
     bool alpha_enabled() const override

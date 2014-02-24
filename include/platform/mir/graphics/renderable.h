@@ -32,7 +32,7 @@ class Buffer;
 class Renderable
 {
 public:
-    virtual std::shared_ptr<Buffer> buffer() const = 0;
+    virtual std::shared_ptr<Buffer> buffer(unsigned long frameno) const = 0;
     virtual bool alpha_enabled() const = 0;
     virtual geometry::Rectangle screen_position() const = 0;
 

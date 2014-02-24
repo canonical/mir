@@ -55,7 +55,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> buffer() const
+    std::shared_ptr<mg::Buffer> buffer(unsigned long) const override
     {
         return renderable_buffer;
     }

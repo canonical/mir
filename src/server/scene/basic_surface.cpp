@@ -328,9 +328,10 @@ bool ms::BasicSurface::shaped() const
     return nonrectangular;
 }
 
-std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer() const
+std::shared_ptr<mg::Buffer>
+    ms::BasicSurface::buffer(unsigned long frameno) const
 {
-    return buffer_stream()->lock_compositor_buffer(1); // TODO frameno
+    return buffer_stream()->lock_compositor_buffer(frameno);
 }
 
 bool ms::BasicSurface::alpha_enabled() const
