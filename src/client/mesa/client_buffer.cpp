@@ -86,6 +86,11 @@ mclm::ClientBuffer::ClientBuffer(
       rect({geom::Point{0, 0}, size}),
       buffer_pf{pf}
 {
+    if (package->fd_items != 1)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Buffer package does not contain the expected number of fd items"));
+    }
 }
 
 mclm::ClientBuffer::~ClientBuffer() noexcept

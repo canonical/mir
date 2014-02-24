@@ -18,10 +18,13 @@
  */
 
 #include "mir/frontend/connector.h"
-#include "mir/frontend/connector_report.h"
+
+#include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/published_socket_connector.h"
-#include "src/server/frontend/protobuf_session_creator.h"
+
+#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/connector_report.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -43,6 +46,7 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -350,27 +354,6 @@ public:
     MOCK_METHOD0(force_requests_to_complete, void());
 };
 
-}
-
-TEST_F(PublishedSocketConnector, forces_requests_to_complete_when_stopping)
-{
-    MockForceRequests mock_force_requests;
-    auto stub_server_tool = std::make_shared<mt::StubServerTool>();
-    auto ipc_factory = std::make_shared<mtd::StubIpcFactory>(*stub_server_tool);
-
-    /* Once for the explicit stop() and once when the communicator is destroyed */
-    EXPECT_CALL(mock_force_requests, force_requests_to_complete())
-        .Times(2);
-
-    auto comms = std::make_shared<mf::PublishedSocketConnector>(
-        "./test_socket1",
-        std::make_shared<mf::ProtobufSessionCreator>(ipc_factory, std::make_shared<mtd::StubSessionAuthorizer>()),
-        10,
-        std::bind(&MockForceRequests::force_requests_to_complete, &mock_force_requests),
-        std::make_shared<mf::NullConnectorReport>());
-
-    comms->start();
-    comms->stop();
 }
 
 TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)

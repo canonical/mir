@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -31,12 +31,12 @@ namespace scene
 class MutableSurfaceState
 {
 public:
-    virtual void move_to(geometry::Point) = 0;
-    virtual void resize(geometry::Size const& size) = 0;
+    virtual void move_to(geometry::Point const&) = 0;
+    virtual bool resize(geometry::Size const& size) = 0;
     virtual void frame_posted() = 0;
     virtual void set_hidden(bool hidden) = 0;
-    virtual void apply_alpha(float alpha) = 0;
-    virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;
+    virtual void set_alpha(float alpha) = 0;
+    virtual void set_rotation(float degrees, glm::vec3 const&) = 0;
     virtual void set_input_region(
         std::vector<geometry::Rectangle> const& input_rectangles) = 0;
 

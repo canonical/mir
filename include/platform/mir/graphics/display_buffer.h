@@ -20,8 +20,11 @@
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
 #include <mir/geometry/rectangle.h>
+#include <mir_toolkit/common.h>
 
 #include <memory>
+#include <functional>
+#include <list>
 
 namespace mir
 {
@@ -29,6 +32,7 @@ namespace graphics
 {
 
 class Buffer;
+class Renderable;
 
 /**
  * Interface to an output framebuffer.
@@ -44,11 +48,31 @@ public:
     virtual void make_current() = 0;
     /** Releases the current GL rendering target. */
     virtual void release_current() = 0;
-    /** Posts the DisplayBuffer to the screen. */
+
+    /** This will trigger OpenGL rendering and post the result to the screen. */
     virtual void post_update() = 0;
 
+    /** This will render renderlist to the screen and post the result to the screen.
+        For each renderable, the DisplayBuffer will decide if its more efficient to render
+        that Renderable via OpenGL, or via another method. If the Renderable is to be rendered
+        via OpenGL, render_fn will be invoked on that Renderable. */
+    virtual void render_and_post_update(
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
+        std::function<void(Renderable const&)> const& render_fn) = 0;
+
+    /** to be deprecated */
     virtual bool can_bypass() const = 0;
     virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
+
+    /** Returns the orientation of the display buffer relative to how the
+     *  user should see it (the orientation of the output).
+     *  This tells us how much (if any) rotation the renderer needs to do.
+     *  If your DisplayBuffer can do the rotation itself then this will
+     *  always return mir_orientation_normal. If the DisplayBuffer does not
+     *  implement the rotation itself then this function will return the
+     *  amount of rotation the renderer must do to make things "look right".
+     */
+    virtual MirOrientation orientation() const = 0;
 
 protected:
     DisplayBuffer() = default;

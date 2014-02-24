@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,7 +20,6 @@
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/input_channel_factory.h"
-#include "surface_data.h"
 #include "basic_surface.h"
 
 namespace geom=mir::geometry;
@@ -56,10 +55,13 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
 
     bool nonrectangular = has_alpha(params.pixel_format);
-    auto state = std::make_shared<SurfaceData>(params.name,
-                                                    actual_size,
-                                                    change_callback,
-                                                    nonrectangular);
     auto input_channel = input_factory->make_input_channel();
-    return std::make_shared<BasicSurface>(state, buffer_stream, input_channel, report);
+    return std::make_shared<BasicSurface>(
+        params.name,
+        actual_size,
+        change_callback,
+        nonrectangular,
+        buffer_stream,
+        input_channel,
+        report);
 }

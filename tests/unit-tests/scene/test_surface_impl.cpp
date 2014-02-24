@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,10 +18,9 @@
 
 #include "src/server/scene/surface_impl.h"
 #include "src/server/scene/basic_surface.h"
-#include "mir/scene/scene_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/surface_stack_model.h"
-#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -55,6 +54,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -72,8 +72,6 @@ class StubSurfaceBuilder : public ms::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
-        stub_data(std::make_shared<ms::SurfaceData>( 
-            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false)),
         dummy_surface()
     {
     }
@@ -81,7 +79,10 @@ public:
     std::weak_ptr<ms::BasicSurface> create_surface(msh::SurfaceCreationParameters const& ) override
     {
         dummy_surface = std::make_shared<ms::BasicSurface>(
-            stub_data, 
+            std::string("stub"), 
+            geom::Rectangle{{},{}}, 
+            [](){},
+            false, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);
@@ -106,9 +107,8 @@ public:
 
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
-    std::shared_ptr<ms::SurfaceData> const stub_data;
     std::shared_ptr<ms::BasicSurface> dummy_surface;
-    std::shared_ptr<ms::SceneReport> const report = std::make_shared<ms::NullSceneReport>();
+    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
 class MockSurfaceBuilder : public ms::SurfaceBuilder
@@ -149,7 +149,8 @@ struct SurfaceImpl : testing::Test
 
         ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
         ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(mir_pixel_format_abgr_8888));
-        ON_CALL(*buffer_stream, swap_client_buffers(_)).WillByDefault(SetArg<0>(nullptr));
+        ON_CALL(*buffer_stream, swap_client_buffers(_, _))
+            .WillByDefault(InvokeArgument<1>(nullptr));
     }
     mf::SurfaceId stub_id;
     std::shared_ptr<mf::EventSink> stub_sender;
@@ -324,6 +325,73 @@ TEST_F(SurfaceImpl, emits_resize_events)
 
     surf.resize(new_size);
     EXPECT_EQ(new_size, surf.size());
+}
+
+TEST_F(SurfaceImpl, emits_resize_events_only_on_change)
+{
+    using namespace testing;
+
+    geom::Size const new_size{123, 456};
+    geom::Size const new_size2{789, 1011};
+    auto sink = std::make_shared<MockEventSink>();
+    ms::SurfaceImpl surf(
+        mt::fake_shared(surface_builder),
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        msh::a_surface(),
+        stub_id,
+        sink);
+
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = stub_id.as_value();
+    e.resize.width = new_size.width.as_int();
+    e.resize.height = new_size.height.as_int();
+    EXPECT_CALL(*sink, handle_event(e))
+        .Times(1);
+
+    MirEvent e2;
+    memset(&e2, 0, sizeof e2);
+    e2.type = mir_event_type_resize;
+    e2.resize.surface_id = stub_id.as_value();
+    e2.resize.width = new_size2.width.as_int();
+    e2.resize.height = new_size2.height.as_int();
+    EXPECT_CALL(*sink, handle_event(e2))
+        .Times(1);
+
+    surf.resize(new_size);
+    EXPECT_EQ(new_size, surf.size());
+    surf.resize(new_size);
+    EXPECT_EQ(new_size, surf.size());
+
+    surf.resize(new_size2);
+    EXPECT_EQ(new_size2, surf.size());
+    surf.resize(new_size2);
+    EXPECT_EQ(new_size2, surf.size());
+}
+
+TEST_F(SurfaceImpl, remembers_alpha)
+{
+    ms::SurfaceImpl surf(
+        mt::fake_shared(surface_builder),
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        msh::a_surface(),
+        stub_id,
+        stub_sender);
+
+    EXPECT_FLOAT_EQ(1.0f, surf.alpha());
+
+    surf.set_alpha(0.5f);
+    EXPECT_FLOAT_EQ(0.5f, surf.alpha());
+
+    surf.set_alpha(0.25f);
+    EXPECT_FLOAT_EQ(0.25f, surf.alpha());
+
+    surf.set_alpha(0.0f);
+    EXPECT_FLOAT_EQ(0.0f, surf.alpha());
+
+    surf.set_alpha(1.0f);
+    EXPECT_FLOAT_EQ(1.0f, surf.alpha());
 }
 
 TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)

@@ -36,6 +36,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace mgm = mir::graphics::mesa;
 namespace mg = mir::graphics;
@@ -79,7 +80,7 @@ mgm::Display::Display(std::shared_ptr<Platform> const& platform,
                       std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
-      monitor(mgm::UdevContext()),
+      monitor(mir::udev::Context()),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
       current_display_configuration{platform->drm.fd}
@@ -114,13 +115,15 @@ void mgm::Display::for_each_display_buffer(
         f(*db_ptr);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mgm::Display::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration() const
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
     /* Give back a copy of the latest configuration information */
     current_display_configuration.update();
-    return std::make_shared<mgm::RealKMSDisplayConfiguration>(current_display_configuration);
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new mgm::RealKMSDisplayConfiguration(current_display_configuration)
+        );
 }
 
 void mgm::Display::configure(mg::DisplayConfiguration const& conf)
@@ -130,6 +133,17 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
 
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
         std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
+
+        /*
+         * Notice for a little while here we will have duplicate
+         * DisplayBuffers attached to each output, and the display_buffers_new
+         * will take over the outputs before the old display_buffers are
+         * destroyed. So to avoid page flipping confusion in-between, make
+         * sure we wait for all pending page flips to finish before the
+         * display_buffers_new are created and take control of the outputs.
+         */
+        for (auto& db : display_buffers)
+            db->wait_for_page_flip();
 
         /* Reset the state of all outputs */
         kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
@@ -147,6 +161,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         {
             auto bounding_rect = group.bounding_rectangle();
             std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
+            MirOrientation orientation = mir_orientation_normal;
 
             group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
             {
@@ -158,17 +173,30 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
                 kms_output->set_power_mode(conf_output.power_mode);
                 kms_outputs.push_back(kms_output);
+
+                /*
+                 * Presently OverlappingOutputGroup guarantees all grouped
+                 * outputs have the same orientation.
+                 */
+                orientation = conf_output.orientation;
             });
 
-            auto surface =
-                platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
-                                                     bounding_rect.size.height.as_uint32_t());
+            uint32_t width = bounding_rect.size.width.as_uint32_t();
+            uint32_t height = bounding_rect.size.height.as_uint32_t();
+            if (orientation == mir_orientation_left ||
+                orientation == mir_orientation_right)
+            {
+                std::swap(width, height);
+            }
+
+            auto surface = platform->gbm.create_scanout_surface(width, height);
 
             std::unique_ptr<DisplayBuffer> db{
                 new DisplayBuffer{platform, listener,
                                   kms_outputs,
                                   std::move(surface),
                                   bounding_rect,
+                                  orientation,
                                   shared_egl.context()}};
 
             display_buffers_new.push_back(std::move(db));
@@ -195,7 +223,7 @@ void mgm::Display::register_configuration_change_handler(
         [conf_change_handler, this](int)
         {
             monitor.process_events([conf_change_handler]
-                                   (UdevMonitor::EventType, UdevDevice const&)
+                                   (mir::udev::Monitor::EventType, mir::udev::Device const&)
                                    {
                                         conf_change_handler();
                                    });

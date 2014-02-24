@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 
+#include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/input/input_channel.h"
@@ -29,6 +30,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_renderer.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/mock_android_native_buffer.h"
@@ -49,6 +51,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mo = mir::options;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -120,7 +123,7 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 class StubDisplayConfiguration : public mtd::NullDisplayConfiguration
 {
 public:
-    StubDisplayConfiguration(geom::Rectangle& rect)
+    StubDisplayConfiguration(geom::Rectangle const& rect)
          : modes{mg::DisplayConfigurationMode{rect.size, 1.0f}}
     {
     }
@@ -132,7 +135,9 @@ public:
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
-            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0, mir_power_mode_on};
+            modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0,
+            mir_pixel_format_abgr_8888, mir_power_mode_on,
+            mir_orientation_normal};
 
         f(dummy_output_config);
     }
@@ -154,9 +159,11 @@ public:
         f(display_buffer);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return std::make_shared<StubDisplayConfiguration>(rect);
+        return std::unique_ptr<mg::DisplayConfiguration>(
+            new StubDisplayConfiguration(rect)
+        );
     }
 
 private:
@@ -198,28 +205,12 @@ class StubGraphicPlatform : public mtd::NullPlatform
     }
 };
 
-class StubRenderer : public mc::Renderer
-{
-public:
-    void begin() const override
-    {
-    }
-
-    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
-    {
-    }
-
-    void end() const override
-    {
-    }
-};
-
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
     std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
     {
-        return std::unique_ptr<StubRenderer>(new StubRenderer());
+        return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
 };
 
@@ -250,13 +241,19 @@ class StubInputManager : public mi::InputManager
 }
 
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
-    DefaultServerConfiguration(::argc, ::argv)
-{
-    namespace po = boost::program_options;
+    DefaultServerConfiguration([]
+    {
+        auto result = std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
 
-    add_options()
-        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
-        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
+        namespace po = boost::program_options;
+
+        result->add_options()
+                ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
+                ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
+
+        return result;
+    }())
+{
 }
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
@@ -273,7 +270,7 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
 {
     auto options = the_options();
 
-    if (options->get("tests-use-real-graphics", false))
+    if (options->get<bool>("tests-use-real-graphics"))
         return DefaultServerConfiguration::the_renderer_factory();
     else
         return renderer_factory(
@@ -287,7 +284,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
 {
     auto options = the_options();
 
-    if (options->get("tests-use-real-input", false))
+    if (options->get<bool>("tests-use-real-input"))
         return DefaultServerConfiguration::the_input_configuration();
     else
         return std::make_shared<mi::NullInputConfiguration>();

@@ -25,7 +25,7 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "mir_test/draw/android_graphics.h"
+#include "mir_test/draw/graphics_region_factory.h"
 #include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
@@ -41,7 +41,6 @@
 namespace mtf = mir_test_framework;
 namespace mt=mir::test;
 namespace mtd=mir::test::draw;
-namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -120,13 +119,7 @@ struct TestClient
     {
         process_sync.wait_for_signal_ready_for();
 
-        MirSurfaceParameters surface_parameters
-        {
-            "testsurface", test_width, test_height, mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware, mir_display_output_id_invalid
-        };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
-        auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
 
         /* set up egl context */
         int major, minor, n;
@@ -173,7 +166,7 @@ struct TestClient
             eglSwapBuffers(egl_display, egl_surface);
         }
 
-        mir_surface_release_sync(surface);
+        mir_surface_release_sync(mir_surface);
         mir_connection_release(connection);
         return 0;
     }
@@ -316,7 +309,7 @@ struct TestClientIPCRender : public testing::Test
     }
 
     void SetUp() {
-        buffer_converter = std::make_shared<mtd::TestGrallocMapper>();
+        buffer_converter = mtd::create_graphics_region_factory();
 
         /* start a server */
         mock_server = std::make_shared<StubServerGenerator>();
@@ -333,7 +326,7 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<StubServerGenerator> mock_server;
 
-    std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
+    std::shared_ptr<mtd::GraphicsRegionFactory> buffer_converter;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
@@ -360,7 +353,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto buf = mock_server->last_posted_buffer();
-    auto region = buffer_converter->graphic_region_from_handle(buf->native_buffer_handle()->anwb());
+    auto region = buffer_converter->graphic_region_from_handle(*buf->native_buffer_handle());
     EXPECT_TRUE(draw_pattern0.check(*region));
 }
 
@@ -372,11 +365,11 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto buf0 = mock_server->second_to_last_posted_buffer();
-    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle()->anwb());
+    auto region0 = buffer_converter->graphic_region_from_handle(*buf0->native_buffer_handle());
     EXPECT_TRUE(draw_pattern0.check(*region0));
 
     auto buf1 = mock_server->last_posted_buffer();
-    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle()->anwb());
+    auto region1 = buffer_converter->graphic_region_from_handle(*buf1->native_buffer_handle());
     EXPECT_TRUE(draw_pattern1.check(*region1));
 }
 
@@ -390,7 +383,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
     /* check content */
     auto buf0 = mock_server->last_posted_buffer();
-    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle()->anwb());
+    auto region0 = buffer_converter->graphic_region_from_handle(*buf0->native_buffer_handle());
     EXPECT_TRUE(red_pattern.check(*region0));
 }
 
@@ -404,10 +397,10 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     auto buf0 = mock_server->second_to_last_posted_buffer();
-    auto region0 = buffer_converter->graphic_region_from_handle(buf0->native_buffer_handle()->anwb());
+    auto region0 = buffer_converter->graphic_region_from_handle(*buf0->native_buffer_handle());
     EXPECT_TRUE(red_pattern.check(*region0));
 
     auto buf1 = mock_server->last_posted_buffer();
-    auto region1 = buffer_converter->graphic_region_from_handle(buf1->native_buffer_handle()->anwb());
+    auto region1 = buffer_converter->graphic_region_from_handle(*buf1->native_buffer_handle());
     EXPECT_TRUE(green_pattern.check(*region1));
 }

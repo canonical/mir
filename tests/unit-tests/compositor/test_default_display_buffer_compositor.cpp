@@ -18,12 +18,13 @@
 
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
 #include "src/server/compositor/renderer.h"
 #include "src/server/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -32,6 +33,7 @@
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_compositor_report.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,6 +43,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -106,6 +109,16 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
+    void set_viewport(geom::Rectangle const& rect) override
+    {
+        renderer->set_viewport(rect);
+    }
+
+    void set_rotation(float degrees) override
+    {
+        renderer->set_rotation(degrees);
+    }
+
     void begin() const override
     {
         renderer->begin();
@@ -121,6 +134,11 @@ struct WrappingRenderer : mc::Renderer
         renderer->end();
     }
 
+    void suspend() override
+    {
+        renderer->suspend();
+    }
+
     mc::Renderer* const renderer;
 };
 
@@ -132,7 +150,7 @@ struct StubRendererFactory : mc::RendererFactory
             new WrappingRenderer{&mock_renderer});
     }
 
-    testing::NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
+    testing::NiceMock<mtd::MockRenderer> mock_renderer;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -149,6 +167,9 @@ TEST(DefaultDisplayBufferCompositor, render)
     StubRendererFactory renderer_factory;
     MockScene scene;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
+
+    ON_CALL(display_buffer, orientation())
+        .WillByDefault(Return(mir_orientation_normal));
 
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,_)).Times(0);
 
@@ -170,7 +191,8 @@ TEST(DefaultDisplayBufferCompositor, render)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -214,7 +236,8 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -246,6 +269,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     renderable_vec.push_back(&small);
     renderable_vec.push_back(&fullscreen);
 
+    EXPECT_CALL(renderer_factory.mock_renderer, suspend())
+        .Times(1);
     EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
@@ -263,9 +288,14 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .WillOnce(Return(compositor_buffer));
 
+    auto report = std::make_shared<mtd::MockCompositorReport>();
+    EXPECT_CALL(*report, began_frame(_));
+    EXPECT_CALL(*report, finished_frame(true,_));
+
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        report);
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -296,7 +326,14 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
 
     Sequence render_seq;
 
+    EXPECT_CALL(renderer_factory.mock_renderer, suspend())
+        .Times(0);
     EXPECT_CALL(display_buffer, make_current())
+        .InSequence(render_seq);
+    EXPECT_CALL(display_buffer, orientation())
+        .InSequence(render_seq)
+        .WillOnce(Return(mir_orientation_normal));
+    EXPECT_CALL(renderer_factory.mock_renderer, set_rotation(_))
         .InSequence(render_seq);
     EXPECT_CALL(renderer_factory.mock_renderer, begin())
         .InSequence(render_seq);
@@ -317,7 +354,8 @@ TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -337,6 +375,8 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -360,9 +400,14 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
 
+    auto report = std::make_shared<mtd::MockCompositorReport>();
+    EXPECT_CALL(*report, began_frame(_));
+    EXPECT_CALL(*report, finished_frame(false,_));
+
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        report);
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -382,6 +427,8 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -407,7 +454,8 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -427,6 +475,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -454,7 +504,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -474,6 +525,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillRepeatedly(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -499,7 +552,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 
@@ -555,6 +609,8 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
@@ -576,7 +632,8 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory));
+        mt::fake_shared(renderer_factory),
+        mr::null_compositor_report());
 
     auto comp = factory.create_compositor_for(display_buffer);
 

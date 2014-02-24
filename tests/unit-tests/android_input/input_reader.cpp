@@ -24,11 +24,11 @@
 #include <gmock/gmock.h>
 #include <math.h>
 
-#include <mir/logging/logger.h>
-#include <mir/logging/input_report.h>
-#include <mir_test/fake_event_hub.h>
+#include "mir/logging/logger.h"
+#include "mir/report/legacy_input_report.h"
+#include "mir_test/fake_event_hub.h"
 
-namespace ml  = mir::logging;
+namespace ml   = mir::logging;
 
 using std::string;
 using mir::input::android::FakeEventHub;
@@ -568,7 +568,7 @@ protected:
     sp<InstrumentedInputReader> mReader;
 
     virtual void SetUp() {
-        mir::logging::legacy_input_report::initialize(std::make_shared<TestLogger>());
+        mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
         mFakeEventHub = new FakeEventHub();
         mFakePolicy = new FakeInputReaderPolicy();
         mFakeListener = new FakeInputListener();
@@ -797,7 +797,7 @@ protected:
     InputDevice* mDevice;
 
     virtual void SetUp() {
-        mir::logging::legacy_input_report::initialize(std::make_shared<TestLogger>());
+        mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
         mFakeEventHub = new FakeEventHub();
         mFakePolicy = new FakeInputReaderPolicy();
         mFakeListener = new FakeInputListener();
@@ -987,7 +987,7 @@ protected:
     InputDevice* mDevice;
 
     virtual void SetUp() {
-        mir::logging::legacy_input_report::initialize(std::make_shared<TestLogger>());
+        mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
         mFakeEventHub = new FakeEventHub();
         mFakePolicy = new FakeInputReaderPolicy();
         mFakeListener = new FakeInputListener();
@@ -4783,6 +4783,37 @@ TEST_F(MultiTouchInputMapperTest, Process_QuickTwoFingerTap_WithoutTrackingIds) 
     process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_KEY, BTN_TOOL_DOUBLETAP, 0x00000001);
     process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_KEY, BTN_TOUCH, 0x00000001);
     process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_SYN, SYN_REPORT, 0x00000000);
+}
+
+// Regression test for LP#1238417:
+// https://bugs.launchpad.net/mir/+bug/1238417
+//
+// Don't assume that ABS_MT_PRESSURE is 0 if you haven't heard from it yet. Instead,
+// the pressure axis should be considered as absent.
+// If a touch point has always the same positive, non-zero, pressure, that value
+// will be informed only once, on its first event. But if mir wasn't running at
+// that time, it would consider the pressure to be zero and therefore the point to be
+// hovering, which is wrong.
+TEST_F(MultiTouchInputMapperTest, Process_IgnorePressureAxisIfValueUnknown) {
+    MultiTouchInputMapper* mapper = new MultiTouchInputMapper(mDevice);
+    addConfigurationProperty("touch.deviceType", "touchScreen");
+    addConfigurationProperty("device.internal", "1");
+    setDisplayInfoAndReconfigure(DISPLAY_ID, 1024, 768, DISPLAY_ORIENTATION_0);
+    prepareAxes(POSITION | PRESSURE | ID);
+    addMapperAndConfigure(mapper);
+
+    // Note that there's no ABS_MT_PRESSURE
+    process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_ABS, ABS_MT_TRACKING_ID, 0x00000018);
+    process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_ABS, ABS_MT_POSITION_X, 500);
+    process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_ABS, ABS_MT_POSITION_Y, 300);
+    process(mapper, ARBITRARY_TIME, DEVICE_ID, EV_SYN, SYN_REPORT, 0x00000000);
+
+    NotifyMotionArgs args;
+    ASSERT_NO_FATAL_FAILURE(mFakeListener->assertNotifyMotionWasCalled(&args));
+
+    // Would be AMOTION_EVENT_ACTION_HOVER_ENTER if pressure value was assumed to be 0 (zero),
+    // which is de default value when the accumulator is cleared.
+    ASSERT_EQ(AMOTION_EVENT_ACTION_DOWN, args.action);
 }
 
 } // namespace android

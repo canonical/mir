@@ -19,14 +19,15 @@ Build-Depends: cmake,
                libboost-regex-dev,
                libboost-filesystem-dev,
                protobuf-compiler,
-               libdrm-dev [!armhf],
+               libdrm-dev,
                libegl1-mesa-dev,
                libgles2-mesa-dev,
-               libgbm-dev [!armhf],
+               libgbm-dev,
                libglm-dev,
                libprotobuf-dev,
                pkg-config,
-               libhardware-dev [armhf],
+               android-headers (>=4.2.2) [i386 amd64 armhf],
+               libhardware-dev [i386 amd64 armhf],
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
@@ -69,7 +70,7 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver12
+Package: libmirserver16
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -77,6 +78,8 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          libmirplatform (= ${binary:Version}),
+         libmirplatformgraphics-mesa (= ${binary:Version}) |
+           libmirplatformgraphics-android (= ${binary:Version}),
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -98,6 +101,36 @@ Description: Display server for Ubuntu - platform library
  Contains the shared libraries required for the Mir server to interact with
  the underlying hardware platform.
 
+Package: libmirplatformgraphics-mesa
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libmirplatform (= ${binary:Version}),
+Description: Display server for Ubuntu - platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the hardware platform using the Mesa drivers.
+
+Package: libmirplatformgraphics-android
+Section: libs
+Architecture: i386 amd64 armhf
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libmirplatform (= ${binary:Version}),
+Description: Display server for Ubuntu - platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the hardware platform using the Android drivers.
+
 Package: mircommon-dev
 Section: libdevel
 Architecture: i386 amd64 armhf arm64
@@ -115,7 +148,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver12 (= ${binary:Version}),
+Depends: libmirserver16 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -127,13 +160,15 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient4
+Package: libmirclient7
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         libmirclientplatform-mesa (= ${binary:Version}) |
+           libmirclientplatform-android (= ${binary:Version}),
 Description: Display server for Ubuntu - client library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -145,7 +180,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient4 (= ${binary:Version}),
+Depends: libmirclient7 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          ${misc:Depends},
@@ -154,6 +189,36 @@ Description: Display server for Ubuntu - development headers
  robust operation and a well-defined driver model.
  .
  Contains header files required to develop against Mir.
+
+Package: libmirclientplatform-mesa
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Replaces: libmirclientplatform
+Description: Display server for Ubuntu - client platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir clients to interact with
+ the underlying hardware platform using the Mesa drivers.
+
+Package: libmirclientplatform-android
+Section: libs
+Architecture: i386 amd64 armhf
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Replaces: libmirclientplatform
+Description: Display server for Ubuntu - client platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir clients to interact with
+ the underlying hardware platform using the Android drivers.
 
 Package: mir-demos
 Architecture: i386 amd64 armhf arm64
@@ -165,6 +230,16 @@ Description: Display server for Ubuntu - demonstration programs
  robust operation and a well-defined driver model.
  .
  Contains demo applications (with source) that use the Mir display server
+
+Package: mir-utils
+Architecture: i386 amd64 armhf arm64
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - utility programs
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains utility programs for probing and controling a Mir server.
 
 Package: mir-doc
 Section: doc

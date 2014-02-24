@@ -22,14 +22,16 @@
 #include "rpc/make_rpc_channel.h"
 #include "rpc/null_rpc_report.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "native_client_platform_factory.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "logging/rpc_report.h"
 #include "logging/input_receiver_report.h"
 #include "lttng/rpc_report.h"
+#include "lttng/input_receiver_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
+#include "mir/shared_library.h"
+#include "client_platform_factory.h"
 
 namespace mcl = mir::client;
 
@@ -38,6 +40,23 @@ namespace
 std::string const off_opt_val{"off"};
 std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
+std::string const default_platform_lib{"libmirclientplatform.so"};
+
+mir::SharedLibrary const* load_library(std::string const& libname)
+{
+    // There's no point in loading twice, and it isn't safe to unload...
+    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
+
+    if (auto& ptr = libraries_cache[libname])
+    {
+        return ptr.get();
+    }
+    else
+    {
+        ptr = std::make_shared<mir::SharedLibrary>(libname);
+        return ptr.get();
+    }
+}
 }
 
 mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
@@ -55,7 +74,7 @@ mcl::DefaultConnectionConfiguration::the_surface_map()
         });
 }
 
-std::shared_ptr<mcl::rpc::MirBasicRpcChannel>
+std::shared_ptr<google::protobuf::RpcChannel>
 mcl::DefaultConnectionConfiguration::the_rpc_channel()
 {
     return rpc_channel(
@@ -82,7 +101,15 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
     return client_platform_factory(
         []
         {
-            return std::make_shared<mcl::NativeClientPlatformFactory>();
+            auto const val_raw = getenv("MIR_CLIENT_PLATFORM_LIB");
+            std::string const val{val_raw ? val_raw : default_platform_lib};
+            auto const platform_lib = load_library(val);
+
+            auto const create_client_platform_factory =
+                platform_lib->load_function<mcl::CreateClientPlatformFactory>(
+                    "create_client_platform_factory");
+
+            return create_client_platform_factory();
         });
 }
 
@@ -131,6 +158,8 @@ mcl::DefaultConnectionConfiguration::the_input_receiver_report()
 
             if (val == log_opt_val)
                 return std::make_shared<mcl::logging::InputReceiverReport>(the_logger());
+            else if (val == lttng_opt_val)
+                return std::make_shared<mcl::lttng::InputReceiverReport>();
             else
                 return std::make_shared<mir::input::receiver::NullInputReceiverReport>();
         });

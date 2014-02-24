@@ -61,6 +61,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <utility>
+#include <ostream>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -76,7 +77,6 @@ mc::SwitchingBundle::SwitchingBundle(
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
-      last_consumed{0},
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
@@ -88,6 +88,11 @@ mc::SwitchingBundle::SwitchingBundle(
                                                " and " +
                                                std::to_string(max_buffers)));
     }
+}
+
+mc::SwitchingBundle::~SwitchingBundle() noexcept
+{
+    force_requests_to_complete();
 }
 
 int mc::SwitchingBundle::nfree() const
@@ -177,9 +182,10 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
     return ring[slot].buf;
 }
 
-mg::Buffer* mc::SwitchingBundle::client_acquire()
+void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* buffer)> complete)
 {
     std::unique_lock<std::mutex> lock(guard);
+    client_acquire_todo = std::move(complete);
 
     if ((framedropping || force_drop) && nbuffers > 1)
     {
@@ -210,9 +216,16 @@ mg::Buffer* mc::SwitchingBundle::client_acquire()
             1;
 #endif
 
-        while (nfree() < min_free)
-            cond.wait(lock);
+        if (nfree() < min_free)
+            return;
     }
+
+    complete_client_acquire(std::move(lock));
+}
+
+void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex> lock)
+{
+    auto complete = std::move(client_acquire_todo);
 
     if (force_drop > 0)
         force_drop--;
@@ -247,7 +260,16 @@ mg::Buffer* mc::SwitchingBundle::client_acquire()
         ring[client].buf = ret;
     }
 
-    return ret.get();
+    lock.unlock();
+
+    try
+    {
+        complete(ret.get());
+    }
+    catch (...)
+    {
+        // TODO comms errors should not propagate to compositing threads
+    }
 }
 
 void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
@@ -273,7 +295,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
     int compositor;
 
     // Multi-monitor acquires close to each other get the same frame:
-    bool same_frame = (frameno == last_consumed);
+    bool same_frame = last_consumed && (frameno == *last_consumed);
 
     int avail = nfree();
     bool can_recycle = ncompositors || avail;
@@ -339,7 +361,8 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
             first_compositor = next(first_compositor);
             ncompositors--;
         }
-        cond.notify_all();
+
+        if (client_acquire_todo) complete_client_acquire(std::move(lock));
     }
 }
 
@@ -392,9 +415,12 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
-    drop_frames(nready);
-    force_drop = nbuffers + 1;
-    cond.notify_all();
+    if (client_acquire_todo)
+    {
+        drop_frames(nready);
+        force_drop = nbuffers + 1;
+        complete_client_acquire(std::move(lock));
+    }
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
@@ -419,4 +445,20 @@ void mc::SwitchingBundle::resize(const geometry::Size &newsize)
 {
     std::unique_lock<std::mutex> lock(guard);
     bundle_properties.size = newsize;
+}
+
+std::ostream& mc::operator<<(std::ostream& os, const mc::SwitchingBundle& bundle)
+{
+    os << "("
+        << (void*)(&bundle)
+        << ",nbuffers=" << bundle.nbuffers
+        << ",first_compositor=" << bundle.first_compositor
+        << ",ncompositors=" << bundle.ncompositors
+        << ",first_ready=" << bundle.first_ready
+        << ",nready=" << bundle.nready
+        << ",first_client=" << bundle.first_client
+        << ",nclients=" << bundle.nclients
+        << ")";
+
+    return os;
 }

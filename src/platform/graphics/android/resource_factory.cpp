@@ -18,14 +18,15 @@
  */
 
 #include "mir/graphics/android/mir_native_window.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "buffer.h"
 #include "resource_factory.h"
 #include "fb_device.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "interpreter_cache.h"
-#include "hwc11_device.h"
-#include "hwc10_device.h"
+#include "hwc_device.h"
+#include "hwc_fb_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync.h"
 #include "android_display.h"
@@ -87,17 +88,18 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
     return std::make_shared<mga::FBDevice>(fb_native_device);
 }
 
-std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc11_device(
+std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HWC11Device>(hwc_native_device, syncer);
+    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
+    return std::make_shared<mga::HwcDevice>(hwc_native_device, syncer, file_ops);
 }
 
-std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc10_device(
+std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device,
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HWC10Device>(hwc_native_device, fb_native_device, syncer);
+    return std::make_shared<mga::HwcFbDevice>(hwc_native_device, fb_native_device, syncer);
 }

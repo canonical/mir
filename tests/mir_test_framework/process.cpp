@@ -21,9 +21,6 @@
 
 #include <errno.h>
 #include <signal.h>
-#include <string.h>
-#include <sys/ptrace.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -109,7 +106,7 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
         int rc = -1;
         while (true)
         {
-            if ((rc = ::waitpid(pid, &status, WNOHANG | WUNTRACED)) == pid)
+            if ((rc = ::waitpid(pid, &status, WNOHANG)) == pid)
             {
                 if (WIFEXITED(status))
                 {
@@ -124,25 +121,6 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                     result.reason = TerminationReason::child_terminated_by_signal;
                     result.signal = WTERMSIG(status);
                     break;
-                }
-                else if (WIFSTOPPED(status))
-                {
-                    assert(!("We are not attached to the child process and thus, we shouldn't reach WIFSTOPPED(status)."));
-                    // As we are not attached to the child process we
-                    // should never hit this branch. However, keeping
-                    // the original code in place and asserting.
-                    int stop_signal = WSTOPSIG(status);
-
-                    if (ptrace(PTRACE_CONT, pid, nullptr, stop_signal) == -1)
-                    {
-                        BOOST_THROW_EXCEPTION(
-                            ::boost::enable_error_info(std::runtime_error("Error continuing child process"))
-                            << (boost::errinfo_errno(errno)));
-                    }
-                }
-                else if (WIFCONTINUED(status))
-                {
-                    continue;
                 }
             }
             else if (rc == 0)

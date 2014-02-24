@@ -50,7 +50,6 @@ public:
     explicit BasicConnector(
         std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
-        std::function<void()> const& force_threads_to_unblock,
         std::shared_ptr<ConnectorReport> const& report);
     ~BasicConnector() noexcept;
     void start() override;
@@ -62,11 +61,11 @@ public:
 protected:
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
     boost::asio::io_service mutable io_service;
+    boost::asio::io_service::work work;
     std::shared_ptr<ConnectorReport> const report;
 
 private:
     std::vector<std::thread> io_service_threads;
-    std::function<void()> const force_threads_to_unblock;
     std::shared_ptr<SessionCreator> const session_creator;
 };
 
@@ -78,7 +77,6 @@ public:
         const std::string& socket_file,
         std::shared_ptr<SessionCreator> const& session_creator,
         int threads,
-        std::function<void()> const& force_threads_to_unblock,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
 

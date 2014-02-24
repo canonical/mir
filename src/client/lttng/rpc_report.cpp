@@ -17,7 +17,7 @@
  */
 
 #include "rpc_report.h"
-#include "mir/lttng/mir_tracepoint.h"
+#include "mir/report/lttng/mir_tracepoint.h"
 
 #include "mir_protobuf_wire.pb.h"
 

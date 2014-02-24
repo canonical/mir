@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,7 +20,6 @@
 
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
-#include "mir/default_configuration_options.h"
 
 #include <memory>
 #include <string>
@@ -36,6 +35,7 @@ class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class RendererFactory;
+class CompositorReport;
 }
 namespace frontend
 {
@@ -49,6 +49,7 @@ class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
+class Screencast;
 }
 
 namespace shell
@@ -64,7 +65,7 @@ class SurfaceConfigurator;
 }
 namespace time
 {
-class TimeSource;
+class Clock;
 }
 namespace scene
 {
@@ -112,10 +113,22 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public virtual ServerConfiguration, DefaultConfigurationOptions
+namespace options
+{
+class Option;
+class Configuration;
+}
+
+namespace report
+{
+class ReportFactory;
+}
+
+class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
+    explicit DefaultServerConfiguration(std::shared_ptr<options::Configuration> const& configuration_options);
 
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
@@ -150,6 +163,7 @@ public:
     /** @name compositor configuration - customization
      * configurable interfaces for modifying compositor
      *  @{ */
+    virtual std::shared_ptr<compositor::CompositorReport> the_compositor_report();
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     /** @} */
 
@@ -169,6 +183,7 @@ public:
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
+    virtual std::shared_ptr<frontend::Screencast>             the_screencast();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
@@ -228,15 +243,16 @@ public:
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
 
-    virtual std::shared_ptr<time::TimeSource>    the_time_source();
+    virtual std::shared_ptr<time::Clock> the_clock();
 
 protected:
-    using DefaultConfigurationOptions::the_options;
-    using DefaultConfigurationOptions::add_options;
-    using DefaultConfigurationOptions::parse_options;
+    std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
+        std::shared_ptr<frontend::Shell> const& shell,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     CachedPtr<frontend::Connector>   connector;
 
@@ -261,6 +277,7 @@ protected:
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::SessionCreator>    session_creator;
+    CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<scene::SurfaceStack> surface_stack;
@@ -278,9 +295,10 @@ protected:
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<time::TimeSource> time_source;
+    CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
@@ -288,11 +306,8 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
 
 private:
+    std::shared_ptr<options::Configuration> const configuration_options;
     std::shared_ptr<input::EventFilter> const default_filter;
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
 
@@ -308,7 +323,8 @@ private:
     std::shared_ptr<scene::SessionManager>       the_session_manager();
     std::shared_ptr<scene::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
-    std::function<void()> force_threads_to_unblock_callback();
+
+    auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 };
 }
 

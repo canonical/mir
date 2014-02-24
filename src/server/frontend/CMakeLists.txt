@@ -3,11 +3,9 @@ set(
 
   client_buffer_tracker.cpp
   session_mediator.cpp
-  null_session_mediator_report.cpp
-  null_message_processor_report.cpp
   protobuf_message_processor.cpp
+  protobuf_responder.cpp
   protobuf_buffer_packer.cpp
-  null_message_processor.cpp
   published_socket_connector.cpp
   protobuf_session_creator.cpp
   socket_session.cpp
@@ -21,13 +19,6 @@ set(
 
   ${PROTO_HDRS}
 )
-
-if (MIR_PLATFORM STREQUAL "android")
-  list(APPEND FRONTEND_SOURCES session_mediator_android.cpp)
-elseif (MIR_PLATFORM STREQUAL "mesa")
-  include_directories(${DRM_INCLUDE_DIRS})
-  list(APPEND FRONTEND_SOURCES session_mediator_mesa.cpp)
-endif()
 
 add_library(
   mirfrontend STATIC

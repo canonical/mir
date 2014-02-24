@@ -73,6 +73,7 @@ message DisplayOutput {
   optional uint32 type = 13;
   optional uint32 preferred_mode = 14;
   optional uint32 power_mode = 15;
+  optional sint32 orientation = 16;
 }
 
 // DEPRECATED
@@ -150,6 +151,22 @@ message EventSequence {
   optional string error = 127;
 }
 
+message ScreencastParameters {
+  required uint32 output_id = 1;
+  required uint32 width = 2;
+  required uint32 height = 3;
+}
+
+message ScreencastId {
+  required uint32 value = 1;
+}
+
+message Screencast {
+  optional ScreencastId screencast_id = 1;
+  optional Buffer buffer = 2;
+  optional string error = 127;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -165,5 +182,9 @@ service DisplayServer {
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
+
+  rpc create_screencast(ScreencastParameters) returns (Screencast);
+  rpc screencast_buffer(ScreencastId) returns (Buffer);
+  rpc release_screencast(ScreencastId) returns (Void);
 }
 

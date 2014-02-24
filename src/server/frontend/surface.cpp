@@ -25,6 +25,10 @@
 
 #include "client_buffer_tracker.h"
 
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 
@@ -39,13 +43,33 @@ auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
     private:
         void swap_buffers(graphics::Buffer*& buffer)
         {
-            surface->swap_buffers(buffer);
+            surface->swap_buffers_blocking(buffer);
         }
         virtual mir::geometry::Size size() const { return surface->size(); }
-        virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
+        virtual MirPixelFormat pixel_format() const { return surface->pixel_format(); }
 
         std::shared_ptr<Surface> const surface;
     };
 
     return std::make_shared<ForwardingInternalSurface>(surface);
+}
+
+void mf::Surface::swap_buffers_blocking(graphics::Buffer*& buffer)
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool done = false;
+
+    swap_buffers(buffer,
+        [&](mg::Buffer* new_buffer)
+        {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+            buffer = new_buffer;
+            done = true;
+            cv.notify_one();
+        });
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+
+    cv.wait(lock, [&]{ return done; });
 }

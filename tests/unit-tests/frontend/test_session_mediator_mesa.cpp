@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,6 +20,8 @@
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
+#include "src/server/frontend/session_mediator.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
@@ -34,6 +36,7 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
+#include "mir_test_doubles/null_screencast.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -44,6 +47,7 @@ namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -57,7 +61,7 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
         return std::shared_ptr<mg::GraphicBufferAllocator>();
     }
 
-    MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
+    MOCK_METHOD1(drm_auth_magic, void(unsigned int));
 };
 
 struct SessionMediatorMesaTest : public ::testing::Test
@@ -67,12 +71,12 @@ struct SessionMediatorMesaTest : public ::testing::Test
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
-          report{std::make_shared<mf::NullSessionMediatorReport>()},
+          report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{shell, mock_platform, display_changer,
+          mediator{__LINE__, shell, mock_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache},
+                   resource_cache, std::make_shared<mtd::NullScreencast>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -95,7 +99,7 @@ TEST_F(SessionMediatorMesaTest, drm_auth_magic_uses_drm_authenticator)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
-    drm_magic_t const drm_magic{0x10111213};
+    unsigned int const drm_magic{0x10111213};
     int const no_error{0};
 
     EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))
@@ -119,7 +123,7 @@ TEST_F(SessionMediatorMesaTest, drm_auth_magic_sets_status_code_on_error)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
-    drm_magic_t const drm_magic{0x10111213};
+    unsigned int const drm_magic{0x10111213};
     int const error_number{667};
 
     EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))

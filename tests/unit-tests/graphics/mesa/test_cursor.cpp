@@ -22,6 +22,7 @@
 #include "src/platform/graphics/mesa/kms_display_configuration.h"
 
 #include "mir_test_doubles/mock_gbm.h"
+#include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -32,28 +33,10 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+using mir::test::MockKMSOutput;
 
 namespace
 {
-
-struct MockKMSOutput : public mgm::KMSOutput
-{
-    MOCK_METHOD0(reset, void());
-    MOCK_METHOD2(configure, void(geom::Displacement, size_t));
-    MOCK_CONST_METHOD0(size, geom::Size());
-
-    MOCK_METHOD1(set_crtc, bool(uint32_t));
-    MOCK_METHOD0(clear_crtc, void());
-    MOCK_METHOD1(schedule_page_flip, bool(uint32_t));
-    MOCK_METHOD0(wait_for_page_flip, void());
-
-    MOCK_METHOD1(set_cursor, void(gbm_bo*));
-    MOCK_METHOD1(move_cursor, void(geom::Point));
-    MOCK_METHOD0(clear_cursor, void());
-    MOCK_CONST_METHOD0(has_cursor, bool());
-
-    MOCK_METHOD1(set_power_mode, void(MirPowerMode));
-};
 
 struct StubKMSOutputContainer : public mgm::KMSOutputContainer
 {
@@ -105,8 +88,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 true,
                 geom::Point{0, 0},
                 1,
-                0,
-                mir_power_mode_on
+                mir_pixel_format_invalid,
+                mir_power_mode_on,
+                mir_orientation_normal
             });
         outputs.push_back(
             {
@@ -124,33 +108,35 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 true,
                 geom::Point{100, 50},
                 0,
-                0,
-                mir_power_mode_on
+                mir_pixel_format_invalid,
+                mir_power_mode_on,
+                mir_orientation_normal
             });
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
         f({card_id, outputs.size()});
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto const& output : outputs)
             f(output);
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPowerMode)
+                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
+                          MirOrientation) override
     {
     }
 
-    uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const
+    uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const override
     {
         return id.as_value();
     }
 
-    size_t get_kms_mode_index(mg::DisplayConfigurationOutputId, size_t conf_mode_index) const
+    size_t get_kms_mode_index(mg::DisplayConfigurationOutputId, size_t conf_mode_index) const override
     {
         return conf_mode_index;
     }

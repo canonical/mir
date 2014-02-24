@@ -21,59 +21,60 @@
 
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
+#include "hwc_layers.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
 #include <initializer_list>
+#include <list>
 
 namespace mir
 {
 namespace graphics
 {
 
-class NativeBuffer;
+class Renderable;
 class Buffer;
 
 namespace android
 {
 
-struct HWCLayer : public hwc_layer_1
-{
-    virtual ~HWCLayer() = default;
-
-    HWCLayer& operator=(HWCLayer const& layer);
-    HWCLayer(HWCLayer const& layer);
-
-protected:
-    HWCLayer(int type, buffer_handle_t handle, int width, int height, int layer_flags);
-
-    hwc_rect_t visible_rect;
-};
-
-struct CompositionLayer : public HWCLayer
-{
-    CompositionLayer(int layer_flags);
-    CompositionLayer(NativeBuffer const&, int layer_flags);
-};
-
-struct FramebufferLayer : public HWCLayer
-{
-    FramebufferLayer();
-    FramebufferLayer(NativeBuffer const&);
-};
-
-class LayerList
+class LayerListBase
 {
 public:
-    LayerList(std::initializer_list<HWCLayer> const& layers);
+    std::weak_ptr<hwc_display_contents_1_t> native_list();
+    NativeFence retirement_fence();
 
-    hwc_display_contents_1_t* native_list() const;
+protected:
+    LayerListBase(size_t initial_list_size);
 
-    void set_fb_target(std::shared_ptr<NativeBuffer> const&);
-    NativeFence framebuffer_fence();
+    void update_representation(size_t needed_size); 
+    std::list<HWCLayer> layers;
 
 private:
+    LayerListBase& operator=(LayerListBase const&) = delete;
+    LayerListBase(LayerListBase const&) = delete;
+
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
+};
+
+class LayerList : public LayerListBase
+{
+public:
+    LayerList();
+};
+
+class FBTargetLayerList : public LayerListBase
+{
+public:
+    FBTargetLayerList();
+    void set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list);
+    void reset_composition_layers(); 
+    NativeFence fb_target_fence();
+    void set_fb_target(Buffer const&);
+
+private:
+    bool skip_layers_present{true};
 };
 
 }

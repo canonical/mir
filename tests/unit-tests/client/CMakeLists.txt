@@ -7,13 +7,14 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_connection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wait_handle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_display_conf.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_screencast.cpp
 )
 
-if(MIR_PLATFORM STREQUAL "android")
+if(MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory("android")
 endif()
 
-if(MIR_PLATFORM STREQUAL "mesa")
+if(MIR_TEST_PLATFORM STREQUAL "mesa")
   add_subdirectory("mesa")
 endif()
 

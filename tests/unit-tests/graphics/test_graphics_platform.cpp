@@ -35,7 +35,7 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
 
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <gtest/gtest.h>
 
@@ -43,6 +43,7 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 namespace mo = mir::options;
 #ifndef ANDROID
 namespace mtf = mir::mir_test_framework;
@@ -66,26 +67,17 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
-        typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
-
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
 #endif
     }
 
     std::shared_ptr<mg::Platform> create_platform()
     {
 #ifdef ANDROID
-        return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mg::NullDisplayReport>());
+        return mg::create_platform(std::make_shared<mo::ProgramOption>(), mr::null_display_report());
 #else
         return std::make_shared<mg::mesa::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            mr::null_display_report(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>());
 #endif
     }

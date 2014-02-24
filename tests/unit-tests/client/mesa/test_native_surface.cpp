@@ -87,16 +87,36 @@ TEST_F(MesaClientNativeSurfaceTest, basic_parameters)
     EXPECT_EQ(surf_params.pixel_format, params.pixel_format);
 }
 
+TEST_F(MesaClientNativeSurfaceTest, first_advance_skips_request)
+{   // Verify the workaround for LP: #1281938 is functioning, until it's
+    // fixed in Mesa and we can remove it from Mir.
+    
+    using namespace testing;
+    MirBufferPackage buffer_package;
+    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
+        .Times(0);
+    EXPECT_CALL(mock_surface, get_current_buffer())
+        .Times(1);
+
+    mclg::NativeSurface interpreter(mock_surface);
+    interpreter.surface_advance_buffer(&interpreter, &buffer_package);
+}
+
 TEST_F(MesaClientNativeSurfaceTest, basic_advance)
 {
     using namespace testing;
     MirBufferPackage buffer_package;
-    EXPECT_CALL(mock_surface, next_buffer(_,_))
+
+    InSequence seq;
+    EXPECT_CALL(mock_surface, get_current_buffer())
+        .Times(1);
+    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
         .Times(1);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
 
     mclg::NativeSurface interpreter(mock_surface);
+    interpreter.surface_advance_buffer(&interpreter, &buffer_package);
     interpreter.surface_advance_buffer(&interpreter, &buffer_package);
 }
 
@@ -105,9 +125,9 @@ TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
     using namespace testing;
 
     Sequence seq;
-    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,0))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,0))
         .InSequence(seq);
-    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,1))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,1))
         .InSequence(seq);
 
     mclg::NativeSurface interpreter(mock_surface);

@@ -143,6 +143,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
     if (!disconnected.load())
     {
         auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+        mir::protobuf::Screencast* screencast{nullptr};
         if (surface)
         {
             surface->clear_fd();
@@ -157,12 +158,18 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
                 rpc_report->file_descriptors_received(*response, fds);
             }
         }
+        else
+        {
+            screencast = dynamic_cast<mir::protobuf::Screencast*>(response);
+        }
 
         auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
         if (!buffer)
         {
             if (surface && surface->has_buffer())
                 buffer = surface->mutable_buffer();
+            else if (screencast && screencast->has_buffer())
+                buffer = screencast->mutable_buffer();
         }
 
         if (buffer)
@@ -267,15 +274,14 @@ void mclr::MirSocketRpcChannel::CallMethod(
         google::protobuf::NewPermanentCallback(this, &MirSocketRpcChannel::receive_file_descriptors, response, complete));
 
     // Only save details after serialization succeeds
-    auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
+    pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    send_message(invocation, send_buffer, invocation);
+    send_message(invocation, invocation);
 }
 
 void mclr::MirSocketRpcChannel::send_message(
     mir::protobuf::wire::Invocation const& body,
-    detail::SendBuffer& send_buffer,
     mir::protobuf::wire::Invocation const& invocation)
 {
     const size_t size = body.ByteSize();
@@ -285,7 +291,7 @@ void mclr::MirSocketRpcChannel::send_message(
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    send_buffer.resize(sizeof header_bytes + size);
+    detail::SendBuffer send_buffer(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
     body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
 

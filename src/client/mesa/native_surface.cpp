@@ -43,15 +43,10 @@ static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interva
     auto s = static_cast<mclm::NativeSurface*>(surface);
     return s->set_swapinterval(interval);
 }
-
-static void buffer_advanced_callback(MirSurface*  /* surface */,
-                                     void*  /* context */)
-{
-}
 }
 
 mclm::NativeSurface::NativeSurface(ClientSurface& surface)
-    : surface(surface)
+    : starting(true), surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
     surface_get_parameters = get_parameters_static;
@@ -60,7 +55,17 @@ mclm::NativeSurface::NativeSurface(ClientSurface& surface)
 
 int mclm::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
 {
-    mir_wait_for(surface.next_buffer(buffer_advanced_callback, NULL));
+    /*
+     * At present dri2_create_mir_window_surface will trigger
+     * mir_advance_colour_buffer which will land here. Since we're still
+     * creating the window, we don't have any buffers we want the server to
+     * composite, so avoid sending a request to the server on startup:
+     */
+    if (starting)
+        starting = false;
+    else
+        surface.request_and_wait_for_next_buffer();
+
     auto buffer = surface.get_current_buffer();
 
     auto buffer_to_driver = buffer->native_buffer_handle();
@@ -80,6 +85,6 @@ int mclm::NativeSurface::set_swapinterval(int interval)
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;
 
-    mir_wait_for(surface.configure(mir_surface_attrib_swapinterval, interval));
+    surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
     return MIR_MESA_TRUE;
 }

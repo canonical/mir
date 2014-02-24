@@ -5,10 +5,9 @@ include_directories(
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
+add_subdirectory(report/)
 add_subdirectory(logging/)
-add_subdirectory(lttng/)
 add_subdirectory(scene/)
-add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
 add_subdirectory(time/)
@@ -29,10 +28,8 @@ set(
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
-  default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
-  shared_library.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -51,9 +48,12 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedgeometry
   mirsharedlogging
   mirsharedenv
+  mirsharedsharedlibrary
   mirscene
   mirtime
   mirlttng
+  mirreport
+  mirlogger
   mirnestedgraphics
   miroffscreengraphics
 )
@@ -65,6 +65,7 @@ list(APPEND MIRSERVER_LINKS
   3rd_party
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
@@ -93,7 +94,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 12)
+set(MIRSERVER_ABI 16)
 
 set_target_properties(
   mirserver

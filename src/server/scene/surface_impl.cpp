@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -103,9 +103,9 @@ MirPixelFormat ms::SurfaceImpl::pixel_format() const
     return surface->pixel_format();
 }
 
-void ms::SurfaceImpl::swap_buffers(graphics::Buffer*& buffer)
+void ms::SurfaceImpl::swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
 {
-    surface->swap_buffers(buffer);
+    surface->swap_buffers(old_buffer, complete);
 }
 
 void ms::SurfaceImpl::allow_framedropping(bool allow)
@@ -245,21 +245,26 @@ void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller
 
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
-    surface->resize(size);
-
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = id.as_value();
-    e.resize.width = size.width.as_int();
-    e.resize.height = size.height.as_int();
-
-    event_sink->handle_event(e);
+    if (surface->resize(size))  // if size changed
+    {
+        MirEvent e;
+        memset(&e, 0, sizeof e);
+        e.type = mir_event_type_resize;
+        e.resize.surface_id = id.as_value();
+        e.resize.width = size.width.as_int();
+        e.resize.height = size.height.as_int();
+        event_sink->handle_event(e);
+    }
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
 {
     surface->set_rotation(degrees, axis);
+}
+
+float ms::SurfaceImpl::alpha() const
+{
+    return surface->alpha();
 }
 
 void ms::SurfaceImpl::set_alpha(float alpha)

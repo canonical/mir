@@ -151,9 +151,11 @@ bool me::WindowManager::handle(MirEvent const& event)
                     power_mode = mir_power_mode_off;
 
                 conf->configure_output(output.id, output.used,
-                                       output.top_left, 
+                                       output.top_left,
                                        output.current_mode_index,
-                                       power_mode);
+                                       output.current_format,
+                                       power_mode,
+                                       output.orientation);
             });
             display_off = !display_off;
 
@@ -162,6 +164,42 @@ bool me::WindowManager::handle(MirEvent const& event)
                 compositor->start();
             return true;
         }
+        else if ((event.key.modifiers & mir_key_modifier_alt) &&
+                 (event.key.modifiers & mir_key_modifier_ctrl))
+        {
+            MirOrientation orientation = mir_orientation_normal;
+            bool rotating = true;
+
+            switch (event.key.scan_code)
+            {
+            case KEY_UP:    orientation = mir_orientation_normal; break;
+            case KEY_DOWN:  orientation = mir_orientation_inverted; break;
+            case KEY_LEFT:  orientation = mir_orientation_left; break;
+            case KEY_RIGHT: orientation = mir_orientation_right; break;
+            default:        rotating = false; break;
+            }
+
+            if (rotating)
+            {
+                compositor->stop();
+                auto conf = display->configuration();
+                conf->for_each_output(
+                    [&](mg::DisplayConfigurationOutput const& output) -> void
+                    {
+                        conf->configure_output(output.id, output.used,
+                                               output.top_left,
+                                               output.current_mode_index,
+                                               output.current_format,
+                                               output.power_mode,
+                                               orientation);
+                    }
+                );
+                display->configure(*conf);
+                compositor->start();
+                return true;
+            }
+        }
+
     }
     else if (event.type == mir_event_type_motion &&
              focus_controller)
@@ -249,6 +287,18 @@ bool me::WindowManager::handle(MirEvent const& event)
                         surf->resize({width, height});
                     }
 
+                    handled = true;
+                }
+                else if (action == mir_motion_action_scroll)
+                {
+                    float alpha = surf->alpha();
+                    alpha += 0.1f *
+                             event.motion.pointer_coordinates[0].vscroll;
+                    if (alpha < 0.0f)
+                        alpha = 0.0f;
+                    else if (alpha > 1.0f)
+                        alpha = 1.0f;
+                    surf->set_alpha(alpha);
                     handled = true;
                 }
 

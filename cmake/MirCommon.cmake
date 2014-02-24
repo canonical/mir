@@ -1,11 +1,14 @@
 cmake_minimum_required (VERSION 2.6)
 # Create target to discover tests
 
-option(
+include(CMakeDependentOption)
+
+CMAKE_DEPENDENT_OPTION(
   DISABLE_GTEST_TEST_DISCOVERY
   "If set to ON, disables fancy test autodiscovery and switches back to classic add_test behavior"
   OFF
-)
+  "NOT MIR_IS_CROSS_COMPILING"
+  ON)
 
 option(
   ENABLE_MEMCHECK_OPTION
@@ -19,22 +22,19 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
 
   if(VALGRIND_EXECUTABLE)
-    if(MIR_PLATFORM STREQUAL "android")
-	  # don't exit with an error when valgrind find errors
-      #set(VALGRIND_ARGS "--error-exitcode=1")
-    else()
-      set(VALGRIND_ARGS "--error-exitcode=1 --trace-children=yes")
+    set(VALGRIND_ARGS "--error-exitcode=1" "--trace-children=yes")
+    set(DISCOVER_FLAGS "--enable-memcheck")
+    if (TARGET_ARCH STREQUAL "arm-linux-gnueabihf")
+        set(VALGRIND_ARGS ${VALGRIND_ARGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
+        set(DISCOVER_FLAGS ${DISCOVER_FLAGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
     endif()
-
-    set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
-
   else(VALGRIND_EXECUTABLE)
     message("Not enabling memcheck as valgrind is missing on your system")
   endif(VALGRIND_EXECUTABLE)
 endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
-  if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
+  if(DISABLE_GTEST_TEST_DISCOVERY)
     add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}")
 
     if (${ARGC} GREATER 1)
@@ -60,7 +60,7 @@ function (mir_discover_tests EXECUTABLE)
 
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${DISCOVER_FLAGS}
       ${EXTRA_ENV_FLAGS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
@@ -81,12 +81,12 @@ endfunction ()
 
 function (mir_add_memcheck_test)
   if (ENABLE_MEMCHECK_OPTION)
-      if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
+      if(DISABLE_GTEST_TEST_DISCOVERY)
           ADD_TEST("memcheck-test" "sh" "-c" "${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error; if [ $? != 0 ]; then exit 0; else exit 1; fi")
       else()
         add_custom_target(
           memcheck_test ALL
-          ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error --memcheck-test
+          ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error --memcheck-test ${DISCOVER_FLAGS}
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "Adding memcheck test" VERBATIM)
 

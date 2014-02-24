@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdint.h>
+#include <getopt.h>
 
 typedef struct
 {
@@ -117,6 +118,8 @@ static void draw_window(Window *win)
     mir_surface_swap_buffers_sync(win->surface);
 }
 
+static char const *socket_file = NULL;
+
 int main(int argc, char *argv[])
 {
     MirConnection *conn;
@@ -124,9 +127,28 @@ int main(int argc, char *argv[])
     Window win[3];
     unsigned int f;
 
-    (void)argc;
+    int arg;
+    opterr = 0;
+    while ((arg = getopt (argc, argv, "hm:")) != -1)
+    {
+        switch (arg)
+        {
+        case 'm':
+            socket_file = optarg;
+            break;
 
-    conn = mir_connect_sync(NULL, argv[0]);
+        case '?':
+        case 'h':
+        default:
+            puts(argv[0]);
+            puts("Usage:");
+            puts("    -m <Mir server socket>");
+            puts("    -h: this help text");
+            return -1;
+        }
+    }
+
+    conn = mir_connect_sync(socket_file, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
         fprintf(stderr, "Could not connect to a display server.\n");

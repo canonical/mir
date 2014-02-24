@@ -75,8 +75,8 @@ struct MockMirSurface : public mcl::ClientSurface
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_callback callback, void * context));
-    MOCK_METHOD2(configure, MirWaitHandle*(MirSurfaceAttrib, int));
+    MOCK_METHOD0(request_and_wait_for_next_buffer, void());
+    MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib, int));
     MirSurfaceParameters params;
 };
 
@@ -137,7 +137,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
-    EXPECT_CALL(mock_surface, next_buffer(_,_))
+    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
         .Times(1);
 
     interpreter.driver_returns_buffer(&buffer, -1);

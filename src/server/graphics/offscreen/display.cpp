@@ -108,10 +108,12 @@ void mgo::Display::for_each_display_buffer(
         f(*db_ptr);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mgo::Display::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mgo::Display::configuration() const
 {
     std::lock_guard<std::mutex> lock{configuration_mutex};
-    return std::make_shared<mgo::DisplayConfiguration>(current_display_configuration);
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new mgo::DisplayConfiguration(current_display_configuration)
+    );
 }
 
 void mgo::Display::configure(mg::DisplayConfiguration const& conf)
@@ -125,11 +127,9 @@ void mgo::Display::configure(mg::DisplayConfiguration const& conf)
         {
             if (output.connected && output.preferred_mode_index < output.modes.size())
             {
-                geom::Rectangle const area{
-                    output.top_left, output.modes[output.current_mode_index].size};
                 auto raw_db = new mgo::DisplayBuffer{
                     SurfacelessEGLContext{egl_display, egl_context_shared},
-                    area};
+                    output.extents()};
 
                 display_buffers.push_back(std::unique_ptr<mg::DisplayBuffer>(raw_db));
             }

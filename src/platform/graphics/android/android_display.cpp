@@ -17,14 +17,13 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display_configuration.h"
+#include "android_display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "android_display.h"
 #include "display_builder.h"
-#include "display_device.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mga=mir::graphics::android;
@@ -35,9 +34,7 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& 
                                     std::shared_ptr<DisplayReport> const& display_report)
     : display_builder{display_builder},
       gl_context{display_builder->display_format(), *display_report},
-      display_device(display_builder->create_display_device()),
-      display_buffer{display_builder->create_display_buffer(display_device, gl_context)},
-      current_configuration{display_buffer->view_area().size}
+      display_buffer{display_builder->create_display_buffer(gl_context)}
 {
     display_report->report_successful_setup_of_native_resources();
 
@@ -52,19 +49,18 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
     f(*display_buffer);
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
+std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() const
 {
-    return std::make_shared<mga::AndroidDisplayConfiguration>(current_configuration);
+    return std::unique_ptr<mg::DisplayConfiguration>(
+        new mga::AndroidDisplayConfiguration(display_buffer->configuration()));
 }
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        // TODO: Properly support multiple outputs
-        display_device->mode(output.power_mode);
+        display_buffer->configure(output);
     });
-    current_configuration = dynamic_cast<mga::AndroidDisplayConfiguration const&>(configuration);
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(

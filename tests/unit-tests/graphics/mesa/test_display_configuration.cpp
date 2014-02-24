@@ -25,7 +25,7 @@
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mir_test_framework/udev_environment.h"
@@ -41,6 +41,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
+namespace mr = mir::report;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
 
@@ -85,13 +86,13 @@ public:
 
         setup_sample_modes();
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mgm::Platform> create_platform()
     {
         return std::make_shared<mgm::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
@@ -197,8 +198,9 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             true,
             geom::Point(),
             1,
-            0,
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -212,8 +214,9 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             false,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -227,8 +230,9 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             false,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         }
     };
 
@@ -286,7 +290,7 @@ TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     /* Test body */
     auto display = create_display(create_platform());
 
-    auto conf = display->configuration();
+    std::shared_ptr<mg::DisplayConfiguration> conf = display->configuration();
     auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
 
     size_t output_count{0};
@@ -329,7 +333,7 @@ TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     /* Test body */
     auto display = create_display(create_platform());
 
-    auto conf = display->configuration();
+    std::shared_ptr<mg::DisplayConfiguration> conf = display->configuration();
     auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
 
     EXPECT_THROW({
@@ -381,8 +385,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             true,
             geom::Point(),
             1,
-            0,
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -396,8 +401,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             false,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         },
     };
 
@@ -415,8 +421,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             true,
             geom::Point(),
             std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max(),
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -430,8 +437,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             false,
             geom::Point(),
             1,
-            0,
-            mir_power_mode_on
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
         },
     };
 

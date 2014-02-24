@@ -56,9 +56,9 @@ public:
     EGLNativeDisplayType egl_native_display() const;
 
     /* From DRMAuthenticator */
-    void drm_auth_magic(drm_magic_t magic);
+    void drm_auth_magic(unsigned int magic);
 
-    std::shared_ptr<UdevContext> udev;
+    std::shared_ptr<mir::udev::Context> udev;
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
 

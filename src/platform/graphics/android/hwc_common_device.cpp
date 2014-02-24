@@ -75,12 +75,10 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
     std::unique_lock<std::mutex> lg(blanked_mutex);
     int err = 0;
 
-    //note: mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off
-    //      are all treated like mir_power_mode_off
     if ((mode_request == mir_power_mode_suspend) ||
         (mode_request == mir_power_mode_standby))
     {
-        mode_request = mir_power_mode_off;
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot set to suspend or standby"));
     }
 
     if ((mode_request == mir_power_mode_on) &&
@@ -128,4 +126,9 @@ int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
     if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
         return err;
     return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
+}
+
+bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
+{
+    return false; 
 }

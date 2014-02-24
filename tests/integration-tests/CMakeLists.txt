@@ -1,3 +1,5 @@
+include(CMakeDependentOption)
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 set(
@@ -20,11 +22,11 @@ add_subdirectory(shell/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_PLATFORM STREQUAL "mesa")
+if(MIR_TEST_PLATFORM STREQUAL "mesa")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
@@ -36,6 +38,7 @@ if(MIR_PLATFORM STREQUAL "mesa")
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
+link_directories(${LIBRARY_OUTPUT_PATH})
 add_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS})
@@ -64,13 +67,16 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_PLATFORM STREQUAL "android")
-  #don't discover the test, we'll run it later on a phone
-else()
-  if(MIR_ENABLE_INTEGRATION_TESTS)
-    mir_discover_tests(mir_integration_tests)
-  endif()
-endif()
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_INTEGRATION_TESTS
+  "Run integration tests as part of default testing"
+  ON
+  "MIR_BUILD_INTEGRATION_TESTS"
+  OFF)
+
+if (MIR_RUN_INTEGRATION_TESTS)
+  mir_discover_tests(mir_integration_tests)
+endif (MIR_RUN_INTEGRATION_TESTS)
 
 install(
     TARGETS mir_integration_tests

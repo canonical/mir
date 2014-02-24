@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/renderable.h"
+#include "mir/graphics/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
@@ -26,105 +28,124 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer const& layer)
+namespace
 {
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
-    return *this;
-}
-
-mga::HWCLayer::HWCLayer(HWCLayer const& layer)
+std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 {
-    memcpy(this, &layer, sizeof(HWCLayer));
-    this->visibleRegionScreen = {1, &this->visible_rect};
-}
-
-mga::HWCLayer::HWCLayer(int type, buffer_handle_t buffer_handle, int width, int height, int layer_flags)
-{
-    compositionType = type;
-    hints = 0;
-    flags = layer_flags;
-    transform = 0;
-    blending = HWC_BLENDING_NONE;
-    //TODO: acquireFenceFd should be buffer.fence()
-    acquireFenceFd = -1;
-    releaseFenceFd = -1;
-
-    visible_rect.top = 0;
-    visible_rect.left = 0;
-    visible_rect.bottom = height;
-    visible_rect.right = width;
-    sourceCrop = visible_rect;
-    displayFrame = visible_rect;
-    visibleRegionScreen.numRects=1;
-    visibleRegionScreen.rects= &visible_rect;
-    handle = buffer_handle;
-
-    memset(&reserved, 0, sizeof(reserved));
-}
-
-mga::FramebufferLayer::FramebufferLayer()
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, nullptr, 0, 0, 0)
-{
-}
-
-mga::FramebufferLayer::FramebufferLayer(mg::NativeBuffer const& buffer)
-    : HWCLayer(HWC_FRAMEBUFFER_TARGET, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, 0)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(int layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, nullptr, 0, 0, layer_flags)
-{
-}
-
-mga::CompositionLayer::CompositionLayer(mg::NativeBuffer const& buffer, int layer_flags)
-    : HWCLayer(HWC_FRAMEBUFFER, buffer.handle(),
-               buffer.anwb()->width, buffer.anwb()->height, layer_flags)
-{
-}
-
-mga::LayerList::LayerList(std::initializer_list<HWCLayer> const& layer_list)
-{
-    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(layer_list.size());
-    hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
+    /* hwc layer list uses hwLayers[0] at the end of the struct */
+    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(needed_size);
+    auto new_hwc_representation = std::shared_ptr<hwc_display_contents_1_t>(
         static_cast<hwc_display_contents_1_t*>( ::operator new(struct_size)));
 
-    auto i = 0u;
-    for(auto& layer : layer_list)
-    {
-        hwc_representation->hwLayers[i++] = layer;
-    }
-    hwc_representation->numHwLayers = layer_list.size();
-    hwc_representation->retireFenceFd = -1;
-    hwc_representation->flags = HWC_GEOMETRY_CHANGED;
+    new_hwc_representation->numHwLayers = needed_size;
+    new_hwc_representation->retireFenceFd = -1;
+    new_hwc_representation->flags = HWC_GEOMETRY_CHANGED;
 
     //aosp exynos hwc in particular, checks that these fields are non-null in hwc1.1, although
     //these fields are deprecated in hwc1.1 and later.
-    hwc_representation->dpy = reinterpret_cast<void*>(0xDECAF);
-    hwc_representation->sur = reinterpret_cast<void*>(0xC0FFEE);
+    static int fake_egl_values = 0;
+    new_hwc_representation->dpy = &fake_egl_values;
+    new_hwc_representation->sur = &fake_egl_values;
 
+    return new_hwc_representation;
+}
 }
 
-void mga::LayerList::set_fb_target(std::shared_ptr<NativeBuffer> const& native_buffer)
+void mga::LayerListBase::update_representation(size_t needed_size)
 {
-    auto fb_position = hwc_representation->numHwLayers - 1;
+    std::shared_ptr<hwc_display_contents_1_t> new_hwc_representation;
+    std::list<HWCLayer> new_layers;
 
-    if (hwc_representation->hwLayers[fb_position].compositionType == HWC_FRAMEBUFFER_TARGET)
+    if (hwc_representation->numHwLayers != needed_size)
     {
-        hwc_representation->hwLayers[fb_position] = mga::FramebufferLayer(*native_buffer);
-        hwc_representation->hwLayers[fb_position].acquireFenceFd = native_buffer->copy_fence();
+        new_hwc_representation = generate_hwc_list(needed_size);
     }
+    else
+    {
+        new_hwc_representation = hwc_representation;
+    }
+
+    for (auto i = 0u; i < needed_size; i++)
+    {
+        new_layers.emplace_back(mga::HWCLayer(new_hwc_representation, i));
+    }
+
+    std::swap(new_layers, layers);
+    hwc_representation = new_hwc_representation;
 }
 
-mga::NativeFence mga::LayerList::framebuffer_fence()
+std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
 {
-    auto fb_position = hwc_representation->numHwLayers - 1;
-    return hwc_representation->hwLayers[fb_position].releaseFenceFd;
+    return hwc_representation;
 }
 
-hwc_display_contents_1_t* mga::LayerList::native_list() const
+mga::NativeFence mga::LayerListBase::retirement_fence()
 {
-    return hwc_representation.get();
+    return hwc_representation->retireFenceFd;
+}
+
+mga::LayerListBase::LayerListBase(size_t initial_list_size)
+    : hwc_representation{generate_hwc_list(initial_list_size)}
+{
+    update_representation(initial_list_size);
+}
+
+mga::LayerList::LayerList()
+    : LayerListBase{1}
+{
+    layers.back().set_layer_type(mga::LayerType::skip);
+}
+
+mga::FBTargetLayerList::FBTargetLayerList()
+    : LayerListBase{2}
+{
+    layers.front().set_layer_type(mga::LayerType::skip);
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+}
+
+void mga::FBTargetLayerList::reset_composition_layers()
+{
+    update_representation(2);
+
+    layers.front().set_layer_type(mga::LayerType::skip);
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+
+    skip_layers_present = true;
+}
+
+void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
+{
+    auto const needed_size = list.size() + 1;
+    update_representation(needed_size);
+
+    auto layers_it = layers.begin();
+    for(auto const& renderable : list)
+    {
+        layers_it->set_layer_type(mga::LayerType::gl_rendered);
+        layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
+        layers_it->set_buffer(*renderable->buffer());
+        layers_it++;
+    }
+
+    layers_it->set_layer_type(mga::LayerType::framebuffer_target);
+    skip_layers_present = false;
+}
+
+
+void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
+{
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    if (skip_layers_present)
+    {
+        layers.front().set_render_parameters(disp_frame, false);
+        layers.front().set_buffer(buffer);
+    }
+
+    layers.back().set_render_parameters(disp_frame, false);
+    layers.back().set_buffer(buffer);
+}
+
+mga::NativeFence mga::FBTargetLayerList::fb_target_fence()
+{
+   return layers.back().release_fence();
 }

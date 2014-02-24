@@ -21,6 +21,7 @@
 
 #include "mir/compositor/compositor.h"
 
+#include <mutex>
 #include <memory>
 #include <vector>
 #include <thread>
@@ -39,13 +40,15 @@ enum {max_client_buffers = 3};
 class DisplayBufferCompositorFactory;
 class CompositingFunctor;
 class Scene;
+class CompositorReport;
 
 class MultiThreadedCompositor : public Compositor
 {
 public:
     MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,
                             std::shared_ptr<Scene> const& scene,
-                            std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory);
+                            std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
+                            std::shared_ptr<CompositorReport> const& compositor_report);
     ~MultiThreadedCompositor();
 
     void start();
@@ -55,9 +58,13 @@ private:
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
+    std::shared_ptr<CompositorReport> const report;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::thread> threads;
+
+    std::mutex started_guard;
+    bool started;
 };
 
 }

@@ -20,10 +20,10 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "src/platform/graphics/mesa/platform.h"
+#include "src/server/report/null_report_factory.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir/graphics/null_display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -42,6 +42,7 @@ namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
+namespace mr = mir::report;
 
 namespace
 {
@@ -56,13 +57,21 @@ public:
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true, geom::Point{0, 0},
-                                          conf_output.preferred_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, true,
+                                          geom::Point{0, 0},
+                                          conf_output.preferred_mode_index,
+                                          conf_output.current_format,
+                                          mir_power_mode_on,
+                                          conf_output.orientation);
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, false,
+                                          conf_output.top_left,
+                                          conf_output.current_mode_index,
+                                          conf_output.current_format,
+                                          mir_power_mode_on,
+                                          conf_output.orientation);
                 }
             });
     }
@@ -80,14 +89,22 @@ public:
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
-                                          conf_output.preferred_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, true,
+                                          geom::Point{max_x, 0},
+                                          conf_output.preferred_mode_index,
+                                          conf_output.current_format,
+                                          mir_power_mode_on,
+                                          conf_output.orientation);
                     max_x += conf_output.modes[conf_output.preferred_mode_index].size.width.as_int();
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false, conf_output.top_left,
-                                          conf_output.current_mode_index, mir_power_mode_on);
+                    conf.configure_output(conf_output.id, false,
+                                          conf_output.top_left,
+                                          conf_output.current_mode_index,
+                                          conf_output.current_format,
+                                          mir_power_mode_on,
+                                          conf_output.orientation);
                 }
             });
     }
@@ -123,13 +140,13 @@ public:
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
             .Times(AtLeast(0));
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mgm::Platform> create_platform()
     {
         return std::make_shared<mgm::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
@@ -333,8 +350,8 @@ TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_ids[i], fb_id,
                                               _, _))
-            .Times(1)
-            .WillOnce(DoAll(SaveArg<4>(&user_data[i]), Return(0)));
+            .Times(2)
+            .WillRepeatedly(DoAll(SaveArg<4>(&user_data[i]), Return(0)));
 
         /* Emit fake DRM page-flip events */
         EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
@@ -349,6 +366,14 @@ TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
 
     auto display = create_display_cloned(create_platform());
 
+    /* First frame: Page flips are scheduled, but not waited for */
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        buffer.post_update();
+    });
+
+    /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
+       are scheduled */
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         buffer.post_update();
@@ -472,7 +497,10 @@ TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
         [&](mg::DisplayConfigurationOutput const& conf_output)
         {
             conf->configure_output(conf_output.id, false, conf_output.top_left,
-                                   conf_output.preferred_mode_index, mir_power_mode_on);
+                                   conf_output.preferred_mode_index,
+                                   mir_pixel_format_xrgb_8888,
+                                   mir_power_mode_on,
+                                   conf_output.orientation);
         });
 
     display->configure(*conf);
@@ -508,7 +536,9 @@ TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
         [&](mg::DisplayConfigurationOutput const& conf_output)
         {
             conf->configure_output(conf_output.id, false, conf_output.top_left,
-                                   conf_output.preferred_mode_index, mir_power_mode_on);
+                                   conf_output.preferred_mode_index,
+                                   mir_pixel_format_xrgb_8888,
+                                   mir_power_mode_on, conf_output.orientation);
         });
 
     display->configure(*conf);

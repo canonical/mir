@@ -33,28 +33,18 @@ namespace geom = mir::geometry;
 mga::OutputBuilder::OutputBuilder(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    bool should_use_fb_fallback)
+    std::shared_ptr<mg::DisplayReport> const& display_report)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       display_report(display_report),
-      force_backup_display(should_use_fb_fallback)
+      force_backup_display(false)
 {
-    if (!force_backup_display)
+    try
     {
-        try
-        {
-            hwc_native = res_factory->create_hwc_native_device();
-        } catch (...)
-        {
-            force_backup_display = true;
-        }
-
-        //HWC 1.2 not supported yet. make an attempt to use backup display
-        if (hwc_native && hwc_native->common.version == HWC_DEVICE_API_VERSION_1_2)
-        {
-            force_backup_display = true;
-        }
+        hwc_native = res_factory->create_hwc_native_device();
+    } catch (...)
+    {
+        force_backup_display = true;
     }
 
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
@@ -73,7 +63,8 @@ MirPixelFormat mga::OutputBuilder::display_format()
     return framebuffers->fb_format();
 }
 
-std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
+std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
+    GLContext const& gl_context)
 {
     std::shared_ptr<mga::DisplayDevice> device;
     if (force_backup_display)
@@ -83,26 +74,32 @@ std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
     }
     else
     {
-        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_1)
-        {
-            device = res_factory->create_hwc11_device(hwc_native);
-            display_report->report_hwc_composition_in_use(1,1);
-        }
         if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
         {
-            device = res_factory->create_hwc10_device(hwc_native, fb_native);
-            display_report->report_hwc_composition_in_use(1,0);
+            device = res_factory->create_hwc_fb_device(hwc_native, fb_native);
         }
+        else //versions 1.1, 1.2
+        {
+            device = res_factory->create_hwc_device(hwc_native);
+        }
+
+        switch (hwc_native->common.version)
+        {
+            case HWC_DEVICE_API_VERSION_1_2:
+                display_report->report_hwc_composition_in_use(1,2);
+                break;
+            case HWC_DEVICE_API_VERSION_1_1:
+                display_report->report_hwc_composition_in_use(1,1);
+                break;
+            case HWC_DEVICE_API_VERSION_1_0:
+                display_report->report_hwc_composition_in_use(1,0);
+                break;
+            default:
+                break;
+        } 
     }
 
-    return device;
-}
-
-std::unique_ptr<mg::DisplayBuffer> mga::OutputBuilder::create_display_buffer(
-    std::shared_ptr<DisplayDevice> const& display_device,
-    GLContext const& gl_context)
-{
     auto native_window = res_factory->create_native_window(framebuffers);
-    return std::unique_ptr<mg::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, display_device, native_window, gl_context));
+    return std::unique_ptr<mga::DisplayBuffer>(
+        new DisplayBuffer(framebuffers, device, native_window, gl_context));
 }

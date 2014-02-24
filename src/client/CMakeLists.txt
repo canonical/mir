@@ -18,6 +18,14 @@ include_directories(
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
 
+if(MIR_BUILD_PLATFORM_ANDROID)
+add_subdirectory(android/)
+endif()
+
+if(MIR_BUILD_PLATFORM_MESA)
+add_subdirectory(mesa/)
+endif()
+
 set(
   CLIENT_SOURCES
 
@@ -33,35 +41,10 @@ set(
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp
+  private.cpp
+  mir_screencast.cpp
+  mir_screencast_api.cpp
 )
-
-if( MIR_PLATFORM STREQUAL "android")
-include_directories(${LIBHARDWARE_INCLUDE_DIRS})
-set(
-  CLIENT_SOURCES
-
-  android/android_client_buffer.cpp
-  android/android_client_buffer_factory.cpp
-  android/android_registrar.cpp
-  android/android_client_platform.cpp
-  android/client_surface_interpreter.cpp
-  android/android_native_display_container.cpp
-  ${CLIENT_SOURCES}
-)
-endif()
-
-if( MIR_PLATFORM STREQUAL "mesa")
-set(
-  CLIENT_SOURCES
-
-  mesa/client_platform.cpp
-  mesa/client_buffer_factory.cpp
-  mesa/client_buffer.cpp
-  mesa/mesa_native_display_container.cpp
-  mesa/native_surface.cpp
-  ${CLIENT_SOURCES}
-)
-endif()
 
 add_library(
   mirclient SHARED
@@ -69,7 +52,7 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
-set(MIRCLIENT_ABI 4)
+set(MIRCLIENT_ABI 7)
 
 set_target_properties(
   mirclient
@@ -85,7 +68,6 @@ set(
   MIR_CLIENT_LIBRARIES
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${LIBHARDWARE_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${XKBCOMMON_LIBRARIES}
 
@@ -93,10 +75,10 @@ set(
   mirsharedinput
   mirsharedlogging
   mirsharedenv
+  mirsharedsharedlibrary
   mirclientrpc
   mirclientlttngstatic
 
-  ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}
  
   3rd_party
@@ -114,7 +96,7 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit ${CMAKE_SOURCE_DIR}/include/client/mir
   DESTINATION "include/mirclient"
 )
 

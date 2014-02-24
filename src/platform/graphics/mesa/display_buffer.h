@@ -48,6 +48,7 @@ public:
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMSurfaceUPtr surface_gbm,
                   geometry::Rectangle const& area,
+                  MirOrientation rot,
                   EGLContext shared_context);
     ~DisplayBuffer();
 
@@ -58,14 +59,19 @@ public:
 
     bool can_bypass() const override;
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
+    void render_and_post_update(std::list<std::shared_ptr<Renderable>> const& renderlist,
+                                std::function<void(Renderable const&)> const& render_fn);
+    MirOrientation orientation() const override;
     void schedule_set_crtc();
+    void wait_for_page_flip();
 
 private:
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
-    bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
+    bool schedule_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
+    BufferObject* scheduled_bufobj;
     std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
@@ -75,7 +81,10 @@ private:
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
     geometry::Rectangle area;
+    uint32_t fb_width, fb_height;
+    MirOrientation rotation;
     std::atomic<bool> needs_set_crtc;
+    bool page_flips_pending;
 };
 
 }

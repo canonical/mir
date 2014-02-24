@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_CLIENT_SURFACE_H_
 #define MIR_CLIENT_CLIENT_SURFACE_H_
 
-#include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/client_types.h"
 
 #include <memory>
 
@@ -33,12 +33,12 @@ class ClientSurface
   public:
     virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
-    virtual MirWaitHandle* next_buffer(mir_surface_callback callback, void * context) = 0;
-    virtual MirWaitHandle* configure(MirSurfaceAttrib a, int value) = 0;
-  protected:
-    ClientSurface() {}
-    virtual ~ClientSurface() {}
+    virtual void request_and_wait_for_next_buffer() = 0;
+    virtual void request_and_wait_for_configure(MirSurfaceAttrib a, int value) = 0;
 
+  protected:
+    ClientSurface() = default;
+    virtual ~ClientSurface() = default;
     ClientSurface(const ClientSurface&) = delete;
     ClientSurface& operator=(const ClientSurface&) = delete;
 };

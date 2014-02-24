@@ -17,7 +17,7 @@
  */
 
 #include "src/client/client_platform.h"
-#include "src/client/native_client_platform_factory.h"
+#include "src/client/mesa/client_platform_factory.h"
 #include "src/client/mesa/mesa_native_display_container.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
@@ -27,14 +27,14 @@
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
-namespace mclg = mir::client::mesa;
+namespace mclm = mir::client::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 TEST(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
 {
     mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
+    mclm::ClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
 
     MirMesaEGLNativeDisplay* nd;
@@ -42,7 +42,7 @@ TEST(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
         std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
 
         nd = reinterpret_cast<MirMesaEGLNativeDisplay*>(*native_display);
-        EXPECT_EQ(MIR_MESA_TRUE, mclg::mir_client_mesa_egl_native_display_is_valid(nd));
+        EXPECT_EQ(MIR_MESA_TRUE, mclm::mir_client_mesa_egl_native_display_is_valid(nd));
     }
-    EXPECT_EQ(MIR_MESA_FALSE, mclg::mir_client_mesa_egl_native_display_is_valid(nd));
+    EXPECT_EQ(MIR_MESA_FALSE, mclm::mir_client_mesa_egl_native_display_is_valid(nd));
 }

@@ -43,7 +43,11 @@ mga::FBDevice::FBDevice(
     mode(mir_power_mode_on);
 }
 
-void mga::FBDevice::prepare_composition()
+void mga::FBDevice::prepare_gl()
+{
+}
+
+void mga::FBDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
 {
 }
 
@@ -63,6 +67,11 @@ void mga::FBDevice::post(mg::Buffer const& buffer)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
+}
+
+bool mga::FBDevice::apply_orientation(MirOrientation) const
+{
+    return false; 
 }
 
 void mga::FBDevice::mode(MirPowerMode mode)

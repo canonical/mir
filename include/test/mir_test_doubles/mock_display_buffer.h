@@ -33,11 +33,22 @@ namespace doubles
 class MockDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
+    MockDisplayBuffer()
+    {
+        using namespace testing;
+        ON_CALL(*this, can_bypass())
+            .WillByDefault(Return(false));
+        ON_CALL(*this, view_area())
+            .WillByDefault(Return(geometry::Rectangle{{0,0},{0,0}}));
+    }
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(post_update, void());
     MOCK_CONST_METHOD0(can_bypass, bool());
+    MOCK_METHOD2(render_and_post_update, void(std::list<std::shared_ptr<graphics::Renderable>> const&, 
+                                   std::function<void(graphics::Renderable const&)> const&));
+    MOCK_CONST_METHOD0(orientation, MirOrientation());
 };
 
 }

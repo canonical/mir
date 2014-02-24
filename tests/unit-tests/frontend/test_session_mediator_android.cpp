@@ -20,6 +20,7 @@
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
@@ -32,6 +33,7 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/null_screencast.h"
 
 #include <gtest/gtest.h>
 
@@ -43,6 +45,7 @@ namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -54,12 +57,12 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           graphics_platform{std::make_shared<mtd::NullPlatform>()},
           display_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
-          report{std::make_shared<mf::NullSessionMediatorReport>()},
+          report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{shell, graphics_platform, display_changer,
+          mediator{__LINE__, shell, graphics_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache},
+                   resource_cache, std::make_shared<mtd::NullScreencast>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
