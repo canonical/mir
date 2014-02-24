@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,20 +16,25 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/scene/surface_data.h"
+#include "src/server/scene/basic_surface.h"
 
 #include "mir/geometry/rectangle.h"
 
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test/fake_shared.h"
+
+#include "src/server/report/null_report_factory.h"
 
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mc = mir::compositor;
-namespace mt = mir::test;
 namespace mi = mir::input;
+namespace mr = mir::report;
 namespace ms = mir::scene;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
 
 namespace
@@ -40,7 +45,7 @@ public:
     MOCK_METHOD0(call, void());
 };
 
-struct SurfaceDataTest : public testing::Test
+struct BasicSurfaceTest : public testing::Test
 {
     void SetUp()
     {
@@ -59,25 +64,44 @@ struct SurfaceDataTest : public testing::Test
     testing::NiceMock<MockCallback> mock_callback;
     std::function<void()> null_change_cb;
     std::function<void()> mock_change_cb;
+    std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream =
+        std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
 }
 
-TEST_F(SurfaceDataTest, basics)
+TEST_F(BasicSurfaceTest, basics)
 {
-    ms::SurfaceData data{name, rect, null_change_cb, false};
+    ms::BasicSurface data{
+        name,
+        rect,
+        null_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     EXPECT_EQ(name, data.name());
     EXPECT_EQ(rect.size, data.size());
     EXPECT_EQ(rect.top_left, data.position());
     EXPECT_FALSE(data.shaped());
 }
 
-TEST_F(SurfaceDataTest, update_position)
+TEST_F(BasicSurfaceTest, update_position)
 {
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData storage{name, rect, mock_change_cb, false};
+    ms::BasicSurface storage{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     EXPECT_EQ(rect.top_left, storage.position());
 
     auto new_top_left = geom::Point{geom::X{6}, geom::Y{10}};
@@ -85,14 +109,22 @@ TEST_F(SurfaceDataTest, update_position)
     EXPECT_EQ(new_top_left, storage.position());
 }
 
-TEST_F(SurfaceDataTest, update_size)
+TEST_F(BasicSurfaceTest, update_size)
 {
     geom::Size const new_size{34, 56};
 
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData storage{name, rect, mock_change_cb, false};
+    ms::BasicSurface storage{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     EXPECT_EQ(rect.size, storage.size());
     EXPECT_NE(new_size, storage.size());
 
@@ -103,12 +135,20 @@ TEST_F(SurfaceDataTest, update_size)
     EXPECT_NE(old_transformation, storage.transformation());
 }
 
-TEST_F(SurfaceDataTest, test_surface_set_rotation_updates_transform)
+TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
 {
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData storage{name, rect, mock_change_cb, false};
+    ms::BasicSurface storage{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     auto original_transformation = storage.transformation();
 
     storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
@@ -116,14 +156,21 @@ TEST_F(SurfaceDataTest, test_surface_set_rotation_updates_transform)
     EXPECT_NE(original_transformation, rotated_transformation);
 }
 
-TEST_F(SurfaceDataTest, test_surface_transformation_cache_refreshes)
+TEST_F(BasicSurfaceTest, test_surface_transformation_cache_refreshes)
 {
     using namespace testing;
 
     const geom::Size sz{geom::Width{85}, geom::Height{43}};
     const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
     const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
-    ms::SurfaceData storage{name, origin, null_change_cb, false};
+    ms::BasicSurface storage{
+        name,
+        origin,
+        null_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
 
     glm::mat4 t0 = storage.transformation();
     storage.move_to(moved_pt.top_left);
@@ -136,39 +183,70 @@ TEST_F(SurfaceDataTest, test_surface_transformation_cache_refreshes)
     EXPECT_NE(t0, t1);
 }
 
-TEST_F(SurfaceDataTest, test_surface_set_alpha_notifies_changes)
+TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
 {
     using namespace testing;
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
 
     float alpha = 0.5f;
     surface_state.apply_alpha(0.5f);
     EXPECT_THAT(alpha, FloatEq(surface_state.alpha()));
 }
 
-TEST_F(SurfaceDataTest, test_surface_is_opaque_by_default)
+TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
-    ms::SurfaceData surface_state{name, rect, null_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        null_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
     EXPECT_FALSE(surface_state.shaped());
 }
 
-TEST_F(SurfaceDataTest, test_surface_apply_rotation)
+TEST_F(BasicSurfaceTest, test_surface_apply_rotation)
 {
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
-TEST_F(SurfaceDataTest, test_surface_should_be_rendered_in)
+TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
 {
-    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
 
     //not renderable by default
@@ -191,32 +269,55 @@ TEST_F(SurfaceDataTest, test_surface_should_be_rendered_in)
     EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect1));
 }
 
-TEST_F(SurfaceDataTest, test_surface_hidden_notifies_changes)
+TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
 {
     using namespace testing;
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     surface_state.set_hidden(true);
 }
 
-TEST_F(SurfaceDataTest, test_surface_frame_posted_notifies_changes)
+TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 {
     using namespace testing;
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     surface_state.frame_posted();
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)
-TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
+TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
 {
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
-    ms::SurfaceData surface_state{name, geom::Rectangle{pt, one_by_one}, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        geom::Rectangle{pt, one_by_one},
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
 
     std::vector<geom::Point> contained_pt
     {
@@ -241,14 +342,22 @@ TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
     }
 }
 
-TEST_F(SurfaceDataTest, set_input_region)
+TEST_F(BasicSurfaceTest, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
         {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}}, //region0
         {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
-    ms::SurfaceData surface_state{name, rect, mock_change_cb, false};
+    ms::BasicSurface surface_state{
+        name,
+        rect,
+        mock_change_cb,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report};
+
     surface_state.set_input_region(rectangles);
 
     std::vector<geom::Point> contained_pt
