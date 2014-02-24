@@ -30,6 +30,7 @@
 #include "lttng/rpc_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
+#include "trusted_session_control.h"
 
 namespace mcl = mir::client;
 
@@ -62,7 +63,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control(), the_trusted_session_control());
         });
 }
 
@@ -151,5 +152,14 @@ std::shared_ptr<mcl::LifecycleControl> mcl::DefaultConnectionConfiguration::the_
         []
         {
             return std::make_shared<mcl::LifecycleControl>();
+        });
+}
+
+std::shared_ptr<mcl::TrustedSessionControl> mcl::DefaultConnectionConfiguration::the_trusted_session_control()
+{
+    return trusted_session_control(
+        []
+        {
+            return std::make_shared<mcl::TrustedSessionControl>();
         });
 }

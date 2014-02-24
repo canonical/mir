@@ -26,6 +26,10 @@
 
 namespace mir
 {
+namespace frontend
+{
+class EventSink;
+}
 namespace shell
 {
 class TrustedSessionCreationParameters;
@@ -38,7 +42,9 @@ class SessionContainer;
 class TrustedSessionImpl : public shell::TrustedSession
 {
 public:
-    TrustedSessionImpl(shell::TrustedSessionCreationParameters const& parameters);
+    TrustedSessionImpl(std::shared_ptr<shell::Session> const& session,
+                       shell::TrustedSessionCreationParameters const& parameters,
+                       std::shared_ptr<frontend::EventSink> const& sink);
     virtual ~TrustedSessionImpl();
 
     frontend::SessionId id() const override;
@@ -52,8 +58,9 @@ public:
     void add_child_session(std::shared_ptr<shell::Session> const& session) override;
 
     static std::shared_ptr<shell::TrustedSession> create_for(std::shared_ptr<shell::Session> const& session,
-                                                            std::shared_ptr<SessionContainer> const& container,
-                                                            shell::TrustedSessionCreationParameters const& parameters);
+                                                             shell::TrustedSessionCreationParameters const& parameters,
+                                                             std::shared_ptr<SessionContainer> const& container,
+                                                             std::shared_ptr<frontend::EventSink> const& sink);
 
 protected:
     TrustedSessionImpl(const TrustedSessionImpl&) = delete;
@@ -62,12 +69,14 @@ protected:
 private:
     frontend::SessionId next_id();
 
+    std::shared_ptr<shell::Session> const trusted_helper;
     std::vector<pid_t> const applications;
+
+    std::shared_ptr<frontend::EventSink> const event_sink;
 
     bool started;
     std::atomic<int> next_session_id;
     frontend::SessionId current_id;
-    std::shared_ptr<shell::Session> trusted_helper;
 };
 
 }

@@ -112,6 +112,14 @@ typedef void (*mir_display_config_callback)(
 typedef void (*mir_tps_callback)(MirTrustedPromptSession* tps, void* context);
 
 /**
+ * Callback member of MirTrustedPromptSession for handling of trusted sessions.
+ *   \param [in] tps            The prompt session associated with the callback
+ *   \param [in] state          The state of the trusted session
+ *   \param [in,out] context    The context provided by the client
+ */
+typedef void (*mir_tps_event_callback)(MirTrustedPromptSession* tps, MirTrustedSessionState state, void* context);
+
+/**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
  * surface can be used for OpenGL accelerated rendering. A "software" surface
  * is one that can be addressed in main memory and blitted to directly.

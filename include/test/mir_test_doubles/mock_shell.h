@@ -45,8 +45,12 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, shell::SurfaceCreationParameters const&));
     MOCK_METHOD1(handle_surface_created, void(std::shared_ptr<frontend::Session> const&));
 
-    MOCK_METHOD3(start_trusted_session_for, frontend::SessionId(std::string&, std::shared_ptr<frontend::Session> const&, shell::TrustedSessionCreationParameters const&));
-    MOCK_METHOD2(stop_trusted_session_for, void(std::shared_ptr<frontend::Session> const&, frontend::SessionId));
+    MOCK_METHOD4(start_trusted_session_for, frontend::SessionId(
+        std::string&,
+        std::shared_ptr<frontend::Session> const&,
+        shell::TrustedSessionCreationParameters const&,
+        std::shared_ptr<frontend::EventSink> const&));
+    MOCK_METHOD1(stop_trusted_session, void(frontend::SessionId));
 };
 
 }

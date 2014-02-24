@@ -42,7 +42,16 @@ MirTrustedPromptSession* mir_trusted_prompt_session_create(MirConnection* connec
  * \return              A MirTrustedPromptSessionAddApplicationResult result of the call
  */
 MirTrustedPromptSessionAddApplicationResult mir_trusted_prompt_session_add_app_with_pid(MirTrustedPromptSession *session,
-                                                                                        pid_t pid);
+    pid_t pid);
+
+/**
+ * Register a callback to be called when a Lifecycle state change occurs.
+ *   \param [in] session        The trusted prompt session
+ *   \param [in] callback       The function to be called when the state change occurs
+ *   \param [in,out] context    User data passed to the callback function
+ */
+void mir_trusted_prompt_session_set_event_callback(MirTrustedPromptSession* session,
+    mir_tps_event_callback callback, void* context);
 
 /**
  * Request the start of a trusted prompt session

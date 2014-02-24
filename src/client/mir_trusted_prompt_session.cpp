@@ -17,19 +17,26 @@
  */
 
 #include "mir_trusted_prompt_session.h"
+#include "trusted_session_control.h"
 
 namespace mp = mir::protobuf;
+namespace mcl = mir::client;
 
 MirTrustedPromptSession::MirTrustedPromptSession(
-    MirConnection *allocating_connection,
-    mp::DisplayServer::Stub & server)
+    mp::DisplayServer::Stub & server,
+    std::shared_ptr<mcl::TrustedSessionControl> const& trusted_session_control)
     : server(server),
-      connection(allocating_connection)
+      trusted_session_control(trusted_session_control),
+      trusted_session_control_fn_id(-1)
 {
 }
 
 MirTrustedPromptSession::~MirTrustedPromptSession()
 {
+    if (trusted_session_control_fn_id == -1)
+    {
+        trusted_session_control->remove_trusted_session_event_handler(trusted_session_control_fn_id);
+    }
 }
 
 MirTrustedPromptSessionAddApplicationResult MirTrustedPromptSession::add_app_with_pid(pid_t pid)
@@ -68,6 +75,27 @@ MirWaitHandle* MirTrustedPromptSession::stop(mir_tps_callback callback, void * c
                                       callback, context));
 
     return &stop_wait_handle;
+}
+
+void MirTrustedPromptSession::register_trusted_session_event_callback(mir_tps_event_callback callback, void* context)
+{
+    if (trusted_session_control_fn_id != -1)
+    {
+        trusted_session_control->remove_trusted_session_event_handler(trusted_session_control_fn_id);
+    }
+
+    trusted_session_control_fn_id = trusted_session_control->add_trusted_session_event_handler(
+        [this, callback, context]
+        (int id, MirTrustedSessionState state)
+        {
+            std::lock_guard<std::recursive_mutex> lock(mutex);
+
+            printf("mir_tps_event_callback with %d", id);
+            if (session.id().value() == id) {
+                callback(this, state, context);
+            }
+        }
+    );
 }
 
 void MirTrustedPromptSession::done_start(mir_tps_callback callback, void* context)

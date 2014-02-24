@@ -24,6 +24,7 @@
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
+#include "../trusted_session_control.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -49,7 +50,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
-    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
+    std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<TrustedSessionControl> const& trusted_session_control) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
@@ -57,6 +59,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    trusted_session_control(trusted_session_control),
     disconnected(false)
 {
     socket.connect(endpoint);
@@ -68,7 +71,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
-    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
+    std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<TrustedSessionControl> const& trusted_session_control) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
@@ -76,6 +80,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    trusted_session_control(trusted_session_control),
     disconnected(false)
 {
     socket.assign(boost::asio::local::stream_protocol(), native_socket);
@@ -388,6 +393,11 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
     if (seq.has_lifecycle_event())
     {
         lifecycle_control->call_lifecycle_event_handler(seq.lifecycle_event().new_state());
+    }
+
+    if (seq.has_trusted_session_event())
+    {
+        trusted_session_control->call_trusted_session_event_handler(seq.trusted_session_event().id().value(), seq.trusted_session_event().new_state());
     }
 
     int const nevents = seq.event_size();

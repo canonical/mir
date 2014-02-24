@@ -40,8 +40,8 @@ public:
     virtual void surface_created(Session& session, std::shared_ptr<Surface> const& surface) = 0;
     virtual void destroying_surface(Session& session, std::shared_ptr<Surface> const& surface) = 0;
 
-    virtual void trusted_session_started(std::shared_ptr<Session> const& session, std::shared_ptr<TrustedSession> const& trusted_session) = 0;
-    virtual void trusted_session_stopped(std::shared_ptr<Session> const& session) = 0;
+    virtual void trusted_session_started(std::shared_ptr<TrustedSession> const& trusted_session) = 0;
+    virtual void trusted_session_stopped(std::shared_ptr<TrustedSession> const& trusted_session) = 0;
 
 protected:
     SessionListener() = default;

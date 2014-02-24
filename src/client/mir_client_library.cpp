@@ -580,6 +580,12 @@ MirWaitHandle *mir_trusted_prompt_session_stop(MirTrustedPromptSession *session,
     }
 }
 
+void mir_trusted_prompt_session_set_event_callback(MirTrustedPromptSession* session,
+                                                   mir_tps_event_callback callback, void* context)
+{
+    session->register_trusted_session_event_callback(callback, context);
+}
+
 void mir_trusted_prompt_session_release(MirTrustedPromptSession* trusted_session)
 {
     delete trusted_session;

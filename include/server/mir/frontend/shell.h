@@ -57,9 +57,9 @@ public:
 
     virtual SessionId start_trusted_session_for(std::string& error,
                                                 std::shared_ptr<Session> const& session,
-                                                shell::TrustedSessionCreationParameters const& params) = 0;
-    virtual void stop_trusted_session_for(std::shared_ptr<Session> const& session,
-                                          SessionId trusted_session_id) = 0;
+                                                shell::TrustedSessionCreationParameters const& params,
+                                                std::shared_ptr<EventSink> const& sink) = 0;
+    virtual void stop_trusted_session(SessionId trusted_session_id) = 0;
 
 protected:
     Shell() = default;

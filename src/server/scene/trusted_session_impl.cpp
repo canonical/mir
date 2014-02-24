@@ -20,14 +20,19 @@
 #include "mir/shell/trusted_session_creation_parameters.h"
 #include "mir/scene/session_container.h"
 #include "mir/scene/session.h"
+#include "mir/frontend/event_sink.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 ms::TrustedSessionImpl::TrustedSessionImpl(
-    msh::TrustedSessionCreationParameters const& parameters) :
+    std::shared_ptr<msh::Session> const& session,
+    msh::TrustedSessionCreationParameters const& parameters,
+    std::shared_ptr<mf::EventSink> const& sink) :
+    trusted_helper(session),
     applications(parameters.applications),
+    event_sink(sink),
     started(false),
     next_session_id(0),
     current_id(next_id())
@@ -60,16 +65,16 @@ std::shared_ptr<msh::Session> ms::TrustedSessionImpl::get_trusted_helper() const
 }
 
 std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::shared_ptr<msh::Session> const& session,
+                                                                        msh::TrustedSessionCreationParameters const& parameters,
                                                                         std::shared_ptr<SessionContainer> const& container,
-                                                                        msh::TrustedSessionCreationParameters const& parameters)
+                                                                        std::shared_ptr<mf::EventSink> const& sink)
 {
-    TrustedSessionImpl* impl = new TrustedSessionImpl(parameters);
+    TrustedSessionImpl* impl = new TrustedSessionImpl(session, parameters, sink);
     std::shared_ptr<msh::TrustedSession> ptr(impl);
 
-    impl->trusted_helper = session;
     impl->started = true;
     session->set_trusted_session(ptr);
-    auto scene_trusted_helper = std::dynamic_pointer_cast<ms::Session>(impl->trusted_helper);
+    auto scene_trusted_helper = std::dynamic_pointer_cast<ms::Session>(session);
 
     for (pid_t application_pid : impl->applications)
     {
@@ -94,6 +99,7 @@ std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::sha
         );
     }
 
+    sink->handle_trusted_session_event(impl->id(), mir_trusted_session_started);
     return ptr;
 }
 
@@ -116,7 +122,7 @@ void ms::TrustedSessionImpl::stop()
     trusted_helper->set_trusted_session(NULL);
 
     started = false;
-    trusted_helper = NULL;
+    event_sink->handle_trusted_session_event(id(), mir_trusted_session_stopped);
 }
 
 std::vector<pid_t> ms::TrustedSessionImpl::get_applications() const

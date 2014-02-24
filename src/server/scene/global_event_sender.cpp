@@ -23,6 +23,7 @@
 namespace mg=mir::graphics;
 namespace ms=mir::scene;
 namespace msh=mir::shell;
+namespace mf=mir::frontend;
 
 ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
     : sessions(session_container)
@@ -45,4 +46,9 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     {
         session->send_display_config(config);
     });
+}
+
+void ms::GlobalEventSender::handle_trusted_session_event(mf::SessionId, MirTrustedSessionState)
+{
+    // Lifecycle events are per application session, never global
 }

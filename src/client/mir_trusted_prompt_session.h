@@ -26,22 +26,34 @@
 #include "client_trusted_session.h"
 
 #include <mutex>
+#include <memory>
+
+namespace mir
+{
+/// The client-side library implementation namespace
+namespace client
+{
+class TrustedSessionControl;
+}
+}
 
 struct MirTrustedPromptSession : public mir::client::TrustedSession
 {
 public:
-    MirTrustedPromptSession(MirTrustedPromptSession const &) = delete;
-    MirTrustedPromptSession& operator=(MirTrustedPromptSession const &) = delete;
-
-    MirTrustedPromptSession(MirConnection *allocating_connection,
-                            mir::protobuf::DisplayServer::Stub & server);
+    MirTrustedPromptSession(mir::protobuf::DisplayServer::Stub & server,
+                            std::shared_ptr<mir::client::TrustedSessionControl> const& trusted_session_control);
 
     ~MirTrustedPromptSession();
+
+    MirTrustedPromptSession(MirTrustedPromptSession const &) = delete;
+    MirTrustedPromptSession& operator=(MirTrustedPromptSession const &) = delete;
 
     MirTrustedPromptSessionAddApplicationResult add_app_with_pid(pid_t pid);
 
     MirWaitHandle* start(mir_tps_callback callback, void * context);
     MirWaitHandle* stop(mir_tps_callback callback, void * context);
+
+    void register_trusted_session_event_callback(mir_tps_event_callback callback, void* context);
 
     char const * get_error_message();
     void set_error_message(std::string const& error);
@@ -58,7 +70,8 @@ private:
     mir::protobuf::Void protobuf_void;
     std::string error_message;
 
-    MirConnection *connection;
+    std::shared_ptr<mir::client::TrustedSessionControl> const trusted_session_control;
+    int trusted_session_control_fn_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;

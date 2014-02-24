@@ -28,7 +28,6 @@ set(
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
-  mir_trusted_prompt_session.cpp
   logging/rpc_report.cpp
   logging/input_receiver_report.cpp
   default_connection_configuration.cpp
@@ -37,6 +36,8 @@ set(
   private.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
+  mir_trusted_prompt_session.cpp
+  trusted_session_control.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
@@ -102,7 +103,7 @@ set(
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}
- 
+
   3rd_party
 )
 

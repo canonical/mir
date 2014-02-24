@@ -51,12 +51,12 @@ struct StubShell : public frontend::Shell
     }
     frontend::SessionId start_trusted_session_for(std::string& /* error */,
                                                 std::shared_ptr<frontend::Session> const& /* session */,
-                                                shell::TrustedSessionCreationParameters const& /* params */)
+                                                shell::TrustedSessionCreationParameters const& /* params */,
+                                                std::shared_ptr<frontend::EventSink> const& /* sink */)
     {
         return frontend::SessionId{0};
     }
-    void stop_trusted_session_for(std::shared_ptr<frontend::Session> const& /* session */,
-                                frontend::SessionId /* trusted_session */)
+    void stop_trusted_session(frontend::SessionId /* trusted_session */)
     {
     }
 

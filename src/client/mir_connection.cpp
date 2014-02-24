@@ -83,7 +83,8 @@ MirConnection::MirConnection(
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
-        surface_map(conf.the_surface_map())
+        surface_map(conf.the_surface_map()),
+        trusted_session_control(conf.the_trusted_session_control())
 {
     connect_result.set_error("connect not called");
     {
@@ -196,7 +197,7 @@ MirWaitHandle* MirConnection::release_surface(
 
 MirTrustedPromptSession* MirConnection::create_trusted_prompt_session()
 {
-    return new MirTrustedPromptSession(this, server);
+    return new MirTrustedPromptSession(server, trusted_session_control);
 }
 
 namespace
@@ -493,6 +494,6 @@ bool MirConnection::set_extra_platform_data(
 }
 
 mir::protobuf::DisplayServer& MirConnection::display_server()
-{ 
+{
     return server;
 }

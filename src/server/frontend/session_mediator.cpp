@@ -426,7 +426,7 @@ void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcControlle
         }
 
         std::string error;
-        auto const session_id = shell->start_trusted_session_for(error, session, parameters);
+        auto const session_id = shell->start_trusted_session_for(error, session, parameters, event_sink);
 
         if (!error.empty())
             response->set_error(error);
@@ -451,7 +451,7 @@ void mf::SessionMediator::stop_trusted_session(::google::protobuf::RpcController
 
         auto const id = SessionId(request->value());
 
-        shell->stop_trusted_session_for(session, id);
+        shell->stop_trusted_session(id);
     }
     done->Run();
 }

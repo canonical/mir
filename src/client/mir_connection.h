@@ -45,6 +45,7 @@ class ClientPlatformFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
+class TrustedSessionControl;
 
 namespace rpc
 {
@@ -166,6 +167,8 @@ private:
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
+
+    std::shared_ptr<mir::client::TrustedSessionControl> const trusted_session_control;
 
     std::vector<int> extra_platform_data;
 

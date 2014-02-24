@@ -83,6 +83,7 @@ struct NullEventSink : mf::EventSink
     void handle_event(MirEvent const& /*e*/) {}
     void handle_lifecycle_event(MirLifecycleState /*state*/) {}
     void handle_display_config_change(mg::DisplayConfiguration const& /*config*/) {}
+    void handle_trusted_session_event(mf::SessionId /*session_id*/, MirTrustedSessionState /*state*/) {}
 };
 }
 
@@ -101,7 +102,7 @@ void me::InprocessEGLClient::thread_loop()
 
     auto input_platform = mircv::InputPlatform::create();
     input_thread = input_platform->create_input_thread(
-        surface->client_input_fd(), 
+        surface->client_input_fd(),
             std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));
     input_thread->start();
 
