@@ -108,16 +108,19 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-add_executable(mir_demo_standalone_render_overlays
+# This demo links to test code, so we can't always build it...
+if (MIR_ENABLE_TESTS)
+  add_executable(mir_demo_standalone_render_overlays
     render_overlays.cpp
-)
+  )
 
-target_link_libraries(mir_demo_standalone_render_overlays
+  target_link_libraries(mir_demo_standalone_render_overlays
     mirserver
     mirlogging
     mirdraw
     mirtestdraw
-)
+  )
+endif ()
 
 set(RENDER_SURFACES_SOURCES
     render_surfaces.cpp
