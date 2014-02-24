@@ -35,7 +35,7 @@ public:
     MockInputSurface()
     {
         using namespace testing;
-        ON_CALL(*this, position())
+        ON_CALL(*this, top_left())
             .WillByDefault(
                 Return(geometry::Point{}));
         ON_CALL(*this, size())
@@ -46,7 +46,7 @@ public:
             .WillByDefault(testing::ReturnRef(n));
     }
     ~MockInputSurface() noexcept {}
-    MOCK_CONST_METHOD0(position, geometry::Point());
+    MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(name, std::string const&());
     MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
