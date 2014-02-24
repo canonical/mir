@@ -86,8 +86,6 @@ struct NullEventSink : mf::EventSink
 };
 }
 
-#include <stdio.h>
-
 void me::InprocessEGLClient::thread_loop()
 {
     geom::Size const surface_size{512, 512};
