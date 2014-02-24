@@ -44,6 +44,24 @@ public:
     {
         return {{},{}};
     }
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+    glm::mat4 const& transformation() const override
+    {
+        return trans;
+    }
+    bool should_be_rendered_in(geometry::Rectangle const&) const override
+    {
+        return true;
+    }
+    bool shaped() const override
+    {
+        return false;
+    }
+private:
+    glm::mat4 trans;
 };
 
 }

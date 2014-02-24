@@ -16,10 +16,11 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
-#define MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
+#ifndef MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
+#define MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 
-#include "mir/compositor/compositing_criteria.h"
+#include "mir_test_doubles/stub_buffer.h"
+#include "mir/graphics/renderable.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
 
@@ -30,10 +31,10 @@ namespace test
 namespace doubles
 {
 
-class StubCompositingCriteria : public compositor::CompositingCriteria
+class FakeRenderable : public graphics::Renderable
 {
 public:
-    StubCompositingCriteria(int x, int y, int width, int height,
+    FakeRenderable(int x, int y, int width, int height,
                             float opacity=1.0f,
                             bool rectangular=true,
                             bool visible=true,
@@ -70,6 +71,21 @@ public:
         return !rectangular;
     }
 
+    std::shared_ptr<graphics::Buffer> buffer() const override
+    {
+        return std::make_shared<StubBuffer>();
+    }
+
+    bool alpha_enabled() const override
+    {
+        return shaped() || alpha() < 1.0f;
+    }
+
+    geometry::Rectangle screen_position() const override
+    {
+        return rect;
+    }
+
 private:
     mir::geometry::Rectangle rect;
     glm::mat4 trans;
@@ -82,4 +98,4 @@ private:
 } // namespace doubles
 } // namespace test
 } // namespace mir
-#endif // MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
+#endif // MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_

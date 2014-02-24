@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_RENDERABLE_H_
 
 #include <mir/geometry/rectangle.h>
+#include <glm/glm.hpp>
 #include <memory>
 
 namespace mir
@@ -34,6 +35,14 @@ public:
     virtual std::shared_ptr<Buffer> buffer() const = 0;
     virtual bool alpha_enabled() const = 0;
     virtual geometry::Rectangle screen_position() const = 0;
+
+    // These are from the old CompositingCriteria. There is a little bit
+    // of function overlap with the above functions still.
+    virtual float alpha() const = 0;
+    virtual glm::mat4 const& transformation() const = 0;
+    virtual bool should_be_rendered_in(geometry::Rectangle const& rect) const = 0;
+    virtual bool shaped() const = 0;  // meaning the pixel format has alpha
+
 
 protected:
     Renderable() = default;

@@ -27,7 +27,7 @@
 #include "src/server/compositor/gl_renderer_factory.h"
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
-#include <mir_test_doubles/mock_compositing_criteria.h>
+#include <mir_test_doubles/mock_renderable.h>
 #include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/mock_gl.h>
@@ -260,9 +260,9 @@ public:
         EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
 
-        EXPECT_CALL(criteria, shaped()).WillRepeatedly(Return(false));
-        EXPECT_CALL(criteria, alpha()).WillRepeatedly(Return(1.0f));
-        EXPECT_CALL(criteria, transformation()).WillRepeatedly(ReturnRef(trans));
+        EXPECT_CALL(renderable, shaped()).WillRepeatedly(Return(false));
+        EXPECT_CALL(renderable, alpha()).WillRepeatedly(Return(1.0f));
+        EXPECT_CALL(renderable, transformation()).WillRepeatedly(ReturnRef(trans));
         EXPECT_CALL(mock_gl, glDisable(_)).Times(AnyNumber());
 
         InSequence s;
@@ -291,7 +291,7 @@ public:
     mir::geometry::Rectangle display_area;
     std::unique_ptr<mc::Renderer> renderer;
     glm::mat4           trans;
-    mtd::MockCompositingCriteria criteria;
+    mtd::MockRenderable renderable;
 };
 
 }
@@ -306,16 +306,16 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-    EXPECT_CALL(criteria, shaped())
+    EXPECT_CALL(renderable, shaped())
         .WillOnce(Return(true));
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
     EXPECT_CALL(mock_gl, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
-    EXPECT_CALL(criteria, transformation())
+    EXPECT_CALL(renderable, transformation())
         .WillOnce(ReturnRef(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
-    EXPECT_CALL(criteria, alpha())
+    EXPECT_CALL(renderable, alpha())
         .WillOnce(Return(0.0f));
     EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
     EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
@@ -346,7 +346,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
@@ -359,7 +359,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     mtd::MockBuffer mock_buffer;
 
     InSequence seq;
-    EXPECT_CALL(criteria, shaped())
+    EXPECT_CALL(renderable, shaped())
         .WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
@@ -378,7 +378,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
@@ -441,24 +441,24 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     renderer->suspend();
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     renderer->begin();
-    renderer->render(criteria, mock_buffer);
+    renderer->render(renderable, mock_buffer);
     renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
