@@ -121,12 +121,9 @@ try
     {
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
-            printf("make current\n");
             buffer.make_current();
             auto render_fn = [](mg::Renderable const&) {};
-            printf("rnp\n");
             buffer.render_and_post_update(renderlist, render_fn);
-            printf("post.\n");
             
         });
     }
