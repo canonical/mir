@@ -20,8 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
 #include "src/platform/graphics/android/display_builder.h"
-#include "stub_display_buffer.h"
-#include "stub_display_device.h"
+#include "src/platform/graphics/android/configurable_display_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -30,25 +29,47 @@ namespace test
 {
 namespace doubles
 {
+
+struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
+{
+    StubConfigurableDisplayBuffer(geometry::Rectangle rect)
+     : rect(rect)
+    {
+    }
+
+    geometry::Rectangle view_area() const { return rect; }
+    void make_current() {}
+    void release_current() {}
+    void post_update() {}
+    bool can_bypass() const override { return false; }
+    void render_and_post_update(
+        std::list<std::shared_ptr<graphics::Renderable>> const&,
+        std::function<void(graphics::Renderable const&)> const&) {}
+    MirOrientation orientation() const override { return mir_orientation_normal; }
+    void configure(graphics::DisplayConfigurationOutput const&) {} 
+    graphics::DisplayConfigurationOutput configuration() const
+    {
+        return graphics::DisplayConfigurationOutput{
+                   graphics::DisplayConfigurationOutputId{1},
+                   graphics::DisplayConfigurationCardId{0},
+                   graphics::DisplayConfigurationOutputType::vga,
+                   {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
+                   mir_power_mode_off,
+                   mir_orientation_normal};
+    }
+private:
+    geometry::Rectangle rect;
+};
+
 struct StubDisplayBuilder : public graphics::android::DisplayBuilder
 {
-    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev, geometry::Size sz)
-        : stub_dev(stub_dev), sz(sz)
+    StubDisplayBuilder(geometry::Size sz)
+        : sz(sz)
     {
     }
 
     StubDisplayBuilder()
-        : StubDisplayBuilder(std::make_shared<StubDisplayDevice>(), geometry::Size{0,0})
-    {
-    }
-
-    StubDisplayBuilder(geometry::Size sz)
-        : StubDisplayBuilder(std::make_shared<StubDisplayDevice>(), sz)
-    {
-    }
-
-    StubDisplayBuilder(std::shared_ptr<graphics::android::DisplayDevice> const& stub_dev)
-        : stub_dev(stub_dev), sz(geometry::Size{0,0})
+        : StubDisplayBuilder(geometry::Size{0,0})
     {
     }
 
@@ -57,20 +78,13 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
         return mir_pixel_format_abgr_8888;
     }
 
-    std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
-        std::shared_ptr<graphics::android::DisplayDevice> const&,
+    std::unique_ptr<graphics::android::ConfigurableDisplayBuffer> create_display_buffer(
         graphics::android::GLContext const&)
     {
-        return std::unique_ptr<graphics::DisplayBuffer>(
-                new StubDisplayBuffer(geometry::Rectangle{{0,0},sz}));
+        return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
+                new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
-
-    std::shared_ptr<graphics::android::DisplayDevice> create_display_device()
-    {
-        return stub_dev;
-    }
-
-    std::shared_ptr<graphics::android::DisplayDevice> const stub_dev;
+    
     geometry::Size sz;
 };
 }

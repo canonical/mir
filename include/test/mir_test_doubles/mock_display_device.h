@@ -38,6 +38,7 @@ public:
     MOCK_METHOD1(prepare_gl_and_overlays, void(std::list<std::shared_ptr<graphics::Renderable>> const&));
     MOCK_METHOD2(gpu_render, void(EGLDisplay, EGLSurface));
     MOCK_METHOD1(post, void(graphics::Buffer const&));
+    MOCK_CONST_METHOD1(apply_orientation, bool(MirOrientation));
 };
 }
 }
