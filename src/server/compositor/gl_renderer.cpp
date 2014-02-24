@@ -247,7 +247,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                           GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    SurfaceID surf = &renderable; // temporary hack till we rearrange classes
+    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];
     bool changed = true;
     auto const& buf_id = buffer.id();
