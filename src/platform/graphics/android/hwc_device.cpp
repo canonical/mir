@@ -92,6 +92,7 @@ void mga::HwcDevice::render_gl_and_overlays(
             lit++;
         }
 #endif
+        printf("SKIP\n");
         return;
     }
 

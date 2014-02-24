@@ -155,7 +155,8 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
 
 void mga::HWCLayer::prepare_non_gl_layer()
 {
-    //hwc will not adopt the fence unless it is one of these types
+    //we shouldn't be copying the FD unless the HWC has marked this as a buffer its interested in.
+    //we disregard fences that haven't changed, as the hwc will still own the buffer
     if (updated && (((hwc_layer->compositionType == HWC_OVERLAY) ||
         (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))))
     {
@@ -172,5 +173,5 @@ void mga::HWCLayer::prepare_non_gl_layer()
 
 bool mga::HWCLayer::was_updated() const
 {
-    return updated | needs_gl_render();
+    return updated | !needs_gl_render();
 }
