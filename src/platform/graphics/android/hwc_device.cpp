@@ -52,8 +52,17 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 
     hwc_wrapper->prepare(*native_list().lock());
 
+    printf("SWAPPING.\n");
     context.swap_buffers();
 }
+
+
+//void update_list()
+//if (list_is_settable)
+//  return
+//prepare(native_list)
+//post_prepare_ops()
+//
 
 void mga::HwcDevice::render_gl_and_overlays(
     SwappingGLContext const& context,
@@ -70,7 +79,7 @@ void mga::HwcDevice::render_gl_and_overlays(
     {
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(*renderable->buffer());//->native_buffer_handle());
+        layers_it->set_buffer(*renderable->buffer());
         list_is_settable |= layers_it->was_updated();
         layers_it++;
     }
@@ -91,23 +100,23 @@ void mga::HwcDevice::render_gl_and_overlays(
     bool needs_swapbuffers = false;
     layers_it = layers.begin();
     for(auto const& renderable : renderables)
-    {
+    { 
+        layers_it->prepare_non_gl_layer();
+
         if (layers_it->needs_gl_render())
         {
             printf("GL NEED\n");
             render_fn(*renderable);
             needs_swapbuffers = true;
         }
-        else
-        {
-            printf("SHOULD PREP.\n");
-            layers_it->prepare_non_gl_layer();
-        }
         layers_it++;
     }
 
     if (needs_swapbuffers)
+    {
+        printf("SWAPPING.\n");
         context.swap_buffers();
+    }
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
@@ -124,14 +133,16 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     if (skip_layers_present)
     {
         layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buffer);
+        //layers.front().set_buffer(buffer);
     }
 
     layers.back().set_render_parameters(disp_frame, false);
     layers.back().set_buffer(buffer);
     layers.back().prepare_non_gl_layer();
 
+    printf("setting.\n");
     hwc_wrapper->set(*native_list().lock());
+    printf("done setting.\n");
 
     for(auto& layer : layers)
     {

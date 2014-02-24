@@ -82,10 +82,13 @@ bool mga::HWCLayer::needs_gl_render() const
 
 void mga::HWCLayer::update_fence_and_release_buffer()
 {
-    associated_buffer->update_fence(hwc_layer->releaseFenceFd);
-    hwc_layer->releaseFenceFd = -1;
-    hwc_layer->acquireFenceFd = -1;
-    associated_buffer.reset();
+    if (hwc_layer->compositionType != HWC_FRAMEBUFFER)
+    { 
+        associated_buffer->update_fence(hwc_layer->releaseFenceFd);
+        hwc_layer->releaseFenceFd = -1;
+        hwc_layer->acquireFenceFd = -1;
+        associated_buffer.reset();
+    }
 }
 
 void mga::HWCLayer::set_layer_type(LayerType type)
@@ -135,9 +138,10 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
     if (buf != &buffer)
     {
+        associated_buffer = buffer.native_buffer_handle();
+
         buf = &buffer;
         updated = true;
-        associated_buffer = buffer.native_buffer_handle();
         hwc_layer->handle = associated_buffer->handle();
         hwc_layer->sourceCrop = 
         {
@@ -160,15 +164,15 @@ void mga::HWCLayer::prepare_non_gl_layer()
     if (updated && (((hwc_layer->compositionType == HWC_OVERLAY) ||
         (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))))
     {
-        auto f = associated_buffer->copy_fence();
-        printf("COPYING FENCE! %i\n", f);
-        hwc_layer->acquireFenceFd = f; 
+        hwc_layer->acquireFenceFd = associated_buffer->copy_fence();
     }
-    else
+    //the HWC is not interested in this buffer. we can release the buffer.
+    else if (hwc_layer->compositionType == HWC_FRAMEBUFFER)
     {
-        hwc_layer->acquireFenceFd = -1; 
+        hwc_layer->acquireFenceFd = -1;
+        associated_buffer.reset();
     }
-    
+
     hwc_layer->releaseFenceFd = -1;
 }
 
