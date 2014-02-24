@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,7 +17,6 @@
  */
 
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/surface_data.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/input_channel.h"
@@ -173,14 +172,11 @@ struct SurfaceCreation : public ::testing::Test
         rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-        stub_data = std::make_shared<ms::SurfaceData>( 
-            surface_name, rect, change_notification, false);
 
         ON_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
             .WillByDefault(InvokeArgument<1>(&stub_buffer));
     }
 
-    std::shared_ptr<ms::SurfaceData> stub_data;
     std::string surface_name;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream;
     MirPixelFormat pf;
@@ -195,17 +191,17 @@ struct SurfaceCreation : public ::testing::Test
 
 }
 
-TEST_F(SurfaceCreation, test_surface_returns_same_state)
-{
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
-
-    EXPECT_EQ(stub_data, surf.compositing_criteria());
-}
-
 TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
 
     EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
         .Times(1)
@@ -218,20 +214,44 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     EXPECT_EQ(surface_name, surf.name());
 }
 
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     EXPECT_EQ(size, surf.size());
 }
 
 TEST_F(SurfaceCreation, test_surface_next_buffer)
 {
     using namespace testing;
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     mtd::StubBuffer graphics_resource;
 
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
@@ -249,7 +269,15 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 
     mtd::StubBuffer stub_buffer;
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
         .Times(1)
         .WillOnce(InvokeArgument<1>(&stub_buffer));
@@ -261,7 +289,14 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
 {
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
 
     auto ret_top_left = surf.top_left();
     EXPECT_EQ(geom::Point(), ret_top_left);
@@ -271,7 +306,15 @@ TEST_F(SurfaceCreation, test_surface_move_to)
 {
     geom::Point p{55, 66};
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     surf.move_to(p);
     EXPECT_EQ(p, surf.top_left());
 }
@@ -284,7 +327,14 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     EXPECT_CALL(*mock_buffer_stream, resize(new_size))
         .Times(1);
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
 
     ASSERT_NE(new_size, surf.size());
     EXPECT_TRUE(surf.resize(new_size));
@@ -299,7 +349,14 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     EXPECT_CALL(*mock_buffer_stream, resize(new_size))
         .Times(1);
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
 
     ASSERT_NE(new_size, surf.size());
 
@@ -319,7 +376,14 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         .Times(1)
         .WillOnce(Throw(std::runtime_error("bad resize")));
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
 
     EXPECT_THROW({
         surf.resize(new_size);
@@ -342,7 +406,10 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
     };
 
     ms::BasicSurface surf(
-        stub_data,
+        surface_name,
+        rect,
+        change_notification,
+        false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         report);
@@ -361,7 +428,15 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
 TEST_F(SurfaceCreation, test_get_input_channel)
 {
     auto mock_channel = std::make_shared<MockInputChannel>();
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, mock_channel, report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        mock_channel,
+        report);
+
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
@@ -370,12 +445,17 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     using namespace testing;
 
     float alpha = 0.5f;
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
 
     surf.set_alpha(alpha);
-    //a bit unintuitive. hopefully goes away when BasicSurface merges with CompositingCriteria
-    auto compositing_criteria = surf.compositing_criteria();
-    EXPECT_FLOAT_EQ(alpha, compositing_criteria->alpha());
+    EXPECT_FLOAT_EQ(alpha, surf.alpha());
 }
 
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
@@ -384,7 +464,15 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 
     EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     surf.force_requests_to_complete();
 }
 
@@ -395,13 +483,29 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true))
         .Times(1);
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     surf.allow_framedropping(true);
 }
 
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     mg::Buffer* buffer{nullptr};
 
     auto const complete = [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; };
@@ -417,7 +521,15 @@ TEST_F(SurfaceCreation, input_fds)
 {
     using namespace testing;
 
-    ms::BasicSurface surf(stub_data, mock_buffer_stream, std::shared_ptr<mi::InputChannel>(), report);
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        report);
+
     EXPECT_THROW({
             surf.client_input_fd();
     }, std::logic_error);
@@ -426,6 +538,13 @@ TEST_F(SurfaceCreation, input_fds)
     int const client_fd = 13;
     EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
 
-    ms::BasicSurface input_surf(stub_data, mock_buffer_stream,mt::fake_shared(channel), report);
+    ms::BasicSurface input_surf(
+        surface_name,
+        rect,
+        change_notification,
+        false,
+        mock_buffer_stream,mt::fake_shared(channel),
+        report);
+
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,7 +21,6 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/surface_stack_model.h"
-#include "src/server/scene/surface_data.h"
 #include "src/server/scene/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -73,8 +72,6 @@ class StubSurfaceBuilder : public ms::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
-        stub_data(std::make_shared<ms::SurfaceData>( 
-            std::string("stub"), geom::Rectangle{{},{}}, [](){}, false)),
         dummy_surface()
     {
     }
@@ -82,7 +79,10 @@ public:
     std::weak_ptr<ms::BasicSurface> create_surface(msh::SurfaceCreationParameters const& ) override
     {
         dummy_surface = std::make_shared<ms::BasicSurface>(
-            stub_data, 
+            std::string("stub"), 
+            geom::Rectangle{{},{}}, 
+            [](){},
+            false, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);
@@ -107,7 +107,6 @@ public:
 
 private:
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
-    std::shared_ptr<ms::SurfaceData> const stub_data;
     std::shared_ptr<ms::BasicSurface> dummy_surface;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
