@@ -542,6 +542,7 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
 
     device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
+    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
 }
 
@@ -571,5 +572,6 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 
     device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
+    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
     device.post(mock_buffer);
 }

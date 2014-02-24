@@ -139,6 +139,7 @@ TEST_F(HWCLayersTest, change_layer_types)
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
+#if 0
 TEST_F(HWCLayersTest, apply_buffer_updates_to_framebuffer_layer)
 {
     EXPECT_CALL(*native_handle_1, copy_fence())
@@ -278,3 +279,4 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
     layer.set_render_parameters(screen_position, false);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
+#endif

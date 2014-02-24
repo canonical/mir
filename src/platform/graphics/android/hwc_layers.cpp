@@ -131,31 +131,46 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     visible_rect = hwc_layer->displayFrame;
 }
 
-void mga::HWCLayer::set_buffer(std::shared_ptr<NativeBuffer> const& buffer)
+void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
-    //this will maintain a content lock on the native buffer until set has been completed
-    associated_buffer = buffer;
-
-    /* if acquireFenceFd is 'moved' into hwc after the first set for the buffer, and HWC will go and 
-       reset this to -1. Take care not to update the acquireFenceFd with the releaseFenceFd from the
-       last display post */
-    if (hwc_layer->handle != buffer->handle())
+    if (buf != &buffer)
     {
-        hwc_layer->handle = buffer->handle();
-
-        //hwc will not adopt the fence unless it is one of these types
-        if ((hwc_layer->compositionType == HWC_OVERLAY) ||
-            (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))
-        {
-            hwc_layer->acquireFenceFd = buffer->copy_fence();
-        }
-        
-        hwc_layer->releaseFenceFd = -1;
+        buf = &buffer;
+        updated = true;
+        associated_buffer = buffer.native_buffer_handle();
+        hwc_layer->handle = associated_buffer->handle();
         hwc_layer->sourceCrop = 
         {
             0, 0,
-            buffer->anwb()->width,
-            buffer->anwb()->height
+            associated_buffer->anwb()->width,
+            associated_buffer->anwb()->height
         };
+    } else
+    {
+        associated_buffer.reset();
+        associated_buffer = buffer.native_buffer_handle();
+        updated = false;
     }
+}
+
+void mga::HWCLayer::prepare_non_gl_layer()
+{
+    //hwc will not adopt the fence unless it is one of these types
+    if (updated && (((hwc_layer->compositionType == HWC_OVERLAY) ||
+        (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))))
+    {
+        printf("COPY FD\n");
+        hwc_layer->acquireFenceFd = associated_buffer->copy_fence();
+    }
+    else
+    {
+        hwc_layer->acquireFenceFd = -1; 
+    }
+    
+    hwc_layer->releaseFenceFd = -1;
+}
+
+bool mga::HWCLayer::was_updated() const
+{
+    return updated | needs_gl_render();
 }

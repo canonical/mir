@@ -47,6 +47,7 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
     update_representation(2);
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    list_is_settable = true;
     skip_layers_present = true;
 
     hwc_wrapper->prepare(*native_list().lock());
@@ -59,34 +60,60 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
+    printf("zzz\n");
     auto const needed_size = renderables.size() + 1;
     update_representation(needed_size);
 
     //pack layer list from renderables
     auto layers_it = layers.begin();
+    list_is_settable = false;
     for(auto const& renderable : renderables)
     {
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
+        layers_it->set_buffer(*renderable->buffer());//->native_buffer_handle());
+        list_is_settable |= layers_it->was_updated();
         layers_it++;
     }
 
+    printf("LIST IS SETTABLE %i\n", list_is_settable);
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
+
+    //nothing has changed in this list, so no need to anything more
+    if(!list_is_settable)
+    {
+#if 0
+        auto lit = layers.begin();
+        for(auto const& renderable : renderables)
+        {
+            (void) renderable;
+            lit->update_fence_and_release_buffer();
+            lit++;
+        }
+#endif
+        return;
+    }
 
     hwc_wrapper->prepare(*native_list().lock());
 
     //if a layer cannot be drawn, draw with GL here
-    layers_it = layers.begin();
     bool needs_swapbuffers = false;
+    layers_it = layers.begin();
     for(auto const& renderable : renderables)
     {
-        if ((layers_it++)->needs_gl_render())
+        if (layers_it->needs_gl_render())
         {
-            needs_swapbuffers = true;
+            printf("PREPARE GL\n");
             render_fn(*renderable);
+            needs_swapbuffers = true;
         }
+        else
+        {
+            printf("PREPARE NON GL\n");
+            layers_it->prepare_non_gl_layer();
+        }
+        layers_it++;
     }
 
     if (needs_swapbuffers)
@@ -95,24 +122,33 @@ void mga::HwcDevice::render_gl_and_overlays(
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
+    //if there have been no updates to the list, discard the 
+    if (!list_is_settable)
+    {
+        printf("ABORT SET.\n");
+        return;
+    }
+
     auto lg = lock_unblanked();
 
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    auto buf = buffer.native_buffer_handle();
     if (skip_layers_present)
     {
         layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buf);
+        layers.front().set_buffer(buffer);
     }
 
     layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buf);
+    layers.back().set_buffer(buffer);
 
+    printf("set.\n");
     hwc_wrapper->set(*native_list().lock());
+
     for(auto& layer : layers)
     {
         layer.update_fence_and_release_buffer();
     }
 
     mga::SyncFence retire_fence(sync_ops, retirement_fence());
+    list_is_settable = false;
 }
