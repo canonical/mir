@@ -28,6 +28,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <atomic>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -77,35 +78,11 @@ struct SwapperSwappingStress : public ::testing::Test
     }
 };
 
-template<typename T> class Atomic   // a helgrind-friendly std::atomic
-{
-public:
-    Atomic(T init) : val(init)
-    {
-    }
-
-    void operator=(T const& v)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        val = v;
-    }
-
-    operator T() const
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        return val;
-    }
-
-private:
-    T val;
-    mutable std::mutex mutex;
-};
-
 } // namespace
 
 TEST_F(SwapperSwappingStress, swapper)
 {
-    Atomic<bool> done(false);
+    std::atomic_bool done(false);
 
     auto f = std::async(std::launch::async,
                 [&]
@@ -150,7 +127,7 @@ TEST_F(SwapperSwappingStress, swapper)
 
 TEST_F(SwapperSwappingStress, different_swapper_types)
 {
-    Atomic<bool> done(false);
+    std::atomic_bool done(false);
 
     auto f = std::async(std::launch::async,
                 [&]
