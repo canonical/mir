@@ -79,9 +79,9 @@ struct FakeScene : mc::Scene
     {
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
-            mg::Renderable &criteria = **it;
-            if (filter(criteria))
-                op(criteria);
+            mg::Renderable &renderable = **it;
+            if (filter(renderable))
+                op(renderable);
         }
     }
 
@@ -120,9 +120,9 @@ struct WrappingRenderer : mc::Renderer
         renderer->begin();
     }
 
-    void render(mg::Renderable const& criteria, mg::Buffer& buffer) const override
+    void render(mg::Renderable const& renderable, mg::Buffer& buffer) const override
     {
-        renderer->render(criteria, buffer);
+        renderer->render(renderable, buffer);
     }
 
     void end() const override
