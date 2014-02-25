@@ -409,7 +409,6 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
     stack.destroy_surface(surface);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace ::testing;
@@ -425,28 +424,26 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
 {
     using namespace ::testing;
