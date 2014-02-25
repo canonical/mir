@@ -53,8 +53,7 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
             namespace po = boost::program_options;
 
             result->add_options()
-                ("fullscreen-surfaces", po::value<bool>()->default_value(false),
-                    "Make all surfaces fullscreen");
+                ("fullscreen-surfaces", "Make all surfaces fullscreen");
 
             return result;
         }()),
