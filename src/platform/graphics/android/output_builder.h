@@ -33,6 +33,7 @@ namespace android
 class FramebufferBundle;
 class DisplayResourceFactory;
 class GraphicBufferAllocator;
+class DisplayDevice;
 
 class OutputBuilder : public DisplayBuilder
 {
@@ -43,9 +44,7 @@ public:
         std::shared_ptr<DisplayReport> const& display_report);
 
     MirPixelFormat display_format();
-    std::shared_ptr<DisplayDevice> create_display_device();
-    std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
-        std::shared_ptr<DisplayDevice> const& display_device,
+    std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
         GLContext const& gl_context);
 
 private:
