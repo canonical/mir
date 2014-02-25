@@ -47,6 +47,7 @@ public:
         std::list<std::shared_ptr<Renderable>> const& list,
         std::function<void(Renderable const&)> const& render_fn) = 0;
     virtual void post(Buffer const& buffer) = 0;
+    virtual bool apply_orientation(MirOrientation orientation) const = 0;
 
 protected:
     DisplayDevice() = default;

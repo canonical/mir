@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,6 +17,7 @@
  */
 
 #include "server_configuration.h"
+#include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/composite_event_filter.h"
@@ -145,14 +146,19 @@ private:
 
 }
 
-me::ServerConfiguration::ServerConfiguration(int argc, char const** argv)
-    : DefaultServerConfiguration(argc, argv)
+me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
+    DefaultServerConfiguration(configuration_options)
 {
     namespace po = boost::program_options;
 
-    add_options()
+    configuration_options->add_options()
         (display_config_opt, po::value<std::string>()->default_value(clone_opt_val),
             "Display configuration [{clone,sidebyside,single}]");
+}
+
+me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
+    ServerConfiguration(std::make_shared<options::DefaultConfiguration>(argc, argv))
+{
 }
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
