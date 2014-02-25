@@ -214,7 +214,6 @@ struct SurfaceStack : public ::testing::Test
 
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
 {
     using namespace testing;
@@ -241,6 +240,7 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
     EXPECT_EQ(use_count, stub_surface1.use_count());
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
 {
     using namespace ::testing;
