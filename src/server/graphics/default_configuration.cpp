@@ -17,6 +17,8 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 
 #include "default_display_configuration_policy.h"
 #include "nested/host_connection.h"
@@ -29,6 +31,8 @@
 #include "mir/abnormal_exit.h"
 
 #include <boost/throw_exception.hpp>
+
+#include <map>
 
 namespace mg = mir::graphics;
 
@@ -76,10 +80,10 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = load_library(the_options()->get<std::string>(platform_graphics_lib));
+            auto graphics_lib = load_library(the_options()->get<std::string>(options::platform_graphics_lib));
 
             // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-            if (the_options()->is_set(standalone_opt) || !the_options()->is_set(host_socket_opt))
+            if (the_options()->is_set(options::standalone_opt) || !the_options()->is_set(options::host_socket_opt))
             {
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
@@ -111,7 +115,7 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            if (the_options()->is_set(offscreen_opt))
+            if (the_options()->is_set(options::offscreen_opt))
             {
                 return std::make_shared<mg::offscreen::Display>(
                     the_graphics_platform(),
@@ -134,19 +138,19 @@ auto mir::DefaultServerConfiguration::the_host_connection()
         {
             auto const options = the_options();
 
-            if (!options->is_set(standalone_opt))
+            if (!options->is_set(options::standalone_opt))
             {
-                if (!options->is_set(host_socket_opt))
+                if (!options->is_set(options::host_socket_opt))
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
 
-                auto host_socket = options->get<std::string>(host_socket_opt);
+                auto host_socket = options->get<std::string>(options::host_socket_opt);
                 auto server_socket = the_socket_file();
 
                 if (server_socket == host_socket)
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
 
-                auto const my_name = options->is_set(name_opt) ?
-                    options->get<std::string>(name_opt) :
+                auto const my_name = options->is_set(options::name_opt) ?
+                    options->get<std::string>(options::name_opt) :
                     "nested-mir@:" + server_socket;
 
                 return std::make_shared<graphics::nested::HostConnection>(

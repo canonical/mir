@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 #include "fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
+#include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
@@ -34,6 +35,7 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
+namespace mo = mir::options;
 
 namespace mir
 {
@@ -44,14 +46,20 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
-      : ServerConfiguration(argc, argv),
+      : ServerConfiguration([argc, argv]
+        {
+            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
+
+            namespace po = boost::program_options;
+
+            result->add_options()
+                ("fullscreen-surfaces", po::value<bool>()->default_value(false),
+                    "Make all surfaces fullscreen");
+
+            return result;
+        }()),
         filter_list(filter_list)
     {
-        namespace po = boost::program_options;
-
-        add_options()
-            ("fullscreen-surfaces", po::value<bool>(),
-                "Make all surfaces fullscreen [bool:default=false]");
     }
 
     std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override

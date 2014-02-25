@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 
+#include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/input/input_channel.h"
@@ -50,6 +51,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mo = mir::options;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -239,13 +241,19 @@ class StubInputManager : public mi::InputManager
 }
 
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
-    DefaultServerConfiguration(::argc, ::argv)
-{
-    namespace po = boost::program_options;
+    DefaultServerConfiguration([]
+    {
+        auto result = std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
 
-    add_options()
-        ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
-        ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
+        namespace po = boost::program_options;
+
+        result->add_options()
+                ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
+                ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
+
+        return result;
+    }())
+{
 }
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()

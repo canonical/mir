@@ -64,7 +64,7 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
 
 struct StubInputSurface : public mi::Surface
 {
-    geom::Point position() const
+    geom::Point top_left() const
     {
         return geom::Point();
     }

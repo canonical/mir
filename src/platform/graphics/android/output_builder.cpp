@@ -63,7 +63,8 @@ MirPixelFormat mga::OutputBuilder::display_format()
     return framebuffers->fb_format();
 }
 
-std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
+std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
+    GLContext const& gl_context)
 {
     std::shared_ptr<mga::DisplayDevice> device;
     if (force_backup_display)
@@ -98,14 +99,7 @@ std::shared_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
         } 
     }
 
-    return device;
-}
-
-std::unique_ptr<mg::DisplayBuffer> mga::OutputBuilder::create_display_buffer(
-    std::shared_ptr<DisplayDevice> const& display_device,
-    GLContext const& gl_context)
-{
     auto native_window = res_factory->create_native_window(framebuffers);
-    return std::unique_ptr<mg::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, display_device, native_window, gl_context));
+    return std::unique_ptr<mga::DisplayBuffer>(
+        new DisplayBuffer(framebuffers, device, native_window, gl_context));
 }

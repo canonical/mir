@@ -20,6 +20,8 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
