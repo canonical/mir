@@ -240,7 +240,6 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
     EXPECT_EQ(use_count, stub_surface1.use_count());
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
 {
     using namespace ::testing;
@@ -256,36 +255,34 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     MockFilterForScene filter;
     MockOperatorForScene renderable_operator;
 
     Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+    EXPECT_CALL(filter, filter(Ref(*renderable1)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+    EXPECT_CALL(filter, filter(Ref(*renderable2)))
         .InSequence(seq1)
         .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+    EXPECT_CALL(filter, filter(Ref(*renderable3)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq2);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq2);
 
     stack.for_each_if(filter, renderable_operator);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
 {
     using namespace ::testing;
