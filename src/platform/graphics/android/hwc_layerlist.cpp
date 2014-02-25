@@ -123,7 +123,7 @@ void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<gr
     {
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(*renderable->buffer());
+        layers_it->set_buffer(*renderable->buffer(1));  // TODO: implement frameno
         layers_it++;
     }
 
