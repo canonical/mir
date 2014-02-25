@@ -514,7 +514,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     comp->composite();
 }
 
-#if 0 // FIXME
 TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
 {
     using namespace testing;
@@ -552,6 +551,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
+    fullscreen.set_buffer(compositor_buffer);
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
@@ -576,8 +576,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
         .Times(0);
-    //EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
-    //    .WillRepeatedly(Return(compositor_buffer));
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillOnce(Return(true));
     comp->composite();
@@ -598,7 +596,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .Times(0);
     comp->composite();
 }
-#endif
 
 TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
 {
