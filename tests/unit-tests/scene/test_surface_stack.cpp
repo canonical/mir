@@ -464,7 +464,6 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
     stack.destroy_surface(s);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
 {
     using namespace ::testing;
@@ -486,6 +485,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
     stack.destroy_surface(s);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 {
     using namespace ::testing;
