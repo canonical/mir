@@ -28,6 +28,7 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/run_mir.h"
@@ -427,6 +428,11 @@ public:
              * (TODO There must be a better way!)
              */
             {
+                // RenderResourcesBufferInitializer will need a GL context
+                // to paint the buffers that get allocated in the swap_buffers() calls
+                auto const gl_context = display->create_gl_context();
+                gl_context->make_current();
+
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
                 s->swap_buffers(buffer, complete);
