@@ -324,7 +324,6 @@ TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
     stack.reverse_for_each_if(filter, renderable_operator);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, stacking_order_reverse)
 {
     using namespace ::testing;
@@ -340,31 +339,26 @@ TEST_F(SurfaceStack, stacking_order_reverse)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
 
     stack.reverse_for_each_if(filter, renderable_operator);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, stacking_order)
 {
     using namespace ::testing;
