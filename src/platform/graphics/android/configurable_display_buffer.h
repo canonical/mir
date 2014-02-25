@@ -16,12 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_
+#define MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_
 
-#include "display_device.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -30,23 +29,15 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplayDevice
+class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
-
-    bool apply_orientation(MirOrientation orientation) const;
-    void mode(MirPowerMode mode);
-    void prepare_gl();
-    void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list); 
-    void gpu_render(EGLDisplay dpy, EGLSurface sur);
-    void post(Buffer const& buffer);
-
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    virtual DisplayConfigurationOutput configuration() const = 0;
+    virtual void configure(DisplayConfigurationOutput const&) = 0;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_ */

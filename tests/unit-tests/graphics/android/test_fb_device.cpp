@@ -60,7 +60,7 @@ struct FBDevice : public ::testing::Test
     mtd::MockEGL mock_egl;
 };
 
-TEST_F(FBDevice, render)
+TEST_F(FBDevice, gpu_render_swaps_buffers)
 {
     using namespace testing;
     int bad = 0xdfefefe;
@@ -80,7 +80,7 @@ TEST_F(FBDevice, render)
     fbdev.gpu_render(dpy, surf);
 }
 
-TEST_F(FBDevice, commit_frame)
+TEST_F(FBDevice, commits_frame_via_post)
 {
     using namespace testing;
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
@@ -97,7 +97,7 @@ TEST_F(FBDevice, commit_frame)
     fbdev.post(*mock_buffer);
 }
 
-TEST_F(FBDevice, set_swapinterval)
+TEST_F(FBDevice, sets_swapinterval_1_on_start)
 {
     EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
         .Times(1);
@@ -105,13 +105,19 @@ TEST_F(FBDevice, set_swapinterval)
 }
 
 //not all fb devices provide a swap interval hook. make sure we don't explode if thats the case
-TEST_F(FBDevice, set_swapinterval_with_null_hook)
+TEST_F(FBDevice, does_not_segfault_if_null_swapinterval_hook)
 {
     fb_hal_mock->setSwapInterval = nullptr;
     mga::FBDevice fbdev(fb_hal_mock);
 }
 
-TEST_F(FBDevice, screen_on_off)
+TEST_F(FBDevice, does_not_accept_orientation_changes)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_FALSE(fbdev.apply_orientation(mir_orientation_left));
+}
+
+TEST_F(FBDevice, can_screen_on_off)
 {
     fb_hal_mock->setSwapInterval = nullptr;
     using namespace testing;

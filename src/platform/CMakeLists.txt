@@ -17,3 +17,4 @@ target_link_libraries(
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(graphics/)
+add_subdirectory(options)
