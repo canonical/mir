@@ -465,7 +465,6 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     comp->composite();
 }
 
-#if 0 // FIXME
 TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 {
     using namespace testing;
@@ -500,10 +499,9 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 
     FakeScene scene(renderable_vec);
 
-    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    //EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
-    //    .WillRepeatedly(Return(compositor_buffer));
-    EXPECT_CALL(*compositor_buffer, can_bypass())
+    auto nonbypassable = std::make_shared<mtd::MockBuffer>();
+    fullscreen.set_buffer(nonbypassable);
+    EXPECT_CALL(*nonbypassable, can_bypass())
         .WillRepeatedly(Return(false));
 
     mc::DefaultDisplayBufferCompositorFactory factory(
@@ -516,6 +514,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     comp->composite();
 }
 
+#if 0 // FIXME
 TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
 {
     using namespace testing;
