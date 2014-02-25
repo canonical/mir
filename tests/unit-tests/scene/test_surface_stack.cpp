@@ -685,7 +685,6 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     tinkerer.join();
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, is_recursively_lockable)
 {
     ms::SurfaceStack stack(
@@ -707,4 +706,3 @@ TEST_F(SurfaceStack, is_recursively_lockable)
     stack.unlock();
     stack.unlock();
 }
-#endif
