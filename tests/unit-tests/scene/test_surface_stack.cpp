@@ -588,7 +588,6 @@ TEST_F(SurfaceStack, raise_throw_behavior)
     }, std::runtime_error);
 }
 
-#if 0 // FIXME
 namespace
 {
 
@@ -638,24 +637,21 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     MockFilterForScene filter;
     Sequence seq1;
-    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+    EXPECT_CALL(filter, filter(Ref(*renderable1)))
         .InSequence(seq1)
         .WillRepeatedly(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+    EXPECT_CALL(filter, filter(Ref(*renderable2)))
         .InSequence(seq1)
         .WillRepeatedly(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+    EXPECT_CALL(filter, filter(Ref(*renderable3)))
         .InSequence(seq1)
         .WillRepeatedly(Return(true));
 
@@ -689,6 +685,7 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     tinkerer.join();
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, is_recursively_lockable)
 {
     ms::SurfaceStack stack(
