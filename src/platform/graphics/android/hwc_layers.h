@@ -68,7 +68,7 @@ public:
 
     void update_fence_and_release_buffer();
     bool needs_gl_render() const;
-    bool was_updated() const;
+    bool needs_hwc_commit() const;
     void prepare_for_draw();
 private:
     hwc_layer_1_t* hwc_layer;

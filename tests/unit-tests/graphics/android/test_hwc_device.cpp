@@ -379,13 +379,11 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
 TEST_F(HwcDevice, hwc_default_set)
 {
     using namespace testing;
-    int skip_release_fence = -1;
     int fb_release_fence = 94;
     int hwc_retire_fence = 74;
     auto set_fences_fn = [&](hwc_display_contents_1_t& contents)
     {
         ASSERT_EQ(contents.numHwLayers, 2);
-        contents.hwLayers[0].releaseFenceFd = skip_release_fence;
         contents.hwLayers[1].releaseFenceFd = fb_release_fence;
         contents.retireFenceFd = hwc_retire_fence;
     };
@@ -400,8 +398,6 @@ TEST_F(HwcDevice, hwc_default_set)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer, update_fence(skip_release_fence))
-        .InSequence(seq);
     EXPECT_CALL(*mock_native_buffer, update_fence(fb_release_fence))
         .InSequence(seq);
     EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))

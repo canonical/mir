@@ -41,8 +41,6 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
@@ -50,8 +48,7 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
     update_representation(2);
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-    printf("TRUE!\n");
-    list_is_settable = true;
+    list_needs_commit = true;
     skip_layers_present = true;
 
     hwc_wrapper->prepare(*native_list().lock());
@@ -67,7 +64,7 @@ void mga::HwcDevice::render_gl_and_overlays(
     auto const needed_size = renderables.size() + 1;
     update_representation(needed_size);
 
-    list_is_settable = false;
+    list_needs_commit = false;
     auto layers_it = layers.begin();
     for(auto const& renderable : renderables)
     {
@@ -75,29 +72,21 @@ void mga::HwcDevice::render_gl_and_overlays(
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
         layers_it->set_buffer(*renderable->buffer());
-        list_is_settable |= layers_it->was_updated();
+        list_needs_commit |= layers_it->needs_hwc_commit();
         layers_it++;
     }
+
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
 
-#if 1
-    if (!list_is_settable)
-    {
-  //      hwc_representation->flags = 0;
-        //nothing has changed in this list, so no need to anything more.
-        //user will have to submit a new list before we'll do anything.
+    if (!list_needs_commit)
         return;
-    }
-#endif
 
-    printf("PREPARE.\n");
     hwc_wrapper->prepare(*native_list().lock());
 
     //draw layers that the HWC did not accept for overlays here
     bool needs_swapbuffers = false;
     layers_it = layers.begin();
-    int i = 0; 
     for(auto const& renderable : renderables)
     {
         //prepare all layers for draw. 
@@ -106,7 +95,6 @@ void mga::HwcDevice::render_gl_and_overlays(
         //trigger GL on the layers that are not overlays
         if (layers_it->needs_gl_render())
         {
-            printf("NEEDS %i\n", i++);
             render_fn(*renderable);
             needs_swapbuffers = true;
         }
@@ -115,22 +103,14 @@ void mga::HwcDevice::render_gl_and_overlays(
 
     //swap if needed
     if (needs_swapbuffers)
-    {
-        printf("SWAP!!!\n");
-//        context.swap_buffers(); 
-        (void) context;
-    }
+        context.swap_buffers(); 
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
-#if 1
-    if (!list_is_settable)
-    {
-        
+    if (!list_needs_commit)
         return;
-    }
-#endif
+
     auto lg = lock_unblanked();
 
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
@@ -143,7 +123,6 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     }
 
     layers.back().set_render_parameters(disp_frame, false);
-    printf("should be fb stetting\n");
     layers.back().set_buffer(buffer);
     layers.back().prepare_for_draw();
 
@@ -151,13 +130,9 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 
     //layers that were the FB target or an overlay need their buffer fences updated
     for(auto& layer : layers)
-    {
         layer.update_fence_and_release_buffer();
-    }
 
     //On some drivers, this fence seems unreliable for display timing purposes. make sure to close()
     mga::SyncFence retire_fence(sync_ops, retirement_fence());
-    list_is_settable = false;
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-printf("END SET!\n");
+    list_needs_commit = false;
 }

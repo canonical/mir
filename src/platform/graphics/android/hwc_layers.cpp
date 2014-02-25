@@ -77,9 +77,7 @@ mga::HWCLayer::HWCLayer(
 
 bool mga::HWCLayer::needs_gl_render() const
 {
-    printf("ctype %i flag %i: %i\n", hwc_layer->compositionType, hwc_layer->flags,
-            ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER)));
-    return (hwc_layer->compositionType == HWC_FRAMEBUFFER);// || (hwc_layer->flags == HWC_SKIP_LAYER));
+    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
 }
 
 void mga::HWCLayer::update_fence_and_release_buffer()
@@ -93,8 +91,6 @@ void mga::HWCLayer::update_fence_and_release_buffer()
     }
 }
 
-static native_handle_t oo;
-static buffer_handle_t boo = &oo;
 void mga::HWCLayer::set_layer_type(LayerType type)
 {
     hwc_layer->flags = 0;
@@ -111,8 +107,6 @@ void mga::HWCLayer::set_layer_type(LayerType type)
 
         case mga::LayerType::framebuffer_target:
             hwc_layer->compositionType = HWC_FRAMEBUFFER_TARGET;
-            printf("HEREE....\n");
-            hwc_layer->handle = boo;
         break;
 
         case mga::LayerType::overlay: //driver is the only one who can set to overlay
@@ -137,7 +131,6 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
         position.size.height.as_int()
     };
 
-    printf("this should copy ....\n");
     visible_rect = 
     {
         position.top_left.x.as_int(),
@@ -149,10 +142,8 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
 
 void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
-
     if (buf != &buffer)
     {
-        printf("BUFFER DIFFERENT.\n");
         associated_buffer = buffer.native_buffer_handle();
 
         buf = &buffer;
@@ -166,7 +157,6 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
         };
     } else
     {
-        printf("BUFFER SAME.\n");
         associated_buffer.reset();
         associated_buffer = buffer.native_buffer_handle();
         updated = false;
@@ -180,8 +170,7 @@ void mga::HWCLayer::prepare_for_draw()
     if (updated && (((hwc_layer->compositionType == HWC_OVERLAY) ||
         (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))))
     {
-//        hwc_layer->acquireFenceFd = associated_buffer->copy_fence();
-        hwc_layer->acquireFenceFd = -1;
+        hwc_layer->acquireFenceFd = associated_buffer->copy_fence();
     }
     //the HWC is not interested in this buffer. we can release the buffer.
     else if (hwc_layer->compositionType == HWC_FRAMEBUFFER)
@@ -193,7 +182,7 @@ void mga::HWCLayer::prepare_for_draw()
     hwc_layer->releaseFenceFd = -1;
 }
 
-bool mga::HWCLayer::was_updated() const
+bool mga::HWCLayer::needs_hwc_commit() const
 {
-    return updated | !needs_gl_render();
+    return updated | needs_gl_render();
 }

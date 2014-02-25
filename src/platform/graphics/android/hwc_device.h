@@ -74,7 +74,7 @@ private:
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
     bool skip_layers_present{true};
-    bool list_is_settable{false};
+    bool list_needs_commit{false};
 };
 
 }
