@@ -34,10 +34,10 @@ class FakeRenderable : public graphics::Renderable
 {
 public:
     FakeRenderable(int x, int y, int width, int height,
-                            float opacity=1.0f,
-                            bool rectangular=true,
-                            bool visible=true,
-                            bool posted=true)
+                   float opacity=1.0f,
+                   bool rectangular=true,
+                   bool visible=true,
+                   bool posted=true)
         : rect{{x, y}, {width, height}},
           opacity(opacity),
           rectangular(rectangular),
@@ -70,9 +70,14 @@ public:
         return !rectangular;
     }
 
+    void set_buffer(std::shared_ptr<graphics::Buffer> b)
+    {
+        buf = b;
+    }
+
     std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
     {
-        return {};
+        return buf;
     }
 
     bool alpha_enabled() const override
@@ -86,6 +91,7 @@ public:
     }
 
 private:
+    std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
     glm::mat4 trans;
     float opacity;

@@ -248,7 +248,6 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     comp->composite();
 }
 
-#if 0 // FIXME - MockCompositingCriteria
 TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 {
     using namespace testing;
@@ -288,10 +287,9 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
+    fullscreen.set_buffer(compositor_buffer);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillOnce(Return(true));
-    // FIXME EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
-    //    .WillOnce(Return(compositor_buffer));
 
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
@@ -306,7 +304,6 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     comp->composite();
 }
-#endif
 
 TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
 {
