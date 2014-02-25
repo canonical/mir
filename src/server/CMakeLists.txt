@@ -8,7 +8,6 @@ add_subdirectory(input/)
 add_subdirectory(report/)
 add_subdirectory(logging/)
 add_subdirectory(scene/)
-add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
 add_subdirectory(time/)
@@ -29,7 +28,6 @@ set(
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
-  default_configuration_options.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
 )

@@ -29,7 +29,7 @@ namespace android
 class AndroidDisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    AndroidDisplayConfiguration(geometry::Size const& display_size);
+    AndroidDisplayConfiguration(DisplayConfigurationOutput&& output);
     AndroidDisplayConfiguration(AndroidDisplayConfiguration const& other);
     AndroidDisplayConfiguration& operator=(AndroidDisplayConfiguration const& other);
 
