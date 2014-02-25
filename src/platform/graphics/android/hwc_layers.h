@@ -69,8 +69,7 @@ public:
     void update_fence_and_release_buffer();
     bool needs_gl_render() const;
     bool was_updated() const;
-    void prepare_non_gl_layer();
-
+    void prepare_for_draw();
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;

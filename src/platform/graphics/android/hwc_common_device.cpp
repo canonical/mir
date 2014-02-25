@@ -118,6 +118,7 @@ std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
 
 int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
 {
+    printf("SCREEN ON!\n");
     if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
         return err;
     return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);

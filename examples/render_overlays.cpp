@@ -124,7 +124,6 @@ try
             buffer.make_current();
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
-            
         });
     }
    return 0;

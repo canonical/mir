@@ -50,12 +50,12 @@ protected:
 
     void update_representation(size_t needed_size); 
     std::list<HWCLayer> layers;
+    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 
 private:
     LayerListBase& operator=(LayerListBase const&) = delete;
     LayerListBase(LayerListBase const&) = delete;
 
-    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 };
 
 class LayerList : public LayerListBase

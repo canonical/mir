@@ -174,14 +174,14 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     layer.set_buffer(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
-    //prepare_non_gl_layer should set the fence
+    //prepare_for_draw should set the fence
     //mir must reset releaseFenceFd to -1
     hwc_layer->releaseFenceFd = fake_fence;
     EXPECT_CALL(*native_handle_1, copy_fence())
         .Times(1)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
-    layer.prepare_non_gl_layer();
+    layer.prepare_for_draw();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
@@ -189,7 +189,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     hwc_layer->acquireFenceFd = -1;
     expected_layer.acquireFenceFd = -1;
     layer.set_buffer(mock_buffer);
-    layer.prepare_non_gl_layer();
+    layer.prepare_for_draw();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
@@ -216,7 +216,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         .Times(1)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
-    layer.prepare_non_gl_layer();
+    layer.prepare_for_draw();
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //hwc will set this to -1 to acknowledge that its adopted this layer's fence.

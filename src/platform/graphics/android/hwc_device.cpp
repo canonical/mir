@@ -25,6 +25,9 @@
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
 
+#include <thread>
+#include <chrono>
+
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
@@ -47,6 +50,7 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
     update_representation(2);
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    printf("TRUE!\n");
     list_is_settable = true;
     skip_layers_present = true;
 
@@ -77,18 +81,23 @@ void mga::HwcDevice::render_gl_and_overlays(
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
 
-    if(!list_is_settable)
+#if 1
+    if (!list_is_settable)
     {
+  //      hwc_representation->flags = 0;
         //nothing has changed in this list, so no need to anything more.
         //user will have to submit a new list before we'll do anything.
         return;
     }
+#endif
 
+    printf("PREPARE.\n");
     hwc_wrapper->prepare(*native_list().lock());
 
     //draw layers that the HWC did not accept for overlays here
     bool needs_swapbuffers = false;
     layers_it = layers.begin();
+    int i = 0; 
     for(auto const& renderable : renderables)
     {
         //prepare all layers for draw. 
@@ -97,6 +106,7 @@ void mga::HwcDevice::render_gl_and_overlays(
         //trigger GL on the layers that are not overlays
         if (layers_it->needs_gl_render())
         {
+            printf("NEEDS %i\n", i++);
             render_fn(*renderable);
             needs_swapbuffers = true;
         }
@@ -106,15 +116,21 @@ void mga::HwcDevice::render_gl_and_overlays(
     //swap if needed
     if (needs_swapbuffers)
     {
-        context.swap_buffers();
+        printf("SWAP!!!\n");
+//        context.swap_buffers(); 
+        (void) context;
     }
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
+#if 1
     if (!list_is_settable)
+    {
+        
         return;
-
+    }
+#endif
     auto lg = lock_unblanked();
 
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
@@ -123,12 +139,13 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     {
         layers.front().set_render_parameters(disp_frame, false);
         layers.front().set_buffer(buffer);
-        layers.front().prepare_non_gl_layer();
+        layers.front().prepare_for_draw();
     }
 
     layers.back().set_render_parameters(disp_frame, false);
+    printf("should be fb stetting\n");
     layers.back().set_buffer(buffer);
-    layers.back().prepare_non_gl_layer();
+    layers.back().prepare_for_draw();
 
     hwc_wrapper->set(*native_list().lock());
 
@@ -141,4 +158,6 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     //On some drivers, this fence seems unreliable for display timing purposes. make sure to close()
     mga::SyncFence retire_fence(sync_ops, retirement_fence());
     list_is_settable = false;
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+printf("END SET!\n");
 }
