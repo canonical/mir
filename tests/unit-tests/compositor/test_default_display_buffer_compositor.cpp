@@ -62,8 +62,6 @@ struct FakeScene : mc::Scene
     FakeScene(std::vector<mg::Renderable*> surfaces) :
         surfaces(surfaces)
     {
-        //ON_CALL(stub_stream, lock_compositor_buffer(testing::_))
-        //    .WillByDefault(testing::Return(std::make_shared<mtd::StubBuffer>()));
     }
 
     // Ugly...should we use delegation?
@@ -197,7 +195,6 @@ TEST(DefaultDisplayBufferCompositor, render)
     comp->composite();
 }
 
-#if 0 // FIXME - MockCompositingCriteria
 TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
@@ -205,31 +202,39 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     StubRendererFactory renderer_factory;
     mtd::NullDisplayBuffer display_buffer;
 
-    NiceMock<mtd::MockCompositingCriteria> mock_criteria1, mock_criteria2, mock_criteria3;
+    mtd::MockRenderable mock_renderable1, mock_renderable2, mock_renderable3;
+
+    auto buf = std::make_shared<mtd::StubBuffer>();
+    EXPECT_CALL(mock_renderable1, buffer(_))
+        .WillOnce(Return(buf));
+    EXPECT_CALL(mock_renderable2, buffer(_))
+        .Times(0);
+    EXPECT_CALL(mock_renderable3, buffer(_))
+        .WillOnce(Return(buf));
 
     glm::mat4 simple;
-    EXPECT_CALL(mock_criteria1, transformation())
+    EXPECT_CALL(mock_renderable1, transformation())
         .WillOnce(ReturnRef(simple));
-    EXPECT_CALL(mock_criteria2, transformation())
+    EXPECT_CALL(mock_renderable2, transformation())
         .WillOnce(ReturnRef(simple));
-    EXPECT_CALL(mock_criteria3, transformation())
+    EXPECT_CALL(mock_renderable3, transformation())
         .WillOnce(ReturnRef(simple));
 
-    EXPECT_CALL(mock_criteria1, should_be_rendered_in(_))
+    EXPECT_CALL(mock_renderable1, should_be_rendered_in(_))
         .WillOnce(Return(true));
-    EXPECT_CALL(mock_criteria2, should_be_rendered_in(_))
+    EXPECT_CALL(mock_renderable2, should_be_rendered_in(_))
         .WillOnce(Return(false));
-    EXPECT_CALL(mock_criteria3, should_be_rendered_in(_))
+    EXPECT_CALL(mock_renderable3, should_be_rendered_in(_))
         .WillOnce(Return(true));
 
     std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&mock_criteria1);
-    renderable_vec.push_back(&mock_criteria2);
-    renderable_vec.push_back(&mock_criteria3);
+    renderable_vec.push_back(&mock_renderable1);
+    renderable_vec.push_back(&mock_renderable2);
+    renderable_vec.push_back(&mock_renderable3);
 
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_criteria1),_)).Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_criteria2),_)).Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_criteria3),_)).Times(1);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_renderable1),_)).Times(1);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_renderable2),_)).Times(0);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_renderable3),_)).Times(1);
 
     FakeScene scene(renderable_vec);
 
@@ -243,6 +248,7 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     comp->composite();
 }
 
+#if 0 // FIXME - MockCompositingCriteria
 TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 {
     using namespace testing;
