@@ -207,7 +207,7 @@ protected:
 };
 
 
-TEST_F(HwcDevice, hwc_default_prepare)
+TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
 {
     using namespace testing;
     std::list<hwc_layer_1_t*> expected_list
@@ -223,7 +223,7 @@ TEST_F(HwcDevice, hwc_default_prepare)
     device.render_gl(stub_context);
 }
 
-TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
+TEST_F(HwcDevice, calls_render_fn_and_swap_when_all_overlays_are_rejected)
 {
     using namespace testing;
     mtd::MockRenderFunction mock_render_fn;
@@ -265,7 +265,7 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_all_rejected)
     device.render_gl_and_overlays(mock_context, updated_list, render_fn);
 }
 
-TEST_F(HwcDevice, hwc_prepare_with_overlays_some_rejected)
+TEST_F(HwcDevice, calls_render_and_swap_when_some_overlays_are_rejected)
 {
     using namespace testing;
     mtd::MockRenderFunction mock_render_fn;
@@ -305,7 +305,7 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_some_rejected)
     device.render_gl_and_overlays(mock_context, updated_list, render_fn);
 }
 
-TEST_F(HwcDevice, hwc_prepare_with_overlays_all_accepted)
+TEST_F(HwcDevice, does_not_call_render_or_swap_when_all_overlays_accepted)
 {
     using namespace testing;
     mtd::MockRenderFunction mock_render_fn;
@@ -344,7 +344,7 @@ TEST_F(HwcDevice, hwc_prepare_with_overlays_all_accepted)
     device.render_gl_and_overlays(mock_context, updated_list, render_fn);
 }
 
-TEST_F(HwcDevice, hwc_prepare_resets_layers)
+TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
 {
     using namespace testing;
     std::list<hwc_layer_1_t*> expected_list1
@@ -376,7 +376,7 @@ TEST_F(HwcDevice, hwc_prepare_resets_layers)
     device.render_gl(stub_context);
 }
 
-TEST_F(HwcDevice, hwc_default_set)
+TEST_F(HwcDevice, sets_and_updates_fences)
 {
     using namespace testing;
     int skip_release_fence = -1;
@@ -410,7 +410,7 @@ TEST_F(HwcDevice, hwc_default_set)
     device.post(mock_buffer);
 }
 
-TEST_F(HwcDevice, can_set_with_overlays)
+TEST_F(HwcDevice, sets_proper_list_with_overlays)
 {
     using namespace testing;
     int fb_acquire_fence = 82;
