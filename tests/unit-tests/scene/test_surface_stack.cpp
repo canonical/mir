@@ -573,7 +573,6 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     stack.for_each_if(filter, renderable_operator);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, raise_throw_behavior)
 {
     using namespace ::testing;
@@ -589,6 +588,7 @@ TEST_F(SurfaceStack, raise_throw_behavior)
     }, std::runtime_error);
 }
 
+#if 0 // FIXME
 namespace
 {
 
