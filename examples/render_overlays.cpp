@@ -25,8 +25,8 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/report_exception.h"
 
-#include "graphics_region_factory.h"
-#include "patterns.h"
+#include "testdraw/graphics_region_factory.h"
+#include "testdraw/patterns.h"
 
 #include <csignal>
 #include <iostream>
