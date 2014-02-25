@@ -443,7 +443,6 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     stack.for_each_if(filter, renderable_operator);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
 {
     using namespace ::testing;
@@ -465,6 +464,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
     stack.destroy_surface(s);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
 {
     using namespace ::testing;
