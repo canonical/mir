@@ -13,15 +13,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
+#ifndef MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_
+#define MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_
 
-#include "configurable_display_buffer.h"
-#include "mir_toolkit/common.h"
-#include <memory>
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -29,25 +28,16 @@ namespace graphics
 {
 namespace android
 {
-class GLContext;
 
-class DisplayBuilder
+class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    virtual ~DisplayBuilder() = default;
-
-    virtual MirPixelFormat display_format() = 0;
-    virtual std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
-        GLContext const& gl_context) = 0;
-
-protected:
-    DisplayBuilder() = default;
-    DisplayBuilder(DisplayBuilder const&) = delete;
-    DisplayBuilder& operator=(DisplayBuilder const&) = delete;
+    virtual DisplayConfigurationOutput configuration() const = 0;
+    virtual void configure(DisplayConfigurationOutput const&) = 0;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_ */

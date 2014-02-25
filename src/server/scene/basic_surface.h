@@ -21,7 +21,6 @@
 
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/input/surface.h"
 
 #include "mutable_surface_state.h"
@@ -68,16 +67,13 @@ public:
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<SceneReport> const& report);
 
-    ~BasicSurface();
+    ~BasicSurface() noexcept;
 
     std::string const& name() const override;
     void move_to(geometry::Point const& top_left) override;
-    void set_rotation(float degrees, glm::vec3 const& axis);
     float alpha() const override;
-    void set_alpha(float alpha);
     void set_hidden(bool is_hidden) override;
 
-    geometry::Point top_left() const;
     geometry::Size size() const override;
 
     MirPixelFormat pixel_format() const;
@@ -101,11 +97,11 @@ public:
      * \throws std::logic_error For impossible sizes like {0,0}.
      */
     bool resize(geometry::Size const& size) override;
-    geometry::Point position() const override;
+    geometry::Point top_left() const override;
     bool contains(geometry::Point const& point) const override;
     void frame_posted() override;
-    void apply_alpha(float alpha) override;
-    void apply_rotation(float degrees, glm::vec3 const&) override;
+    void set_alpha(float alpha) override;
+    void set_rotation(float degrees, glm::vec3 const&) override;
     glm::mat4 const& transformation() const override;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
     bool shaped() const  override;  // meaning the pixel format has alpha
@@ -114,10 +110,9 @@ private:
     BasicSurface(BasicSurface const&) = delete;
     BasicSurface& operator=(BasicSurface const&) = delete;
 
-    // Members originally from SurfaceData
     std::mutex mutable guard;
-    std::function<void()> notify_change;
-    std::string surface_name;
+    std::function<void()> const notify_change;
+    std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;
@@ -128,9 +123,7 @@ private:
     bool hidden;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
-    // End of members originally from SurfaceData
-
-    std::shared_ptr<compositor::BufferStream> surface_buffer_stream;
+    std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SceneReport> const report;
 };
