@@ -392,7 +392,6 @@ TEST_F(SurfaceStack, stacking_order)
     stack.for_each_if(filter, renderable_operator);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
 {
     using namespace ::testing;
@@ -410,6 +409,7 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
     stack.destroy_surface(surface);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace ::testing;
