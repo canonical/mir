@@ -485,7 +485,6 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
     stack.destroy_surface(s);
 }
 
-#if 0 // FIXME
 TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 {
     using namespace ::testing;
@@ -501,31 +500,28 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
     // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
     // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -533,6 +529,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.for_each_if(filter, renderable_operator);
 }
 
+#if 0 // FIXME
 TEST_F(SurfaceStack, depth_id_trumps_raise)
 {
     using namespace ::testing;
