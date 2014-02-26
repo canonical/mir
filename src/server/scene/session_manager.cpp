@@ -138,15 +138,14 @@ void ms::SessionManager::set_focus_to(std::shared_ptr<msh::Session> const& shell
 void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
-    auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
     session_event_sink->handle_session_stopping(shell_session);
 
-    if (scene_session->get_parent())
+    auto session_parent = shell_session->get_parent();
+    if (session_parent)
     {
-        auto scene_session_parent = std::dynamic_pointer_cast<ms::Session>(scene_session->get_parent());
-        scene_session->set_parent(NULL);
-        scene_session_parent->get_children()->remove_session(shell_session);
+        shell_session->set_parent(NULL);
+        session_parent->get_children()->remove_session(shell_session);
     }
 
     auto trusted_session = shell_session->get_trusted_session();

@@ -64,8 +64,6 @@ ms::ApplicationSession::~ApplicationSession()
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
     }
-
-    printf("DESTROY session %s\n", session_name.c_str());
 }
 
 mf::SurfaceId ms::ApplicationSession::next_id()
@@ -119,11 +117,7 @@ std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
         {
             child_surface = child_session->default_surface();
             if (child_surface)
-            {
-                printf("returning child surface from %s\n", child_session->name().c_str());
                 return false;
-            }
-            printf("no surface for %s\n", child_session->name().c_str());
             return true;
         },
         true // reverse for_each
@@ -133,15 +127,9 @@ std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
         return child_surface;
 
     if (surfaces.size())
-    {
-        printf("returning main surface from %s\n", name().c_str());
         return surfaces.begin()->second;
-    }
     else
-    {
-        printf("no surface for %s\n", name().c_str());
         return std::shared_ptr<msh::Surface>();
-    }
 }
 
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
@@ -180,6 +168,14 @@ void ms::ApplicationSession::hide()
     {
         id_s.second->hide();
     }
+
+    children->for_each(
+        []
+        (std::shared_ptr<shell::Session> const& child_session)
+        {
+            child_session->hide();
+        }
+    );
 }
 
 void ms::ApplicationSession::show()
@@ -189,6 +185,14 @@ void ms::ApplicationSession::show()
     {
         id_s.second->show();
     }
+
+    children->for_each(
+        []
+        (std::shared_ptr<shell::Session> const& child_session)
+        {
+            child_session->show();
+        }
+    );
 }
 
 int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
@@ -209,6 +213,7 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
+
     children->for_each(
         [state]
         (std::shared_ptr<shell::Session> const& child_session)

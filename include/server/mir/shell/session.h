@@ -26,10 +26,11 @@
 
 namespace mir
 {
+namespace scene { class SessionContainer; }
+
 namespace shell
 {
 class Surface;
-class SessionContainer;
 class TrustedSession;
 
 class Session : public frontend::Session
@@ -45,6 +46,10 @@ public:
 
     virtual std::shared_ptr<TrustedSession> get_trusted_session() const = 0;
     virtual void set_trusted_session(std::shared_ptr<TrustedSession> const& trusted_session) = 0;
+
+    virtual std::shared_ptr<Session> get_parent() const = 0;
+    virtual void set_parent(std::shared_ptr<shell::Session> const& parent) = 0;
+    virtual std::shared_ptr<scene::SessionContainer> get_children() const = 0;
 };
 }
 }

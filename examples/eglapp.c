@@ -168,7 +168,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         mir_buffer_usage_hardware,
         mir_display_output_id_invalid
     };
-    MirEventDelegate delegate =
+    MirEventDelegate delegate = 
     {
         mir_eglapp_handle_event,
         NULL

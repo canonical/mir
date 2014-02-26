@@ -90,7 +90,6 @@ void MirTrustedPromptSession::register_trusted_session_event_callback(mir_tps_ev
         {
             std::lock_guard<std::recursive_mutex> lock(mutex);
 
-            printf("mir_tps_event_callback with %d", id);
             if (session.id().value() == id) {
                 callback(this, state, context);
             }

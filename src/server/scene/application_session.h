@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/scene/session.h"
+#include "mir/shell/session.h"
 
 #include <map>
 
@@ -40,7 +40,7 @@ namespace scene
 {
 class SnapshotStrategy;
 
-class ApplicationSession : public scene::Session
+class ApplicationSession : public shell::Session
 {
 public:
     ApplicationSession(

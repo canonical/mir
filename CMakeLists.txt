@@ -38,6 +38,7 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 

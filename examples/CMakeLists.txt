@@ -86,15 +86,6 @@ target_link_libraries(mir_demo_client_scroll
 
 )
 
-#add_executable(mir_demo_client_trusted_session_trusted_helper trusted_session_trusted_helper.c)
-#target_link_libraries(mir_demo_client_trusted_session_trusted_helper mirclient)
-
-#add_executable(mir_demo_client_trusted_session_app1 trusted_session_app1.c)
-#target_link_libraries(mir_demo_client_trusted_session_app1 mirclient)
-
-#add_executable(mir_demo_client_trusted_session_trusted_app2 trusted_session_trusted_app2.c)
-#target_link_libraries(mir_demo_client_trusted_session_trusted_app2 eglapp)
-
 add_library(mirdraw STATIC graphics_utils.cpp)
 target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 
@@ -106,7 +97,7 @@ include_directories(
 )
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
-add_executable(mir_demo_standalone_render_to_fb
+add_executable(mir_demo_standalone_render_to_fb 
   ${RENDER_TO_FB_SOURCES}
 )
 
@@ -136,7 +127,7 @@ add_executable(mir_demo_standalone_input_filter
   server_configuration.cpp
 )
 
-target_link_libraries(mir_demo_standalone_input_filter
+target_link_libraries(mir_demo_standalone_input_filter  
   mirserver
 )
 
@@ -151,11 +142,8 @@ set (INSTALL_DEMOS
   mir_demo_client_multiwin
   mir_demo_client_display_config
   mir_demo_client_progressbar
-#  mir_demo_client_trusted_session_app1
-#  mir_demo_client_trusted_session_trusted_helper
-#  mir_demo_client_trusted_session_trusted_app2
   mir_demo_standalone_input_filter
-  mir_demo_standalone_render_to_fb
+  mir_demo_standalone_render_to_fb 
   mir_demo_standalone_render_surfaces
 )
 

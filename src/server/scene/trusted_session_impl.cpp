@@ -19,7 +19,7 @@
 #include "trusted_session_impl.h"
 #include "mir/shell/trusted_session_creation_parameters.h"
 #include "mir/scene/session_container.h"
-#include "mir/scene/session.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/event_sink.h"
 
 namespace mf = mir::frontend;
@@ -64,17 +64,16 @@ std::shared_ptr<msh::Session> ms::TrustedSessionImpl::get_trusted_helper() const
     return trusted_helper;
 }
 
-std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::shared_ptr<msh::Session> const& session,
+std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::shared_ptr<msh::Session> const& trusted_helper,
                                                                         msh::TrustedSessionCreationParameters const& parameters,
                                                                         std::shared_ptr<SessionContainer> const& container,
                                                                         std::shared_ptr<mf::EventSink> const& sink)
 {
-    TrustedSessionImpl* impl = new TrustedSessionImpl(session, parameters, sink);
+    TrustedSessionImpl* impl = new TrustedSessionImpl(trusted_helper, parameters, sink);
     std::shared_ptr<msh::TrustedSession> ptr(impl);
 
     impl->started = true;
-    session->set_trusted_session(ptr);
-    auto scene_trusted_helper = std::dynamic_pointer_cast<ms::Session>(session);
+    trusted_helper->set_trusted_session(ptr);
 
     for (pid_t application_pid : impl->applications)
     {
@@ -86,10 +85,8 @@ std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::sha
             {
                 if (container_session->process_id() == application_pid)
                 {
-                    auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-
-                    scene_session->set_parent(scene_trusted_helper);
-                    scene_trusted_helper->get_children()->insert_session(container_session);
+                    container_session->set_parent(trusted_helper);
+                    trusted_helper->get_children()->insert_session(container_session);
 
                     impl->add_child_session(container_session);
                     container_session->set_trusted_session(ptr);
@@ -107,18 +104,16 @@ void ms::TrustedSessionImpl::stop()
 {
     if (!started)
         return;
-    auto scene_session = std::dynamic_pointer_cast<ms::Session>(trusted_helper);
 
-    scene_session->get_children()->for_each(
+    trusted_helper->get_children()->for_each(
         [this]
         (std::shared_ptr<msh::Session> const& child_session)
         {
-            auto scene_session = std::dynamic_pointer_cast<ms::Session>(child_session);
-            scene_session->set_parent(NULL);
+            child_session->set_parent(NULL);
             child_session->set_trusted_session(NULL);
         }
     );
-    scene_session->get_children()->clear();
+    trusted_helper->get_children()->clear();
     trusted_helper->set_trusted_session(NULL);
 
     started = false;
@@ -135,11 +130,6 @@ void ms::TrustedSessionImpl::add_child_session(std::shared_ptr<msh::Session> con
     if (!started)
         return;
 
-    printf("adding child session %s\n", session->name().c_str());
-
-    auto scene_trusted_helper = std::dynamic_pointer_cast<ms::Session>(trusted_helper);
-    auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-
-    scene_session->set_parent(scene_trusted_helper);
-    scene_trusted_helper->get_children()->insert_session(session);
+    session->set_parent(trusted_helper);
+    trusted_helper->get_children()->insert_session(session);
 }
