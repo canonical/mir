@@ -39,6 +39,10 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 
     new_hwc_representation->numHwLayers = needed_size;
     new_hwc_representation->retireFenceFd = -1;
+
+    //as far as HWC is concerned, two things can change. If the size of the list, or the position
+    //of the surfaces in the list change, then we must toggle this flag to on. 
+    //TODO: toggle this flag on/off appropriately. 
     new_hwc_representation->flags = HWC_GEOMETRY_CHANGED;
 
     //aosp exynos hwc in particular, checks that these fields are non-null in hwc1.1, although
@@ -62,7 +66,6 @@ void mga::LayerListBase::update_representation(
 
     if (layers.size() == needed_size)
     {
-        printf("SIZE SAME\n");
         auto layers_it = layers.begin();
         for(auto renderable : renderlist)
         {
@@ -75,7 +78,6 @@ void mga::LayerListBase::update_representation(
     }
     else
     {
-        printf("SIZE DIFFERENT.\n");
         any_buffer_updated = true;
         std::list<HWCLayer> new_layers;
         auto i = 0u;
@@ -92,18 +94,17 @@ void mga::LayerListBase::update_representation(
 
         for(; i < needed_size; i++)
         {
-            printf("pushing empty layer\n");
             new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
         }
         layers = std::move(new_layers);
     }
-    printf("LAYER SIZE %i\n", layers.size());
 }
 
 bool mga::LayerListBase::list_has_changed()
 {
     return any_buffer_updated;
 }
+
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
 {
     return hwc_representation;

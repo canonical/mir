@@ -93,7 +93,6 @@ void mga::HWCLayer::update_fence_and_release_buffer()
 
 void mga::HWCLayer::set_layer_type(LayerType type)
 {
- //   static native_handle_t oo;
     hwc_layer->flags = 0;
     switch(type)
     {
@@ -108,7 +107,6 @@ void mga::HWCLayer::set_layer_type(LayerType type)
 
         case mga::LayerType::framebuffer_target:
             hwc_layer->compositionType = HWC_FRAMEBUFFER_TARGET;
-//            hwc_layer->handle = &oo;
         break;
 
         case mga::LayerType::overlay: //driver is the only one who can set to overlay
@@ -157,7 +155,8 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
             associated_buffer->anwb()->width,
             associated_buffer->anwb()->height
         };
-    } else
+    }
+    else
     {
         associated_buffer.reset();
         associated_buffer = buffer.native_buffer_handle();

@@ -45,7 +45,6 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    printf("prepping.\n");
     update_representation(2, {});
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
@@ -98,12 +97,8 @@ void mga::HwcDevice::render_gl_and_overlays(
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     if (!list_needs_commit)
-    {
-        printf("ok.\n");
         return;
-    }
 
-    printf("actually committing\n");
     auto lg = lock_unblanked();
 
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
