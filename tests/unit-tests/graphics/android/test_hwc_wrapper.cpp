@@ -53,7 +53,9 @@ struct HwcWrapper : public ::testing::Test
 
     hwc_display_contents_1_t list;
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
-    hwc_display_contents_1_t *virtual_display, *external_display, *primary_display;
+    hwc_display_contents_1_t *virtual_display;
+    hwc_display_contents_1_t*external_display;
+    hwc_display_contents_1_t *primary_display;
 };
 
 TEST_F(HwcWrapper, submits_correct_prepare_parameters)
