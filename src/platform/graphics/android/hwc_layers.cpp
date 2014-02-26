@@ -93,6 +93,7 @@ void mga::HWCLayer::update_fence_and_release_buffer()
 
 void mga::HWCLayer::set_layer_type(LayerType type)
 {
+ //   static native_handle_t oo;
     hwc_layer->flags = 0;
     switch(type)
     {
@@ -107,6 +108,7 @@ void mga::HWCLayer::set_layer_type(LayerType type)
 
         case mga::LayerType::framebuffer_target:
             hwc_layer->compositionType = HWC_FRAMEBUFFER_TARGET;
+//            hwc_layer->handle = &oo;
         break;
 
         case mga::LayerType::overlay: //driver is the only one who can set to overlay
@@ -184,5 +186,5 @@ void mga::HWCLayer::prepare_for_draw()
 
 bool mga::HWCLayer::needs_hwc_commit() const
 {
-    return updated;
+    return (updated || needs_gl_render());
 }

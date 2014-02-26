@@ -23,6 +23,8 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/report_exception.h"
 
+#include <thread>
+#include <chrono>
 #include <csignal>
 #include <iostream>
 
@@ -74,7 +76,9 @@ try
             buffer.post_update();
         });
 
+printf("done.\n");
         gl_animation.step();
+    //    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     }
 
     return 0;

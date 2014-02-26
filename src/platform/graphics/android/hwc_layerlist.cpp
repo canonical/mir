@@ -51,24 +51,59 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-void mga::LayerListBase::update_representation(size_t needed_size)
+void mga::LayerListBase::update_representation(
+    size_t needed_size, std::list<std::shared_ptr<mg::Renderable>> const& renderlist)
 {
+    any_buffer_updated = false;
     if (hwc_representation->numHwLayers != needed_size)
     {
         hwc_representation = generate_hwc_list(needed_size);
     }
 
-    if (layers.size() != needed_size)
+    if (layers.size() == needed_size)
     {
-        std::list<HWCLayer> new_layers;
-        for (auto i = 0u; i < needed_size; i++)
+        printf("SIZE SAME\n");
+        auto layers_it = layers.begin();
+        for(auto renderable : renderlist)
         {
+            layers_it->set_render_parameters(
+                renderable->screen_position(), renderable->alpha_enabled());
+            layers_it->set_buffer(*renderable->buffer());
+            any_buffer_updated |= layers_it->needs_hwc_commit(); 
+            layers_it++;
+        }
+    }
+    else
+    {
+        printf("SIZE DIFFERENT.\n");
+        any_buffer_updated = true;
+        std::list<HWCLayer> new_layers;
+        auto i = 0u;
+        for(auto const& renderable : renderlist)
+        {
+            new_layers.emplace_back(
+                mga::HWCLayer(
+                    mga::LayerType::gl_rendered,
+                    renderable->screen_position(),
+                    renderable->alpha_enabled(),
+                    hwc_representation, i++));
+            new_layers.back().set_buffer(*renderable->buffer());
+        }
+
+        for(; i < needed_size; i++)
+        {
+            printf("pushing empty layer\n");
             new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
         }
         layers = std::move(new_layers);
     }
+    printf("LAYER SIZE %i\n", layers.size());
 }
 
+bool mga::LayerListBase::list_has_changed()
+{
+    return any_buffer_updated;
+}
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
 {
     return hwc_representation;
@@ -82,7 +117,7 @@ mga::NativeFence mga::LayerListBase::retirement_fence()
 mga::LayerListBase::LayerListBase(size_t initial_list_size)
     : hwc_representation{generate_hwc_list(initial_list_size)}
 {
-    update_representation(initial_list_size);
+    update_representation(initial_list_size, {});
 }
 
 mga::LayerList::LayerList()

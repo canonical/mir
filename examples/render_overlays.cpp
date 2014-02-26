@@ -124,6 +124,7 @@ try
             buffer.make_current();
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
+        //    printf("done with outer loop\n");
         });
     }
    return 0;

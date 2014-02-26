@@ -90,6 +90,7 @@ void mga::DisplayBuffer::post()
 {
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
+    printf("ok.\n");
 }
 
 bool mga::DisplayBuffer::can_bypass() const
