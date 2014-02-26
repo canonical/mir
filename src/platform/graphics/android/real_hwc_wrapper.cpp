@@ -30,7 +30,6 @@ mga::RealHwcWrapper::RealHwcWrapper(std::shared_ptr<hwc_composer_device_1> const
 
 void mga::RealHwcWrapper::prepare(hwc_display_contents_1_t& display_list) const
 {
-    printf("PREPARE.\n");
     //note, although we only have a primary display right now,
     //      set the external and virtual displays to null as some drivers check for that
     hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
@@ -44,12 +43,11 @@ void mga::RealHwcWrapper::prepare(hwc_display_contents_1_t& display_list) const
 
 void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
 {
-    printf("SET.\n");
     hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
     if (auto rc = hwc_device->set(hwc_device.get(), 1, displays))
     {
         std::stringstream ss;
-        ss << "error during hwc set(). rc = " << std::hex << rc;
+        ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }

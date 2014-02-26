@@ -131,13 +131,7 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
         position.size.height.as_int()
     };
 
-    visible_rect = 
-    {
-        position.top_left.x.as_int(),
-        position.top_left.y.as_int(),
-        position.size.width.as_int(),
-        position.size.height.as_int()
-    };
+    visible_rect = hwc_layer->displayFrame;
 }
 
 void mga::HWCLayer::set_buffer(Buffer const& buffer)

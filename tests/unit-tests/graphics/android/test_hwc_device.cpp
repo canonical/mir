@@ -532,7 +532,6 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
-    //all accepted
     ON_CALL(*mock_hwc_device_wrapper, prepare(_))
         .WillByDefault(Invoke([&](hwc_display_contents_1_t& contents)
         {
@@ -542,7 +541,6 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
 
-    //set
     EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
         .Times(1);
 
@@ -562,7 +560,6 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
-    //all accepted
     ON_CALL(*mock_hwc_device_wrapper, prepare(_))
         .WillByDefault(Invoke([&](hwc_display_contents_1_t& contents)
         {
@@ -572,7 +569,6 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
 
-    //set
     EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
         .Times(2);
 

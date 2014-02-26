@@ -23,8 +23,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/report_exception.h"
 
-#include <thread>
-#include <chrono>
 #include <csignal>
 #include <iostream>
 

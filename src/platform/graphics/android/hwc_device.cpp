@@ -25,9 +25,6 @@
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
 
-#include <thread>
-#include <chrono>
-
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
@@ -89,9 +86,8 @@ void mga::HwcDevice::render_gl_and_overlays(
         layers_it++;
     }
 
-    //swap if needed
     if (needs_swapbuffers)
-        context.swap_buffers(); 
+        context.swap_buffers();
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
@@ -115,11 +111,11 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     layers.back().prepare_for_draw();
 
     hwc_wrapper->set(*native_list().lock());
-
     for(auto& layer : layers)
+    {
         layer.update_fence_and_release_buffer();
+    }
 
-    //On some drivers, this fence seems unreliable for display timing purposes. make sure to close()
     mga::SyncFence retire_fence(sync_ops, retirement_fence());
     list_needs_commit = false;
 }

@@ -55,10 +55,7 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     EXPECT_THAT(arg.compositionType, MatchesMember(value.compositionType, "compositionType"));
     EXPECT_THAT(arg.hints, MatchesMember(value.hints, "hints"));
     EXPECT_THAT(arg.flags, MatchesMember(value.flags, "flags"));
-//    if (value.handle)
-//        EXPECT_THAT(arg.handle, MatchesMember(value.handle, "handle"));
-//    else
-//        EXPECT_NE(arg.handle, nullptr); 
+    EXPECT_THAT(arg.handle, MatchesMember(value.handle, "handle"));
     EXPECT_THAT(arg.transform, MatchesMember(value.transform, "transform"));
     EXPECT_THAT(arg.blending, MatchesMember(value.blending, "blending"));
     EXPECT_THAT(arg.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
