@@ -41,6 +41,7 @@ public:
         std::list<std::shared_ptr<graphics::Renderable>> const&,
         std::function<void(graphics::Renderable const&)> const&));
     MOCK_METHOD1(post, void(graphics::Buffer const&));
+    MOCK_CONST_METHOD1(apply_orientation, bool(MirOrientation));
 };
 }
 }
