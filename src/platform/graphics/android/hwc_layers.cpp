@@ -184,5 +184,5 @@ void mga::HWCLayer::prepare_for_draw()
 
 bool mga::HWCLayer::needs_hwc_commit() const
 {
-    return updated | needs_gl_render();
+    return updated;
 }

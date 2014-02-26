@@ -47,7 +47,7 @@ void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
     if (auto rc = hwc_device->set(hwc_device.get(), 1, displays))
     {
         std::stringstream ss;
-        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        ss << "error during hwc set(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }

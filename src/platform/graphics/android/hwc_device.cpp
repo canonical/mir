@@ -64,7 +64,6 @@ void mga::HwcDevice::render_gl_and_overlays(
     auto const needed_size = renderables.size() + 1;
     update_representation(needed_size);
 
-    list_needs_commit = false;
     auto layers_it = layers.begin();
     for(auto const& renderable : renderables)
     {
@@ -72,23 +71,21 @@ void mga::HwcDevice::render_gl_and_overlays(
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
         layers_it->set_buffer(*renderable->buffer());
-        list_needs_commit |= layers_it->needs_hwc_commit();
         layers_it++;
     }
 
     layers_it->set_layer_type(mga::LayerType::framebuffer_target);
     skip_layers_present = false;
 
-    if (!list_needs_commit)
-        return;
-
     hwc_wrapper->prepare(*native_list().lock());
 
     //draw layers that the HWC did not accept for overlays here
+    list_needs_commit = false;
     bool needs_swapbuffers = false;
     layers_it = layers.begin();
     for(auto const& renderable : renderables)
     {
+        list_needs_commit |= layers_it->needs_hwc_commit();
         //prepare all layers for draw. 
         layers_it->prepare_for_draw();
 
@@ -97,6 +94,7 @@ void mga::HwcDevice::render_gl_and_overlays(
         {
             render_fn(*renderable);
             needs_swapbuffers = true;
+            list_needs_commit = true;
         }
         layers_it++;
     }
