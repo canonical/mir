@@ -55,10 +55,10 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-void mga::LayerListBase::update_representation(
+bool mga::LayerListBase::update_list_and_check_if_changed(
     size_t needed_size, std::list<std::shared_ptr<mg::Renderable>> const& renderlist)
 {
-    any_buffer_updated = false;
+    bool any_buffer_updated = false;
     if (hwc_representation->numHwLayers != needed_size)
     {
         hwc_representation = generate_hwc_list(needed_size);
@@ -98,10 +98,7 @@ void mga::LayerListBase::update_representation(
         }
         layers = std::move(new_layers);
     }
-}
 
-bool mga::LayerListBase::list_has_changed()
-{
     return any_buffer_updated;
 }
 
@@ -118,7 +115,7 @@ mga::NativeFence mga::LayerListBase::retirement_fence()
 mga::LayerListBase::LayerListBase(size_t initial_list_size)
     : hwc_representation{generate_hwc_list(initial_list_size)}
 {
-    update_representation(initial_list_size, {});
+    update_list_and_check_if_changed(initial_list_size, {});
 }
 
 mga::LayerList::LayerList()

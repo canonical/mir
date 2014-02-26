@@ -42,7 +42,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    update_representation(2, {});
+    update_list_and_check_if_changed(2, {});
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
     list_needs_commit = true;
@@ -59,8 +59,7 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::function<void(Renderable const&)> const& render_fn)
 {
     auto const needed_size = renderables.size() + 1;
-    update_representation(needed_size, renderables);
-    if (!list_has_changed())
+    if (!update_list_and_check_if_changed(needed_size, renderables))
         return;
 
     list_needs_commit = true;

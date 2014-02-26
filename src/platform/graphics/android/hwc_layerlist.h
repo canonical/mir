@@ -48,15 +48,14 @@ public:
 protected:
     LayerListBase(size_t initial_list_size);
 
-    void update_representation(size_t needed_size, std::list<std::shared_ptr<Renderable>> const&); 
+    bool update_list_and_check_if_changed(size_t needed_size, std::list<std::shared_ptr<Renderable>> const&); 
     std::list<HWCLayer> layers;
-    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    bool list_has_changed();
 
 private:
     LayerListBase& operator=(LayerListBase const&) = delete;
     LayerListBase(LayerListBase const&) = delete;
-    bool any_buffer_updated;
+
+    std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
 };
 
 class LayerList : public LayerListBase
