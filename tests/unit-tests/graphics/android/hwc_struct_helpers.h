@@ -55,15 +55,28 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     EXPECT_THAT(arg.compositionType, MatchesMember(value.compositionType, "compositionType"));
     EXPECT_THAT(arg.hints, MatchesMember(value.hints, "hints"));
     EXPECT_THAT(arg.flags, MatchesMember(value.flags, "flags"));
-    EXPECT_THAT(arg.handle, MatchesMember(value.handle, "backgroundColor.handle"));
-    EXPECT_THAT(arg.transform, MatchesMember(value.transform, "backgroundColor.transform"));
-    EXPECT_THAT(arg.blending, MatchesMember(value.blending, "backgroundColor.blending"));
+    EXPECT_THAT(arg.handle, MatchesMember(value.handle, "handle"));
+    EXPECT_THAT(arg.transform, MatchesMember(value.transform, "transform"));
+    EXPECT_THAT(arg.blending, MatchesMember(value.blending, "blending"));
     EXPECT_THAT(arg.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
     EXPECT_THAT(arg.displayFrame, MatchesRect(value.displayFrame, "displayFrame"));
     EXPECT_THAT(arg.visibleRegionScreen.numRects, MatchesMember(value.visibleRegionScreen.numRects, "visibleRegionScreen.numRects"));
     EXPECT_THAT(arg.acquireFenceFd, MatchesMember(value.acquireFenceFd, "acquireFenceFd"));
     EXPECT_THAT(arg.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
 
+    return !(::testing::Test::HasFailure());
+}
+
+MATCHER_P(MatchesList, value, std::string(""))
+{
+    EXPECT_EQ(arg.numHwLayers, value.size());
+    auto i = 0u;
+    for(auto layer : value)
+    {
+        EXPECT_THAT(arg.hwLayers[i++], MatchesLayer(*layer));
+        if (::testing::Test::HasFailure())
+            return false;
+    }
     return !(::testing::Test::HasFailure());
 }
 

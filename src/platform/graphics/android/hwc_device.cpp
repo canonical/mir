@@ -25,42 +25,32 @@
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
 
-#include <boost/throw_exception.hpp>
-#include <sstream>
-#include <stdexcept>
-
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                          std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
+      LayerListBase{2},
+      hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-}
-
-void mga::HwcDevice::prepare(hwc_display_contents_1_t& display_list)
-{
-    //note, although we only have a primary display right now,
-    //      set the external and virtual displays to null as some drivers check for that
-    hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
-    if (auto rc = hwc_device->prepare(hwc_device.get(), 1, displays))
-    {
-        std::stringstream ss;
-        ss << "error during hwc prepare(). rc = " << std::hex << rc;
-        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
-    }
+    layers.front().set_layer_type(mga::LayerType::skip);
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    auto prepare_fn = [this](hwc_display_contents_1_t& prep)
-    {
-        prepare(prep);
-    };
-    layer_list.prepare_default_layers(prepare_fn);
+    update_representation(2);
+    layers.front().set_layer_type(mga::LayerType::skip);
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    skip_layers_present = true;
+
+    hwc_wrapper->prepare(*native_list().lock());
+
     context.swap_buffers();
 }
 
@@ -69,13 +59,37 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
-    auto prepare_fn = [this](hwc_display_contents_1_t& prep)
-    {
-        prepare(prep);
-    };
-    layer_list.prepare_composition_layers(prepare_fn, renderables, render_fn);
+    auto const needed_size = renderables.size() + 1;
+    update_representation(needed_size);
 
-    if (layer_list.needs_swapbuffers())
+    //pack layer list from renderables
+    auto layers_it = layers.begin();
+    for(auto const& renderable : renderables)
+    {
+        layers_it->set_layer_type(mga::LayerType::gl_rendered);
+        layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
+        layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
+        layers_it++;
+    }
+
+    layers_it->set_layer_type(mga::LayerType::framebuffer_target);
+    skip_layers_present = false;
+
+    hwc_wrapper->prepare(*native_list().lock());
+
+    //if a layer cannot be drawn, draw with GL here
+    layers_it = layers.begin();
+    bool needs_swapbuffers = false;
+    for(auto const& renderable : renderables)
+    {
+        if ((layers_it++)->needs_gl_render())
+        {
+            needs_swapbuffers = true;
+            render_fn(*renderable);
+        }
+    }
+
+    if (needs_swapbuffers)
         context.swap_buffers();
 }
 
@@ -83,23 +97,22 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
     auto lg = lock_unblanked();
 
-    layer_list.set_fb_target(buffer);
-
-    auto rc = 0;
-    auto display_list = layer_list.native_list().lock();
-    if (display_list)
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto buf = buffer.native_buffer_handle();
+    if (skip_layers_present)
     {
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-        rc = hwc_device->set(hwc_device.get(), 1, displays);
-
-        layer_list.update_fences();
-        mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
+        layers.front().set_render_parameters(disp_frame, false);
+        layers.front().set_buffer(buf);
     }
 
-    if ((rc != 0) || (!display_list))
+    layers.back().set_render_parameters(disp_frame, false);
+    layers.back().set_buffer(buf);
+
+    hwc_wrapper->set(*native_list().lock());
+    for(auto& layer : layers)
     {
-        std::stringstream ss;
-        ss << "error during hwc prepare(). rc = " << std::hex << rc;
-        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+        layer.update_fence_and_release_buffer();
     }
+
+    mga::SyncFence retire_fence(sync_ops, retirement_fence());
 }
