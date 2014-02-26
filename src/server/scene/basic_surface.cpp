@@ -66,7 +66,7 @@ void ms::BasicSurface::force_requests_to_complete()
     surface_buffer_stream->force_requests_to_complete();
 }
 
-ms::BasicSurface::~BasicSurface()
+ms::BasicSurface::~BasicSurface() noexcept
 {
     report->surface_deleted(this, surface_name);
 }
@@ -91,29 +91,10 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
     notify_change();
 }
 
-void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
-        transformation_dirty = true;
-    }
-    notify_change();
-}
-
 float ms::BasicSurface::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
     return surface_alpha;
-}
-
-void ms::BasicSurface::set_alpha(float alpha_v)
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        surface_alpha = alpha_v;
-    }
-    notify_change();
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
@@ -123,12 +104,6 @@ void ms::BasicSurface::set_hidden(bool hide)
         hidden = hide;
     }
     notify_change();
-}
-
-geom::Point ms::BasicSurface::top_left() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return surface_rect.top_left;
 }
 
 mir::geometry::Size ms::BasicSurface::size() const
@@ -221,7 +196,7 @@ bool ms::BasicSurface::resize(geom::Size const& size)
     return true;
 }
 
-geom::Point ms::BasicSurface::position() const
+geom::Point ms::BasicSurface::top_left() const
 {
     std::unique_lock<std::mutex> lk(guard);
     return surface_rect.top_left;
@@ -252,7 +227,7 @@ void ms::BasicSurface::frame_posted()
     notify_change();
 }
 
-void ms::BasicSurface::apply_alpha(float alpha)
+void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
@@ -262,7 +237,7 @@ void ms::BasicSurface::apply_alpha(float alpha)
 }
 
 
-void ms::BasicSurface::apply_rotation(float degrees, glm::vec3 const& axis)
+void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     {
         std::unique_lock<std::mutex> lk(guard);

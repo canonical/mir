@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/options/default_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
@@ -41,19 +42,31 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-    DefaultConfigurationOptions(argc, argv),
+        DefaultServerConfiguration(std::make_shared<mo::DefaultConfiguration>(argc, argv))
+{
+}
+
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
+    configuration_options(configuration_options),
     default_filter(std::make_shared<mi::VTFilter>())
 {
 }
 
+auto mir::DefaultServerConfiguration::the_options() const
+->std::shared_ptr<options::Option>
+{
+    return configuration_options->the_options();
+}
+
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    auto socket_file = the_options()->get<std::string>(server_socket_opt);
+    auto socket_file = the_options()->get<std::string>(options::server_socket_opt);
 
     // Record this for any children that want to know how to connect to us.
     // By both listening to this env var on startup and resetting it here,

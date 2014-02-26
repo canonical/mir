@@ -26,13 +26,12 @@ namespace mtd=mir::test::doubles;
 
 struct HwcWrapper : public ::testing::Test
 {
-    virtual void SetUp()
+    HwcWrapper()
+     : mock_device(std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>()),
+       virtual_display{nullptr},
+       external_display{nullptr},
+       primary_display{nullptr}
     {
-        mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        virtual_display = nullptr;
-        external_display = nullptr;
-        primary_display = nullptr;
-
     }
 
     int display_saving_fn(
@@ -52,13 +51,12 @@ struct HwcWrapper : public ::testing::Test
         return 0;
     }
 
-    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     hwc_display_contents_1_t list;
-
-    hwc_display_contents_1_t* virtual_display, *external_display, *primary_display;
+    std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
+    hwc_display_contents_1_t *virtual_display, *external_display, *primary_display;
 };
 
-TEST_F(HwcWrapper, submits_correct_prepare_paramters)
+TEST_F(HwcWrapper, submits_correct_prepare_parameters)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
@@ -88,7 +86,7 @@ TEST_F(HwcWrapper, throws_on_prepare_failure)
     }, std::runtime_error);
 }
 
-TEST_F(HwcWrapper, submits_correct_set_paramters)
+TEST_F(HwcWrapper, submits_correct_set_parameters)
 {
     using namespace testing;
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))

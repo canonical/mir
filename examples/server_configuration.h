@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,6 +23,11 @@
 
 namespace mir
 {
+namespace options
+{
+class DefaultConfiguration;
+}
+
 namespace examples
 {
 
@@ -30,6 +35,7 @@ class ServerConfiguration : public DefaultServerConfiguration
 {
 public:
     ServerConfiguration(int argc, char const** argv);
+    explicit ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options);
 
     std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy() override;
     std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter() override;
