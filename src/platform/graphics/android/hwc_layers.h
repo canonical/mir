@@ -76,7 +76,6 @@ private:
     hwc_rect_t visible_rect;
     std::shared_ptr<NativeBuffer> associated_buffer;
     bool updated{false};
-    Buffer const* buf;
 };
 }
 }

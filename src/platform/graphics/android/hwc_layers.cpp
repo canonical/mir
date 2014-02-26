@@ -136,26 +136,17 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
 
 void mga::HWCLayer::set_buffer(Buffer const& buffer)
 {
-    if (buf != &buffer)
-    {
-        associated_buffer = buffer.native_buffer_handle();
+    associated_buffer.reset();
+    associated_buffer = buffer.native_buffer_handle();
+    updated = (hwc_layer->handle != associated_buffer->handle());
 
-        buf = &buffer;
-        updated = true;
-        hwc_layer->handle = associated_buffer->handle();
-        hwc_layer->sourceCrop = 
-        {
-            0, 0,
-            associated_buffer->anwb()->width,
-            associated_buffer->anwb()->height
-        };
-    }
-    else
+    hwc_layer->handle = associated_buffer->handle();
+    hwc_layer->sourceCrop = 
     {
-        associated_buffer.reset();
-        associated_buffer = buffer.native_buffer_handle();
-        updated = false;
-    }
+        0, 0,
+        associated_buffer->anwb()->width,
+        associated_buffer->anwb()->height
+    };
 }
 
 void mga::HWCLayer::prepare_for_draw()
