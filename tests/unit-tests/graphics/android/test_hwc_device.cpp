@@ -172,7 +172,7 @@ protected:
         empty_prepare_fn = [] (hwc_display_contents_1_t&) {};
         empty_render_fn = [] (mg::Renderable const&) {};
 
-        mock_hwc_device_wrapper = std::make_shared<MockHWCDeviceWrapper>();
+        mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<MockHWCDeviceWrapper>>();
     }
 
     std::shared_ptr<MockFileOps> mock_file_ops;
