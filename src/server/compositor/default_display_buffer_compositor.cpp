@@ -107,6 +107,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
     if (bypass_env && display_buffer.can_bypass())
     {
+        // It would be *really* nice not to lock the scene for a composite pass
         std::unique_lock<Scene> lock(*scene);
 
         mc::BypassFilter filter(display_buffer);

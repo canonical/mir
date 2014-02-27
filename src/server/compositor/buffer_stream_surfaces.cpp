@@ -83,3 +83,8 @@ void mc::BufferStreamSurfaces::allow_framedropping(bool allow)
 {
     buffer_bundle->allow_framedropping(allow);
 }
+
+int mc::BufferStreamSurfaces::uncomposited_buffers() const
+{
+    return buffer_bundle->uncomposited_buffers();
+}
