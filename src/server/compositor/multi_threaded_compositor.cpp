@@ -120,7 +120,8 @@ public:
          * worst and schedule enough frames to ensure all surfaces' queues
          * are fully drained.
          */
-        frames_scheduled = max_client_buffers;
+        if (frames_scheduled < max_client_buffers)
+            ++frames_scheduled;
         run_cv.notify_one();
     }
 
