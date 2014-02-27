@@ -20,6 +20,8 @@
 #define MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
 
 #include "mir/shell/session.h"
+#include "src/server/scene/default_session_container.h"
+#include <memory>
 
 namespace mir
 {
@@ -30,6 +32,10 @@ namespace doubles
 
 struct StubShellSession : public shell::Session
 {
+    StubShellSession():
+        children(std::make_shared<scene::DefaultSessionContainer>())
+    {}
+
     frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
@@ -89,6 +95,24 @@ struct StubShellSession : public shell::Session
     void set_trusted_session(std::shared_ptr<shell::TrustedSession> const& /* trusted_session */) override
     {
     }
+
+    std::shared_ptr<shell::Session> get_parent() const override
+    {
+        return std::shared_ptr<shell::Session>();
+    }
+
+    void set_parent(std::shared_ptr<shell::Session> const& /* new_parent */) override
+    {
+    }
+
+    std::shared_ptr<scene::SessionContainer> get_children() const override
+    {
+        return children;
+    }
+
+private:
+    std::shared_ptr<scene::DefaultSessionContainer> children;
+
 };
 
 }

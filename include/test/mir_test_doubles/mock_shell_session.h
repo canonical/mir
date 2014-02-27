@@ -56,6 +56,10 @@ struct MockShellSession : public shell::Session
 
     MOCK_CONST_METHOD0(get_trusted_session, std::shared_ptr<shell::TrustedSession>());
     MOCK_METHOD1(set_trusted_session, void(std::shared_ptr<shell::TrustedSession> const&));
+
+    MOCK_CONST_METHOD0(get_parent, std::shared_ptr<shell::Session>());
+    MOCK_METHOD1(set_parent, void(std::shared_ptr<shell::Session> const&));
+    MOCK_CONST_METHOD0(get_children, std::shared_ptr<scene::SessionContainer>());
 };
 
 }
