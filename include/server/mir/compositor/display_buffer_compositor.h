@@ -30,6 +30,7 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
+    /// Returns the highest number of pending buffers in any surface composited
     virtual int composite() = 0;
 
 protected:

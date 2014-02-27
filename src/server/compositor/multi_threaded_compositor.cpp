@@ -105,6 +105,15 @@ public:
                 lock.unlock();
                 auto max_uncomposited_buffers = display_buffer_compositor->composite();
                 lock.lock();
+
+                /*
+                 * Each surface could have a number of frames ready in its buffer
+                 * queue. And we need to ensure that we render all of them so that
+                 * none linger in the queue indefinitely (seen as input lag).
+                 * max_uncomposited_buffers is the highest number for any surface
+                 * composited we schedule enough frames to ensure all surfaces'
+                 * queues are fully drained.
+                 */
                 frames_scheduled = std::max(frames_scheduled, max_uncomposited_buffers);
             }
         }
@@ -114,16 +123,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
-        /*
-         * Each surface could have a number of frames ready in its buffer
-         * queue. And we need to ensure that we render all of them so that
-         * none linger in the queue indefinitely (seen as input lag). So while
-         * there's no API support for finding out queue lengths, assume the
-         * worst and schedule enough frames to ensure all surfaces' queues
-         * are fully drained.
-         */
-        if (frames_scheduled < max_client_buffers)
-            ++frames_scheduled;
+        frames_scheduled = std::max(frames_scheduled, 1);
         run_cv.notify_one();
     }
 
