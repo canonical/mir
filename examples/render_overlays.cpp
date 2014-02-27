@@ -61,7 +61,7 @@ public:
 
     void draw()
     {
-        if (count++ %2)
+        if (count++ % 2)
             fill.draw(
                 *region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
         else
