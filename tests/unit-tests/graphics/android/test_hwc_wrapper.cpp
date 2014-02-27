@@ -24,10 +24,21 @@
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
+namespace
+{
+struct MockHwcLogger
+{
+    MOCK_METHOD0(log_list_submitted_to_prepare(hwc_display_contents_1_t const&));
+    MOCK_METHOD0(log_prepare_done(hwc_display_contents_1_t const&));
+    MOCK_METHOD0(log_set_list(hwc_display_contents_1_t const&));
+};
+}
+
 struct HwcWrapper : public ::testing::Test
 {
     HwcWrapper()
      : mock_device(std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>()),
+       mock_logger(std::make_shared<MockHwcLogger>()),
        virtual_display{nullptr},
        external_display{nullptr},
        primary_display{nullptr}
@@ -52,6 +63,7 @@ struct HwcWrapper : public ::testing::Test
     }
 
     hwc_display_contents_1_t list;
+    std::shared_ptr<mtd::MockHwcLogger> const mock_logger;
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
     hwc_display_contents_1_t *virtual_display;
     hwc_display_contents_1_t*external_display;
@@ -61,11 +73,16 @@ struct HwcWrapper : public ::testing::Test
 TEST_F(HwcWrapper, submits_correct_prepare_parameters)
 {
     using namespace testing;
+    Sequence seq;
+    EXPECT_CALL(*mock_logger, log_list_submitted_to_prepare(Ref(list)))
+        .InSequence(seq);
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
-        .Times(1)
+        .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
+    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(list)))
+        .InSequence(seq);
 
-    mga::RealHwcWrapper wrapper(mock_device);
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
     wrapper.prepare(list);
 
     EXPECT_EQ(&list, primary_display);
@@ -77,7 +94,7 @@ TEST_F(HwcWrapper, throws_on_prepare_failure)
 {
     using namespace testing;
 
-    mga::RealHwcWrapper wrapper(mock_device);
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
 
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), _, _))
         .Times(1)
@@ -91,11 +108,14 @@ TEST_F(HwcWrapper, throws_on_prepare_failure)
 TEST_F(HwcWrapper, submits_correct_set_parameters)
 {
     using namespace testing;
+    Sequence seq;
+    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(list)))
+        .InSequence(seq);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
-        .Times(1)
+        .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
 
-    mga::RealHwcWrapper wrapper(mock_device);
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
     wrapper.set(list);
 
     EXPECT_EQ(&list, primary_display);
@@ -107,7 +127,7 @@ TEST_F(HwcWrapper, throws_on_set_failure)
 {
     using namespace testing;
 
-    mga::RealHwcWrapper wrapper(mock_device);
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
 
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), _, _))
         .Times(1)
