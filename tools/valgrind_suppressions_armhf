@@ -3,13 +3,13 @@
 {
     ld_value4
     Memcheck:Value4
-    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+    obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
 {
     ld_cond
     Memcheck:Cond
-    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+    obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
 
@@ -17,14 +17,14 @@
     ld_open
     Memcheck:Param
     open(filename)
-    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+    obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
 {
     ld_getcwd
     Memcheck:Param
     getcwd(buf)
-    obj:/lib/arm-linux-gnueabihf/ld-2.18.so
+    obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
 # Android libs

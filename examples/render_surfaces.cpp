@@ -28,10 +28,12 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
+#include "mir/raii.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -197,7 +199,7 @@ public:
           h{static_cast<float>(s->size().height.as_uint32_t())},
           dx{dx},
           dy{dy},
-          rotation_axis{rotation_axis},
+          rotation_axis(rotation_axis),
           alpha_offset{alpha_offset}
     {
     }
@@ -296,12 +298,17 @@ public:
         class RenderResourcesBufferInitializer : public mg::BufferInitializer
         {
         public:
-            RenderResourcesBufferInitializer()
+            RenderResourcesBufferInitializer(std::unique_ptr<mg::GLContext> gl_context)
+                : gl_context{std::move(gl_context)}
             {
             }
 
             void operator()(mg::Buffer& buffer)
             {
+                auto using_gl_context = mir::raii::paired_calls(
+                    [this] { gl_context->make_current(); },
+                    [this] { gl_context->release_current(); });
+
                 mt::ImageRenderer img_renderer{mir_image.pixel_data,
                                geom::Size{mir_image.width, mir_image.height},
                                mir_image.bytes_per_pixel};
@@ -309,9 +316,13 @@ public:
                 brt.make_current();
                 img_renderer.render();
             }
+
+        private:
+            std::unique_ptr<mg::GLContext> const gl_context;
+
         };
 
-        return std::make_shared<RenderResourcesBufferInitializer>();
+        return std::make_shared<RenderResourcesBufferInitializer>(the_display()->create_gl_context());
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
 
