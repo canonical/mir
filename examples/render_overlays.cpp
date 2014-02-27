@@ -44,20 +44,59 @@ void signal_handler(int /*signum*/)
 {
     running = false;
 }
-}
+
+class DemoOverlayClient
+{
+public:
+    DemoOverlayClient(
+        mg::GraphicBufferAllocator& buffer_allocator,
+        mg::BufferProperties const& buffer_properties, uint32_t color, uint32_t c2)
+         : front_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
+           back_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
+           region_factory(mir::test::draw::create_graphics_region_factory()),
+           fill{color},
+           fill2{c2}, count{0}
+    {
+    }
+
+    void draw()
+    {
+        if (count++ %2)
+            fill.draw(
+                *region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
+        else
+            fill2.draw(
+                *region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
+
+        std::swap(front_buffer, back_buffer);
+    }
+
+    std::shared_ptr<mg::Buffer> last_rendered()
+    {
+        return front_buffer;
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> front_buffer;
+    std::shared_ptr<mg::Buffer> back_buffer;
+    std::shared_ptr<mir::test::draw::GraphicsRegionFactory> region_factory;
+    mir::test::draw::DrawPatternSolid fill;
+    mir::test::draw::DrawPatternSolid fill2;
+    int count;
+};
 
 class DemoRenderable : public mg::Renderable
 {
 public:
-    DemoRenderable(std::shared_ptr<mg::Buffer> const& buffer, geom::Rectangle rect)
-        : renderable_buffer(buffer),
+    DemoRenderable(std::shared_ptr<DemoOverlayClient> const& client, geom::Rectangle rect)
+        : client(std::move(client)),
           position(rect)
     {
     }
 
     std::shared_ptr<mg::Buffer> buffer() const
     {
-        return renderable_buffer;
+        return client->last_rendered();
     }
 
     bool alpha_enabled() const
@@ -71,15 +110,14 @@ public:
     }
 
 private:
-    std::shared_ptr<mg::Buffer> const renderable_buffer;
+    std::shared_ptr<DemoOverlayClient> const client;
     geom::Rectangle const position;
 };
+}
 
 int main(int argc, char const** argv)
 try
 {
-    mir::test::draw::DrawPatternSolid fill_with_green(0xFF00FF00);
-    mir::test::draw::DrawPatternSolid fill_with_blue(0xFFFF0000);
 
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
@@ -95,7 +133,6 @@ try
     auto platform = conf.the_graphics_platform();
     auto display = platform->create_display(conf.the_display_configuration_policy());
     auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
-    auto region_factory = mir::test::draw::create_graphics_region_factory();
 
      mg::BufferProperties buffer_properties{
         geom::Size{512, 512},
@@ -103,18 +140,13 @@ try
         mg::BufferUsage::hardware
     };
 
-    auto buffer1 = buffer_allocator->alloc_buffer(buffer_properties);
-    auto buffer2 = buffer_allocator->alloc_buffer(buffer_properties);
+    auto client1 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFF00FF00, 0xFFFFFFFF);
+    auto client2 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFFFF0000, 0xFFFFFFFF);
 
-    fill_with_green.draw(*region_factory->graphic_region_from_handle(*buffer1->native_buffer_handle()));
-    fill_with_blue.draw(*region_factory->graphic_region_from_handle(*buffer2->native_buffer_handle()));
-
-    geom::Rectangle screen_pos1{{0,0} , {512, 512}};
-    geom::Rectangle screen_pos2{{80,80} , {592,592}};
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<DemoRenderable>(buffer2, screen_pos2),
-        std::make_shared<DemoRenderable>(buffer1, screen_pos1)
+        std::make_shared<DemoRenderable>(client1, geom::Rectangle{{0,0} , {512, 512}}),
+        std::make_shared<DemoRenderable>(client2, geom::Rectangle{{80,80} , {592,592}})
     };
 
     while (running)
@@ -122,6 +154,8 @@ try
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
             buffer.make_current();
+            client1->draw();
+            client2->draw();
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
         });
