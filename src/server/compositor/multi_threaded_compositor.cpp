@@ -91,10 +91,7 @@ public:
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
-            while (!frames_scheduled && running)
-                run_cv.wait(lock);
-
-            frames_scheduled--;
+            run_cv.wait(lock, [&]{ return frames_scheduled || !running; });
 
             /*
              * Check if we are running before compositing, since we may have
@@ -102,9 +99,9 @@ public:
              */
             if (running)
             {
+                --frames_scheduled;
                 lock.unlock();
                 auto max_uncomposited_buffers = display_buffer_compositor->composite();
-                lock.lock();
 
                 /*
                  * Each surface could have a number of frames ready in its buffer
@@ -114,6 +111,7 @@ public:
                  * composited we schedule enough frames to ensure all surfaces'
                  * queues are fully drained.
                  */
+                lock.lock();
                 frames_scheduled = std::max(frames_scheduled, max_uncomposited_buffers);
             }
         }
