@@ -125,13 +125,13 @@ int mc::DefaultDisplayBufferCompositor::composite()
 
             if (bypass_buf->can_bypass())
             {
-                lock.unlock();
-                display_buffer.post_update(bypass_buf);
-                bypassed = true;
                 max_uncomposited_buffers = std::max(
                     max_uncomposited_buffers,
                     match.topmost_fullscreen()->uncomposited_buffers());
 
+                lock.unlock();
+                display_buffer.post_update(bypass_buf);
+                bypassed = true;
                 renderer->suspend();
             }
         }
