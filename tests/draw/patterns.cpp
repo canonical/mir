@@ -26,6 +26,11 @@ mtd::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
 {
 }
 
+void mtd::DrawPatternSolid::update_color(uint32_t new_color_value)
+{
+    color_value = new_color_value; 
+}
+
 void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
 {
     if (region.pixel_format != mir_pixel_format_abgr_8888 )

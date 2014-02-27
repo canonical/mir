@@ -52,11 +52,12 @@ public:
     /* todo: should construct with a color value type, not an uint32 */
     DrawPatternSolid(uint32_t color_value);
 
+    void update_color(uint32_t new_color_value); 
     void draw(MirGraphicsRegion const& region) const;
     bool check(MirGraphicsRegion const& region) const;
 
 private:
-    const uint32_t color_value;
+    uint32_t color_value;
 };
 
 template<size_t Rows, size_t Cols>

@@ -25,9 +25,11 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/report_exception.h"
 
+#include "mir_image.h"
 #include "graphics_region_factory.h"
 #include "patterns.h"
 
+#include <chrono>
 #include <csignal>
 #include <iostream>
 
@@ -50,24 +52,35 @@ class DemoOverlayClient
 public:
     DemoOverlayClient(
         mg::GraphicBufferAllocator& buffer_allocator,
-        mg::BufferProperties const& buffer_properties, uint32_t color, uint32_t c2)
+        mg::BufferProperties const& buffer_properties, uint32_t color)
          : front_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
            back_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
            region_factory(mir::test::draw::create_graphics_region_factory()),
-           fill{color},
-           fill2{c2}, count{0}
+           color{color},
+           last_tick{std::chrono::high_resolution_clock::now()}
     {
     }
 
-    void draw()
+    int compute_update_value()
     {
-        if (count++ % 2)
-            fill.draw(
-                *region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
-        else
-            fill2.draw(
-                *region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
+        float const update_ratio{3.90625}; //this will give an update of 256 in 1s  
+        auto current_tick = std::chrono::high_resolution_clock::now();
+        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            current_tick - last_tick).count();
+        float update_value = elapsed_ms / update_ratio;
+        last_tick = current_tick;
+        return static_cast<int>(update_value);
+    }
 
+    void update_green_channel()
+    {
+        char green_value = (color >> 8) & 0xFF;
+        green_value += compute_update_value();
+        color &= 0xFFFF00FF;
+        color |= (green_value << 8);
+
+        mir::test::draw::DrawPatternSolid fill{color};
+        fill.draw(*region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
         std::swap(front_buffer, back_buffer);
     }
 
@@ -80,9 +93,8 @@ private:
     std::shared_ptr<mg::Buffer> front_buffer;
     std::shared_ptr<mg::Buffer> back_buffer;
     std::shared_ptr<mir::test::draw::GraphicsRegionFactory> region_factory;
-    mir::test::draw::DrawPatternSolid fill;
-    mir::test::draw::DrawPatternSolid fill2;
-    int count;
+    unsigned int color;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_tick;
 };
 
 class DemoRenderable : public mg::Renderable
@@ -140,8 +152,8 @@ try
         mg::BufferUsage::hardware
     };
 
-    auto client1 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFF00FF00, 0xFFFFFFFF);
-    auto client2 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFFFF0000, 0xFFFFFFFF);
+    auto client1 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFF0000FF);
+    auto client2 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFFFFFF00);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
@@ -154,8 +166,8 @@ try
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
             buffer.make_current();
-            client1->draw();
-            client2->draw();
+            client1->update_green_channel();
+            client2->update_green_channel();
             auto render_fn = [](mg::Renderable const&) {};
             buffer.render_and_post_update(renderlist, render_fn);
         });
