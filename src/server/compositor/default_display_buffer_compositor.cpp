@@ -104,6 +104,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
         return !env || env[0] != '0';
     }()};
     bool bypassed = false;
+    int max_uncomposited_buffers = 0;
 
     if (bypass_env && display_buffer.can_bypass())
     {
@@ -127,6 +128,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
+                max_uncomposited_buffers = std::max(
+                    max_uncomposited_buffers,
+                    match.topmost_fullscreen()->uncomposited_buffers());
+
                 renderer->suspend();
             }
         }
@@ -151,7 +156,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno);
+        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, max_uncomposited_buffers);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();

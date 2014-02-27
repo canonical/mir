@@ -24,10 +24,12 @@ namespace mc=mir::compositor;
 mc::RenderingOperator::RenderingOperator(
     Renderer& renderer,
     std::function<void(std::shared_ptr<void> const&)> save_resource,
-    unsigned long frameno) :
+    unsigned long frameno,
+    int& max_uncomposited_buffers) :
     renderer(renderer),
     save_resource(save_resource),
-    frameno(frameno)
+    frameno(frameno),
+    max_uncomposited_buffers(max_uncomposited_buffers)
 {
 }
 
@@ -36,4 +38,7 @@ void mc::RenderingOperator::operator()(CompositingCriteria const& info, BufferSt
     auto compositor_buffer = stream.lock_compositor_buffer(frameno);
     renderer.render(info, *compositor_buffer);
     save_resource(compositor_buffer);
+    max_uncomposited_buffers = std::max(
+        max_uncomposited_buffers,
+        stream.uncomposited_buffers());
 }

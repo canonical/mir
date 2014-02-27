@@ -61,8 +61,9 @@ TEST(RenderingOperator, render_operator_saves_resources)
     std::vector<std::shared_ptr<void>> saved_resources;
 
     {
+        int max_uncomposited_buffers = 0;
         auto save_fn = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
-        mc::RenderingOperator rendering_operator(mock_renderer, save_fn, frameno);
+        mc::RenderingOperator rendering_operator(mock_renderer, save_fn, frameno, max_uncomposited_buffers);
 
         rendering_operator(mock_criteria, mock_stream);
         rendering_operator(mock_criteria, mock_stream);
