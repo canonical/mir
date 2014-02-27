@@ -450,7 +450,7 @@ void mc::SwitchingBundle::resize(const geometry::Size &newsize)
 int mc::SwitchingBundle::uncomposited_buffers() const
 {
     std::unique_lock<std::mutex> lock(guard);
-    return nready;
+    return nready-1;
 }
 
 std::ostream& mc::operator<<(std::ostream& os, const mc::SwitchingBundle& bundle)

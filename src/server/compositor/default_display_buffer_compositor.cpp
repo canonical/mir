@@ -80,7 +80,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 }
 
 
-void mc::DefaultDisplayBufferCompositor::composite()
+int mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
@@ -165,5 +165,6 @@ void mc::DefaultDisplayBufferCompositor::composite()
     }
 
     report->finished_frame(bypassed, this);
+    return max_uncomposited_buffers;
 }
 

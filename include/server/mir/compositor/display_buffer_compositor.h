@@ -30,7 +30,7 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    virtual void composite() = 0;
+    virtual int composite() = 0;
 
 protected:
     DisplayBufferCompositor() = default;

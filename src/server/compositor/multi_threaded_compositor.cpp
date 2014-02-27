@@ -24,6 +24,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
 
+#include <iostream> // DEBUG
 #include <thread>
 #include <condition_variable>
 
@@ -102,8 +103,9 @@ public:
             if (running)
             {
                 lock.unlock();
-                display_buffer_compositor->composite();
+                auto max_uncomposited_buffers = display_buffer_compositor->composite();
                 lock.lock();
+                frames_scheduled = std::max(frames_scheduled, max_uncomposited_buffers);
             }
         }
     }
