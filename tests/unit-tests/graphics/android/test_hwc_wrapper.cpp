@@ -17,6 +17,7 @@
  */
 
 #include "src/platform/graphics/android/real_hwc_wrapper.h"
+#include "src/platform/graphics/android/hwc_logger.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -26,11 +27,11 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
-struct MockHwcLogger
+struct MockHwcLogger : public mga::HwcLogger
 {
-    MOCK_METHOD0(log_list_submitted_to_prepare(hwc_display_contents_1_t const&));
-    MOCK_METHOD0(log_prepare_done(hwc_display_contents_1_t const&));
-    MOCK_METHOD0(log_set_list(hwc_display_contents_1_t const&));
+    MOCK_METHOD1(log_list_submitted_to_prepare, void(hwc_display_contents_1_t const&));
+    MOCK_METHOD1(log_prepare_done, void(hwc_display_contents_1_t const&));
+    MOCK_METHOD1(log_set_list, void(hwc_display_contents_1_t const&));
 };
 }
 
@@ -63,8 +64,8 @@ struct HwcWrapper : public ::testing::Test
     }
 
     hwc_display_contents_1_t list;
-    std::shared_ptr<mtd::MockHwcLogger> const mock_logger;
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
+    std::shared_ptr<MockHwcLogger> const mock_logger;
     hwc_display_contents_1_t *virtual_display;
     hwc_display_contents_1_t*external_display;
     hwc_display_contents_1_t *primary_display;

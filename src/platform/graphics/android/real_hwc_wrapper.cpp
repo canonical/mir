@@ -23,8 +23,11 @@
 
 namespace mga=mir::graphics::android;
 
-mga::RealHwcWrapper::RealHwcWrapper(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
-    : hwc_device(hwc_device)
+mga::RealHwcWrapper::RealHwcWrapper(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    std::shared_ptr<mga::HwcLogger> const& logger)
+    : hwc_device(hwc_device),
+      logger(logger)
 {
 }
 
