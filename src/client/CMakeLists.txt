@@ -61,9 +61,6 @@ set_target_properties(
   SOVERSION ${MIRCLIENT_ABI}
 )
 
-# Ensure mirclient_compat_links exist before any dependents of mirclient
-add_dependencies(mirclient mirclient_compat_links)
-
 set(
   MIR_CLIENT_LIBRARIES
   ${Boost_LIBRARIES}
