@@ -113,22 +113,6 @@ std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
-    std::shared_ptr<msh::Surface> child_surface;
-    children->for_each(
-        [&child_surface]
-        (std::shared_ptr<shell::Session> const& child_session)
-        {
-            child_surface = child_session->default_surface();
-            if (child_surface)
-                return false;
-            return true;
-        },
-        true // reverse for_each
-    );
-
-    if (child_surface)
-        return child_surface;
-
     if (surfaces.size())
         return surfaces.begin()->second;
     else
