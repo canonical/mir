@@ -39,7 +39,7 @@ struct HwcWrapper : public ::testing::Test
 {
     HwcWrapper()
      : mock_device(std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>()),
-       mock_logger(std::make_shared<MockHwcLogger>()),
+       mock_logger(std::make_shared<testing::NiceMock<MockHwcLogger>>()),
        virtual_display{nullptr},
        external_display{nullptr},
        primary_display{nullptr}
@@ -110,7 +110,7 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(list)))
+    EXPECT_CALL(*mock_logger, log_set_list(Ref(list)))
         .InSequence(seq);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .InSequence(seq)
