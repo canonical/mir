@@ -332,7 +332,7 @@ TEST_F(MesaDisplayTest, create_display_drm_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_drm, drmOpen(_,_))
+    EXPECT_CALL(mock_drm, open(_,_,_))
         .Times(AtLeast(1))
         .WillRepeatedly(Return(-1));
 
