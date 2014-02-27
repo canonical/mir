@@ -30,6 +30,8 @@ add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(draw/)
 
+link_directories(${LIBRARY_OUTPUT_PATH})
+
 add_executable(mir_unit_tests ${UNIT_TEST_SOURCES})
 uses_android_input(mir_unit_tests)
 
@@ -39,6 +41,7 @@ target_link_libraries(
   mirclient
   mirserver
   mirplatformgraphics
+  mirclientplatform
   mirdraw
   mirtestdraw
   mirlogging

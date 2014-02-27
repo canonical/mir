@@ -21,19 +21,27 @@ override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-          -DMIR_RUN_ACCEPTANCE_TESTS=OFF -DMIR_RUN_INTEGRATION_TESTS=OFF \
-	  -DMIR_PLATFORM=android 
+	  -DMIR_PLATFORM=android\;mesa
 else
-ifeq ($(DEB_HOST_ARCH),powerpc)
+ifeq ($(DEB_HOST_ARCH),arm64)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_ENABLE_TESTS=NO
+	  -DMIR_PLATFORM=mesa
 else
 	dh_auto_configure -- \
-	  $(COMMON_CONFIGURE_OPTIONS)
+	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DMIR_PLATFORM=mesa\;android
 endif
 endif
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -V
+
+override_dh_install:
+	dh_install --fail-missing
+	sh debian/install_ld_so_conf.sh $(DEB_HOST_MULTIARCH)
+
+override_dh_installdeb:
+	sh debian/create_postinst_prerm_scripts.sh $(DEB_HOST_MULTIARCH)
+	dh_installdeb

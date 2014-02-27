@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/input/input_configuration.h"
@@ -32,14 +33,12 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
-#include "scene_report.h"
 #include "surface_source.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
-namespace ml = mir::logging;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -125,29 +124,6 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
         });
 }
 
-std::shared_ptr<ms::SceneReport>
-mir::DefaultServerConfiguration::the_scene_report()
-{
-    return scene_report([this]() -> std::shared_ptr<ms::SceneReport>
-    {
-        auto opt = the_options()->get<std::string>(scene_report_opt);
-
-        if (opt == log_opt_value)
-        {
-            return std::make_shared<ml::SceneReport>(the_logger());
-        }
-        else if (opt == off_opt_value)
-        {
-            return std::make_shared<ms::NullSceneReport>();
-        }
-        else
-        {
-            throw AbnormalExit(std::string("Invalid ") + scene_report_opt + " option: " + opt +
-                " (valid options are: \"" + off_opt_value + "\" and \"" + log_opt_value + "\")");
-        }
-    });
-}
-
 std::shared_ptr<ms::BroadcastingSessionEventSink>
 mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
 {
@@ -203,19 +179,6 @@ std::shared_ptr<mir::DisplayChanger>
 mir::DefaultServerConfiguration::the_display_changer()
 {
     return the_mediating_display_changer();
-}
-
-std::function<void()>
-mir::DefaultServerConfiguration::force_threads_to_unblock_callback()
-{
-    auto shell_sessions = the_session_container();
-    return [shell_sessions]
-    {
-        shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-        {
-            session->force_requests_to_complete();
-        });
-    };
 }
 
 std::shared_ptr<mf::EventSink>

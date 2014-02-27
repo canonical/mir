@@ -31,7 +31,7 @@ class Surface
 {
 public:
     virtual std::string const& name() const = 0;
-    virtual geometry::Point position() const = 0;
+    virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
     virtual bool contains(geometry::Point const& point) const = 0;
 

@@ -49,6 +49,32 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
     return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 }
+
+class MockSnapshotStrategy : public ms::SnapshotStrategy
+{
+public:
+    ~MockSnapshotStrategy() noexcept {}
+
+    MOCK_METHOD2(take_snapshot_of,
+                void(std::shared_ptr<msh::SurfaceBufferAccess> const&,
+                     msh::SnapshotCallback const&));
+};
+
+struct MockSnapshotCallback
+{
+    void operator()(msh::Snapshot const& snapshot)
+    {
+        operator_call(snapshot);
+    }
+    MOCK_METHOD1(operator_call, void(msh::Snapshot const&));
+};
+
+MATCHER(IsNullSnapshot, "")
+{
+    return arg.size == mir::geometry::Size{} &&
+           arg.stride == mir::geometry::Stride{} &&
+           arg.pixels == nullptr;
+}
 }
 
 TEST(ApplicationSession, create_and_destroy_surface)
@@ -234,23 +260,23 @@ TEST(ApplicationSession, destroy_invalid_surface_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST(ApplicationSession, uses_snapshot_strategy)
+TEST(ApplicationSession, takes_snapshot_of_default_surface)
 {
     using namespace ::testing;
 
-    class MockSnapshotStrategy : public ms::SnapshotStrategy
-    {
-    public:
-        ~MockSnapshotStrategy() noexcept {}
-
-        MOCK_METHOD2(take_snapshot_of,
-                    void(std::shared_ptr<msh::SurfaceBufferAccess> const&,
-                         msh::SnapshotCallback const&));
-    };
-
-    auto snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
-    mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
+    mtd::NullEventSink sender;
+    auto const default_surface = make_mock_surface();
+    auto const default_surface_buffer_access =
+        std::static_pointer_cast<msh::SurfaceBufferAccess>(default_surface);
+    auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
+
+    EXPECT_CALL(surface_factory, create_surface(_,_,_,_))
+        .WillOnce(Return(default_surface));
+
+    EXPECT_CALL(*snapshot_strategy,
+                take_snapshot_of(default_surface_buffer_access, _));
+
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_factory),
         __LINE__,
@@ -259,9 +285,32 @@ TEST(ApplicationSession, uses_snapshot_strategy)
         std::make_shared<msh::NullSessionListener>(),
         mt::fake_shared(sender));
 
-    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_));
-
+    auto surface = app_session.create_surface(msh::SurfaceCreationParameters{});
     app_session.take_snapshot(msh::SnapshotCallback());
+    app_session.destroy_surface(surface);
+}
+
+TEST(ApplicationSession, returns_null_snapshot_if_no_default_surface)
+{
+    using namespace ::testing;
+
+    mtd::NullEventSink sender;
+    mtd::MockSurfaceFactory surface_factory;
+    auto snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
+    MockSnapshotCallback mock_snapshot_callback;
+
+    ms::ApplicationSession app_session(
+        mt::fake_shared(surface_factory),
+        __LINE__,
+        "Foo",
+        snapshot_strategy,
+        std::make_shared<msh::NullSessionListener>(),
+        mt::fake_shared(sender));
+
+    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_)).Times(0);
+    EXPECT_CALL(mock_snapshot_callback, operator_call(IsNullSnapshot()));
+
+    app_session.take_snapshot(std::ref(mock_snapshot_callback));
 }
 
 namespace

@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
 #include "mir_toolkit/common.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
@@ -48,7 +49,7 @@ public:
     void post(Buffer const& buffer);
 
 private:
-    LayerList layer_list;
+    FBTargetLayerList layer_list;
 
     std::shared_ptr<SyncFileOps> const sync_ops;
     static size_t const num_displays{3}; //primary, external, virtual

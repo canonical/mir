@@ -34,6 +34,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_renderer.h"
 
 #include <gtest/gtest.h>
 
@@ -85,28 +86,12 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
     std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
     {
-        struct StubRenderer : public mc::Renderer
-        {
-            void begin(float) const override
-            {
-            }
-            void render(mc::CompositingCriteria const&, mg::Buffer&) const override
-            {
-            }
-            void end() const override
-            {
-            }
-            void suspend() override
-            {
-            }
-        };
-
         struct StubRendererFactory : public mc::RendererFactory
         {
             std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
             {
-                auto raw = new StubRenderer{};
-                return std::unique_ptr<StubRenderer>(raw);
+                auto raw = new mtd::StubRenderer{};
+                return std::unique_ptr<mtd::StubRenderer>(raw);
             }
         };
 

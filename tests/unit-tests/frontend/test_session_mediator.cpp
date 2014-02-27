@@ -17,8 +17,8 @@
  */
 
 #include "mir/compositor/buffer_stream.h"
-#include "mir/frontend/session_mediator_report.h"
 #include "src/server/frontend/session_mediator.h"
+#include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
 #include "mir/graphics/display.h"
@@ -60,6 +60,7 @@ namespace mp = mir::protobuf;
 namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mr = mir::report;
 
 namespace
 {
@@ -203,7 +204,7 @@ struct SessionMediatorTest : public ::testing::Test
           graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
           graphics_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
-          report{std::make_shared<mf::NullSessionMediatorReport>()},
+          report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
           mediator{__LINE__, shell, graphics_platform, graphics_changer,

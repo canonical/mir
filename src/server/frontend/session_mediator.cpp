@@ -37,6 +37,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/drm_authenticator.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -45,6 +46,8 @@
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <mutex>
@@ -80,8 +83,7 @@ mf::SessionMediator::SessionMediator(
 
 mf::SessionMediator::~SessionMediator() noexcept
 {
-    auto session = weak_session.lock();
-    if (session)
+    if (auto session = weak_session.lock())
     {
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
         shell->close_session(session);
@@ -404,6 +406,45 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+void mf::SessionMediator::drm_auth_magic(
+    google::protobuf::RpcController* /*controller*/,
+    const mir::protobuf::DRMMagic* request,
+    mir::protobuf::DRMAuthMagicStatus* response,
+    google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_drm_auth_magic_called(session->name());
+    }
+
+    auto const magic = static_cast<unsigned int>(request->magic());
+    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
+    if (!authenticator)
+        BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the active platform"));
+
+    try
+    {
+        authenticator->drm_auth_magic(magic);
+        response->set_status_code(0);
+    }
+    catch (std::exception const& e)
+    {
+        auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+
+        if (errno_ptr != nullptr)
+            response->set_status_code(*errno_ptr);
+        else
+            throw;
+    }
+
+    done->Run();
+}
+
 void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcController*,
     const ::mir::protobuf::TrustedSessionParameters* request,
     ::mir::protobuf::TrustedSession* response,
@@ -455,6 +496,7 @@ void mf::SessionMediator::stop_trusted_session(::google::protobuf::RpcController
     }
     done->Run();
 }
+
 void mf::SessionMediator::pack_protobuf_buffer(
     protobuf::Buffer& protobuf_buffer,
     graphics::Buffer* graphics_buffer,

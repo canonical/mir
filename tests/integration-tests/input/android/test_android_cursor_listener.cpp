@@ -18,11 +18,12 @@
  */
 
 #include "src/server/input/android/android_input_manager.h"
+#include "src/server/report/null_report_factory.h"
+
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
-#include "mir/input/null_input_report.h"
 #include "mir/input/input_region.h"
 #include "mir/geometry/rectangle.h"
 
@@ -44,6 +45,7 @@ namespace mis = mir::input::synthesis;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 using mtd::MockEventFilter;
 
@@ -86,7 +88,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
             event_filter,
             mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
-            std::make_shared<mi::NullInputReport>());
+            mr::null_input_report());
 
         fake_event_hub = configuration->the_fake_event_hub();
 

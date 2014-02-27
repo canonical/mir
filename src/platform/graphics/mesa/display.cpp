@@ -134,6 +134,17 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
         std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
+        /*
+         * Notice for a little while here we will have duplicate
+         * DisplayBuffers attached to each output, and the display_buffers_new
+         * will take over the outputs before the old display_buffers are
+         * destroyed. So to avoid page flipping confusion in-between, make
+         * sure we wait for all pending page flips to finish before the
+         * display_buffers_new are created and take control of the outputs.
+         */
+        for (auto& db : display_buffers)
+            db->wait_for_page_flip();
+
         /* Reset the state of all outputs */
         kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
         {

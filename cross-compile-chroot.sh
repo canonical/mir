@@ -1,27 +1,69 @@
 #!/bin/bash
-# build script for Mir on android arm devices
+# build script to compile Mir for armhf devices
 #
 set -e
 
-BUILD_DIR=build-android-arm
-NUM_JOBS=$(( `grep -c ^processor /proc/cpuinfo` + 1 ))
+usage() {
+  echo "usage: $(basename $0) [-c] [-u]"
+  echo "-c clean before building"
+  echo "-u update partial chroot directory"
+  echo "-h this message"
+}
 
-if [ "$MIR_NDK_PATH" = "" ]; then
-    export MIR_NDK_PATH=`pwd`/partial-armhf-chroot
-    if [ ! -d ${MIR_NDK_PATH} ]; then 
-        echo "no partial root specified or detected. attempting to create one"
-    fi
+clean_build_dir() {
+    rm -rf ${1}
+    mkdir ${1}
+}
+
+BUILD_DIR=build-android-arm
+NUM_JOBS=$(( $(grep -c ^processor /proc/cpuinfo) + 1 ))
+_do_update_chroot=0
+
+while getopts "cuh" OPTNAME
+do
+    case $OPTNAME in
+      c )
+        clean_build_dir ${BUILD_DIR}
+        ;;
+      u )
+        _do_update_chroot=1
+        ;;
+      h )
+        usage
+        exit 0
+        ;;
+      * )
+        echo "invalid option specified"
+        usage
+        exit 1
+        ;;
+    esac
+done
+
+
+if [ "${MIR_NDK_PATH}" = "" ]; then
+    export MIR_NDK_PATH=$(pwd)/partial-armhf-chroot
 fi
 
-pushd tools > /dev/null
-    ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH}
-popd > /dev/null
+if [ ! -d ${MIR_NDK_PATH} ]; then 
+    echo "no partial chroot dir detected. attempting to create one"
+    _do_update_chroot=1
+fi
 
-echo "Using MIR_NDK_PATH: $MIR_NDK_PATH"
+if [ ! -d ${BUILD_DIR} ]; then 
+    mkdir ${BUILD_DIR}
+fi
 
-#start with a clean build every time
-rm -rf ${BUILD_DIR}
-mkdir ${BUILD_DIR}
+if [ ${_do_update_chroot} -eq 1 ] ; then
+    pushd tools > /dev/null
+        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH}
+    popd > /dev/null
+    # force a clean build after an update, since CMake cache maybe out of date
+    clean_build_dir ${BUILD_DIR}
+fi
+
+echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
+
 pushd ${BUILD_DIR} > /dev/null 
 
     export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf/pkgconfig"
@@ -33,9 +75,9 @@ pushd ${BUILD_DIR} > /dev/null
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
       -DBoost_COMPILER=-gcc \
-      -DMIR_PLATFORM=android \
+      -DMIR_PLATFORM=android\;mesa \
       .. 
 
-    cmake --build . -- -j${NUM_JOBS}
+    make -j${NUM_JOBS}
 
 popd ${BUILD_DIR} > /dev/null 

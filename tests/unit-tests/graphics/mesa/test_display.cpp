@@ -19,7 +19,7 @@
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/display.h"
 #include "src/platform/graphics/mesa/virtual_terminal.h"
-#include "src/server/logging/display_report.h"
+#include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
@@ -27,7 +27,7 @@
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -47,8 +47,10 @@
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
 namespace ml=mir::logging;
+namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir::mir_test_framework;
+namespace mr=mir::report;
 
 namespace
 {
@@ -89,7 +91,7 @@ class MesaDisplayTest : public ::testing::Test
 public:
     MesaDisplayTest() :
         mock_report{std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>()},
-        null_report{std::make_shared<mg::NullDisplayReport>()}
+        null_report{mr::null_display_report()}
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -114,7 +116,7 @@ public:
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
         .Times(AtLeast(0));
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mgm::Platform> create_platform()
@@ -428,14 +430,12 @@ TEST_F(MesaDisplayTest, post_update)
 
         /* Handle the flip event */
         EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
-            .Times(1)
-            .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
+            .Times(0);
 
-        /* Release the current FB */
+        /* Release last_flipped_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
-
-        /* Release the new FB (at destruction time) */
+        /* Release scheduled_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
     }
@@ -468,11 +468,11 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             .Times(Exactly(1))
             .WillOnce(Return(-1));
 
-        /* Release the new (not flipped) BO */
+        /* Release failed bufobj */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
 
-        /* Release the current FB (at destruction time) */
+        /* Release scheduled_bufobj (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
     }
@@ -526,7 +526,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_re
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
@@ -542,7 +542,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_make_current_o
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
@@ -558,7 +558,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
@@ -574,7 +574,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
     using namespace ::testing;
 
     auto logger = std::make_shared<MockLogger>();
-    auto reporter = std::make_shared<ml::DisplayReport>(logger);
+    auto reporter = std::make_shared<mrl::DisplayReport>(logger);
 
     EXPECT_CALL(
         *logger,
@@ -723,8 +723,6 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
                         null_report);
 
-    auto syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
-
     mir::AsioMainLoop ml;
     std::condition_variable done;
 
@@ -747,12 +745,15 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
         });
 
     std::thread t{
-        [this, syspath]
+        [this]
         {
-            for (int i = 0; i < device_change_count; ++i)
+            auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+
+            for (int i = 0; i != device_change_count; ++i)
             {
-                fake_devices.emit_device_changed(syspath);
+                // sleeping between calls to fake_devices hides race conditions
                 std::this_thread::sleep_for(std::chrono::microseconds{500});
+                fake_devices.emit_device_changed(syspath);
             }
         }};
 
@@ -760,9 +761,8 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
         [this, &done, &m, &ml, &call_count]
         {
             std::unique_lock<std::mutex> lock(m);
-            if (!done.wait_for (lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
-                ADD_FAILURE() << "Timeout waiting for change events";
-            ml.stop();
+            if (!done.wait_for(lock, std::chrono::seconds{1}, [&call_count]() { return call_count == expected_call_count; }))
+                ml.stop();
         }
     };
 

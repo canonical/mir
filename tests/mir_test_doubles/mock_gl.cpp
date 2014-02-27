@@ -34,6 +34,8 @@ mtd::MockGL::MockGL()
 
     global_mock_gl = this;
 
+    ON_CALL(*this, glCheckFramebufferStatus(_))
+        .WillByDefault(Return(GL_FRAMEBUFFER_COMPLETE));
 }
 
 mtd::MockGL::~MockGL()
@@ -370,6 +372,12 @@ void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers)
     global_mock_gl->glGenRenderbuffers(n, renderbuffers);
 }
 
+void glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glDeleteRenderbuffers(n, renderbuffers);
+}
+
 void glRenderbufferStorage(GLenum target, GLenum internalformat,
                            GLsizei width, GLsizei height)
 {
@@ -384,3 +392,8 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     global_mock_gl->glViewport(x, y, width, height);
 }
 
+void glFinish()
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glFinish();
+}

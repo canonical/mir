@@ -30,7 +30,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <gbm.h>
 
@@ -44,6 +44,7 @@ namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
+namespace mr=mir::report;
 namespace mtf=mir::mir_test_framework;
 
 class GBMBufferTest : public ::testing::Test
@@ -53,7 +54,7 @@ protected:
     {
         using namespace testing;
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
 
         size = geom::Size{300, 200};
         pf = mir_pixel_format_argb_8888;
@@ -74,7 +75,7 @@ protected:
         .WillByDefault(Return(stride.as_uint32_t()));
 
         platform = std::make_shared<mgm::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
         allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init));

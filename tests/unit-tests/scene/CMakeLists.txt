@@ -11,7 +11,7 @@ list(
 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_impl.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_data.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_stack.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_controller.cpp
 )

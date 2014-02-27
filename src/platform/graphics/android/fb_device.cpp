@@ -69,6 +69,11 @@ void mga::FBDevice::post(mg::Buffer const& buffer)
     }
 }
 
+bool mga::FBDevice::apply_orientation(MirOrientation) const
+{
+    return false; 
+}
+
 void mga::FBDevice::mode(MirPowerMode mode)
 {
     int enable = 0;

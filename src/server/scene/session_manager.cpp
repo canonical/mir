@@ -139,6 +139,8 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 {
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
 
+    shell_session->force_requests_to_complete();
+
     session_event_sink->handle_session_stopping(shell_session);
 
     auto session_parent = shell_session->get_parent();
