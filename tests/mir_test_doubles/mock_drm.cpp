@@ -229,6 +229,9 @@ mtd::MockDRM::MockDRM()
 
     global_mock = this;
 
+    ON_CALL(*this, open(_,_,_))
+    .WillByDefault(Return(fake_drm.fd()));
+
     ON_CALL(*this, drmOpen(_,_))
     .WillByDefault(Return(fake_drm.fd()));
 
@@ -405,7 +408,7 @@ int open(char const* path, int flags, mode_t mode)
 {
     char const* drm_prefix = "/dev/dri/";
     if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
-        return global_mock->drmOpen("i915", NULL);
+        return global_mock->open(path, flags, mode);
 
     int (*real_open)(char const *path, int flags, mode_t mode);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "open");
@@ -417,7 +420,7 @@ int open64(char const* path, int flags, mode_t mode)
 {
     char const* drm_prefix = "/dev/dri/";
     if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
-        return global_mock->drmOpen("i915", NULL);
+        return global_mock->open(path, flags, mode);
 
     int (*real_open64)(char const *path, int flags, mode_t mode);
     *(void **)(&real_open64) = dlsym(RTLD_NEXT, "open64");
@@ -429,7 +432,7 @@ int __open(char const* path, int flags, mode_t mode)
 {
     char const* drm_prefix = "/dev/dri/";
     if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
-        return global_mock->drmOpen("i915", NULL);
+        return global_mock->open(path, flags, mode);
 
     int (*real_open)(char const *path, int flags, mode_t mode);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "__open");
@@ -441,7 +444,7 @@ int __open64(char const* path, int flags, mode_t mode)
 {
     char const* drm_prefix = "/dev/dri/";
     if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
-        return global_mock->drmOpen("i915", NULL);
+        return global_mock->open(path, flags, mode);
 
     int (*real_open64)(char const *path, int flags, mode_t mode);
     *(void **)(&real_open64) = dlsym(RTLD_NEXT, "__open64");
