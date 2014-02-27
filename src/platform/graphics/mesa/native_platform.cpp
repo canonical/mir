@@ -95,8 +95,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
     return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
 }
 
-// TODO: Currently this will not work in multimonitor scenarios!. Use of an internal client inside a nested Mir on Mesa will end in
-// a deadlock inside the Mesa-EGL layer between the multiple compositor threads. ~racarr
+// TODO: Currently this will not work in multimonitor scenarios!. Multiple EGL surfaces (i.e. one per monitor) may
+// eventually cause deadlock in swap buffers as documented in: https://bugs.launchpad.net/mir/+bug/1285500
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
     if (!internal_native_display)
