@@ -289,7 +289,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      * (top-left is (0,0), bottom-right is (W,H)) to the normalized GL coordinate system
      * (top-left is (-1,1), bottom-right is (1,-1))
      */
-    glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 1.0f, 0.0f});
+    glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
             glm::vec3{2.0f / rect.size.width.as_float(),
                       -2.0f / rect.size.height.as_float(),
