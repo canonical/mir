@@ -51,8 +51,9 @@ public:
                             std::shared_ptr<CompositorReport> const& compositor_report);
     ~MultiThreadedCompositor();
 
-    void start();
-    void stop();
+    void start() override;
+    void schedule_compositing() override;
+    void stop() override;
 
 private:
     std::shared_ptr<graphics::Display> const display;

@@ -30,6 +30,7 @@ public:
     virtual ~Compositor() {}
 
     virtual void start() = 0;
+    virtual void schedule_compositing() = 0;
     virtual void stop() = 0;
 
 protected:

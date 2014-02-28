@@ -34,6 +34,7 @@ class MockCompositor : public compositor::Compositor
 {
 public:
     MOCK_METHOD0(start, void());
+    MOCK_METHOD0(schedule_compositing, void());
     MOCK_METHOD0(stop, void());
 };
 

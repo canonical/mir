@@ -65,16 +65,21 @@ public:
             {
                 display_buffer_compositor_map[&display_buffer] = db_compositor_factory->create_compositor_for(display_buffer);
             });
-}
+    }
 
     void start()
     {
         scene->set_change_callback([this]()
         {
-            display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
-            {
-                display_buffer_compositor_map[&display_buffer]->composite();
-            });
+            schedule_compositing();
+        });
+    }
+
+    void schedule_compositing()
+    {
+        display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+        {
+            display_buffer_compositor_map[&display_buffer]->composite();
         });
     }
 
