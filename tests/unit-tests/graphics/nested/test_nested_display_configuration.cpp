@@ -257,13 +257,14 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_has_one_output)
 
 TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
 {
-    geom::Point const top_left{10,20};
+    geom::Point const new_top_left{10,20};
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
-    config.configure_output(
-        mg::DisplayConfigurationOutputId(default_output_id), true,
-        top_left, default_current_mode, default_current_output_format,
-        mir_power_mode_on, mir_orientation_normal);
+    config.for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.used = true;
+            output.top_left = new_top_left;
+        });
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(1));
@@ -272,72 +273,15 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
         {
             ov.f(output);
             EXPECT_EQ(true, output.used);
-            EXPECT_EQ(top_left, output.top_left);
+            EXPECT_EQ(new_top_left, output.top_left);
             EXPECT_EQ(0, output.current_mode_index);
             EXPECT_EQ(default_current_output_format, output.current_format);
         });
 }
 
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_mode)
-{
-    geom::Point const top_left{10,20};
-    size_t const too_big_mode_index = 1;
-    mgn::NestedDisplayConfiguration config(build_trivial_configuration());
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, -1, default_current_output_format,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, too_big_mode_index, default_current_output_format,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-}
-
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_format)
-{
-    geom::Point const top_left{10,20};
-    mgn::NestedDisplayConfiguration config(build_trivial_configuration());
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, default_current_mode, mir_pixel_format_invalid,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-
-    EXPECT_THROW(
-        {config.configure_output(
-            mg::DisplayConfigurationOutputId(default_output_id),
-            true, top_left, default_current_mode, mir_pixel_formats,
-            mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-}
-
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_output)
-{
-    geom::Point const top_left{10,20};
-    mgn::NestedDisplayConfiguration config(build_trivial_configuration());
-
-    EXPECT_THROW(
-        {config.configure_output(
-             mg::DisplayConfigurationOutputId(default_output_id+1), true,
-             top_left, default_current_mode, default_current_output_format,
-             mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-
-    EXPECT_THROW(
-        {config.configure_output(
-             mg::DisplayConfigurationOutputId(default_output_id-1), true,
-             top_left, default_current_mode, default_current_output_format,
-             mir_power_mode_on, mir_orientation_normal);},
-        std::runtime_error);
-}
+// Validation tests once stood here. They've now been replaced by more
+// portable validation logic which can be found in:
+// TEST(DisplayConfiguration, ...
 
 TEST_F(NestedDisplayConfiguration, non_trivial_configuration_has_two_cards)
 {
@@ -365,8 +309,16 @@ TEST_F(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
     geom::Point const top_left{100,200};
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
 
-    config.configure_output(id, true, top_left, 1, mir_pixel_format_argb_8888,
-                            mir_power_mode_on, mir_orientation_normal);
+    config.for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.id == id)
+            {
+                output.used = true;
+                output.top_left = top_left;
+                output.current_mode_index = 1;
+                output.current_format = mir_pixel_format_argb_8888;
+            }
+        });
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(3));
