@@ -7,11 +7,11 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
@@ -24,7 +24,6 @@
 #include <functional>
 #include <mutex>
 #include <map>
-#include <atomic>
 
 namespace mir
 {
@@ -46,7 +45,7 @@ private:
 
     std::mutex mutable guard;
     std::map<int, std::function<void(uint32_t, MirTrustedSessionState)>> handle_trusted_session_events;
-    std::atomic<int> next_fn_id;
+    int next_fn_id;
 };
 }
 }

@@ -21,7 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_debug.h"
-#include "mir_toolkit/mir_client_library_tps.h"
+#include "mir_toolkit/mir_client_library_trusted_session.h"
 
 #include "mir_connection.h"
 #include "display_configuration.h"
@@ -30,7 +30,7 @@
 #include "default_connection_configuration.h"
 #include "lifecycle_control.h"
 #include "api_impl_types.h"
-#include "mir_trusted_prompt_session.h"
+#include "mir_trusted_session.h"
 
 #include <set>
 #include <unordered_set>
@@ -539,25 +539,27 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
 }
 
 /**************************
- * Trusted prompt session specific functions *
+ * Trusted session specific functions *
  **************************/
 
-MirTrustedPromptSession* mir_trusted_prompt_session_create(MirConnection* connection)
+MirTrustedSession* mir_trusted_session_create(MirConnection* connection)
 {
-    return connection->create_trusted_prompt_session();
+    return connection->create_trusted_session();
 }
 
-MirTrustedPromptSessionAddApplicationResult mir_trusted_prompt_session_add_app_with_pid(MirTrustedPromptSession *session,
-                                                                                        pid_t pid)
+MirTrustedSessionAddApplicationResult mir_trusted_session_add_app_with_pid(MirTrustedSession *trusted_session,
+                                                                           pid_t pid)
 {
-    return session->add_app_with_pid(pid);
+    return trusted_session->add_app_with_pid(pid);
 }
 
-MirWaitHandle *mir_trusted_prompt_session_start(MirTrustedPromptSession *session, mir_tps_callback callback, void* context)
+MirWaitHandle *mir_trusted_session_start(MirTrustedSession *trusted_session,
+                                         mir_trusted_session_callback callback,
+                                         void* context)
 {
     try
     {
-        return session->start(callback, context);
+        return trusted_session->start(callback, context);
     }
     catch (std::exception const&)
     {
@@ -566,11 +568,13 @@ MirWaitHandle *mir_trusted_prompt_session_start(MirTrustedPromptSession *session
     }
 }
 
-MirWaitHandle *mir_trusted_prompt_session_stop(MirTrustedPromptSession *session, mir_tps_callback callback, void* context)
+MirWaitHandle *mir_trusted_session_stop(MirTrustedSession *trusted_session,
+                                        mir_trusted_session_callback callback,
+                                        void* context)
 {
     try
     {
-        return session->stop(callback, context);
+        return trusted_session->stop(callback, context);
     }
     catch (std::exception const&)
     {
@@ -579,14 +583,14 @@ MirWaitHandle *mir_trusted_prompt_session_stop(MirTrustedPromptSession *session,
     }
 }
 
-void mir_trusted_prompt_session_set_event_callback(MirTrustedPromptSession* session,
-                                                   mir_tps_event_callback callback, void* context)
+void mir_trusted_session_set_event_callback(MirTrustedSession* trusted_session,
+                                            mir_trusted_session_event_callback callback,
+                                            void* context)
 {
-    session->register_trusted_session_event_callback(callback, context);
+    trusted_session->register_trusted_session_event_callback(callback, context);
 }
 
-void mir_trusted_prompt_session_release(MirTrustedPromptSession* trusted_session)
+void mir_trusted_session_release(MirTrustedSession* trusted_session)
 {
     delete trusted_session;
 }
-

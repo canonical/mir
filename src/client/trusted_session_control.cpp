@@ -7,11 +7,11 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
@@ -57,5 +57,5 @@ void mcl::TrustedSessionControl::call_trusted_session_event_handler(int32_t id, 
 
 int mcl::TrustedSessionControl::next_id()
 {
-    return next_fn_id.fetch_add(1);
+    return ++next_fn_id;
 }

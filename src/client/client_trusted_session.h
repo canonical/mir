@@ -32,8 +32,8 @@ namespace client
 class TrustedSession
 {
 public:
-    virtual MirWaitHandle* start(mir_tps_callback callback, void * context) = 0;
-    virtual MirWaitHandle* stop(mir_tps_callback callback, void * context) = 0;
+    virtual MirWaitHandle* start(mir_trusted_session_callback callback, void * context) = 0;
+    virtual MirWaitHandle* stop(mir_trusted_session_callback callback, void * context) = 0;
 
 protected:
     TrustedSession() {}

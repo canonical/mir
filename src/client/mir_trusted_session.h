@@ -1,9 +1,9 @@
 /*
  * Copyright © 2014 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,15 +13,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#ifndef MIR_CLIENT_MIR_TRUSTED_PROMPT_SESSION_H_
-#define MIR_CLIENT_MIR_TRUSTED_PROMPT_SESSION_H_
+#ifndef MIR_CLIENT_MIR_TRUSTED_SESSION_H_
+#define MIR_CLIENT_MIR_TRUSTED_SESSION_H_
 
 #include "mir_protobuf.pb.h"
-
-#include "mir_toolkit/mir_client_library_tps.h"
 #include "mir_wait_handle.h"
 #include "client_trusted_session.h"
 
@@ -37,23 +35,23 @@ class TrustedSessionControl;
 }
 }
 
-struct MirTrustedPromptSession : public mir::client::TrustedSession
+struct MirTrustedSession : public mir::client::TrustedSession
 {
 public:
-    MirTrustedPromptSession(mir::protobuf::DisplayServer::Stub & server,
-                            std::shared_ptr<mir::client::TrustedSessionControl> const& trusted_session_control);
+    MirTrustedSession(mir::protobuf::DisplayServer::Stub & server,
+                      std::shared_ptr<mir::client::TrustedSessionControl> const& trusted_session_control);
 
-    ~MirTrustedPromptSession();
+    ~MirTrustedSession();
 
-    MirTrustedPromptSession(MirTrustedPromptSession const &) = delete;
-    MirTrustedPromptSession& operator=(MirTrustedPromptSession const &) = delete;
+    MirTrustedSession(MirTrustedSession const &) = delete;
+    MirTrustedSession& operator=(MirTrustedSession const &) = delete;
 
-    MirTrustedPromptSessionAddApplicationResult add_app_with_pid(pid_t pid);
+    MirTrustedSessionAddApplicationResult add_app_with_pid(pid_t pid);
 
-    MirWaitHandle* start(mir_tps_callback callback, void * context);
-    MirWaitHandle* stop(mir_tps_callback callback, void * context);
+    MirWaitHandle* start(mir_trusted_session_callback callback, void * context);
+    MirWaitHandle* stop(mir_trusted_session_callback callback, void * context);
 
-    void register_trusted_session_event_callback(mir_tps_event_callback callback, void* context);
+    void register_trusted_session_event_callback(mir_trusted_session_event_callback callback, void* context);
 
     char const * get_error_message();
     void set_error_message(std::string const& error);
@@ -76,9 +74,9 @@ private:
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
 
-    void done_start(mir_tps_callback callback, void* context);
-    void done_stop(mir_tps_callback callback, void* context);
+    void done_start(mir_trusted_session_callback callback, void* context);
+    void done_stop(mir_trusted_session_callback callback, void* context);
 };
 
-#endif /* MIR_CLIENT_MIR_TRUSTED_PROMPT_SESSION_H_ */
+#endif /* MIR_CLIENT_MIR_TRUSTED_SESSION_H_ */
 
