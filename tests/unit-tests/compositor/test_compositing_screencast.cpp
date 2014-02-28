@@ -91,7 +91,7 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            int composite() { return 0; }
+            bool composite() { return false; }
         };
 
         auto raw = new NullDisplayBufferCompositor{};
@@ -101,7 +101,7 @@ public:
 
 struct MockDisplayBufferCompositor : mc::DisplayBufferCompositor
 {
-    MOCK_METHOD0(composite, int());
+    MOCK_METHOD0(composite, bool());
 };
 
 class WrappingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -112,7 +112,7 @@ public:
     {
     }
 
-    int composite() { return comp.composite(); }
+    bool composite() { return comp.composite(); }
 
 private:
     mc::DisplayBufferCompositor& comp;

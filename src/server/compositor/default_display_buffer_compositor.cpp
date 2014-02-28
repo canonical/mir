@@ -80,7 +80,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 }
 
 
-int mc::DefaultDisplayBufferCompositor::composite()
+bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
@@ -104,7 +104,7 @@ int mc::DefaultDisplayBufferCompositor::composite()
         return !env || env[0] != '0';
     }()};
     bool bypassed = false;
-    int max_uncomposited_buffers = 0;
+    bool uncomposited_buffers{false};
 
     if (bypass_env && display_buffer.can_bypass())
     {
@@ -124,9 +124,7 @@ int mc::DefaultDisplayBufferCompositor::composite()
 
             if (bypass_buf->can_bypass())
             {
-                max_uncomposited_buffers = std::max(
-                    max_uncomposited_buffers,
-                    match.topmost_fullscreen()->composable_buffers()-1);
+                uncomposited_buffers = match.topmost_fullscreen()->composable_buffers() > 1;
 
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);
@@ -155,7 +153,7 @@ int mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, max_uncomposited_buffers);
+        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, uncomposited_buffers);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();
@@ -164,6 +162,6 @@ int mc::DefaultDisplayBufferCompositor::composite()
     }
 
     report->finished_frame(bypassed, this);
-    return max_uncomposited_buffers;
+    return uncomposited_buffers;
 }
 

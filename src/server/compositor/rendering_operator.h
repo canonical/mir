@@ -36,7 +36,7 @@ public:
         Renderer& renderer,
         std::function<void(std::shared_ptr<void> const&)> save_resource,
         unsigned long frameno,
-        int& max_uncomposited_buffers);
+        bool& uncomposited_buffers);
     ~RenderingOperator() = default;
 
     void operator()(graphics::Renderable const&);
@@ -45,7 +45,7 @@ private:
     Renderer& renderer;
     std::function<void(std::shared_ptr<void> const&)> save_resource;
     unsigned long const frameno;
-    int& max_uncomposited_buffers;
+    bool& uncomposited_buffers;
 };
 
 }
