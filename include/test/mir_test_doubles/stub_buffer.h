@@ -39,20 +39,31 @@ class StubBuffer : public graphics::BufferBasic
 {
 public:
     StubBuffer()
-        : buf_size{0, 0},
-          buf_pixel_format{mir_pixel_format_abgr_8888}
+        : StubBuffer{
+              graphics::BufferProperties{
+                  geometry::Size{},
+                  mir_pixel_format_abgr_8888,
+                  graphics::BufferUsage::hardware}}
+
     {
     }
 
     StubBuffer(graphics::BufferProperties const& properties)
+        : StubBuffer{properties, geometry::Stride{}}
+    {
+    }
+
+    StubBuffer(graphics::BufferProperties const& properties,
+               geometry::Stride stride)
         : buf_size{properties.size},
-          buf_pixel_format{properties.format}
+          buf_pixel_format{properties.format},
+          buf_stride{stride}
     {
     }
 
     virtual geometry::Size size() const { return buf_size; }
 
-    virtual geometry::Stride stride() const { return geometry::Stride(); }
+    virtual geometry::Stride stride() const { return buf_stride; }
 
     virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
 
@@ -70,6 +81,7 @@ public:
 
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
+    geometry::Stride const buf_stride;
 };
 }
 }

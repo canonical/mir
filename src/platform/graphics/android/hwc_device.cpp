@@ -68,7 +68,7 @@ void mga::HwcDevice::render_gl_and_overlays(
     {
         layers_it->set_layer_type(mga::LayerType::gl_rendered);
         layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(renderable->buffer()->native_buffer_handle());
+        layers_it->set_buffer(renderable->buffer(1)->native_buffer_handle()); // TODO: remove needing to know about frameno
         layers_it++;
     }
 
