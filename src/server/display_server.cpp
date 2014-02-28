@@ -147,6 +147,7 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->stop(); }};
 
             compositor->start();
+            compositor->schedule_compositing();
 
             paused = false;
         }
@@ -206,6 +207,8 @@ void mir::DisplayServer::run()
 {
     p->connector->start();
     p->compositor->start();
+    p->compositor->schedule_compositing(); // TODO not needed in nested mode
+
     p->input_manager->start();
 
     p->server_status_listener->started();

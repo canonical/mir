@@ -363,7 +363,7 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     EXPECT_CALL(*mock_report, added_display(_,_,_,_,_))
         .Times(1);
     EXPECT_CALL(*mock_report, scheduled())
-        .Times(2);
+        .Times(1);
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
@@ -405,6 +405,12 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 
     compositor.start();
 
+    // Nothing should change before we call schedule_compositing()
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
+
+    compositor.schedule_compositing();
+
     // Initial render: initial_composites frames should be composited at least
     while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, composites_per_update))
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -436,6 +442,12 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 
     compositor.start();
 
+    // Nothing should change before we call schedule_compositing()
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 2*composites_per_update, 2*composites_per_update));
+
+    compositor.schedule_compositing();
+
     // Display buffers should be forced to render another 3, so that's 9
     while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*composites_per_update))
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -461,6 +473,7 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report};
 
     compositor.start();
+    compositor.schedule_compositing();
 
     while (!db_compositor_factory->enough_renders_happened())
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
