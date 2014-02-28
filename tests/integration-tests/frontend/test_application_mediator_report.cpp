@@ -50,6 +50,12 @@ struct MockApplicationMediatorReport : mf::SessionMediatorReport
 
         EXPECT_CALL(*this, session_disconnect_called(testing::_)).
             Times(testing::AtLeast(0));
+
+        EXPECT_CALL(*this, session_start_trusted_session_called(testing::_)).
+            Times(testing::AtLeast(0));
+
+        EXPECT_CALL(*this, session_stop_trusted_session_called(testing::_)).
+            Times(testing::AtLeast(0));
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
@@ -360,3 +366,116 @@ TEST_F(ApplicationMediatorReport, session_disconnect_called)
 
     launch_client_process(client_process);
 }
+
+TEST_F(ApplicationMediatorReport, session_start_trusted_session_called)
+{
+    struct Server : TestingServerConfiguration
+    {
+        std::shared_ptr<mf::SessionMediatorReport>
+        the_application_mediator_report()
+        {
+            auto result = std::make_shared<MockApplicationMediatorReport>();
+
+            EXPECT_CALL(*result, session_start_trusted_session_called(testing::_)).
+                Times(1);
+
+            return result;
+        }
+    } server_processing;
+
+    launch_server_process(server_processing);
+
+    struct Client: TestingClientConfiguration
+    {
+        void exec()
+        {
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
+
+            client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(client, connect_done()).
+                Times(testing::AtLeast(0));
+            EXPECT_CALL(client, trusted_session_start_done()).
+                Times(testing::AtLeast(0));
+
+            client.display_server.connect(
+                0,
+                &client.connect_parameters,
+                &client.connection,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
+
+            client.wait_for_connect_done();
+
+            client.display_server.start_trusted_session(
+                0,
+                &client.trusted_session_parameters,
+                &client.trusted_session,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trusted_session_start_done));
+            client.wait_for_trusted_session_start_done();
+
+        }
+    } client_process;
+
+    launch_client_process(client_process);
+}
+
+TEST_F(ApplicationMediatorReport, session_stop_trusted_session_called)
+{
+    struct Server : TestingServerConfiguration
+    {
+        std::shared_ptr<mf::SessionMediatorReport>
+        the_application_mediator_report()
+        {
+            auto result = std::make_shared<MockApplicationMediatorReport>();
+
+            EXPECT_CALL(*result, session_start_trusted_session_called(testing::_)).
+                Times(1);
+
+            return result;
+        }
+    } server_processing;
+
+    launch_server_process(server_processing);
+
+    struct Client: TestingClientConfiguration
+    {
+        void exec()
+        {
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
+
+            client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(client, connect_done()).
+                Times(testing::AtLeast(0));
+            EXPECT_CALL(client, trusted_session_start_done()).
+                Times(testing::AtLeast(0));
+            EXPECT_CALL(client, trusted_session_stop_done()).
+                Times(testing::AtLeast(0));
+
+            client.display_server.connect(
+                0,
+                &client.connect_parameters,
+                &client.connection,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
+
+            client.wait_for_connect_done();
+
+            client.display_server.start_trusted_session(
+                0,
+                &client.trusted_session_parameters,
+                &client.trusted_session,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trusted_session_start_done));
+            client.wait_for_trusted_session_start_done();
+
+            client.display_server.stop_trusted_session(
+                0,
+                &client.trusted_session.id(),
+                &client.ignored,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trusted_session_stop_done));
+            client.wait_for_trusted_session_stop_done();
+
+        }
+    } client_process;
+
+    launch_client_process(client_process);
+}
+
+

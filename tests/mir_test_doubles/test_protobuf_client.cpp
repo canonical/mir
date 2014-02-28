@@ -51,6 +51,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
     drm_auth_magic_done_called(false),
     configure_display_done_called(false),
     tfd_done_called(false),
+    trusted_session_start_done_called(false),
+    trusted_session_stop_done_called(false),
     connect_done_count(0),
     create_surface_done_count(0),
     disconnect_done_count(0)
@@ -75,6 +77,10 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
+    ON_CALL(*this, trusted_session_start_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trusted_session_start_done));
+    ON_CALL(*this, trusted_session_stop_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trusted_session_stop_done));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -122,6 +128,16 @@ void mir::test::TestProtobufClient::on_drm_auth_magic_done()
 void mir::test::TestProtobufClient::on_configure_display_done()
 {
     configure_display_done_called.store(true);
+}
+
+void mir::test::TestProtobufClient::on_trusted_session_start_done()
+{
+    trusted_session_start_done_called.store(true);
+}
+
+void mir::test::TestProtobufClient::on_trusted_session_stop_done()
+{
+    trusted_session_stop_done_called.store(true);
 }
 
 void mir::test::TestProtobufClient::wait_for_configure_display_done()
@@ -226,4 +242,24 @@ void mir::test::TestProtobufClient::wait_for_tfd_done()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     tfd_done_called.store(false);
+}
+
+void mir::test::TestProtobufClient::wait_for_trusted_session_start_done()
+{
+    for (int i = 0; !trusted_session_start_done_called.load() && i < maxwait; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
+    }
+    trusted_session_start_done_called.store(false);
+}
+
+void mir::test::TestProtobufClient::wait_for_trusted_session_stop_done()
+{
+    for (int i = 0; !trusted_session_stop_done_called.load() && i < maxwait; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
+    }
+    trusted_session_stop_done_called.store(false);
 }
