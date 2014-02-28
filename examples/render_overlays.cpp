@@ -25,7 +25,6 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/report_exception.h"
 
-#include "mir_image.h"
 #include "graphics_region_factory.h"
 #include "patterns.h"
 
@@ -101,7 +100,7 @@ class DemoRenderable : public mg::Renderable
 {
 public:
     DemoRenderable(std::shared_ptr<DemoOverlayClient> const& client, geom::Rectangle rect)
-        : client(std::move(client)),
+        : client(client),
           position(rect)
     {
     }
