@@ -51,22 +51,51 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-void mga::LayerListBase::update_representation(size_t needed_size)
+bool mga::LayerListBase::update_list_and_check_if_changed(
+    size_t needed_size, std::list<std::shared_ptr<mg::Renderable>> const& renderlist)
 {
+    bool any_buffer_updated = false;
     if (hwc_representation->numHwLayers != needed_size)
     {
         hwc_representation = generate_hwc_list(needed_size);
     }
 
-    if (layers.size() != needed_size)
+    if (layers.size() == needed_size)
     {
+        auto layers_it = layers.begin();
+        for(auto renderable : renderlist)
+        {
+            layers_it->set_render_parameters(
+                renderable->screen_position(), renderable->alpha_enabled());
+            layers_it->set_buffer(*renderable->buffer(1));// TODO: remove needing to know about frameno
+            any_buffer_updated |= layers_it->needs_hwc_commit(); 
+            layers_it++;
+        }
+    }
+    else
+    {
+        any_buffer_updated = true;
         std::list<HWCLayer> new_layers;
-        for (auto i = 0u; i < needed_size; i++)
+        auto i = 0u;
+        for(auto const& renderable : renderlist)
+        {
+            new_layers.emplace_back(
+                mga::HWCLayer(
+                    mga::LayerType::gl_rendered,
+                    renderable->screen_position(),
+                    renderable->alpha_enabled(),
+                    hwc_representation, i++));
+            new_layers.back().set_buffer(*renderable->buffer(1));// TODO: remove needing to know about frameno
+        }
+
+        for(; i < needed_size; i++)
         {
             new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
         }
         layers = std::move(new_layers);
     }
+
+    return any_buffer_updated;
 }
 
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
@@ -82,7 +111,7 @@ mga::NativeFence mga::LayerListBase::retirement_fence()
 mga::LayerListBase::LayerListBase(size_t initial_list_size)
     : hwc_representation{generate_hwc_list(initial_list_size)}
 {
-    update_representation(initial_list_size);
+    update_list_and_check_if_changed(initial_list_size, {});
 }
 
 mga::LayerList::LayerList()

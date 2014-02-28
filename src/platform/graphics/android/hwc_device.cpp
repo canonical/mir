@@ -44,9 +44,10 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    update_representation(2);
+    update_list_and_check_if_changed(2, {});
     layers.front().set_layer_type(mga::LayerType::skip);
     layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    list_needs_commit = true;
     skip_layers_present = true;
 
     hwc_wrapper->prepare(*native_list().lock());
@@ -60,33 +61,29 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::function<void(Renderable const&)> const& render_fn)
 {
     auto const needed_size = renderables.size() + 1;
-    update_representation(needed_size);
+    if (!(list_needs_commit = update_list_and_check_if_changed(needed_size, renderables)))
+        return;
 
-    //pack layer list from renderables
+    skip_layers_present = false;
+
+    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    hwc_wrapper->prepare(*native_list().lock());
+
+    //draw layers that the HWC did not accept for overlays here
+    bool needs_swapbuffers = false;
     auto layers_it = layers.begin();
     for(auto const& renderable : renderables)
     {
-        layers_it->set_layer_type(mga::LayerType::gl_rendered);
-        layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(renderable->buffer(1)->native_buffer_handle()); // TODO: remove needing to know about frameno
-        layers_it++;
-    }
+        //prepare all layers for draw. 
+        layers_it->prepare_for_draw();
 
-    layers_it->set_layer_type(mga::LayerType::framebuffer_target);
-    skip_layers_present = false;
-
-    hwc_wrapper->prepare(*native_list().lock());
-
-    //if a layer cannot be drawn, draw with GL here
-    layers_it = layers.begin();
-    bool needs_swapbuffers = false;
-    for(auto const& renderable : renderables)
-    {
-        if ((layers_it++)->needs_gl_render())
+        //trigger GL on the layers that are not overlays
+        if (layers_it->needs_gl_render())
         {
-            needs_swapbuffers = true;
             render_fn(*renderable);
+            needs_swapbuffers = true;
         }
+        layers_it++;
     }
 
     if (needs_swapbuffers)
@@ -95,18 +92,23 @@ void mga::HwcDevice::render_gl_and_overlays(
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
+    if (!list_needs_commit)
+        return;
+
     auto lg = lock_unblanked();
 
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    auto buf = buffer.native_buffer_handle();
+    //TODO: the functions on mga::Layer should be consolidated
     if (skip_layers_present)
     {
         layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buf);
+        layers.front().set_buffer(buffer);
+        layers.front().prepare_for_draw();
     }
 
     layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buf);
+    layers.back().set_buffer(buffer);
+    layers.back().prepare_for_draw();
 
     hwc_wrapper->set(*native_list().lock());
     for(auto& layer : layers)
@@ -115,4 +117,5 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     }
 
     mga::SyncFence retire_fence(sync_ops, retirement_fence());
+    list_needs_commit = false;
 }
