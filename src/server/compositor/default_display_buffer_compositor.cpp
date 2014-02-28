@@ -108,7 +108,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (bypass_env && display_buffer.can_bypass())
     {
-        // It would be *really* nice not to lock the scene for a composite pass
+        // It would be *really* nice not to lock the scene for a composite pass.
+        // (C.f. lp:1234018)
+        // A compositor shouldn't know anything about navigating the scene,
+        // it should be passed a collection of objects to render. (And any
+        // locks managed by the scene - which can just lock what is needed.)
         std::unique_lock<Scene> lock(*scene);
 
         mc::BypassFilter filter(display_buffer);
