@@ -50,7 +50,7 @@ public:
     virtual void resize(geometry::Size const& size) = 0;
     virtual void allow_framedropping(bool) = 0;
     virtual void force_requests_to_complete() = 0;
-    virtual int uncomposited_buffers() const = 0;
+    virtual int composable_buffers() const = 0;
 };
 
 }

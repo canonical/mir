@@ -41,5 +41,5 @@ void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
     save_resource(compositor_buffer);
     max_uncomposited_buffers = std::max(
         max_uncomposited_buffers,
-        renderable.uncomposited_buffers());
+        renderable.composable_buffers());
 }

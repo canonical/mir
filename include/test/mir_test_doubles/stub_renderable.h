@@ -61,7 +61,7 @@ public:
         return false;
     }
 
-    int uncomposited_buffers() const override
+    int composable_buffers() const override
     {
         return 0;
     }

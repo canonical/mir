@@ -110,7 +110,7 @@ public:
     std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override;
     bool alpha_enabled() const override;
     geometry::Rectangle screen_position() const override;
-    int uncomposited_buffers() const override;
+    int composable_buffers() const override;
 
 private:
     BasicSurface(BasicSurface const&) = delete;

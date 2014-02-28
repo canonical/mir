@@ -76,7 +76,7 @@ public:
     virtual void allow_framedropping(bool) {}
     virtual mg::BufferProperties properties() const { return mg::BufferProperties{}; };
     void resize(const geom::Size &) override {}
-    int uncomposited_buffers() const override { return 0; }
+    int composable_buffers() const override { return 0; }
 };
 
 

@@ -90,7 +90,7 @@ public:
         return rect.overlaps(position);
     }
 
-    int uncomposited_buffers() const override
+    int composable_buffers() const override
     {
         return 0;
     }
