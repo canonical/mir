@@ -58,7 +58,7 @@ protected:
     EGLDisplay dpy{&fake_dpy};
     EGLSurface sur{&fake_sur};
 
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 
     MirPixelFormat test_pf;
     geom::Size test_size;

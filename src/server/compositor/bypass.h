@@ -30,13 +30,12 @@ class DisplayBuffer;
 }
 namespace compositor
 {
-class CompositingCriteria;
 
 class BypassFilter : public FilterForScene
 {
 public:
     BypassFilter(const graphics::DisplayBuffer &display_buffer);
-    bool operator()(const CompositingCriteria &criteria) override;
+    bool operator()(const graphics::Renderable &) override;
     bool fullscreen_on_top() const;
 
 private:
@@ -49,13 +48,12 @@ private:
 class BypassMatch : public OperatorForScene
 {
 public:
-    void operator()(const CompositingCriteria &,
-                    compositor::BufferStream &stream) override;
-    compositor::BufferStream *topmost_fullscreen() const;
+    void operator()(const graphics::Renderable &) override;
+    const graphics::Renderable *topmost_fullscreen() const;
 
 private:
-    // This has to be a pointer. We have no control over BufferStream lifetime
-    compositor::BufferStream *latest = nullptr;
+    // This has to be a pointer. We have no control over Renderable lifetime
+    const graphics::Renderable *latest = nullptr;
 };
 
 } // namespace compositor

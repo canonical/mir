@@ -48,7 +48,7 @@ public:
 protected:
     LayerListBase(size_t initial_list_size);
 
-    void update_representation(size_t needed_size); 
+    bool update_list_and_check_if_changed(size_t needed_size, std::list<std::shared_ptr<Renderable>> const&); 
     std::list<HWCLayer> layers;
 
 private:
