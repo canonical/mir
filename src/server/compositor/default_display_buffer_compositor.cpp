@@ -126,7 +126,7 @@ int mc::DefaultDisplayBufferCompositor::composite()
             {
                 max_uncomposited_buffers = std::max(
                     max_uncomposited_buffers,
-                    match.topmost_fullscreen()->composable_buffers());
+                    match.topmost_fullscreen()->composable_buffers()-1);
 
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);

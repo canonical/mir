@@ -75,7 +75,7 @@ public:
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
-    int composable_buffers() const override { return 0; }
+    int composable_buffers() const override { return 1; }
 
 private:
     int render_operations_fd;

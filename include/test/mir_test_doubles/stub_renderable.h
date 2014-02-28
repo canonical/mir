@@ -63,7 +63,7 @@ public:
 
     int composable_buffers() const override
     {
-        return 0;
+        return 1;
     }
 
 private:
