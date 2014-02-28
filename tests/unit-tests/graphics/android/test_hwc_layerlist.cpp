@@ -21,11 +21,12 @@
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-
+namespace mtd=mir::test::doubles;
 namespace
 {
-struct LayerListTest
+struct LayerListTest : public testing::Test
 {
     LayerListTest()
         : renderables{std::make_shared<mtd::StubRenderable>(),
@@ -39,40 +40,40 @@ struct LayerListTest
 
 TEST_F(LayerListTest, list_defaults)
 {
-    mga::LayerList layerlist{0};
+    mga::LayerList layerlist{{}, 0};
 
     auto list = layerlist.native_list().lock();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
-    EXPECT_EQ(layerlist.begin(), layerlist.end());
+    EXPECT_EQ(layerlist.renderable_layers_begin(), layerlist.end());
+    EXPECT_EQ(layerlist.additional_layers_begin(), layerlist.end());
 }
 
-TEST_F(LayerListTest, list_defaults)
+TEST_F(LayerListTest, list_iterators)
 {
-    mga::LayerList layerlist{0};
+    mga::LayerList layerlist{{}, 0};
     size_t additional_layers = 2;
-    auto changed = update_list_and_check_if_changed(renderables, additional_layers);
+    layerlist.update_list_and_check_if_changed(renderables, additional_layers);
 
     auto additional_ct = 0;
     auto composed_ct = 0; 
-    auto in_additional_layers = false;
-    for(auto it = layerlist.begin(); it != layerlist.end(); it++)
+    for(auto it = layerlist.renderable_layers_begin(); it != layerlist.end(); it++)
     {
-        if (it == layerlist.last_composition_layer())
-            in_additional_layers = true;
-
-        if (in_additional_layers)
-            additional_ct++;
-        else
-            composed_ct++;
+        composed_ct++;
     }
 
-    EXPECT_EQ(composed_ct, renderables.size());
-    EXPECT_EQ(addional_ct, additional_layers);
+    for(auto it = layerlist.additional_layers_begin(); it != layerlist.end(); it++)
+    {
+        additional_ct++;
+    }
+
+    EXPECT_EQ(additional_ct, additional_layers);
+    EXPECT_EQ(composed_ct, renderables.size() + additional_layers);
 }
 
+#if 0
 /* Tests without HWC_FRAMEBUFFER_TARGET */
 /* an empty list should have a skipped layer. This will force a GL render on hwc set */
 TEST_F(LayerListTest, hwc10_list_defaults)
@@ -98,3 +99,4 @@ TEST_F(LayerListTest, hwc10_list_defaults)
     ASSERT_EQ(1, list->numHwLayers);
     EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
 }
+#endif

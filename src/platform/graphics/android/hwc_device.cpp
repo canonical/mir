@@ -34,23 +34,23 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      LayerListBase{2},
+      hwc_list{{}, 2},
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+//    layers.front().set_layer_type(mga::LayerType::skip);
+//    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
 }
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    update_list_and_check_if_changed(2, {});
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    hwc_list.update_list_and_check_if_changed({}, 2);
+//    layers.front().set_layer_type(mga::LayerType::skip);
+//    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
     list_needs_commit = true;
     skip_layers_present = true;
 
-    hwc_wrapper->prepare(*native_list().lock());
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     context.swap_buffers();
 }
@@ -60,15 +60,17 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
-    auto const needed_size = renderables.size() + 1;
-    if (!(list_needs_commit = update_list_and_check_if_changed(needed_size, renderables)))
+    auto const additional_layers = 1; //1 extra layer for FBTARGET
+    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, additional_layers)))
         return;
 
     skip_layers_present = false;
 
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-    hwc_wrapper->prepare(*native_list().lock());
-
+//    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+    (void) context;
+    (void) render_fn;
+#if 0
     //draw layers that the HWC did not accept for overlays here
     bool needs_swapbuffers = false;
     auto layers_it = layers.begin();
@@ -88,15 +90,18 @@ void mga::HwcDevice::render_gl_and_overlays(
 
     if (needs_swapbuffers)
         context.swap_buffers();
+#endif
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
+    (void) buffer;
     if (!list_needs_commit)
         return;
 
     auto lg = lock_unblanked();
 
+#if 0
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     //TODO: the functions on mga::Layer should be consolidated
     if (skip_layers_present)
@@ -115,7 +120,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     {
         layer.update_fence_and_release_buffer();
     }
-
-    mga::SyncFence retire_fence(sync_ops, retirement_fence());
+#endif
+    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
     list_needs_commit = false;
 }

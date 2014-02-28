@@ -50,8 +50,7 @@ protected:
     HwcWrapper(HwcWrapper const&) = delete;
 };
 
-class HwcDevice : public HWCCommonDevice,
-                  private LayerListBase
+class HwcDevice : public HWCCommonDevice
 {
 public:
     //TODO: the first two constructor arguments are redundant. eliminate the 1st one when the 2nd
@@ -69,6 +68,7 @@ public:
     void post(Buffer const& buffer);
 
 private:
+    LayerList hwc_list;
     void prepare(hwc_display_contents_1_t& display_list);
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;

@@ -39,29 +39,28 @@ class Buffer;
 namespace android
 {
 
-class LayerListBase
+class LayerList
 {
 public:
+    LayerList(std::list<std::shared_ptr<Renderable>> const&, size_t additional_layers);
+
+    bool update_list_and_check_if_changed(
+        std::list<std::shared_ptr<Renderable>> const& renderlist,
+        size_t additional_layers);
+ 
+    std::list<HWCLayer>::iterator renderable_layers_begin() const;
+    std::list<HWCLayer>::iterator additional_layers_begin() const;
+    std::list<HWCLayer>::iterator end() const;
+
     std::weak_ptr<hwc_display_contents_1_t> native_list();
     NativeFence retirement_fence();
 
-protected:
-    LayerListBase(size_t initial_list_size);
-
-    bool update_list_and_check_if_changed(size_t needed_size, std::list<std::shared_ptr<Renderable>> const&); 
-    std::list<HWCLayer> layers;
-
 private:
-    LayerListBase& operator=(LayerListBase const&) = delete;
-    LayerListBase(LayerListBase const&) = delete;
+    LayerList& operator=(LayerList const&) = delete;
+    LayerList(LayerList const&) = delete;
 
+    std::list<HWCLayer> layers;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-};
-
-class LayerList : public LayerListBase
-{
-public:
-    LayerList();
 };
 
 }

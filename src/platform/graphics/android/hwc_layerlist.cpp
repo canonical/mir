@@ -51,9 +51,20 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-bool mga::LayerListBase::update_list_and_check_if_changed(
-    size_t needed_size, std::list<std::shared_ptr<mg::Renderable>> const& renderlist)
+mga::LayerList::LayerList(
+    std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
+    size_t additional_layers)
 {
+    update_list_and_check_if_changed(renderlist, additional_layers);
+}
+
+bool mga::LayerList::update_list_and_check_if_changed(
+    std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
+    size_t additional_layers)
+{
+#if 0
+    size_t current_list_size = 
+
     bool any_buffer_updated = false;
     if (hwc_representation->numHwLayers != needed_size)
     {
@@ -94,28 +105,26 @@ bool mga::LayerListBase::update_list_and_check_if_changed(
         }
         layers = std::move(new_layers);
     }
-
     return any_buffer_updated;
+#endif
+    (void)renderlist; (void) additional_layers;
+    return true;
 }
 
-std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
+std::weak_ptr<hwc_display_contents_1_t> mga::LayerList::native_list()
 {
     return hwc_representation;
 }
 
-mga::NativeFence mga::LayerListBase::retirement_fence()
+mga::NativeFence mga::LayerList::retirement_fence()
 {
     return hwc_representation->retireFenceFd;
 }
 
-mga::LayerListBase::LayerListBase(size_t initial_list_size)
-    : hwc_representation{generate_hwc_list(initial_list_size)}
-{
-    update_list_and_check_if_changed(initial_list_size, {});
-}
-
+#if 0
 mga::LayerList::LayerList()
-    : LayerListBase{1}
+    : LayerListBase{{}, 1}
 {
     layers.back().set_layer_type(mga::LayerType::skip);
 }
+#endif
