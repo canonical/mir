@@ -62,11 +62,10 @@ bool mga::LayerList::update_list_and_check_if_changed(
     std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
     size_t additional_layers)
 {
-#if 0
-    size_t current_list_size = 
+    size_t needed_size = renderlist.size() + additional_layers; 
 
     bool any_buffer_updated = false;
-    if (hwc_representation->numHwLayers != needed_size)
+    if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
     {
         hwc_representation = generate_hwc_list(needed_size);
     }
@@ -106,9 +105,6 @@ bool mga::LayerList::update_list_and_check_if_changed(
         layers = std::move(new_layers);
     }
     return any_buffer_updated;
-#endif
-    (void)renderlist; (void) additional_layers;
-    return true;
 }
 
 std::list<mga::HWCLayer>::iterator mga::LayerList::renderable_layers_begin()

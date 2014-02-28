@@ -69,8 +69,8 @@ TEST_F(LayerListTest, list_iterators)
         additional_ct++;
     }
 
-    EXPECT_EQ(additional_ct, additional_layers);
-    EXPECT_EQ(composed_ct, renderables.size() + additional_layers);
+    EXPECT_EQ(additional_layers, additional_ct);
+    EXPECT_EQ(renderables.size() + additional_layers, composed_ct);
 }
 
 #if 0
