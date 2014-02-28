@@ -100,18 +100,17 @@ public:
             {
                 frames_scheduled = false;
                 lock.unlock();
-                auto max_uncomposited_buffers = display_buffer_compositor->composite();
+                auto uncomposited_buffers = display_buffer_compositor->composite();
 
                 /*
                  * Each surface could have a number of frames ready in its buffer
                  * queue. And we need to ensure that we render all of them so that
                  * none linger in the queue indefinitely (seen as input lag).
-                 * max_uncomposited_buffers is the highest number for any surface
-                 * composited we schedule enough frames to ensure all surfaces'
-                 * queues are fully drained.
+                 * uncomposited_buffers indicates that there are we need to schedule
+                 * more frames to ensure all surfaces' queues are fully drained.
                  */
                 lock.lock();
-                frames_scheduled |= max_uncomposited_buffers;
+                frames_scheduled |= uncomposited_buffers;
             }
         }
     }
