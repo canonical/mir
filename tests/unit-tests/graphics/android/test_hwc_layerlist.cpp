@@ -66,6 +66,7 @@ TEST_F(LayerListTest, list_iterators)
 
     for(auto it = layerlist.additional_layers_begin(); it != layerlist.end(); it++)
     {
+        printf("CT>>\n");
         additional_ct++;
     }
 
