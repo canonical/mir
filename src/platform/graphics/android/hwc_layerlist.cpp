@@ -140,11 +140,3 @@ mga::NativeFence mga::LayerList::retirement_fence()
 {
     return hwc_representation->retireFenceFd;
 }
-
-#if 0
-mga::LayerList::LayerList()
-    : LayerListBase{{}, 1}
-{
-    layers.back().set_layer_type(mga::LayerType::skip);
-}
-#endif
