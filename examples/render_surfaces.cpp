@@ -199,7 +199,7 @@ public:
           h{static_cast<float>(s->size().height.as_uint32_t())},
           dx{dx},
           dy{dy},
-          rotation_axis{rotation_axis},
+          rotation_axis(rotation_axis),
           alpha_offset{alpha_offset}
     {
     }

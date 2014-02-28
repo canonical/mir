@@ -16,8 +16,8 @@
  */
 
 #include "gl_renderer.h"
-#include "mir/compositor/compositing_criteria.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -220,11 +220,11 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteTextures(1, &t.second.id);
 }
 
-void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buffer) const
+void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
 {
     glUseProgram(program);
 
-    if (criteria.shaped() || criteria.alpha() < 1.0f)
+    if (renderable.shaped() || renderable.alpha() < 1.0f)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -236,8 +236,8 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     glActiveTexture(GL_TEXTURE0);
 
     glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
-                       glm::value_ptr(criteria.transformation()));
-    glUniform1f(alpha_uniform_loc, criteria.alpha());
+                       glm::value_ptr(renderable.transformation()));
+    glUniform1f(alpha_uniform_loc, renderable.alpha());
 
     /* Set up vertex attribute data */
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
@@ -247,7 +247,7 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
                           GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    SurfaceID surf = &criteria; // temporary hack till we rearrange classes
+    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];
     bool changed = true;
     auto const& buf_id = buffer.id();
@@ -289,7 +289,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      * (top-left is (0,0), bottom-right is (W,H)) to the normalized GL coordinate system
      * (top-left is (-1,1), bottom-right is (1,-1))
      */
-    glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 1.0f, 0.0f});
+    glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
             glm::vec3{2.0f / rect.size.width.as_float(),
                       -2.0f / rect.size.height.as_float(),

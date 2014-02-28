@@ -32,7 +32,7 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
-    std::shared_ptr<graphics::Buffer> buffer() const
+    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
     {
         return {};
     }
@@ -44,6 +44,30 @@ public:
     {
         return {{},{}};
     }
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+    glm::mat4 const& transformation() const override
+    {
+        return trans;
+    }
+    bool should_be_rendered_in(geometry::Rectangle const&) const override
+    {
+        return true;
+    }
+    bool shaped() const override
+    {
+        return false;
+    }
+
+    int uncomposited_buffers() const override
+    {
+        return 0;
+    }
+
+private:
+    glm::mat4 trans;
 };
 
 }
