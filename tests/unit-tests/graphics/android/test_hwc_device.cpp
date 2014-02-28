@@ -55,7 +55,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> buffer() const
+    std::shared_ptr<mg::Buffer> buffer(unsigned long) const
     {
         return buf;
     }
@@ -68,6 +68,27 @@ public:
     geom::Rectangle screen_position() const override
     {
         return screen_pos;
+    }
+
+    float alpha() const
+    {
+        return 1.0;
+    }
+    
+    glm::mat4 const& transformation() const
+    {
+        static glm::mat4 matrix;
+        return matrix;
+    }
+
+    bool should_be_rendered_in(geom::Rectangle const&) const
+    {
+        return true;
+    }
+
+    bool shaped() const
+    {
+        return true;
     }
 
 private:

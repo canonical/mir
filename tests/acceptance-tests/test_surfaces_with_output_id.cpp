@@ -18,8 +18,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/scene.h"
-#include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/renderable.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -152,9 +152,9 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
                     struct VerificationFilter : public mc::FilterForScene
                     {
-                        bool operator()(mc::CompositingCriteria const& criteria)
+                        bool operator()(mg::Renderable const& rend)
                         {
-                            auto const& trans = criteria.transformation();
+                            auto const& trans = rend.transformation();
                             int width = trans[0][0];
                             int height = trans[1][1];
                             int x = trans[3][0] - width / 2;
@@ -168,8 +168,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
                     struct NullOperator : public mc::OperatorForScene
                     {
-                        void operator()(mc::CompositingCriteria const&,
-                                        mc::BufferStream&) {}
+                        void operator()(mg::Renderable const&) {}
                     } null_operator;
 
                     scene->for_each_if(filter, null_operator);

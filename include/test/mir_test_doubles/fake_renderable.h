@@ -16,10 +16,10 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
-#define MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
+#ifndef MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
+#define MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 
-#include "mir/compositor/compositing_criteria.h"
+#include "mir/graphics/renderable.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
 
@@ -30,14 +30,14 @@ namespace test
 namespace doubles
 {
 
-class StubCompositingCriteria : public compositor::CompositingCriteria
+class FakeRenderable : public graphics::Renderable
 {
 public:
-    StubCompositingCriteria(int x, int y, int width, int height,
-                            float opacity=1.0f,
-                            bool rectangular=true,
-                            bool visible=true,
-                            bool posted=true)
+    FakeRenderable(int x, int y, int width, int height,
+                   float opacity=1.0f,
+                   bool rectangular=true,
+                   bool visible=true,
+                   bool posted=true)
         : rect{{x, y}, {width, height}},
           opacity(opacity),
           rectangular(rectangular),
@@ -70,7 +70,28 @@ public:
         return !rectangular;
     }
 
+    void set_buffer(std::shared_ptr<graphics::Buffer> b)
+    {
+        buf = b;
+    }
+
+    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
+    {
+        return buf;
+    }
+
+    bool alpha_enabled() const override
+    {
+        return shaped() || alpha() < 1.0f;
+    }
+
+    geometry::Rectangle screen_position() const override
+    {
+        return rect;
+    }
+
 private:
+    std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
     glm::mat4 trans;
     float opacity;
@@ -82,4 +103,4 @@ private:
 } // namespace doubles
 } // namespace test
 } // namespace mir
-#endif // MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
+#endif // MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_

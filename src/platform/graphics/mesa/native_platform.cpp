@@ -98,6 +98,8 @@ void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const
     }
 
     packer->pack_stride(buffer->stride());
+    packer->pack_flags(native_handle->flags);
+    packer->pack_size(buffer->size());
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)

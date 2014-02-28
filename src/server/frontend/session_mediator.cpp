@@ -328,22 +328,28 @@ void mf::SessionMediator::configure_display(
         report->session_configure_display_called(session->name());
 
         auto config = display_changer->active_configuration();
-        for (auto i=0; i < request->display_output_size(); i++)
-        {
-            auto& output = request->display_output(i);
-            mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
-            config->configure_output(output_id, output.used(),
-                                     geom::Point{output.position_x(),
-                                                 output.position_y()},
-                                     output.current_mode(),
-                                     static_cast<MirPixelFormat>(
-                                         output.current_format()),
-                                     static_cast<MirPowerMode>(
-                                         output.power_mode()),
-                                     static_cast<MirOrientation>(
-                                         output.orientation())
-                                     );
-        }
+
+        config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
+            unsigned id = dest.id.as_value();
+            int n = 0;
+            for (; n < request->display_output_size(); ++n)
+            {
+                if (request->display_output(n).output_id() == id)
+                    break;
+            }
+            if (n >= request->display_output_size())
+                return;
+
+            auto& src = request->display_output(n);
+            dest.used = src.used();
+            dest.top_left = geom::Point{src.position_x(),
+                                        src.position_y()};
+            dest.current_mode_index = src.current_mode();
+            dest.current_format =
+                static_cast<MirPixelFormat>(src.current_format());
+            dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
+            dest.orientation = static_cast<MirOrientation>(src.orientation());
+        });
 
         display_changer->configure(session, config);
         auto display_config = display_changer->active_configuration();
