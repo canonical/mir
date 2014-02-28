@@ -65,7 +65,7 @@ private:
 
     std::list<HWCLayer> layers;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
-    std::list<HWCLayer>::iterator last_renderable_layer;
+    std::list<HWCLayer>::iterator first_additional_layer;
 };
 
 }

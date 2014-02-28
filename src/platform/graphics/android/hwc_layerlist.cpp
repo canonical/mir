@@ -98,8 +98,15 @@ bool mga::LayerList::update_list_and_check_if_changed(
         layers = std::move(new_layers);
     }
 
-    last_renderable_layer = layers.begin();
-    std::advance(last_renderable_layer, renderlist.size());
+    if (additional_layers == 0)
+    {
+        first_additional_layer = layers.end();
+    }
+    else
+    {
+        first_additional_layer = layers.begin();
+        std::advance(first_additional_layer, renderlist.size());
+    }
 
     return any_buffer_updated;
 }
@@ -111,7 +118,7 @@ std::list<mga::HWCLayer>::iterator mga::LayerList::begin()
 
 std::list<mga::HWCLayer>::iterator mga::LayerList::additional_layers_begin()
 {
-    return last_renderable_layer;
+    return first_additional_layer;
 }
 
 std::list<mga::HWCLayer>::iterator mga::LayerList::end()

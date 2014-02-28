@@ -66,6 +66,6 @@ TEST_F(LayerListTest, list_iterators)
 
     mga::LayerList list3(renderables, 0);
     EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
-    EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), 0);
-    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), renderables.size());
+    EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
+    EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
 }
