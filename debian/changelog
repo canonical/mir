@@ -3,58 +3,27 @@ mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
   [ Kevin Gunn ]
   * New upstream release 0.1.6 (https://launchpad.net/mir/+milestone/0.1.6)
     - mirserver ABI bumped to 16
-    - graphics config: if we're not creating an endpoint, don't check its
-      name against host endpoint.
-    - tools: Update valgrind suppressions for armhf
-    - Remove mentions of non-existent deprecated target
-      "mirclient_compat_links".
-    - Proper fix to get the fb format information to the DisplayConfiguration
-      for the AndroidDisplay. Restructures where the configuration lives in
-      android to be better prepared for multi-monitor android.
-    - scene: Dedup public interface of BasicSurface following its absorption
-      of SurfaceData.
-    - config: rework to make it easier for clients to customize option setup
-      and processing.
-    - scene: BasicSurface implements the functionality of the former
-      SurfaceData directly.
-    - mirscreencast: allow for a limited number of frames to be captured by
-      setting -n <number> on the command line.
-    - Restructed lttng report related classes into a separate directory
-      and namespace
-    - config, frontend: remove force_threads_to_unblock_callback()
-    - Protect input region member of surface data, hold mutex to access
-      hidden member.
-    - config: ConfigurationOptions::default_ipc_threads can be a constant.
     - debian: Provide platform packages managed with dpkg alternatives.
-    - Add the ability to load device traces, both udev and ioctls, in the
-      UdevEnvironment test helper.
-    - test_client_input.cpp: Remove unused global "mir_test_socket".
-    - Sundry improvements to mir::udev.
-    - Move Renderer rotation out of the begin() method and into set_rotation().
-    - Move Renderer viewport setup out of the constructor and into a separate
-      function, where it can be changed without having to reconstruct the
-      whole Renderer.
-    - Unduplicate stub/null Renderer classes used by tests.
-    - Move locking logic for GLRenderer construction into the constructor.
-    - build: Allow building multiple platforms in the same build.
-    - Cleanup setup-partial-armhf-chroot.sh script
-    - Add options to cross-compile script to make cleaning build directory
-      and updating chroot folder optional.
+    - mirscreencast: allow for a number of frames captured by
+      setting -n <number> on the command line.
+    - tools: Update valgrind suppressions for armhf
     - tools: Add new libmirclientplatform.so to install_on_android.sh.
-    - frontend: Have a single drm_auth_magic handler implementation for
-      all platforms.
-    - Avoid unresolved symbols warnings, due to direct references to
-      eglCreateImageKHR.
-    - client: Dynamically load the client platform.
     - add "mir_demo_standalone_render_overlays", which is a free standing
       example of overlay support.
-    - android: Make hwc list struct and hwc layers structs a bit more generic
-      to prepare for overlay support.
-    - StubDisplayConfig: Avoid impossible combinations of stub outputs that
-      have: connected==false && used==true
+    - Remove vestige of deprecated target"mirclient_compat_links".
+    - Proper DisplayConfiguration for the AndroidDisplay to be better 
+      prepared for multi-monitor android.
+    - scene: Dedup public interface of BasicSurface following its absorption
+      of SurfaceData.
+    - scene: BasicSurface implements the functionality of the former
+      SurfaceData directly.
+    - config, frontend: remove force_threads_to_unblock_callback()
+    - test_client_input.cpp: Remove unused global "mir_test_socket".
+    - Move locking logic for GLRenderer construction into the constructor.
+    - frontend: Have a single drm_auth_magic handler implementation for
+      all platforms.
+    - client: Dynamically load the client platform.
     - guide: Update rules for using 'override' when overriding methods.
-    - compositor: Implement screencasting by compositing to an offscreen
-      buffer.
     - Bugs fixed:
       . Exceptions thrown from within compositing threads were untraceable,
         resulting in a bunch of undebuggable crash reports (LP: #1237332)
@@ -93,6 +62,8 @@ mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
       . Fix Nexus 10 leaking FD's in the hwc prepare/set loop. (LP: #1278658)
       . Parallelize page flipping with rendering of the next frame 
         (LP: #1213801)
+      .  glm package 0.9.5.1-1 update broke mir (LP: #1285955)
+      . Screencast feature by compositing to offscreen buffer (LP: #1207312)
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 27 Feb 2014 19:37:47 -0600
 
