@@ -241,7 +241,7 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
+        rotation_matrix = glm::rotate(glm::mat4(1.0f), degrees, axis);
         transformation_dirty = true;
     }
     notify_change();
@@ -263,7 +263,7 @@ glm::mat4 const& ms::BasicSurface::transformation() const
                                  0.0f};
 
         /* Get the center of the renderable's area */
-        const glm::vec3 center_vec{top_left_vec + 0.5f * size_vec};
+        const glm::vec3 center_vec(top_left_vec + 0.5f * size_vec);
 
         /*
          * Every renderable is drawn using a 1x1 quad centered at 0,0.
