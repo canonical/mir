@@ -66,38 +66,9 @@ TEST_F(LayerListTest, list_iterators)
 
     for(auto it = layerlist.additional_layers_begin(); it != layerlist.end(); it++)
     {
-        printf("CT>>\n");
         additional_ct++;
     }
 
     EXPECT_EQ(additional_layers, additional_ct);
     EXPECT_EQ(renderables.size() + additional_layers, composed_ct);
 }
-
-#if 0
-/* Tests without HWC_FRAMEBUFFER_TARGET */
-/* an empty list should have a skipped layer. This will force a GL render on hwc set */
-TEST_F(LayerListTest, hwc10_list_defaults)
-{
-    mga::LayerList layerlist;
-
-    hwc_layer_1_t skip_layer;
-    hwc_rect_t empty_region{0,0,0,0};
-
-    skip_layer.compositionType = HWC_FRAMEBUFFER;
-    skip_layer.hints = 0;
-    skip_layer.flags = HWC_SKIP_LAYER;
-    skip_layer.handle = 0;
-    skip_layer.transform = 0;
-    skip_layer.blending = HWC_BLENDING_NONE;
-    skip_layer.sourceCrop = empty_region;
-    skip_layer.displayFrame = empty_region;
-    skip_layer.visibleRegionScreen = {1, &empty_region};
-    skip_layer.acquireFenceFd = -1;
-    skip_layer.releaseFenceFd = -1;
-
-    auto list = layerlist.native_list().lock();
-    ASSERT_EQ(1, list->numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
-}
-#endif
