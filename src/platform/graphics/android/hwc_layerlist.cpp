@@ -51,13 +51,6 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-mga::LayerList::LayerList(
-    std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
-    size_t additional_layers)
-{
-    update_list_and_check_if_changed(renderlist, additional_layers);
-}
-
 bool mga::LayerList::update_list_and_check_if_changed(
     std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
     size_t additional_layers)
@@ -135,3 +128,11 @@ mga::NativeFence mga::LayerList::retirement_fence()
 {
     return hwc_representation->retireFenceFd;
 }
+
+mga::LayerList::LayerList(
+    std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
+    size_t additional_layers)
+{
+    update_list_and_check_if_changed(renderlist, additional_layers);
+}
+

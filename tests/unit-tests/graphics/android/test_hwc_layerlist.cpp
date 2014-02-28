@@ -53,22 +53,19 @@ TEST_F(LayerListTest, list_defaults)
 
 TEST_F(LayerListTest, list_iterators)
 {
-    mga::LayerList layerlist{{}, 0};
     size_t additional_layers = 2;
-    layerlist.update_list_and_check_if_changed(renderables, additional_layers);
+    mga::LayerList list(renderables, additional_layers);
+    EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers + renderables.size());
+    EXPECT_EQ(std::distance(list.additional_layers_begin(), list.end()), additional_layers);
+    EXPECT_EQ(std::distance(list.begin(), list.additional_layers_begin()), renderables.size());
 
-    auto additional_ct = 0;
-    auto composed_ct = 0; 
-    for(auto it = layerlist.begin(); it != layerlist.end(); it++)
-    {
-        composed_ct++;
-    }
+    mga::LayerList list2({}, additional_layers);
+    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers);
+    EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), additional_layers);
+    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), 0);
 
-    for(auto it = layerlist.additional_layers_begin(); it != layerlist.end(); it++)
-    {
-        additional_ct++;
-    }
-
-    EXPECT_EQ(additional_layers, additional_ct);
-    EXPECT_EQ(renderables.size() + additional_layers, composed_ct);
+    mga::LayerList list3(renderables, 0);
+    EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
+    EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), 0);
+    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), renderables.size());
 }

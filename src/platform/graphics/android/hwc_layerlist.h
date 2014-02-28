@@ -39,22 +39,26 @@ class Buffer;
 namespace android
 {
 
+/* this is a partitioned list. renderlist makes up the first renderlist.size() elements
+   of the list, and there are additional_layers added to the end. 
+   std::distance(begin(), additional_layers_begin()) == renderlist.size() 
+   std::distance(additional_layers_begin(), end()) == additional_layers
+   std::distance(begin(), end()) == renderlist.size() + additional_layers 
+*/ 
 class LayerList
 {
 public:
-    LayerList(std::list<std::shared_ptr<Renderable>> const&, size_t additional_layers);
-
+    LayerList(std::list<std::shared_ptr<Renderable>> const& renderlist, size_t additional_layers);
     bool update_list_and_check_if_changed(
         std::list<std::shared_ptr<Renderable>> const& renderlist,
         size_t additional_layers);
- 
+
     std::list<HWCLayer>::iterator begin();
     std::list<HWCLayer>::iterator additional_layers_begin();
     std::list<HWCLayer>::iterator end();
 
     std::weak_ptr<hwc_display_contents_1_t> native_list();
     NativeFence retirement_fence();
-
 private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
