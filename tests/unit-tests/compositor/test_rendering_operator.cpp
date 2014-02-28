@@ -20,7 +20,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_renderer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_compositing_criteria.h"
+#include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/stub_buffer.h"
 
 #include <gmock/gmock.h>
@@ -38,24 +38,23 @@ TEST(RenderingOperator, render_operator_saves_resources)
 
     unsigned long frameno = 84;
     mtd::MockRenderer mock_renderer;
-    mtd::MockCompositingCriteria mock_criteria;
-    mtd::MockBufferStream mock_stream;
+    mtd::MockRenderable mock_renderable;
     auto stub_buffer0 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(mock_stream, lock_compositor_buffer(frameno))
+    EXPECT_CALL(mock_renderable, buffer(frameno))
         .Times(3)
         .WillOnce(Return(stub_buffer0))
         .WillOnce(Return(stub_buffer1)) 
         .WillOnce(Return(stub_buffer2));
 
     Sequence seq;
-    EXPECT_CALL(mock_renderer, render(Ref(mock_criteria), Ref(*stub_buffer0)))
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer0)))
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(mock_criteria), Ref(*stub_buffer1)))
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer1)))
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(mock_criteria), Ref(*stub_buffer2)))
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer2)))
         .InSequence(seq);
  
     std::vector<std::shared_ptr<void>> saved_resources;
@@ -64,9 +63,9 @@ TEST(RenderingOperator, render_operator_saves_resources)
         auto save_fn = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
         mc::RenderingOperator rendering_operator(mock_renderer, save_fn, frameno);
 
-        rendering_operator(mock_criteria, mock_stream);
-        rendering_operator(mock_criteria, mock_stream);
-        rendering_operator(mock_criteria, mock_stream);
+        rendering_operator(mock_renderable);
+        rendering_operator(mock_renderable);
+        rendering_operator(mock_renderable);
     }
 
     ASSERT_EQ(3u, saved_resources.size());

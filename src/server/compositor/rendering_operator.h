@@ -38,7 +38,7 @@ public:
         unsigned long frameno);
     ~RenderingOperator() = default;
 
-    void operator()(CompositingCriteria const& info, BufferStream&);
+    void operator()(graphics::Renderable const&);
 
 private:
     Renderer& renderer;

@@ -55,7 +55,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> buffer() const
+    std::shared_ptr<mg::Buffer> buffer(unsigned long) const override
     {
         return renderable_buffer;
     }
@@ -70,9 +70,30 @@ public:
         return position;
     }
 
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+
+    glm::mat4 const& transformation() const override
+    {
+        return trans;
+    }
+
+    bool shaped() const
+    {
+        return false;
+    }
+
+    bool should_be_rendered_in(geom::Rectangle const& rect) const override
+    {
+        return rect.overlaps(position);
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const renderable_buffer;
     geom::Rectangle const position;
+    glm::mat4 const trans;
 };
 
 int main(int argc, char const** argv)

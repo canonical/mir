@@ -302,3 +302,19 @@ bool ms::BasicSurface::shaped() const
 {
     return nonrectangular;
 }
+
+std::shared_ptr<mg::Buffer>
+    ms::BasicSurface::buffer(unsigned long frameno) const
+{
+    return buffer_stream()->lock_compositor_buffer(frameno);
+}
+
+bool ms::BasicSurface::alpha_enabled() const
+{
+    return shaped() || alpha() < 1.0f;
+}
+
+geom::Rectangle ms::BasicSurface::screen_position() const
+{   // This would be more efficient to return a const reference
+    return surface_rect;
+}

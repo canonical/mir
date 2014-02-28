@@ -19,8 +19,8 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
-#include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
 
 #include "mutable_surface_state.h"
@@ -53,7 +53,7 @@ namespace scene
 class SceneReport;
 
 class BasicSurface :
-    public compositor::CompositingCriteria,
+    public graphics::Renderable,
     public input::Surface,
     public MutableSurfaceState
 {
@@ -105,6 +105,11 @@ public:
     glm::mat4 const& transformation() const override;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
     bool shaped() const  override;  // meaning the pixel format has alpha
+
+    // Renderable interface
+    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override;
+    bool alpha_enabled() const override;
+    geometry::Rectangle screen_position() const override;
 
 private:
     BasicSurface(BasicSurface const&) = delete;
