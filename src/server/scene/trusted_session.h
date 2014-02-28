@@ -75,7 +75,7 @@ private:
     std::shared_ptr<frontend::EventSink> const event_sink;
 
     bool started;
-    std::atomic<int> next_session_id;
+    static std::atomic<int> next_session_id;
     frontend::SessionId current_id;
 };
 

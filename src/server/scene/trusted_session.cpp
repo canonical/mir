@@ -26,6 +26,8 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+std::atomic<int> ms::TrustedSession::next_session_id{0};
+
 ms::TrustedSession::TrustedSession(
     std::shared_ptr<msh::Session> const& session,
     msh::TrustedSessionCreationParameters const& parameters,
@@ -34,7 +36,6 @@ ms::TrustedSession::TrustedSession(
     applications(parameters.applications),
     event_sink(sink),
     started(false),
-    next_session_id(0),
     current_id(next_id())
 {
 }
@@ -85,9 +86,6 @@ std::shared_ptr<msh::TrustedSession> ms::TrustedSession::start_for(std::shared_p
             {
                 if (container_session->process_id() == application_pid)
                 {
-                    container_session->set_parent(trusted_helper);
-                    trusted_helper->get_children()->insert_session(container_session);
-
                     impl->add_child_session(container_session);
                     container_session->set_trusted_session(ptr);
                     added_sessions.push_back(container_session);
