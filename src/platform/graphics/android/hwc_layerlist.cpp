@@ -111,6 +111,21 @@ bool mga::LayerList::update_list_and_check_if_changed(
     return true;
 }
 
+std::list<mga::HWCLayer>::iterator mga::LayerList::renderable_layers_begin()
+{
+    return layers.begin(); 
+}
+
+std::list<mga::HWCLayer>::iterator mga::LayerList::additional_layers_begin()
+{
+    return layers.begin(); 
+}
+
+std::list<mga::HWCLayer>::iterator mga::LayerList::end()
+{
+    return layers.end(); 
+}
+
 std::weak_ptr<hwc_display_contents_1_t> mga::LayerList::native_list()
 {
     return hwc_representation;
