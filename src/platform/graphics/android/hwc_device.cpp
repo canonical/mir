@@ -29,6 +29,39 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
+namespace
+{
+static const size_t fbtarget_plus_skip_size = 2;
+static const size_t fbtarget_size = 1;
+}
+
+void mga::HwcDevice::setup_layer_types()
+{
+    auto it = hwc_list.additional_layers_begin();
+    auto distance = std::distance(it, hwc_list.end());
+    if(distance == fbtarget_plus_skip_size)
+    {
+        it->set_layer_type(mga::LayerType::skip);
+        it++;
+        it->set_layer_type(mga::LayerType::framebuffer_target);
+    }
+
+    if (distance == fbtarget_size)
+        it->set_layer_type(mga::LayerType::framebuffer_target);
+}
+
+void mga::HwcDevice::set_list_framebuffer(mg::Buffer const& buffer)
+{
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    for(auto it = hwc_list.additional_layers_begin(); it != hwc_list.end(); it++)
+    {
+        //TODO: the functions on mga::Layer should be consolidated
+        it->set_render_parameters(disp_frame, false);
+        it->set_buffer(buffer);
+        it->prepare_for_draw();
+    }
+}
+
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                           std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
@@ -38,20 +71,15 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-    auto it = hwc_list.additional_layers_begin();
-    it++->set_layer_type(mga::LayerType::skip);
-    it++->set_layer_type(mga::LayerType::framebuffer_target);
+    setup_layer_types();
 }
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    hwc_list.update_list_and_check_if_changed({}, 2);
-    auto it = hwc_list.additional_layers_begin();
-    it++->set_layer_type(mga::LayerType::skip);
-    it++->set_layer_type(mga::LayerType::framebuffer_target);
+    hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
+    setup_layer_types();
 
     list_needs_commit = true;
-    skip_layers_present = true;
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
@@ -63,12 +91,9 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
-    auto const additional_layers = 1; //1 extra layer for FBTARGET
-    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, additional_layers)))
+    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
         return;
-
-    skip_layers_present = false;
-    hwc_list.additional_layers_begin()->set_layer_type(mga::LayerType::framebuffer_target);
+    setup_layer_types();
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
@@ -99,22 +124,7 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
         return;
 
     auto lg = lock_unblanked();
-
-    //TODO: the functions on mga::Layer should be consolidated
-    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    auto it = hwc_list.additional_layers_begin();
-    if (skip_layers_present)
-    {
-        it->set_render_parameters(disp_frame, false);
-        it->set_buffer(buffer);
-        it->prepare_for_draw();
-        it++;
-    }
-
-    it->set_render_parameters(disp_frame, false);
-    it->set_buffer(buffer);
-    it->prepare_for_draw();
-
+    set_list_framebuffer(buffer);
     hwc_wrapper->set(*hwc_list.native_list().lock());
 
     for(auto& layer : hwc_list)
