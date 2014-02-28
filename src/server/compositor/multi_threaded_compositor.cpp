@@ -24,7 +24,6 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
 
-#include <iostream> // DEBUG
 #include <thread>
 #include <condition_variable>
 
@@ -99,7 +98,7 @@ public:
              */
             if (running)
             {
-                --frames_scheduled;
+                frames_scheduled = false;
                 lock.unlock();
                 auto max_uncomposited_buffers = display_buffer_compositor->composite();
 
@@ -112,7 +111,7 @@ public:
                  * queues are fully drained.
                  */
                 lock.lock();
-                frames_scheduled = std::max(frames_scheduled, max_uncomposited_buffers);
+                frames_scheduled |= max_uncomposited_buffers;
             }
         }
     }
@@ -121,7 +120,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
-        frames_scheduled = std::max(frames_scheduled, 1);
+        frames_scheduled = true;
         run_cv.notify_one();
     }
 
@@ -136,7 +135,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
     bool running;
-    int frames_scheduled;
+    bool frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
