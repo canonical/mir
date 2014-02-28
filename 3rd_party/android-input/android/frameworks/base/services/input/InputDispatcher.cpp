@@ -432,6 +432,7 @@ bool InputDispatcher::enqueueInboundEventLocked(EventEntry* entry) {
 sp<InputWindowHandle> InputDispatcher::findTouchedWindowAtLocked(int32_t x, int32_t y) {
     sp<InputWindowHandle> foundHandle = NULL;
     mEnumerator->for_each([&](sp<InputWindowHandle> windowHandle) {
+        windowHandle->updateInfo();
         const InputWindowInfo* windowInfo = windowHandle->getInfo();
         int32_t flags = windowInfo->layoutParamsFlags;
 
@@ -1151,6 +1152,7 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
 
         // Traverse windows from front to back to find touched window and outside targets.
         mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
+            windowHandle->updateInfo();
             const InputWindowInfo* windowInfo = windowHandle->getInfo();
             int32_t flags = windowInfo->layoutParamsFlags;
 
