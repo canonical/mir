@@ -163,6 +163,15 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         renderer->end();
 
         display_buffer.post_update();
+
+        // This is a frig to avoid lp:1286190
+        if (size_of_last_pass)
+        {
+            uncomposited_buffers |= saved_resources.empty();
+        }
+
+        size_of_last_pass = saved_resources.size();
+        // End of frig
     }
 
     report->finished_frame(bypassed, this);
