@@ -26,6 +26,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/basic_surface.h"
+#include "mir_test_doubles/null_event_sink.h"
+#include "mir/shell/trusted_session_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -204,6 +206,25 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
 
     auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     session_manager.close_session(session);
+}
+
+TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_trusted_session_start_and_stop)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(session_listener, starting(_)).Times(testing::AtLeast(0));
+    EXPECT_CALL(session_listener, focused(_)).Times(testing::AtLeast(0));
+
+    EXPECT_CALL(session_listener, trusted_session_started(_)).Times(1);
+    EXPECT_CALL(session_listener, trusted_session_stopped(_)).Times(1);
+
+    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    std::string error;
+    msh::TrustedSessionCreationParameters parameters;
+
+    mf::SessionId id = session_manager.start_trusted_session_for(error, session, parameters, std::make_shared<mtd::NullEventSink>());
+    session_manager.stop_trusted_session(id);
 }
 
 namespace
