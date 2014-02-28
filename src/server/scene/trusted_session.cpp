@@ -16,7 +16,7 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "trusted_session_impl.h"
+#include "trusted_session.h"
 #include "mir/shell/trusted_session_creation_parameters.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/session.h"
@@ -26,7 +26,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-ms::TrustedSessionImpl::TrustedSessionImpl(
+ms::TrustedSession::TrustedSession(
     std::shared_ptr<msh::Session> const& session,
     msh::TrustedSessionCreationParameters const& parameters,
     std::shared_ptr<mf::EventSink> const& sink) :
@@ -39,37 +39,37 @@ ms::TrustedSessionImpl::TrustedSessionImpl(
 {
 }
 
-ms::TrustedSessionImpl::~TrustedSessionImpl()
+ms::TrustedSession::~TrustedSession()
 {
-    TrustedSessionImpl::stop();
+    TrustedSession::stop();
 }
 
-mf::SessionId ms::TrustedSessionImpl::id() const
+mf::SessionId ms::TrustedSession::id() const
 {
     return current_id;
 }
 
-mf::SessionId ms::TrustedSessionImpl::next_id()
+mf::SessionId ms::TrustedSession::next_id()
 {
     return mf::SessionId(next_session_id.fetch_add(1));
 }
 
-bool  ms::TrustedSessionImpl::get_started() const
+bool  ms::TrustedSession::get_started() const
 {
     return started;
 }
 
-std::shared_ptr<msh::Session> ms::TrustedSessionImpl::get_trusted_helper() const
+std::shared_ptr<msh::Session> ms::TrustedSession::get_trusted_helper() const
 {
     return trusted_helper;
 }
 
-std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::shared_ptr<msh::Session> const& trusted_helper,
-                                                                        msh::TrustedSessionCreationParameters const& parameters,
-                                                                        std::shared_ptr<SessionContainer> const& container,
-                                                                        std::shared_ptr<mf::EventSink> const& sink)
+std::shared_ptr<msh::TrustedSession> ms::TrustedSession::start_for(std::shared_ptr<msh::Session> const& trusted_helper,
+                                                                   msh::TrustedSessionCreationParameters const& parameters,
+                                                                   std::shared_ptr<SessionContainer> const& container,
+                                                                   std::shared_ptr<mf::EventSink> const& sink)
 {
-    TrustedSessionImpl* impl = new TrustedSessionImpl(trusted_helper, parameters, sink);
+    TrustedSession* impl = new TrustedSession(trusted_helper, parameters, sink);
     std::shared_ptr<msh::TrustedSession> ptr(impl);
 
     impl->started = true;
@@ -100,7 +100,7 @@ std::shared_ptr<msh::TrustedSession> ms::TrustedSessionImpl::create_for(std::sha
     return ptr;
 }
 
-void ms::TrustedSessionImpl::stop()
+void ms::TrustedSession::stop()
 {
     if (!started)
         return;
@@ -120,12 +120,12 @@ void ms::TrustedSessionImpl::stop()
     event_sink->handle_trusted_session_event(id(), mir_trusted_session_stopped);
 }
 
-std::vector<pid_t> ms::TrustedSessionImpl::get_applications() const
+std::vector<pid_t> ms::TrustedSession::get_applications() const
 {
   return applications;
 }
 
-void ms::TrustedSessionImpl::add_child_session(std::shared_ptr<msh::Session> const& session)
+void ms::TrustedSession::add_child_session(std::shared_ptr<msh::Session> const& session)
 {
     if (!started)
         return;

@@ -16,8 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SHELL_TRUSTED_SESSION_IMPL_H_
-#define MIR_SHELL_TRUSTED_SESSION_IMPL_H_
+#ifndef MIR_SCENE_TRUSTED_SESSION_H_
+#define MIR_SCENE_TRUSTED_SESSION_H_
 
 #include "mir/shell/trusted_session.h"
 
@@ -39,13 +39,13 @@ namespace scene
 {
 class SessionContainer;
 
-class TrustedSessionImpl : public shell::TrustedSession
+class TrustedSession : public shell::TrustedSession
 {
 public:
-    TrustedSessionImpl(std::shared_ptr<shell::Session> const& session,
+    TrustedSession(std::shared_ptr<shell::Session> const& session,
                        shell::TrustedSessionCreationParameters const& parameters,
                        std::shared_ptr<frontend::EventSink> const& sink);
-    virtual ~TrustedSessionImpl();
+    virtual ~TrustedSession();
 
     frontend::SessionId id() const override;
 
@@ -57,14 +57,14 @@ public:
 
     void add_child_session(std::shared_ptr<shell::Session> const& session) override;
 
-    static std::shared_ptr<shell::TrustedSession> create_for(std::shared_ptr<shell::Session> const& session,
-                                                             shell::TrustedSessionCreationParameters const& parameters,
-                                                             std::shared_ptr<SessionContainer> const& container,
-                                                             std::shared_ptr<frontend::EventSink> const& sink);
+    static std::shared_ptr<shell::TrustedSession> start_for(std::shared_ptr<shell::Session> const& session,
+                                                            shell::TrustedSessionCreationParameters const& parameters,
+                                                            std::shared_ptr<SessionContainer> const& container,
+                                                            std::shared_ptr<frontend::EventSink> const& sink);
 
 protected:
-    TrustedSessionImpl(const TrustedSessionImpl&) = delete;
-    TrustedSessionImpl& operator=(const TrustedSessionImpl&) = delete;
+    TrustedSession(const TrustedSession&) = delete;
+    TrustedSession& operator=(const TrustedSession&) = delete;
 
 private:
     frontend::SessionId next_id();
@@ -82,4 +82,4 @@ private:
 }
 }
 
-#endif // MIR_SHELL_TRUSTED_PROMPT_SESSION_IMPL_H_
+#endif // MIR_SCENE_TRUSTED_SESSION_H_

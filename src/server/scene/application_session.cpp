@@ -17,7 +17,7 @@
  */
 
 #include "application_session.h"
-#include "trusted_session_impl.h"
+#include "trusted_session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"

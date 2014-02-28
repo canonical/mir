@@ -25,7 +25,7 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
 #include "session_event_sink.h"
-#include "trusted_session_impl.h"
+#include "trusted_session.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -227,7 +227,7 @@ mf::SessionId ms::SessionManager::start_trusted_session_for(std::string& error,
     }
 
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
-    std::shared_ptr<msh::TrustedSession> trusted_session = TrustedSessionImpl::create_for(shell_session, params, app_container, sink);
+    std::shared_ptr<msh::TrustedSession> trusted_session = TrustedSession::start_for(shell_session, params, app_container, sink);
     trusted_sessions[trusted_session->id()] = trusted_session;
 
     session_listener->trusted_session_started(trusted_session);
