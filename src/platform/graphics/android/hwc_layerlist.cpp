@@ -116,7 +116,7 @@ bool mga::LayerList::update_list_and_check_if_changed(
     return any_buffer_updated;
 }
 
-std::list<mga::HWCLayer>::iterator mga::LayerList::renderable_layers_begin()
+std::list<mga::HWCLayer>::iterator mga::LayerList::begin()
 {
     return layers.begin(); 
 }

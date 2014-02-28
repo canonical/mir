@@ -48,7 +48,7 @@ public:
         std::list<std::shared_ptr<Renderable>> const& renderlist,
         size_t additional_layers);
  
-    std::list<HWCLayer>::iterator renderable_layers_begin();
+    std::list<HWCLayer>::iterator begin();
     std::list<HWCLayer>::iterator additional_layers_begin();
     std::list<HWCLayer>::iterator end();
 

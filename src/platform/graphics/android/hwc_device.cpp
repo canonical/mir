@@ -38,15 +38,18 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-//    layers.front().set_layer_type(mga::LayerType::skip);
-//    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    auto it = hwc_list.additional_layers_begin();
+    it++->set_layer_type(mga::LayerType::skip);
+    it++->set_layer_type(mga::LayerType::framebuffer_target);
 }
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list_and_check_if_changed({}, 2);
-//    layers.front().set_layer_type(mga::LayerType::skip);
-//    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    auto it = hwc_list.additional_layers_begin();
+    it++->set_layer_type(mga::LayerType::skip);
+    it++->set_layer_type(mga::LayerType::framebuffer_target);
+
     list_needs_commit = true;
     skip_layers_present = true;
 
@@ -65,15 +68,13 @@ void mga::HwcDevice::render_gl_and_overlays(
         return;
 
     skip_layers_present = false;
+    hwc_list.additional_layers_begin()->set_layer_type(mga::LayerType::framebuffer_target);
 
-//    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
-    (void) context;
-    (void) render_fn;
-#if 0
+
     //draw layers that the HWC did not accept for overlays here
     bool needs_swapbuffers = false;
-    auto layers_it = layers.begin();
+    auto layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
         //prepare all layers for draw. 
@@ -90,37 +91,37 @@ void mga::HwcDevice::render_gl_and_overlays(
 
     if (needs_swapbuffers)
         context.swap_buffers();
-#endif
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
-    (void) buffer;
     if (!list_needs_commit)
         return;
 
     auto lg = lock_unblanked();
 
-#if 0
-    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
     //TODO: the functions on mga::Layer should be consolidated
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto it = hwc_list.additional_layers_begin();
     if (skip_layers_present)
     {
-        layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buffer);
-        layers.front().prepare_for_draw();
+        it->set_render_parameters(disp_frame, false);
+        it->set_buffer(buffer);
+        it->prepare_for_draw();
+        it++;
     }
 
-    layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buffer);
-    layers.back().prepare_for_draw();
+    it->set_render_parameters(disp_frame, false);
+    it->set_buffer(buffer);
+    it->prepare_for_draw();
 
-    hwc_wrapper->set(*native_list().lock());
-    for(auto& layer : layers)
+    hwc_wrapper->set(*hwc_list.native_list().lock());
+
+    for(auto& layer : hwc_list)
     {
         layer.update_fence_and_release_buffer();
     }
-#endif
+
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
     list_needs_commit = false;
 }

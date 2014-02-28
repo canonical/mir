@@ -47,7 +47,7 @@ TEST_F(LayerListTest, list_defaults)
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
-    EXPECT_EQ(layerlist.renderable_layers_begin(), layerlist.end());
+    EXPECT_EQ(layerlist.begin(), layerlist.end());
     EXPECT_EQ(layerlist.additional_layers_begin(), layerlist.end());
 }
 
@@ -59,7 +59,7 @@ TEST_F(LayerListTest, list_iterators)
 
     auto additional_ct = 0;
     auto composed_ct = 0; 
-    for(auto it = layerlist.renderable_layers_begin(); it != layerlist.end(); it++)
+    for(auto it = layerlist.begin(); it != layerlist.end(); it++)
     {
         composed_ct++;
     }
