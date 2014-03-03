@@ -65,7 +65,7 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_scene(),
                 the_display_buffer_compositor_factory(),
                 the_compositor_report(),
-                the_options()->is_set(options::standalone_opt));
+                !the_options()->is_set(options::host_socket_opt));
         });
 }
 
