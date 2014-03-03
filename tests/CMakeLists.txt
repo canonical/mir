@@ -43,7 +43,6 @@ endif (MIR_BUILD_UNIT_TESTS)
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
-add_subdirectory(draw/)
 add_subdirectory(client-language/)
 add_subdirectory(mir-stress/)
 

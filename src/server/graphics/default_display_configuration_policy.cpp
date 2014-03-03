@@ -76,26 +76,25 @@ void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
         });
 
     conf.for_each_output(
-        [&](DisplayConfigurationOutput const& conf_output)
+        [&](UserDisplayConfigurationOutput& conf_output)
         {
             if (!conf_output.connected || conf_output.modes.empty() ||
                 available_outputs_for_card[conf_output.card_id] == 0)
             {
-                conf.configure_output(conf_output.id, false,
-                                      conf_output.top_left,
-                                      conf_output.current_mode_index,
-                                      conf_output.current_format,
-                                      default_power_state,
-                                      conf_output.orientation);
+                conf_output.used = false;
+                conf_output.power_mode = default_power_state;
                 return;
             }
 
             size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
             MirPixelFormat format{select_opaque_format(conf_output.current_format, conf_output.pixel_formats)};
 
-            conf.configure_output(conf_output.id, true, geom::Point(),
-                                  preferred_mode_index, format,
-                                  default_power_state, mir_orientation_normal);
+            conf_output.used = true;
+            conf_output.top_left = geom::Point{0, 0};
+            conf_output.current_mode_index = preferred_mode_index;
+            conf_output.current_format = format;
+            conf_output.power_mode = default_power_state;
+            conf_output.orientation = mir_orientation_normal;
 
             --available_outputs_for_card[conf_output.card_id];
         });

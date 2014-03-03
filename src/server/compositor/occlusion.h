@@ -27,13 +27,12 @@ namespace mir
 {
 namespace compositor
 {
-class CompositingCriteria;
 
 class OcclusionFilter : public FilterForScene
 {
 public:
     OcclusionFilter(const geometry::Rectangle &area);
-    bool operator()(const CompositingCriteria &criteria) override;
+    bool operator()(const graphics::Renderable &renderable) override;
 
 private:
     const geometry::Rectangle &area;
@@ -45,13 +44,12 @@ private:
 class OcclusionMatch : public OperatorForScene
 {
 public:
-    void operator()(const CompositingCriteria &,
-                    BufferStream &stream) override;
+    void operator()(const graphics::Renderable &renderable) override;
 
-    bool occluded(const CompositingCriteria &criteria) const;
+    bool occluded(const graphics::Renderable &renderable) const;
 
 private:
-    typedef std::set<const CompositingCriteria*> RenderableSet;
+    typedef std::set<const graphics::Renderable*> RenderableSet;
     RenderableSet hidden;
 };
 

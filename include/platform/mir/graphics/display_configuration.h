@@ -114,6 +114,31 @@ struct DisplayConfigurationOutput
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
+    bool valid() const;
+};
+
+/**
+ * Mirror of a DisplayConfigurationOutput, with some fields limited to
+ * being read-only, preventing users from changing things they shouldn't.
+ */
+struct UserDisplayConfigurationOutput
+{
+    DisplayConfigurationOutputId const& id;
+    DisplayConfigurationCardId const& card_id;
+    DisplayConfigurationOutputType const& type;
+    std::vector<MirPixelFormat> const& pixel_formats;
+    std::vector<DisplayConfigurationMode> const& modes;
+    size_t const& preferred_mode_index;
+    geometry::Size const& physical_size_mm;
+    bool const& connected;
+    bool& used;
+    geometry::Point& top_left;
+    size_t& current_mode_index;
+    MirPixelFormat& current_format;
+    MirPowerMode& power_mode;
+    MirOrientation& orientation;
+
+    UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
@@ -140,13 +165,8 @@ public:
     virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const = 0;
     /** Executes a function object for each output in the configuration. */
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
-
-    /** Configures an output. */
-    virtual void configure_output(DisplayConfigurationOutputId id, bool used,
-                                  geometry::Point top_left, size_t mode_index,
-                                  MirPixelFormat format,
-                                  MirPowerMode power_mode,
-                                  MirOrientation orientation) = 0;
+    virtual void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) = 0;
+    virtual bool valid() const;
 
 protected:
     DisplayConfiguration() = default;

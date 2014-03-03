@@ -67,7 +67,7 @@ public:
     {
     }
 
-    void operator()()
+    void operator()() noexcept  // noexcept is important! (LP: #1237332)
     {
         std::unique_lock<std::mutex> lock{run_mutex};
 

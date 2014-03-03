@@ -23,8 +23,8 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 
-#include "mir_test/draw/graphics_region_factory.h"
-#include "mir_test/draw/patterns.h"
+#include "testdraw/graphics_region_factory.h"
+#include "testdraw/patterns.h"
 
 #include <gtest/gtest.h>
 

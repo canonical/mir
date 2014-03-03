@@ -40,7 +40,8 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(CompositingCriteria const& info, graphics::Buffer& buffer) const override;
+    void render(graphics::Renderable const& renderable,
+                graphics::Buffer& buffer) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
@@ -60,7 +61,7 @@ private:
 
     geometry::Rectangle viewport;
 
-    typedef CompositingCriteria const* SurfaceID;
+    typedef graphics::Renderable const* SurfaceID;
     struct Texture
     {
         GLuint id = 0;
