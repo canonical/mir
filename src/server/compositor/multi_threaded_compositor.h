@@ -65,6 +65,8 @@ private:
 
     std::mutex started_guard;
     bool started;
+
+    void schedule_compositing();
 };
 
 }

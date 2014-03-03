@@ -363,7 +363,7 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     EXPECT_CALL(*mock_report, added_display(_,_,_,_,_))
         .Times(1);
     EXPECT_CALL(*mock_report, scheduled())
-        .Times(1);
+        .Times(2);
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {

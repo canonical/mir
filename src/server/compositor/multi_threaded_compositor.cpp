@@ -161,6 +161,13 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
     stop();
 }
 
+void mc::MultiThreadedCompositor::schedule_compositing()
+{
+    report->scheduled();
+    for (auto& f : thread_functors)
+        f->schedule_compositing();
+}
+
 void mc::MultiThreadedCompositor::start()
 {
     std::unique_lock<std::mutex> lk(started_guard);
@@ -184,14 +191,11 @@ void mc::MultiThreadedCompositor::start()
     /* Recomposite whenever the scene changes */
     scene->set_change_callback([this]()
     {
-        report->scheduled();
-        for (auto& f : thread_functors)
-            f->schedule_compositing();
+        schedule_compositing();
     });
 
     /* First render */
-    for (auto& f : thread_functors)
-        f->schedule_compositing();
+    schedule_compositing();
 
     started = true;
 }
