@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -326,6 +327,34 @@ public:
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
 
+    // TODO This is a bit ugly (will clean up later as this isn't the point of current MP)
+    // Unless the compositor starts before we create the surfaces it won't respond to
+    // the change notification that causes.
+    std::shared_ptr<mc::Compositor>
+    the_compositor()
+    {
+        struct Compositor : mc::Compositor
+        {
+            Compositor(std::function<void()> create_surfaces, std::shared_ptr<mc::Compositor> wrapped) :
+                create_surfaces(create_surfaces), wrapped(wrapped) {}
+
+            void start() override { wrapped->start(); create_surfaces(); create_surfaces = []{}; }
+            virtual void stop()override { wrapped->stop(); }
+
+            std::function<void()> create_surfaces;
+            std::shared_ptr<mc::Compositor> const wrapped;
+        };
+
+        return compositor(
+            [this]()
+            {
+                auto compositor = ServerConfiguration::the_compositor();
+
+                return std::make_shared<Compositor>([this] { create_surfaces(); }, compositor);
+            });
+    }
+
+
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
     // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
     std::shared_ptr<mc::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
@@ -493,8 +522,6 @@ try
 
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
-        conf.create_surfaces();
-
         cursor = conf.the_cursor();
 
         input_is_on = conf.input_is_on();
