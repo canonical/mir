@@ -30,20 +30,16 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
+
+#include <mutex>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display;
-bool mgm::NativePlatform::internal_display_clients_present = false;
-
 void mgm::NativePlatform::initialize(
     std::shared_ptr<NestedContext> const& nested_context_arg)
 {
-    internal_native_display.reset();
-    internal_display_clients_present = false;
-
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
     drm_fd = fds.at(0);
@@ -53,8 +49,7 @@ void mgm::NativePlatform::initialize(
 
 mgm::NativePlatform::~NativePlatform()
 {
-    internal_display_clients_present = false;
-    internal_native_display.reset();
+    finish_internal_native_display();
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
@@ -99,10 +94,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 // eventually cause deadlock in swap buffers as documented in: https://bugs.launchpad.net/mir/+bug/1285500
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    if (!internal_native_display)
-        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
-    internal_display_clients_present = true;
-    return std::make_shared<mgm::InternalClient>(internal_native_display);
+    auto nd = ensure_internal_native_display(get_ipc_package());
+    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
@@ -126,3 +119,37 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
 {
     return std::make_shared<mgm::NativePlatform>();
 }
+
+namespace
+{
+std::shared_ptr<mgm::InternalNativeDisplay> native_display = 0;
+std::mutex native_display_guard;
+}
+
+bool mgm::NativePlatform::internal_native_display_in_use()
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    return native_display != 0;
+}
+
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display()
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    return native_display;
+}
+
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::ensure_internal_native_display(
+    std::shared_ptr<mg::PlatformIPCPackage> const& package)
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    if (!native_display)
+        native_display = std::make_shared<mgm::InternalNativeDisplay>(package);
+    return native_display;
+}
+
+void mgm::NativePlatform::finish_internal_native_display()
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    native_display.reset();
+}
+

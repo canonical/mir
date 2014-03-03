@@ -43,15 +43,17 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
     void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const override;
-
-    //connection shared by all internal clients
-    static bool internal_display_clients_present;
-    static std::shared_ptr<InternalNativeDisplay> internal_native_display;
+    
+    static std::shared_ptr<InternalNativeDisplay> internal_native_display();
+    static bool internal_native_display_in_use();
 
 private:
     int drm_fd;
     std::shared_ptr<NestedContext> nested_context;
     helpers::GBMHelper gbm;
+
+    static std::shared_ptr<InternalNativeDisplay> ensure_internal_native_display(std::shared_ptr<PlatformIPCPackage> const& package);
+    static void finish_internal_native_display();
 };
 }
 }
