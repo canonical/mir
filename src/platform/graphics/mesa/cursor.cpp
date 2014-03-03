@@ -51,7 +51,6 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
     default:
     case mir_orientation_normal:
         return vector;
-
     }
 }
 }
@@ -138,7 +137,6 @@ void mgm::Cursor::for_each_used_output(
             });
         });
 }
-
 
 void mgm::Cursor::place_cursor_at(
     geometry::Point position,
