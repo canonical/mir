@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test/pipe.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -76,12 +77,13 @@ public:
 TEST_F(MesaGraphicsPlatform, get_ipc_package)
 {
     using namespace testing;
-    const int auth_fd{66};
+    mir::test::Pipe auth_pipe;
+    int const auth_fd{auth_pipe.read_fd()};
 
     /* First time for master DRM fd, second for authenticated fd */
+    EXPECT_CALL(mock_drm, open(_,_,_))
+        .WillOnce(Return(mock_drm.fake_drm.fd()));
     EXPECT_CALL(mock_drm, drmOpen(_,_))
-        .Times(2)
-        .WillOnce(Return(mock_drm.fake_drm.fd()))
         .WillOnce(Return(auth_fd));
 
     /* Expect proper authorization */
@@ -107,7 +109,7 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_drm, drmOpen(_,_))
+    EXPECT_CALL(mock_drm, open(_,_,_))
             .WillRepeatedly(Return(-1));
 
     try

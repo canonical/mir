@@ -144,10 +144,16 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                     BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Specify either $MIR_SOCKET or --standalone"));
 
                 auto host_socket = options->get<std::string>(options::host_socket_opt);
-                auto server_socket = the_socket_file();
 
-                if (server_socket == host_socket)
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+                std::string server_socket{"none"};
+
+                if (!the_options()->is_set(options::no_server_socket_opt))
+                {
+                    server_socket = the_socket_file();
+
+                    if (server_socket == host_socket)
+                        BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+                }
 
                 auto const my_name = options->is_set(options::name_opt) ?
                     options->get<std::string>(options::name_opt) :

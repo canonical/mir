@@ -172,6 +172,12 @@ void mgn::NestedDisplay::complete_display_initialization(MirPixelFormat format)
 
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    if (!configuration.valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Invalid or inconsistent display configuration"));
+    }
+
     decltype(outputs) result;
 
     // TODO for proper mirrored mode support we will need to detect overlapping outputs and

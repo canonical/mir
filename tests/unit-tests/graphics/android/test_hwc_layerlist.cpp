@@ -45,7 +45,7 @@ public:
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mt::fake_shared(native_handle_1)));
-        ON_CALL(mock_renderable, buffer())
+        ON_CALL(mock_renderable, buffer(_))
             .WillByDefault(Return(mt::fake_shared(mock_buffer)));
         ON_CALL(mock_renderable, alpha_enabled())
             .WillByDefault(Return(alpha_enabled));

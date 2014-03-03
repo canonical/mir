@@ -27,7 +27,6 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/compositor/renderer.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/compositor/compositing_criteria.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
@@ -38,7 +37,6 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_input_surface.h"
-#include "mir_test_doubles/mock_compositing_criteria.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -84,8 +82,8 @@ public:
 struct MockFilterForScene : public mc::FilterForScene
 {
     // Can not mock operator overload so need to forward
-    MOCK_METHOD1(filter, bool(mc::CompositingCriteria const&));
-    bool operator()(mc::CompositingCriteria const& r)
+    MOCK_METHOD1(filter, bool(mg::Renderable const&));
+    bool operator()(mg::Renderable const& r)
     {
         return filter(r);
     }
@@ -93,8 +91,8 @@ struct MockFilterForScene : public mc::FilterForScene
 
 struct StubFilterForScene : public mc::FilterForScene
 {
-    MOCK_METHOD1(filter, bool(mc::CompositingCriteria const&));
-    bool operator()(mc::CompositingCriteria const&)
+    MOCK_METHOD1(filter, bool(mg::Renderable const&));
+    bool operator()(mg::Renderable const&)
     {
         return true;
     }
@@ -102,16 +100,16 @@ struct StubFilterForScene : public mc::FilterForScene
 
 struct MockOperatorForScene : public mc::OperatorForScene
 {
-    MOCK_METHOD2(renderable_operator, void(mc::CompositingCriteria const&, mc::BufferStream&));
-    void operator()(mc::CompositingCriteria const& state, mc::BufferStream& stream)
+    MOCK_METHOD1(renderable_operator, void(mg::Renderable const&));
+    void operator()(mg::Renderable const& state)
     {
-        renderable_operator(state, stream);
+        renderable_operator(state);
     }
 };
 
 struct StubOperatorForScene : public mc::OperatorForScene
 {
-    void operator()(mc::CompositingCriteria const&, mc::BufferStream&)
+    void operator()(mg::Renderable const&)
     {
     }
 };
@@ -257,31 +255,28 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     MockFilterForScene filter;
     MockOperatorForScene renderable_operator;
 
     Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+    EXPECT_CALL(filter, filter(Ref(*renderable1)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+    EXPECT_CALL(filter, filter(Ref(*renderable2)))
         .InSequence(seq1)
         .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+    EXPECT_CALL(filter, filter(Ref(*renderable3)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq2);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq2);
 
     stack.for_each_if(filter, renderable_operator);
@@ -302,33 +297,28 @@ TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     MockFilterForScene filter;
     MockOperatorForScene renderable_operator;
 
     Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+    EXPECT_CALL(filter, filter(Ref(*renderable3)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+    EXPECT_CALL(filter, filter(Ref(*renderable2)))
         .InSequence(seq1)
         .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+    EXPECT_CALL(filter, filter(Ref(*renderable1)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq2);
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq2);
 
     stack.reverse_for_each_if(filter, renderable_operator);
@@ -349,26 +339,20 @@ TEST_F(SurfaceStack, stacking_order_reverse)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator,
-                renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
 
     stack.reverse_for_each_if(filter, renderable_operator);
@@ -389,23 +373,20 @@ TEST_F(SurfaceStack, stacking_order)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -443,23 +424,20 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -522,31 +500,28 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
     // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
     // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -569,31 +544,28 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
         report);
 
     auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     StubFilterForScene filter;
     MockOperatorForScene renderable_operator;
     Sequence seq;
     // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
     // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*renderable3)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -626,7 +598,7 @@ struct UniqueOperatorForScene : public mc::OperatorForScene
     {
     }
 
-    void operator()(const mc::CompositingCriteria &, mc::BufferStream&)
+    void operator()(const mg::Renderable &)
     {
         ASSERT_STREQ("", owner);
         owner = "UniqueOperatorForScene";
@@ -665,24 +637,21 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
         report);
 
     auto s1 = stack.create_surface(default_params);
-    auto criteria1 = s1.lock();
-    auto stream1 = s1.lock()->buffer_stream();
+    auto renderable1 = s1.lock();
     auto s2 = stack.create_surface(default_params);
-    auto criteria2 = s2.lock();
-    auto stream2 = s2.lock()->buffer_stream();
+    auto renderable2 = s2.lock();
     auto s3 = stack.create_surface(default_params);
-    auto criteria3 = s3.lock();
-    auto stream3 = s3.lock()->buffer_stream();
+    auto renderable3 = s3.lock();
 
     MockFilterForScene filter;
     Sequence seq1;
-    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+    EXPECT_CALL(filter, filter(Ref(*renderable1)))
         .InSequence(seq1)
         .WillRepeatedly(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+    EXPECT_CALL(filter, filter(Ref(*renderable2)))
         .InSequence(seq1)
         .WillRepeatedly(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+    EXPECT_CALL(filter, filter(Ref(*renderable3)))
         .InSequence(seq1)
         .WillRepeatedly(Return(true));
 

@@ -31,7 +31,7 @@
 // It is needed by the following member functions:
 //  for_each(), for_each_if(), reverse_for_each_if(), create_surface() and destroy_surface()
 // to access:
-//  compositing_criteria(), buffer_stream() and input_channel()
+//  buffer_stream() and input_channel()
 #include "basic_surface.h"
 
 #include <boost/throw_exception.hpp>
@@ -67,9 +67,8 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mc::CompositingCriteria& info = **it;
-            mc::BufferStream& stream = *((*it)->buffer_stream());
-            if (filter(info)) op(info, stream);
+            mg::Renderable& r = **it;
+            if (filter(r)) op(r);
         }
     }
 }
@@ -85,9 +84,8 @@ void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
         auto surfaces = layer->second;
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
-            mc::CompositingCriteria& info = **it;
-            mc::BufferStream& stream = *((*it)->buffer_stream());
-            if (filter(info)) op(info, stream);
+            mg::Renderable& r = **it;
+            if (filter(r)) op(r);
         }
     }
 }
