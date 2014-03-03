@@ -22,53 +22,6 @@
 
 namespace mo = mir::options;
 
-namespace
-{
-void parse_arguments(
-    boost::program_options::options_description desc,
-    mo::ProgramOption& options,
-    int argc,
-    char const* argv[])
-{
-    namespace po = boost::program_options;
-
-    try
-    {
-        desc.add_options()
-            ("help,h", "this help text");
-
-        options.parse_arguments(desc, argc, argv);
-
-        if (options.is_set("help"))
-        {
-            std::ostringstream help_text;
-            help_text << desc;
-            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
-        }
-    }
-    catch (po::error const& error)
-    {
-        std::ostringstream help_text;
-        help_text << "Failed to parse command line options: " << error.what() << "." << std::endl << desc;
-        BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
-    }
-}
-
-void parse_environment(
-    boost::program_options::options_description& desc,
-    mo::ProgramOption& options)
-{
-    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
-    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
-    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
-    auto mir_socket = getenv("MIR_SOCKET");
-    if (!host_socket && mir_socket)
-        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
-
-    options.parse_environment(desc, "MIR_SERVER_");
-}
-}
-
 char const* const mo::server_socket_opt           = "file,f";
 char const* const mo::no_server_socket_opt        = "no-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
@@ -177,19 +130,66 @@ boost::program_options::options_description_easy_init mo::DefaultConfiguration::
     return program_options->add_options();
 }
 
-void mo::DefaultConfiguration::parse_options(boost::program_options::options_description& options_description, ProgramOption& options) const
-{
-    parse_arguments(options_description, options, argc, argv);
-    parse_environment(options_description, options);
-}
-
 std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
 {
     if (!options)
     {
         auto options = std::make_shared<ProgramOption>();
-        parse_options(*program_options, *options);
+        parse_arguments(*program_options, *options, argc, argv);
+        parse_environment(*program_options, *options);
+        parse_config_file(*program_options, *options);
         this->options = options;
     }
     return options;
+}
+
+
+void mo::DefaultConfiguration::parse_arguments(
+    boost::program_options::options_description desc,
+    mo::ProgramOption& options,
+    int argc,
+    char const* argv[]) const
+{
+    namespace po = boost::program_options;
+
+    try
+    {
+        desc.add_options()
+            ("help,h", "this help text");
+
+        options.parse_arguments(desc, argc, argv);
+
+        if (options.is_set("help"))
+        {
+            std::ostringstream help_text;
+            help_text << desc;
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+        }
+    }
+    catch (po::error const& error)
+    {
+        std::ostringstream help_text;
+        help_text << "Failed to parse command line options: " << error.what() << "." << std::endl << desc;
+        BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+    }
+}
+
+void mo::DefaultConfiguration::parse_environment(
+    boost::program_options::options_description& desc,
+    mo::ProgramOption& options) const
+{
+    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
+    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
+    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
+    auto mir_socket = getenv("MIR_SOCKET");
+    if (!host_socket && mir_socket)
+        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
+
+    options.parse_environment(desc, "MIR_SERVER_");
+}
+
+void mo::DefaultConfiguration::parse_config_file(
+    boost::program_options::options_description& /*desc*/,
+    mo::ProgramOption& /*options*/) const
+{
 }
