@@ -31,6 +31,11 @@ set(MIR_VERSION_MINOR 1)
 set(MIR_VERSION_PATCH 6)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+execute_process(
+  COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
+  OUTPUT_VARIABLE TARGET_ARCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 option(use_debflags "Use build flags from dpkg-buildflags." OFF)
 if(use_debflags)
@@ -108,7 +113,6 @@ foreach(platform IN LISTS MIR_PLATFORM)
      set(MIR_BUILD_PLATFORM_ANDROID TRUE)
   endif()
 endforeach(platform)
-message(STATUS "${MIR_TEST_PLATFORM} ${MIR_BUILD_PLATFORM_MESA} ${MIR_BUILD_PLATFORM_ANDROID}")
 
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)

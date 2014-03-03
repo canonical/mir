@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/options/configuration.h"
 
 #include "lttng_report_factory.h"
 #include "logging_report_factory.h"
@@ -34,23 +35,23 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
 {
     auto opt = the_options()->get<std::string>(report_opt);
 
-    if (opt == log_opt_value)
+    if (opt == options::log_opt_value)
     {
         return std::unique_ptr<mir::report::ReportFactory>(new report::LoggingReportFactory(the_logger(), the_clock()));
     }
-    else if (opt == lttng_opt_value)
+    else if (opt == options::lttng_opt_value)
     {
         return std::unique_ptr<mir::report::ReportFactory>(new report::LttngReportFactory());
     }
-    else if (opt == off_opt_value)
+    else if (opt == options::off_opt_value)
     {
         return std::unique_ptr<mir::report::ReportFactory>(new report::NullReportFactory());
     }
     else
     {
         throw AbnormalExit(std::string("Invalid ") + report_opt + " option: " + opt + " (valid options are: \"" +
-                           ConfigurationOptions::off_opt_value + "\" and \"" + ConfigurationOptions::log_opt_value +
-                           "\" and \"" + ConfigurationOptions::lttng_opt_value + "\")");
+            options::off_opt_value + "\" and \"" + options::log_opt_value +
+                           "\" and \"" + options::lttng_opt_value + "\")");
     }
 }
 
@@ -59,7 +60,7 @@ auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr
     return compositor_report(
         [this]()->std::shared_ptr<mc::CompositorReport>
         {
-            return report_factory(compositor_report_opt)->create_compositor_report();
+            return report_factory(options::compositor_report_opt)->create_compositor_report();
         });
 }
 
@@ -68,7 +69,7 @@ auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<
     return connector_report(
         [this]()->std::shared_ptr<mf::ConnectorReport>
         {
-            return report_factory(connector_report_opt)->create_connector_report();
+            return report_factory(options::connector_report_opt)->create_connector_report();
         });
 }
 
@@ -77,7 +78,7 @@ auto mir::DefaultServerConfiguration::the_session_mediator_report() -> std::shar
     return session_mediator_report(
         [this]()->std::shared_ptr<mf::SessionMediatorReport>
         {
-            return report_factory(session_mediator_report_opt)->create_session_mediator_report();
+            return report_factory(options::session_mediator_report_opt)->create_session_mediator_report();
         });
 }
 
@@ -86,7 +87,7 @@ auto mir::DefaultServerConfiguration::the_message_processor_report() -> std::sha
     return message_processor_report(
         [this]()->std::shared_ptr<mf::MessageProcessorReport>
         {
-            return report_factory(msg_processor_report_opt)->create_message_processor_report();
+            return report_factory(options::msg_processor_report_opt)->create_message_processor_report();
         });
 }
 
@@ -95,7 +96,7 @@ auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg
     return display_report(
         [this]()->std::shared_ptr<mg::DisplayReport>
         {
-            return report_factory(display_report_opt)->create_display_report();
+            return report_factory(options::display_report_opt)->create_display_report();
         });
 }
 
@@ -104,7 +105,7 @@ auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::
     return input_report(
         [this]()->std::shared_ptr<mi::InputReport>
         {
-            return report_factory(input_report_opt)->create_input_report();
+            return report_factory(options::input_report_opt)->create_input_report();
         });
 }
 
@@ -113,8 +114,6 @@ auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::
     return scene_report(
         [this]()->std::shared_ptr<ms::SceneReport>
         {
-            return report_factory(scene_report_opt)->create_scene_report();
+            return report_factory(options::scene_report_opt)->create_scene_report();
         });
 }
-
-

@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
 
-#include "mir/graphics/display_buffer.h"
+#include "configurable_display_buffer.h"
 #include "mir_toolkit/common.h"
 #include <memory>
 
@@ -29,7 +29,6 @@ namespace graphics
 {
 namespace android
 {
-class DisplayDevice;
 class GLContext;
 
 class DisplayBuilder
@@ -38,9 +37,7 @@ public:
     virtual ~DisplayBuilder() = default;
 
     virtual MirPixelFormat display_format() = 0;
-    virtual std::shared_ptr<DisplayDevice> create_display_device() = 0;
-    virtual std::unique_ptr<graphics::DisplayBuffer> create_display_buffer(
-        std::shared_ptr<DisplayDevice> const& display_device,
+    virtual std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
         GLContext const& gl_context) = 0;
 
 protected:

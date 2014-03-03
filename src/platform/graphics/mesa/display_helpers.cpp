@@ -65,6 +65,13 @@ int mgmh::DRMHelper::get_authenticated_fd()
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Failed to open DRM device for authenticated fd"));
 
+    if (fcntl(auth_fd, F_SETFD, fcntl(auth_fd, F_GETFD) | FD_CLOEXEC) == -1)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to set FD_CLOEXEC for authenticated drm fd")));
+    }
+
     drm_magic_t magic;
     int ret = -1;
     if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
@@ -198,7 +205,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
             continue;
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
-        tmp_fd = open(device.devnode(), O_RDWR, O_CLOEXEC);
+        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
         if (tmp_fd < 0)
         {
             error = errno;

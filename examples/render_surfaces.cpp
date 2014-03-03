@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,6 +18,7 @@
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/connector.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -27,10 +28,12 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
+#include "mir/raii.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -51,11 +54,13 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
+namespace mo = mir::options;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::tools;
 namespace me = mir::examples;
+
 
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
@@ -194,7 +199,7 @@ public:
           h{static_cast<float>(s->size().height.as_uint32_t())},
           dx{dx},
           dy{dy},
-          rotation_axis{rotation_axis},
+          rotation_axis(rotation_axis),
           alpha_offset{alpha_offset}
     {
     }
@@ -252,16 +257,22 @@ private:
 class RenderSurfacesServerConfiguration : public me::ServerConfiguration
 {
 public:
-    RenderSurfacesServerConfiguration(int argc, char const** argv)
-        : ServerConfiguration(argc, argv)
-    {
-        namespace po = boost::program_options;
+    RenderSurfacesServerConfiguration(int argc, char const** argv) :
+        ServerConfiguration([argc, argv]
+        {
+            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
-        add_options()
-            (surfaces_to_render, po::value<int>()->default_value(5),
-                "Number of surfaces to render")
-            (display_cursor, po::value<bool>()->default_value(false),
-                "Display test cursor. (If input is disabled it gets animated.)");
+            namespace po = boost::program_options;
+
+            result->add_options()
+                (surfaces_to_render, po::value<int>()->default_value(5),
+                    "Number of surfaces to render")
+                (display_cursor, po::value<bool>()->default_value(false),
+                    "Display test cursor. (If input is disabled it gets animated.)");
+
+            return result;
+        }())
+    {
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
@@ -287,12 +298,17 @@ public:
         class RenderResourcesBufferInitializer : public mg::BufferInitializer
         {
         public:
-            RenderResourcesBufferInitializer()
+            RenderResourcesBufferInitializer(std::unique_ptr<mg::GLContext> gl_context)
+                : gl_context{std::move(gl_context)}
             {
             }
 
             void operator()(mg::Buffer& buffer)
             {
+                auto using_gl_context = mir::raii::paired_calls(
+                    [this] { gl_context->make_current(); },
+                    [this] { gl_context->release_current(); });
+
                 mt::ImageRenderer img_renderer{mir_image.pixel_data,
                                geom::Size{mir_image.width, mir_image.height},
                                mir_image.bytes_per_pixel};
@@ -300,9 +316,13 @@ public:
                 brt.make_current();
                 img_renderer.render();
             }
+
+        private:
+            std::unique_ptr<mg::GLContext> const gl_context;
+
         };
 
-        return std::make_shared<RenderResourcesBufferInitializer>();
+        return std::make_shared<RenderResourcesBufferInitializer>(the_display()->create_gl_context());
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
 
@@ -443,7 +463,7 @@ public:
 
     bool input_is_on()
     {
-        return the_options()->get<bool>(enable_input_opt);
+        return the_options()->get<bool>(mo::enable_input_opt);
     }
 
     std::weak_ptr<mg::Cursor> the_cursor()

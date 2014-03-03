@@ -26,17 +26,16 @@
 
 namespace mir
 {
+namespace graphics { class Renderable; }
 namespace compositor
 {
-class BufferStream;
-class CompositingCriteria;
 
 class FilterForScene
 {
 public:
     virtual ~FilterForScene() {}
 
-    virtual bool operator()(CompositingCriteria const&) = 0;
+    virtual bool operator()(graphics::Renderable const&) = 0;
 
 protected:
     FilterForScene() = default;
@@ -49,7 +48,7 @@ class OperatorForScene
 public:
     virtual ~OperatorForScene() {}
 
-    virtual void operator()(CompositingCriteria const&, BufferStream&) = 0;
+    virtual void operator()(graphics::Renderable const&) = 0;
 
 protected:
     OperatorForScene() = default;

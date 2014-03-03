@@ -69,8 +69,10 @@ void mgo::DisplayConfiguration::for_each_output(
     f(output);
 }
 
-void mgo::DisplayConfiguration::configure_output(
-    mg::DisplayConfigurationOutputId, bool, geom::Point, size_t,
-    MirPixelFormat, MirPowerMode, MirOrientation)
+void mgo::DisplayConfiguration::for_each_output(
+    std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
+    mg::UserDisplayConfigurationOutput user(output);
+    f(user);
 }
+
