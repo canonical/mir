@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/compositor.h"
+#include "mir/server_status_listener.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -87,6 +87,7 @@ namespace me = mir::examples;
 
 namespace
 {
+std::atomic<bool> created{false};
 bool input_is_on = false;
 std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
@@ -327,33 +328,30 @@ public:
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
 
-    // TODO This is a bit ugly (will clean up later as this isn't the point of current MP)
     // Unless the compositor starts before we create the surfaces it won't respond to
     // the change notification that causes.
-    std::shared_ptr<mc::Compositor>
-    the_compositor()
+    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener()
     {
-        struct Compositor : mc::Compositor
+        struct ServerStatusListener : mir::ServerStatusListener
         {
-            Compositor(std::function<void()> create_surfaces, std::shared_ptr<mc::Compositor> wrapped) :
+            ServerStatusListener(std::function<void()> create_surfaces, std::shared_ptr<mir::ServerStatusListener> wrapped) :
                 create_surfaces(create_surfaces), wrapped(wrapped) {}
 
-            void start() override { wrapped->start(); create_surfaces(); create_surfaces = []{}; }
-            virtual void stop()override { wrapped->stop(); }
+            virtual void paused() override { wrapped->paused(); }
+            virtual void resumed() override { wrapped->resumed(); }
+            virtual void started() override { wrapped->started(); create_surfaces(); create_surfaces = []{}; }
 
             std::function<void()> create_surfaces;
-            std::shared_ptr<mc::Compositor> const wrapped;
+            std::shared_ptr<mir::ServerStatusListener> const wrapped;
         };
 
-        return compositor(
+        return server_status_listener(
             [this]()
             {
-                auto compositor = ServerConfiguration::the_compositor();
-
-                return std::make_shared<Compositor>([this] { create_surfaces(); }, compositor);
+                auto wrapped = ServerConfiguration::the_server_status_listener();
+                return std::make_shared<ServerStatusListener>([this] { create_surfaces(); }, wrapped);
             });
     }
-
 
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
     // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
@@ -373,6 +371,7 @@ public:
 
             bool composite()
             {
+                while (!created) std::this_thread::yield();
                 animate_cursor();
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
@@ -489,6 +488,8 @@ public:
                     2.0f * M_PI * cos(i));
             ++i;
         }
+
+        created = true;
     }
 
     bool input_is_on()
