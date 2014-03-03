@@ -25,8 +25,8 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/report_exception.h"
 
-#include "graphics_region_factory.h"
-#include "patterns.h"
+#include "testdraw/graphics_region_factory.h"
+#include "testdraw/patterns.h"
 
 #include <csignal>
 #include <iostream>
@@ -55,7 +55,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> buffer() const
+    std::shared_ptr<mg::Buffer> buffer(unsigned long) const override
     {
         return renderable_buffer;
     }
@@ -70,9 +70,30 @@ public:
         return position;
     }
 
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+
+    glm::mat4 const& transformation() const override
+    {
+        return trans;
+    }
+
+    bool shaped() const
+    {
+        return false;
+    }
+
+    bool should_be_rendered_in(geom::Rectangle const& rect) const override
+    {
+        return rect.overlaps(position);
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const renderable_buffer;
     geom::Rectangle const position;
+    glm::mat4 const trans;
 };
 
 int main(int argc, char const** argv)

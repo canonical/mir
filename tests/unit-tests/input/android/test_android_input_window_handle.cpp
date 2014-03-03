@@ -83,7 +83,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     EXPECT_CALL(mock_surface, size())
         .Times(1)
         .WillOnce(Return(default_surface_size));
-    EXPECT_CALL(mock_surface, position())
+    EXPECT_CALL(mock_surface, top_left())
         .Times(1)
         .WillOnce(Return(default_surface_top_left));
     EXPECT_CALL(mock_surface, name())

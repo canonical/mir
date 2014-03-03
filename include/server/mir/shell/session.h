@@ -33,7 +33,6 @@ class Surface;
 class Session : public frontend::Session
 {
 public:
-    virtual std::string name() const = 0;
     virtual void force_requests_to_complete() = 0;
     virtual pid_t process_id() const = 0;
 

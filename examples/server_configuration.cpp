@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,6 +17,7 @@
  */
 
 #include "server_configuration.h"
+#include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/composite_event_filter.h"
@@ -55,28 +56,23 @@ public:
             });
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput const& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0 &&
                     available_outputs_for_card[conf_output.card_id] > 0)
                 {
-                    conf.configure_output(conf_output.id, true,
-                                          geom::Point{max_x, 0},
-                                          preferred_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = true;
+                    conf_output.top_left = geom::Point{max_x, 0};
+                    conf_output.current_mode_index = preferred_mode_index;
+                    conf_output.power_mode = mir_power_mode_on;
+                    conf_output.orientation = mir_orientation_normal;
                     max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
                     --available_outputs_for_card[conf_output.card_id];
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false,
-                                          conf_output.top_left,
-                                          conf_output.current_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = false;
+                    conf_output.power_mode = mir_power_mode_off;
                 }
             });
     }
@@ -91,26 +87,20 @@ public:
         bool done{false};
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput const& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (!done && conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true,
-                                          geom::Point{0, 0},
-                                          preferred_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = true;
+                    conf_output.top_left = geom::Point{0, 0};
+                    conf_output.current_mode_index = preferred_mode_index;
+                    conf_output.power_mode = mir_power_mode_on;
                     done = true;
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false,
-                                          conf_output.top_left,
-                                          conf_output.current_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = false;
+                    conf_output.power_mode = mir_power_mode_off;
                 }
             });
     }
@@ -145,14 +135,19 @@ private:
 
 }
 
-me::ServerConfiguration::ServerConfiguration(int argc, char const** argv)
-    : DefaultServerConfiguration(argc, argv)
+me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
+    DefaultServerConfiguration(configuration_options)
 {
     namespace po = boost::program_options;
 
-    add_options()
+    configuration_options->add_options()
         (display_config_opt, po::value<std::string>()->default_value(clone_opt_val),
             "Display configuration [{clone,sidebyside,single}]");
+}
+
+me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
+    ServerConfiguration(std::make_shared<options::DefaultConfiguration>(argc, argv))
+{
 }
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>

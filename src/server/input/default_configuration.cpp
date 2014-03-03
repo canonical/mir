@@ -25,6 +25,8 @@
 #include "null_input_configuration.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir/report/legacy_input_report.h"
 
 
@@ -61,12 +63,12 @@ mir::DefaultServerConfiguration::the_input_configuration()
     [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         auto const options = the_options();
-        if (!options->get<bool>(enable_input_opt))
+        if (!options->get<bool>(options::enable_input_opt))
         {
             return std::make_shared<mi::NullInputConfiguration>();
         }
         // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-        else if (options->is_set(standalone_opt) || !options->is_set(host_socket_opt))
+        else if (options->is_set(options::standalone_opt) || !options->is_set(options::host_socket_opt))
         {
             return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
@@ -92,7 +94,7 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get<std::string>(legacy_input_report_opt) == log_opt_value)
+            if (the_options()->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
         });
