@@ -43,7 +43,7 @@ public:
     {
     }
 
-    void render(compositor::CompositingCriteria const&,
+    void render(graphics::Renderable const&,
                 graphics::Buffer&) const override
     {
     }

@@ -40,7 +40,19 @@ private:
     // accessed via the base interface, when access to add_options() has been "lost"
     std::shared_ptr<options::Option> the_options() const override;
 
-    virtual void parse_options(boost::program_options::options_description& options_description, ProgramOption& options) const;
+    virtual void parse_arguments(
+        boost::program_options::options_description desc,
+        ProgramOption& options,
+        int argc,
+        char const* argv[]) const;
+
+    virtual void parse_environment(
+        boost::program_options::options_description& desc,
+        ProgramOption& options) const;
+
+    virtual void parse_config_file(
+        boost::program_options::options_description& desc,
+        ProgramOption& options) const;
 
     int const argc;
     char const** const argv;
