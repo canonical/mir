@@ -60,6 +60,12 @@ public:
     {
         return false;
     }
+
+    int composable_buffers() const override
+    {
+        return 1;
+    }
+
 private:
     glm::mat4 trans;
 };

@@ -30,7 +30,8 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    virtual void composite() = 0;
+    /// Returns true if any surface composited has buffers pending
+    virtual bool composite() = 0;
 
 protected:
     DisplayBufferCompositor() = default;

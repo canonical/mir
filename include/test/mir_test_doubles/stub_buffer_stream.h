@@ -72,6 +72,8 @@ public:
     {
     }
 
+    int composable_buffers() const override { return 1; }
+
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
 };

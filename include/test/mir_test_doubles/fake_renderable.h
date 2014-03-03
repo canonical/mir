@@ -90,6 +90,11 @@ public:
         return rect;
     }
 
+    int composable_buffers() const override
+    {
+        return 1;
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
