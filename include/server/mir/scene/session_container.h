@@ -37,6 +37,7 @@ public:
     virtual void clear() = 0;
 
     virtual void for_each(std::function<void(std::shared_ptr<shell::Session> const&)> f) const = 0;
+    // Allow reverse iteration over the container, with a bailout (return false).
     virtual void for_each(std::function<bool(std::shared_ptr<shell::Session> const&)> f, bool reverse) const = 0;
 
     // For convenience the successor of the null session is defined as the last session
