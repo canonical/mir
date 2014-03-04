@@ -68,33 +68,6 @@ struct VertexAttributes
     GLfloat texcoord[2];
 };
 
-/*
- * The texture coordinates are y-inverted to account for the difference in the
- * texture and renderable pixel data row order. In particular, GL textures
- * expect pixel data in rows starting from the bottom and moving up the image,
- * whereas our renderables provide data in rows starting from the top and
- * moving down the image.
- */
-const VertexAttributes vertex_attribs[4] =
-{
-    {
-        {-0.5f, -0.5f, 0.0f},
-        {0.0f, 0.0f}
-    },
-    {
-        {-0.5f, 0.5f, 0.0f},
-        {0.0f, 1.0f},
-    },
-    {
-        {0.5f, -0.5f, 0.0f},
-        {1.0f, 0.0f},
-    },
-    {
-        {0.5f, 0.5f, 0.0f},
-        {1.0f, 1.0f}
-    }
-};
-
 typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
 typedef void(*MirGLGetObjectiv)(GLuint, GLenum, GLint *);
 
@@ -196,10 +169,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     /* Create VBO */
     glGenBuffers(1, &vertex_attribs_vbo);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
-                 vertex_attribs, GL_STATIC_DRAW);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
 
@@ -241,7 +210,36 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
     /* Set up vertex attribute data */
+    auto const& rect = renderable.screen_position();
+    GLfloat left = rect.top_left.x.as_int();
+    GLfloat right = left + rect.size.width.as_int();
+    GLfloat top = rect.top_left.y.as_int();
+    GLfloat bottom = top + rect.size.height.as_int();
+
+    VertexAttributes vertex_attribs[4] =
+    {
+        {
+            {left, top, 0.0f},
+            {0.0f, 0.0f}
+        },
+        {
+            {left, bottom, 0.0f},
+            {0.0f, 1.0f},
+        },
+        {
+            {right, top, 0.0f},
+            {1.0f, 0.0f},
+        },
+        {
+            {right, bottom, 0.0f},
+            {1.0f, 1.0f}
+        }
+    };
+    
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
+                 vertex_attribs, GL_STATIC_DRAW);
+
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes),
                           static_cast<GLbyte*>(0) +
