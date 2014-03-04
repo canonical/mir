@@ -22,12 +22,14 @@
 #include "src/platform/graphics/mesa/kms_display_configuration.h"
 
 #include "mir_test_doubles/mock_gbm.h"
+#include "mir_test/fake_shared.h"
 #include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <unordered_map>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -43,7 +45,8 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
     StubKMSOutputContainer()
         : outputs{
             {10, std::make_shared<testing::NiceMock<MockKMSOutput>>()},
-            {11, std::make_shared<testing::NiceMock<MockKMSOutput>>()}}
+            {11, std::make_shared<testing::NiceMock<MockKMSOutput>>()},
+            {12, std::make_shared<testing::NiceMock<MockKMSOutput>>()}}
     {
     }
 
@@ -112,6 +115,26 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_power_mode_on,
                 mir_orientation_normal
             });
+        outputs.push_back(
+            {
+                mg::DisplayConfigurationOutputId{12},
+                card_id,
+                mg::DisplayConfigurationOutputType::vga,
+                {},
+                {
+                    {geom::Size{800, 200}, 59.9},
+                    {geom::Size{100, 200}, 59.9},
+                },
+                0,
+                geom::Size{800, 200},
+                true,
+                true,
+                geom::Point{666, 0},
+                0,
+                mir_pixel_format_invalid,
+                mir_power_mode_on,
+                mir_orientation_right
+            });
     }
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
@@ -148,6 +171,16 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
     {
     }
 
+    void set_orentation_of_output(mg::DisplayConfigurationOutputId id, MirOrientation orientation)
+    {
+        auto output = std::find_if(outputs.begin(), outputs.end(),
+                                   [id] (mg::DisplayConfigurationOutput const& output) -> bool {return output.id == id;});
+        if (output != outputs.end())
+        {
+            output->orientation = orientation;
+        }
+    }
+
     mg::DisplayConfigurationCardId card_id;
     std::vector<mg::DisplayConfigurationOutput> outputs;
 };
@@ -167,10 +200,11 @@ struct MesaCursorTest : public ::testing::Test
 {
     MesaCursorTest()
         : cursor{mock_gbm.fake_gbm.device, output_container,
-                 std::make_shared<StubCurrentConfiguration>()}
+            mir::test::fake_shared(current_configuration)}
     {
     }
 
+    StubCurrentConfiguration current_configuration;
     testing::NiceMock<mtd::MockGBM> mock_gbm;
     StubKMSOutputContainer output_container;
     mgm::Cursor cursor;
@@ -224,10 +258,12 @@ TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{0,0}));
     EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 
     /* No checking of existing cursor state */
     EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[11], has_cursor()).Times(0);
+    EXPECT_CALL(*output_container.outputs[12], has_cursor()).Times(0);
 
     mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
                               std::make_shared<StubCurrentConfiguration>()};
@@ -328,12 +364,60 @@ TEST_F(MesaCursorTest, shows_at_last_known_position)
     output_container.verify_and_clear_expectations();
 }
 
+TEST_F(MesaCursorTest, moves_properly_to_and_inside_left_rotated_output)
+{
+    using namespace testing;
+
+    current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{12}, mir_orientation_left);
+
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{112,100}));
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{150,96}));
+
+    cursor.move_to({766, 112});
+    cursor.move_to({770, 150});
+
+    output_container.verify_and_clear_expectations();
+}
+
+
+TEST_F(MesaCursorTest, moves_properly_to_and_inside_right_rotated_output)
+{
+    using namespace testing;
+
+    current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{12}, mir_orientation_right);
+
+
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{688,100}));
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{650,104}));
+
+    cursor.move_to({766, 112});
+    cursor.move_to({770, 150});
+
+    output_container.verify_and_clear_expectations();
+}
+
+TEST_F(MesaCursorTest, moves_properly_to_and_inside_inverted_output)
+{
+    using namespace testing;
+
+    current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{12}, mir_orientation_inverted);
+
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{700,88}));
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{696,50}));
+
+    cursor.move_to({766, 112});
+    cursor.move_to({770, 150});
+
+    output_container.verify_and_clear_expectations();
+}
+
 TEST_F(MesaCursorTest, hides_cursor_in_all_outputs)
 {
     using namespace testing;
 
     EXPECT_CALL(*output_container.outputs[10], clear_cursor());
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 
     cursor.hide();
 
@@ -346,4 +430,5 @@ TEST_F(MesaCursorTest, clears_cursor_on_exit)
 
     EXPECT_CALL(*output_container.outputs[10], clear_cursor());
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 }
