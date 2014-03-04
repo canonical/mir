@@ -26,7 +26,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
-#include <cstddef>
 #include <mutex>
 
 namespace mg = mir::graphics;
@@ -60,12 +59,6 @@ const GLchar* fragment_shader_src =
     "   vec4 frag = texture2D(tex, v_texcoord);\n"
     "   gl_FragColor = vec4(frag.xyz, frag.a * alpha);\n"
     "}\n"
-};
-
-struct VertexAttributes
-{
-    GLfloat position[3];
-    GLfloat texcoord[2];
 };
 
 typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
@@ -102,7 +95,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     texcoord_attr_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    vertex_attribs_vbo(0),
     rotation(NAN) // ensure the first set_rotation succeeds
 {
     /*
@@ -166,9 +158,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
 
     glUniform1i(tex_loc, 0);
 
-    /* Create VBO */
-    glGenBuffers(1, &vertex_attribs_vbo);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
 
@@ -184,8 +173,6 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteShader(fragment_shader);
     if (program)
         glDeleteProgram(program);
-    if (vertex_attribs_vbo)
-        glDeleteBuffers(1, &vertex_attribs_vbo);
     for (auto& t : textures)
         glDeleteTextures(1, &t.second.id);
 }
@@ -216,7 +203,18 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     GLfloat top = rect.top_left.y.as_int();
     GLfloat bottom = top + rect.size.height.as_int();
 
-    VertexAttributes vertex_attribs[4] =
+    struct Vertex
+    {
+        GLfloat position[3];
+        GLfloat texcoord[2];
+    };
+
+    /*
+     * In future, this array should be generated dynamically by a
+     * "Renderable::tessellate()" interface. That would allow the shell to do
+     * fancy deformations (like wobbly windows).
+     */
+    Vertex vertices[4] =
     {
         {
             {left, top, 0.0f},
@@ -236,18 +234,12 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
         }
     };
     
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
-                 vertex_attribs, GL_STATIC_DRAW);
-
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                          GL_FALSE, sizeof(VertexAttributes),
-                          static_cast<GLbyte*>(0) +
-                              offsetof(VertexAttributes, position));
+                          GL_FALSE, sizeof(Vertex),
+                          &vertices[0].position);
     glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                          GL_FALSE, sizeof(VertexAttributes),
-                          static_cast<GLbyte*>(0) +
-                              offsetof(VertexAttributes, texcoord));
+                          GL_FALSE, sizeof(Vertex),
+                          &vertices[0].texcoord);
 
     SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];

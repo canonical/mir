@@ -56,7 +56,6 @@ private:
     GLuint display_transform_uniform_loc;
     GLuint transform_uniform_loc;
     GLuint alpha_uniform_loc;
-    GLuint vertex_attribs_vbo;
     float rotation;
 
     geometry::Rectangle viewport;
