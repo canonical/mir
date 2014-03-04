@@ -447,7 +447,7 @@ void mc::SwitchingBundle::resize(const geometry::Size &newsize)
     bundle_properties.size = newsize;
 }
 
-int mc::SwitchingBundle::composable_buffers() const
+int mc::SwitchingBundle::buffers_ready_for_compositor() const
 {
     std::unique_lock<std::mutex> lock(guard);
     return nready;

@@ -69,7 +69,7 @@ public:
      * nbuffers frames while old frames of the old size are consumed.
      */
     void resize(const geometry::Size &newsize) override;
-    int composable_buffers() const override;
+    int buffers_ready_for_compositor() const override;
 
 private:
     graphics::BufferProperties bundle_properties;

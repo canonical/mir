@@ -46,7 +46,7 @@ public:
     virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual void force_requests_to_complete() = 0;
     virtual void resize(const geometry::Size &newsize) = 0;
-    virtual int composable_buffers() const = 0;
+    virtual int buffers_ready_for_compositor() const = 0;
 protected:
     BufferBundle() = default;
     BufferBundle(BufferBundle const&) = delete;
