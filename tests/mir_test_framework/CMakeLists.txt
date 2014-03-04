@@ -1,4 +1,4 @@
-add_definitions(-DUDEVMOCK_DIR="${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings")
+add_definitions(-DUDEVMOCK_DIR="../../bin/udev_recordings")
 
 include_directories(
     ${Boost_INCLUDE_DIRS}
@@ -51,4 +51,10 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+add_custom_command(TARGET mir-test-framework POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_BINARY_DIR}/bin/udev_recordings
+  COMMENT "Copying umockdev recordings to build dir..."
 )
