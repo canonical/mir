@@ -23,46 +23,21 @@
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
+#include <thread>
+
 static char const *socket_file = NULL;
+static EGLDisplay disp;
 
-int main(int argc, char* argv[])
+
+void create_and_run_scroll_surface(MirConnection *connection)
 {
-    MirConnection *connection = 0;
     MirSurface *surface = 0;
-    int arg;
-    opterr = 0;
-    while ((arg = getopt (argc, argv, "hm:")) != -1)
-    {
-        switch (arg)
-        {
-        case 'm':
-            socket_file = optarg;
-            break;
-
-        case '?':
-        case 'h':
-        default:
-            puts(argv[0]);
-            puts("Usage:");
-            puts("    -m <Mir server socket>");
-            puts("    -h: this help text");
-            return -1;
-        }
-    }
-
-    puts("Starting");
-
-    connection = mir_connect_sync(socket_file, __PRETTY_FUNCTION__);
-    assert(connection != NULL);
-    assert(mir_connection_is_valid(connection));
-    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
-    puts("Connected");
-
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
@@ -79,7 +54,6 @@ int main(int argc, char* argv[])
 
     /* egl setup */
     int major, minor, n, rc;
-    EGLDisplay disp;
     EGLContext context;
     EGLSurface egl_surface;
     EGLConfig egl_config;
@@ -93,12 +67,8 @@ int main(int argc, char* argv[])
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeDisplayType native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
     assert(native_window != (EGLNativeWindowType)NULL);
-
-    disp = eglGetDisplay(native_display);
-    assert(disp != EGL_NO_DISPLAY);
 
     rc = eglInitialize(disp, &major, &minor);
     assert(rc == EGL_TRUE);
@@ -131,15 +101,66 @@ int main(int argc, char* argv[])
 
     eglDestroySurface(disp, egl_surface);
     eglDestroyContext(disp, context);
-    eglTerminate(disp);
-
+    
     mir_surface_release_sync(surface);
     puts("Surface released");
+}
+
+int main(int argc, char* argv[])
+{
+    MirConnection *connection = 0;
+    unsigned num_windows = 1;
+    int arg;
+    opterr = 0;
+    while ((arg = getopt (argc, argv, "hmw:")) != -1)
+    {
+        switch (arg)
+        {
+        case 'm':
+            socket_file = optarg;
+            break;
+        case 'w':
+            num_windows = atoi(optarg);
+            break;
+        case '?':
+        case 'h':
+        default:
+            puts(argv[0]);
+            puts("Usage:");
+            puts("    -m <Mir server socket>");
+            puts("    -w <Number of windows to create>:");
+            puts("    -h: this help text");
+            return -1;
+        }
+    }
+
+    puts("Starting");
+
+    connection = mir_connect_sync(socket_file, __PRETTY_FUNCTION__);
+    assert(connection != NULL);
+    assert(mir_connection_is_valid(connection));
+    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
+    puts("Connected");
+
+    EGLNativeDisplayType native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
+    disp = eglGetDisplay(native_display);
+    assert(disp != EGL_NO_DISPLAY);
+
+    if (num_windows == 1)
+    {
+        create_and_run_scroll_surface(connection);
+    }
+    else
+    {
+        for (unsigned i = 0; i < num_windows; i++) std::thread(create_and_run_scroll_surface, connection).detach();
+        for(;;) {}
+    }
+    
+
+    eglTerminate(disp);
 
     mir_connection_release(connection);
     puts("Connection released");
-
-    (void)rc;
 
     return 0;
 }

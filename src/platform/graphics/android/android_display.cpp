@@ -26,6 +26,8 @@
 #include "display_builder.h"
 #include "mir/geometry/rectangle.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -57,6 +59,12 @@ std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() c
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    if (!configuration.valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Invalid or inconsistent display configuration"));
+    }
+
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         display_buffer->configure(output);
