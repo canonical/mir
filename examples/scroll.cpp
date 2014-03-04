@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     unsigned num_windows = 1;
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hmw:")) != -1)
+    while ((arg = getopt (argc, argv, "hm:w:")) != -1)
     {
         switch (arg)
         {
