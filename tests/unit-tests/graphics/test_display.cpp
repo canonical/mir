@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/options/program_option.h"
 
@@ -38,6 +39,7 @@
 #include "src/server/report/null_report_factory.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
@@ -96,6 +98,38 @@ public:
     mtf::UdevEnvironment fake_devices;
 #endif
 };
+
+namespace
+{
+
+class MockDisplayConfiguration : public mg::DisplayConfiguration
+{
+public:
+    MOCK_CONST_METHOD1(for_each_card,
+        void(std::function<void(mg::DisplayConfigurationCard const&)>));
+    MOCK_CONST_METHOD1(for_each_output,
+        void(std::function<void(mg::DisplayConfigurationOutput const&)>));
+    MOCK_METHOD1(for_each_output,
+        void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
+    MOCK_CONST_METHOD0(valid, bool());
+};
+
+}
+
+TEST_F(DisplayTest, configure_disallows_invalid_configuration)
+{
+    using namespace testing;
+    auto display = create_display();
+    MockDisplayConfiguration config;
+
+    EXPECT_CALL(config, valid())
+        .WillOnce(Return(false));
+
+    EXPECT_THROW({display->configure(config);}, std::logic_error);
+
+    // Determining what counts as a valid configuration is a much trickier
+    // platform-dependent exercise, so won't be tested here.
+}
 
 TEST_F(DisplayTest, gl_context_make_current_uses_shared_context)
 {

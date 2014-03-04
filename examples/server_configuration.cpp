@@ -56,28 +56,23 @@ public:
             });
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput const& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0 &&
                     available_outputs_for_card[conf_output.card_id] > 0)
                 {
-                    conf.configure_output(conf_output.id, true,
-                                          geom::Point{max_x, 0},
-                                          preferred_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = true;
+                    conf_output.top_left = geom::Point{max_x, 0};
+                    conf_output.current_mode_index = preferred_mode_index;
+                    conf_output.power_mode = mir_power_mode_on;
+                    conf_output.orientation = mir_orientation_normal;
                     max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
                     --available_outputs_for_card[conf_output.card_id];
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false,
-                                          conf_output.top_left,
-                                          conf_output.current_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = false;
+                    conf_output.power_mode = mir_power_mode_off;
                 }
             });
     }
@@ -92,26 +87,20 @@ public:
         bool done{false};
 
         conf.for_each_output(
-            [&](mg::DisplayConfigurationOutput const& conf_output)
+            [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 if (!done && conf_output.connected && conf_output.modes.size() > 0)
                 {
-                    conf.configure_output(conf_output.id, true,
-                                          geom::Point{0, 0},
-                                          preferred_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = true;
+                    conf_output.top_left = geom::Point{0, 0};
+                    conf_output.current_mode_index = preferred_mode_index;
+                    conf_output.power_mode = mir_power_mode_on;
                     done = true;
                 }
                 else
                 {
-                    conf.configure_output(conf_output.id, false,
-                                          conf_output.top_left,
-                                          conf_output.current_mode_index,
-                                          conf_output.current_format,
-                                          mir_power_mode_on,
-                                          mir_orientation_normal);
+                    conf_output.used = false;
+                    conf_output.power_mode = mir_power_mode_off;
                 }
             });
     }
