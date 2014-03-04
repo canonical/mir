@@ -1,35 +1,31 @@
 mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
 
-  [ Kevin Gunn ]
   * New upstream release 0.1.6 (https://launchpad.net/mir/+milestone/0.1.6)
-    - mirserver ABI bumped to 16
+    - mirserver ABI bumped to 16.
+    - Server API changes:
+      . Report classes have moved to new namespaces/components. Please
+        consult the server headers.
+      . General clean-ups and virtual function changes affecting the ABI
+        (a rebuild is required for all shells).
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - Add new feature: Screen recording ("screencasting") as demonstrated by
+      the new mir-util "mirscreencast".
     - debian: Provide platform packages managed with dpkg alternatives.
-    - mirscreencast: allow for a number of frames captured by
-      setting -n <number> on the command line.
-    - tools: Update valgrind suppressions for armhf
+    - Add new valgrind suppressions (mostly for armhf right now)
     - tools: Add new libmirclientplatform.so to install_on_android.sh.
-    - add "mir_demo_standalone_render_overlays", which is a free standing
+    - Add "mir_demo_standalone_render_overlays", which is a free-standing
       example of overlay support.
-    - Remove vestige of deprecated target"mirclient_compat_links".
     - Proper DisplayConfiguration for the AndroidDisplay to be better 
-      prepared for multi-monitor android.
-    - scene: Dedup public interface of BasicSurface following its absorption
-      of SurfaceData.
-    - scene: BasicSurface implements the functionality of the former
-      SurfaceData directly.
-    - config, frontend: remove force_threads_to_unblock_callback()
-    - test_client_input.cpp: Remove unused global "mir_test_socket".
-    - Move locking logic for GLRenderer construction into the constructor.
-    - frontend: Have a single drm_auth_magic handler implementation for
-      all platforms.
-    - client: Dynamically load the client platform.
-    - guide: Update rules for using 'override' when overriding methods.
+      prepared for multi-monitor Android.
+    - Commenced/continued simplifying the surface class hierarchy: BasicSurface
+      has now absorbed SurfaceData.
+    - Dynamically load the client platform library.
     - Bugs fixed:
       . Exceptions thrown from within compositing threads were untraceable,
         resulting in a bunch of undebuggable crash reports (LP: #1237332)
       . Ensure we close drm device file descriptors on exec. (LP: #1284081)
-      . if we use GL to init each buffer, then we need a GL context. 
-        (LP: #1284597)
+      . nested render_surfaces fails on N4 [std::exception::what: Failed to
+        compile vertex shader:] (LP: #1284597)
       . examples: correct "fullscreen-surfaces" option. (LP: #1284554)
       . Fix mutex data race reported by helgrind in integration test:
         SwapperSwappingStress (LP: #1282886)
@@ -40,10 +36,8 @@ mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1283085)
       . tests: Suppress spurious memory errors occuring when running the
         unit tests on armhf with valgrind. (LP: #1279438)
-      . workaround: avoid notifying the server with a next_buffer message on
-        startup when no frame is rendered yet to composite. Sending a 
-        premature next_buffer result premature compositing of old 
-        uninitialized buffer (LP: #1281938)
+      . Mir shows an old frame on client startup (for Mesa GL clients)
+        (LP: #1281938)
       . tests: Add expectation to validate second SessionAuthorizer method
         is called wit correct parameter. (LP: #1218436)
       . Set field "current_format" when sending a display config to the
@@ -57,12 +51,13 @@ mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
       . tests: Don't emit an "add" uevent manually when adding a device
         (LP: #1281146)
       . config: reduce size of default RPC thread pool. (LP: #1233001)
-      . compositor: non-blocking implementation of
-        SwitchingBundle::client_acquire. (LP: #1267323)
-      . Fix Nexus 10 leaking FD's in the hwc prepare/set loop. (LP: #1278658)
-      . Parallelize page flipping with rendering of the next frame 
-        (LP: #1213801)
-      .  glm package 0.9.5.1-1 update broke mir (LP: #1285955)
+      . Clients freeze on startup if 10 or more are already running
+        (LP: #1267323)
+      . Fix Nexus 10 leaking FDs in the hwc prepare/set loop. (LP: #1278658)
+      . Parallelize page flipping with rendering of the next frame, fixing
+        stuttering observed in multi-monitor clone mode (LP: #1213801)
+      . Ubuntu trusty update "glm 0.9.5.1-1" broke Mir builds. Work around the
+        change. (LP: #1285955)
       . Screencast feature by compositing to offscreen buffer (LP: #1207312)
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 27 Feb 2014 19:37:47 -0600
