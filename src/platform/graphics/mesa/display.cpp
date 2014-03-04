@@ -128,12 +128,6 @@ std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration() const
 
 void mgm::Display::configure(mg::DisplayConfiguration const& conf)
 {
-    if (!conf.valid())
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Invalid or inconsistent display configuration"));
-    }
-
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
 

@@ -18,7 +18,6 @@
 
 #include "rendering_operator.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/graphics/renderable.h"
 
 namespace mc=mir::compositor;
 
@@ -32,9 +31,9 @@ mc::RenderingOperator::RenderingOperator(
 {
 }
 
-void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
+void mc::RenderingOperator::operator()(CompositingCriteria const& info, BufferStream& stream)
 {
-    auto compositor_buffer = renderable.buffer(frameno);
-    renderer.render(renderable, *compositor_buffer);
+    auto compositor_buffer = stream.lock_compositor_buffer(frameno);
+    renderer.render(info, *compositor_buffer);
     save_resource(compositor_buffer);
 }

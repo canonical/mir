@@ -1,10 +1,6 @@
 mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
 
   [ Kevin Gunn ]
-  * Cherry-picked from future release 0.1.7:
-    - display configuration simplification changes
-    - Bug fix for FTBFS when disabling some tests (LP: #1283951)
-    - Bug fix for crashing sw clients on nested (LP: #1261286)
   * New upstream release 0.1.6 (https://launchpad.net/mir/+milestone/0.1.6)
     - mirserver ABI bumped to 16
     - debian: Provide platform packages managed with dpkg alternatives.

@@ -209,27 +209,35 @@ TEST_F(AndroidDisplay, configures_display_buffer)
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 
     auto configuration = display.configuration();
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        output.power_mode = mir_power_mode_on;
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_on, output.orientation);
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        output.power_mode = mir_power_mode_standby;
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_standby, output.orientation);
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        output.power_mode = mir_power_mode_off;
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_off, output.orientation);
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        output.power_mode = mir_power_mode_suspend;
+        configuration->configure_output(
+            output.id, output.used, output.top_left, output.current_mode_index,
+            output.current_format, mir_power_mode_suspend, output.orientation);
     });
     display.configure(*configuration);
 }

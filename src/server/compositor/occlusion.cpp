@@ -16,22 +16,21 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderable.h"
 #include "occlusion.h"
 
 using namespace mir;
 using namespace mir::compositor;
-using namespace mir::graphics;
 
 OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
         : area(area)
 {
 }
 
-bool OcclusionFilter::operator()(const Renderable &renderable)
+bool OcclusionFilter::operator()(const CompositingCriteria &criteria)
 {
-    const glm::mat4 &trans = renderable.transformation();
+    const glm::mat4 &trans = criteria.transformation();
     bool orthogonal =
         trans[0][1] == 0.0f &&
         trans[0][2] == 0.0f &&
@@ -49,14 +48,14 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
     if (!orthogonal)
         return false;  // Weirdly transformed. Assume never occluded.
 
-    // This could be replaced by adding a "Renderable::rect()"
+    // This could be replaced by adding a "CompositingCriteria::rect()"
     int width = trans[0][0];
     int height = trans[1][1];
     int x = trans[3][0] - width / 2;
     int y = trans[3][1] - height / 2;
     geometry::Rectangle window{{x, y}, {width, height}};
 
-    if (!renderable.should_be_rendered_in(area))
+    if (!criteria.should_be_rendered_in(area))
         return true;  // Not on the display, or invisible; definitely occluded.
 
     bool occluded = false;
@@ -69,18 +68,19 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
         }
     }
 
-    if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
+    if (!occluded && criteria.alpha() == 1.0f && !criteria.shaped())
         coverage.push_back(window);
 
     return occluded;
 }
 
-void OcclusionMatch::operator()(const Renderable &renderable)
+void OcclusionMatch::operator()(const CompositingCriteria &criteria,
+                                compositor::BufferStream &)
 {
-    hidden.insert(&renderable);
+    hidden.insert(&criteria);
 }
 
-bool OcclusionMatch::occluded(const Renderable &renderable) const
+bool OcclusionMatch::occluded(const CompositingCriteria &criteria) const
 {
-    return hidden.find(&renderable) != hidden.end();
+    return hidden.find(&criteria) != hidden.end();
 }

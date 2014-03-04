@@ -16,13 +16,12 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/renderable.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/graphics/display_buffer.h"
 #include "bypass.h"
 
 using namespace mir;
 using namespace mir::compositor;
-using namespace mir::graphics;
 
 BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
         : display_buffer(display_buffer)
@@ -56,12 +55,12 @@ BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
     fullscreen[3][3] = 1.0f;
 }
 
-bool BypassFilter::operator()(const Renderable &renderable)
+bool BypassFilter::operator()(const CompositingCriteria &criteria)
 {
     if (!all_orthogonal)
         return false;
 
-    const glm::mat4 &trans = renderable.transformation();
+    const glm::mat4 &trans = criteria.transformation();
     bool orthogonal =
         trans[0][1] == 0.0f &&
         trans[0][2] == 0.0f &&
@@ -85,16 +84,16 @@ bool BypassFilter::operator()(const Renderable &renderable)
 
     // Not weirdly transformed but also not on this monitor? Don't care...
     // This will also check the surface is not hidden and has been posted.
-    if (!renderable.should_be_rendered_in(display_buffer.view_area()))
+    if (!criteria.should_be_rendered_in(display_buffer.view_area()))
         return false;
 
     topmost_fits = false;
 
-    if (renderable.alpha() != 1.0f || renderable.shaped())
+    if (criteria.alpha() != 1.0f || criteria.shaped())
         return false;
 
     // Transformed perfectly to fit the monitor? Bypass!
-    topmost_fits = renderable.transformation() == fullscreen;
+    topmost_fits = criteria.transformation() == fullscreen;
     return topmost_fits;
 }
 
@@ -103,12 +102,13 @@ bool BypassFilter::fullscreen_on_top() const
     return all_orthogonal && topmost_fits;
 }
 
-void BypassMatch::operator()(const Renderable &r)
+void BypassMatch::operator()(const CompositingCriteria &,
+                             compositor::BufferStream &stream)
 {
-    latest = &r;
+    latest = &stream;
 }
 
-const Renderable *BypassMatch::topmost_fullscreen() const
+compositor::BufferStream *BypassMatch::topmost_fullscreen() const
 {
     return latest;
 }

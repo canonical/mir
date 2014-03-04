@@ -21,7 +21,7 @@
 
 #include "rendering_operator.h"
 #include "mir/compositor/scene.h"
-#include "mir/graphics/renderable.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
@@ -46,10 +46,10 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
           occlusions(occlusions)
     {
     }
-    bool operator()(mg::Renderable const& r)
+    bool operator()(mc::CompositingCriteria const& info)
     {
-        return r.should_be_rendered_in(enclosing_region) &&
-               !occlusions.occluded(r);
+        return info.should_be_rendered_in(enclosing_region) &&
+               !occlusions.occluded(info);
     }
 
     mir::geometry::Rectangle const& enclosing_region;
@@ -118,7 +118,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
         if (filter.fullscreen_on_top())
         {
             auto bypass_buf =
-                match.topmost_fullscreen()->buffer(local_frameno);
+                match.topmost_fullscreen()->lock_compositor_buffer(
+                    local_frameno);
 
             if (bypass_buf->can_bypass())
             {

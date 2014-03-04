@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
-#define MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
+#define MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
 
-#include <mir/graphics/renderable.h>
-#include <memory>
+#include "mir/compositor/compositing_criteria.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -29,25 +29,17 @@ namespace test
 namespace doubles
 {
 
-class StubRenderable : public graphics::Renderable
+class MockCompositingCriteria : public compositor::CompositingCriteria
 {
 public:
-    std::shared_ptr<graphics::Buffer> buffer() const
-    {
-        return {};
-    }
-    bool alpha_enabled() const
-    {
-        return false;
-    }
-    geometry::Rectangle screen_position() const
-    {
-        return {{},{}};
-    }
+    ~MockCompositingCriteria() noexcept {}
+    MOCK_CONST_METHOD0(alpha, float());
+    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
+    MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const&));
+    MOCK_CONST_METHOD0(shaped, bool());
 };
 
 }
 }
 }
-
-#endif /* MIR_TEST_DOUBLES_STUB_RENDERABLE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_ */

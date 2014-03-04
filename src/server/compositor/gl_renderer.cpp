@@ -16,8 +16,8 @@
  */
 
 #include "gl_renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,7 +26,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
-#include <cstddef>
 #include <mutex>
 
 namespace mg = mir::graphics;
@@ -64,8 +63,8 @@ const GLchar* fragment_shader_src =
 
 struct VertexAttributes
 {
-    GLfloat position[3];
-    GLfloat texcoord[2];
+    glm::vec3 position;
+    glm::vec2 texcoord;
 };
 
 /*
@@ -75,23 +74,23 @@ struct VertexAttributes
  * whereas our renderables provide data in rows starting from the top and
  * moving down the image.
  */
-const VertexAttributes vertex_attribs[4] =
+VertexAttributes vertex_attribs[4] =
 {
     {
-        {-0.5f, -0.5f, 0.0f},
-        {0.0f, 0.0f}
+        glm::vec3{-0.5f, -0.5f, 0.0f},
+        glm::vec2{0.0f, 0.0f}
     },
     {
-        {-0.5f, 0.5f, 0.0f},
-        {0.0f, 1.0f},
+        glm::vec3{-0.5f, 0.5f, 0.0f},
+        glm::vec2{0.0f, 1.0f},
     },
     {
-        {0.5f, -0.5f, 0.0f},
-        {1.0f, 0.0f},
+        glm::vec3{0.5f, -0.5f, 0.0f},
+        glm::vec2{1.0f, 0.0f},
     },
     {
-        {0.5f, 0.5f, 0.0f},
-        {1.0f, 1.0f}
+        glm::vec3{0.5f, 0.5f, 0.0f},
+        glm::vec2{1.0f, 1.0f}
     }
 };
 
@@ -198,7 +197,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
 
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
-                 vertex_attribs, GL_STATIC_DRAW);
+            glm::value_ptr(vertex_attribs[0].position), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
@@ -221,11 +220,11 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteTextures(1, &t.second.id);
 }
 
-void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
+void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buffer) const
 {
     glUseProgram(program);
 
-    if (renderable.shaped() || renderable.alpha() < 1.0f)
+    if (criteria.shaped() || criteria.alpha() < 1.0f)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -237,21 +236,18 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     glActiveTexture(GL_TEXTURE0);
 
     glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
-                       glm::value_ptr(renderable.transformation()));
-    glUniform1f(alpha_uniform_loc, renderable.alpha());
+                       glm::value_ptr(criteria.transformation()));
+    glUniform1f(alpha_uniform_loc, criteria.alpha());
 
     /* Set up vertex attribute data */
     glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                          GL_FALSE, sizeof(VertexAttributes),
-                          static_cast<GLbyte*>(0) +
-                              offsetof(VertexAttributes, position));
+                          GL_FALSE, sizeof(VertexAttributes), 0);
     glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
                           GL_FALSE, sizeof(VertexAttributes),
-                          static_cast<GLbyte*>(0) +
-                              offsetof(VertexAttributes, texcoord));
+                          reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
+    SurfaceID surf = &criteria; // temporary hack till we rearrange classes
     auto& tex = textures[surf];
     bool changed = true;
     auto const& buf_id = buffer.id();
