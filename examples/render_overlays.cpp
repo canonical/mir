@@ -60,17 +60,6 @@ public:
     {
     }
 
-    int compute_update_value()
-    {
-        float const update_ratio{3.90625}; //this will give an update of 256 in 1s  
-        auto current_tick = std::chrono::high_resolution_clock::now();
-        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            current_tick - last_tick).count();
-        float update_value = elapsed_ms / update_ratio;
-        last_tick = current_tick;
-        return static_cast<int>(update_value);
-    }
-
     void update_green_channel()
     {
         char green_value = (color >> 8) & 0xFF;
@@ -89,6 +78,17 @@ public:
     }
 
 private:
+    int compute_update_value()
+    {
+        float const update_ratio{3.90625}; //this will give an update of 256 in 1s  
+        auto current_tick = std::chrono::high_resolution_clock::now();
+        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            current_tick - last_tick).count();
+        float update_value = elapsed_ms / update_ratio;
+        last_tick = current_tick;
+        return static_cast<int>(update_value);
+    }
+
     std::shared_ptr<mg::Buffer> front_buffer;
     std::shared_ptr<mg::Buffer> back_buffer;
     std::shared_ptr<mir::test::draw::GraphicsRegionFactory> region_factory;
