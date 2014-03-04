@@ -493,9 +493,16 @@ TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_we_still_compo
 
     compositor.stop();
     compositor.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // Verify we're still at zero frames
+    for (int countdown = 100;
+        countdown != 0 &&
+        !db_compositor_factory->check_record_count_for_each_buffer(nbuffers, composites_per_update, composites_per_update);
+        --countdown)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    // Verify we composited the expected frame
     EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, composites_per_update, composites_per_update));
 
     compositor.stop();
