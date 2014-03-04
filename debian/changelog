@@ -59,6 +59,8 @@ mir (0.1.6-0ubuntu1) UNRELEASED; urgency=medium
       . Ubuntu trusty update "glm 0.9.5.1-1" broke Mir builds. Work around the
         change. (LP: #1285955)
       . Screencast feature by compositing to offscreen buffer (LP: #1207312)
+      . Don't pass a parameter to bash's popd command. It doesn't expect one
+        and will return an error from cross-compile-chroot.sh. (LP: #1287600)
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 27 Feb 2014 19:37:47 -0600
 
