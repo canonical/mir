@@ -61,7 +61,7 @@ public:
         return false;
     }
 
-    int composable_buffers() const override
+    int buffers_ready_for_compositor() const override
     {
         return 1;
     }

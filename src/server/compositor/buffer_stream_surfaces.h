@@ -50,7 +50,7 @@ public:
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
     void force_requests_to_complete() override;
-    int composable_buffers() const override;
+    int buffers_ready_for_compositor() const override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;

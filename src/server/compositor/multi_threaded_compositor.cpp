@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -100,17 +100,17 @@ public:
             {
                 frames_scheduled = false;
                 lock.unlock();
-                auto uncomposited_buffers = display_buffer_compositor->composite();
+                auto more_frames_pending = display_buffer_compositor->composite();
 
                 /*
                  * Each surface could have a number of frames ready in its buffer
                  * queue. And we need to ensure that we render all of them so that
                  * none linger in the queue indefinitely (seen as input lag).
-                 * uncomposited_buffers indicates that there are we need to schedule
+                 * more_frames_pending indicates that there are we need to schedule
                  * more frames to ensure all surfaces' queues are fully drained.
                  */
                 lock.lock();
-                frames_scheduled |= uncomposited_buffers;
+                frames_scheduled |= more_frames_pending;
             }
         }
     }

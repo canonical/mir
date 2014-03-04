@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2013 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -30,7 +30,8 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    /// Returns true if any surface composited has buffers pending
+    /// Returns true if there is additional work to do. E.g. a composited surface
+    /// has additional buffers ready to composite or during animation
     virtual bool composite() = 0;
 
 protected:

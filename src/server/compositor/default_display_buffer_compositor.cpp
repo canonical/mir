@@ -128,7 +128,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
             if (bypass_buf->can_bypass())
             {
-                uncomposited_buffers = match.topmost_fullscreen()->composable_buffers() > 1;
+                uncomposited_buffers = match.topmost_fullscreen()->buffers_ready_for_compositor() > 1;
 
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);

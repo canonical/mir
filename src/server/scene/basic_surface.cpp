@@ -319,7 +319,7 @@ geom::Rectangle ms::BasicSurface::screen_position() const
     return surface_rect;
 }
 
-int ms::BasicSurface::composable_buffers() const
+int ms::BasicSurface::buffers_ready_for_compositor() const
 {
-    return surface_buffer_stream->composable_buffers();
+    return surface_buffer_stream->buffers_ready_for_compositor();
 }
