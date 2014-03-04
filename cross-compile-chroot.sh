@@ -80,4 +80,4 @@ pushd ${BUILD_DIR} > /dev/null
 
     make -j${NUM_JOBS}
 
-popd ${BUILD_DIR} > /dev/null 
+popd > /dev/null 
