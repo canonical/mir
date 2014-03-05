@@ -44,7 +44,7 @@ namespace mir
 namespace examples
 {
 
-class DemoRendererFactor : public compositor::RendererFactory
+class DemoRendererFactory : public compositor::RendererFactory
 {
 public:
     std::unique_ptr<compositor::Renderer> create_renderer_for(
@@ -97,7 +97,7 @@ public:
 
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override
     {
-        return std::make_shared<DemoRendererFactor>();
+        return std::make_shared<DemoRendererFactory>();
     }
 
 private:
