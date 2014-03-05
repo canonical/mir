@@ -271,6 +271,8 @@ public:
     testing::NiceMock<MockProtobufServer> mock_server;
     StubProtobufServer stub_server;
     uint32_t const default_output_id;
+    mir::geometry::Size default_size;
+    mir::geometry::Rectangle default_region;
     CustomMirDisplayOutput const default_mir_output;
     std::shared_ptr<StubEGLNativeWindowFactory> const stub_egl_native_window_factory;
     std::shared_ptr<StubClientBufferFactory> const stub_client_buffer_factory;
@@ -288,6 +290,8 @@ TEST_F(MirScreencastTest, creates_screencast_on_construction)
         .WillOnce(RunClosure());
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -311,6 +315,8 @@ TEST_F(MirScreencastTest, releases_screencast_on_release)
         .WillOnce(RunClosure());
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -335,6 +341,8 @@ TEST_F(MirScreencastTest, requests_screencast_buffer_on_next_buffer)
         .WillOnce(RunClosure());
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -351,6 +359,8 @@ TEST_F(MirScreencastTest, executes_callback_on_creation)
     EXPECT_CALL(mock_cb, call(_, &mock_cb));
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, stub_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -364,6 +374,8 @@ TEST_F(MirScreencastTest, executes_callback_on_release)
     using namespace testing;
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, stub_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -383,6 +395,8 @@ TEST_F(MirScreencastTest, executes_callback_on_next_buffer)
     using namespace testing;
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, stub_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -408,6 +422,8 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_output)
 
     EXPECT_THROW({
         MirScreencast screencast(
+            default_region,
+            default_size,
             invalid_modes_output, stub_server,
             stub_egl_native_window_factory,
             stub_client_buffer_factory,
@@ -420,6 +436,8 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_output)
 
     EXPECT_THROW({
         MirScreencast screencast(
+            default_region,
+            default_size,
             unused_output, stub_server,
             stub_egl_native_window_factory,
             stub_client_buffer_factory,
@@ -430,6 +448,8 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_output)
 TEST_F(MirScreencastTest, returns_correct_surface_parameters)
 {
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, stub_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -469,6 +489,8 @@ TEST_F(MirScreencastTest, uses_buffer_message_from_server)
         .WillOnce(Return(client_buffer1));
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         mock_client_buffer_factory,
@@ -502,6 +524,8 @@ TEST_F(MirScreencastTest, returns_current_client_buffer)
         .WillOnce(Return(client_buffer2));
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         mock_client_buffer_factory,
@@ -522,6 +546,8 @@ TEST_F(MirScreencastTest, gets_egl_native_window)
     using namespace testing;
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, stub_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -542,6 +568,8 @@ TEST_F(MirScreencastTest, is_invalid_if_server_create_screencast_fails)
         .WillOnce(DoAll(SetCreateError(), RunClosure()));
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,
@@ -562,6 +590,8 @@ TEST_F(MirScreencastTest, calls_callback_on_creation_failure)
     EXPECT_CALL(mock_cb, call(_,&mock_cb));
 
     MirScreencast screencast{
+        default_region,
+        default_size,
         default_mir_output, mock_server,
         stub_egl_native_window_factory,
         stub_client_buffer_factory,

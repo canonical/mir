@@ -155,6 +155,10 @@ message ScreencastParameters {
   required uint32 output_id = 1;
   required uint32 width = 2;
   required uint32 height = 3;
+  required uint32 region_top = 4;
+  required uint32 region_left = 5;
+  required uint32 region_width = 6;
+  required uint32 region_height = 7;
 }
 
 message ScreencastId {

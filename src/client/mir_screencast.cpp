@@ -47,6 +47,36 @@ geom::Size mir_output_get_size(MirDisplayOutput const& output)
     }
 }
 
+geom::Rectangle choose_region(
+    geom::Rectangle const& client_region,
+    geom::Rectangle const& display_region)
+{
+    if (display_region.contains(client_region) &&
+        client_region.size.width.as_int() != 0 &&
+        client_region.size.height.as_int() != 0)
+    {
+        return client_region;
+    }
+    else {
+        return display_region;
+    }
+}
+
+geom::Size choose_size(
+    geom::Size const& client_size,
+    geom::Size const& display_size)
+{
+    if (client_size.width.as_int() != 0 &&
+            client_size.height.as_int() != 0)
+    {
+        return client_size;
+    }
+    else
+    {
+        return display_size;
+    }
+}
+
 
 void populate_buffer_package(
     MirBufferPackage& buffer_package,
@@ -86,6 +116,8 @@ void populate_buffer_package(
 }
 
 MirScreencast::MirScreencast(
+    geom::Rectangle const& region,
+    geom::Size const& size,
     MirDisplayOutput const& output,
     mir::protobuf::DisplayServer& server,
     std::shared_ptr<mcl::EGLNativeWindowFactory> const& egl_native_window_factory,
@@ -100,10 +132,22 @@ MirScreencast::MirScreencast(
 {
     protobuf_screencast.set_error("Not initialized");
 
+    geom::Rectangle extents{
+        {output.position_x, output.position_y},
+        output_size
+    };
+
+    extents = choose_region(region, extents);
+    output_size = choose_size(size, extents.size);
+
     mir::protobuf::ScreencastParameters parameters;
     parameters.set_output_id(output_id);
     parameters.set_width(output_size.width.as_uint32_t());
     parameters.set_height(output_size.height.as_uint32_t());
+    parameters.set_region_top(extents.top_left.y.as_uint32_t());
+    parameters.set_region_left(extents.top_left.x.as_uint32_t());
+    parameters.set_region_width(extents.size.width.as_uint32_t());
+    parameters.set_region_height(extents.size.height.as_uint32_t());
 
     server.create_screencast(
         nullptr,

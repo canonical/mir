@@ -368,7 +368,12 @@ void mf::SessionMediator::create_screencast(
     mg::DisplayConfigurationOutputId const output_id{
         static_cast<int>(parameters->output_id())};
 
-    auto screencast_session_id = screencast->create_session(output_id);
+    geom::Rectangle const region{
+        {parameters->region_left(), parameters->region_top()},
+        {parameters->region_width(), parameters->region_height()}
+    };
+    geom::Size const size{parameters->width(), parameters->height()};
+    auto screencast_session_id = screencast->create_session(output_id, region, size);
     auto buffer = screencast->capture(screencast_session_id);
 
     protobuf_screencast->mutable_screencast_id()->set_value(

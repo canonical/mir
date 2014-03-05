@@ -301,7 +301,7 @@ try
         output_id = get_first_valid_output_id(connection.get());
 
     MirScreencastParameters params{
-        output_id, 0, 0, mir_pixel_format_invalid};
+        output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
 
     std::cout << "Starting screencast for output id " << params.output_id << std::endl;
 

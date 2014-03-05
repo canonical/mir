@@ -60,15 +60,22 @@ mc::CompositingScreencast::CompositingScreencast(
 }
 
 mf::ScreencastSessionId mc::CompositingScreencast::create_session(
-    graphics::DisplayConfigurationOutputId output_id)
+    graphics::DisplayConfigurationOutputId output_id,
+    geom::Rectangle const& region,
+    geom::Size const& size)
 {
     geom::Rectangle extents;
     MirPixelFormat pixel_format;
     std::tie(extents,pixel_format) = output_info_for(output_id);
 
+    extents = choose_region(region, extents);
+
     std::lock_guard<decltype(session_mutex)> lock{session_mutex};
     auto const id = next_available_session_id();
-    session_contexts[id] = create_session_context(extents, pixel_format);
+    session_contexts[id] = create_session_context(
+            extents,
+            choose_size(size, extents.size),
+            pixel_format);
 
     return id;
 }
@@ -145,13 +152,45 @@ mc::CompositingScreencast::output_info_for(
     return {extents, pixel_format};
 }
 
+geom::Rectangle mc::CompositingScreencast::choose_region(
+    geom::Rectangle const& client_region,
+    geom::Rectangle const& display_region)
+{
+    if (display_region.contains(client_region) &&
+        client_region.size.width.as_int() != 0 &&
+        client_region.size.height.as_int() != 0)
+    {
+        return client_region;
+    }
+    else {
+        return display_region;
+    }
+}
+
+geom::Size mc::CompositingScreencast::choose_size(
+    geom::Size const& client_size,
+    geom::Size const& display_size)
+{
+    if (client_size.width.as_int() != 0 &&
+            client_size.height.as_int() != 0)
+    {
+        return client_size;
+    }
+    else
+    {
+        return display_size;
+    }
+}
+
+
 std::shared_ptr<mc::detail::ScreencastSessionContext>
 mc::CompositingScreencast::create_session_context(
     geometry::Rectangle const& rect,
+    geometry::Size const& size,
     MirPixelFormat pixel_format)
 {
     mg::BufferProperties buffer_properties{
-        rect.size,
+        size,
         pixel_format,
         mg::BufferUsage::hardware};
 

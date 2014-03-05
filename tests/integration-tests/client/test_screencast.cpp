@@ -123,6 +123,10 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     protobuf_parameters.set_output_id(0);
     protobuf_parameters.set_width(0);
     protobuf_parameters.set_height(0);
+    protobuf_parameters.set_region_left(0);
+    protobuf_parameters.set_region_top(0);
+    protobuf_parameters.set_region_width(0);
+    protobuf_parameters.set_region_height(0);
     mir::protobuf::Screencast protobuf_screencast;
 
     WaitObject wait_rpc;

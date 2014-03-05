@@ -37,6 +37,7 @@ namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mt = mir::test;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -98,7 +99,7 @@ TEST_F(MirScreencastTest, creation_with_invalid_connection_fails)
     using namespace testing;
 
     uint32_t const output_id{2};
-    MirScreencastParameters params{output_id, 0, 0, mir_pixel_format_invalid};
+    MirScreencastParameters params{output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
 
     auto screencast = mir_connection_create_screencast_sync(nullptr, &params);
     ASSERT_EQ(nullptr, screencast);
@@ -112,9 +113,9 @@ TEST_F(MirScreencastTest, creation_with_invalid_output_fails)
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
     uint32_t const invalid_output_id{33};
-    MirScreencastParameters params{invalid_output_id, 0, 0, mir_pixel_format_invalid};
+    MirScreencastParameters params{invalid_output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
 
-    EXPECT_CALL(mock_screencast(), create_session(_))
+    EXPECT_CALL(mock_screencast(), create_session(_, _, _))
         .Times(0);
 
     auto screencast =
@@ -133,12 +134,12 @@ TEST_F(MirScreencastTest, contacts_server_screencast_for_create_and_release)
 
     mf::ScreencastSessionId const screencast_session_id{99};
     uint32_t const output_id{2};
-    MirScreencastParameters params{output_id, 0, 0, mir_pixel_format_invalid};
+    MirScreencastParameters params{output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
 
     InSequence seq;
 
     EXPECT_CALL(mock_screencast(),
-                create_session(mg::DisplayConfigurationOutputId{output_id}))
+                create_session(mg::DisplayConfigurationOutputId{output_id}, _, _))
         .WillOnce(Return(screencast_session_id));
 
     EXPECT_CALL(mock_screencast(), capture(screencast_session_id))
@@ -153,6 +154,94 @@ TEST_F(MirScreencastTest, contacts_server_screencast_for_create_and_release)
     mir_connection_release(connection);
 }
 
+TEST_F(MirScreencastTest, uses_provided_size_and_region)
+{
+    using namespace testing;
+
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+
+    mf::ScreencastSessionId const screencast_session_id{99};
+    uint32_t const output_id{2};
+    geom::Size const size{10, 20};
+    geom::Rectangle const region {{1, 2}, size};
+    MirScreencastParameters params {
+        output_id,
+        size.width.as_uint32_t(),
+        size.height.as_uint32_t(),
+        {
+          region.top_left.x.as_uint32_t(),
+          region.top_left.y.as_uint32_t(),
+          size.width.as_uint32_t(),
+          size.height.as_uint32_t()
+        },
+        mir_pixel_format_invalid
+    };
+
+
+    InSequence seq;
+
+    EXPECT_CALL(mock_screencast(),
+                create_session(mg::DisplayConfigurationOutputId{output_id}, region, size))
+        .WillOnce(Return(screencast_session_id));
+
+    EXPECT_CALL(mock_screencast(), capture(_))
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+
+    EXPECT_CALL(mock_screencast(), destroy_session(_));
+
+    auto screencast = mir_connection_create_screencast_sync(connection, &params);
+    ASSERT_NE(nullptr, screencast);
+
+    mir_screencast_release_sync(screencast);
+
+    mir_connection_release(connection);
+}
+
+TEST_F(MirScreencastTest, ignores_invalid_region_and_size)
+{
+    using namespace testing;
+
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+
+    mf::ScreencastSessionId const screencast_session_id{99};
+    uint32_t const output_id{2};
+    geom::Size const size{0, 0};
+    geom::Rectangle const region {{0, 0}, {0, 0}};
+    MirScreencastParameters params {
+        output_id,
+        size.width.as_uint32_t(),
+        size.height.as_uint32_t(),
+        {
+          region.top_left.x.as_uint32_t(),
+          region.top_left.y.as_uint32_t(),
+          region.size.width.as_uint32_t(),
+          region.size.height.as_uint32_t()
+        },
+        mir_pixel_format_invalid
+    };
+
+
+    InSequence seq;
+
+    EXPECT_CALL(mock_screencast(),
+                create_session(mg::DisplayConfigurationOutputId{output_id}, Ne(region), Ne(size)))
+        .WillOnce(Return(screencast_session_id));
+
+    EXPECT_CALL(mock_screencast(), capture(_))
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+
+    EXPECT_CALL(mock_screencast(), destroy_session(_));
+
+    auto screencast = mir_connection_create_screencast_sync(connection, &params);
+    ASSERT_NE(nullptr, screencast);
+
+    mir_screencast_release_sync(screencast);
+
+    mir_connection_release(connection);
+}
+
 TEST_F(MirScreencastTest, gets_valid_egl_native_window)
 {
     using namespace testing;
@@ -162,10 +251,10 @@ TEST_F(MirScreencastTest, gets_valid_egl_native_window)
 
     mf::ScreencastSessionId const screencast_session_id{99};
     uint32_t const output_id{2};
-    MirScreencastParameters params{output_id, 0, 0, mir_pixel_format_invalid};
+    MirScreencastParameters params{output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
 
     InSequence seq;
-    EXPECT_CALL(mock_screencast(), create_session(_))
+    EXPECT_CALL(mock_screencast(), create_session(_, _, _))
         .WillOnce(Return(screencast_session_id));
     EXPECT_CALL(mock_screencast(), capture(_))
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
@@ -190,9 +279,9 @@ TEST_F(MirScreencastTest, fails_on_client_when_server_request_fails)
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
     uint32_t const output_id{2};
-    MirScreencastParameters params{output_id, 0, 0, mir_pixel_format_invalid};
+    MirScreencastParameters params{output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
 
-    EXPECT_CALL(mock_screencast(), create_session(_))
+    EXPECT_CALL(mock_screencast(), create_session(_, _, _))
         .WillOnce(Throw(std::runtime_error("")));
 
     auto screencast = mir_connection_create_screencast_sync(connection, &params);

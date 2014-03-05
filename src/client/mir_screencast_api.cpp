@@ -64,8 +64,16 @@ MirScreencast* mir_connection_create_screencast_sync(
 
         auto const client_platform = connection->get_client_platform();
 
+        mir::geometry::Rectangle const region{
+            {parameters->region.left, parameters->region.top},
+            {parameters->region.width, parameters->region.height}
+        };
+        mir::geometry::Size const size{parameters->width, parameters->height};
+
         std::unique_ptr<MirScreencast> screencast_uptr{
             new MirScreencast{
+                region,
+                size,
                 find_display_output(*config, parameters->output_id),
                 connection->display_server(),
                 client_platform,

@@ -25,6 +25,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 
 #include <EGL/eglplatform.h>
 
@@ -42,6 +43,8 @@ struct MirScreencast : public mir::client::ClientSurface
 {
 public:
     MirScreencast(
+        mir::geometry::Rectangle const& region,
+        mir::geometry::Size const& size,
         MirDisplayOutput const& output,
         mir::protobuf::DisplayServer& server,
         std::shared_ptr<mir::client::EGLNativeWindowFactory> const& egl_native_window_factory,
@@ -76,7 +79,7 @@ private:
 
     mir::protobuf::DisplayServer& server;
     uint32_t const output_id;
-    mir::geometry::Size const output_size;
+    mir::geometry::Size output_size;
     MirPixelFormat const output_format;
     std::shared_ptr<mir::client::EGLNativeWindowFactory> const egl_native_window_factory;
     mir::client::ClientBufferDepository buffer_depository;
