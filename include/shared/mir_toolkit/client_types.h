@@ -267,13 +267,13 @@ typedef struct MirEventDelegate
     void *context;
 } MirEventDelegate;
 
-typedef struct MirScreenRegion
+typedef struct MirRectangle
 {
     uint32_t left;
     uint32_t top;
     uint32_t width;
     uint32_t height;
-} MirScreenRegion;
+} MirRectangle;
 /**
  * MirScreencastParameters is the structure of required information that
  * you must provide to Mir in order to create a MirScreencast.
@@ -283,7 +283,7 @@ typedef struct MirScreencastParameters
     uint32_t output_id;
     uint32_t width;
     uint32_t height;
-    MirScreenRegion region;
+    MirRectangle region;
     MirPixelFormat pixel_format;
 } MirScreencastParameters;
 
