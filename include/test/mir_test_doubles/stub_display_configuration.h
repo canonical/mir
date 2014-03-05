@@ -156,13 +156,8 @@ public:
         }
     }
 
-    void for_each_output(std::function<void(graphics::UserDisplayConfigurationOutput&)> f) override
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, MirPixelFormat, MirPowerMode, MirOrientation) override
     {
-        for (auto& disp : outputs)
-        {
-            graphics::UserDisplayConfigurationOutput user(disp);
-            f(user);
-        }
     }
 
     std::vector<graphics::DisplayConfigurationCard> cards;

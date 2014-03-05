@@ -140,14 +140,23 @@ bool me::WindowManager::handle(MirEvent const& event)
         {
             compositor->stop();
             auto conf = display->configuration();
-            MirPowerMode new_power_mode = display_off ?
-                mir_power_mode_on : mir_power_mode_off;
-            conf->for_each_output(
-                [&](mg::UserDisplayConfigurationOutput& output) -> void
-                {
-                    output.power_mode = new_power_mode;
-                }
-            );
+            conf->for_each_output([&](mg::DisplayConfigurationOutput const& output) -> void
+            {
+                MirPowerMode power_mode;
+                if (!output.used) return;
+
+                if (display_off == true)
+                    power_mode = mir_power_mode_on;
+                else
+                    power_mode = mir_power_mode_off;
+
+                conf->configure_output(output.id, output.used,
+                                       output.top_left,
+                                       output.current_mode_index,
+                                       output.current_format,
+                                       power_mode,
+                                       output.orientation);
+            });
             display_off = !display_off;
 
             display->configure(*conf.get());
@@ -175,9 +184,14 @@ bool me::WindowManager::handle(MirEvent const& event)
                 compositor->stop();
                 auto conf = display->configuration();
                 conf->for_each_output(
-                    [&](mg::UserDisplayConfigurationOutput& output) -> void
+                    [&](mg::DisplayConfigurationOutput const& output) -> void
                     {
-                        output.orientation = orientation;
+                        conf->configure_output(output.id, output.used,
+                                               output.top_left,
+                                               output.current_mode_index,
+                                               output.current_format,
+                                               output.power_mode,
+                                               orientation);
                     }
                 );
                 display->configure(*conf);

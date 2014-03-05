@@ -40,7 +40,7 @@ void PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
 {
     base_policy->apply_to(conf);
     conf.for_each_output(
-        [&](graphics::UserDisplayConfigurationOutput& conf_output)
+        [&](graphics::DisplayConfigurationOutput const& conf_output)
         {
             if (!conf_output.connected || !conf_output.used) return;
 
@@ -56,7 +56,12 @@ void PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
             if (pos == conf_output.pixel_formats.end())
                 return;
 
-            conf_output.current_format = *pos;
+            conf.configure_output(conf_output.id, true, conf_output.top_left,
+                                  conf_output.current_mode_index,
+                                  *pos,
+                                  conf_output.power_mode,
+                                  conf_output.orientation
+                                 );
         });
 }
 
