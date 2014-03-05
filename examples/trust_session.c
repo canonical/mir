@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
-///\page trust_session_trust_session.c trust_session_trust_session.c: A mir client which starts a trust session and trusted client app.
+///\page trust_session.c trust_session.c: A mir client which starts a trust session and trusted client app.
 /// mir_demo_client_trust_session shows the use of mir trust session API.
 /// This program opens a mir connection and creates a trust session.
 ///\section demo_client_trusted_helper demo_client_trusted_helper()
@@ -41,13 +41,13 @@
 ///\section demo_client_trust_session_app demo_client_trust_session_app()
 /// Opens a mir connection and creates a surface
 /// before releasing the surface and closing the connection.
-///\example trust_session_trust_session.c A mir client demonstrating trust sessions.
+///\example trust_session.c A mir client demonstrating trust sessions.
 ///\section MirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
-///\snippet trust_session_trust_session.c MirDemoState_tag
+///\snippet trust_session.c MirDemoState_tag
 ///\section Callbacks Callbacks
+///\snippet trust_session.c Callback_tag
 /// This program opens a mir connection and starts a trust session.
-///\snippet trust_session_trust_session.c Callback_tag
 
 ///\internal [MirDemoState_tag]
 // Utility structure for the state of a single session.
@@ -56,46 +56,12 @@ typedef struct MirDemoState
     MirConnection *connection;
     MirSurface *surface;
     MirTrustSession *trust_session;
-    MirBool trust_session_started;
     pid_t  child_pid;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
 
 ///\internal [Callback_tag]
-// Callback to update MirDemoState on connection
-static void connection_callback(MirConnection *new_connection, void *context)
-{
-    ((MirDemoState*)context)->connection = new_connection;
-}
-
-// Callback to update MirDemoState on surface_create
-static void surface_create_callback(MirSurface *new_surface, void *context)
-{
-    ((MirDemoState*)context)->surface = new_surface;
-}
-
-// Callback to update MirDemoState on surface_release
-static void surface_release_callback(MirSurface *old_surface, void *context)
-{
-    (void)old_surface;
-    ((MirDemoState*)context)->surface = 0;
-}
-
-// Callback to update MirDemoState on trust_session_started
-static void trust_session_started_callback(MirTrustSession* tps, void* context)
-{
-    (void)tps;
-    ((MirDemoState*)context)->trust_session_started = mir_true;
-}
-
-// Callback to update MirDemoState on trust_session_stopped
-static void trust_session_stopped_callback(MirTrustSession* tps, void* context)
-{
-    (void)tps;
-    ((MirDemoState*)context)->trust_session_started = mir_false;
-}
-
 // Callback to update MirDemoState on trust_session_event
 static void trust_session_event_callback(MirTrustSession* trust_session, MirTrustSessionState state, void* context)
 {
@@ -105,7 +71,6 @@ static void trust_session_event_callback(MirTrustSession* trust_session, MirTrus
     printf("Trust Session state updated to %d\n", state);
     if (state == mir_trust_session_stopped)
     {
-        demo_state->trust_session_started = mir_false;
         kill(demo_state->child_pid, SIGINT);
     }
 }
@@ -113,9 +78,8 @@ static void trust_session_event_callback(MirTrustSession* trust_session, MirTrus
 
 void start_session(const char* server, const char* name, MirDemoState* mcd)
 {
-    // Call mir_connect and wait for callback to complete.
-    mir_wait_for(mir_connect(server, name, connection_callback, mcd));
-    printf("Connected for '%s'\n", name);
+    // Call mir_connect synchronously
+    mcd->connection = mir_connect_sync(server, name);
 
     // We expect a connection handle;
     // we expect it to be valid; and,
@@ -123,6 +87,7 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
     assert(mcd->connection != NULL);
     assert(mir_connection_is_valid(mcd->connection));
     assert(strcmp(mir_connection_get_error_message(mcd->connection), "") == 0);
+    printf("Connected for '%s'\n", name);
 
     // We can query information about the platform we're running on
     {
@@ -141,13 +106,15 @@ void stop_session(MirDemoState* mcd)
     if (mcd->trust_session)
     {
         mir_trust_session_release(mcd->trust_session);
+        mcd->trust_session = 0;
         puts("Trust session released for 'demo_client_trusted_helper'");
     }
 
     if (mcd->surface)
     {
         // We should release our surface
-        mir_wait_for(mir_surface_release(mcd->surface, surface_release_callback, mcd));
+        mir_surface_release_sync(mcd->surface);
+        mcd->surface = 0;
         puts("Surface released for 'demo_client_app2'");
     }
 
@@ -162,7 +129,6 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
     mcd.connection = 0;
     mcd.surface = 0;
     mcd.trust_session = 0;
-    mcd.trust_session_started = mir_false;
     mcd.child_pid = child_pid;
     start_session(server, "demo_client_trust_session_trusted_helper", &mcd);
 
@@ -172,8 +138,8 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
     MirTrustSessionAddApplicationResult add_result = mir_trust_session_add_app_with_pid(mcd.trust_session, child_pid);
     assert(add_result == mir_trust_session_app_addition_succeeded);
 
-    mir_wait_for(mir_trust_session_start(mcd.trust_session, trust_session_started_callback, &mcd));
-    assert(mcd.trust_session_started == mir_true);
+    mir_trust_session_start_sync(mcd.trust_session);
+    assert(mir_trust_session_is_started(mcd.trust_session) == mir_true);
     puts("Started Trust Helper for 'demo_client_trusted_helper'");
 
     // Case where the session is stopped by server.
@@ -183,10 +149,10 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
     printf("Waiting on child app: %d\n", child_pid);
     waitpid(child_pid, &status, 0);
 
-    if (mcd.trust_session_started == mir_true)
+    if (mir_trust_session_is_started(mcd.trust_session) == mir_true)
     {
-        mir_wait_for(mir_trust_session_stop(mcd.trust_session, trust_session_stopped_callback, &mcd));
-        assert(mcd.trust_session_started == mir_false);
+        mir_trust_session_stop_sync(mcd.trust_session);
+        assert(mir_trust_session_is_started(mcd.trust_session) == mir_false);
         puts("Stopped Trust Helper for 'demo_client_trusted_helper'");
     }
 
@@ -210,8 +176,7 @@ void demo_client_trust_session_app(const char* server)
          mir_buffer_usage_hardware, mir_display_output_id_invalid};
 
     // ...we create a surface using that format and wait for callback to complete.
-    mir_wait_for(mir_connection_create_surface(mcd.connection, &request_params, surface_create_callback, &mcd));
-    puts("Surface created for 'demo_client_trust_session_app'");
+    mcd.surface = mir_connection_create_surface_sync(mcd.connection, &request_params);
 
     // We expect a surface handle;
     // we expect it to be valid; and,
@@ -219,6 +184,7 @@ void demo_client_trust_session_app(const char* server)
     assert(mcd.surface != NULL);
     assert(mir_surface_is_valid(mcd.surface));
     assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
+    puts("Surface created for 'demo_client_trust_session_app'");
 
     // Wait for stdin
     char buff[1];

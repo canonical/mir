@@ -27,16 +27,28 @@ MirTrustSession::MirTrustSession(
     std::shared_ptr<mcl::TrustSessionControl> const& trust_session_control)
     : server(server),
       trust_session_control(trust_session_control),
-      trust_session_control_fn_id(-1)
+      started(false)
 {
+    trust_session_control_fn_id = trust_session_control->add_trust_session_event_handler(
+        [this]
+        (int id, MirTrustSessionState state)
+        {
+            std::lock_guard<std::recursive_mutex> lock(mutex);
+
+            if (session.id().value() == id) {
+                if (handle_trust_session_event) {
+                    handle_trust_session_event(id, state);
+                }
+                started.store(state == mir_trust_session_started);
+            }
+
+        }
+    );
 }
 
 MirTrustSession::~MirTrustSession()
 {
-    if (trust_session_control_fn_id == -1)
-    {
-        trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
-    }
+    trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
 }
 
 MirTrustSessionAddApplicationResult MirTrustSession::add_app_with_pid(pid_t pid)
@@ -89,12 +101,7 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void *
 
 void MirTrustSession::register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context)
 {
-    if (trust_session_control_fn_id != -1)
-    {
-        trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
-    }
-
-    trust_session_control_fn_id = trust_session_control->add_trust_session_event_handler(
+    handle_trust_session_event =
         [this, callback, context]
         (int id, MirTrustSessionState state)
         {
@@ -104,12 +111,13 @@ void MirTrustSession::register_trust_session_event_callback(mir_trust_session_ev
                 callback(this, state, context);
             }
         }
-    );
+    ;
 }
 
 void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
     set_error_message(session.error());
+    started.store(!session.has_error());
 
     callback(this, context);
     start_wait_handle.result_received();
@@ -117,6 +125,7 @@ void MirTrustSession::done_start(mir_trust_session_callback callback, void* cont
 
 void MirTrustSession::done_stop(mir_trust_session_callback callback, void* context)
 {
+    started.store(false);
     callback(this, context);
     stop_wait_handle.result_received();
 }
@@ -147,4 +156,9 @@ int MirTrustSession::id() const
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return session.id().value();
+}
+
+bool MirTrustSession::is_started() const
+{
+    return started.load();
 }

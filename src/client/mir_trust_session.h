@@ -25,6 +25,7 @@
 
 #include <mutex>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
@@ -57,6 +58,8 @@ public:
     void set_error_message(std::string const& error);
     int id() const;
 
+    bool is_started() const;
+
 private:
     mutable std::recursive_mutex mutex; // Protects all members of *this
 
@@ -69,10 +72,12 @@ private:
     std::string error_message;
 
     std::shared_ptr<mir::client::TrustSessionControl> const trust_session_control;
+    std::function<void(uint32_t, MirTrustSessionState)> handle_trust_session_event;
     int trust_session_control_fn_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
+    std::atomic<bool> started;
 
     void done_start(mir_trust_session_callback callback, void* context);
     void done_stop(mir_trust_session_callback callback, void* context);

@@ -568,6 +568,15 @@ MirWaitHandle *mir_trust_session_start(MirTrustSession *trust_session,
     }
 }
 
+MirBool mir_trust_session_start_sync(MirTrustSession *trust_session)
+{
+    mir_wait_for(mir_trust_session_start(trust_session,
+                             reinterpret_cast<mir_trust_session_callback>
+                                             (assign_result),
+                             NULL));
+    return trust_session->is_started() ? mir_true : mir_false;
+}
+
 MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session,
                                         mir_trust_session_callback callback,
                                         void* context)
@@ -581,6 +590,20 @@ MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session,
         // TODO callback with an error
         return nullptr;
     }
+}
+
+MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session)
+{
+    mir_wait_for(mir_trust_session_stop(trust_session,
+                             reinterpret_cast<mir_trust_session_callback>
+                                             (assign_result),
+                             NULL));
+    return trust_session->is_started() ? mir_false : mir_true;
+}
+
+MirBool mir_trust_session_is_started(MirTrustSession *trust_session)
+{
+    return trust_session->is_started() ? mir_true : mir_false;
 }
 
 void mir_trust_session_set_event_callback(MirTrustSession* trust_session,

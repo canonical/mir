@@ -37,41 +37,67 @@ MirTrustSession* mir_trust_session_create(MirConnection* connection);
 
 /**
  * Create an new trust session
- * \param [in] session  The trust session
- * \param [in] pid      The process id of the application to add
- * \return              A MirTrustSessionAddApplicationResult result of the call
+ *   \param [in] trust_session  The trust session
+ *   \param [in] pid            The process id of the application to add
+ *   \return                    A MirTrustSessionAddApplicationResult result of the call
  */
-MirTrustSessionAddApplicationResult mir_trust_session_add_app_with_pid(MirTrustSession *session,
+MirTrustSessionAddApplicationResult mir_trust_session_add_app_with_pid(MirTrustSession *trust_session,
     pid_t pid);
 
 /**
  * Register a callback to be called when a Lifecycle state change occurs.
- *   \param [in] session        The trust session
+ *   \param [in] trust_session  The trust session
  *   \param [in] callback       The function to be called when the state change occurs
  *   \param [in,out] context    User data passed to the callback function
  */
-void mir_trust_session_set_event_callback(MirTrustSession* session,
+void mir_trust_session_set_event_callback(MirTrustSession* trust_session,
     mir_trust_session_event_callback callback, void* context);
 
 /**
  * Request the start of a trust session
- * \param [in] session  The trust session
- * \return              True if the request was made successfully,
- *                      false otherwise
+ *   \param [in] trust_session  The trust session
+ *   \param [in] callback       Callback function to be invoked when request
+ *                              completes
+ *   \param [in,out] context    User data passed to the callback function
+ *   \return                    A handle that can be passed to mir_wait_for
  */
-MirWaitHandle *mir_trust_session_start(MirTrustSession *session, mir_trust_session_callback callback, void* context);
+MirWaitHandle *mir_trust_session_start(MirTrustSession *trust_session, mir_trust_session_callback callback, void* context);
+
+/**
+ * Request the start of a trust session
+ *   \param [in] trust_session  The trust session
+ *   \return                    True if the request was made successfully,
+ *                              false otherwise
+ */
+MirBool mir_trust_session_start_sync(MirTrustSession *trust_session);
 
 /**
  * Request the cancellation of a trust session
- * \param [in] session  The trust session
- * \return              True if the request was made successfully,
- *                      false otherwise
+ *   \param [in] trust_session  The trust session
+ *   \return                    True if the request was made successfully,
+ *                              false otherwise
  */
-MirWaitHandle *mir_trust_session_stop(MirTrustSession *session, mir_trust_session_callback callback, void* context);
+MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session, mir_trust_session_callback callback, void* context);
+
+/**
+ * Request the start of a trust session
+ *   \param [in] trust_session  The trust session
+ *   \return                    True if the request was made successfully,
+ *                              false otherwise
+ */
+MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session);
+
+/**
+ * Test for a started trust session
+ * \param [in] trust_session  The trust session
+ * \return                    True if the supplied trust session has been started, or
+ *                            false otherwise.
+ */
+MirBool mir_trust_session_is_started(MirTrustSession *trust_session);
 
 /**
  * Release a trust session
- *   \param [in] trust_session  The trust session
+ *   \param [in] trust_session  The trust session to release
  */
 void mir_trust_session_release(MirTrustSession* trust_session);
 
