@@ -18,7 +18,7 @@
 
 #include <EventHub.h>
 
-#include "mir/input/input_report.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <umockdev.h>
 #include "mir_test_framework/udev_environment.h"
@@ -27,29 +27,6 @@
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
-
-namespace
-{
-class NullInputReport : public mi::InputReport
-{
-public:
-    NullInputReport() = default;
-
-    void received_event_from_kernel(int64_t /*when*/, int /*type*/, int /*code*/, int /*value*/) override
-    {
-    }
-    void published_key_event(int /*dest_fd*/, uint32_t /*seq_id*/, int64_t /*event_time*/) override
-    {
-    }
-    void published_motion_event(int /*dest_fd*/, uint32_t /*seq_id*/, int64_t /*event_time*/) override
-    {
-    }
-    virtual void received_event_finished_signal(int /*src_fd*/, uint32_t /*seq_id*/) override
-    {
-    }
-};
-
-}
 
 class EventHubDeviceEnumerationTest : public ::testing::TestWithParam<std::string>
 {
@@ -61,7 +38,7 @@ TEST_P(EventHubDeviceEnumerationTest, ScansOnConstruction)
     mir::mir_test_framework::UdevEnvironment env;
     env.add_standard_device(GetParam());
 
-    auto hub = android::sp<android::EventHub>{new android::EventHub{std::make_shared<NullInputReport>()}};
+    auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
 
     android::RawEvent buffer[10];
     memset(buffer, 0, sizeof(buffer));
@@ -79,7 +56,7 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceAddedOnHotplug)
 {
     mir::mir_test_framework::UdevEnvironment env;
 
-    auto hub = android::sp<android::EventHub>{new android::EventHub{std::make_shared<NullInputReport>()}};
+    auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
 
     android::RawEvent buffer[10];
     memset(buffer, 0, sizeof(buffer));
@@ -106,7 +83,7 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceRemovedOnHotunplug)
     mir::mir_test_framework::UdevEnvironment env;
     env.add_standard_device(GetParam());
 
-    auto hub = android::sp<android::EventHub>{new android::EventHub{std::make_shared<NullInputReport>()}};
+    auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
 
     android::RawEvent buffer[10];
     // Flush out initial events.
