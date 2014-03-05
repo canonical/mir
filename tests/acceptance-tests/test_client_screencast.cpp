@@ -163,7 +163,7 @@ TEST_F(MirScreencastTest, uses_provided_size_and_region)
 
     mf::ScreencastSessionId const screencast_session_id{99};
     uint32_t const output_id{2};
-    geom::Size const size{10, 20};
+    geom::Size const size{3, 4};
     geom::Rectangle const region {{1, 2}, size};
     MirScreencastParameters params {
         output_id,
