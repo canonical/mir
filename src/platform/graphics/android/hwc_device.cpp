@@ -38,16 +38,17 @@ static const size_t fbtarget_size = 1;
 void mga::HwcDevice::setup_layer_types()
 {
     auto it = hwc_list.additional_layers_begin();
-    auto distance = std::distance(it, hwc_list.end());
-    if(distance == fbtarget_plus_skip_size)
+    auto const num_additional_layers = std::distance(it, hwc_list.end());
+    switch (num_additional_layers)
     {
-        it->set_layer_type(mga::LayerType::skip);
-        it++;
-        it->set_layer_type(mga::LayerType::framebuffer_target);
+        case fbtarget_plus_skip_size:
+            it->set_layer_type(mga::LayerType::skip);
+            ++it;
+        case fbtarget_size:
+            it->set_layer_type(mga::LayerType::framebuffer_target);
+        default:
+            break;
     }
-
-    if (distance == fbtarget_size)
-        it->set_layer_type(mga::LayerType::framebuffer_target);
 }
 
 void mga::HwcDevice::set_list_framebuffer(mg::Buffer const& buffer)
