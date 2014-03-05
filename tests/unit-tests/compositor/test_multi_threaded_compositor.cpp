@@ -393,7 +393,7 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 {
     using namespace testing;
 
-    unsigned int const nbuffers{mc::max_client_buffers};
+    unsigned int const nbuffers = 3;
 
     auto display = std::make_shared<StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
