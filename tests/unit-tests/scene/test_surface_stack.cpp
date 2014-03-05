@@ -76,6 +76,7 @@ public:
     virtual void allow_framedropping(bool) {}
     virtual mg::BufferProperties properties() const { return mg::BufferProperties{}; };
     void resize(const geom::Size &) override {}
+    int buffers_ready_for_compositor() const override { return 1; }
 };
 
 

@@ -60,6 +60,12 @@ public:
     {
         return false;
     }
+
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
+
 private:
     glm::mat4 trans;
 };

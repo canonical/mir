@@ -137,11 +137,11 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surfac
     }
 
     if (found_surface)
+    {
         input_registrar->input_channel_closed(keep_alive->input_channel());
-
-    report->surface_removed(keep_alive.get(), keep_alive.get()->name());
-
-    emit_change_notification();
+        report->surface_removed(keep_alive.get(), keep_alive.get()->name());
+        emit_change_notification();
+    }
     // TODO: error logging when surface not found
 }
 

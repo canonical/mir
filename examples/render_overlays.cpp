@@ -90,6 +90,11 @@ public:
         return rect.overlaps(position);
     }
 
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const renderable_buffer;
     geom::Rectangle const position;

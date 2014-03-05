@@ -48,6 +48,7 @@ public:
     MOCK_METHOD0(force_client_abort, void());
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD1(resize, void(const geometry::Size &));
+    int buffers_ready_for_compositor() const override { return 1; }
 };
 
 }

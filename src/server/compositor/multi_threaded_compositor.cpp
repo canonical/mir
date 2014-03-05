@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -90,10 +90,7 @@ public:
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
-            while (!frames_scheduled && running)
-                run_cv.wait(lock);
-
-            frames_scheduled--;
+            run_cv.wait(lock, [&]{ return frames_scheduled || !running; });
 
             /*
              * Check if we are running before compositing, since we may have
@@ -101,9 +98,19 @@ public:
              */
             if (running)
             {
+                frames_scheduled = false;
                 lock.unlock();
-                display_buffer_compositor->composite();
+                auto more_frames_pending = display_buffer_compositor->composite();
+
+                /*
+                 * Each surface could have a number of frames ready in its buffer
+                 * queue. And we need to ensure that we render all of them so that
+                 * none linger in the queue indefinitely (seen as input lag).
+                 * more_frames_pending indicates that there are we need to schedule
+                 * more frames to ensure all surfaces' queues are fully drained.
+                 */
                 lock.lock();
+                frames_scheduled |= more_frames_pending;
             }
         }
     }
@@ -112,15 +119,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
-        /*
-         * Each surface could have a number of frames ready in its buffer
-         * queue. And we need to ensure that we render all of them so that
-         * none linger in the queue indefinitely (seen as input lag). So while
-         * there's no API support for finding out queue lengths, assume the
-         * worst and schedule enough frames to ensure all surfaces' queues
-         * are fully drained.
-         */
-        frames_scheduled = max_client_buffers;
+        frames_scheduled = true;
         run_cv.notify_one();
     }
 
@@ -135,7 +134,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
     bool running;
-    int frames_scheduled;
+    bool frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
