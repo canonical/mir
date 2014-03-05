@@ -42,9 +42,12 @@ const GLchar* vertex_shader_src =
     "uniform mat4 screen_to_gl_coords;\n"
     "uniform mat4 display_transform;\n"
     "uniform mat4 transform;\n"
+    "uniform vec2 centre;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_Position = display_transform * screen_to_gl_coords * transform * vec4(position, 1.0);\n"
+    "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
+    "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
+    "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
@@ -93,6 +96,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     program(0),
     position_attr_loc(0),
     texcoord_attr_loc(0),
+    centre_uniform_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
     rotation(NAN) // ensure the first set_rotation succeeds
@@ -155,6 +159,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     alpha_uniform_loc = glGetUniformLocation(program, "alpha");
     position_attr_loc = glGetAttribLocation(program, "position");
     texcoord_attr_loc = glGetAttribLocation(program, "texcoord");
+    centre_uniform_loc = glGetUniformLocation(program, "centre");
 
     glUniform1i(tex_loc, 0);
 
@@ -208,6 +213,13 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
         glDisable(GL_BLEND);
     }
     glActiveTexture(GL_TEXTURE0);
+
+    auto const& rect = renderable.screen_position();
+    GLfloat centrex = rect.top_left.x.as_int() +
+                      rect.size.width.as_int() / 2.0f;
+    GLfloat centrey = rect.top_left.y.as_int() +
+                      rect.size.height.as_int() / 2.0f;
+    glUniform2f(centre_uniform_loc, centrex, centrey);
 
     glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
                        glm::value_ptr(renderable.transformation()));
