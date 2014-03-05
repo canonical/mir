@@ -45,7 +45,7 @@ public:
     MirScreencast(
         mir::geometry::Rectangle const& region,
         mir::geometry::Size const& size,
-        MirDisplayOutput const& output,
+        MirPixelFormat pixel_format,
         mir::protobuf::DisplayServer& server,
         std::shared_ptr<mir::client::EGLNativeWindowFactory> const& egl_native_window_factory,
         std::shared_ptr<mir::client::ClientBufferFactory> const& factory,
@@ -78,8 +78,7 @@ private:
         mir_screencast_callback callback, void* context);
 
     mir::protobuf::DisplayServer& server;
-    uint32_t const output_id;
-    mir::geometry::Size output_size;
+    mir::geometry::Size const output_size;
     MirPixelFormat const output_format;
     std::shared_ptr<mir::client::EGLNativeWindowFactory> const egl_native_window_factory;
     mir::client::ClientBufferDepository buffer_depository;

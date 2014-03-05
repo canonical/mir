@@ -60,22 +60,20 @@ mc::CompositingScreencast::CompositingScreencast(
 }
 
 mf::ScreencastSessionId mc::CompositingScreencast::create_session(
-    graphics::DisplayConfigurationOutputId output_id,
     geom::Rectangle const& region,
-    geom::Size const& size)
+    geom::Size const& size,
+    MirPixelFormat const pixel_format)
 {
-    geom::Rectangle extents;
-    MirPixelFormat pixel_format;
-    std::tie(extents,pixel_format) = output_info_for(output_id);
-
-    extents = choose_region(region, extents);
-
+    if (size.width.as_int() == 0 ||
+        size.height.as_int() == 0 ||
+        region.size.width.as_int() == 0 ||
+        region.size.height.as_int() == 0 ||
+        pixel_format == mir_pixel_format_invalid) {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
+    }
     std::lock_guard<decltype(session_mutex)> lock{session_mutex};
     auto const id = next_available_session_id();
-    session_contexts[id] = create_session_context(
-            extents,
-            choose_size(size, extents.size),
-            pixel_format);
+    session_contexts[id] = create_session_context(region, size, pixel_format);
 
     return id;
 }
@@ -121,67 +119,6 @@ mf::ScreencastSessionId mc::CompositingScreencast::next_available_session_id()
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Too many screencast sessions!"));
 }
-
-std::pair<geom::Rectangle,MirPixelFormat>
-mc::CompositingScreencast::output_info_for(
-    graphics::DisplayConfigurationOutputId output_id)
-{
-    auto const conf = display->configuration();
-    geom::Rectangle extents;
-    MirPixelFormat pixel_format{mir_pixel_format_invalid};
-
-    conf->for_each_output(
-        [&](mg::DisplayConfigurationOutput const& output)
-        {
-            if (output.id == output_id &&
-                output.connected && output.used &&
-                output.current_mode_index < output.modes.size())
-            {
-                extents = output.extents();
-                pixel_format = output.current_format;
-            }
-        });
-
-    if (extents == geom::Rectangle() ||
-        pixel_format == mir_pixel_format_invalid)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid output for screen capture"));
-    }
-
-    return {extents, pixel_format};
-}
-
-geom::Rectangle mc::CompositingScreencast::choose_region(
-    geom::Rectangle const& client_region,
-    geom::Rectangle const& display_region)
-{
-    if (display_region.contains(client_region) &&
-        client_region.size.width.as_int() != 0 &&
-        client_region.size.height.as_int() != 0)
-    {
-        return client_region;
-    }
-    else {
-        return display_region;
-    }
-}
-
-geom::Size mc::CompositingScreencast::choose_size(
-    geom::Size const& client_size,
-    geom::Size const& display_size)
-{
-    if (client_size.width.as_int() != 0 &&
-            client_size.height.as_int() != 0)
-    {
-        return client_size;
-    }
-    else
-    {
-        return display_size;
-    }
-}
-
 
 std::shared_ptr<mc::detail::ScreencastSessionContext>
 mc::CompositingScreencast::create_session_context(

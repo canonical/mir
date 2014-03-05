@@ -85,7 +85,7 @@ uint32_t get_first_valid_output_id(MirConnection* connection)
     throw std::runtime_error("Couldn't find a valid output to screencast");
 }
 
-mir::geometry::Size get_output_size(MirConnection* connection, uint32_t output_id)
+MirScreencastParameters get_screencast_params(MirConnection* connection, uint32_t output_id)
 {
     auto const conf = mir::raii::deleter_for(
         mir_connection_create_display_config(connection),
@@ -102,7 +102,10 @@ mir::geometry::Size get_output_size(MirConnection* connection, uint32_t output_i
             output.current_mode < output.num_modes)
         {
             MirDisplayMode const& mode = output.modes[output.current_mode];
-            return mir::geometry::Size{mode.horizontal_resolution, mode.vertical_resolution};
+            return MirScreencastParameters{
+                {output.position_x, output.position_y, mode.horizontal_resolution, mode.vertical_resolution},
+                mode.horizontal_resolution, mode.vertical_resolution, output.current_format
+            };
         }
     }
 
@@ -200,14 +203,13 @@ struct EGLSetup
 };
 
 void do_screencast(MirConnection* connection, MirScreencast* screencast,
-                   uint32_t output_id, int32_t number_of_captures)
+                   mir::geometry::Size const& size, int32_t number_of_captures)
 {
     static int const rgba_pixel_size{4};
 
-    auto const frame_size = get_output_size(connection, output_id);
     auto const frame_size_bytes = rgba_pixel_size *
-                                  frame_size.width.as_uint32_t() *
-                                  frame_size.height.as_uint32_t();
+                                  size.width.as_uint32_t() *
+                                  size.height.as_uint32_t();
 
     std::vector<char> frame_data(frame_size_bytes, 0);
 
@@ -216,13 +218,13 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
 
     std::stringstream ss;
     ss << "/tmp/mir_screencast_" ;
-    ss << frame_size.width << "x" << frame_size.height;
+    ss << size.width << "x" << size.height;
     ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
     std::ofstream video_file(ss.str());
 
     while (running && (number_of_captures != 0))
     {
-        read_pixels(format, frame_size, frame_data.data());
+        read_pixels(format, size, frame_data.data());
 
         auto write_out_future = std::async(
                 std::launch::async,
@@ -300,10 +302,9 @@ try
     if (output_id == mir_display_output_id_invalid)
         output_id = get_first_valid_output_id(connection.get());
 
-    MirScreencastParameters params{
-        output_id, 0, 0, {0, 0, 0, 0}, mir_pixel_format_invalid};
+    std::cout << "Starting screencast for output id " << output_id << std::endl;
 
-    std::cout << "Starting screencast for output id " << params.output_id << std::endl;
+    MirScreencastParameters params = get_screencast_params(connection.get(), output_id);
 
     auto const screencast = mir::raii::deleter_for(
         mir_connection_create_screencast_sync(connection.get(), &params),
@@ -312,7 +313,8 @@ try
     if (screencast == nullptr)
         throw std::runtime_error("Failed to create screencast");
 
-    do_screencast(connection.get(), screencast.get(), output_id, number_of_captures);
+    mir::geometry::Size screencast_size {params.width, params.height};
+    do_screencast(connection.get(), screencast.get(), screencast_size, number_of_captures);
 
     return EXIT_SUCCESS;
 }
