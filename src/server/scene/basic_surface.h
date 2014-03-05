@@ -102,7 +102,7 @@ public:
     void frame_posted() override;
     void set_alpha(float alpha) override;
     void set_rotation(float degrees, glm::vec3 const&) override;
-    glm::mat4 const& transformation() const override;
+    glm::mat4 transformation() const override;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
     bool shaped() const  override;  // meaning the pixel format has alpha
 
@@ -110,6 +110,7 @@ public:
     std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override;
     bool alpha_enabled() const override;
     geometry::Rectangle screen_position() const override;
+    int buffers_ready_for_compositor() const override;
 
 private:
     BasicSurface(BasicSurface const&) = delete;

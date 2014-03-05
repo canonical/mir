@@ -75,6 +75,7 @@ public:
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
+    int buffers_ready_for_compositor() const override { return 1; }
 
 private:
     int render_operations_fd;

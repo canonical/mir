@@ -262,7 +262,7 @@ public:
 
         EXPECT_CALL(renderable, shaped()).WillRepeatedly(Return(false));
         EXPECT_CALL(renderable, alpha()).WillRepeatedly(Return(1.0f));
-        EXPECT_CALL(renderable, transformation()).WillRepeatedly(ReturnRef(trans));
+        EXPECT_CALL(renderable, transformation()).WillRepeatedly(Return(trans));
         EXPECT_CALL(mock_gl, glDisable(_)).Times(AnyNumber());
 
         InSequence s;
@@ -313,7 +313,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
     EXPECT_CALL(renderable, transformation())
-        .WillOnce(ReturnRef(trans));
+        .WillOnce(Return(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
     EXPECT_CALL(renderable, alpha())
         .WillOnce(Return(0.0f));

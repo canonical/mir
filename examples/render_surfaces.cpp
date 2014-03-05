@@ -342,7 +342,7 @@ public:
             {
             }
 
-            void composite()
+            bool composite()
             {
                 animate_cursor();
                 stop_watch.stop();
@@ -360,6 +360,7 @@ public:
                     m.step();
 
                 frames++;
+                return false;
             }
 
         private:

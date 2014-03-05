@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -50,6 +50,7 @@ public:
     virtual void resize(geometry::Size const& size) = 0;
     virtual void allow_framedropping(bool) = 0;
     virtual void force_requests_to_complete() = 0;
+    virtual int buffers_ready_for_compositor() const = 0;
 };
 
 }

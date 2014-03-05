@@ -134,11 +134,12 @@ public:
     {
     }
 
-    void composite()
+    bool composite()
     {
         mark_render_buffer();
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
+        return false;
     }
 
 private:
@@ -252,11 +253,12 @@ public:
     {
     }
 
-    void composite()
+    bool composite()
     {
         fake_surface_update();
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
+        return false;
     }
 
 private:
@@ -301,7 +303,7 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            void composite() {}
+            bool composite() { return false; }
         };
 
         auto raw = new NullDisplayBufferCompositor{};
@@ -310,7 +312,7 @@ public:
 };
 
 auto const null_report = mr::null_compositor_report();
-
+unsigned int const composites_per_update{1};
 }
 
 TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
@@ -373,7 +375,7 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
 
     compositor.start();
     scene->emit_change_event();
-    while (!db_compositor_factory->check_record_count_for_each_buffer(1, mc::max_client_buffers))
+    while (!db_compositor_factory->check_record_count_for_each_buffer(1, composites_per_update))
         std::this_thread::yield();
     compositor.stop();
 }
@@ -391,7 +393,7 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 {
     using namespace testing;
 
-    unsigned int const nbuffers{mc::max_client_buffers};
+    unsigned int const nbuffers = 3;
 
     auto display = std::make_shared<StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
@@ -403,28 +405,28 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 
     compositor.start();
 
-    // Initial render: 3 frames should be composited at least
-    while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3))
+    // Initial render: initial_composites frames should be composited at least
+    while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, composites_per_update))
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    // Now we have 3 redraws, pause for a while
+    // Now we have initial_composites redraws, pause for a while
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     // ... and make sure the number is still only 3
-    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, nbuffers, nbuffers));
+    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, composites_per_update, composites_per_update));
 
     // Trigger more surface changes
     scene->emit_change_event();
 
     // Display buffers should be forced to render another 3, so that's 6
-    while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 2*nbuffers))
+    while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 2*composites_per_update))
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     // Now pause without any further surface changes
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    // Verify we never triggered more than 6 compositions
-    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 2*nbuffers, 2*nbuffers));
+    // Verify we never triggered more than 2*initial_composites compositions
+    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 2*composites_per_update, 2*composites_per_update));
 
     compositor.stop();  // Pause the compositor so we don't race
 
@@ -435,14 +437,14 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
     compositor.start();
 
     // Display buffers should be forced to render another 3, so that's 9
-    while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*nbuffers))
+    while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*composites_per_update))
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     // Now pause without any further surface changes
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     // Verify we never triggered more than 9 compositions
-    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*nbuffers, 3*nbuffers));
+    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*composites_per_update, 3*composites_per_update));
 
     compositor.stop();
 }
