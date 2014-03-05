@@ -21,7 +21,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir_wait_handle.h"
-#include "client_trusted_session.h"
+#include "client_trust_session.h"
 
 #include <mutex>
 #include <memory>
@@ -31,27 +31,27 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
-class TrustedSessionControl;
+class TrustSessionControl;
 }
 }
 
-struct MirTrustedSession : public mir::client::TrustedSession
+struct MirTrustSession : public mir::client::TrustSession
 {
 public:
-    MirTrustedSession(mir::protobuf::DisplayServer::Stub & server,
-                      std::shared_ptr<mir::client::TrustedSessionControl> const& trusted_session_control);
+    MirTrustSession(mir::protobuf::DisplayServer::Stub & server,
+                      std::shared_ptr<mir::client::TrustSessionControl> const& trust_session_control);
 
-    ~MirTrustedSession();
+    ~MirTrustSession();
 
-    MirTrustedSession(MirTrustedSession const &) = delete;
-    MirTrustedSession& operator=(MirTrustedSession const &) = delete;
+    MirTrustSession(MirTrustSession const &) = delete;
+    MirTrustSession& operator=(MirTrustSession const &) = delete;
 
-    MirTrustedSessionAddApplicationResult add_app_with_pid(pid_t pid);
+    MirTrustSessionAddApplicationResult add_app_with_pid(pid_t pid);
 
-    MirWaitHandle* start(mir_trusted_session_callback callback, void * context);
-    MirWaitHandle* stop(mir_trusted_session_callback callback, void * context);
+    MirWaitHandle* start(mir_trust_session_callback callback, void * context);
+    MirWaitHandle* stop(mir_trust_session_callback callback, void * context);
 
-    void register_trusted_session_event_callback(mir_trusted_session_event_callback callback, void* context);
+    void register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context);
 
     char const * get_error_message();
     void set_error_message(std::string const& error);
@@ -63,19 +63,19 @@ private:
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
              race in session, last_buffer_id */
     mir::protobuf::DisplayServer::Stub & server;
-    mir::protobuf::TrustedSession session;
-    mir::protobuf::TrustedSessionParameters parameters;
+    mir::protobuf::TrustSession session;
+    mir::protobuf::TrustSessionParameters parameters;
     mir::protobuf::Void protobuf_void;
     std::string error_message;
 
-    std::shared_ptr<mir::client::TrustedSessionControl> const trusted_session_control;
-    int trusted_session_control_fn_id;
+    std::shared_ptr<mir::client::TrustSessionControl> const trust_session_control;
+    int trust_session_control_fn_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
 
-    void done_start(mir_trusted_session_callback callback, void* context);
-    void done_stop(mir_trusted_session_callback callback, void* context);
+    void done_start(mir_trust_session_callback callback, void* context);
+    void done_stop(mir_trust_session_callback callback, void* context);
 };
 
 #endif /* MIR_CLIENT_MIR_TRUSTED_SESSION_H_ */

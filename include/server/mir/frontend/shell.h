@@ -31,7 +31,7 @@ namespace mir
 namespace shell
 {
 struct SurfaceCreationParameters;
-struct TrustedSessionCreationParameters;
+struct TrustSessionCreationParameters;
 }
 namespace frontend
 {
@@ -55,11 +55,11 @@ public:
 
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
-    virtual SessionId start_trusted_session_for(std::string& error,
+    virtual SessionId start_trust_session_for(std::string& error,
                                                 std::shared_ptr<Session> const& session,
-                                                shell::TrustedSessionCreationParameters const& params,
+                                                shell::TrustSessionCreationParameters const& params,
                                                 std::shared_ptr<EventSink> const& sink) = 0;
-    virtual void stop_trusted_session(SessionId trusted_session_id) = 0;
+    virtual void stop_trust_session(SessionId trust_session_id) = 0;
 
 protected:
     Shell() = default;

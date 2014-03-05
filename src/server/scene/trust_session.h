@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_TRUSTED_SESSION_H_
 #define MIR_SCENE_TRUSTED_SESSION_H_
 
-#include "mir/shell/trusted_session.h"
+#include "mir/shell/trust_session.h"
 
 #include <vector>
 #include <atomic>
@@ -32,20 +32,20 @@ class EventSink;
 }
 namespace shell
 {
-class TrustedSessionCreationParameters;
+class TrustSessionCreationParameters;
 }
 
 namespace scene
 {
 class SessionContainer;
 
-class TrustedSession : public shell::TrustedSession
+class TrustSession : public shell::TrustSession
 {
 public:
-    TrustedSession(std::shared_ptr<shell::Session> const& session,
-                       shell::TrustedSessionCreationParameters const& parameters,
+    TrustSession(std::shared_ptr<shell::Session> const& session,
+                       shell::TrustSessionCreationParameters const& parameters,
                        std::shared_ptr<frontend::EventSink> const& sink);
-    virtual ~TrustedSession();
+    virtual ~TrustSession();
 
     frontend::SessionId id() const override;
 
@@ -57,14 +57,14 @@ public:
 
     void add_child_session(std::shared_ptr<shell::Session> const& session) override;
 
-    static std::shared_ptr<shell::TrustedSession> start_for(std::shared_ptr<shell::Session> const& session,
-                                                            shell::TrustedSessionCreationParameters const& parameters,
+    static std::shared_ptr<shell::TrustSession> start_for(std::shared_ptr<shell::Session> const& session,
+                                                            shell::TrustSessionCreationParameters const& parameters,
                                                             std::shared_ptr<SessionContainer> const& container,
                                                             std::shared_ptr<frontend::EventSink> const& sink);
 
 protected:
-    TrustedSession(const TrustedSession&) = delete;
-    TrustedSession& operator=(const TrustedSession&) = delete;
+    TrustSession(const TrustSession&) = delete;
+    TrustSession& operator=(const TrustSession&) = delete;
 
 private:
     frontend::SessionId next_id();

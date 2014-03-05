@@ -44,7 +44,7 @@ namespace client
 class DisplayConfiguration;
 class SurfaceMap;
 class LifecycleControl;
-class TrustedSessionControl;
+class TrustSessionControl;
 namespace rpc
 {
 
@@ -58,14 +58,14 @@ public:
                         std::shared_ptr<DisplayConfiguration> const& disp_config,
                         std::shared_ptr<RpcReport> const& rpc_report,
                         std::shared_ptr<LifecycleControl> const& lifecycle_control,
-                        std::shared_ptr<TrustedSessionControl> const& trusted_session_control);
+                        std::shared_ptr<TrustSessionControl> const& trust_session_control);
 
     MirSocketRpcChannel(int native_socket,
                         std::shared_ptr<SurfaceMap> const& surface_map,
                         std::shared_ptr<DisplayConfiguration> const& disp_config,
                         std::shared_ptr<RpcReport> const& rpc_report,
                         std::shared_ptr<LifecycleControl> const& lifecycle_control,
-                        std::shared_ptr<TrustedSessionControl> const& trusted_session_control);
+                        std::shared_ptr<TrustSessionControl> const& trust_session_control);
     ~MirSocketRpcChannel();
 
 private:
@@ -101,7 +101,7 @@ private:
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
-    std::shared_ptr<TrustedSessionControl> trusted_session_control;
+    std::shared_ptr<TrustSessionControl> trust_session_control;
     std::atomic<bool> disconnected;
 };
 

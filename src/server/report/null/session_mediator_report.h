@@ -51,9 +51,9 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 
     void session_configure_display_called(std::string const& app_name) override;
 
-    void session_start_trusted_session_called(std::string const& app_name) override;
+    void session_start_trust_session_called(std::string const& app_name) override;
 
-    void session_stop_trusted_session_called(std::string const& app_name) override;
+    void session_stop_trust_session_called(std::string const& app_name) override;
 
     void session_error(
         std::string const& app_name,

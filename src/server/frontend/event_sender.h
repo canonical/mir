@@ -41,7 +41,7 @@ public:
     void handle_event(MirEvent const& e);
     void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
-    void handle_trusted_session_event(SessionId session_id, MirTrustedSessionState state);
+    void handle_trust_session_event(SessionId session_id, MirTrustSessionState state);
 
 private:
     void send_event_sequence(protobuf::EventSequence&);

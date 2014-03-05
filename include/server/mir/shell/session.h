@@ -31,7 +31,7 @@ namespace scene { class SessionContainer; }
 namespace shell
 {
 class Surface;
-class TrustedSession;
+class TrustSession;
 
 class Session : public frontend::Session
 {
@@ -44,8 +44,8 @@ public:
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 
-    virtual std::shared_ptr<TrustedSession> get_trusted_session() const = 0;
-    virtual void set_trusted_session(std::shared_ptr<TrustedSession> const& trusted_session) = 0;
+    virtual std::shared_ptr<TrustSession> get_trust_session() const = 0;
+    virtual void set_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
     virtual std::shared_ptr<Session> get_parent() const = 0;
     virtual void set_parent(std::shared_ptr<shell::Session> const& parent) = 0;

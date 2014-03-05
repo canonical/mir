@@ -83,7 +83,7 @@ struct NullEventSink : mf::EventSink
     void handle_event(MirEvent const& /*e*/) {}
     void handle_lifecycle_event(MirLifecycleState /*state*/) {}
     void handle_display_config_change(mg::DisplayConfiguration const& /*config*/) {}
-    void handle_trusted_session_event(mf::SessionId /*session_id*/, MirTrustedSessionState /*state*/) {}
+    void handle_trust_session_event(mf::SessionId /*session_id*/, MirTrustSessionState /*state*/) {}
 };
 }
 

@@ -24,7 +24,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/trusted_session_creation_parameters.h"
+#include "mir/shell/trust_session_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -445,9 +445,9 @@ void mf::SessionMediator::drm_auth_magic(
     done->Run();
 }
 
-void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcController*,
-    const ::mir::protobuf::TrustedSessionParameters* request,
-    ::mir::protobuf::TrustedSession* response,
+void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustSessionParameters* request,
+    ::mir::protobuf::TrustSession* response,
     ::google::protobuf::Closure* done)
 {
     {
@@ -457,9 +457,9 @@ void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcControlle
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_start_trusted_session_called(session->name());
+        report->session_start_trust_session_called(session->name());
 
-        msh::TrustedSessionCreationParameters parameters;
+        msh::TrustSessionCreationParameters parameters;
         for (auto i=0; i < request->application_size(); i++)
         {
             auto& application = request->application(i);
@@ -467,7 +467,7 @@ void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcControlle
         }
 
         std::string error;
-        auto const session_id = shell->start_trusted_session_for(error, session, parameters, event_sink);
+        auto const session_id = shell->start_trust_session_for(error, session, parameters, event_sink);
 
         if (!error.empty())
             response->set_error(error);
@@ -476,8 +476,8 @@ void mf::SessionMediator::start_trusted_session(::google::protobuf::RpcControlle
     done->Run();
 }
 
-void mf::SessionMediator::stop_trusted_session(::google::protobuf::RpcController*,
-    const ::mir::protobuf::TrustedSessionId* request,
+void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustSessionId* request,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
@@ -488,11 +488,11 @@ void mf::SessionMediator::stop_trusted_session(::google::protobuf::RpcController
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_stop_trusted_session_called(session->name());
+        report->session_stop_trust_session_called(session->name());
 
         auto const id = SessionId(request->value());
 
-        shell->stop_trusted_session(id);
+        shell->stop_trust_session(id);
     }
     done->Run();
 }

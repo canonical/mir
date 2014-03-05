@@ -36,7 +36,7 @@ namespace shell
 class SurfaceFactory;
 class FocusSetter;
 class SessionListener;
-class TrustedSession;
+class TrustSession;
 }
 
 namespace scene
@@ -72,13 +72,13 @@ public:
 
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
-    frontend::SessionId start_trusted_session_for(std::string& error,
+    frontend::SessionId start_trust_session_for(std::string& error,
                                                   std::shared_ptr<frontend::Session> const& session,
-                                                  shell::TrustedSessionCreationParameters const& params,
+                                                  shell::TrustSessionCreationParameters const& params,
                                                   std::shared_ptr<frontend::EventSink> const& sink) override;
-    void stop_trusted_session(frontend::SessionId trusted_session_id) override;
+    void stop_trust_session(frontend::SessionId trust_session_id) override;
 
-    std::shared_ptr<shell::TrustedSession> get_trusted_session(frontend::SessionId id) const;
+    std::shared_ptr<shell::TrustSession> get_trust_session(frontend::SessionId id) const;
 
 protected:
     SessionManager(const SessionManager&) = delete;
@@ -99,10 +99,10 @@ private:
 
     std::mutex mutable surfaces_mutex;
 
-    typedef std::map<frontend::SessionId, std::shared_ptr<shell::TrustedSession>> TrustedSessions;
-    TrustedSessions::const_iterator checked_find(frontend::SessionId id) const;
-    std::mutex mutable trusted_sessions_mutex;
-    TrustedSessions trusted_sessions;
+    typedef std::map<frontend::SessionId, std::shared_ptr<shell::TrustSession>> TrustSessions;
+    TrustSessions::const_iterator checked_find(frontend::SessionId id) const;
+    std::mutex mutable trust_sessions_mutex;
+    TrustSessions trust_sessions;
 
 };
 

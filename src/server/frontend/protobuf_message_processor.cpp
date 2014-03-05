@@ -173,13 +173,13 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::release_screencast, invocation);
         }
-        else if ("start_trusted_session" == invocation.method_name())
+        else if ("start_trust_session" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::start_trusted_session, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::start_trust_session, invocation);
         }
-        else if ("stop_trusted_session" == invocation.method_name())
+        else if ("stop_trust_session" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::stop_trusted_session, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::stop_trust_session, invocation);
         }
         else if ("disconnect" == invocation.method_name())
         {

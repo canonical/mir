@@ -78,8 +78,8 @@ public:
 
     std::shared_ptr<SessionContainer> get_children() const;
 
-    std::shared_ptr<shell::TrustedSession> get_trusted_session() const;
-    void set_trusted_session(std::shared_ptr<shell::TrustedSession> const& trusted_session);
+    std::shared_ptr<shell::TrustSession> get_trust_session() const;
+    void set_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -102,9 +102,9 @@ private:
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
 
-    // trusted sessions
+    // trust sessions
     std::mutex mutable mutex;
-    std::shared_ptr<shell::TrustedSession> trusted_session;
+    std::shared_ptr<shell::TrustSession> trust_session;
     std::shared_ptr<shell::Session> parent;
     std::shared_ptr<SessionContainer> children;
 };

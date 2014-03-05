@@ -16,35 +16,35 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "mir/shell/trusted_session_creation_parameters.h"
+#include "mir/shell/trust_session_creation_parameters.h"
 
 namespace msh = mir::shell;
 
-msh::TrustedSessionCreationParameters::TrustedSessionCreationParameters()
+msh::TrustSessionCreationParameters::TrustSessionCreationParameters()
 {
 }
 
-msh::TrustedSessionCreationParameters& msh::TrustedSessionCreationParameters::add_application(pid_t application_pid)
+msh::TrustSessionCreationParameters& msh::TrustSessionCreationParameters::add_application(pid_t application_pid)
 {
     applications.push_back(application_pid);
     return *this;
 }
 
 bool msh::operator==(
-    const TrustedSessionCreationParameters& lhs,
-    const msh::TrustedSessionCreationParameters& rhs)
+    const TrustSessionCreationParameters& lhs,
+    const msh::TrustSessionCreationParameters& rhs)
 {
     return lhs.applications == rhs.applications;
 }
 
 bool msh::operator!=(
-    const TrustedSessionCreationParameters& lhs,
-    const msh::TrustedSessionCreationParameters& rhs)
+    const TrustSessionCreationParameters& lhs,
+    const msh::TrustSessionCreationParameters& rhs)
 {
     return !(lhs == rhs);
 }
 
-msh::TrustedSessionCreationParameters msh::a_trusted_session()
+msh::TrustSessionCreationParameters msh::a_trust_session()
 {
-    return TrustedSessionCreationParameters();
+    return TrustSessionCreationParameters();
 }

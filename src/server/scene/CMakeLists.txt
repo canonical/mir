@@ -16,5 +16,5 @@ ADD_LIBRARY(
   surface_source.cpp
   surface_impl.cpp
   threaded_snapshot_strategy.cpp
-  trusted_session.cpp
+  trust_session.cpp
 )

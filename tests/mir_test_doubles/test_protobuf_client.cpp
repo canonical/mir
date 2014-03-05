@@ -22,7 +22,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/lifecycle_control.h"
-#include "src/client/trusted_session_control.h"
+#include "src/client/trust_session_control.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
@@ -40,7 +40,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
-        std::make_shared<mir::client::TrustedSessionControl>())),
+        std::make_shared<mir::client::TrustSessionControl>())),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
@@ -51,8 +51,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
     drm_auth_magic_done_called(false),
     configure_display_done_called(false),
     tfd_done_called(false),
-    trusted_session_start_done_called(false),
-    trusted_session_stop_done_called(false),
+    trust_session_start_done_called(false),
+    trust_session_stop_done_called(false),
     connect_done_count(0),
     create_surface_done_count(0),
     disconnect_done_count(0)
@@ -77,10 +77,10 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
-    ON_CALL(*this, trusted_session_start_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trusted_session_start_done));
-    ON_CALL(*this, trusted_session_stop_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trusted_session_stop_done));
+    ON_CALL(*this, trust_session_start_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trust_session_start_done));
+    ON_CALL(*this, trust_session_stop_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trust_session_stop_done));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -130,14 +130,14 @@ void mir::test::TestProtobufClient::on_configure_display_done()
     configure_display_done_called.store(true);
 }
 
-void mir::test::TestProtobufClient::on_trusted_session_start_done()
+void mir::test::TestProtobufClient::on_trust_session_start_done()
 {
-    trusted_session_start_done_called.store(true);
+    trust_session_start_done_called.store(true);
 }
 
-void mir::test::TestProtobufClient::on_trusted_session_stop_done()
+void mir::test::TestProtobufClient::on_trust_session_stop_done()
 {
-    trusted_session_stop_done_called.store(true);
+    trust_session_stop_done_called.store(true);
 }
 
 void mir::test::TestProtobufClient::wait_for_configure_display_done()
@@ -244,22 +244,22 @@ void mir::test::TestProtobufClient::wait_for_tfd_done()
     tfd_done_called.store(false);
 }
 
-void mir::test::TestProtobufClient::wait_for_trusted_session_start_done()
+void mir::test::TestProtobufClient::wait_for_trust_session_start_done()
 {
-    for (int i = 0; !trusted_session_start_done_called.load() && i < maxwait; ++i)
+    for (int i = 0; !trust_session_start_done_called.load() && i < maxwait; ++i)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         std::this_thread::yield();
     }
-    trusted_session_start_done_called.store(false);
+    trust_session_start_done_called.store(false);
 }
 
-void mir::test::TestProtobufClient::wait_for_trusted_session_stop_done()
+void mir::test::TestProtobufClient::wait_for_trust_session_stop_done()
 {
-    for (int i = 0; !trusted_session_stop_done_called.load() && i < maxwait; ++i)
+    for (int i = 0; !trust_session_stop_done_called.load() && i < maxwait; ++i)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         std::this_thread::yield();
     }
-    trusted_session_stop_done_called.store(false);
+    trust_session_stop_done_called.store(false);
 }

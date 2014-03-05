@@ -29,22 +29,22 @@ namespace mir
 {
 namespace client
 {
-class TrustedSessionControl
+class TrustSessionControl
 {
 public:
-    TrustedSessionControl();
-    ~TrustedSessionControl();
+    TrustSessionControl();
+    ~TrustSessionControl();
 
-    int add_trusted_session_event_handler(std::function<void(uint32_t, MirTrustedSessionState)> const&);
-    void remove_trusted_session_event_handler(int id);
+    int add_trust_session_event_handler(std::function<void(uint32_t, MirTrustSessionState)> const&);
+    void remove_trust_session_event_handler(int id);
 
-    void call_trusted_session_event_handler(int32_t id, uint32_t state);
+    void call_trust_session_event_handler(int32_t id, uint32_t state);
 
 private:
     int next_id();
 
     std::mutex mutable guard;
-    std::map<int, std::function<void(uint32_t, MirTrustedSessionState)>> handle_trusted_session_events;
+    std::map<int, std::function<void(uint32_t, MirTrustSessionState)>> handle_trust_session_events;
     int next_fn_id;
 };
 }

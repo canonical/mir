@@ -17,14 +17,14 @@
  */
 
 #include "application_session.h"
-#include "trusted_session.h"
+#include "trust_session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
 #include "mir/frontend/event_sink.h"
 #include "default_session_container.h"
-#include "mir/shell/trusted_session.h"
+#include "mir/shell/trust_session.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -229,16 +229,16 @@ std::shared_ptr<ms::SessionContainer> ms::ApplicationSession::get_children() con
     return children;
 }
 
-std::shared_ptr<msh::TrustedSession> ms::ApplicationSession::get_trusted_session() const
+std::shared_ptr<msh::TrustSession> ms::ApplicationSession::get_trust_session() const
 {
     std::unique_lock<std::mutex> lock(mutex);
 
-    return trusted_session;
+    return trust_session;
 }
 
-void ms::ApplicationSession::set_trusted_session(std::shared_ptr<msh::TrustedSession> const& _trusted_session)
+void ms::ApplicationSession::set_trust_session(std::shared_ptr<msh::TrustSession> const& _trust_session)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
-    trusted_session = _trusted_session;
+    trust_session = _trust_session;
 }

@@ -16,46 +16,32 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SHELL_TRUSTED_SESSION_H_
-#define MIR_SHELL_TRUSTED_SESSION_H_
-
-#include "mir/frontend/session_id.h"
+#ifndef MIR_SHELL_TRUSTED_SESSION_CREATION_PARAMETERS_H_
+#define MIR_SHELL_TRUSTED_SESSION_CREATION_PARAMETERS_H_
 
 #include <sys/types.h>
 #include <vector>
 #include <string>
-#include <memory>
 
 namespace mir
 {
-
 namespace shell
 {
-class Session;
 
-class TrustedSession
+struct TrustSessionCreationParameters
 {
-public:
-    virtual ~TrustedSession() {}
+    TrustSessionCreationParameters();
 
-    virtual frontend::SessionId id() const = 0;
+    TrustSessionCreationParameters& add_application(pid_t application_pid);
 
-    virtual std::vector<pid_t> get_applications() const = 0;
-
-    virtual bool get_started() const = 0;
-    virtual std::shared_ptr<shell::Session> get_trusted_helper() const = 0;
-
-    virtual void stop() = 0;
-
-    virtual void add_child_session(std::shared_ptr<shell::Session> const& session) = 0;
-
-protected:
-    TrustedSession() = default;
-    TrustedSession(const TrustedSession&) = delete;
-    TrustedSession& operator=(const TrustedSession&) = delete;
+    std::vector<pid_t> applications;
 };
 
+bool operator==(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
+bool operator!=(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
+
+TrustSessionCreationParameters a_trust_session();
 }
 }
 
-#endif // MIR_SHELL_TRUSTED_SESSION_H_
+#endif /* MIR_SHELL_TRUSTED_SESSION_CREATION_PARAMETERS_H_ */

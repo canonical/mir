@@ -124,13 +124,13 @@ public:
                            mir::protobuf::Buffer*,
                            google::protobuf::Closure* done);
 
-    void start_trusted_session(::google::protobuf::RpcController* controller,
-                               const ::mir::protobuf::TrustedSessionParameters* request,
-                               ::mir::protobuf::TrustedSession* response,
+    void start_trust_session(::google::protobuf::RpcController* controller,
+                               const ::mir::protobuf::TrustSessionParameters* request,
+                               ::mir::protobuf::TrustSession* response,
                                ::google::protobuf::Closure* done) override;
 
-    void stop_trusted_session(::google::protobuf::RpcController* controller,
-                              const ::mir::protobuf::TrustedSessionId* request,
+    void stop_trust_session(::google::protobuf::RpcController* controller,
+                              const ::mir::protobuf::TrustSessionId* request,
                               ::mir::protobuf::Void* response,
                               ::google::protobuf::Closure* done) override;
 

@@ -45,7 +45,7 @@ class ClientPlatformFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
-class TrustedSessionControl;
+class TrustSessionControl;
 
 namespace rpc
 {
@@ -87,7 +87,7 @@ public:
             mir_surface_callback callback,
             void *context);
 
-    MirTrustedSession* create_trusted_session();
+    MirTrustSession* create_trust_session();
 
     char const * get_error_message();
 
@@ -168,7 +168,7 @@ private:
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
-    std::shared_ptr<mir::client::TrustedSessionControl> const trusted_session_control;
+    std::shared_ptr<mir::client::TrustSessionControl> const trust_session_control;
 
     std::vector<int> extra_platform_data;
 

@@ -46,7 +46,7 @@ typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 typedef struct MirScreencast MirScreencast;
-typedef struct MirTrustedSession MirTrustedSession;
+typedef struct MirTrustSession MirTrustSession;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -105,19 +105,19 @@ typedef void (*mir_display_config_callback)(
     MirConnection* connection, void* context);
 
 /**
- * Callback member of MirTrustedSession for handling of trusted sessions.
- *   \param [in] tps            The trusted session associated with the callback
+ * Callback member of MirTrustSession for handling of trust sessions.
+ *   \param [in] tps            The trust session associated with the callback
  *   \param [in,out] context    The context provided by the client
  */
-typedef void (*mir_trusted_session_callback)(MirTrustedSession* tps, void* context);
+typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
 
 /**
- * Callback member of MirTrustedSession for handling of trusted sessions.
- *   \param [in] tps            The trusted session associated with the callback
- *   \param [in] state          The state of the trusted session
+ * Callback member of MirTrustSession for handling of trust sessions.
+ *   \param [in] tps            The trust session associated with the callback
+ *   \param [in] state          The state of the trust session
  *   \param [in,out] context    The context provided by the client
  */
-typedef void (*mir_trusted_session_event_callback)(MirTrustedSession* tps, MirTrustedSessionState state, void* context);
+typedef void (*mir_trust_session_event_callback)(MirTrustSession* tps, MirTrustSessionState state, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -303,14 +303,14 @@ typedef struct MirScreencastParameters
 typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
 
 /**
- * MirTrustedSessionAddApplicationResult specifies the result of a
- * call to add an app id to a trusted session
+ * MirTrustSessionAddApplicationResult specifies the result of a
+ * call to add an app id to a trust session
  */
 typedef enum
 {
-    mir_trusted_session_app_addition_succeeded,
-    mir_trusted_session_app_already_part_of_trusted_session
-} MirTrustedSessionAddApplicationResult;
+    mir_trust_session_app_addition_succeeded,
+    mir_trust_session_app_already_part_of_trust_session
+} MirTrustSessionAddApplicationResult;
 
 #ifdef __cplusplus
 }

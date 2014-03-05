@@ -16,46 +16,46 @@
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#include "trusted_session_control.h"
+#include "trust_session_control.h"
 
 namespace mcl = mir::client;
 
-mcl::TrustedSessionControl::TrustedSessionControl() :
+mcl::TrustSessionControl::TrustSessionControl() :
     next_fn_id(0)
 {
 }
 
-mcl::TrustedSessionControl::~TrustedSessionControl()
+mcl::TrustSessionControl::~TrustSessionControl()
 {
 }
 
-int mcl::TrustedSessionControl::add_trusted_session_event_handler(std::function<void(uint32_t, MirTrustedSessionState)> const& fn)
+int mcl::TrustSessionControl::add_trust_session_event_handler(std::function<void(uint32_t, MirTrustSessionState)> const& fn)
 {
     std::unique_lock<std::mutex> lk(guard);
 
     int id = next_id();
-    handle_trusted_session_events[id] = fn;
+    handle_trust_session_events[id] = fn;
     return id;
 }
 
-void mcl::TrustedSessionControl::remove_trusted_session_event_handler(int id)
+void mcl::TrustSessionControl::remove_trust_session_event_handler(int id)
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    handle_trusted_session_events.erase(id);
+    handle_trust_session_events.erase(id);
 }
 
-void mcl::TrustedSessionControl::call_trusted_session_event_handler(int32_t id, uint32_t state)
+void mcl::TrustSessionControl::call_trust_session_event_handler(int32_t id, uint32_t state)
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    for (auto const& fn : handle_trusted_session_events)
+    for (auto const& fn : handle_trust_session_events)
     {
-        fn.second(id, static_cast<MirTrustedSessionState>(state));
+        fn.second(id, static_cast<MirTrustSessionState>(state));
     }
 }
 
-int mcl::TrustedSessionControl::next_id()
+int mcl::TrustSessionControl::next_id()
 {
     return ++next_fn_id;
 }

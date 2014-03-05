@@ -49,9 +49,9 @@ struct TestProtobufClient
     mir::protobuf::Connection connection;
     mir::protobuf::DisplayConfiguration disp_config;
     mir::protobuf::DisplayConfiguration disp_config_response;
-    mir::protobuf::TrustedSessionParameters trusted_session_parameters;
-    mir::protobuf::TrustedSession trusted_session;
-    mir::protobuf::TrustedSessionId trusted_session_id;
+    mir::protobuf::TrustSessionParameters trust_session_parameters;
+    mir::protobuf::TrustSession trust_session;
+    mir::protobuf::TrustSessionId trust_session_id;
 
     MOCK_METHOD0(connect_done, void());
     MOCK_METHOD0(create_surface_done, void());
@@ -60,8 +60,8 @@ struct TestProtobufClient
     MOCK_METHOD0(disconnect_done, void());
     MOCK_METHOD0(drm_auth_magic_done, void());
     MOCK_METHOD0(display_configure_done, void());
-    MOCK_METHOD0(trusted_session_start_done, void());
-    MOCK_METHOD0(trusted_session_stop_done, void());
+    MOCK_METHOD0(trust_session_start_done, void());
+    MOCK_METHOD0(trust_session_stop_done, void());
 
     void on_connect_done();
 
@@ -77,9 +77,9 @@ struct TestProtobufClient
 
     void on_configure_display_done();
 
-    void on_trusted_session_start_done();
+    void on_trust_session_start_done();
 
-    void on_trusted_session_stop_done();
+    void on_trust_session_stop_done();
 
     void wait_for_connect_done();
 
@@ -103,9 +103,9 @@ struct TestProtobufClient
 
     void wait_for_configure_display_done();
 
-    void wait_for_trusted_session_start_done();
+    void wait_for_trust_session_start_done();
 
-    void wait_for_trusted_session_stop_done();
+    void wait_for_trust_session_stop_done();
 
     const int maxwait;
     std::atomic<bool> connect_done_called;
@@ -116,8 +116,8 @@ struct TestProtobufClient
     std::atomic<bool> drm_auth_magic_done_called;
     std::atomic<bool> configure_display_done_called;
     std::atomic<bool> tfd_done_called;
-    std::atomic<bool> trusted_session_start_done_called;
-    std::atomic<bool> trusted_session_stop_done_called;
+    std::atomic<bool> trust_session_start_done_called;
+    std::atomic<bool> trust_session_stop_done_called;
 
     std::atomic<int> connect_done_count;
     std::atomic<int> create_surface_done_count;

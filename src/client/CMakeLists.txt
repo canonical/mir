@@ -44,8 +44,8 @@ set(
   private.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
-  mir_trusted_session.cpp
-  trusted_session_control.cpp
+  mir_trust_session.cpp
+  trust_session_control.cpp
 )
 
 add_library(

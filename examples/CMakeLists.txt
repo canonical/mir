@@ -86,8 +86,8 @@ target_link_libraries(mir_demo_client_scroll
 
 )
 
-add_executable(mir_demo_client_trusted_session trusted_session_trusted_session.c)
-target_link_libraries(mir_demo_client_trusted_session mirclient)
+add_executable(mir_demo_client_trust_session trust_session.c)
+target_link_libraries(mir_demo_client_trust_session mirclient)
 
 add_library(mirdraw STATIC graphics_utils.cpp)
 target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
@@ -156,7 +156,7 @@ set (INSTALL_DEMOS
   mir_demo_client_multiwin
   mir_demo_client_display_config
   mir_demo_client_progressbar
-  mir_demo_client_trusted_session
+  mir_demo_client_trust_session
   mir_demo_standalone_input_filter
   mir_demo_standalone_render_to_fb
   mir_demo_standalone_render_surfaces

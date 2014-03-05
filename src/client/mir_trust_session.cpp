@@ -16,30 +16,30 @@
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#include "mir_trusted_session.h"
-#include "trusted_session_control.h"
+#include "mir_trust_session.h"
+#include "trust_session_control.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
 
-MirTrustedSession::MirTrustedSession(
+MirTrustSession::MirTrustSession(
     mp::DisplayServer::Stub & server,
-    std::shared_ptr<mcl::TrustedSessionControl> const& trusted_session_control)
+    std::shared_ptr<mcl::TrustSessionControl> const& trust_session_control)
     : server(server),
-      trusted_session_control(trusted_session_control),
-      trusted_session_control_fn_id(-1)
+      trust_session_control(trust_session_control),
+      trust_session_control_fn_id(-1)
 {
 }
 
-MirTrustedSession::~MirTrustedSession()
+MirTrustSession::~MirTrustSession()
 {
-    if (trusted_session_control_fn_id == -1)
+    if (trust_session_control_fn_id == -1)
     {
-        trusted_session_control->remove_trusted_session_event_handler(trusted_session_control_fn_id);
+        trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
     }
 }
 
-MirTrustedSessionAddApplicationResult MirTrustedSession::add_app_with_pid(pid_t pid)
+MirTrustSessionAddApplicationResult MirTrustSession::add_app_with_pid(pid_t pid)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -49,54 +49,54 @@ MirTrustedSessionAddApplicationResult MirTrustedSession::add_app_with_pid(pid_t 
         auto const& application = parameters.application(i);
         if (application.has_pid() && application.pid() == pid)
         {
-            return mir_trusted_session_app_already_part_of_trusted_session;
+            return mir_trust_session_app_already_part_of_trust_session;
         }
     }
 
     auto app = parameters.add_application();
     app->set_pid(pid);
 
-    return mir_trusted_session_app_addition_succeeded;
+    return mir_trust_session_app_addition_succeeded;
 }
 
-MirWaitHandle* MirTrustedSession::start(mir_trusted_session_callback callback, void * context)
+MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void * context)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    server.start_trusted_session(
+    server.start_trust_session(
         0,
         &parameters,
         &session,
-        google::protobuf::NewCallback(this, &MirTrustedSession::done_start,
+        google::protobuf::NewCallback(this, &MirTrustSession::done_start,
                                       callback, context));
 
     return &start_wait_handle;
 }
 
-MirWaitHandle* MirTrustedSession::stop(mir_trusted_session_callback callback, void * context)
+MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void * context)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    server.stop_trusted_session(
+    server.stop_trust_session(
         0,
         &session.id(),
         &protobuf_void,
-        google::protobuf::NewCallback(this, &MirTrustedSession::done_stop,
+        google::protobuf::NewCallback(this, &MirTrustSession::done_stop,
                                       callback, context));
 
     return &stop_wait_handle;
 }
 
-void MirTrustedSession::register_trusted_session_event_callback(mir_trusted_session_event_callback callback, void* context)
+void MirTrustSession::register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context)
 {
-    if (trusted_session_control_fn_id != -1)
+    if (trust_session_control_fn_id != -1)
     {
-        trusted_session_control->remove_trusted_session_event_handler(trusted_session_control_fn_id);
+        trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
     }
 
-    trusted_session_control_fn_id = trusted_session_control->add_trusted_session_event_handler(
+    trust_session_control_fn_id = trust_session_control->add_trust_session_event_handler(
         [this, callback, context]
-        (int id, MirTrustedSessionState state)
+        (int id, MirTrustSessionState state)
         {
             std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -107,7 +107,7 @@ void MirTrustedSession::register_trusted_session_event_callback(mir_trusted_sess
     );
 }
 
-void MirTrustedSession::done_start(mir_trusted_session_callback callback, void* context)
+void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
     set_error_message(session.error());
 
@@ -115,13 +115,13 @@ void MirTrustedSession::done_start(mir_trusted_session_callback callback, void* 
     start_wait_handle.result_received();
 }
 
-void MirTrustedSession::done_stop(mir_trusted_session_callback callback, void* context)
+void MirTrustSession::done_stop(mir_trust_session_callback callback, void* context)
 {
     callback(this, context);
     stop_wait_handle.result_received();
 }
 
-char const * MirTrustedSession::get_error_message()
+char const * MirTrustSession::get_error_message()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -135,14 +135,14 @@ char const * MirTrustedSession::get_error_message()
     }
 }
 
-void MirTrustedSession::set_error_message(std::string const& error)
+void MirTrustSession::set_error_message(std::string const& error)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     error_message = error;
 }
 
-int MirTrustedSession::id() const
+int MirTrustSession::id() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 

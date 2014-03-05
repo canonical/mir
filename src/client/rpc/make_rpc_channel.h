@@ -29,7 +29,7 @@ namespace client
 class SurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
-class TrustedSessionControl;
+class TrustSessionControl;
 
 namespace rpc
 {
@@ -41,7 +41,7 @@ make_rpc_channel(std::string const& name,
                  std::shared_ptr<DisplayConfiguration> const& disp_conf,
                  std::shared_ptr<RpcReport> const& rpc_report,
                  std::shared_ptr<LifecycleControl> const& lifecycle_control,
-                 std::shared_ptr<TrustedSessionControl> const& trusted_session_control);
+                 std::shared_ptr<TrustSessionControl> const& trust_session_control);
 }
 }
 }

@@ -29,18 +29,18 @@ namespace client
  * Interface to client-side platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class TrustedSession
+class TrustSession
 {
 public:
-    virtual MirWaitHandle* start(mir_trusted_session_callback callback, void * context) = 0;
-    virtual MirWaitHandle* stop(mir_trusted_session_callback callback, void * context) = 0;
+    virtual MirWaitHandle* start(mir_trust_session_callback callback, void * context) = 0;
+    virtual MirWaitHandle* stop(mir_trust_session_callback callback, void * context) = 0;
 
 protected:
-    TrustedSession() {}
-    virtual ~TrustedSession() {}
+    TrustSession() {}
+    virtual ~TrustSession() {}
 
-    TrustedSession(const TrustedSession&) = delete;
-    TrustedSession& operator=(const TrustedSession&) = delete;
+    TrustSession(const TrustSession&) = delete;
+    TrustSession& operator=(const TrustSession&) = delete;
 };
 
 }

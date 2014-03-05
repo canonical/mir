@@ -144,12 +144,12 @@ message LifecycleEvent {
   optional string error = 127;
 }
 
-message TrustedSessionId {
+message TrustSessionId {
   required int32 value = 1;
 }
 
-message TrustedSessionEvent {
-  optional TrustedSessionId id = 1;
+message TrustSessionEvent {
+  optional TrustSessionId id = 1;
   required uint32 new_state = 2; // State transition
   optional string error = 127;
 }
@@ -158,7 +158,7 @@ message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
   optional LifecycleEvent lifecycle_event = 3;
-  optional TrustedSessionEvent trusted_session_event = 4;
+  optional TrustSessionEvent trust_session_event = 4;
   optional string error = 127;
 }
 
@@ -178,16 +178,16 @@ message Screencast {
   optional string error = 127;
 }
 
-message TrustedSessionApplication {
+message TrustSessionApplication {
   required int32 pid = 1;
 }
 
-message TrustedSessionParameters {
-  repeated TrustedSessionApplication application = 2;
+message TrustSessionParameters {
+  repeated TrustSessionApplication application = 2;
 }
 
-message TrustedSession {
-  optional TrustedSessionId id = 1;
+message TrustSession {
+  optional TrustSessionId id = 1;
   optional string error = 127;
 }
 
@@ -211,7 +211,7 @@ service DisplayServer {
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
 
-  rpc start_trusted_session(TrustedSessionParameters) returns (TrustedSession);
-  rpc stop_trusted_session(TrustedSessionId) returns (Void);
+  rpc start_trust_session(TrustSessionParameters) returns (TrustSession);
+  rpc stop_trust_session(TrustSessionId) returns (Void);
 }
 

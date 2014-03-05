@@ -17,8 +17,8 @@
  */
 
 #include "mir/frontend/event_sink.h"
-#include "mir/shell/trusted_session_creation_parameters.h"
-#include "src/server/scene/trusted_session.h"
+#include "mir/shell/trust_session_creation_parameters.h"
+#include "src/server/scene/trust_session.h"
 #include "src/server/scene/default_session_container.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -43,7 +43,7 @@ public:
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
-    MOCK_METHOD2(handle_trusted_session_event, void(mir::frontend::SessionId session_id, MirTrustedSessionState state));
+    MOCK_METHOD2(handle_trust_session_event, void(mir::frontend::SessionId session_id, MirTrustSessionState state));
 };
 struct MockSessionContainer : public ms::SessionContainer
 {
@@ -56,9 +56,9 @@ struct MockSessionContainer : public ms::SessionContainer
     ~MockSessionContainer() noexcept {}
 };
 
-struct TrustedSession : public testing::Test
+struct TrustSession : public testing::Test
 {
-    TrustedSession()
+    TrustSession()
     : set_parent_count(0)
     {
         container.insert_session(mt::fake_shared(trusted_helper));
@@ -71,11 +71,11 @@ struct TrustedSession : public testing::Test
 
         ON_CALL(trusted_app1, name()).WillByDefault(testing::Return("trusted_app1"));
         ON_CALL(trusted_app1, process_id()).WillByDefault(testing::Return(2));
-        ON_CALL(trusted_app1, set_parent(testing::_)).WillByDefault(Invoke(this, &TrustedSession::set_parent));
+        ON_CALL(trusted_app1, set_parent(testing::_)).WillByDefault(Invoke(this, &TrustSession::set_parent));
 
         ON_CALL(trusted_app2, name()).WillByDefault(testing::Return("trusted_app2"));
         ON_CALL(trusted_app2, process_id()).WillByDefault(testing::Return(3));
-        ON_CALL(trusted_app2, set_parent(testing::_)).WillByDefault(Invoke(this, &TrustedSession::set_parent));
+        ON_CALL(trusted_app2, set_parent(testing::_)).WillByDefault(Invoke(this, &TrustSession::set_parent));
     }
 
     void set_parent(std::shared_ptr<msh::Session> const&) {
@@ -93,47 +93,47 @@ struct TrustedSession : public testing::Test
 };
 }
 
-TEST_F(TrustedSession, start_and_stop)
+TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
 
-    EXPECT_CALL(sender, handle_trusted_session_event(_, mir_trusted_session_started)).Times(1);
-    EXPECT_CALL(sender, handle_trusted_session_event(_, mir_trusted_session_stopped)).Times(1);
+    EXPECT_CALL(sender, handle_trust_session_event(_, mir_trust_session_started)).Times(1);
+    EXPECT_CALL(sender, handle_trust_session_event(_, mir_trust_session_stopped)).Times(1);
 
-    msh::TrustedSessionCreationParameters parameters;
-    auto trusted_session = ms::TrustedSession::start_for(mt::fake_shared(trusted_helper),
+    msh::TrustSessionCreationParameters parameters;
+    auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
                                                       mt::fake_shared(container),
                                                       mt::fake_shared(sender));
-    trusted_session->stop();
+    trust_session->stop();
 }
 
-TEST_F(TrustedSession, trusted_session_ids)
+TEST_F(TrustSession, trust_session_ids)
 {
     using namespace testing;
 
-    msh::TrustedSessionCreationParameters parameters;
-    auto trusted_session1 = ms::TrustedSession::start_for(mt::fake_shared(trusted_helper),
+    msh::TrustSessionCreationParameters parameters;
+    auto trust_session1 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
                                                       mt::fake_shared(container),
                                                       mt::fake_shared(sender));
 
-    auto trusted_session2 = ms::TrustedSession::start_for(mt::fake_shared(trusted_helper),
+    auto trust_session2 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
                                                       mt::fake_shared(container),
                                                       mt::fake_shared(sender));
 
-    auto trusted_session3 = ms::TrustedSession::start_for(mt::fake_shared(trusted_helper),
+    auto trust_session3 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
                                                       mt::fake_shared(container),
                                                       mt::fake_shared(sender));
 
-    EXPECT_THAT(trusted_session1->id(), Ne(trusted_session2->id()));
-    EXPECT_THAT(trusted_session1->id(), Ne(trusted_session3->id()));
-    EXPECT_THAT(trusted_session2->id(), Ne(trusted_session3->id()));
+    EXPECT_THAT(trust_session1->id(), Ne(trust_session2->id()));
+    EXPECT_THAT(trust_session1->id(), Ne(trust_session3->id()));
+    EXPECT_THAT(trust_session2->id(), Ne(trust_session3->id()));
 }
 
-TEST_F(TrustedSession, parenting)
+TEST_F(TrustSession, parenting)
 {
     using namespace testing;
 
@@ -141,14 +141,14 @@ TEST_F(TrustedSession, parenting)
     EXPECT_CALL(trusted_app2, set_parent(_)).Times(1);
     EXPECT_CALL(child_container, insert_session(_)).Times(2);
 
-    msh::TrustedSessionCreationParameters parameters;
-    auto trusted_session = ms::TrustedSession::start_for(mt::fake_shared(trusted_helper),
+    msh::TrustSessionCreationParameters parameters;
+    auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters.add_application(trusted_app1.process_id())
                                                                 .add_application(trusted_app2.process_id()),
                                                       mt::fake_shared(container),
                                                       mt::fake_shared(sender));
 
     EXPECT_CALL(child_container, clear()).Times(1);
-    trusted_session->stop();
+    trust_session->stop();
 }
 

@@ -65,7 +65,7 @@ struct MockEventSink : public mf::EventSink
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
-    MOCK_METHOD2(handle_trusted_session_event, void(mf::SessionId session_id, MirTrustedSessionState state));
+    MOCK_METHOD2(handle_trust_session_event, void(mf::SessionId session_id, MirTrustSessionState state));
 };
 
 class StubSurfaceBuilder : public ms::SurfaceBuilder
@@ -80,10 +80,10 @@ public:
     std::weak_ptr<ms::BasicSurface> create_surface(msh::SurfaceCreationParameters const& ) override
     {
         dummy_surface = std::make_shared<ms::BasicSurface>(
-            std::string("stub"), 
-            geom::Rectangle{{},{}}, 
+            std::string("stub"),
+            geom::Rectangle{{},{}},
             [](){},
-            false, 
+            false,
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
             report);

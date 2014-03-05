@@ -19,7 +19,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_trusted_session.h"
+#include "mir_toolkit/mir_client_library_trust_session.h"
 
 #include <gtest/gtest.h>
 
@@ -30,7 +30,7 @@ namespace
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
-using MirClientLibraryTrustedSessionTest = DefaultDisplayServerTestFixture;
+using MirClientLibraryTrustSessionTest = DefaultDisplayServerTestFixture;
 
 namespace mir
 {
@@ -40,7 +40,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon()
         : connection(0)
-        , trusted_session(0)
+        , trust_session(0)
         , started(0)
         , stopped(0)
     {
@@ -57,13 +57,13 @@ struct ClientConfigCommon : TestingClientConfiguration
         connection = new_connection;
     }
 
-    static void trusted_session_start_callback(MirTrustedSession * /* session */, void * context)
+    static void trust_session_start_callback(MirTrustSession * /* session */, void * context)
     {
         ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
         config->started++;
     }
 
-    static void trusted_session_stop_callback(MirTrustedSession * /* session */, void * context)
+    static void trust_session_stop_callback(MirTrustSession * /* session */, void * context)
     {
         ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
         config->stopped++;
@@ -71,13 +71,13 @@ struct ClientConfigCommon : TestingClientConfiguration
 
 
     MirConnection* connection;
-    MirTrustedSession* trusted_session;
+    MirTrustSession* trust_session;
     int started;
     int stopped;
 };
 }
 
-TEST_F(MirClientLibraryTrustedSessionTest, client_library_trusted_session)
+TEST_F(MirClientLibraryTrustSessionTest, client_library_trust_session)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -89,14 +89,14 @@ TEST_F(MirClientLibraryTrustedSessionTest, client_library_trusted_session)
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ("", mir_connection_get_error_message(connection));
 
-            trusted_session = mir_trusted_session_create(connection);
-            ASSERT_TRUE(trusted_session != NULL);
+            trust_session = mir_trust_session_create(connection);
+            ASSERT_TRUE(trust_session != NULL);
 
-            mir_wait_for(mir_trusted_session_start(trusted_session, trusted_session_start_callback, this));
+            mir_wait_for(mir_trust_session_start(trust_session, trust_session_start_callback, this));
             EXPECT_EQ(started, 1);
             EXPECT_EQ(stopped, 0);
 
-            mir_wait_for(mir_trusted_session_stop(trusted_session, trusted_session_stop_callback, this));
+            mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
             EXPECT_EQ(stopped, 1);
 
             mir_connection_release(connection);
