@@ -61,7 +61,7 @@ TEST_P(EventHubDeviceEnumerationTest, ScansOnConstruction)
     mir::mir_test_framework::UdevEnvironment env;
     env.add_standard_device(GetParam());
 
-    auto hub = new android::EventHub{std::make_shared<NullInputReport>()};
+    auto hub = android::sp<android::EventHub>{new android::EventHub{std::make_shared<NullInputReport>()}};
 
     android::RawEvent buffer[10];
     memset(buffer, 0, sizeof(buffer));
@@ -79,7 +79,7 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceAddedOnHotplug)
 {
     mir::mir_test_framework::UdevEnvironment env;
 
-    auto hub = new android::EventHub{std::make_shared<NullInputReport>()};
+    auto hub = android::sp<android::EventHub>{new android::EventHub{std::make_shared<NullInputReport>()}};
 
     android::RawEvent buffer[10];
     memset(buffer, 0, sizeof(buffer));
@@ -106,7 +106,7 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceRemovedOnHotunplug)
     mir::mir_test_framework::UdevEnvironment env;
     env.add_standard_device(GetParam());
 
-    auto hub = new android::EventHub{std::make_shared<NullInputReport>()};
+    auto hub = android::sp<android::EventHub>{new android::EventHub{std::make_shared<NullInputReport>()}};
 
     android::RawEvent buffer[10];
     // Flush out initial events.
