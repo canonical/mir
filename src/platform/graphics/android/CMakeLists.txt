@@ -51,6 +51,8 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
+install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/android)
+
 if (MIR_TEST_PLATFORM STREQUAL "android")
   add_custom_command(TARGET mirplatformgraphicsandroid
     POST_BUILD
@@ -58,6 +60,11 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
     COMMAND ${CMAKE_COMMAND} -E create_symlink android/$<TARGET_FILE_NAME:mirplatformgraphicsandroid> libmirplatformgraphics.so
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
-endif()
 
-install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/android)
+  install(CODE
+    "execute_process(
+       COMMAND ln -sf mir/platformgraphics/android/libmirplatformgraphics.so
+       WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
+     )"
+  )
+endif()
