@@ -286,7 +286,7 @@ typedef struct MirScreencastParameters
     uint32_t width;
     uint32_t height;
     /**
-     * The rectangular region of the screen.to capture
+     * The rectangular region of the screen to capture.
      *
      * Set to 0's to capture all of the screen.
      */
