@@ -47,6 +47,7 @@ const GLchar* vertex_shader_src =
     "void main() {\n"
     "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
     "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
+    "   transformed.z = 0.0;\n" // avoid clipping while we lack depth/perspective
     "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
