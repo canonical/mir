@@ -247,7 +247,7 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
     notify_change();
 }
 
-glm::mat4 const& ms::BasicSurface::transformation() const
+glm::mat4 ms::BasicSurface::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
 
