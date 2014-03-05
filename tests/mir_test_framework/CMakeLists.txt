@@ -1,5 +1,3 @@
-add_definitions(-DUDEVMOCK_DIR="../../bin/udev_recordings")
-
 include_directories(
     ${Boost_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
