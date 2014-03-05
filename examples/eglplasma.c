@@ -85,14 +85,13 @@ int main(int argc, char *argv[])
         "    const float pi2 = 6.283185308;                      \n"
         "    float u = texcoord.x * pi2;                         \n"
         "    float v = texcoord.y * pi2;                         \n"
-        "    float t = mod(theta, pi2);                          \n"
-        "    float us = (cos(1.1 * u + 7.0 * t) +                \n"
-        "                cos(2.3 * v * cos(1.0 * t)) +           \n"
-        "                cos(0.3 * u * cos(3.0 * t))             \n"
+        "    float us = (cos(1.1 * u + 7.0 * theta) +            \n"
+        "                cos(2.3 * v * cos(1.0 * theta)) +       \n"
+        "                cos(0.3 * u * cos(3.0 * theta))         \n"
         "               ) / 3.0;                                 \n"
-        "    float vs = (cos(2.3 * v + 8.0 * t) +                \n"
-        "                cos(1.3 * u * cos(3.0 * t)) +           \n"
-        "                cos(1.7 * v * cos(2.0 * t))             \n"
+        "    float vs = (cos(2.3 * v + 8.0 * theta) +            \n"
+        "                cos(1.3 * u * cos(3.0 * theta)) +       \n"
+        "                cos(1.7 * v * cos(2.0 * theta))         \n"
         "               ) / 3.0;                                 \n"
         "    float x = (us * vs + 1.0) / 2.0;                    \n"
         "    gl_FragColor = vec4(gradient(x), 1.0);              \n"
@@ -105,6 +104,7 @@ int main(int argc, char *argv[])
         1.0f,-1.0f,
        -1.0f,-1.0f,
     };
+    const float pi2 = 6.283185308f;
     GLuint vshader, fshader, prog;
     GLint linked, low_color, high_color, vpos, theta;
     unsigned int width = 0, height = 0;
@@ -151,6 +151,8 @@ int main(int argc, char *argv[])
     {
         glUniform1f(theta, angle);
         angle += 0.005f;
+        if (angle > pi2)
+            angle -= pi2;
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         mir_eglapp_swap_buffers();
     }
