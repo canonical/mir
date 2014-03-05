@@ -214,11 +214,11 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 
     glm::mat4 simple;
     EXPECT_CALL(mock_renderable1, transformation())
-        .WillOnce(ReturnRef(simple));
+        .WillOnce(Return(simple));
     EXPECT_CALL(mock_renderable2, transformation())
-        .WillOnce(ReturnRef(simple));
+        .WillOnce(Return(simple));
     EXPECT_CALL(mock_renderable3, transformation())
-        .WillOnce(ReturnRef(simple));
+        .WillOnce(Return(simple));
 
     EXPECT_CALL(mock_renderable1, should_be_rendered_in(_))
         .WillOnce(Return(true));
