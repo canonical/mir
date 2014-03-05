@@ -34,12 +34,6 @@ namespace compositor
 class GLRenderer : public Renderer
 {
 public:
-    struct Vertex
-    {
-        GLfloat position[3];
-        GLfloat texcoord[2];
-    };
-
     GLRenderer(geometry::Rectangle const& display_area);
     virtual ~GLRenderer() noexcept;
 
@@ -53,6 +47,12 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
+
+    struct Vertex
+    {
+        GLfloat position[3];
+        GLfloat texcoord[2];
+    };
 
     /**
      * tessellate defines the list of triangles that will be used to render
