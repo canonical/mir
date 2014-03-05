@@ -24,6 +24,7 @@
 #include "mir/graphics/buffer_id.h"
 #include <GLES2/gl2.h>
 #include <unordered_map>
+#include <vector>
 
 namespace mir
 {
@@ -33,6 +34,12 @@ namespace compositor
 class GLRenderer : public Renderer
 {
 public:
+    struct Vertex
+    {
+        GLfloat position[3];
+        GLfloat texcoord[2];
+    };
+
     GLRenderer(geometry::Rectangle const& display_area);
     virtual ~GLRenderer() noexcept;
 
@@ -46,6 +53,19 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
+
+    /**
+     * tessellate defines the list of triangles that will be used to render
+     * the surface. By default it just returns 4 vertices in a rectangular
+     * GL_TRIANGLE_STRIP. However you can override its behaviour to tessellate
+     * more finely and deform the vertices as used in effects like
+     * the magic lamp and wobbly windows.
+     *
+     * \returns The mode to be passed to glDrawArrays: GL_TRIANGLE_STRIP,
+     *          GL_TRIANGLE_FAN or GL_TRIANGLES.
+     */
+    virtual GLenum tessellate(graphics::Renderable const& renderable,
+                              std::vector<Vertex>& vertices) const;
 
 private:
     GLuint vertex_shader;
