@@ -277,12 +277,19 @@ typedef struct MirRectangle
 /**
  * MirScreencastParameters is the structure of required information that
  * you must provide to Mir in order to create a MirScreencast.
+ *
+ * Set width and height to 0 to capture at the native screen resolution.
  */
 typedef struct MirScreencastParameters
 {
     uint32_t output_id;
     uint32_t width;
     uint32_t height;
+    /**
+     * The rectangular region of the screen.to capture
+     *
+     * Set to 0's to capture all of the screen.
+     */
     MirRectangle region;
     MirPixelFormat pixel_format;
 } MirScreencastParameters;
