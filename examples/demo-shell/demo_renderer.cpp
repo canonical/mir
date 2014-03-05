@@ -29,5 +29,5 @@ DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
 void DemoRenderer::begin() const
 {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    GLRenderer::begin();
+    glClear(GL_COLOR_BUFFER_BIT);
 }
