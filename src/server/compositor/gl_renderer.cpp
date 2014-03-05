@@ -217,11 +217,9 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     GLenum draw_mode = tessellate(renderable, vertices);
    
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                          GL_FALSE, sizeof(Vertex),
-                          &vertices[0].position);
+                          GL_FALSE, sizeof(Vertex), &vertices[0].position);
     glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                          GL_FALSE, sizeof(Vertex),
-                          &vertices[0].texcoord);
+                          GL_FALSE, sizeof(Vertex), &vertices[0].texcoord);
 
     SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];
