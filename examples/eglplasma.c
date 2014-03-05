@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
         glUniform1f(theta, angle);
         angle += 0.005f;
         if (angle > pi2)
-            angle = 0.0f;
+            angle -= pi2;
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         mir_eglapp_swap_buffers();
     }
