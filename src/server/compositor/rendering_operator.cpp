@@ -25,10 +25,12 @@ namespace mc=mir::compositor;
 mc::RenderingOperator::RenderingOperator(
     Renderer& renderer,
     std::function<void(std::shared_ptr<void> const&)> save_resource,
-    unsigned long frameno) :
+    unsigned long frameno,
+    bool& uncomposited_buffers) :
     renderer(renderer),
     save_resource(save_resource),
-    frameno(frameno)
+    frameno(frameno),
+    uncomposited_buffers(uncomposited_buffers)
 {
 }
 
@@ -37,4 +39,5 @@ void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
     auto compositor_buffer = renderable.buffer(frameno);
     renderer.render(renderable, *compositor_buffer);
     save_resource(compositor_buffer);
+    uncomposited_buffers |= renderable.buffers_ready_for_compositor() > 1;
 }

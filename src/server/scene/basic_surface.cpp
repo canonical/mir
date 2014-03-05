@@ -318,3 +318,8 @@ geom::Rectangle ms::BasicSurface::screen_position() const
 {   // This would be more efficient to return a const reference
     return surface_rect;
 }
+
+int ms::BasicSurface::buffers_ready_for_compositor() const
+{
+    return surface_buffer_stream->buffers_ready_for_compositor();
+}
