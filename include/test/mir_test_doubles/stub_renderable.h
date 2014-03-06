@@ -48,7 +48,7 @@ public:
     {
         return 1.0f;
     }
-    glm::mat4 const& transformation() const override
+    glm::mat4 transformation() const override
     {
         return trans;
     }

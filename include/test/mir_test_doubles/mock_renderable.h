@@ -34,7 +34,7 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(alpha_enabled, bool());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
+    MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const& rect));
     MOCK_CONST_METHOD0(shaped, bool());
     int buffers_ready_for_compositor() const override { return 1; }

@@ -34,7 +34,6 @@ char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
 char const* const mo::host_socket_opt             = "host-socket";
-char const* const mo::standalone_opt              = "standalone";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
@@ -70,8 +69,6 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     namespace po = boost::program_options;
 
     add_options()
-        (standalone_opt, po::value<bool>(),
-            "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
