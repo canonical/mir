@@ -371,7 +371,7 @@ void mf::SessionMediator::create_screencast(
         {parameters->region_width(), parameters->region_height()}
     };
     geom::Size const size{parameters->width(), parameters->height()};
-    MirPixelFormat pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
+    MirPixelFormat const pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
 
     auto screencast_session_id = screencast->create_session(region, size, pixel_format);
     auto buffer = screencast->capture(screencast_session_id);

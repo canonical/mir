@@ -86,7 +86,8 @@ MirScreencast::MirScreencast(
         output_size.height.as_int() == 0 ||
         region.size.width.as_int()  == 0 ||
         region.size.height.as_int() == 0 ||
-        pixel_format == mir_pixel_format_invalid) {
+        pixel_format == mir_pixel_format_invalid)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
     }
     protobuf_screencast.set_error("Not initialized");
