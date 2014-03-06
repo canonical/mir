@@ -151,12 +151,12 @@ MATCHER_P(WithOutputId, value, "")
 
 MATCHER_P3(WithParams, region, size, pixel_format, "")
 {
-    return arg->width() == size.width.as_int() &&
-           arg->height() == size.height.as_int() &&
+    return arg->width() == size.width.as_uint32_t() &&
+           arg->height() == size.height.as_uint32_t() &&
            arg->region_left() == region.top_left.x.as_int() &&
            arg->region_top() == region.top_left.y.as_int() &&
-           arg->region_width() == region.size.width.as_int() &&
-           arg->region_height() == region.size.height.as_int() &&
+           arg->region_width() == region.size.width.as_uint32_t() &&
+           arg->region_height() == region.size.height.as_uint32_t() &&
            arg->pixel_format() == pixel_format;
 }
 
