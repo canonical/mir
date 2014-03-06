@@ -112,6 +112,7 @@ private:
     int force_drop;
 
     std::function<void(graphics::Buffer* buffer)> client_acquire_todo;
+    std::condition_variable client_acquire_cv;
 
     friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 };
