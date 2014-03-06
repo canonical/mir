@@ -84,6 +84,7 @@ private:
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
     void complete_client_acquire(std::unique_lock<std::mutex> lock);
+    bool client_buffers_available(std::unique_lock<std::mutex> const& lock);
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
