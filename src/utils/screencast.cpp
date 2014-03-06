@@ -113,12 +113,9 @@ MirRectangle get_screen_region_from(MirConnection* connection, uint32_t output_i
             output.current_mode < output.num_modes)
         {
             MirDisplayMode const& mode = output.modes[output.current_mode];
-            return MirRectangle{
-                output.position_x,
-                output.position_y,
-                mode.horizontal_resolution,
-                mode.vertical_resolution
-            };
+            return MirRectangle{output.position_x, output.position_y,
+                                mode.horizontal_resolution,
+                                mode.vertical_resolution};
         }
     }
 
@@ -131,19 +128,25 @@ MirScreencastParameters get_screencast_params(MirConnection* connection,
                                               uint32_t output_id)
 {
     MirScreencastParameters params;
-    if (requested_region.size() == 4) {
+    if (requested_region.size() == 4)
+    {
         params.region.left = requested_region[0];
         params.region.top = requested_region[1];
         params.region.width = requested_region[2];
         params.region.height = requested_region[3];
-    } else {
+    }
+    else
+    {
         params.region = get_screen_region_from(connection, output_id);
     }
 
-    if (requested_size.size() == 2) {
+    if (requested_size.size() == 2)
+    {
         params.width = requested_size[0];
         params.height = requested_size[1];
-    } else {
+    }
+    else
+    {
         params.width = params.region.width;
         params.height = params.region.height;
     }
@@ -303,10 +306,13 @@ try
             po::value<std::vector<int>>(&screen_region)->multitoken(),
             "screen region to capture [left top width height]")
         ("stdout", po::value<bool>(&use_std_out)->zero_tokens(), "use stdout for output (--file is ignored)")
-        ("query", po::value<bool>(&query_params_only)->zero_tokens(), "only queries the colorspace and output size used but does not start screencast");;
+        ("query",
+            po::value<bool>(&query_params_only)->zero_tokens(),
+            "only queries the colorspace and output size used but does not start screencast");
 
     po::variables_map vm;
-    try {
+    try
+    {
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
 
@@ -315,6 +321,9 @@ try
 
         if (vm.count("screen-region") && screen_region.size() != 4)
             throw po::error("invalid number of parameters specified for screen-region");
+
+        if (vm.count("display-id") && vm.count("screen-region"))
+            throw po::error("cannot set both display-id and screen-region");
     }
     catch(po::error& e)
     {
@@ -323,16 +332,16 @@ try
         return EXIT_FAILURE;
     }
 
-    if (vm.count("help")) {
+    if (vm.count("help"))
+    {
         std::cout << desc << std::endl;
         return EXIT_SUCCESS;
     }
 
-
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
-    const char* socket_name = vm.count("mir-socket-file") ? socket_filename.c_str() : nullptr;
+    char const* socket_name = vm.count("mir-socket-file") ? socket_filename.c_str() : nullptr;
     auto const connection = mir::raii::deleter_for(
         mir_connect_sync(socket_name, "mirscreencast"),
         [](MirConnection* c) { if (c) mir_connection_release(c); });
@@ -349,7 +358,7 @@ try
     }
 
     MirScreencastParameters params =
-            get_screencast_params(connection.get(), requested_size, screen_region, output_id);
+        get_screencast_params(connection.get(), requested_size, screen_region, output_id);
 
     auto const screencast = mir::raii::deleter_for(
         mir_connection_create_screencast_sync(connection.get(), &params),
@@ -361,15 +370,17 @@ try
     EGLSetup egl_setup{connection.get(), screencast.get()};
     mir::geometry::Size screencast_size {params.width, params.height};
 
-    if (query_params_only) {
+    if (query_params_only)
+    {
         std::cout << "Colorspace: " <<
-                (egl_setup.pixel_read_format() == GL_BGRA_EXT ? "BGRA" : "RGBA") << std::endl;
+            (egl_setup.pixel_read_format() == GL_BGRA_EXT ? "BGRA" : "RGBA") << std::endl;
         std::cout << "Output size: " <<
-                screencast_size.width << "x" << screencast_size.height << std::endl;
+            screencast_size.width << "x" << screencast_size.height << std::endl;
         return EXIT_SUCCESS;
     }
 
-    if (output_filename.empty()) {
+    if (output_filename.empty() && !use_std_out)
+    {
         std::stringstream ss;
         ss << "/tmp/mir_screencast_" ;
         ss << screencast_size.width << "x" << screencast_size.height;
@@ -378,7 +389,7 @@ try
     }
 
     do_screencast(egl_setup, screencast_size, number_of_captures,
-            use_std_out ? std::cout : std::move(std::ofstream(output_filename)));
+        use_std_out ? std::cout : std::move(std::ofstream(output_filename)));
 
     return EXIT_SUCCESS;
 }
