@@ -122,10 +122,10 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     mir::protobuf::ScreencastParameters protobuf_parameters;
     protobuf_parameters.set_width(0);
     protobuf_parameters.set_height(0);
-    protobuf_parameters.set_region_left(0);
-    protobuf_parameters.set_region_top(0);
-    protobuf_parameters.set_region_width(0);
-    protobuf_parameters.set_region_height(0);
+    protobuf_parameters.mutable_region()->set_left(0);
+    protobuf_parameters.mutable_region()->set_top(0);
+    protobuf_parameters.mutable_region()->set_width(0);
+    protobuf_parameters.mutable_region()->set_height(0);
     protobuf_parameters.set_pixel_format(0);
     mir::protobuf::Screencast protobuf_screencast;
 
