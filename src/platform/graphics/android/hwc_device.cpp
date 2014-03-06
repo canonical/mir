@@ -29,28 +29,60 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
+namespace
+{
+static const size_t fbtarget_plus_skip_size = 2;
+static const size_t fbtarget_size = 1;
+}
+
+void mga::HwcDevice::setup_layer_types()
+{
+    auto it = hwc_list.additional_layers_begin();
+    auto const num_additional_layers = std::distance(it, hwc_list.end());
+    switch (num_additional_layers)
+    {
+        case fbtarget_plus_skip_size:
+            it->set_layer_type(mga::LayerType::skip);
+            ++it;
+        case fbtarget_size:
+            it->set_layer_type(mga::LayerType::framebuffer_target);
+        default:
+            break;
+    }
+}
+
+void mga::HwcDevice::set_list_framebuffer(mg::Buffer const& buffer)
+{
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    for(auto it = hwc_list.additional_layers_begin(); it != hwc_list.end(); it++)
+    {
+        //TODO: the functions on mga::Layer should be consolidated
+        it->set_render_parameters(disp_frame, false);
+        it->set_buffer(buffer);
+        it->prepare_for_draw();
+    }
+}
+
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                           std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      LayerListBase{2},
+      hwc_list{{}, 2},
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
+    setup_layer_types();
 }
 
 void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    update_list_and_check_if_changed(2, {});
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-    list_needs_commit = true;
-    skip_layers_present = true;
+    hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
+    setup_layer_types();
 
-    hwc_wrapper->prepare(*native_list().lock());
+    list_needs_commit = true;
+
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     context.swap_buffers();
 }
@@ -60,18 +92,15 @@ void mga::HwcDevice::render_gl_and_overlays(
     std::list<std::shared_ptr<Renderable>> const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
-    auto const needed_size = renderables.size() + 1;
-    if (!(list_needs_commit = update_list_and_check_if_changed(needed_size, renderables)))
+    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
         return;
+    setup_layer_types();
 
-    skip_layers_present = false;
-
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-    hwc_wrapper->prepare(*native_list().lock());
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     //draw layers that the HWC did not accept for overlays here
     bool needs_swapbuffers = false;
-    auto layers_it = layers.begin();
+    auto layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
         //prepare all layers for draw. 
@@ -96,26 +125,14 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
         return;
 
     auto lg = lock_unblanked();
+    set_list_framebuffer(buffer);
+    hwc_wrapper->set(*hwc_list.native_list().lock());
 
-    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    //TODO: the functions on mga::Layer should be consolidated
-    if (skip_layers_present)
-    {
-        layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buffer);
-        layers.front().prepare_for_draw();
-    }
-
-    layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buffer);
-    layers.back().prepare_for_draw();
-
-    hwc_wrapper->set(*native_list().lock());
-    for(auto& layer : layers)
+    for(auto& layer : hwc_list)
     {
         layer.update_fence_and_release_buffer();
     }
 
-    mga::SyncFence retire_fence(sync_ops, retirement_fence());
+    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
     list_needs_commit = false;
 }

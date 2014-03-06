@@ -16,45 +16,56 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test_doubles/stub_renderable.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-
-TEST(LayerListTest, list_defaults)
+namespace mtd=mir::test::doubles;
+namespace
 {
-    mga::LayerList layerlist;
+struct LayerListTest : public testing::Test
+{
+    LayerListTest()
+        : renderables{std::make_shared<mtd::StubRenderable>(),
+                      std::make_shared<mtd::StubRenderable>(),
+                      std::make_shared<mtd::StubRenderable>()}
+    {}
+
+    std::list<std::shared_ptr<mg::Renderable>> renderables;
+};
+}
+
+TEST_F(LayerListTest, list_defaults)
+{
+    mga::LayerList layerlist{{}, 0};
 
     auto list = layerlist.native_list().lock();
     EXPECT_EQ(-1, list->retireFenceFd);
     EXPECT_EQ(HWC_GEOMETRY_CHANGED, list->flags);
     EXPECT_NE(nullptr, list->dpy);
     EXPECT_NE(nullptr, list->sur);
+    EXPECT_EQ(layerlist.begin(), layerlist.end());
+    EXPECT_EQ(layerlist.additional_layers_begin(), layerlist.end());
 }
 
-/* Tests without HWC_FRAMEBUFFER_TARGET */
-/* an empty list should have a skipped layer. This will force a GL render on hwc set */
-TEST(LayerListTest, hwc10_list_defaults)
+TEST_F(LayerListTest, list_iterators)
 {
-    mga::LayerList layerlist;
+    size_t additional_layers = 2;
+    mga::LayerList list(renderables, additional_layers);
+    EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers + renderables.size());
+    EXPECT_EQ(std::distance(list.additional_layers_begin(), list.end()), additional_layers);
+    EXPECT_EQ(std::distance(list.begin(), list.additional_layers_begin()), renderables.size());
 
-    hwc_layer_1_t skip_layer;
-    hwc_rect_t empty_region{0,0,0,0};
+    mga::LayerList list2({}, additional_layers);
+    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers);
+    EXPECT_EQ(std::distance(list2.additional_layers_begin(), list2.end()), additional_layers);
+    EXPECT_EQ(std::distance(list2.begin(), list2.additional_layers_begin()), 0);
 
-    skip_layer.compositionType = HWC_FRAMEBUFFER;
-    skip_layer.hints = 0;
-    skip_layer.flags = HWC_SKIP_LAYER;
-    skip_layer.handle = 0;
-    skip_layer.transform = 0;
-    skip_layer.blending = HWC_BLENDING_NONE;
-    skip_layer.sourceCrop = empty_region;
-    skip_layer.displayFrame = empty_region;
-    skip_layer.visibleRegionScreen = {1, &empty_region};
-    skip_layer.acquireFenceFd = -1;
-    skip_layer.releaseFenceFd = -1;
-
-    auto list = layerlist.native_list().lock();
-    ASSERT_EQ(1, list->numHwLayers);
-    EXPECT_THAT(skip_layer, MatchesLayer(list->hwLayers[0]));
+    mga::LayerList list3(renderables, 0);
+    EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
+    EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
+    EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
 }
