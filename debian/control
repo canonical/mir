@@ -109,7 +109,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          libmirplatform (= ${binary:Version}),
-Description: Display server for Ubuntu - platform library
+Description: Display server for Ubuntu - platform library for Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
@@ -124,7 +124,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          libmirplatform (= ${binary:Version}),
-Description: Display server for Ubuntu - platform library
+Description: Display server for Ubuntu - platform library for Android
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
@@ -198,7 +198,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Replaces: libmirclientplatform
-Description: Display server for Ubuntu - client platform library
+Description: Display server for Ubuntu - client platform library for Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
@@ -213,7 +213,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Replaces: libmirclientplatform
-Description: Display server for Ubuntu - client platform library
+Description: Display server for Ubuntu - client platform library for Android
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
