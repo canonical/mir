@@ -56,13 +56,22 @@ public:
 
     /**
      * tessellate defines the list of triangles that will be used to render
-     * the surface. By default it just returns 4 vertices in a rectangular
-     * GL_TRIANGLE_STRIP. However you can override its behaviour to tessellate
-     * more finely and deform the vertices as used in effects like
-     * the magic lamp and wobbly windows.
+     * the surface. By default it just returns 4 vertices for a rectangle.
+     * However you can override its behaviour to tessellate more finely and
+     * deform freely for effects like wobbly windows.
      *
-     * \returns The mode to be passed to glDrawArrays: GL_TRIANGLE_STRIP,
+     * \returns The mode to be passed to glDrawArrays, e.g. GL_TRIANGLE_STRIP,
      *          GL_TRIANGLE_FAN or GL_TRIANGLES.
+     *
+     * \note The cohesion of this function to GLRenderer is quite loose and it
+     *       does not strictly need to reside here.
+     *       However it seems a good choice under GLRenderer while this remains
+     *       the only OpenGL-specific class in the display server, and
+     *       tessellation is very much OpenGL-specific. Also, the Renderer
+     *       is one of the few compositor classes that is easy to override
+     *       with a custom shell implementation right now. And that's a
+     *       requirement if you want to implement your own tessellate for
+     *       deformation effects.
      */
     virtual GLenum tessellate(graphics::Renderable const& renderable,
                               std::vector<Vertex>& vertices) const;
