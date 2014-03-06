@@ -388,8 +388,19 @@ try
         output_filename = ss.str();
     }
 
-    do_screencast(egl_setup, screencast_size, number_of_captures,
-        use_std_out ? std::cout : std::move(std::ofstream(output_filename)));
+    std::ostream *out_stream;
+    std::unique_ptr<std::ostream> file_stream;
+    if (use_std_out)
+    {
+        out_stream = &std::cout;
+    }
+    else
+    {
+        file_stream = std::move(std::unique_ptr<std::ostream>(new std::ofstream(output_filename)));
+        out_stream = file_stream.get();
+    }
+
+    do_screencast(egl_setup, screencast_size, number_of_captures, *out_stream);
 
     return EXIT_SUCCESS;
 }
