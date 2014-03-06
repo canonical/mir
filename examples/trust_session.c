@@ -188,8 +188,10 @@ void demo_client_trust_session_app(const char* server)
 
     // Wait for stdin
     char buff[1];
-    read(STDIN_FILENO, &buff, 1);
-    puts("demo_client_trust_session_app Done");
+    if (read(STDIN_FILENO, &buff, 1) > 0 )
+    {
+        puts("demo_client_trust_session_app Done");
+    }
 
     stop_session(&mcd);
 }
