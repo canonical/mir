@@ -49,7 +49,7 @@ public:
     {
         return 1.0f;
     }
-    glm::mat4 const& transformation() const override
+    glm::mat4 transformation() const override
     {
         return trans;
     }
@@ -61,6 +61,12 @@ public:
     {
         return false;
     }
+
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
+
 private:
     glm::mat4 trans;
 };

@@ -247,7 +247,7 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
     notify_change();
 }
 
-glm::mat4 const& ms::BasicSurface::transformation() const
+glm::mat4 ms::BasicSurface::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -317,4 +317,9 @@ bool ms::BasicSurface::alpha_enabled() const
 geom::Rectangle ms::BasicSurface::screen_position() const
 {   // This would be more efficient to return a const reference
     return surface_rect;
+}
+
+int ms::BasicSurface::buffers_ready_for_compositor() const
+{
+    return surface_buffer_stream->buffers_ready_for_compositor();
 }

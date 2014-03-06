@@ -75,7 +75,7 @@ public:
         return 1.0;
     }
     
-    glm::mat4 const& transformation() const
+    glm::mat4 transformation() const
     {
         static glm::mat4 matrix;
         return matrix;
@@ -91,6 +91,10 @@ public:
         return true;
     }
 
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
 private:
     std::shared_ptr<mg::Buffer> buf;
     geom::Rectangle screen_pos;

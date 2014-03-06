@@ -125,7 +125,7 @@ public:
         return 1.0f;
     }
 
-    glm::mat4 const& transformation() const override
+    glm::mat4 transformation() const override
     {
         return trans;
     }
@@ -138,6 +138,11 @@ public:
     bool should_be_rendered_in(geom::Rectangle const& rect) const override
     {
         return rect.overlaps(position);
+    }
+
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
     }
 
 private:
