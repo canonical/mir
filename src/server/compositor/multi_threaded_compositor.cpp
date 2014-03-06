@@ -147,18 +147,28 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
-    std::shared_ptr<CompositorReport> const& compositor_report)
+    std::shared_ptr<CompositorReport> const& compositor_report,
+    bool compose_on_start)
     : display{display},
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      started{false}
+      started{false},
+      compose_on_start{compose_on_start}
 {
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 {
     stop();
+}
+
+void mc::MultiThreadedCompositor::schedule_compositing()
+{
+    std::unique_lock<std::mutex> lk(started_guard);
+    report->scheduled();
+    for (auto& f : thread_functors)
+        f->schedule_compositing();
 }
 
 void mc::MultiThreadedCompositor::start()
@@ -184,16 +194,18 @@ void mc::MultiThreadedCompositor::start()
     /* Recomposite whenever the scene changes */
     scene->set_change_callback([this]()
     {
-        report->scheduled();
-        for (auto& f : thread_functors)
-            f->schedule_compositing();
+        schedule_compositing();
     });
 
-    /* First render */
-    for (auto& f : thread_functors)
-        f->schedule_compositing();
-
     started = true;
+
+    /* Optional first render */
+    if (compose_on_start)
+    {
+        lk.unlock();
+        schedule_compositing();
+    }
+
 }
 
 void mc::MultiThreadedCompositor::stop()
@@ -204,7 +216,9 @@ void mc::MultiThreadedCompositor::stop()
         return;
     }
 
+    lk.unlock();
     scene->set_change_callback([]{});
+    lk.lock();
 
     for (auto& f : thread_functors)
         f->stop();
@@ -218,4 +232,8 @@ void mc::MultiThreadedCompositor::stop()
     report->stopped();
 
     started = false;
+
+    // If the compositor is restarted we've likely got clients blocked
+    // so we will need to schedule compositing immediately
+    compose_on_start = true;
 }
