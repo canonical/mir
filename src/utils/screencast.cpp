@@ -370,15 +370,6 @@ try
     EGLSetup egl_setup{connection.get(), screencast.get()};
     mir::geometry::Size screencast_size {params.width, params.height};
 
-    if (query_params_only)
-    {
-        std::cout << "Colorspace: " <<
-            (egl_setup.pixel_read_format() == GL_BGRA_EXT ? "BGRA" : "RGBA") << std::endl;
-        std::cout << "Output size: " <<
-            screencast_size.width << "x" << screencast_size.height << std::endl;
-        return EXIT_SUCCESS;
-    }
-
     if (output_filename.empty() && !use_std_out)
     {
         std::stringstream ss;
@@ -386,6 +377,17 @@ try
         ss << screencast_size.width << "x" << screencast_size.height;
         ss << (egl_setup.pixel_read_format() == GL_BGRA_EXT ? ".bgra" : ".rgba");
         output_filename = ss.str();
+    }
+
+    if (query_params_only)
+    {
+       std::cout << "Colorspace: " <<
+           (egl_setup.pixel_read_format() == GL_BGRA_EXT ? "BGRA" : "RGBA") << std::endl;
+       std::cout << "Output size: " <<
+           screencast_size.width << "x" << screencast_size.height << std::endl;
+       std::cout << "Output to: " <<
+           (use_std_out ? "standard out" : output_filename) << std::endl;
+       return EXIT_SUCCESS;
     }
 
     std::ostream *out_stream;
