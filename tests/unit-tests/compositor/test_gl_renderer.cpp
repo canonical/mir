@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include <src/server/compositor/renderer.h>
+#include "mir/compositor/renderer.h"
 #include "src/server/compositor/gl_renderer_factory.h"
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
