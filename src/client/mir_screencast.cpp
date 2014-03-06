@@ -92,16 +92,12 @@ MirScreencast::MirScreencast(
     }
     protobuf_screencast.set_error("Not initialized");
 
-
-    mir::protobuf::Rectangle rect;
     mir::protobuf::ScreencastParameters parameters;
 
-    rect.set_left(region.top_left.x.as_int());
-    rect.set_top(region.top_left.y.as_int());
-    rect.set_width(region.size.width.as_uint32_t());
-    rect.set_height(region.size.height.as_uint32_t());
-
-    parameters.set_allocated_region(&rect);
+    parameters.mutable_region()->set_left(region.top_left.x.as_int());
+    parameters.mutable_region()->set_top(region.top_left.y.as_int());
+    parameters.mutable_region()->set_width(region.size.width.as_uint32_t());
+    parameters.mutable_region()->set_height(region.size.height.as_uint32_t());
     parameters.set_width(output_size.width.as_uint32_t());
     parameters.set_height(output_size.height.as_uint32_t());
     parameters.set_pixel_format(pixel_format);
