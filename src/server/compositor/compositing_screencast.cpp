@@ -68,7 +68,8 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
         size.height.as_int() == 0 ||
         region.size.width.as_int() == 0 ||
         region.size.height.as_int() == 0 ||
-        pixel_format == mir_pixel_format_invalid) {
+        pixel_format == mir_pixel_format_invalid)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
     }
     std::lock_guard<decltype(session_mutex)> lock{session_mutex};

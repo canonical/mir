@@ -86,19 +86,24 @@ MirScreencast::MirScreencast(
         output_size.height.as_int() == 0 ||
         region.size.width.as_int()  == 0 ||
         region.size.height.as_int() == 0 ||
-        pixel_format == mir_pixel_format_invalid) {
+        pixel_format == mir_pixel_format_invalid)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
     }
     protobuf_screencast.set_error("Not initialized");
 
+
+    mir::protobuf::Rectangle rect;
     mir::protobuf::ScreencastParameters parameters;
 
+    rect.set_left(region.top_left.x.as_int());
+    rect.set_top(region.top_left.y.as_int());
+    rect.set_width(region.size.width.as_uint32_t());
+    rect.set_height(region.size.height.as_uint32_t());
+
+    parameters.set_allocated_region(&rect);
     parameters.set_width(output_size.width.as_uint32_t());
     parameters.set_height(output_size.height.as_uint32_t());
-    parameters.set_region_top(region.top_left.y.as_int());
-    parameters.set_region_left(region.top_left.x.as_int());
-    parameters.set_region_width(region.size.width.as_uint32_t());
-    parameters.set_region_height(region.size.height.as_uint32_t());
     parameters.set_pixel_format(pixel_format);
 
     server.create_screencast(
