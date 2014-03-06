@@ -117,29 +117,6 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
 
 }
 
-void ms::MediatingDisplayChanger::ensure_display_powered(std::shared_ptr<mf::Session> const& session)
-{
-    std::lock_guard<std::mutex> lg{configuration_mutex};
-    bool switched = false;
-
-    auto it = config_map.find(session);
-    if (it == config_map.end())
-        return;
-    auto conf = it->second;
-    conf->for_each_output([&](mg::UserDisplayConfigurationOutput& output) -> void
-    {
-        if (!output.used) return;
-
-        if (output.power_mode != mir_power_mode_on)
-        {
-            switched = true;
-            output.power_mode = mir_power_mode_on;
-        }
-    });
-    if (switched)
-        configure(session, conf);
-}
-
 void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)

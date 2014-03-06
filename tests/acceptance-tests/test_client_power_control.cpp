@@ -39,7 +39,27 @@ static void set_power_modes_to_off(MirDisplayConfiguration *conf)
     }
 }
 
+static void set_power_modes_to_on(MirDisplayConfiguration *conf)
+{
+    for (unsigned i = 0; i < conf->num_outputs; i++)
+    {
+        auto &output = conf->outputs[i];
+
+        output.power_mode = mir_power_mode_on;
+    }
+}
+
 static void expect_power_modes_are_on(MirDisplayConfiguration *conf)
+{
+    for (unsigned i = 0; i < conf->num_outputs; i++)
+    {
+        auto &output = conf->outputs[i];
+
+        EXPECT_EQ(mir_power_mode_on, output.power_mode);
+    }
+}
+
+static void expect_power_modes_are_off(MirDisplayConfiguration *conf)
 {
     for (unsigned i = 0; i < conf->num_outputs; i++)
     {
@@ -59,18 +79,27 @@ static void with_configuration(MirConnection *connection, std::function<void(Mir
 
 using ClientPowerControl = BespokeDisplayServerTestFixture;
 
-// When a client has requested to turn the display off, we re-enable it when the client makes a buffer swapping request.
-// This behavior is required due to the serial manner in which we process requests on the server side. If the display is off
-// when the client makes a swap buffers request, swap buffers will block until the screen is reenabled. However even if on the 
-// client side, swap buffers is called asynchronously, the server side RPC thread will not process another request from this client
-// until swap buffers completes. Thus its unfortunately not possible for the client to turn the screen back on!
-TEST_F(ClientPowerControl, client_advancing_buffer_will_override_power_request_made_by_same_client)
+// This is a regression test for an old situation. Before next_buffer was executed
+// asynchronously with respect to the session mediator it was possible for a client
+// to reach an impossible to unblock state:
+// 1. Turn power off.
+// 2. Swaps buffers.
+// Now the client RPC thread was blocked and swap buffers will never complete so we
+// can never turn the display back on.
+// This test verifies that this scenario no longer results in a deadlock.
+TEST_F(ClientPowerControl, client_may_turn_power_back_on_while_blocked_on_swap_buffers)
 {
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
     struct Client : TestingClientConfiguration
     {
+        MirSurface *surface;
+        static void surface_callback(MirSurface *s, void* ctx)
+        {
+            Client *c = static_cast<Client*>(ctx);
+            c->surface = s;
+        }
         void exec()
         {
             auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
@@ -90,23 +119,27 @@ TEST_F(ClientPowerControl, client_advancing_buffer_will_override_power_request_m
                 mir_buffer_usage_hardware,
                 mir_display_output_id_invalid
             };
-            auto s = mir_connection_create_surface_sync(connection, &params);
+            // Creating the surface will try to swap buffers, so this can not complete
+            // while the display is off.
+            auto s_handle = mir_connection_create_surface(connection, &params, surface_callback, this);
 
-            // Creating a surface advances buffers and thus should flip the power request back to on.
-            with_configuration(connection, expect_power_modes_are_on);
+            with_configuration(connection, expect_power_modes_are_off);
 
-            // Flip them back off.
+            // Flip them back on.
             with_configuration(connection, 
                 [&](MirDisplayConfiguration *c)
                 {
-                    set_power_modes_to_off(c);
+                    set_power_modes_to_on(c);
                     mir_connection_apply_display_config(connection, c);
                 });
 
-            mir_surface_swap_buffers_sync(s);
             with_configuration(connection, expect_power_modes_are_on);
             
-            mir_surface_release_sync(s);
+            mir_wait_for(s_handle);
+            
+            EXPECT_NE(nullptr, surface);
+                        
+            mir_surface_release_sync(surface);
             mir_connection_release(connection);
         }
     } client_config;
