@@ -67,11 +67,7 @@ public:
      *       does not strictly need to reside here.
      *       However it seems a good choice under GLRenderer while this remains
      *       the only OpenGL-specific class in the display server, and
-     *       tessellation is very much OpenGL-specific. Also, the Renderer
-     *       is one of the few compositor classes that is easy to override
-     *       with a custom shell implementation right now. And that's a
-     *       requirement if you want to implement your own tessellate for
-     *       deformation effects.
+     *       tessellation is very much OpenGL-specific.
      */
     virtual GLenum tessellate(graphics::Renderable const& renderable,
                               std::vector<Vertex>& vertices) const;
