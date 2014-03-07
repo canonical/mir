@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_CLIENT_LIBRARY_TRUSTED_SESSION_H_
-#define MIR_CLIENT_LIBRARY_TRUSTED_SESSION_H_
+#ifndef MIR_CLIENT_LIBRARY_TRUST_SESSION_H_
+#define MIR_CLIENT_LIBRARY_TRUST_SESSION_H_
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -88,12 +88,11 @@ MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session, mir_trust_
 MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session);
 
 /**
- * Test for a started trust session
+ * Return the state of trust session
  * \param [in] trust_session  The trust session
- * \return                    True if the supplied trust session has been started, or
- *                            false otherwise.
+ * \return                    The state of the trust session
  */
-MirBool mir_trust_session_is_started(MirTrustSession *trust_session);
+MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session);
 
 /**
  * Release a trust session
@@ -106,4 +105,4 @@ void mir_trust_session_release(MirTrustSession* trust_session);
 /**@}*/
 #endif
 
-#endif /* MIR_CLIENT_LIBRARY_TRUSTED_SESSION_H_ */
+#endif /* MIR_CLIENT_LIBRARY_TRUST_SESSION_H_ */

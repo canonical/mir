@@ -54,6 +54,7 @@ class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
 class Screencast;
+class TrustSession;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
@@ -130,7 +131,7 @@ public:
                                ::google::protobuf::Closure* done) override;
 
     void stop_trust_session(::google::protobuf::RpcController* controller,
-                              const ::mir::protobuf::TrustSessionId* request,
+                              const ::mir::protobuf::Void* request,
                               ::mir::protobuf::Void* response,
                               ::google::protobuf::Closure* done) override;
 
@@ -163,6 +164,7 @@ private:
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
+    std::weak_ptr<TrustSession> weak_trust_session;
 };
 
 }

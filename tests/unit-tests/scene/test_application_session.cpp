@@ -321,7 +321,7 @@ public:
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
-    MOCK_METHOD2(handle_trust_session_event, void(mir::frontend::SessionId session_id, MirTrustSessionState state));
+    MOCK_METHOD1(handle_trust_session_event, void(MirTrustSessionState state));
 };
 }
 TEST(ApplicationSession, display_config_sender)

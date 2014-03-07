@@ -48,7 +48,7 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     });
 }
 
-void ms::GlobalEventSender::handle_trust_session_event(mf::SessionId, MirTrustSessionState)
+void ms::GlobalEventSender::handle_trust_session_event(MirTrustSessionState)
 {
     // Lifecycle events are per application session, never global
 }

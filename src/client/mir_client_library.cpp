@@ -574,7 +574,7 @@ MirBool mir_trust_session_start_sync(MirTrustSession *trust_session)
                              reinterpret_cast<mir_trust_session_callback>
                                              (assign_result),
                              NULL));
-    return trust_session->is_started() ? mir_true : mir_false;
+    return trust_session->get_state() == mir_trust_session_started ? mir_true : mir_false;
 }
 
 MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session,
@@ -598,12 +598,12 @@ MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session)
                              reinterpret_cast<mir_trust_session_callback>
                                              (assign_result),
                              NULL));
-    return trust_session->is_started() ? mir_false : mir_true;
+    return trust_session->get_state() == mir_trust_session_stopped ? mir_true : mir_false;
 }
 
-MirBool mir_trust_session_is_started(MirTrustSession *trust_session)
+MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session)
 {
-    return trust_session->is_started() ? mir_true : mir_false;
+    return trust_session->get_state();
 }
 
 void mir_trust_session_set_event_callback(MirTrustSession* trust_session,

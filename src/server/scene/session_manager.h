@@ -72,13 +72,11 @@ public:
 
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
-    frontend::SessionId start_trust_session_for(std::string& error,
+    std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& error,
                                                   std::shared_ptr<frontend::Session> const& session,
                                                   shell::TrustSessionCreationParameters const& params,
                                                   std::shared_ptr<frontend::EventSink> const& sink) override;
-    void stop_trust_session(frontend::SessionId trust_session_id) override;
-
-    std::shared_ptr<shell::TrustSession> get_trust_session(frontend::SessionId id) const;
+    void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
 
 protected:
     SessionManager(const SessionManager&) = delete;
@@ -99,8 +97,7 @@ private:
 
     std::mutex mutable surfaces_mutex;
 
-    typedef std::map<frontend::SessionId, std::shared_ptr<shell::TrustSession>> TrustSessions;
-    TrustSessions::const_iterator checked_find(frontend::SessionId id) const;
+    typedef std::vector<std::shared_ptr<frontend::TrustSession>> TrustSessions;
     std::mutex mutable trust_sessions_mutex;
     TrustSessions trust_sessions;
 

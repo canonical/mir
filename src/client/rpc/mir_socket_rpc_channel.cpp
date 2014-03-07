@@ -397,7 +397,7 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 
     if (seq.has_trust_session_event())
     {
-        trust_session_control->call_trust_session_event_handler(seq.trust_session_event().id().value(), seq.trust_session_event().new_state());
+        trust_session_control->call_trust_session_event_handler(seq.trust_session_event().new_state());
     }
 
     int const nevents = seq.event_size();

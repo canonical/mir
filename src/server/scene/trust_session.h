@@ -16,8 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUSTED_SESSION_H_
-#define MIR_SCENE_TRUSTED_SESSION_H_
+#ifndef MIR_SCENE_TRUST_SESSION_H_
+#define MIR_SCENE_TRUST_SESSION_H_
 
 #include "mir/shell/trust_session.h"
 
@@ -47,11 +47,9 @@ public:
                        std::shared_ptr<frontend::EventSink> const& sink);
     virtual ~TrustSession();
 
-    frontend::SessionId id() const override;
-
     std::vector<pid_t> get_applications() const override;
 
-    bool get_started() const override;
+    MirTrustSessionState get_state() const override;
     std::shared_ptr<shell::Session> get_trusted_helper() const override;
     void stop() override;
 
@@ -67,19 +65,15 @@ protected:
     TrustSession& operator=(const TrustSession&) = delete;
 
 private:
-    frontend::SessionId next_id();
-
     std::shared_ptr<shell::Session> const trusted_helper;
     std::vector<pid_t> const applications;
 
     std::shared_ptr<frontend::EventSink> const event_sink;
 
-    bool started;
-    static std::atomic<int> next_session_id;
-    frontend::SessionId current_id;
+    MirTrustSessionState state;
 };
 
 }
 }
 
-#endif // MIR_SCENE_TRUSTED_SESSION_H_
+#endif // MIR_SCENE_TRUST_SESSION_H_

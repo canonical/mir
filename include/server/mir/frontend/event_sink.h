@@ -20,7 +20,6 @@
 #define MIR_EVENTS_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/frontend/session_id.h"
 
 namespace mir
 {
@@ -38,7 +37,7 @@ public:
     virtual void handle_event(MirEvent const& e) = 0;
     virtual void handle_lifecycle_event(MirLifecycleState state) = 0;
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
-    virtual void handle_trust_session_event(frontend::SessionId session_id, MirTrustSessionState state) = 0;
+    virtual void handle_trust_session_event(MirTrustSessionState state) = 0;
 
 protected:
     EventSink() = default;

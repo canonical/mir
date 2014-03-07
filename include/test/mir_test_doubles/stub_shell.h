@@ -49,14 +49,14 @@ struct StubShell : public frontend::Shell
     void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
-    frontend::SessionId start_trust_session_for(std::string& /* error */,
+    std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& /* error */,
                                                 std::shared_ptr<frontend::Session> const& /* session */,
                                                 shell::TrustSessionCreationParameters const& /* params */,
                                                 std::shared_ptr<frontend::EventSink> const& /* sink */)
     {
-        return frontend::SessionId{0};
+        return std::shared_ptr<frontend::TrustSession>();
     }
-    void stop_trust_session(frontend::SessionId /* trust_session */)
+    void stop_trust_session(std::shared_ptr<frontend::TrustSession>  const& /* trust_session */)
     {
     }
 

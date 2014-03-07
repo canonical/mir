@@ -72,13 +72,11 @@ void mfd::EventSender::handle_lifecycle_event(
 }
 
 void mfd::EventSender::handle_trust_session_event(
-    SessionId session_id,
     MirTrustSessionState state)
 {
     mp::EventSequence seq;
 
     auto protobuf_trust_session_event = seq.mutable_trust_session_event();
-    protobuf_trust_session_event->mutable_id()->set_value(session_id.as_value());
     protobuf_trust_session_event->set_new_state(state);
 
     send_event_sequence(seq);

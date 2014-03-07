@@ -51,7 +51,6 @@ struct TestProtobufClient
     mir::protobuf::DisplayConfiguration disp_config_response;
     mir::protobuf::TrustSessionParameters trust_session_parameters;
     mir::protobuf::TrustSession trust_session;
-    mir::protobuf::TrustSessionId trust_session_id;
 
     MOCK_METHOD0(connect_done, void());
     MOCK_METHOD0(create_surface_done, void());

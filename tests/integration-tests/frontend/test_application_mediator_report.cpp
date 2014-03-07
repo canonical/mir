@@ -467,7 +467,7 @@ TEST_F(ApplicationMediatorReport, session_stop_trust_session_called)
 
             client.display_server.stop_trust_session(
                 0,
-                &client.trust_session.id(),
+                &client.ignored,
                 &client.ignored,
                 google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_stop_done));
             client.wait_for_trust_session_stop_done();

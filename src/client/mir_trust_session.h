@@ -16,8 +16,8 @@
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#ifndef MIR_CLIENT_MIR_TRUSTED_SESSION_H_
-#define MIR_CLIENT_MIR_TRUSTED_SESSION_H_
+#ifndef MIR_CLIENT_MIR_TRUST_SESSION_H_
+#define MIR_CLIENT_MIR_TRUST_SESSION_H_
 
 #include "mir_protobuf.pb.h"
 #include "mir_wait_handle.h"
@@ -56,9 +56,8 @@ public:
 
     char const * get_error_message();
     void set_error_message(std::string const& error);
-    int id() const;
 
-    bool is_started() const;
+    MirTrustSessionState get_state() const;
 
 private:
     mutable std::recursive_mutex mutex; // Protects all members of *this
@@ -72,16 +71,16 @@ private:
     std::string error_message;
 
     std::shared_ptr<mir::client::TrustSessionControl> const trust_session_control;
-    std::function<void(uint32_t, MirTrustSessionState)> handle_trust_session_event;
+    std::function<void(MirTrustSessionState)> handle_trust_session_event;
     int trust_session_control_fn_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
-    std::atomic<bool> started;
+    std::atomic<MirTrustSessionState> state;
 
     void done_start(mir_trust_session_callback callback, void* context);
     void done_stop(mir_trust_session_callback callback, void* context);
 };
 
-#endif /* MIR_CLIENT_MIR_TRUSTED_SESSION_H_ */
+#endif /* MIR_CLIENT_MIR_TRUST_SESSION_H_ */
 

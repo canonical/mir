@@ -15,8 +15,8 @@
  *
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
-#ifndef MIR_CLIENT_TRUSTED_SESSION_H_
-#define MIR_CLIENT_TRUSTED_SESSION_H_
+#ifndef MIR_CLIENT_TRUST_SESSION_H_
+#define MIR_CLIENT_TRUST_SESSION_H_
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -46,4 +46,4 @@ protected:
 }
 }
 
-#endif /* MIR_CLIENT_TRUSTED_SESSION_H_ */
+#endif /* MIR_CLIENT_TRUST_SESSION_H_ */

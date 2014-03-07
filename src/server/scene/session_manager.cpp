@@ -88,18 +88,26 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
     app_container->insert_session(new_session);
 
     {
+        // Add session to existing trust session
         std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
-        for (auto const& trust_session : trust_sessions)
-        {
-            for (pid_t application_pid : trust_session.second->get_applications())
+        auto find_trusted_sesssion_fn =
+            [client_pid]
+            (std::shared_ptr<frontend::TrustSession> const& trust_session)
             {
-                if (application_pid == client_pid)
-                {
-                    trust_session.second->add_child_session(new_session);
-                    new_session->set_trust_session(trust_session.second);
-                }
-            }
+                auto applications = trust_session->get_applications();
+                auto it_apps = std::find(applications.begin(), applications.end(), client_pid);
+                return it_apps != applications.end();
+            };
+
+        auto it = trust_sessions.begin();
+        while((it = std::find_if(it, trust_sessions.end(), find_trusted_sesssion_fn)) != trust_sessions.end())
+        {
+            auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(*it);
+
+            shell_trust_session->add_child_session(new_session);
+            new_session->set_trust_session(shell_trust_session);
+            it++;
         }
     }
 
@@ -153,7 +161,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
     auto trust_session = shell_session->get_trust_session();
     if (trust_session && trust_session->get_trusted_helper() == shell_session)
     {
-        stop_trust_session(trust_session->id());
+        stop_trust_session(trust_session);
     }
 
     session_listener->stopping(shell_session);
@@ -210,55 +218,45 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
     set_focus_to(shell_session);
 }
 
-mf::SessionId ms::SessionManager::start_trust_session_for(std::string& error,
+std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::string& error,
                                             std::shared_ptr<mf::Session> const& session,
                                             shell::TrustSessionCreationParameters const& params,
                                             std::shared_ptr<mf::EventSink> const& sink)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
-    for (auto const& trust_session : trust_sessions)
-    {
-        if (trust_session.second->get_trusted_helper() == session)
+    auto it = std::find_if(trust_sessions.begin(), trust_sessions.end(),
+        [session]
+        (std::shared_ptr<frontend::TrustSession> const& trust_session)
         {
-            error = "Trust session already started";
-            return mf::SessionId(-1);
+            auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
+
+            return shell_trust_session->get_trusted_helper() == session;
         }
+    );
+    if (it != trust_sessions.end())
+    {
+        error = "Trust session already started";
+        return std::shared_ptr<mf::TrustSession>();
     }
 
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
     std::shared_ptr<msh::TrustSession> trust_session = TrustSession::start_for(shell_session, params, app_container, sink);
-    trust_sessions[trust_session->id()] = trust_session;
+    trust_sessions.push_back(trust_session);
 
     session_listener->trust_session_started(trust_session);
 
-    return trust_session->id();
+    return trust_session;
 }
 
-void ms::SessionManager::stop_trust_session(mf::SessionId trust_session_id)
+void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
 {
-    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-    auto p = checked_find(trust_session_id);
-
-    p->second->stop();
-    session_listener->trust_session_stopped(p->second);
-
-    trust_sessions.erase(p);
-}
-
-std::shared_ptr<msh::TrustSession> ms::SessionManager::get_trust_session(mf::SessionId id) const
-{
-    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-
-    return checked_find(id)->second;
-}
-
-ms::SessionManager::TrustSessions::const_iterator ms::SessionManager::checked_find(mf::SessionId id) const
-{
-    auto p = trust_sessions.find(id);
-    if (p == trust_sessions.end())
+    auto it = std::find(trust_sessions.begin(), trust_sessions.end(), trust_session);
+    if (it != trust_sessions.end())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SessionId"));
+        (*it)->stop();
+        session_listener->trust_session_stopped(std::dynamic_pointer_cast<msh::TrustSession>(trust_session));
+
+        trust_sessions.erase(it);
     }
-    return p;
 }

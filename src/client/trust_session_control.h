@@ -16,8 +16,8 @@
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#ifndef MIR_TRUSTED_SESSION_CONTROL_H_
-#define MIR_TRUSTED_SESSION_CONTROL_H_
+#ifndef MIR_TRUST_SESSION_CONTROL_H_
+#define MIR_TRUST_SESSION_CONTROL_H_
 
 #include "mir_toolkit/common.h"
 
@@ -35,19 +35,19 @@ public:
     TrustSessionControl();
     ~TrustSessionControl();
 
-    int add_trust_session_event_handler(std::function<void(uint32_t, MirTrustSessionState)> const&);
+    int add_trust_session_event_handler(std::function<void(MirTrustSessionState)> const&);
     void remove_trust_session_event_handler(int id);
 
-    void call_trust_session_event_handler(int32_t id, uint32_t state);
+    void call_trust_session_event_handler(uint32_t state);
 
 private:
     int next_id();
 
     std::mutex mutable guard;
-    std::map<int, std::function<void(uint32_t, MirTrustSessionState)>> handle_trust_session_events;
+    std::map<int, std::function<void(MirTrustSessionState)>> handle_trust_session_events;
     int next_fn_id;
 };
 }
 }
 
-#endif /* MIR_TRUSTED_SESSION_CONTROL_H_ */
+#endif /* MIR_TRUST_SESSION_CONTROL_H_ */

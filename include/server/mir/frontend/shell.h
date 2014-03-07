@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_SHELL_H_
 
 #include "mir/frontend/surface_id.h"
-#include "mir/frontend/session_id.h"
 
 #include <sys/types.h>
 
@@ -37,6 +36,7 @@ namespace frontend
 {
 class EventSink;
 class Session;
+class TrustSession;
 
 class Shell
 {
@@ -55,11 +55,11 @@ public:
 
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
-    virtual SessionId start_trust_session_for(std::string& error,
+    virtual std::shared_ptr<TrustSession> start_trust_session_for(std::string& error,
                                                 std::shared_ptr<Session> const& session,
                                                 shell::TrustSessionCreationParameters const& params,
                                                 std::shared_ptr<EventSink> const& sink) = 0;
-    virtual void stop_trust_session(SessionId trust_session_id) = 0;
+    virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
 protected:
     Shell() = default;

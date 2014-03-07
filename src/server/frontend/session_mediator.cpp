@@ -24,7 +24,6 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/trust_session_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -41,6 +40,8 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
+#include "mir/frontend/trust_session.h"
+#include "mir/shell/trust_session_creation_parameters.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -467,17 +468,19 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         }
 
         std::string error;
-        auto const session_id = shell->start_trust_session_for(error, session, parameters, event_sink);
+        auto trust_session = shell->start_trust_session_for(error, session, parameters, event_sink);
+        weak_trust_session = trust_session;
 
         if (!error.empty())
             response->set_error(error);
-        response->mutable_id()->set_value(session_id.as_value());
+        if (trust_session)
+            response->set_state(trust_session->get_state());
     }
     done->Run();
 }
 
 void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
-    const ::mir::protobuf::TrustSessionId* request,
+    const ::mir::protobuf::Void*,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
@@ -488,11 +491,14 @@ void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+        auto trust_session = weak_trust_session.lock();
+
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trusted session"));
+
         report->session_stop_trust_session_called(session->name());
 
-        auto const id = SessionId(request->value());
-
-        shell->stop_trust_session(id);
+        shell->stop_trust_session(trust_session);
     }
     done->Run();
 }

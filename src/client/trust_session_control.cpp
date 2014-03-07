@@ -29,7 +29,7 @@ mcl::TrustSessionControl::~TrustSessionControl()
 {
 }
 
-int mcl::TrustSessionControl::add_trust_session_event_handler(std::function<void(uint32_t, MirTrustSessionState)> const& fn)
+int mcl::TrustSessionControl::add_trust_session_event_handler(std::function<void(MirTrustSessionState)> const& fn)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -45,13 +45,13 @@ void mcl::TrustSessionControl::remove_trust_session_event_handler(int id)
     handle_trust_session_events.erase(id);
 }
 
-void mcl::TrustSessionControl::call_trust_session_event_handler(int32_t id, uint32_t state)
+void mcl::TrustSessionControl::call_trust_session_event_handler(uint32_t state)
 {
     std::unique_lock<std::mutex> lk(guard);
 
     for (auto const& fn : handle_trust_session_events)
     {
-        fn.second(id, static_cast<MirTrustSessionState>(state));
+        fn.second(static_cast<MirTrustSessionState>(state));
     }
 }
 

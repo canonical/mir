@@ -26,8 +26,6 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-std::atomic<int> ms::TrustSession::next_session_id{0};
-
 ms::TrustSession::TrustSession(
     std::shared_ptr<msh::Session> const& session,
     msh::TrustSessionCreationParameters const& parameters,
@@ -35,8 +33,7 @@ ms::TrustSession::TrustSession(
     trusted_helper(session),
     applications(parameters.applications),
     event_sink(sink),
-    started(false),
-    current_id(next_id())
+    state(mir_trust_session_stopped)
 {
 }
 
@@ -45,19 +42,9 @@ ms::TrustSession::~TrustSession()
     TrustSession::stop();
 }
 
-mf::SessionId ms::TrustSession::id() const
+MirTrustSessionState  ms::TrustSession::get_state() const
 {
-    return current_id;
-}
-
-mf::SessionId ms::TrustSession::next_id()
-{
-    return mf::SessionId(next_session_id.fetch_add(1));
-}
-
-bool  ms::TrustSession::get_started() const
-{
-    return started;
+    return state;
 }
 
 std::shared_ptr<msh::Session> ms::TrustSession::get_trusted_helper() const
@@ -73,7 +60,7 @@ std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<m
     TrustSession* impl = new TrustSession(trusted_helper, parameters, sink);
     std::shared_ptr<msh::TrustSession> ptr(impl);
 
-    impl->started = true;
+    impl->state = mir_trust_session_started;
     trusted_helper->set_trust_session(ptr);
 
     for (pid_t application_pid : impl->applications)
@@ -94,13 +81,13 @@ std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<m
         );
     }
 
-    sink->handle_trust_session_event(impl->id(), mir_trust_session_started);
+    sink->handle_trust_session_event(mir_trust_session_started);
     return ptr;
 }
 
 void ms::TrustSession::stop()
 {
-    if (!started)
+    if (state == mir_trust_session_stopped)
         return;
 
     trusted_helper->get_children()->for_each(
@@ -114,8 +101,8 @@ void ms::TrustSession::stop()
     trusted_helper->get_children()->clear();
     trusted_helper->set_trust_session(NULL);
 
-    started = false;
-    event_sink->handle_trust_session_event(id(), mir_trust_session_stopped);
+    state = mir_trust_session_stopped;
+    event_sink->handle_trust_session_event(mir_trust_session_stopped);
 }
 
 std::vector<pid_t> ms::TrustSession::get_applications() const
@@ -125,7 +112,7 @@ std::vector<pid_t> ms::TrustSession::get_applications() const
 
 void ms::TrustSession::add_child_session(std::shared_ptr<msh::Session> const& session)
 {
-    if (!started)
+    if (state == mir_trust_session_stopped)
         return;
 
     session->set_parent(trusted_helper);

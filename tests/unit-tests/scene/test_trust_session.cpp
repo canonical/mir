@@ -43,7 +43,7 @@ public:
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
-    MOCK_METHOD2(handle_trust_session_event, void(mir::frontend::SessionId session_id, MirTrustSessionState state));
+    MOCK_METHOD1(handle_trust_session_event, void(MirTrustSessionState state));
 };
 struct MockSessionContainer : public ms::SessionContainer
 {
@@ -97,8 +97,8 @@ TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
 
-    EXPECT_CALL(sender, handle_trust_session_event(_, mir_trust_session_started)).Times(1);
-    EXPECT_CALL(sender, handle_trust_session_event(_, mir_trust_session_stopped)).Times(1);
+    EXPECT_CALL(sender, handle_trust_session_event(mir_trust_session_started)).Times(1);
+    EXPECT_CALL(sender, handle_trust_session_event(mir_trust_session_stopped)).Times(1);
 
     msh::TrustSessionCreationParameters parameters;
     auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
@@ -108,7 +108,7 @@ TEST_F(TrustSession, start_and_stop)
     trust_session->stop();
 }
 
-TEST_F(TrustSession, trust_session_ids)
+TEST_F(TrustSession, multi_trust_sessions)
 {
     using namespace testing;
 
@@ -128,9 +128,9 @@ TEST_F(TrustSession, trust_session_ids)
                                                       mt::fake_shared(container),
                                                       mt::fake_shared(sender));
 
-    EXPECT_THAT(trust_session1->id(), Ne(trust_session2->id()));
-    EXPECT_THAT(trust_session1->id(), Ne(trust_session3->id()));
-    EXPECT_THAT(trust_session2->id(), Ne(trust_session3->id()));
+    EXPECT_THAT(trust_session1, Ne(std::shared_ptr<mf::TrustSession>()));
+    EXPECT_THAT(trust_session1, Ne(std::shared_ptr<mf::TrustSession>()));
+    EXPECT_THAT(trust_session2, Ne(std::shared_ptr<mf::TrustSession>()));
 }
 
 TEST_F(TrustSession, parenting)

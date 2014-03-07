@@ -139,7 +139,7 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
     assert(add_result == mir_trust_session_app_addition_succeeded);
 
     mir_trust_session_start_sync(mcd.trust_session);
-    assert(mir_trust_session_is_started(mcd.trust_session) == mir_true);
+    assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_started);
     puts("Started Trust Helper for 'demo_client_trusted_helper'");
 
     // Case where the session is stopped by server.
@@ -149,10 +149,10 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
     printf("Waiting on child app: %d\n", child_pid);
     waitpid(child_pid, &status, 0);
 
-    if (mir_trust_session_is_started(mcd.trust_session) == mir_true)
+    if (mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_started)
     {
         mir_trust_session_stop_sync(mcd.trust_session);
-        assert(mir_trust_session_is_started(mcd.trust_session) == mir_false);
+        assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_stopped);
         puts("Stopped Trust Helper for 'demo_client_trusted_helper'");
     }
 

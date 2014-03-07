@@ -27,21 +27,18 @@ MirTrustSession::MirTrustSession(
     std::shared_ptr<mcl::TrustSessionControl> const& trust_session_control)
     : server(server),
       trust_session_control(trust_session_control),
-      started(false)
+      state(mir_trust_session_stopped)
 {
     trust_session_control_fn_id = trust_session_control->add_trust_session_event_handler(
         [this]
-        (int id, MirTrustSessionState state)
+        (MirTrustSessionState new_state)
         {
             std::lock_guard<std::recursive_mutex> lock(mutex);
 
-            if (session.id().value() == id) {
-                if (handle_trust_session_event) {
-                    handle_trust_session_event(id, state);
-                }
-                started.store(state == mir_trust_session_started);
+            if (handle_trust_session_event) {
+                handle_trust_session_event(new_state);
             }
-
+            this->state.store(new_state);
         }
     );
 }
@@ -49,6 +46,11 @@ MirTrustSession::MirTrustSession(
 MirTrustSession::~MirTrustSession()
 {
     trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
+}
+
+MirTrustSessionState MirTrustSession::get_state() const
+{
+    return state.load();
 }
 
 MirTrustSessionAddApplicationResult MirTrustSession::add_app_with_pid(pid_t pid)
@@ -91,7 +93,7 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void *
 
     server.stop_trust_session(
         0,
-        &session.id(),
+        &protobuf_void,
         &protobuf_void,
         google::protobuf::NewCallback(this, &MirTrustSession::done_stop,
                                       callback, context));
@@ -103,13 +105,10 @@ void MirTrustSession::register_trust_session_event_callback(mir_trust_session_ev
 {
     handle_trust_session_event =
         [this, callback, context]
-        (int id, MirTrustSessionState state)
+        (MirTrustSessionState state)
         {
             std::lock_guard<std::recursive_mutex> lock(mutex);
-
-            if (session.id().value() == id) {
-                callback(this, state, context);
-            }
+            callback(this, state, context);
         }
     ;
 }
@@ -117,7 +116,10 @@ void MirTrustSession::register_trust_session_event_callback(mir_trust_session_ev
 void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
     set_error_message(session.error());
-    started.store(!session.has_error());
+    if (session.has_state())
+        state.store((MirTrustSessionState)session.state());
+    else
+        state.store(mir_trust_session_stopped);
 
     callback(this, context);
     start_wait_handle.result_received();
@@ -125,7 +127,7 @@ void MirTrustSession::done_start(mir_trust_session_callback callback, void* cont
 
 void MirTrustSession::done_stop(mir_trust_session_callback callback, void* context)
 {
-    started.store(false);
+    state.store(mir_trust_session_stopped);
     callback(this, context);
     stop_wait_handle.result_received();
 }
@@ -149,16 +151,4 @@ void MirTrustSession::set_error_message(std::string const& error)
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     error_message = error;
-}
-
-int MirTrustSession::id() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return session.id().value();
-}
-
-bool MirTrustSession::is_started() const
-{
-    return started.load();
 }

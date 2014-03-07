@@ -223,8 +223,8 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_trust
     std::string error;
     msh::TrustSessionCreationParameters parameters;
 
-    mf::SessionId id = session_manager.start_trust_session_for(error, session, parameters, std::make_shared<mtd::NullEventSink>());
-    session_manager.stop_trust_session(id);
+    auto trust_session = session_manager.start_trust_session_for(error, session, parameters, std::make_shared<mtd::NullEventSink>());
+    session_manager.stop_trust_session(trust_session);
 }
 
 namespace

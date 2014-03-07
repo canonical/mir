@@ -31,7 +31,7 @@ struct NullEventSink : public frontend::EventSink
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(graphics::DisplayConfiguration const&) {}
-    void handle_trust_session_event(frontend::SessionId, MirTrustSessionState) {}
+    void handle_trust_session_event(MirTrustSessionState) {}
 };
 }
 }

@@ -65,7 +65,7 @@ struct MockEventSink : public mf::EventSink
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
-    MOCK_METHOD2(handle_trust_session_event, void(mf::SessionId session_id, MirTrustSessionState state));
+    MOCK_METHOD1(handle_trust_session_event, void(MirTrustSessionState state));
 };
 
 class StubSurfaceBuilder : public ms::SurfaceBuilder
