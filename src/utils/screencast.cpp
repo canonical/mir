@@ -151,7 +151,12 @@ MirScreencastParameters get_screencast_params(MirConnection* connection,
         params.height = params.region.height;
     }
 
-    params.pixel_format = mir_pixel_format_xbgr_8888;
+    unsigned int num_valid_formats = 0;
+    mir_connection_get_available_surface_formats(connection, &params.pixel_format, 1, &num_valid_formats);
+
+    if (num_valid_formats == 0)
+        throw std::runtime_error("Couldn't find a valid pixel format for connection");
+
     return params;
 }
 
