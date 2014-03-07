@@ -180,7 +180,12 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
-    return ((mgm::Platform::internal_display_clients_present) &&
-            (display == mgm::Platform::internal_native_display.get())) || 
-        (mgm::NativePlatform::internal_native_display_in_use() && (display == mgm::NativePlatform::internal_native_display().get()));
+    bool nested_internal_display_in_use = mgm::NativePlatform::internal_native_display_in_use();
+    bool host_internal_display_in_use = mgm::Platform::internal_display_clients_present;
+
+    if (host_internal_display_in_use)
+        return (display == mgm::Platform::internal_native_display.get());
+    else if (nested_internal_display_in_use)
+        return (display == mgm::NativePlatform::internal_native_display().get());
+    return 0;
 }

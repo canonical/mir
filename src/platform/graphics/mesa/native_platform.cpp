@@ -122,14 +122,14 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
 
 namespace
 {
-std::shared_ptr<mgm::InternalNativeDisplay> native_display = 0;
+std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
 std::mutex native_display_guard;
 }
 
 bool mgm::NativePlatform::internal_native_display_in_use()
 {
     std::unique_lock<std::mutex> lg(native_display_guard);
-    return native_display != 0;
+    return native_display != nullptr;
 }
 
 std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display()
