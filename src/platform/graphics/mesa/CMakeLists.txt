@@ -32,7 +32,6 @@ add_library(
   internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
-  overlapping_output_grouping.cpp
   native_platform.cpp
   anonymous_shm_file.cpp
   shm_buffer.cpp
