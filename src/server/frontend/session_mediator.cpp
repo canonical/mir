@@ -467,6 +467,10 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
             parameters.add_application(application.pid());
         }
 
+        auto current_trust_session = weak_trust_session.lock();
+        if (current_trust_session.get() != nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Cannot start another trust session"));
+
         std::string error;
         auto trust_session = shell->start_trust_session_for(error, session, parameters, event_sink);
         weak_trust_session = trust_session;
@@ -492,6 +496,7 @@ void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         auto trust_session = weak_trust_session.lock();
+        weak_trust_session.reset();
 
         if (trust_session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid trusted session"));
