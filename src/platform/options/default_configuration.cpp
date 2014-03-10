@@ -70,7 +70,7 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
 
     add_options()
         (host_socket_opt, po::value<std::string>(),
-            "Host socket filename [string:default=$MIR_SOCKET]")
+            "Host socket filename")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
