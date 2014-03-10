@@ -135,8 +135,8 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
     // We create a trust session
     mcd.trust_session = mir_connection_trust_session_create(mcd.connection);
     assert(mcd.trust_session != NULL);
-    MirTrustSessionAddApplicationResult add_result = mir_trust_session_add_app_with_pid(mcd.trust_session, child_pid);
-    assert(add_result == mir_trust_session_app_addition_succeeded);
+    MirTrustSessionAddTrustResult add_result = mir_trust_session_add_trusted_pid(mcd.trust_session, child_pid);
+    assert(add_result == mir_trust_session_pid_addition_succeeded);
 
     mir_trust_session_start_sync(mcd.trust_session);
     assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_started);

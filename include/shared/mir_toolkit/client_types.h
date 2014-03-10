@@ -303,14 +303,14 @@ typedef struct MirScreencastParameters
 typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
 
 /**
- * MirTrustSessionAddApplicationResult specifies the result of a
+ * MirTrustSessionAddTrustResult specifies the result of a
  * call to add an app id to a trust session
  */
 typedef enum
 {
-    mir_trust_session_app_addition_succeeded,
-    mir_trust_session_app_already_part_of_trust_session
-} MirTrustSessionAddApplicationResult;
+    mir_trust_session_pid_addition_succeeded,
+    mir_trust_session_pid_already_part_of_trust_session
+} MirTrustSessionAddTrustResult;
 
 #ifdef __cplusplus
 }

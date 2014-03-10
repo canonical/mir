@@ -47,7 +47,7 @@ public:
     MirTrustSession(MirTrustSession const &) = delete;
     MirTrustSession& operator=(MirTrustSession const &) = delete;
 
-    MirTrustSessionAddApplicationResult add_app_with_pid(pid_t pid);
+    MirTrustSessionAddTrustResult add_trusted_pid(pid_t pid);
 
     MirWaitHandle* start(mir_trust_session_callback callback, void * context);
     MirWaitHandle* stop(mir_trust_session_callback callback, void * context);

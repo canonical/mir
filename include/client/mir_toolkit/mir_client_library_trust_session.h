@@ -40,9 +40,9 @@ MirTrustSession* mir_connection_trust_session_create(MirConnection* connection);
  * Add a process id to the trust session relationship
  *   \param [in] trust_session  The trust session
  *   \param [in] pid            The process id of the application to add
- *   \return                    A MirTrustSessionAddApplicationResult result of the call
+ *   \return                    A MirTrustSessionAddTrustResult result of the call
  */
-MirTrustSessionAddApplicationResult mir_trust_session_add_app_with_pid(MirTrustSession *trust_session,
+MirTrustSessionAddTrustResult mir_trust_session_add_trusted_pid(MirTrustSession *trust_session,
     pid_t pid);
 
 /**

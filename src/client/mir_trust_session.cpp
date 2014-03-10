@@ -53,7 +53,7 @@ MirTrustSessionState MirTrustSession::get_state() const
     return state.load();
 }
 
-MirTrustSessionAddApplicationResult MirTrustSession::add_app_with_pid(pid_t pid)
+MirTrustSessionAddTrustResult MirTrustSession::add_trusted_pid(pid_t pid)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
@@ -63,14 +63,14 @@ MirTrustSessionAddApplicationResult MirTrustSession::add_app_with_pid(pid_t pid)
         auto const& application = parameters.application(i);
         if (application.has_pid() && application.pid() == pid)
         {
-            return mir_trust_session_app_already_part_of_trust_session;
+            return mir_trust_session_pid_already_part_of_trust_session;
         }
     }
 
     auto app = parameters.add_application();
     app->set_pid(pid);
 
-    return mir_trust_session_app_addition_succeeded;
+    return mir_trust_session_pid_addition_succeeded;
 }
 
 MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void * context)
