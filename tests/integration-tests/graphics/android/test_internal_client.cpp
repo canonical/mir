@@ -81,9 +81,8 @@ struct StubInputFactory : public mi::InputChannelFactory
 }
 
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
-
+{
     SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
-
     auto size = geom::Size{334, 122};
     auto pf  = mir_pixel_format_abgr_8888;
     msh::SurfaceCreationParameters params;

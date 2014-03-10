@@ -65,7 +65,6 @@ protected:
     static void (*original_sigterm_handler)(int);
 };
 
-
 void (*AndroidDisplay::original_sigterm_handler)(int);
 std::shared_ptr<mga::ResourceFactory> AndroidDisplay::display_resource_factory;
 }
@@ -73,7 +72,6 @@ std::shared_ptr<mga::ResourceFactory> AndroidDisplay::display_resource_factory;
 TEST_F(AndroidDisplay, display_can_post)
 {
     SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
-
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);

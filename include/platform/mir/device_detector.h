@@ -16,17 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
-#define MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
+#ifndef MIR_DEVICE_DETECTOR_H_
+#define MIR_DEVICE_DETECTOR_H_
 
 #include <hybris/properties/properties.h>
 #include <string>
 
 namespace mir
 {
-namespace graphics
-{
-
 class PropertiesWrapper
 {
 public:
@@ -41,7 +38,7 @@ private:
     PropertiesWrapper& operator=(PropertiesWrapper const&) = delete;
 };
 
-class AndroidPropertiesOps : public PropertiesWrapper
+class PropertiesOps : public PropertiesWrapper
 {
 public:
     int property_get(
@@ -61,7 +58,5 @@ private:
     std::string device_name_;
     bool android_device_present_; 
 };
-
 }
-}
-#endif /* MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_ */
+#endif /* MIR_DEVICE_DETECTOR_H_ */

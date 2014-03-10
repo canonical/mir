@@ -16,11 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/device_detector.h"
+#include "mir/device_detector.h"
 
-namespace mg=mir::graphics;
-
-int mg::AndroidPropertiesOps::property_get(
+int mir::PropertiesOps::property_get(
     char const key[PROP_NAME_MAX],
     char value[PROP_VALUE_MAX],
     char const default_value[PROP_VALUE_MAX]) const
@@ -28,7 +26,7 @@ int mg::AndroidPropertiesOps::property_get(
     return property_get(key, value, default_value);
 }
 
-mg::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
+mir::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
 {
     static char const key[PROP_NAME_MAX] = "ro.product.device"; 
     static char const default_value[PROP_VALUE_MAX] = "";
@@ -38,12 +36,12 @@ mg::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
     android_device_present_ = !(device_name_ == std::string{default_value});
 }
 
-bool mg::DeviceDetector::android_device_present() const
+bool mir::DeviceDetector::android_device_present() const
 {
     return android_device_present_;
 }
 
-std::string mg::DeviceDetector::device_name() const
+std::string mir::DeviceDetector::device_name() const
 {
     return device_name_;
 }
