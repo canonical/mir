@@ -15,3 +15,35 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+
+#include "device_detector.h"
+
+namespace mga=mir::graphics::android;
+
+int mga::AndroidPropertiesOps::property_get(
+    char const key[PROP_NAME_MAX],
+    char value[PROP_VALUE_MAX],
+    char const default_value[PROP_VALUE_MAX]) const
+{
+    return property_get(key, value, default_value);
+}
+
+mga::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
+{
+    static char const key[PROP_NAME_MAX] = "ro.product.device"; 
+    static char const default_value[PROP_VALUE_MAX] = "";
+    static char value[PROP_VALUE_MAX] = "";
+    properties.property_get(key, value, default_value);
+    device_name_ = std::string{value};
+    android_device_present_ = !(device_name_ == std::string{default_value});
+}
+
+bool mga::DeviceDetector::android_device_present() const
+{
+    return android_device_present_;
+}
+
+std::string mga::DeviceDetector::device_name() const
+{
+    return device_name_;
+}
