@@ -278,12 +278,24 @@ typedef struct MirRectangle
 /**
  * MirScreencastParameters is the structure of required information that
  * you must provide to Mir in order to create a MirScreencast.
+ * The width and height parameters can be used to down-scale the screencast
+ * For no scaling set them to the region width and height.
  */
 typedef struct MirScreencastParameters
 {
+    /**
+     * The rectangular region of the screen to capture -
+     * The region is specified in virtual screen space hence multiple screens can be captured simultaneously
+     */
     MirRectangle region;
+    /** The width of the screencast which can be different than the screen region capture width */
     unsigned int width;
+    /** The height of the screencast which can be different than the screen region capture height */
     unsigned int height;
+    /**
+     * The pixel format of the screencast.
+     * It must be a supported format obtained from mir_connection_get_available_surface_formats.
+     */
     MirPixelFormat pixel_format;
 } MirScreencastParameters;
 
