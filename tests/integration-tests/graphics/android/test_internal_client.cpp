@@ -41,6 +41,7 @@
 
 #include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test/android_device_detection.h"
 
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
@@ -81,6 +82,8 @@ struct StubInputFactory : public mi::InputChannelFactory
 
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
+
     auto size = geom::Size{334, 122};
     auto pf  = mir_pixel_format_abgr_8888;
     msh::SurfaceCreationParameters params;

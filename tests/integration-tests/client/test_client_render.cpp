@@ -29,6 +29,7 @@
 #include "testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test/android_device_detection.h"
 
 #include "mir/frontend/connector.h"
 
@@ -346,6 +347,7 @@ std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process_do
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     sync1.try_signal_ready_for();
 
     /* wait for client to finish */
@@ -359,6 +361,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 
 TEST_F(TestClientIPCRender, test_render_double)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     sync2.try_signal_ready_for();
 
     /* wait for client to finish */
@@ -375,6 +378,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
 
     sync3.try_signal_ready_for();
@@ -389,6 +393,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 

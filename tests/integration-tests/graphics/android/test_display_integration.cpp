@@ -25,6 +25,7 @@
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test/android_device_detection.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -63,6 +64,7 @@ protected:
     static std::shared_ptr<mga::ResourceFactory> display_resource_factory;
     static void (*original_sigterm_handler)(int);
 };
+
 
 void (*AndroidDisplay::original_sigterm_handler)(int);
 std::shared_ptr<mga::ResourceFactory> AndroidDisplay::display_resource_factory;

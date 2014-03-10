@@ -26,8 +26,6 @@ namespace mir
 {
 namespace graphics
 {
-namespace android
-{
 
 class PropertiesWrapper
 {
@@ -64,7 +62,6 @@ private:
     bool android_device_present_; 
 };
 
-}
 }
 }
 #endif /* MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_ */

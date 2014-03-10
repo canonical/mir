@@ -7,6 +7,7 @@ add_library(
   default_display_configuration_policy.cpp
   gl_extensions_base.cpp
   surfaceless_egl_context.cpp
+  device_detector.cpp
 )
 
 add_subdirectory(nested/)

@@ -23,6 +23,7 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 
+#include "mir_test/android_device_detection.h"
 #include "testdraw/graphics_region_factory.h"
 #include "testdraw/patterns.h"
 
@@ -84,6 +85,7 @@ auto client_acquire_blocking(mc::SwitchingBundle& switching_bundle)
 
 TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     using namespace testing;
 
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
@@ -100,6 +102,7 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 
 TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     using namespace testing;
 
     mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
@@ -112,6 +115,7 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)
 
 TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
 {
+    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     using namespace testing;
 
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);

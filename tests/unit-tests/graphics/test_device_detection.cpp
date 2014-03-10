@@ -16,15 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/device_detector.h"
+#include "mir/graphics/device_detector.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
 
 namespace
 {
-struct MockOps : mga::PropertiesWrapper
+struct MockOps : mg::PropertiesWrapper
 {
     MOCK_CONST_METHOD3(property_get, int(
         char const[PROP_NAME_MAX], char[PROP_VALUE_MAX], char const[PROP_VALUE_MAX]));
@@ -47,7 +47,7 @@ TEST(DeviceDetection, detects_device)
             return 0;
         }));
 
-    mga::DeviceDetector detector(mock_ops);
+    mg::DeviceDetector detector(mock_ops);
     EXPECT_TRUE(detector.android_device_present());
     EXPECT_EQ(std::string{name_str}, detector.device_name());
 }
@@ -67,7 +67,7 @@ TEST(DeviceDetection, does_not_detect_device)
             return 0;
         }));
 
-    mga::DeviceDetector detector(mock_ops);
+    mg::DeviceDetector detector(mock_ops);
     EXPECT_FALSE(detector.android_device_present());
     EXPECT_EQ(std::string{}, detector.device_name());
 }
