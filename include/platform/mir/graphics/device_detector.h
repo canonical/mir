@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
 #define MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
 
-#include <hybris/properties/properties.h>
+#include <properties/properties.h>
 #include <string>
 
 namespace mir
