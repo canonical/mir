@@ -23,7 +23,7 @@ int mir::PropertiesOps::property_get(
     char value[PROP_VALUE_MAX],
     char const default_value[PROP_VALUE_MAX]) const
 {
-    return property_get(key, value, default_value);
+    return ::property_get(key, value, default_value);
 }
 
 mir::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
