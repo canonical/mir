@@ -395,19 +395,15 @@ try
        return EXIT_SUCCESS;
     }
 
-    std::ostream *out_stream;
-    std::unique_ptr<std::ostream> file_stream;
     if (use_std_out)
     {
-        out_stream = &std::cout;
+        do_screencast(egl_setup, screencast_size, number_of_captures, std::cout);
     }
     else
     {
-        file_stream = std::move(std::unique_ptr<std::ostream>(new std::ofstream(output_filename)));
-        out_stream = file_stream.get();
+        std::ofstream file_stream(output_filename);
+        do_screencast(egl_setup, screencast_size, number_of_captures, file_stream);
     }
-
-    do_screencast(egl_setup, screencast_size, number_of_captures, *out_stream);
 
     return EXIT_SUCCESS;
 }
