@@ -49,8 +49,6 @@
 #include <sstream>
 #include <vector>
 
-#include <glm/gtc/matrix_transform.hpp>
-
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
