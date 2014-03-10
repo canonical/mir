@@ -19,6 +19,52 @@
 #ifndef MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
 #define MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
 
+#include <hybris/properties/properties.h>
+#include <string>
 
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
 
+class PropertiesWrapper
+{
+public:
+    PropertiesWrapper() = default;
+    virtual ~PropertiesWrapper() = default;
+    virtual int property_get(
+        char const key[PROP_NAME_MAX],
+        char value[PROP_VALUE_MAX],
+        char const default_value[PROP_VALUE_MAX]) const = 0;
+private:
+    PropertiesWrapper(PropertiesWrapper const&) = delete;
+    PropertiesWrapper& operator=(PropertiesWrapper const&) = delete;
+};
+
+class AndroidPropertiesOps : public PropertiesWrapper
+{
+public:
+    int property_get(
+        char const key[PROP_NAME_MAX] ,
+        char value[PROP_VALUE_MAX],
+        char const default_value[PROP_VALUE_MAX]) const;
+};
+
+class DeviceDetector
+{
+public:
+    DeviceDetector(PropertiesWrapper const& properties);
+
+    bool android_device_present() const;
+    std::string device_name() const;
+private:
+    std::string const device_name_;
+    bool const android_device_present_; 
+};
+
+}
+}
+}
 #endif /* MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_ */

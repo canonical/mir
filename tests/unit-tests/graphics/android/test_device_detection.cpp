@@ -17,36 +17,57 @@
  */
 
 #include "src/platform/graphics/android/device_detector.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+namespace mga=mir::graphics::android;
 
 namespace
 {
-struct MockOps : mga::AndroidPropertiesOps
+struct MockOps : mga::PropertiesWrapper
 {
-    MOCK_CONST_METHOD3(property_get, int(char const*, char*, char const*));
+    MOCK_CONST_METHOD3(property_get, int(
+        char const[PROP_NAME_MAX], char[PROP_VALUE_MAX], char const[PROP_VALUE_MAX]));
 };
 }
 
 TEST(DeviceDetection, detects_device)
 {
+    using namespace testing;
     static char const default_str[] = "";
     static char const name_str[] = "tunafish";
 
-    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device", _, StrEq(default_str))
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
         .Times(1)
-        .WillOnce(SetArg<2>(default_str));
+        .WillOnce(Invoke([&]
+        (char const[PROP_NAME_MAX], char value[PROP_VALUE_MAX], char const[PROP_VALUE_MAX])
+        {
+            memcpy(value, name_str, sizeof(name_str));
+            return 0;
+        }));
 
-    DeviceDetector detector(mock_ops);
+    mga::DeviceDetector detector(mock_ops);
     EXPECT_TRUE(detector.android_device_present());
-    EXPECT_STREQ(detector.device_name(), "tunafish");
+    EXPECT_EQ(detector.device_name(), std::string{"tunafish"});
 }
 
-TEST(DeviceDetection, detects_no_android_device)
+TEST(DeviceDetection, does_not_detect_device)
 {
+    using namespace testing;
     static char const default_str[] = "";
-    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device", _, StrEq(default_str))
-        .Times(1)
-        .WillOnce(SetArg<2>(default_str));
 
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&]
+        (char const[PROP_NAME_MAX], char value[PROP_VALUE_MAX], char const default_value[PROP_VALUE_MAX])
+        {
+            memcpy(value, default_value, sizeof(*default_value));
+            return 0;
+        }));
+
+    mga::DeviceDetector detector(mock_ops);
     EXPECT_FALSE(detector.android_device_present());
-    EXPECT_STREQ(detector.device_name(), std::string{});
+    EXPECT_EQ(detector.device_name(), std::string{});
 }
