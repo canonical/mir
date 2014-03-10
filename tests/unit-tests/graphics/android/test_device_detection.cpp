@@ -49,7 +49,7 @@ TEST(DeviceDetection, detects_device)
 
     mga::DeviceDetector detector(mock_ops);
     EXPECT_TRUE(detector.android_device_present());
-    EXPECT_EQ(detector.device_name(), std::string{"tunafish"});
+    EXPECT_EQ(std::string{name_str}, detector.device_name());
 }
 
 TEST(DeviceDetection, does_not_detect_device)
@@ -69,5 +69,5 @@ TEST(DeviceDetection, does_not_detect_device)
 
     mga::DeviceDetector detector(mock_ops);
     EXPECT_FALSE(detector.android_device_present());
-    EXPECT_EQ(detector.device_name(), std::string{});
+    EXPECT_EQ(std::string{}, detector.device_name());
 }
