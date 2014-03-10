@@ -60,7 +60,7 @@ const GLint texcoord_attr_location = 4;
 const GLint screen_to_gl_coords_uniform_location = 5;
 const GLint tex_uniform_location = 6;
 const GLint display_transform_uniform_location = 7;
-const GLint centre_uniform_location = 7;
+const GLint centre_uniform_location = 8;
 const std::string stub_info_log = "something failed!";
 const size_t stub_info_log_length = stub_info_log.size();
 
