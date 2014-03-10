@@ -25,7 +25,6 @@
 #include "mir_connection.h"
 #include "display_configuration.h"
 #include "mir_surface.h"
-#include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
 #include "lifecycle_control.h"
@@ -397,7 +396,7 @@ void mir_wait_for_one(MirWaitHandle* wait_handle)
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
-    return surface->generate_native_window();
+    return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,

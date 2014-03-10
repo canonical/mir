@@ -17,7 +17,7 @@
  */
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/display_buffer.h"
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/null_platform.h"
@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
+#include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -33,8 +34,11 @@
 using namespace testing;
 using namespace mir;
 using namespace std;
+using namespace mir::test;
 using namespace mir::test::doubles;
 using namespace mir::mir_test_framework;
+using namespace mir::graphics;
+using mir::report::null_display_report;
 
 class MesaDisplayBufferTest : public Test
 {
@@ -65,7 +69,13 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
             .WillByDefault(Return(456));
 
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
+
+        mock_kms_output = std::make_shared<NiceMock<MockKMSOutput>>();
+        ON_CALL(*mock_kms_output, set_crtc(_))
+            .WillByDefault(Return(true));
+        ON_CALL(*mock_kms_output, schedule_page_flip(_))
+            .WillByDefault(Return(true));
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -73,7 +83,7 @@ public:
     shared_ptr<graphics::mesa::Platform> create_platform()
     {
         return make_shared<graphics::mesa::Platform>(
-                      make_shared<graphics::NullDisplayReport>(),
+                      null_display_report(),
                       make_shared<NullVirtualTerminal>());
     }
 
@@ -85,6 +95,7 @@ protected:
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
+    std::shared_ptr<MockKMSOutput> mock_kms_output;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
@@ -93,7 +104,7 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -109,7 +120,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -125,7 +136,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -141,7 +152,7 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -164,7 +175,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -185,7 +196,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -206,7 +217,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
@@ -227,10 +238,62 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
-        make_shared<graphics::NullDisplayReport>(),
+        null_display_report(),
         {},
         nullptr,
         area,
         mir_orientation_right,
         mock_egl.fake_egl_context);
 }
+
+TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    db.post_update();
+}
+
+TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    InSequence seq;
+
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+        .Times(1);
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        mock_egl.fake_egl_context);
+
+    db.post_update();
+    db.post_update();
+}
+

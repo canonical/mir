@@ -27,6 +27,8 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <mutex>
+#include <atomic>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -49,41 +51,41 @@ struct SwapperSwappingStress : public ::testing::Test
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;
-    std::atomic<bool> client_thread_done;
+    std::mutex acquire_mutex;  // must live longer than our callback/lambda
+
+    mg::Buffer* client_acquire_blocking(
+        std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
+    {
+        std::condition_variable cv;
+        bool acquired = false;
+    
+        mg::Buffer* result;
+        switching_bundle->client_acquire(
+            [&](mg::Buffer* new_buffer)
+             {
+                std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
+    
+                result = new_buffer;
+                acquired = true;
+                cv.notify_one();
+             });
+    
+        std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
+    
+        cv.wait(lock, [&]{ return acquired; });
+    
+        return result;
+    }
 };
 
-auto client_acquire_blocking(std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
--> mg::Buffer*
-{
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-
-    mg::Buffer* result;
-    switching_bundle->client_acquire(
-        [&](mg::Buffer* new_buffer)
-         {
-            std::unique_lock<decltype(mutex)> lock(mutex);
-
-            result = new_buffer;
-            done = true;
-            cv.notify_one();
-         });
-
-    std::unique_lock<decltype(mutex)> lock(mutex);
-
-    cv.wait(lock, [&]{ return done; });
-
-    return result;
-}
-}
+} // namespace
 
 TEST_F(SwapperSwappingStress, swapper)
 {
-    client_thread_done = false;
+    std::atomic_bool done(false);
 
     auto f = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     for(auto i=0u; i < 400; i++)
                     {
@@ -91,14 +93,14 @@ TEST_F(SwapperSwappingStress, swapper)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    client_thread_done = true;
+                    done = true;
                 });
 
     auto g = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     unsigned long count = 0;
-                    while(!client_thread_done)
+                    while (!done)
                     {
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
@@ -125,10 +127,10 @@ TEST_F(SwapperSwappingStress, swapper)
 
 TEST_F(SwapperSwappingStress, different_swapper_types)
 {
-    client_thread_done = false;
+    std::atomic_bool done(false);
 
     auto f = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     for(auto i=0u; i < 400; i++)
                     {
@@ -136,14 +138,14 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                         std::this_thread::yield();
                         switching_bundle->client_release(b);
                     }
-                    client_thread_done = true;
+                    done = true;
                 });
 
     auto g = std::async(std::launch::async,
-                [this]
+                [&]
                 {
                     unsigned long count = 0;
-                    while(!client_thread_done)
+                    while (!done)
                     {
                         auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();

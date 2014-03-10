@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -22,8 +22,7 @@
 
 #include "src/server/scene/surface_builder.h"
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/surface_data.h"
-#include "mir/scene/scene_report.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
@@ -40,11 +39,13 @@ class StubSurfaceBuilder : public scene::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         dummy_surface(std::make_shared<scene::BasicSurface>(
-            std::make_shared<scene::SurfaceData>( 
-                std::string("stub"), geometry::Rectangle{{},{}}, [](){}, false),
+            std::string("stub"),
+            geometry::Rectangle{{},{}},
+            [](){},
+            false,
             std::make_shared<StubBufferStream>(),
             std::shared_ptr<input::InputChannel>(),
-            std::make_shared<scene::NullSceneReport>()))
+            mir::report::null_scene_report()))
     {
     }
 

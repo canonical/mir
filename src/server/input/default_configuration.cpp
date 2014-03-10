@@ -19,17 +19,20 @@
 #include "mir/default_server_configuration.h"
 
 #include "display_input_region.h"
-#include "mir/input/android/default_android_input_configuration.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
 #include "null_input_configuration.h"
 
-#include "mir/logging/input_report.h"
+#include "mir/input/android/default_android_input_configuration.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
+#include "mir/report/legacy_input_report.h"
+
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace ml = mir::logging;
+namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -60,12 +63,12 @@ mir::DefaultServerConfiguration::the_input_configuration()
     [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         auto const options = the_options();
-        if (!options->get<bool>(enable_input_opt))
+        if (!options->get<bool>(options::enable_input_opt))
         {
             return std::make_shared<mi::NullInputConfiguration>();
         }
         // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-        else if (options->is_set(standalone_opt) || !options->is_set(host_socket_opt))
+        else if (options->is_set(options::standalone_opt) || !options->is_set(options::host_socket_opt))
         {
             return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
@@ -91,8 +94,8 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get<std::string>(legacy_input_report_opt) == log_opt_value)
-                    ml::legacy_input_report::initialize(the_logger());
+            if (the_options()->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
+                    mr::legacy_input::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
         });
 }
@@ -126,3 +129,4 @@ auto mir::DefaultServerConfiguration::the_nested_event_filter()
 {
     return the_nested_input_relay();
 }
+

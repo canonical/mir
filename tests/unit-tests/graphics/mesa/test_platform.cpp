@@ -24,11 +24,12 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 
-#include "mir/graphics/null_display_report.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <gtest/gtest.h>
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test/pipe.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -45,6 +46,7 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
+namespace mr = mir::report;
 
 namespace
 {
@@ -56,13 +58,13 @@ public:
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
-        fake_devices.add_standard_drm_devices();
+        fake_devices.add_standard_device("standard-drm-devices");
     }
 
     std::shared_ptr<mg::Platform> create_platform()
     {
         return std::make_shared<mgm::Platform>(
-            std::make_shared<mg::NullDisplayReport>(),
+            mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
@@ -75,12 +77,13 @@ public:
 TEST_F(MesaGraphicsPlatform, get_ipc_package)
 {
     using namespace testing;
-    const int auth_fd{66};
+    mir::test::Pipe auth_pipe;
+    int const auth_fd{auth_pipe.read_fd()};
 
     /* First time for master DRM fd, second for authenticated fd */
+    EXPECT_CALL(mock_drm, open(_,_,_))
+        .WillOnce(Return(mock_drm.fake_drm.fd()));
     EXPECT_CALL(mock_drm, drmOpen(_,_))
-        .Times(2)
-        .WillOnce(Return(mock_drm.fake_drm.fd()))
         .WillOnce(Return(auth_fd));
 
     /* Expect proper authorization */
@@ -106,7 +109,7 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_drm, drmOpen(_,_))
+    EXPECT_CALL(mock_drm, open(_,_,_))
             .WillRepeatedly(Return(-1));
 
     try
@@ -185,7 +188,7 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
 {
     using namespace testing;
 
-    drm_magic_t const magic{0x10111213};
+    unsigned int const magic{0x10111213};
 
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(0));
@@ -199,7 +202,7 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
 {
     using namespace testing;
 
-    drm_magic_t const magic{0x10111213};
+    unsigned int const magic{0x10111213};
 
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(-1));

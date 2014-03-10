@@ -18,6 +18,14 @@ include_directories(
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
 
+if(MIR_BUILD_PLATFORM_ANDROID)
+add_subdirectory(android/)
+endif()
+
+if(MIR_BUILD_PLATFORM_MESA)
+add_subdirectory(mesa/)
+endif()
+
 set(
   CLIENT_SOURCES
 
@@ -38,34 +46,6 @@ set(
   mir_screencast_api.cpp
 )
 
-if( MIR_PLATFORM STREQUAL "android")
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
-set(
-  CLIENT_SOURCES
-
-  android/android_client_buffer.cpp
-  android/android_client_buffer_factory.cpp
-  android/android_registrar.cpp
-  android/android_client_platform.cpp
-  android/client_surface_interpreter.cpp
-  android/android_native_display_container.cpp
-  ${CLIENT_SOURCES}
-)
-endif()
-
-if( MIR_PLATFORM STREQUAL "mesa")
-set(
-  CLIENT_SOURCES
-
-  mesa/client_platform.cpp
-  mesa/client_buffer_factory.cpp
-  mesa/client_buffer.cpp
-  mesa/mesa_native_display_container.cpp
-  mesa/native_surface.cpp
-  ${CLIENT_SOURCES}
-)
-endif()
-
 add_library(
   mirclient SHARED
 
@@ -81,14 +61,10 @@ set_target_properties(
   SOVERSION ${MIRCLIENT_ABI}
 )
 
-# Ensure mirclient_compat_links exist before any dependents of mirclient
-add_dependencies(mirclient mirclient_compat_links)
-
 set(
   MIR_CLIENT_LIBRARIES
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${LIBHARDWARE_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${XKBCOMMON_LIBRARIES}
 
@@ -96,10 +72,10 @@ set(
   mirsharedinput
   mirsharedlogging
   mirsharedenv
+  mirsharedsharedlibrary
   mirclientrpc
   mirclientlttngstatic
 
-  ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}
  
   3rd_party

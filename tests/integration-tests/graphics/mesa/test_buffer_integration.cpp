@@ -20,11 +20,13 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
-#include "mir/graphics/null_display_report.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
+#include "src/server/report/null_report_factory.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
@@ -37,6 +39,7 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace mr = mir::report;
 
 namespace mir
 {
@@ -94,7 +97,7 @@ protected:
         auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get<bool>("tests-use-real-graphics"))
-            platform = mg::create_platform(options, std::make_shared<mg::NullDisplayReport>());
+            platform = mg::create_platform(options, mr::null_display_report());
         else
             platform = std::make_shared<StubGraphicPlatform>();
 

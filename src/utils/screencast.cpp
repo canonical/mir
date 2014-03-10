@@ -42,45 +42,23 @@ namespace
 
 volatile sig_atomic_t running = 1;
 
+//In android, waiting for a future is causing the gl/egl context to become invalid
+//possibly due to assumptions in libhybris/android linker.
+//A TLS allocation in the main thread is forced with this variable which seems to push
+//the gl/egl context TLS into a slot where the future wait code does not overwrite it.
+thread_local int tls_hack[2];
+
 void shutdown(int)
 {
     running = 0;
 }
 
-std::future<void> write_frame_to_file(
-    std::vector<char> const& frame_data, int frame_number, GLenum format)
-{
-    return std::async(
-        std::launch::async,
-        [&frame_data, frame_number, format]
-        {
-            std::stringstream ss;
-            ss << "/tmp/mir_" ;
-            ss.width(5);
-            ss.fill('0');
-            ss << frame_number;
-            ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
-            std::ofstream f(ss.str());
-            f.write(frame_data.data(), frame_data.size());
-        });
-}
-
-GLenum read_pixels(mir::geometry::Size const& size, void* buffer)
+void read_pixels(GLenum format, mir::geometry::Size const& size, void* buffer)
 {
     auto width = size.width.as_uint32_t();
     auto height = size.height.as_uint32_t();
 
-    GLenum format = GL_BGRA_EXT;
-
     glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, buffer);
-
-    if (glGetError() != GL_NO_ERROR)
-    {
-        format = GL_RGBA;
-        glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, buffer);
-    }
-
-    return format;
 }
 
 
@@ -136,6 +114,8 @@ void print_usage()
     std::cout << "Usage " << std::endl
               << "    -m <Mir server socket>" << std::endl
               << "    -o <Output id>" << std::endl
+              << "    -n <Number of frames to capture>" << std::endl
+              << "        default (-1) is to capture infinite frames" << std::endl
               << "    -h: this help text" << std::endl;
 }
 
@@ -184,6 +164,13 @@ struct EGLSetup
         {
             throw std::runtime_error("Failed to make screencast surface current");
         }
+
+        uint32_t a_pixel;
+        glReadPixels(0, 0, 1, 1, GL_BGRA_EXT, GL_UNSIGNED_BYTE, &a_pixel);
+        if (glGetError() == GL_NO_ERROR)
+            read_pixel_format = GL_BGRA_EXT;
+        else
+            read_pixel_format = GL_RGBA;
     }
 
     ~EGLSetup()
@@ -200,14 +187,20 @@ struct EGLSetup
             throw std::runtime_error("Failed to swap screencast surface buffers");
     }
 
+    GLenum pixel_read_format()
+    {
+        return read_pixel_format;
+    }
+
     EGLDisplay egl_display;
     EGLContext egl_context;
     EGLSurface egl_surface;
     EGLConfig egl_config;
+    GLenum read_pixel_format;
 };
 
 void do_screencast(MirConnection* connection, MirScreencast* screencast,
-                   uint32_t output_id)
+                   uint32_t output_id, int32_t number_of_captures)
 {
     static int const rgba_pixel_size{4};
 
@@ -216,22 +209,33 @@ void do_screencast(MirConnection* connection, MirScreencast* screencast,
                                   frame_size.width.as_uint32_t() *
                                   frame_size.height.as_uint32_t();
 
-    int frame_number{0};
     std::vector<char> frame_data(frame_size_bytes, 0);
-    std::future<void> frame_written_future =
-        std::async(std::launch::deferred, []{});
 
     EGLSetup egl_setup{connection, screencast};
+    auto format = egl_setup.pixel_read_format();
 
-    while (running)
+    std::stringstream ss;
+    ss << "/tmp/mir_screencast_" ;
+    ss << frame_size.width << "x" << frame_size.height;
+    ss << (format == GL_BGRA_EXT ? ".bgra" : ".rgba");
+    std::ofstream video_file(ss.str());
+
+    while (running && (number_of_captures != 0))
     {
-        frame_written_future.wait();
+        read_pixels(format, frame_size, frame_data.data());
 
-        auto format = read_pixels(frame_size, frame_data.data());
-        frame_written_future = write_frame_to_file(frame_data, frame_number, format);
+        auto write_out_future = std::async(
+                std::launch::async,
+                [&video_file, &frame_data] {
+                    video_file.write(frame_data.data(), frame_data.size());
+                });
 
         egl_setup.swap_buffers();
-        ++frame_number;
+
+        write_out_future.wait();
+
+        if (number_of_captures > 0)
+            number_of_captures--;
     }
 }
 
@@ -244,11 +248,18 @@ try
     opterr = 0;
     char const* socket_file = nullptr;
     uint32_t output_id = mir_display_output_id_invalid;
+    int32_t number_of_captures = -1;
 
-    while ((arg = getopt (argc, argv, "hm:o:")) != -1)
+    //avoid unused warning/error
+    tls_hack[0] = 0;
+
+    while ((arg = getopt (argc, argv, "hm:o:n:")) != -1)
     {
         switch (arg)
         {
+        case 'n':
+            number_of_captures = std::stoi(std::string(optarg)); 
+            break;
         case 'm':
             socket_file = optarg;
             break;
@@ -301,13 +312,18 @@ try
     if (screencast == nullptr)
         throw std::runtime_error("Failed to create screencast");
 
-    do_screencast(connection.get(), screencast.get(), output_id);
+    do_screencast(connection.get(), screencast.get(), output_id, number_of_captures);
 
     return EXIT_SUCCESS;
+}
+catch(std::invalid_argument const& e)
+{
+    std::cerr << "Invalid Argument" << std::endl;
+    print_usage();
+    return EXIT_FAILURE;
 }
 catch(std::exception const& e)
 {
     std::cerr << e.what() << std::endl;
-
     return EXIT_FAILURE;
 }

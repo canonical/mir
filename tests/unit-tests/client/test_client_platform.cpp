@@ -17,13 +17,15 @@
  */
 
 #include "src/client/client_platform.h"
-#include "src/client/native_client_platform_factory.h"
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/mock_android_hw.h"
+#include "src/client/android/client_platform_factory.h"
+#else
+#include "src/client/mesa/client_platform_factory.h"
 #endif
 
 #include <gmock/gmock.h>
@@ -32,19 +34,20 @@
 namespace mcl=mir::client;
 namespace mtd = mir::test::doubles;
 
-class ClientPlatformTest : public ::testing::Test
+struct ClientPlatformTest : public ::testing::Test
 {
+    mtd::MockClientContext context;
 #ifdef ANDROID
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    mcl::android::ClientPlatformFactory factory;
+#else
+    mcl::mesa::ClientPlatformFactory factory;
 #endif
 };
 
 TEST_F(ClientPlatformTest, platform_name)
 {
-    mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
-
 #ifdef ANDROID
     auto type = mir_platform_type_android;
 #else
@@ -55,8 +58,6 @@ TEST_F(ClientPlatformTest, platform_name)
 
 TEST_F(ClientPlatformTest, platform_creates)
 {
-    mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto buffer_factory = platform->create_buffer_factory();
     EXPECT_NE(buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
@@ -64,8 +65,6 @@ TEST_F(ClientPlatformTest, platform_creates)
 
 TEST_F(ClientPlatformTest, platform_creates_native_window)
 {
-    mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
@@ -74,8 +73,6 @@ TEST_F(ClientPlatformTest, platform_creates_native_window)
 
 TEST_F(ClientPlatformTest, platform_creates_egl_native_display)
 {
-    mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
     EXPECT_NE(nullptr, native_display.get());

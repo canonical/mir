@@ -21,8 +21,6 @@
 
 #include "renderer_factory.h"
 
-#include <mutex>
-
 namespace mir
 {
 namespace compositor
@@ -32,9 +30,6 @@ class GLRendererFactory : public RendererFactory
 {
 public:
     std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
-
-private:
-    std::mutex renderer_mutex;
 };
 
 }
