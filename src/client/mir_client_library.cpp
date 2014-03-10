@@ -542,7 +542,7 @@ int mir_connection_drm_set_gbm_device(MirConnection* connection,
  * Trust session specific functions *
  **************************/
 
-MirTrustSession* mir_trust_session_create(MirConnection* connection)
+MirTrustSession* mir_connection_trust_session_create(MirConnection* connection)
 {
     return connection->create_trust_session();
 }

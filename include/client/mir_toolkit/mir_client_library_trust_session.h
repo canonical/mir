@@ -31,12 +31,13 @@ extern "C" {
 
 /**
  * Create an new trust session
- * \return               Structure that describes the trust session
+ *   \param [in] connection  The connection
+ *   \return                 Structure that describes the trust session
  */
-MirTrustSession* mir_trust_session_create(MirConnection* connection);
+MirTrustSession* mir_connection_trust_session_create(MirConnection* connection);
 
 /**
- * Create an new trust session
+ * Add a process id to the trust session relationship
  *   \param [in] trust_session  The trust session
  *   \param [in] pid            The process id of the application to add
  *   \return                    A MirTrustSessionAddApplicationResult result of the call
@@ -45,7 +46,7 @@ MirTrustSessionAddApplicationResult mir_trust_session_add_app_with_pid(MirTrustS
     pid_t pid);
 
 /**
- * Register a callback to be called when a Lifecycle state change occurs.
+ * Register a callback to be called when a trust session state change occurs.
  *   \param [in] trust_session  The trust session
  *   \param [in] callback       The function to be called when the state change occurs
  *   \param [in,out] context    User data passed to the callback function
@@ -64,7 +65,7 @@ void mir_trust_session_set_event_callback(MirTrustSession* trust_session,
 MirWaitHandle *mir_trust_session_start(MirTrustSession *trust_session, mir_trust_session_callback callback, void* context);
 
 /**
- * Request the start of a trust session
+ * Perform a mir_trust_session_start() but also wait for and return the result.
  *   \param [in] trust_session  The trust session
  *   \return                    True if the request was made successfully,
  *                              false otherwise
@@ -80,7 +81,7 @@ MirBool mir_trust_session_start_sync(MirTrustSession *trust_session);
 MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session, mir_trust_session_callback callback, void* context);
 
 /**
- * Request the start of a trust session
+ * Perform a mir_trust_session_stop() but also wait for and return the result.
  *   \param [in] trust_session  The trust session
  *   \return                    True if the request was made successfully,
  *                              false otherwise
