@@ -8,7 +8,7 @@ INCLUDE(FindPackageHandleStandardArgs)
 find_package( PkgConfig )
 pkg_check_modules(ANDROID_PROPERTIES REQUIRED libandroid-properties)
 
-find_path(ANDROID_PROPERTIES_INCLUDE_DIR properties/properties.h
+find_path(ANDROID_PROPERTIES_INCLUDE_DIR hybris/properties/properties.h
           HINTS ${PC_ANDROID_PROPERTIES_INCLUDEDIR} ${PC_ANDROID_PROPERTIES_INCLUDE_DIRS})
 find_library(ANDROID_PROPERTIES_LIBRARIES
              NAMES        libandroid-properties.so
