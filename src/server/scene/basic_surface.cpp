@@ -25,6 +25,7 @@
 
 #include "mir/scene/scene_report.h"
 
+#define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <boost/throw_exception.hpp>
@@ -241,7 +242,7 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        rotation_matrix = glm::rotate(glm::mat4(1.0f), degrees, axis);
+        rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(degrees), axis);
         transformation_dirty = true;
     }
     notify_change();
