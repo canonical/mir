@@ -26,6 +26,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/surfaceless_egl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/overlapping_output_grouping.h"
 #include "host_connection.h"
 
 #include <boost/throw_exception.hpp>
@@ -174,48 +175,50 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
 {
     if (!configuration.valid())
     {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("Invalid or inconsistent display configuration"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
     }
 
     decltype(outputs) result;
+    OverlappingOutputGrouping unique_outputs{configuration};
 
-    // TODO for proper mirrored mode support we will need to detect overlapping outputs and
-    // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
-    // TODO used by the Mesa backend for a similar purpose could help with this.
-    configuration.for_each_output(
-        [&](mg::DisplayConfigurationOutput const& output)
+    unique_outputs.for_each_group(
+        [&](mg::OverlappingOutputGroup const& group)
         {
-            if (output.used)
-            {
-                geometry::Rectangle const& area = output.extents();
-
-                auto const& egl_config_format = output.current_format;
-
-                complete_display_initialization(egl_config_format);
-
-                MirSurfaceParameters const request_params =
+            bool have_output_for_group = false;
+            geometry::Rectangle const& area = group.bounding_rectangle();
+            group.for_each_output([&](mg::DisplayConfigurationOutput output)
+                {
+                    if (!have_output_for_group)
                     {
-                        "Mir nested display",
-                        area.size.width.as_int(),
-                        area.size.height.as_int(),
-                        egl_config_format,
-                        mir_buffer_usage_hardware,
-                        static_cast<uint32_t>(output.id.as_value())
-                    };
+                        auto const& egl_config_format = output.current_format;
 
-                auto const mir_surface = mir_connection_create_surface_sync(*connection, &request_params);
+                        complete_display_initialization(egl_config_format);
 
-                if (!mir_surface_is_valid(mir_surface))
-                    BOOST_THROW_EXCEPTION(std::runtime_error(mir_surface_get_error_message(mir_surface)));
+                        MirSurfaceParameters const request_params = {
+                            "Mir nested display",
+                            area.size.width.as_int(),
+                            area.size.height.as_int(),
+                            egl_config_format,
+                            mir_buffer_usage_hardware,
+                            static_cast<uint32_t>(output.id.as_value())
+                        };
 
-                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(
-                    egl_display,
-                    mir_surface,
-                    area,
-                    event_handler,
-                    output.current_format);
-            }
+                        auto const mir_surface =
+                                mir_connection_create_surface_sync(*connection, &request_params);
+
+                        if (!mir_surface_is_valid(mir_surface))
+                            BOOST_THROW_EXCEPTION(
+                                        std::runtime_error(mir_surface_get_error_message(mir_surface)));
+
+                        result[output.id] = std::make_shared<mgn::detail::NestedOutput>(
+                            egl_display,
+                            mir_surface,
+                            area,
+                            event_handler,
+                            output.current_format);
+                        have_output_for_group = true;
+                    }
+                });
         });
 
     if (result.empty())
