@@ -1,6 +1,5 @@
 include_directories(${PROJECT_SOURCE_DIR}/include/platform)
 include_directories(${UDEV_INCLUDE_DIRS})
-include_directories (${ANDROID_PROPERTIES_INCLUDE_DIRS})
 
 add_library(
   mirplatform SHARED
@@ -13,7 +12,6 @@ target_link_libraries(
   mirplatformgraphicscommon
 
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
-  ${ANDROID_PROPERTIES_LIBRARIES}
 )
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
