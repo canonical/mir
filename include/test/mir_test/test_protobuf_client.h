@@ -21,6 +21,7 @@
 #define MIR_TEST_TEST_CLIENT_H_
 
 #include "mir_protobuf.pb.h"
+#include "wait_condition.h"
 
 #include <gmock/gmock.h>
 
@@ -76,10 +77,6 @@ struct TestProtobufClient
 
     void on_configure_display_done();
 
-    void on_trust_session_start_done();
-
-    void on_trust_session_stop_done();
-
     void wait_for_connect_done();
 
     void wait_for_create_surface();
@@ -115,8 +112,9 @@ struct TestProtobufClient
     std::atomic<bool> drm_auth_magic_done_called;
     std::atomic<bool> configure_display_done_called;
     std::atomic<bool> tfd_done_called;
-    std::atomic<bool> trust_session_start_done_called;
-    std::atomic<bool> trust_session_stop_done_called;
+
+    WaitCondition wc_trust_session_start;
+    WaitCondition wc_trust_session_stop;
 
     std::atomic<int> connect_done_count;
     std::atomic<int> create_surface_done_count;

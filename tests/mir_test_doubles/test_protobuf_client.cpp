@@ -51,8 +51,6 @@ mir::test::TestProtobufClient::TestProtobufClient(
     drm_auth_magic_done_called(false),
     configure_display_done_called(false),
     tfd_done_called(false),
-    trust_session_start_done_called(false),
-    trust_session_stop_done_called(false),
     connect_done_count(0),
     create_surface_done_count(0),
     disconnect_done_count(0)
@@ -78,9 +76,9 @@ mir::test::TestProtobufClient::TestProtobufClient(
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
     ON_CALL(*this, trust_session_start_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trust_session_start_done));
+        .WillByDefault(testing::Invoke(&wc_trust_session_start, &WaitCondition::wake_up_everyone));
     ON_CALL(*this, trust_session_stop_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_trust_session_stop_done));
+        .WillByDefault(testing::Invoke(&wc_trust_session_stop, &WaitCondition::wake_up_everyone));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -128,16 +126,6 @@ void mir::test::TestProtobufClient::on_drm_auth_magic_done()
 void mir::test::TestProtobufClient::on_configure_display_done()
 {
     configure_display_done_called.store(true);
-}
-
-void mir::test::TestProtobufClient::on_trust_session_start_done()
-{
-    trust_session_start_done_called.store(true);
-}
-
-void mir::test::TestProtobufClient::on_trust_session_stop_done()
-{
-    trust_session_stop_done_called.store(true);
 }
 
 void mir::test::TestProtobufClient::wait_for_configure_display_done()
@@ -246,20 +234,10 @@ void mir::test::TestProtobufClient::wait_for_tfd_done()
 
 void mir::test::TestProtobufClient::wait_for_trust_session_start_done()
 {
-    for (int i = 0; !trust_session_start_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    trust_session_start_done_called.store(false);
+    wc_trust_session_start.wait_for_at_most_seconds(maxwait);
 }
 
 void mir::test::TestProtobufClient::wait_for_trust_session_stop_done()
 {
-    for (int i = 0; !trust_session_stop_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    trust_session_stop_done_called.store(false);
+    wc_trust_session_stop.wait_for_at_most_seconds(maxwait);
 }
