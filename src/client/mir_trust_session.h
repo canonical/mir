@@ -19,9 +19,10 @@
 #ifndef MIR_CLIENT_MIR_TRUST_SESSION_H_
 #define MIR_CLIENT_MIR_TRUST_SESSION_H_
 
+#include "mir_toolkit/mir_client_library.h"
+
 #include "mir_protobuf.pb.h"
 #include "mir_wait_handle.h"
-#include "client_trust_session.h"
 
 #include <mutex>
 #include <memory>
@@ -36,7 +37,7 @@ class TrustSessionControl;
 }
 }
 
-struct MirTrustSession : public mir::client::TrustSession
+struct MirTrustSession
 {
 public:
     MirTrustSession(mir::protobuf::DisplayServer::Stub & server,
