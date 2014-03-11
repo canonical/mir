@@ -32,6 +32,7 @@ add_library(
   interpreter_cache.cpp
   internal_client.cpp
   gl_context.cpp
+  real_hwc_wrapper.cpp
 )
 
 set_target_properties(

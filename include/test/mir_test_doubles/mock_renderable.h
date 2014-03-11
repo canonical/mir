@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
 #define MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
 
+#include "mir_test_doubles/stub_buffer.h"
 #include <mir/graphics/renderable.h>
 #include <gmock/gmock.h>
 
@@ -30,6 +31,13 @@ namespace doubles
 {
 struct MockRenderable : public graphics::Renderable
 {
+    MockRenderable()
+    {
+        ON_CALL(*this, screen_position())
+            .WillByDefault(testing::Return(geometry::Rectangle{{},{}}));
+        ON_CALL(*this, buffer(testing::_))
+            .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
+    }
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<graphics::Buffer>(unsigned long));
     MOCK_CONST_METHOD0(alpha_enabled, bool());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());

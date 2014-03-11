@@ -33,6 +33,7 @@ class Renderable;
 
 namespace android
 {
+class SwappingGLContext;
 
 class DisplayDevice
 {
@@ -40,9 +41,11 @@ public:
     virtual ~DisplayDevice() = default;
 
     virtual void mode(MirPowerMode mode) = 0;
-    virtual void prepare_gl() = 0;
-    virtual void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list) = 0; 
-    virtual void gpu_render(EGLDisplay dpy, EGLSurface sur) = 0;
+    virtual void render_gl(SwappingGLContext const& context) = 0;
+    virtual void render_gl_and_overlays(
+        SwappingGLContext const& context,
+        std::list<std::shared_ptr<Renderable>> const& list,
+        std::function<void(Renderable const&)> const& render_fn) = 0;
     virtual void post(Buffer const& buffer) = 0;
     virtual bool apply_orientation(MirOrientation orientation) const = 0;
 

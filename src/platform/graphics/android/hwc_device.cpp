@@ -17,83 +17,122 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer.h"
-
-#include <EGL/eglext.h>
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom = mir::geometry;
 
+namespace
+{
+static const size_t fbtarget_plus_skip_size = 2;
+static const size_t fbtarget_size = 1;
+}
+
+void mga::HwcDevice::setup_layer_types()
+{
+    auto it = hwc_list.additional_layers_begin();
+    auto const num_additional_layers = std::distance(it, hwc_list.end());
+    switch (num_additional_layers)
+    {
+        case fbtarget_plus_skip_size:
+            it->set_layer_type(mga::LayerType::skip);
+            ++it;
+        case fbtarget_size:
+            it->set_layer_type(mga::LayerType::framebuffer_target);
+        default:
+            break;
+    }
+}
+
+void mga::HwcDevice::set_list_framebuffer(mg::Buffer const& buffer)
+{
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    for(auto it = hwc_list.additional_layers_begin(); it != hwc_list.end(); it++)
+    {
+        //TODO: the functions on mga::Layer should be consolidated
+        it->set_render_parameters(disp_frame, false);
+        it->set_buffer(buffer);
+        it->prepare_for_draw();
+    }
+}
+
 mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                          std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
+      hwc_list{{}, 2},
+      hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
+    setup_layer_types();
 }
 
-void mga::HwcDevice::prepare_gl()
+void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 {
-    auto rc = 0;
-    auto display_list = layer_list.native_list().lock();
-    if (display_list)
-    {
-        //note, although we only have a primary display right now,
-        //      set the external and virtual displays to null as some drivers check for that
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-        rc = hwc_device->prepare(hwc_device.get(), 1, displays);
-    }
+    hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
+    setup_layer_types();
 
-    if ((rc != 0) || (!display_list))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc prepare()"));
-    }
+    list_needs_commit = true;
+
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+
+    context.swap_buffers();
 }
 
-void mga::HwcDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
+void mga::HwcDevice::render_gl_and_overlays(
+    SwappingGLContext const& context,
+    std::list<std::shared_ptr<Renderable>> const& renderables,
+    std::function<void(Renderable const&)> const& render_fn)
 {
-    prepare_gl();
-}
+    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
+        return;
+    setup_layer_types();
 
-void mga::HwcDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
-{
-    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+
+    //draw layers that the HWC did not accept for overlays here
+    bool needs_swapbuffers = false;
+    auto layers_it = hwc_list.begin();
+    for(auto const& renderable : renderables)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
+        //prepare all layers for draw. 
+        layers_it->prepare_for_draw();
+
+        //trigger GL on the layers that are not overlays
+        if (layers_it->needs_gl_render())
+        {
+            render_fn(*renderable);
+            needs_swapbuffers = true;
+        }
+        layers_it++;
     }
+
+    if (needs_swapbuffers)
+        context.swap_buffers();
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
 {
+    if (!list_needs_commit)
+        return;
+
     auto lg = lock_unblanked();
+    set_list_framebuffer(buffer);
+    hwc_wrapper->set(*hwc_list.native_list().lock());
 
-    layer_list.set_fb_target(buffer);
-
-    auto rc = 0;
-    auto display_list = layer_list.native_list().lock();
-    if (display_list)
+    for(auto& layer : hwc_list)
     {
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get(), nullptr, nullptr};
-        rc = hwc_device->set(hwc_device.get(), 1, displays);
-
-        mga::SyncFence retire_fence(sync_ops, layer_list.retirement_fence());
-
-        int framebuffer_fence = layer_list.fb_target_fence();
-        auto native_buffer = buffer.native_buffer_handle();
-        native_buffer->update_fence(framebuffer_fence);
+        layer.update_fence_and_release_buffer();
     }
 
-    if ((rc != 0) || (!display_list))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
-    }
+    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    list_needs_commit = false;
 }
