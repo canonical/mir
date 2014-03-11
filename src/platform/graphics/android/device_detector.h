@@ -34,9 +34,9 @@ public:
     PropertiesWrapper() = default;
     virtual ~PropertiesWrapper() = default;
     virtual int property_get(
-        char const key[PROP_NAME_MAX],
-        char value[PROP_VALUE_MAX],
-        char const default_value[PROP_VALUE_MAX]) const = 0;
+        char const* key,
+        char* value,
+        char const* default_value) const = 0;
 private:
     PropertiesWrapper(PropertiesWrapper const&) = delete;
     PropertiesWrapper& operator=(PropertiesWrapper const&) = delete;
@@ -46,9 +46,9 @@ class PropertiesOps : public PropertiesWrapper
 {
 public:
     int property_get(
-        char const key[PROP_NAME_MAX] ,
-        char value[PROP_VALUE_MAX],
-        char const default_value[PROP_VALUE_MAX]) const;
+        char const* key,
+        char* value,
+        char const* default_value) const;
 };
 
 class DeviceDetector

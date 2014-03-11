@@ -21,17 +21,17 @@
 namespace mga=mir::graphics::android;
 
 int mga::PropertiesOps::property_get(
-    char const key[PROP_NAME_MAX],
-    char value[PROP_VALUE_MAX],
-    char const default_value[PROP_VALUE_MAX]) const
+    char const* key,
+    char* value,
+    char const* default_value) const
 {
     return ::property_get(key, value, default_value);
 }
 
 mga::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
 {
-    char const key[PROP_NAME_MAX] = "ro.product.device"; 
-    char const default_value[PROP_VALUE_MAX] = "";
+    char const key[] = "ro.product.device"; 
+    char const default_value[] = "";
     char value[PROP_VALUE_MAX] = "";
     properties.property_get(key, value, default_value);
     device_name_ = std::string{value};

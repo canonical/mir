@@ -41,9 +41,9 @@ TEST(DeviceDetection, detects_device)
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
         .Times(1)
         .WillOnce(Invoke([&]
-        (char const[PROP_NAME_MAX], char value[PROP_VALUE_MAX], char const[PROP_VALUE_MAX])
+        (char const*, char* value, char const*)
         {
-            memcpy(value, name_str, sizeof(name_str));
+            strncpy(value, name_str, PROP_VALUE_MAX);
             return 0;
         }));
 
@@ -61,9 +61,9 @@ TEST(DeviceDetection, does_not_detect_device)
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
         .Times(1)
         .WillOnce(Invoke([&]
-        (char const[PROP_NAME_MAX], char value[PROP_VALUE_MAX], char const default_value[PROP_VALUE_MAX])
+        (char const*, char* value, char const* default_value)
         {
-            memcpy(value, default_value, sizeof(*default_value));
+            strncpy(value, default_value, PROP_VALUE_MAX);
             return 0;
         }));
 
