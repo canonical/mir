@@ -89,7 +89,7 @@ TEST_F(MirClientLibraryTrustSessionTest, client_library_trust_session)
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ("", mir_connection_get_error_message(connection));
 
-            trust_session = mir_connection_trust_session_create(connection);
+            trust_session = mir_connection_create_trust_session(connection);
             ASSERT_TRUE(trust_session != NULL);
 
             mir_wait_for(mir_trust_session_start(trust_session, trust_session_start_callback, this));

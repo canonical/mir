@@ -34,7 +34,7 @@ extern "C" {
  *   \param [in] connection  The connection
  *   \return                 Structure that describes the trust session
  */
-MirTrustSession* mir_connection_trust_session_create(MirConnection* connection);
+MirTrustSession* mir_connection_create_trust_session(MirConnection* connection);
 
 /**
  * Add a process id to the trust session relationship
