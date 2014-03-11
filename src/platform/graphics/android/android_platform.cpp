@@ -31,7 +31,7 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
-#include "mir/options/default_configuration.h"
+#include "mir/options/configuration.h"
 
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/options_description.hpp>

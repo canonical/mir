@@ -23,7 +23,6 @@
 
 namespace mir
 {
-
 class SharedLibrary
 {
 public:
@@ -51,5 +50,6 @@ private:
     SharedLibrary& operator=(SharedLibrary const&) = delete;
 };
 }
+
 
 #endif /* MIR_SHARED_LIBRARY_H_ */
