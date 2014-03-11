@@ -30,9 +30,9 @@ int mga::PropertiesOps::property_get(
 
 mga::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
 {
-    static char const key[PROP_NAME_MAX] = "ro.product.device"; 
-    static char const default_value[PROP_VALUE_MAX] = "";
-    static char value[PROP_VALUE_MAX] = "";
+    char const key[PROP_NAME_MAX] = "ro.product.device"; 
+    char const default_value[PROP_VALUE_MAX] = "";
+    char value[PROP_VALUE_MAX] = "";
     properties.property_get(key, value, default_value);
     device_name_ = std::string{value};
     android_device_present_ = !(device_name_ == std::string{default_value});

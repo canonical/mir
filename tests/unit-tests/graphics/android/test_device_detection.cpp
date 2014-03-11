@@ -34,8 +34,8 @@ struct MockOps : mga::PropertiesWrapper
 TEST(DeviceDetection, detects_device)
 {
     using namespace testing;
-    static char const default_str[] = "";
-    static char const name_str[] = "tunafish";
+    char const default_str[] = "";
+    char const name_str[] = "tunafish";
 
     MockOps mock_ops;
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
@@ -55,7 +55,7 @@ TEST(DeviceDetection, detects_device)
 TEST(DeviceDetection, does_not_detect_device)
 {
     using namespace testing;
-    static char const default_str[] = "";
+    char const default_str[] = "";
 
     MockOps mock_ops;
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
