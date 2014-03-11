@@ -308,8 +308,8 @@ typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_
  */
 typedef enum
 {
-    mir_trust_session_pid_addition_succeeded,
-    mir_trust_session_pid_already_part_of_trust_session
+    mir_trust_session_pid_added,
+    mir_trust_session_pid_already_exists
 } MirTrustSessionAddTrustResult;
 
 #ifdef __cplusplus
