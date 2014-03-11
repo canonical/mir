@@ -5,7 +5,6 @@ include_directories (${ANDROID_PROPERTIES_INCLUDE_DIRS})
 add_library(
   mirplatform SHARED
 
-  device_detector.cpp
   udev_wrapper.cpp
 )
 

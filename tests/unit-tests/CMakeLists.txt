@@ -11,7 +11,6 @@ set(
   test_asio_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
-  test_device_detection.cpp
 )
 
 if (UMOCKDEV_REQUIRED)

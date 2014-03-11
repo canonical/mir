@@ -16,13 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_DEVICE_DETECTOR_H_
-#define MIR_DEVICE_DETECTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
+#define MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
 
 #include <hybris/properties/properties.h>
 #include <string>
 
 namespace mir
+{
+namespace graphics
+{
+namespace android
 {
 class PropertiesWrapper
 {
@@ -59,4 +63,6 @@ private:
     bool android_device_present_; 
 };
 }
-#endif /* MIR_DEVICE_DETECTOR_H_ */
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_ */

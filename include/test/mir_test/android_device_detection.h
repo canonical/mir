@@ -19,13 +19,13 @@
 #ifndef MIR_TEST_ANDROID_DEVICE_DETECTION_H_
 #define MIR_TEST_ANDROID_DEVICE_DETECTION_H_
 
-#include "mir/device_detector.h"
+#include "src/platform/graphics/android/device_detector.h"
 #include <gtest/gtest.h>
 #include <iostream>
 
 #define SKIP_IF_NO_ANDROID_HARDWARE_PRESENT() \
-    mir::PropertiesOps ops; \
-    mir::DeviceDetector detector{ops}; \
+    mir::graphics::android::PropertiesOps ops; \
+    mir::graphics::android::DeviceDetector detector{ops}; \
     if(!detector.android_device_present()) \
     { \
         std::cout << "WARNING: test skipped due to lack of android drivers on system\n"; \

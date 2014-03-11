@@ -32,6 +32,7 @@ add_library(
   interpreter_cache.cpp
   internal_client.cpp
   gl_context.cpp
+  device_detector.cpp
 )
 
 set_target_properties(
