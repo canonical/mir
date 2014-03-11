@@ -513,3 +513,145 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
     /* Fake a VT switch back request */
     sig_handler(SIGUSR1);
 }
+
+TEST_F(LinuxVirtualTerminalTest, DoesNotTryToReaquireSessionLeader)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+
+    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto null_report = mr::null_display_report();
+
+    pid_t const mockpid{1234};
+
+    ON_CALL(*pops, getpid()).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getsid(Eq(0))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getsid(Eq(mockpid))).WillByDefault(Return(mockpid));
+
+    EXPECT_CALL(*pops, setpgid(_,_)).Times(0);
+    EXPECT_CALL(*pops, setsid()).Times(0);
+
+    set_up_expectations_for_vt_setup(vt_num, true);
+    set_up_expectations_for_vt_teardown();
+
+    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
+}
+
+TEST_F(LinuxVirtualTerminalTest, RelinquishesGroupLeaderBeforeClaimingSessionLeader)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto null_report = mr::null_display_report();
+
+    pid_t const mockpid{1234};
+    pid_t const mock_parent_pid{4567};
+
+    ON_CALL(*pops, getpid()).WillByDefault(Return(mockpid));
+
+    ON_CALL(*pops, getpgid(Eq(0))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getpgid(Eq(mockpid))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getpgid(Eq(mock_parent_pid))).WillByDefault(Return(mock_parent_pid));
+
+    ON_CALL(*pops, getppid()).WillByDefault(Return(mock_parent_pid));
+
+    ON_CALL(*pops, getsid(Eq(0))).WillByDefault(Return(1));
+    ON_CALL(*pops, getsid(Eq(mockpid))).WillByDefault(Return(1));
+
+    EXPECT_CALL(*pops, setpgid(Eq(0), Eq(mock_parent_pid)))
+        .Times(1)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*pops, setsid())
+        .Times(1)
+        .WillOnce(Return(0));
+
+    set_up_expectations_for_vt_setup(vt_num, true);
+    set_up_expectations_for_vt_teardown();
+
+    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
+}
+
+TEST_F(LinuxVirtualTerminalTest, ExceptionIfSettingProcessGroupFails)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto null_report = mr::null_display_report();
+
+    pid_t const mockpid{1234};
+    pid_t const mock_parent_pid{4567};
+
+    ON_CALL(*pops, getpid()).WillByDefault(Return(mockpid));
+
+    ON_CALL(*pops, getpgid(Eq(0))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getpgid(Eq(mockpid))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getpgid(Eq(mock_parent_pid))).WillByDefault(Return(mock_parent_pid));
+
+    ON_CALL(*pops, getppid()).WillByDefault(Return(mock_parent_pid));
+
+    ON_CALL(*pops, getsid(Eq(0))).WillByDefault(Return(1));
+    ON_CALL(*pops, getsid(Eq(mockpid))).WillByDefault(Return(1));
+
+    EXPECT_CALL(*pops, setpgid(Eq(0), Eq(mock_parent_pid)))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+
+    EXPECT_THROW({
+        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
+    }, std::runtime_error);
+}
+
+TEST_F(LinuxVirtualTerminalTest, ExceptionIfBecomingSessionLeaderFails)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto null_report = mr::null_display_report();
+
+    pid_t const mockpid{1234};
+    pid_t const mock_parent_pid{4567};
+
+    ON_CALL(*pops, getpid()).WillByDefault(Return(mockpid));
+
+    ON_CALL(*pops, getpgid(Eq(0))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getpgid(Eq(mockpid))).WillByDefault(Return(mockpid));
+    ON_CALL(*pops, getpgid(Eq(mock_parent_pid))).WillByDefault(Return(mock_parent_pid));
+
+    ON_CALL(*pops, getppid()).WillByDefault(Return(mock_parent_pid));
+
+    ON_CALL(*pops, getsid(Eq(0))).WillByDefault(Return(1));
+    ON_CALL(*pops, getsid(Eq(mockpid))).WillByDefault(Return(1));
+
+    EXPECT_CALL(*pops, setpgid(Eq(0), Eq(mock_parent_pid)))
+        .Times(1)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*pops, setsid())
+        .Times(1)
+        .WillOnce(Return(-1));
+
+
+    EXPECT_THROW({
+        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
+    }, std::runtime_error);
+}
