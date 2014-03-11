@@ -89,6 +89,34 @@ struct RealVTFileOperations : public mgm::VTFileOperations
     }
 };
 
+struct RealPosixProcessOperations : public mgm::PosixProcessOperations
+{
+    pid_t getpid() const override
+    {
+        return ::getpid();
+    }
+    pid_t getppid() const override
+    {
+        return ::getppid();
+    }
+    pid_t getpgid(pid_t process) const override
+    {
+        return ::getpgid(process);
+    }
+    pid_t getsid(pid_t process) const override
+    {
+        return ::getsid(process);
+    }
+    int setpgid(pid_t process, pid_t group) override
+    {
+        return ::setpgid(process, group);
+    }
+    pid_t setsid() override
+    {
+        return ::setsid();
+    }
+};
+
 }
 
 std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_display;
@@ -169,8 +197,10 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
         real_fops,
+        std::move(real_pops),
         options->get<int>("vt"), // TODO This option is mesa specific
         report);
 
