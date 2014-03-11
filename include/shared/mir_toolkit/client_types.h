@@ -112,12 +112,13 @@ typedef void (*mir_display_config_callback)(
 typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
 
 /**
- * Callback member of MirTrustSession for handling of trust sessions.
- *   \param [in] tps            The trust session associated with the callback
- *   \param [in] state          The state of the trust session
- *   \param [in,out] context    The context provided by the client
+ * Callback member of MirTrustSession for handling of trust sessions events.
+ *   \param [in] trusted_session  The trust session associated with the callback
+ *   \param [in] state            The state of the trust session
+ *   \param [in,out] context      The context provided by the client
  */
-typedef void (*mir_trust_session_event_callback)(MirTrustSession* tps, MirTrustSessionState state, void* context);
+typedef void (*mir_trust_session_event_callback)(
+    MirTrustSession* trusted_session, MirTrustSessionState state, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
