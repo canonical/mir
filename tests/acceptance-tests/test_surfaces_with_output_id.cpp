@@ -154,12 +154,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
                     {
                         bool operator()(mg::Renderable const& rend)
                         {
-                            auto const& trans = rend.transformation();
-                            int width = trans[0][0];
-                            int height = trans[1][1];
-                            int x = trans[3][0] - width / 2;
-                            int y = trans[3][1] - height / 2;
-                            rects.push_back({{x, y}, {width, height}});
+                            rects.push_back(rend.screen_position());
                             return false;
                         }
 

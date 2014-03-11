@@ -49,7 +49,6 @@ ms::BasicSurface::BasicSurface(
     notify_change(change_cb),
     surface_name(name),
     surface_rect(rect),
-    transformation_dirty(true),
     surface_alpha(1.0f),
     first_frame_posted(false),
     hidden(false),
@@ -87,7 +86,6 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
     {
         std::unique_lock<std::mutex> lk(guard);
         surface_rect.top_left = top_left;
-        transformation_dirty = true;
     }
     notify_change();
 }
@@ -190,7 +188,6 @@ bool ms::BasicSurface::resize(geom::Size const& size)
     {
         std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = size;
-        transformation_dirty = true;
     }
     notify_change();
 
@@ -243,7 +240,6 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
     {
         std::unique_lock<std::mutex> lk(guard);
         rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(degrees), axis);
-        transformation_dirty = true;
     }
     notify_change();
 }
@@ -252,41 +248,8 @@ glm::mat4 ms::BasicSurface::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    auto surface_size = surface_rect.size;
-    auto surface_top_left = surface_rect.top_left;
-    if (transformation_dirty || transformation_size != surface_size)
-    {
-        const glm::vec3 top_left_vec{surface_top_left.x.as_int(),
-                                     surface_top_left.y.as_int(),
-                                     0.0f};
-        const glm::vec3 size_vec{surface_size.width.as_uint32_t(),
-                                 surface_size.height.as_uint32_t(),
-                                 0.0f};
-
-        /* Get the center of the renderable's area */
-        const glm::vec3 center_vec(top_left_vec + 0.5f * size_vec);
-
-        /*
-         * Every renderable is drawn using a 1x1 quad centered at 0,0.
-         * We need to transform and scale that quad to get to its final position
-         * and size.
-         *
-         * 1. We scale the quad vertices (from 1x1 to wxh)
-         * 2. We move the quad to its final position. Note that because the quad
-         *    is centered at (0,0), we need to translate by center_vec, not
-         *    top_left_vec.
-         */
-        glm::mat4 pos_size_matrix;
-        pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
-        pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
-
-        // Rotate, then scale, then translate
-        transformation_matrix = pos_size_matrix * rotation_matrix;
-        transformation_size = surface_size;
-        transformation_dirty = false;
-    }
-
-    return transformation_matrix;
+    // By default the only transformation implemented is rotation...
+    return rotation_matrix;
 }
 
 bool ms::BasicSurface::should_be_rendered_in(geom::Rectangle const& rect) const

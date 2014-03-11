@@ -55,6 +55,19 @@ public:
     // These are from the old CompositingCriteria. There is a little bit
     // of function overlap with the above functions still.
     virtual float alpha() const = 0;
+
+    /**
+     * Transformation returns the transformation matrix that should be applied
+     * to the surface. By default when there are no transformations this will
+     * be the identity matrix.
+     *
+     * \warning As this functionality is presently only used by
+     *          mir_demo_standalone_render_surfaces for rotations it may be
+     *          deprecated in future. It is expected that real transformations
+     *          may become more transient things (e.g. applied by animation
+     *          logic externally instead of being a semi-permanent attribute of
+     *          the surface itself).
+     */
     virtual glm::mat4 transformation() const = 0;
     virtual bool should_be_rendered_in(geometry::Rectangle const& rect) const = 0;
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
