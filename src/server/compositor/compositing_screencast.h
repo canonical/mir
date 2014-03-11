@@ -48,16 +48,18 @@ public:
         std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory);
 
     frontend::ScreencastSessionId create_session(
-        graphics::DisplayConfigurationOutputId output_id);
+        geometry::Rectangle const& region,
+        geometry::Size const& size,
+        MirPixelFormat pixel_format);
     void destroy_session(frontend::ScreencastSessionId id);
     std::shared_ptr<graphics::Buffer> capture(frontend::ScreencastSessionId id);
 
 private:
     frontend::ScreencastSessionId next_available_session_id();
-    std::pair<geometry::Rectangle,MirPixelFormat> output_info_for(
-        graphics::DisplayConfigurationOutputId output_id);
     std::shared_ptr<detail::ScreencastSessionContext>
-        create_session_context(geometry::Rectangle const& rect, MirPixelFormat pixel_format);
+        create_session_context(geometry::Rectangle const& rect,
+            geometry::Size const& size,
+            MirPixelFormat pixel_format);
 
     std::mutex session_mutex;
     std::shared_ptr<graphics::Display> const display;

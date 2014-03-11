@@ -26,25 +26,7 @@
 
 namespace
 {
-
 void null_callback(MirScreencast*, void*) {}
-
-MirDisplayOutput& find_display_output(
-    MirDisplayConfiguration const& config,
-    uint32_t output_id)
-{
-    for (decltype(config.num_outputs) i = 0; i != config.num_outputs; ++i)
-    {
-        if (config.outputs[i].output_id == output_id)
-        {
-            return config.outputs[i];
-        }
-    }
-
-    BOOST_THROW_EXCEPTION(
-        std::runtime_error("Couldn't find output with supplied id"));
-}
-
 }
 
 MirScreencast* mir_connection_create_screencast_sync(
@@ -64,9 +46,17 @@ MirScreencast* mir_connection_create_screencast_sync(
 
         auto const client_platform = connection->get_client_platform();
 
+        mir::geometry::Rectangle const region{
+            {parameters->region.left, parameters->region.top},
+            {parameters->region.width, parameters->region.height}
+        };
+        mir::geometry::Size const size{parameters->width, parameters->height};
+
         std::unique_ptr<MirScreencast> screencast_uptr{
             new MirScreencast{
-                find_display_output(*config, parameters->output_id),
+                region,
+                size,
+                parameters->pixel_format,
                 connection->display_server(),
                 client_platform,
                 client_platform->create_buffer_factory(),

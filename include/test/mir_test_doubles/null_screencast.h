@@ -32,7 +32,9 @@ class NullScreencast : public frontend::Screencast
 {
 public:
     frontend::ScreencastSessionId create_session(
-        graphics::DisplayConfigurationOutputId)
+        geometry::Rectangle const&,
+        geometry::Size const&,
+        MirPixelFormat)
     {
         return frontend::ScreencastSessionId{1};
     }

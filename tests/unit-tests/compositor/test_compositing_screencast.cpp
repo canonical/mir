@@ -151,12 +151,20 @@ MATCHER_P(BufferPropertiesMatchOutput, output, "")
     return arg.size == output.extents().size;
 }
 
+MATCHER_P(BufferPropertiesMatchSize, size, "")
+{
+    return arg.size == size;
+}
+
 struct CompositingScreencastTest : testing::Test
 {
     CompositingScreencastTest()
         : screencast{mt::fake_shared(stub_display),
                      mt::fake_shared(stub_buffer_allocator),
-                     mt::fake_shared(stub_db_compositor_factory)}
+                     mt::fake_shared(stub_db_compositor_factory)},
+          default_size{1, 1},
+          default_region{{0, 0}, {1, 1}},
+          default_pixel_format{mir_pixel_format_xbgr_8888}
     {
     }
 
@@ -165,7 +173,9 @@ struct CompositingScreencastTest : testing::Test
     mtd::StubBufferAllocator stub_buffer_allocator;
     NullDisplayBufferCompositorFactory stub_db_compositor_factory;
     mc::CompositingScreencast screencast;
-    mg::DisplayConfigurationOutputId const valid_output_id{2};
+    geom::Size const default_size;
+    geom::Rectangle const default_region;
+    MirPixelFormat default_pixel_format;
 };
 
 }
@@ -176,19 +186,22 @@ TEST_F(CompositingScreencastTest, produces_different_session_ids)
 
     for (int i = 0; i != 10; ++i)
     {
-        auto session_id = screencast.create_session(valid_output_id);
+        auto session_id = screencast.create_session(default_region, default_size, default_pixel_format);
         ASSERT_TRUE(session_ids.find(session_id) == session_ids.end())
             << "session_id: " << session_id << " iter: " << i;
         session_ids.insert(session_id);
     }
 }
 
-TEST_F(CompositingScreencastTest, throws_on_creation_with_invalid_output_id)
+TEST_F(CompositingScreencastTest, throws_on_creation_with_invalid_params)
 {
-    mg::DisplayConfigurationOutputId const invalid_output_id{111};
     std::unordered_set<mf::ScreencastSessionId> session_ids;
+    geom::Size invalid_size{0, 0};
+    geom::Rectangle invalid_region{{0, 0}, {0, 0}};
 
-    EXPECT_THROW(screencast.create_session(invalid_output_id), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(invalid_region, default_size, default_pixel_format), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(default_region, invalid_size, default_pixel_format), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(default_region, default_size, mir_pixel_format_invalid), std::runtime_error);
 }
 
 TEST_F(CompositingScreencastTest, throws_on_capture_with_invalid_session_id)
@@ -199,21 +212,20 @@ TEST_F(CompositingScreencastTest, throws_on_capture_with_invalid_session_id)
 
 TEST_F(CompositingScreencastTest, throws_on_capture_with_destroyed_session_id)
 {
-    auto session_id = screencast.create_session(valid_output_id);
+    auto session_id = screencast.create_session(default_region, default_size, default_pixel_format);
     screencast.destroy_session(session_id);
     EXPECT_THROW(screencast.capture(session_id), std::logic_error);
 }
 
-TEST_F(CompositingScreencastTest, captures_by_compositing_with_output_extents)
+TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
 {
     using namespace testing;
 
     MockDisplayBufferCompositorFactory mock_db_compositor_factory;
-    auto const& output = stub_display.output_with(valid_output_id);
 
     InSequence s;
     EXPECT_CALL(mock_db_compositor_factory,
-                create_compositor_mock(DisplayBufferCoversArea(output.extents())));
+                create_compositor_mock(DisplayBufferCoversArea(default_region)));
     EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite());
 
     mc::CompositingScreencast screencast_local{
@@ -221,22 +233,21 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_output_extents)
         mt::fake_shared(stub_buffer_allocator),
         mt::fake_shared(mock_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(valid_output_id);
+    auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
 
     screencast_local.capture(session_id);
 }
 
-TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_output_size)
+TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)
 {
     using namespace testing;
 
     MockBufferAllocator mock_buffer_allocator;
-    auto const& output = stub_display.output_with(valid_output_id);
     mtd::StubBuffer stub_buffer;
 
     InSequence s;
     EXPECT_CALL(mock_buffer_allocator,
-                alloc_buffer(BufferPropertiesMatchOutput(output)))
+                alloc_buffer(BufferPropertiesMatchSize(default_size)))
         .WillOnce(Return(mt::fake_shared(stub_buffer)));
 
     mc::CompositingScreencast screencast_local{
@@ -244,7 +255,7 @@ TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_output_size)
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(valid_output_id);
+    auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
 
     auto buffer = screencast_local.capture(session_id);
     ASSERT_EQ(&stub_buffer, buffer.get());
@@ -267,13 +278,13 @@ TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id1 = screencast_local.create_session(valid_output_id);
+    auto session_id1 = screencast_local.create_session(default_region, default_size, default_pixel_format);
     auto buffer1 = screencast_local.capture(session_id1);
     ASSERT_EQ(&stub_buffer1, buffer1.get());
     buffer1 = screencast_local.capture(session_id1);
     ASSERT_EQ(&stub_buffer1, buffer1.get());
 
-    auto session_id2 = screencast_local.create_session(valid_output_id);
+    auto session_id2 = screencast_local.create_session(default_region, default_size, default_pixel_format);
     auto buffer2 = screencast_local.capture(session_id2);
     ASSERT_EQ(&stub_buffer2, buffer2.get());
     buffer2 = screencast_local.capture(session_id2);
