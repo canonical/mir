@@ -109,7 +109,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<DefaultCursorListener>(the_display()->the_cursor());
+            return std::make_shared<DefaultCursorListener>(the_cursor());
         });
 }
 

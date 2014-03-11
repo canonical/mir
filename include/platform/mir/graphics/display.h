@@ -97,9 +97,9 @@ public:
     virtual void resume() = 0;
 
     /**
-     * Gets the hardware cursor object.
+     * Create a hardware cursor object.
      */
-    virtual std::weak_ptr<Cursor> the_cursor() = 0;
+    virtual std::shared_ptr<Cursor> create_hardware_cursor() = 0;
 
     /**
      * Creates a GLContext object that shares resources with the Display's GL context.

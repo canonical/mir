@@ -117,7 +117,7 @@ public:
     void pause() override;
     void resume() override;
 
-    std::weak_ptr<Cursor> the_cursor() override;
+    std::shared_ptr<Cursor> create_hardware_cursor() override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:

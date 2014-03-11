@@ -93,6 +93,7 @@ class Display;
 class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
+class Cursor;
 namespace nested { class HostConnection; }
 }
 namespace input
@@ -158,6 +159,7 @@ public:
      * dependencies of graphics on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
+    virtual std::shared_ptr<graphics::Cursor> the_cursor();
     /** @} */
 
     /** @name compositor configuration - customization
@@ -269,6 +271,7 @@ protected:
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
+    CachedPtr<graphics::Cursor>       cursor;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;

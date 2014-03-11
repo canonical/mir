@@ -495,11 +495,11 @@ public:
         return the_options()->get<bool>(mo::enable_input_opt);
     }
 
-    std::weak_ptr<mg::Cursor> the_cursor()
+    std::shared_ptr<mg::Cursor> the_cursor()
     {
         if (the_options()->get<bool>(display_cursor))
         {
-            return the_display()->the_cursor();
+            return me::ServerConfiguration::the_cursor();
         }
         else
         {
