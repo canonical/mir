@@ -60,7 +60,6 @@ class Configuration
 public:
     virtual std::shared_ptr<options::Option> the_options() const = 0;
     virtual boost::program_options::options_description_easy_init add_options() = 0;
-    virtual std::string graphics_library_name() const = 0;
 
 protected:
 

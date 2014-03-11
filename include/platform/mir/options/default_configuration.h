@@ -33,10 +33,7 @@ public:
     DefaultConfiguration(int argc, char const* argv[]);
     virtual ~DefaultConfiguration() = default;
 
-    // add_options() allows users to add their own options. This MUST be called
-    // before the first invocation of the_options() - typically during initialization.
     boost::program_options::options_description_easy_init add_options();
-    std::string graphics_library_name() const;
 
 private:
     // accessed via the base interface, when access to add_options() has been "lost"
@@ -59,7 +56,8 @@ private:
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
-    std::shared_ptr<Option> mutable options;
+    std::shared_ptr<ProgramOption> mutable options;
+    bool mutable parsed;
 };
 
 class GraphicsPlatformConfiguration : public Configuration
@@ -69,7 +67,6 @@ public:
     virtual ~GraphicsPlatformConfiguration() = default;
     std::shared_ptr<options::Option> the_options() const override;
     boost::program_options::options_description_easy_init add_options();
-    std::string graphics_library_name() const;
 
 private:
     std::shared_ptr<Configuration> const default_config;

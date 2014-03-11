@@ -66,16 +66,18 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     program_options(std::make_shared<boost::program_options::options_description>(
     "Command-line options.\n"
     "Descriptions prefixed with [platform-specific] may not be available on mir servers running on other graphics platforms\n"
-    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
+    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"")),
+    options(std::make_shared<ProgramOption>()),
+    parsed{false}
 {
     using namespace options;
     namespace po = boost::program_options;
 
     add_options()
         (host_socket_opt, po::value<std::string>(),
-            "Host socket filename")
+            "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
-            "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
+            "Socket filename.")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
             "Library to use for platform graphics support")
@@ -124,21 +126,25 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
 
 boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()
 {
-    if (options)
-        BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
-
+    parsed = false;
     return program_options->add_options();
 }
 
 std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
 {
-    if (!options)
+    if (!parsed)
     {
-        auto options = std::make_shared<ProgramOption>();
         parse_arguments(*program_options, *options, argc, argv);
         parse_environment(*program_options, *options);
         parse_config_file(*program_options, *options);
-        this->options = options;
+        if (options->is_set("help"))
+        {
+            std::ostringstream help_text;
+            help_text << *program_options;
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+        }
+
+        parsed = true;
     }
     return options;
 }
@@ -154,17 +160,8 @@ void mo::DefaultConfiguration::parse_arguments(
 
     try
     {
-        desc.add_options()
-            ("help,h", "this help text");
-
         options.parse_arguments(desc, argc, argv);
 
-        if (options.is_set("help"))
-        {
-            std::ostringstream help_text;
-            help_text << desc;
-            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
-        }
     }
     catch (po::error const& error)
     {
@@ -194,28 +191,20 @@ void mo::DefaultConfiguration::parse_config_file(
 {
 }
 
-std::string mo::DefaultConfiguration::graphics_library_name() const
-{
-    namespace po = boost::program_options;
-    boost::program_options::options_description options("temporary");
-    ProgramOption program_options;
-    options.add_options()
-        (platform_graphics_lib,
-         po::value<std::string>()->default_value(default_platform_graphics_lib),
-         "");
-
-    program_options.parse_arguments(options, argc, argv);
-    program_options.parse_environment(options, "MIR_SERVER_");
-    return program_options.get<std::string>(platform_graphics_lib);
-}
-
 mo::GraphicsPlatformConfiguration::GraphicsPlatformConfiguration(
     std::shared_ptr<Configuration> const& config)
     : default_config(config)
 {
-    auto graphics_lib = mir::load_library(config->graphics_library_name());
+    auto graphics_libname = config->the_options()->get<std::string>(platform_graphics_lib);
+    auto graphics_lib = mir::load_library(graphics_libname);
     auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
+
+    //add platform specific options
     add_platform_options(*config);
+
+    //add on a help option
+    config->add_options()
+        ("help,h", "this help text");
 }
 
 std::shared_ptr<mo::Option> mo::GraphicsPlatformConfiguration::the_options() const
@@ -226,8 +215,4 @@ std::shared_ptr<mo::Option> mo::GraphicsPlatformConfiguration::the_options() con
 boost::program_options::options_description_easy_init mo::GraphicsPlatformConfiguration::add_options()
 {
     return default_config->add_options();
-}
-std::string mo::GraphicsPlatformConfiguration::graphics_library_name() const
-{
-    return default_config->graphics_library_name();
 }
