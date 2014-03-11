@@ -52,6 +52,18 @@ public:
     MOCK_METHOD2(tcgetattr, int(int, struct termios*));
 };
 
+class MockPosixProcessOperations : public mgm::PosixProcessOperations
+{
+public:
+    ~MockPosixProcessOperations() = default;
+    MOCK_CONST_METHOD0(getpid, pid_t());
+    MOCK_CONST_METHOD0(getppid, pid_t());
+    MOCK_CONST_METHOD1(getpgid, pid_t(pid_t));
+    MOCK_CONST_METHOD1(getsid, pid_t(pid_t));
+    MOCK_METHOD2(setpgid, int(pid_t, pid_t));
+    MOCK_METHOD0(setsid, pid_t());
+};
+
 class MockMainLoop : public mir::MainLoop
 {
 public:
@@ -248,9 +260,10 @@ TEST_F(LinuxVirtualTerminalTest, use_provided_vt)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt{fops, vt_num, null_report};
+    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
@@ -266,9 +279,10 @@ TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt{fops, 0, null_report};
+    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), 0, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
@@ -291,10 +305,11 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
         .WillOnce(Return(-1));
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
     EXPECT_THROW({
-        mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
+        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     }, std::runtime_error);
 }
 
@@ -311,9 +326,10 @@ TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_mode_if_vt_process)
     set_up_expectations_for_vt_teardown(fake_vt_mode_process);
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 }
 
 TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
@@ -333,9 +349,10 @@ TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     vt.set_graphics_mode();
 }
 
@@ -356,9 +373,10 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     EXPECT_THROW({
         vt.set_graphics_mode();
     }, std::runtime_error);
@@ -379,9 +397,10 @@ TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 
     auto null_handler = [] { return true; };
     vt.register_switch_handlers(mock_main_loop, null_handler, null_handler);
@@ -405,9 +424,10 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, null_report);
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 
     auto succeeding_handler = [] { return true; };
     vt.register_switch_handlers(mock_main_loop, succeeding_handler, succeeding_handler);
@@ -443,8 +463,9 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, mt::fake_shared(mock_report));
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
 
     auto failing_handler = [] { return false; };
     vt.register_switch_handlers(mock_main_loop, failing_handler, failing_handler);
@@ -479,8 +500,9 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new NiceMock<MockPosixProcessOperations>());
 
-    mgm::LinuxVirtualTerminal vt(fops, 0, mt::fake_shared(mock_report));
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
 
     auto succeeding_handler = [] { return true; };
     auto failing_handler = [] { return false; };
