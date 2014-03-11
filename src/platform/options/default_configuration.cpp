@@ -119,9 +119,7 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
-            "Render to offscreen buffers instead of the real outputs.")
-        ("vt", po::value<int>()->default_value(0), // TODO this not applicable on all graphics platforms
-            "VT to run on or 0 to use current.");
+            "Render to offscreen buffers instead of the real outputs.");
 }
 
 boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()

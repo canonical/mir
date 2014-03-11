@@ -25,10 +25,13 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
+#include "mir/options/configuration.h"
 #include "mir/graphics/native_buffer.h"
 
 #include "drm_close_threadsafe.h"
 
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/options_description.hpp>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -181,4 +184,12 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 {
     return ((mgm::Platform::internal_display_clients_present) &&
             (display == mgm::Platform::internal_native_display.get()));
+}
+
+extern "C" void add_platform_options(mo::Configuration& config)
+{
+    namespace po = boost::program_options;
+    config.add_options()
+        ("vt", po::value<int>()->default_value(0),
+            "[platform-specific] VT to run on or 0 to use current.");
 }
