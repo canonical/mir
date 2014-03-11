@@ -90,8 +90,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
     return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
 }
 
-// TODO: Currently this will not work in multimonitor scenarios!. Multiple EGL surfaces (i.e. one per monitor) may
-// eventually cause deadlock in swap buffers as documented in: https://bugs.launchpad.net/mir/+bug/1285500
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
     auto nd = ensure_internal_native_display(get_ipc_package());
