@@ -33,6 +33,7 @@ class Surface;
 namespace options
 {
 class Option;
+class Configuration;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and
@@ -119,6 +120,8 @@ public:
  */
 extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
 extern "C" std::shared_ptr<Platform> create_platform (std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
+extern "C" typedef void(*AddPlatformOptions)(options::Configuration& config);
+extern "C" void add_platform_options(options::Configuration& config);
 }
 }
 

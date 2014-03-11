@@ -16,7 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/shared_library.h"
 #include "mir/options/default_configuration.h"
+#include "mir/graphics/platform.h"
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
@@ -63,6 +65,7 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     argv(argv),
     program_options(std::make_shared<boost::program_options::options_description>(
     "Command-line options.\n"
+    "Descriptions prefixed with [platform-specific] may not be available on mir servers running on other graphics platforms\n"
     "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
 {
     using namespace options;
@@ -189,4 +192,42 @@ void mo::DefaultConfiguration::parse_config_file(
     boost::program_options::options_description& /*desc*/,
     mo::ProgramOption& /*options*/) const
 {
+}
+
+std::string mo::DefaultConfiguration::graphics_library_name() const
+{
+    namespace po = boost::program_options;
+    boost::program_options::options_description options("temporary");
+    ProgramOption program_options;
+    options.add_options()
+        (platform_graphics_lib,
+         po::value<std::string>()->default_value(default_platform_graphics_lib),
+         "");
+
+    program_options.parse_arguments(options, argc, argv);
+    program_options.parse_environment(options, "MIR_SERVER_");
+    return program_options.get<std::string>(platform_graphics_lib);
+}
+
+mo::GraphicsPlatformConfiguration::GraphicsPlatformConfiguration(
+    std::shared_ptr<Configuration> const& config)
+    : default_config(config)
+{
+    auto graphics_lib = mir::load_library(config->graphics_library_name());
+    auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
+    add_platform_options(*config);
+}
+
+std::shared_ptr<mo::Option> mo::GraphicsPlatformConfiguration::the_options() const
+{
+    return default_config->the_options();
+}
+
+boost::program_options::options_description_easy_init mo::GraphicsPlatformConfiguration::add_options()
+{
+    return default_config->add_options();
+}
+std::string mo::GraphicsPlatformConfiguration::graphics_library_name() const
+{
+    return default_config->graphics_library_name();
 }

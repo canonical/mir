@@ -32,6 +32,7 @@ add_library(
   interpreter_cache.cpp
   internal_client.cpp
   gl_context.cpp
+  android_platform_options.cpp
 )
 
 set_target_properties(
