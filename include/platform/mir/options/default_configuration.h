@@ -21,12 +21,12 @@
 
 #include "mir/options/configuration.h"
 
-
 namespace mir
 {
+class SharedLibrary;
+
 namespace options
 {
-
 class DefaultConfiguration : public Configuration
 {
 public:
@@ -63,8 +63,11 @@ private:
 class GraphicsPlatformConfiguration : public Configuration
 {
 public:
-    GraphicsPlatformConfiguration(std::shared_ptr<Configuration> const&);
-    virtual ~GraphicsPlatformConfiguration() = default;
+    GraphicsPlatformConfiguration(
+        std::shared_ptr<Configuration> const&,
+        std::function<mir::SharedLibrary const*(std::string const&)> const& load_library);
+
+   virtual ~GraphicsPlatformConfiguration() = default;
     std::shared_ptr<options::Option> the_options() const override;
     boost::program_options::options_description_easy_init add_options();
 

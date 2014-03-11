@@ -192,11 +192,12 @@ void mo::DefaultConfiguration::parse_config_file(
 }
 
 mo::GraphicsPlatformConfiguration::GraphicsPlatformConfiguration(
-    std::shared_ptr<Configuration> const& config)
+    std::shared_ptr<Configuration> const& config,
+    std::function<mir::SharedLibrary const*(std::string const&)> const& load_library)
     : default_config(config)
 {
     auto graphics_libname = config->the_options()->get<std::string>(platform_graphics_lib);
-    auto graphics_lib = mir::load_library(graphics_libname);
+    auto graphics_lib = load_library(graphics_libname);
     auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
 
     //add platform specific options
