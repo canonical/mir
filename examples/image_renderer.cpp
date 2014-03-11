@@ -23,6 +23,7 @@
 #pragma GCC diagnostic warning "-Wall"
 #include <glm/glm.hpp>
 #pragma GCC diagnostic pop
+#define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp>
 
 #include <memory>

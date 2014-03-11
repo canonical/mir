@@ -34,7 +34,7 @@ class GraphicsRegionFactory
 public:
     virtual ~GraphicsRegionFactory() {}
     virtual std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
-        graphics::NativeBuffer const& native_buffer) = 0;
+        graphics::NativeBuffer& native_buffer) = 0;
 
 protected:
     GraphicsRegionFactory() = default;

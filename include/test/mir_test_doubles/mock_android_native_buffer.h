@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_ANDROID_NATIVE_BUFFER_H_
 
 #include "mir/graphics/android/native_buffer.h"
+#include "mir/geometry/size.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -41,6 +42,14 @@ struct MockAndroidNativeBuffer : public graphics::NativeBuffer
         ON_CALL(*this, copy_fence())
             .WillByDefault(Return(-1));
     }
+
+    MockAndroidNativeBuffer(geometry::Size sz)
+        : MockAndroidNativeBuffer()
+    {
+        stub_anwb.width = sz.width.as_int();
+        stub_anwb.height = sz.height.as_int();
+    }
+
     MOCK_CONST_METHOD0(anwb, ANativeWindowBuffer*());
     MOCK_CONST_METHOD0(handle, buffer_handle_t());
     MOCK_CONST_METHOD0(copy_fence, graphics::android::NativeFence());

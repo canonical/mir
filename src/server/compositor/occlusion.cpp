@@ -31,35 +31,15 @@ OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
 
 bool OcclusionFilter::operator()(const Renderable &renderable)
 {
-    const glm::mat4 &trans = renderable.transformation();
-    bool orthogonal =
-        trans[0][1] == 0.0f &&
-        trans[0][2] == 0.0f &&
-        trans[0][3] == 0.0f &&
-        trans[1][0] == 0.0f &&
-        trans[1][2] == 0.0f &&
-        trans[1][3] == 0.0f &&
-        trans[2][0] == 0.0f &&
-        trans[2][1] == 0.0f &&
-        trans[2][2] == 0.0f &&
-        trans[2][3] == 0.0f &&
-        trans[3][2] == 0.0f &&
-        trans[3][3] == 1.0f;
-
-    if (!orthogonal)
+    static const glm::mat4 identity;
+    if (renderable.transformation() != identity)
         return false;  // Weirdly transformed. Assume never occluded.
-
-    // This could be replaced by adding a "Renderable::rect()"
-    int width = trans[0][0];
-    int height = trans[1][1];
-    int x = trans[3][0] - width / 2;
-    int y = trans[3][1] - height / 2;
-    geometry::Rectangle window{{x, y}, {width, height}};
 
     if (!renderable.should_be_rendered_in(area))
         return true;  // Not on the display, or invisible; definitely occluded.
 
     bool occluded = false;
+    geometry::Rectangle const& window = renderable.screen_position();
     for (const auto &r : coverage)
     {
         if (r.contains(window))

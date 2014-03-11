@@ -39,7 +39,9 @@ public:
     virtual ~Screencast() = default;
 
     virtual ScreencastSessionId create_session(
-        graphics::DisplayConfigurationOutputId output_id) = 0;
+        mir::geometry::Rectangle const& region,
+        mir::geometry::Size const& size,
+        MirPixelFormat pixel_format) = 0;
     virtual void destroy_session(ScreencastSessionId id) = 0;
     virtual std::shared_ptr<graphics::Buffer> capture(ScreencastSessionId id) = 0;
 

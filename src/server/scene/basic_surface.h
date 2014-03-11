@@ -121,9 +121,6 @@ private:
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 rotation_matrix;
-    mutable glm::mat4 transformation_matrix;
-    mutable geometry::Size transformation_size;
-    mutable bool transformation_dirty;
     float surface_alpha;
     bool first_frame_posted;
     bool hidden;

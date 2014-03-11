@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
 
+#include "mir_test_doubles/stub_buffer.h"
 #include <mir/graphics/renderable.h>
 #include <memory>
 
@@ -34,7 +35,7 @@ class StubRenderable : public graphics::Renderable
 public:
     std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
     {
-        return {};
+        return std::make_shared<StubBuffer>();
     }
     bool alpha_enabled() const
     {

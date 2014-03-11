@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_BYPASS_H_
 
 #include "mir/compositor/scene.h"
-#include "glm/glm.hpp"
 
 namespace mir
 {
@@ -41,7 +40,6 @@ public:
 private:
     bool all_orthogonal = true;
     bool topmost_fits = false;
-    glm::mat4 fullscreen;
     const graphics::DisplayBuffer &display_buffer;
 };
 

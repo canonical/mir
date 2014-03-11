@@ -19,6 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "gl_context.h"
 #include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
@@ -43,20 +44,20 @@ mga::FBDevice::FBDevice(
     mode(mir_power_mode_on);
 }
 
-void mga::FBDevice::prepare_gl()
+void mga::FBDevice::render_gl(SwappingGLContext const& context)
 {
+    context.swap_buffers();
 }
 
-void mga::FBDevice::prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const&)
+void mga::FBDevice::render_gl_and_overlays(
+    SwappingGLContext const& context,
+    std::list<std::shared_ptr<Renderable>> const& renderables,
+    std::function<void(Renderable const&)> const& render_fn) 
 {
-}
+    for(auto const& renderable : renderables)
+        render_fn(*renderable);
 
-void mga::FBDevice::gpu_render(EGLDisplay dpy, EGLSurface sur)
-{
-    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
-    }
+    context.swap_buffers();
 }
 
 void mga::FBDevice::post(mg::Buffer const& buffer)
