@@ -2744,6 +2744,12 @@ void InputDispatcher::setKeyboardFocusLocked(const sp<InputWindowHandle>& newFoc
                   c_str(newFocusedWindowHandle->getName()));
 #endif
         }
+
+        if (mInputTargetWaitCause != INPUT_TARGET_WAIT_CAUSE_NONE) {
+            releasePendingEventLocked();
+            drainInboundQueueLocked();
+        }
+
         mFocusedWindowHandle = newFocusedWindowHandle;
     }
 }
