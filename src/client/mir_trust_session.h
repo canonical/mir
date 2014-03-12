@@ -33,7 +33,7 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
-class TrustSessionControl;
+class EventDistributor;
 }
 }
 
@@ -41,7 +41,7 @@ struct MirTrustSession
 {
 public:
     MirTrustSession(mir::protobuf::DisplayServer::Stub & server,
-                      std::shared_ptr<mir::client::TrustSessionControl> const& trust_session_control);
+                      std::shared_ptr<mir::client::EventDistributor> const& event_distributor);
 
     ~MirTrustSession();
 
@@ -71,9 +71,9 @@ private:
     mir::protobuf::Void protobuf_void;
     std::string error_message;
 
-    std::shared_ptr<mir::client::TrustSessionControl> const trust_session_control;
+    std::shared_ptr<mir::client::EventDistributor> const event_distributor;
     std::function<void(MirTrustSessionState)> handle_trust_session_event;
-    int trust_session_control_fn_id;
+    int event_distributor_fn_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;

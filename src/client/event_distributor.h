@@ -16,10 +16,9 @@
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#ifndef MIR_TRUST_SESSION_CONTROL_H_
-#define MIR_TRUST_SESSION_CONTROL_H_
+#ifndef MIR_CLIENT_EVENT_DISTRIBUTOR_H
 
-#include "mir_toolkit/common.h"
+#include "mir_toolkit/event.h"
 
 #include <functional>
 #include <mutex>
@@ -29,25 +28,25 @@ namespace mir
 {
 namespace client
 {
-class TrustSessionControl
+class EventDistributor
 {
 public:
-    TrustSessionControl();
-    ~TrustSessionControl();
+    EventDistributor();
+    ~EventDistributor();
 
-    int add_trust_session_event_handler(std::function<void(MirTrustSessionState)> const&);
-    void remove_trust_session_event_handler(int id);
+    int register_event_handler(std::function<void(MirEvent const&)> const&);
+    void unregister_event_handler(int id);
 
-    void call_trust_session_event_handler(uint32_t state);
+    void handle_event(MirEvent const& event);
 
 private:
     int next_id();
 
     std::mutex mutable guard;
-    std::map<int, std::function<void(MirTrustSessionState)>> handle_trust_session_events;
+    std::map<int, std::function<void(MirEvent const&)>> event_handlers;
     int next_fn_id;
 };
 }
 }
 
-#endif /* MIR_TRUST_SESSION_CONTROL_H_ */
+#endif /* MIR_CLIENT_EVENT_DISTRIBUTOR_H */

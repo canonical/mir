@@ -45,7 +45,7 @@ set(
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_trust_session.cpp
-  trust_session_control.cpp
+  event_distributor.cpp
 )
 
 add_library(

@@ -16,46 +16,46 @@
  * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
-#include "trust_session_control.h"
+#include "event_distributor.h"
 
 namespace mcl = mir::client;
 
-mcl::TrustSessionControl::TrustSessionControl() :
+mcl::EventDistributor::EventDistributor() :
     next_fn_id(0)
 {
 }
 
-mcl::TrustSessionControl::~TrustSessionControl()
+mcl::EventDistributor::~EventDistributor()
 {
 }
 
-int mcl::TrustSessionControl::add_trust_session_event_handler(std::function<void(MirTrustSessionState)> const& fn)
+int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent const&)> const& fn)
 {
     std::unique_lock<std::mutex> lk(guard);
 
     int id = next_id();
-    handle_trust_session_events[id] = fn;
+    event_handlers[id] = fn;
     return id;
 }
 
-void mcl::TrustSessionControl::remove_trust_session_event_handler(int id)
+void mcl::EventDistributor::unregister_event_handler(int id)
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    handle_trust_session_events.erase(id);
+    event_handlers.erase(id);
 }
 
-void mcl::TrustSessionControl::call_trust_session_event_handler(uint32_t state)
+void mcl::EventDistributor::handle_event(MirEvent const& event)
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    for (auto const& fn : handle_trust_session_events)
+    for (auto const& fn : event_handlers)
     {
-        fn.second(static_cast<MirTrustSessionState>(state));
+        fn.second(event);
     }
 }
 
-int mcl::TrustSessionControl::next_id()
+int mcl::EventDistributor::next_id()
 {
     return ++next_fn_id;
 }

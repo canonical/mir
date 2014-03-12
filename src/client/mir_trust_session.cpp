@@ -17,35 +17,38 @@
  */
 
 #include "mir_trust_session.h"
-#include "trust_session_control.h"
+#include "event_distributor.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
 
 MirTrustSession::MirTrustSession(
     mp::DisplayServer::Stub & server,
-    std::shared_ptr<mcl::TrustSessionControl> const& trust_session_control)
+    std::shared_ptr<mcl::EventDistributor> const& event_distributor)
     : server(server),
-      trust_session_control(trust_session_control),
+      event_distributor(event_distributor),
       state(mir_trust_session_stopped)
 {
-    trust_session_control_fn_id = trust_session_control->add_trust_session_event_handler(
+    event_distributor_fn_id = event_distributor->register_event_handler(
         [this]
-        (MirTrustSessionState new_state)
+        (MirEvent const& event)
         {
+            if (event.type != mir_event_type_trust_session_state_change)
+                return;
+
             std::lock_guard<std::recursive_mutex> lock(mutex);
 
             if (handle_trust_session_event) {
-                handle_trust_session_event(new_state);
+                handle_trust_session_event(event.trust_session.new_state);
             }
-            this->state.store(new_state);
+            this->state.store(event.trust_session.new_state);
         }
     );
 }
 
 MirTrustSession::~MirTrustSession()
 {
-    trust_session_control->remove_trust_session_event_handler(trust_session_control_fn_id);
+    event_distributor->unregister_event_handler(event_distributor_fn_id);
 }
 
 MirTrustSessionState MirTrustSession::get_state() const

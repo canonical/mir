@@ -43,7 +43,6 @@ public:
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
-    MOCK_METHOD1(handle_trust_session_event, void(MirTrustSessionState state));
 };
 struct MockSessionContainer : public ms::SessionContainer
 {
@@ -93,12 +92,16 @@ struct TrustSession : public testing::Test
 };
 }
 
+MATCHER_P(EqTrustedEventState, state, "") {
+  return arg.type == mir_event_type_trust_session_state_change && arg.trust_session.new_state == state;
+}
+
 TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
 
-    EXPECT_CALL(sender, handle_trust_session_event(mir_trust_session_started)).Times(1);
-    EXPECT_CALL(sender, handle_trust_session_event(mir_trust_session_stopped)).Times(1);
+    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_started))).Times(1);
+    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_stopped))).Times(1);
 
     msh::TrustSessionCreationParameters parameters;
     auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
@@ -129,8 +132,8 @@ TEST_F(TrustSession, multi_trust_sessions)
                                                       mt::fake_shared(sender));
 
     EXPECT_THAT(trust_session1, Ne(std::shared_ptr<mf::TrustSession>()));
-    EXPECT_THAT(trust_session1, Ne(std::shared_ptr<mf::TrustSession>()));
     EXPECT_THAT(trust_session2, Ne(std::shared_ptr<mf::TrustSession>()));
+    EXPECT_THAT(trust_session3, Ne(std::shared_ptr<mf::TrustSession>()));
 }
 
 TEST_F(TrustSession, parenting)

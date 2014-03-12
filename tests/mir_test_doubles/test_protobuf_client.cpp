@@ -22,7 +22,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/lifecycle_control.h"
-#include "src/client/trust_session_control.h"
+#include "src/client/event_distributor.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
@@ -40,7 +40,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
-        std::make_shared<mir::client::TrustSessionControl>())),
+        std::make_shared<mir::client::EventDistributor>())),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),

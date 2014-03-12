@@ -81,7 +81,11 @@ std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<m
         );
     }
 
-    sink->handle_trust_session_event(mir_trust_session_started);
+    MirEvent start_session;
+    start_session.type = mir_event_type_trust_session_state_change;
+    start_session.trust_session.new_state = impl->state;
+    sink->handle_event(start_session);
+
     return ptr;
 }
 
@@ -102,7 +106,11 @@ void ms::TrustSession::stop()
     trusted_helper->set_trust_session(NULL);
 
     state = mir_trust_session_stopped;
-    event_sink->handle_trust_session_event(mir_trust_session_stopped);
+
+    MirEvent start_session;
+    start_session.type = mir_event_type_trust_session_state_change;
+    start_session.trust_session.new_state = state;
+    event_sink->handle_event(start_session);
 }
 
 std::vector<pid_t> ms::TrustSession::get_applications() const
