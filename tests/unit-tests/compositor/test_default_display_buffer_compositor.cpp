@@ -20,8 +20,8 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
-#include "src/server/compositor/renderer.h"
-#include "src/server/compositor/renderer_factory.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
@@ -214,18 +214,36 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 
     glm::mat4 simple;
     EXPECT_CALL(mock_renderable1, transformation())
-        .WillOnce(ReturnRef(simple));
+        .WillOnce(Return(simple));
     EXPECT_CALL(mock_renderable2, transformation())
-        .WillOnce(ReturnRef(simple));
+        .WillOnce(Return(simple));
     EXPECT_CALL(mock_renderable3, transformation())
-        .WillOnce(ReturnRef(simple));
+        .WillOnce(Return(simple));
 
     EXPECT_CALL(mock_renderable1, should_be_rendered_in(_))
-        .WillOnce(Return(true));
+        .WillRepeatedly(Return(true));
     EXPECT_CALL(mock_renderable2, should_be_rendered_in(_))
-        .WillOnce(Return(false));
+        .WillRepeatedly(Return(false));
     EXPECT_CALL(mock_renderable3, should_be_rendered_in(_))
-        .WillOnce(Return(true));
+        .WillRepeatedly(Return(true));
+
+    EXPECT_CALL(mock_renderable1, alpha())
+        .WillOnce(Return(1.0f));
+    EXPECT_CALL(mock_renderable3, alpha())
+        .WillOnce(Return(1.0f));
+
+    EXPECT_CALL(mock_renderable1, shaped())
+        .WillOnce(Return(false));
+    EXPECT_CALL(mock_renderable3, shaped())
+        .WillOnce(Return(false));
+
+    geom::Rectangle rect;
+    EXPECT_CALL(mock_renderable1, screen_position())
+        .WillOnce(Return(geom::Rectangle{{1,2}, {3,4}}));
+    EXPECT_CALL(mock_renderable2, screen_position())
+        .Times(0);
+    EXPECT_CALL(mock_renderable3, screen_position())
+        .WillOnce(Return(geom::Rectangle{{5,6}, {7,8}}));
 
     std::vector<mg::Renderable*> renderable_vec;
     renderable_vec.push_back(&mock_renderable1);

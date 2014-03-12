@@ -26,8 +26,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
-#include "src/server/compositor/renderer.h"
-#include "src/server/compositor/renderer_factory.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"

@@ -51,101 +51,95 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-void mga::LayerListBase::update_representation(size_t needed_size)
+bool mga::LayerList::update_list_and_check_if_changed(
+    std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
+    size_t additional_layers)
 {
-    std::shared_ptr<hwc_display_contents_1_t> new_hwc_representation;
-    std::list<HWCLayer> new_layers;
+    size_t needed_size = renderlist.size() + additional_layers; 
 
-    if (hwc_representation->numHwLayers != needed_size)
+    bool any_buffer_updated = false;
+    if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
     {
-        new_hwc_representation = generate_hwc_list(needed_size);
+        hwc_representation = generate_hwc_list(needed_size);
+    }
+
+    if (layers.size() == needed_size)
+    {
+        auto layers_it = layers.begin();
+        for(auto renderable : renderlist)
+        {
+            layers_it->set_render_parameters(
+                renderable->screen_position(), renderable->alpha_enabled());
+            layers_it->set_buffer(*renderable->buffer(1));// TODO: remove needing to know about frameno
+            any_buffer_updated |= layers_it->needs_hwc_commit(); 
+            layers_it++;
+        }
     }
     else
     {
-        new_hwc_representation = hwc_representation;
+        any_buffer_updated = true;
+        std::list<HWCLayer> new_layers;
+        auto i = 0u;
+        for(auto const& renderable : renderlist)
+        {
+            new_layers.emplace_back(
+                mga::HWCLayer(
+                    mga::LayerType::gl_rendered,
+                    renderable->screen_position(),
+                    renderable->alpha_enabled(),
+                    hwc_representation, i++));
+            new_layers.back().set_buffer(*renderable->buffer(1));// TODO: remove needing to know about frameno
+        }
+
+        for(; i < needed_size; i++)
+        {
+            new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
+        }
+        layers = std::move(new_layers);
     }
 
-    for (auto i = 0u; i < needed_size; i++)
+    if (additional_layers == 0)
     {
-        new_layers.emplace_back(mga::HWCLayer(new_hwc_representation, i));
+        first_additional_layer = layers.end();
+    }
+    else
+    {
+        first_additional_layer = layers.begin();
+        std::advance(first_additional_layer, renderlist.size());
     }
 
-    std::swap(new_layers, layers);
-    hwc_representation = new_hwc_representation;
+    return any_buffer_updated;
 }
 
-std::weak_ptr<hwc_display_contents_1_t> mga::LayerListBase::native_list()
+std::list<mga::HWCLayer>::iterator mga::LayerList::begin()
+{
+    return layers.begin(); 
+}
+
+std::list<mga::HWCLayer>::iterator mga::LayerList::additional_layers_begin()
+{
+    return first_additional_layer;
+}
+
+std::list<mga::HWCLayer>::iterator mga::LayerList::end()
+{
+    return layers.end(); 
+}
+
+std::weak_ptr<hwc_display_contents_1_t> mga::LayerList::native_list()
 {
     return hwc_representation;
 }
 
-mga::NativeFence mga::LayerListBase::retirement_fence()
+mga::NativeFence mga::LayerList::retirement_fence()
 {
     return hwc_representation->retireFenceFd;
 }
 
-mga::LayerListBase::LayerListBase(size_t initial_list_size)
-    : hwc_representation{generate_hwc_list(initial_list_size)}
+mga::LayerList::LayerList(
+    std::list<std::shared_ptr<mg::Renderable>> const& renderlist,
+    size_t additional_layers)
 {
-    update_representation(initial_list_size);
+    update_list_and_check_if_changed(renderlist, additional_layers);
 }
 
-mga::LayerList::LayerList()
-    : LayerListBase{1}
-{
-    layers.back().set_layer_type(mga::LayerType::skip);
-}
-
-mga::FBTargetLayerList::FBTargetLayerList()
-    : LayerListBase{2}
-{
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-}
-
-void mga::FBTargetLayerList::reset_composition_layers()
-{
-    update_representation(2);
-
-    layers.front().set_layer_type(mga::LayerType::skip);
-    layers.back().set_layer_type(mga::LayerType::framebuffer_target);
-
-    skip_layers_present = true;
-}
-
-void mga::FBTargetLayerList::set_composition_layers(std::list<std::shared_ptr<graphics::Renderable>> const& list)
-{
-    auto const needed_size = list.size() + 1;
-    update_representation(needed_size);
-
-    auto layers_it = layers.begin();
-    for(auto const& renderable : list)
-    {
-        layers_it->set_layer_type(mga::LayerType::gl_rendered);
-        layers_it->set_render_parameters(renderable->screen_position(), renderable->alpha_enabled());
-        layers_it->set_buffer(*renderable->buffer(1));  // TODO: implement frameno
-        layers_it++;
-    }
-
-    layers_it->set_layer_type(mga::LayerType::framebuffer_target);
-    skip_layers_present = false;
-}
-
-
-void mga::FBTargetLayerList::set_fb_target(mg::Buffer const& buffer)
-{
-    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    if (skip_layers_present)
-    {
-        layers.front().set_render_parameters(disp_frame, false);
-        layers.front().set_buffer(buffer);
-    }
-
-    layers.back().set_render_parameters(disp_frame, false);
-    layers.back().set_buffer(buffer);
-}
-
-mga::NativeFence mga::FBTargetLayerList::fb_target_fence()
-{
-   return layers.back().release_fence();
-}

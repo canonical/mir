@@ -132,7 +132,8 @@ TEST_F(BasicSurfaceTest, update_size)
 
     storage.resize(new_size);
     EXPECT_EQ(new_size, storage.size());
-    EXPECT_NE(old_transformation, storage.transformation());
+    // Size no longer affects transformation:
+    EXPECT_EQ(old_transformation, storage.transformation());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
@@ -154,33 +155,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
     storage.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
     auto rotated_transformation = storage.transformation();
     EXPECT_NE(original_transformation, rotated_transformation);
-}
-
-TEST_F(BasicSurfaceTest, test_surface_transformation_cache_refreshes)
-{
-    using namespace testing;
-
-    const geom::Size sz{geom::Width{85}, geom::Height{43}};
-    const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
-    const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
-    ms::BasicSurface storage{
-        name,
-        origin,
-        null_change_cb,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        report};
-
-    glm::mat4 t0 = storage.transformation();
-    storage.move_to(moved_pt.top_left);
-    EXPECT_NE(t0, storage.transformation());
-    storage.move_to(origin.top_left);
-    EXPECT_EQ(t0, storage.transformation());
-
-    storage.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
-    glm::mat4 t1 = storage.transformation();
-    EXPECT_NE(t0, t1);
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)

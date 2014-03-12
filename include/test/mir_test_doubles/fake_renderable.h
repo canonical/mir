@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 
 #include "mir/graphics/renderable.h"
+#define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
 
@@ -44,10 +45,6 @@ public:
           visible(visible),
           posted(posted)
     {
-        const glm::mat4 ident;
-        glm::vec3 size(width, height, 0.0f);
-        glm::vec3 pos(x + width / 2, y + height / 2, 0.0f);
-        trans = glm::scale( glm::translate(ident, pos), size);
     }
 
     float alpha() const override
@@ -55,9 +52,9 @@ public:
         return opacity;
     }
 
-    glm::mat4 const& transformation() const override
+    glm::mat4 transformation() const override
     {
-        return trans;
+        return glm::mat4();
     }
 
     bool should_be_rendered_in(const mir::geometry::Rectangle &r) const override
@@ -90,10 +87,14 @@ public:
         return rect;
     }
 
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
-    glm::mat4 trans;
     float opacity;
     bool rectangular;
     bool visible;

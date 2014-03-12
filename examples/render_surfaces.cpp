@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/server_status_listener.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -47,8 +48,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -86,6 +85,7 @@ namespace me = mir::examples;
 
 namespace
 {
+std::atomic<bool> created{false};
 bool input_is_on = false;
 std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
@@ -326,6 +326,31 @@ public:
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
 
+    // Unless the compositor starts before we create the surfaces it won't respond to
+    // the change notification that causes.
+    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener()
+    {
+        struct ServerStatusListener : mir::ServerStatusListener
+        {
+            ServerStatusListener(std::function<void()> create_surfaces, std::shared_ptr<mir::ServerStatusListener> wrapped) :
+                create_surfaces(create_surfaces), wrapped(wrapped) {}
+
+            virtual void paused() override { wrapped->paused(); }
+            virtual void resumed() override { wrapped->resumed(); }
+            virtual void started() override { wrapped->started(); create_surfaces(); create_surfaces = []{}; }
+
+            std::function<void()> create_surfaces;
+            std::shared_ptr<mir::ServerStatusListener> const wrapped;
+        };
+
+        return server_status_listener(
+            [this]()
+            {
+                auto wrapped = ServerConfiguration::the_server_status_listener();
+                return std::make_shared<ServerStatusListener>([this] { create_surfaces(); }, wrapped);
+            });
+    }
+
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
     // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
     std::shared_ptr<mc::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
@@ -342,8 +367,9 @@ public:
             {
             }
 
-            void composite()
+            bool composite()
             {
+                while (!created) std::this_thread::yield();
                 animate_cursor();
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
@@ -360,6 +386,7 @@ public:
                     m.step();
 
                 frames++;
+                return false;
             }
 
         private:
@@ -459,6 +486,8 @@ public:
                     2.0f * M_PI * cos(i));
             ++i;
         }
+
+        created = true;
     }
 
     bool input_is_on()
@@ -492,8 +521,6 @@ try
 
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
-        conf.create_surfaces();
-
         cursor = conf.the_cursor();
 
         input_is_on = conf.input_is_on();

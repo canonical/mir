@@ -80,7 +80,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 }
 
 
-void mc::DefaultDisplayBufferCompositor::composite()
+bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
@@ -104,9 +104,15 @@ void mc::DefaultDisplayBufferCompositor::composite()
         return !env || env[0] != '0';
     }()};
     bool bypassed = false;
+    bool uncomposited_buffers{false};
 
     if (bypass_env && display_buffer.can_bypass())
     {
+        // It would be *really* nice not to lock the scene for a composite pass.
+        // (C.f. lp:1234018)
+        // A compositor shouldn't know anything about navigating the scene,
+        // it should be passed a collection of objects to render. (And any
+        // locks managed by the scene - which can just lock what is needed.)
         std::unique_lock<Scene> lock(*scene);
 
         mc::BypassFilter filter(display_buffer);
@@ -122,6 +128,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
             if (bypass_buf->can_bypass())
             {
+                uncomposited_buffers = match.topmost_fullscreen()->buffers_ready_for_compositor() > 1;
+
                 lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
@@ -149,14 +157,24 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno);
+        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, uncomposited_buffers);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();
 
         display_buffer.post_update();
+
+        // This is a frig to avoid lp:1286190
+        if (size_of_last_pass)
+        {
+            uncomposited_buffers |= saved_resources.empty();
+        }
+
+        size_of_last_pass = saved_resources.size();
+        // End of frig
     }
 
     report->finished_frame(bypassed, this);
+    return uncomposited_buffers;
 }
 

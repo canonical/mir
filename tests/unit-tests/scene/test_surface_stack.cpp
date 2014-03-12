@@ -25,7 +25,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -76,6 +76,7 @@ public:
     virtual void allow_framedropping(bool) {}
     virtual mg::BufferProperties properties() const { return mg::BufferProperties{}; };
     void resize(const geom::Size &) override {}
+    int buffers_ready_for_compositor() const override { return 1; }
 };
 
 

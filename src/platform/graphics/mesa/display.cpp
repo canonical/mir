@@ -24,7 +24,7 @@
 #include "kms_output.h"
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
-#include "overlapping_output_grouping.h"
+#include "mir/graphics/overlapping_output_grouping.h"
 
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
