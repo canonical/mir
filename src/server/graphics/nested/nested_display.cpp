@@ -272,7 +272,7 @@ void mgn::NestedDisplay::resume()
     // TODO If we "own" the cursor then we need to restore it
 }
 
-auto mgn::NestedDisplay::create_hardware_cursor()->std::shared_ptr<Cursor>
+auto mgn::NestedDisplay::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial image */)->std::shared_ptr<Cursor>
 {
     // TODO Do we "own" the cursor or does the host mir?
     return std::shared_ptr<Cursor>();

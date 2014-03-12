@@ -94,6 +94,8 @@ class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
 class Cursor;
+class CursorImage;
+class CursorRepository;
 namespace nested { class HostConnection; }
 }
 namespace input
@@ -160,6 +162,9 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
+    virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
+    virtual std::shared_ptr<graphics::CursorRepository> the_cursor_repository();
+
     /** @} */
 
     /** @name compositor configuration - customization
@@ -272,6 +277,8 @@ protected:
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
+    CachedPtr<graphics::CursorImage>  default_cursor_image;
+    CachedPtr<graphics::CursorRepository> cursor_repository;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;

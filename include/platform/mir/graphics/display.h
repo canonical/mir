@@ -31,6 +31,7 @@ namespace graphics
 class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
+class CursorImage;
 class GLContext;
 class EventHandlerRegister;
 
@@ -99,7 +100,7 @@ public:
     /**
      * Create a hardware cursor object.
      */
-    virtual std::shared_ptr<Cursor> create_hardware_cursor() = 0;
+    virtual std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) = 0;
 
     /**
      * Creates a GLContext object that shares resources with the Display's GL context.

@@ -27,6 +27,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/cursor_image.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
@@ -48,6 +49,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+
+#include <assert.h>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -90,14 +93,14 @@ bool input_is_on = false;
 std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
 static const uint32_t fg_color = 0xffdd4814;
+static const int width = 64;
+static const int height = 64;
 
-void update_cursor(uint32_t bg_color, uint32_t fg_color)
+struct ExampleCursorImage : public mg::CursorImage
 {
-    if (auto cursor = ::cursor.lock())
+    ExampleCursorImage(uint32_t bg_color, uint32_t fg_color)
+        : image(height*width, bg_color)
     {
-        static const int width = 64;
-        static const int height = 64;
-        std::vector<uint32_t> image(height * width, bg_color);
         for (int i = 0; i != width-1; ++i)
         {
             if (i < 16)
@@ -111,7 +114,23 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
             image[(i+1) * height + i] = fg_color;
             image[i * height + i + 1] = fg_color;
         }
-        cursor->set_image(image.data(), geom::Size{width, height});
+    }
+    
+    void const* raw_argb(geom::Size const& size)
+    {
+        assert(size.width.as_uint32_t() == width);
+        assert(size.width.as_uint32_t() == height);
+        return image.data();
+    }
+
+    std::vector<uint32_t> image;
+};
+
+void update_cursor(uint32_t bg_color, uint32_t fg_color)
+{
+    if (auto cursor = ::cursor.lock())
+    {
+        cursor->set_image(std::make_shared<ExampleCursorImage>(bg_color, fg_color), geom::Size{width, height});
     }
 }
 

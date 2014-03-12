@@ -32,6 +32,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include "builtin_cursor_repository.h"
+
 #include <map>
 
 namespace mg = mir::graphics;
@@ -137,7 +139,27 @@ mir::DefaultServerConfiguration::the_cursor()
         [this]() -> std::shared_ptr<mg::Cursor>
         {
             // For now we only support a hardware cursor.
-            return the_display()->create_hardware_cursor();
+            return the_display()->create_hardware_cursor(the_default_cursor_image());
+        });
+}
+
+std::shared_ptr<mg::CursorImage>
+mir::DefaultServerConfiguration::the_default_cursor_image()
+{
+    return default_cursor_image(
+        [this]()
+        {
+            return the_cursor_repository()->lookup_cursor("default", "arrow");
+        });
+}
+
+std::shared_ptr<mg::CursorRepository>
+mir::DefaultServerConfiguration::the_cursor_repository()
+{
+    return cursor_repository(
+        [this]()
+        {
+            return std::make_shared<mg::BuiltinCursorRepository>();
         });
 }
 
