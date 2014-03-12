@@ -232,6 +232,8 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Start a new process.
+    // This simulates the helper starting a new application which it adds to the trusted session.
     pid_t pid = fork();
 
     if (pid == 0)
