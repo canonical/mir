@@ -386,7 +386,6 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     }, std::runtime_error);
 }
 
-
 TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
 {
     using namespace testing;
@@ -526,7 +525,6 @@ TEST_F(LinuxVirtualTerminalTest, does_not_try_to_reaquire_session_leader)
 
     InSequence s;
 
-
     auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
     auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
@@ -652,7 +650,6 @@ TEST_F(LinuxVirtualTerminalTest, exception_if_becoming_session_leader_fails)
     EXPECT_CALL(*pops, setsid())
         .Times(1)
         .WillOnce(Return(-1));
-
 
     EXPECT_THROW({
         mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
