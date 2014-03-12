@@ -37,10 +37,11 @@ endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
   if(DISABLE_GTEST_TEST_DISCOVERY)
-    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}")
-
+    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=-*DeathTest.*")
+    add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
     if (${ARGC} GREATER 1)
       set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
+      set_property(TEST ${EXECUTABLE}_death_tests PROPERTY ENVIRONMENT ${ARGN})
     endif()
   else()
     set(CHECK_TEST_DISCOVERY_TARGET_NAME "check_discover_tests_in_${EXECUTABLE}")
