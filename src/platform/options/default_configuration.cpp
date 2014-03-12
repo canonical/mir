@@ -70,9 +70,9 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
 
     add_options()
         (host_socket_opt, po::value<std::string>(),
-            "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
+            "Host socket filename")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
-            "Socket filename.")
+            "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
             "Library to use for platform graphics support")

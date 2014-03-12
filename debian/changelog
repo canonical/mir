@@ -1,17 +1,124 @@
-mir (0.1.5-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.1.6+14.04.20140310-0ubuntu1) trusty; urgency=medium
 
-  * New upstream release 0.1.5 (https://launchpad.net/mir/+milestone/0.1.5)
-    - frontend: Implement screencast rpc methods
+  [ Kevin Gunn ]
+  * Cherry-picked from future release 0.1.7:
+    - Enhancement: options: Make it easier to customize DefaultConfiguration
+    - Bug fix: Don't pass a parameter to bash's popd command. It doesn't expect
+      one and will return an error from cross-compile-chroot.sh. (LP: #1287600)
+  * New upstream release 0.1.6 (https://launchpad.net/mir/+milestone/0.1.6)
+    - mirserver ABI bumped to 16.
+    - Server API changes:
+      . Report classes have moved to new namespaces/components. Please
+        consult the server headers.
+      . General clean-ups and virtual function changes affecting the ABI
+        (a rebuild is required for all shells).
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - Add new feature: Screen recording ("screencasting") as demonstrated by
+      the new mir-util "mirscreencast".
+    - debian: Provide platform packages managed with dpkg alternatives.
+    - Add new valgrind suppressions (mostly for armhf right now)
+    - tools: Add new libmirclientplatform.so to install_on_android.sh.
+    - Add "mir_demo_standalone_render_overlays", which is a free-standing
+      example of overlay support.
+    - Proper DisplayConfiguration for the AndroidDisplay to be better 
+      prepared for multi-monitor Android.
+    - Commenced/continued simplifying the surface class hierarchy: BasicSurface
+      has now absorbed SurfaceData.
+    - Dynamically load the client platform library.
     - Bugs fixed:
-      . frontend: Add a level of indirection to hide 
-        use of mir::protobuf::wire::Invocation from 
-        public headers (LP: #1276162)
-      . graphics: android: remove wait on retireFenceFd. 
-        On some platforms (specifically the 4.4-based flo
-        and grouper), this wait was causing us to miss 
-        vsync. (LP: #1274189)
+      . Exceptions thrown from within compositing threads were untraceable,
+        resulting in a bunch of undebuggable crash reports (LP: #1237332)
+      . Ensure we close drm device file descriptors on exec. (LP: #1284081)
+      . nested render_surfaces fails on N4 [std::exception::what: Failed to
+        compile vertex shader:] (LP: #1284597)
+      . examples: correct "fullscreen-surfaces" option. (LP: #1284554)
+      . Fix mutex data race reported by helgrind in integration test:
+        SwapperSwappingStress (LP: #1282886)
+      . scene: Return null snapshots for sessions without surfaces 
+        (LP: #1281728)
+      . tests: Address some raciness in
+        MesaDisplayTest.drm_device_change_event_triggers_handler. 
+        (LP: #1283085)
+      . tests: Suppress spurious memory errors occuring when running the
+        unit tests on armhf with valgrind. (LP: #1279438)
+      . Mir shows an old frame on client startup (for Mesa GL clients)
+        (LP: #1281938)
+      . tests: Add expectation to validate second SessionAuthorizer method
+        is called wit correct parameter. (LP: #1218436)
+      . Set field "current_format" when sending a display config to the
+        server. (LP: #1277343)
+      . Fix crash in android devices by working around a subtle threading
+        bug, use a dummy thead_local array to push the gl/egl context TLS 
+        into a region where the future wait code does not overwrite it. 
+        (LP: #1280086)
+      . compositor: calling SwitchingBundle::force_requests_to_complete()
+        can be a no-op when there are no requests. (LP: #1281145)
+      . tests: Don't emit an "add" uevent manually when adding a device
+        (LP: #1281146)
+      . config: reduce size of default RPC thread pool. (LP: #1233001)
+      . Clients freeze on startup if 10 or more are already running
+        (LP: #1267323)
+      . Fix Nexus 10 leaking FDs in the hwc prepare/set loop. (LP: #1278658)
+      . Parallelize page flipping with rendering of the next frame, fixing
+        stuttering observed in multi-monitor clone mode (LP: #1213801)
+      . Ubuntu trusty update "glm 0.9.5.1-1" broke Mir builds. Work around the
+        change. (LP: #1285955)
+      . Screencast feature by compositing to offscreen buffer (LP: #1207312)
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Thu, 06 Feb 2014 10:54:17 -0600
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 10 Mar 2014 19:28:46 +0000
+
+mir (0.1.5+14.04.20140212-0ubuntu1) trusty; urgency=medium
+
+  [ Kevin Gunn ]
+  * Cherry-picked from future release 0.1.6:
+    - frontend, shell: provide the client process ID in the shell::Session
+      interface (LP: #1276704)
+  * New upstream release 0.1.5 (https://launchpad.net/mir/+milestone/0.1.5)
+    - mirclient ABI bumped to 7
+    - mirserver ABI bumped to 15
+    - Refactoring to support client-controled RPC.
+    - Add an translucent server example (use sparingly, this will kill
+      performance!)
+    - Add workaround for Qualcomm Snapdragon 8960 driver bug.
+    - android-input: Improve debug output
+    - Screen rotation support half done (rotation of the screen works but input
+      rotation not implemented yet).
+    - Add groundwork for overlay support to take better advantage of mobile
+      hardware features and optimize composition in future.
+    - Add support for HWC 1.2 (Android 4.4)
+    - Add groundwork for screencasting (screen recording).
+    - Optimized surface resizing, significantly reducing event flooding for
+      some input configurations like touch.
+    - Bugs fixed:
+      . Surfaces no longer visible at all on Nexus 10 (LP: #1271853)
+      . mir nested server failure: what(): error binding buffer to texture
+        (LP: #1272041)
+      . Unity does not process events from evdev device created before unity is
+        restarted (autopilot tests) (LP: #1238417)
+      . mir_unit_tests can't run on touch images any more (missing
+        libumockdev.so.0) (LP: #1271434)
+      . chmod 777 /tmp/mir_socket is no longer sufficient for non-root clients
+        to connect to a root server (LP: #1272143)
+      . Nexus7(2013) flo framerate maxes out at 30fps (LP: #1274189)
+      . libmirserver user is unable to #include
+         <mir/frontend/template_protobuf_message_processor.h> (LP: #1276162)
+      . libmirclient user cannot "#include <mir/client/private.h>"
+        (LP: #1276565)
+      . AndroidInternalClient.internal_client_creation_and_use hangs on Nexus
+        10 (LP: #1270685)
+      . Tests that use the InProcessServer bind the default socket file
+        (LP: #1271604)
+      . BasicConnector threads exit immediately (LP: #1271655)
+      . Integration tests TestClientIPCRender.test_accelerated_render fails on
+        Galaxy Nexus and Nexus4 (LP: #1272597)
+      . Android backend unit-tests FTBS on amd64 (LP: #1276621)
+      . Erroneous use of last_consumed in SwitchingBundle::compositor_acquire
+        (LP: #1270964)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 12 Feb 2014 18:29:29 +0000
 
 mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
 

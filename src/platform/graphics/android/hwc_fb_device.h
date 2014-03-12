@@ -38,12 +38,16 @@ public:
                 std::shared_ptr<framebuffer_device_t> const& fb_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
-    void prepare_gl();
-    void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list); 
-    void gpu_render(EGLDisplay dpy, EGLSurface sur);
+    virtual void render_gl(SwappingGLContext const& context);
+    virtual void render_gl_and_overlays(
+        SwappingGLContext const& context,
+        std::list<std::shared_ptr<Renderable>> const& list,
+        std::function<void(Renderable const&)> const& render_fn);
     void post(Buffer const& buffer);
 
 private:
+    void prepare();
+    void gpu_render();
     std::shared_ptr<framebuffer_device_t> const fb_device;
     static int const num_displays{1};
     LayerList layer_list;

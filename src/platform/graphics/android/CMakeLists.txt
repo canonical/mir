@@ -34,6 +34,7 @@ add_library(
   internal_client.cpp
   gl_context.cpp
   device_detector.cpp
+  real_hwc_wrapper.cpp
 )
 
 set_target_properties(

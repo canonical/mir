@@ -36,23 +36,45 @@ namespace android
 class HWCVsyncCoordinator;
 class SyncFileOps;
 
+class HwcWrapper
+{
+public:
+    virtual ~HwcWrapper() = default;
+
+    virtual void prepare(hwc_display_contents_1_t&) const = 0;
+    virtual void set(hwc_display_contents_1_t&) const = 0;
+
+protected:
+    HwcWrapper() = default;
+    HwcWrapper& operator=(HwcWrapper const&) = delete;
+    HwcWrapper(HwcWrapper const&) = delete;
+};
+
 class HwcDevice : public HWCCommonDevice
 {
 public:
+    //TODO: the first two constructor arguments are redundant. eliminate the 1st one when the 2nd
+    //      one can be used by the HWCCommonDevice 
     HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+              std::shared_ptr<HwcWrapper> const& hwc_wrapper,
               std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
               std::shared_ptr<SyncFileOps> const& sync_ops);
 
-    void prepare_gl();
-    void prepare_gl_and_overlays(std::list<std::shared_ptr<Renderable>> const& list); 
-    void gpu_render(EGLDisplay dpy, EGLSurface sur);
+    virtual void render_gl(SwappingGLContext const& context);
+    virtual void render_gl_and_overlays(
+        SwappingGLContext const& context,
+        std::list<std::shared_ptr<Renderable>> const& list,
+        std::function<void(Renderable const&)> const& render_fn);
     void post(Buffer const& buffer);
 
 private:
-    FBTargetLayerList layer_list;
+    LayerList hwc_list;
+    void set_list_framebuffer(Buffer const&);
+    void setup_layer_types();
 
+    std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
-    static size_t const num_displays{3}; //primary, external, virtual
+    bool list_needs_commit{false};
 };
 
 }

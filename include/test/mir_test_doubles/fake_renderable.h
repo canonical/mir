@@ -45,10 +45,6 @@ public:
           visible(visible),
           posted(posted)
     {
-        const glm::mat4 ident;
-        glm::vec3 size(width, height, 0.0f);
-        glm::vec3 pos(x + width / 2, y + height / 2, 0.0f);
-        trans = glm::scale( glm::translate(ident, pos), size);
     }
 
     float alpha() const override
@@ -58,7 +54,7 @@ public:
 
     glm::mat4 transformation() const override
     {
-        return trans;
+        return glm::mat4();
     }
 
     bool should_be_rendered_in(const mir::geometry::Rectangle &r) const override
@@ -99,7 +95,6 @@ public:
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
-    glm::mat4 trans;
     float opacity;
     bool rectangular;
     bool visible;

@@ -365,10 +365,15 @@ void mf::SessionMediator::create_screencast(
     google::protobuf::Closure* done)
 {
     static bool const need_full_ipc{true};
-    mg::DisplayConfigurationOutputId const output_id{
-        static_cast<int>(parameters->output_id())};
 
-    auto screencast_session_id = screencast->create_session(output_id);
+    geom::Rectangle const region{
+        {parameters->region().left(), parameters->region().top()},
+        {parameters->region().width(), parameters->region().height()}
+    };
+    geom::Size const size{parameters->width(), parameters->height()};
+    MirPixelFormat const pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
+
+    auto screencast_session_id = screencast->create_session(region, size, pixel_format);
     auto buffer = screencast->capture(screencast_session_id);
 
     protobuf_screencast->mutable_screencast_id()->set_value(

@@ -79,10 +79,8 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
     using namespace testing;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl())
+    EXPECT_CALL(*mock_display_device, render_gl(_))
         .Times(Exactly(1));
-    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
-        .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
         .WillOnce(Return(stub_buffer));
@@ -101,9 +99,7 @@ TEST_F(AndroidDisplayBuffer, performs_default_post_if_empty_list)
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl())
-        .Times(1);
-    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
+    EXPECT_CALL(*mock_display_device, render_gl(_))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -119,24 +115,13 @@ TEST_F(AndroidDisplayBuffer, performs_default_post_if_empty_list)
 TEST_F(AndroidDisplayBuffer, posts_overlay_list)
 {
     using namespace testing;
-
-    struct MockRenderOperator
-    {
-        MOCK_METHOD0(called, void());
-    };
-
     std::list<std::shared_ptr<mg::Renderable>> renderlist{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
-
-    MockRenderOperator mock_call_counter;
+    std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_gl_and_overlays(Ref(renderlist)))
-        .Times(1);
-    EXPECT_CALL(mock_call_counter, called())
-        .Times(renderlist.size());
-    EXPECT_CALL(*mock_display_device, gpu_render(dummy_display, mock_egl.fake_egl_surface))
+    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist), Ref(render_fn)))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -145,10 +130,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
         .Times(1);
 
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-
-    db.render_and_post_update(renderlist, [&](mg::Renderable const&){
-        mock_call_counter.called();
-    });
+    db.render_and_post_update(renderlist, render_fn); 
 }
 
 TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)

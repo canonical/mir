@@ -33,9 +33,11 @@ namespace doubles
 class MockScreencast : public frontend::Screencast
 {
 public:
-    MOCK_METHOD1(create_session,
+    MOCK_METHOD3(create_session,
                  frontend::ScreencastSessionId(
-                     graphics::DisplayConfigurationOutputId));
+                     geometry::Rectangle const&,
+                     geometry::Size const&,
+                     MirPixelFormat));
     MOCK_METHOD1(destroy_session, void(frontend::ScreencastSessionId));
     MOCK_METHOD1(capture,
                  std::shared_ptr<graphics::Buffer>(
