@@ -1,3 +1,31 @@
+mir (0.1.7-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.1.7 (https://launchpad.net/mir/+milestone/0.1.7)
+    - mirserver ABI bumped to 17 (soon)
+    - Server API changes (AKA why doesn't my code build any more?):
+      . Class "CompositingCriteria" has been removed. It's replaced by the more
+        flexible "Renderable" interface. This also resulted in parameter
+        changes for the Renderer and scene filtering classes.
+      . The function "DisplayConfiguration::configure_output()" has been
+        removed. Instead, please use the new mutable version of
+        "DisplayConfiguration::for_each_output()" with which you can modify
+        the output structure passed in on each iteration.
+      . Exposed formerly private class "GLRenderer" and demonstrated how
+        to override its behaviour in demo-shell. This area is under
+        construction and may experience further major changes.
+    - Added initial support for hardware (HWC) overlays to accelerate
+      rendering and reduce power consumption. Not complete yet.
+    - Screen rotation: Added mouse cursor rotation support, so you can now
+      still control things on a rotated screen. Still missing rotation of
+      the cursor bitmap itself.
+    - Lots of fixes to support nested Mir servers (see below).
+    - Major simplification to how surface size/position/transformation
+      interact, making transformations much easier to manage and work with.
+    - Bugs fixed:
+      <fill this in once tagged and released when proposing to archive>
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 12 Mar 2014 11:05:20 +0800
+
 mir (0.1.6+14.04.20140310-0ubuntu1) trusty; urgency=medium
 
   [ Kevin Gunn ]
