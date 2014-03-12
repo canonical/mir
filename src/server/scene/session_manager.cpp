@@ -92,8 +92,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
         std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
         auto find_trusted_sesssion_fn =
-            [client_pid]
-            (std::shared_ptr<frontend::TrustSession> const& trust_session)
+            [client_pid](std::shared_ptr<frontend::TrustSession> const& trust_session)
             {
                 auto applications = trust_session->get_applications();
                 auto it_apps = std::find(applications.begin(), applications.end(), client_pid);
@@ -226,8 +225,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
     auto it = std::find_if(trust_sessions.begin(), trust_sessions.end(),
-        [session]
-        (std::shared_ptr<frontend::TrustSession> const& trust_session)
+        [session](std::shared_ptr<frontend::TrustSession> const& trust_session)
         {
             auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
 

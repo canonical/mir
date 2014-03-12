@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_CLIENT_LIBRARY_TRUST_SESSION_H_
-#define MIR_CLIENT_LIBRARY_TRUST_SESSION_H_
+#ifndef MIR_TOOLKIT_MIR_TRUST_SESSION_H_
+#define MIR_TOOLKIT_MIR_TRUST_SESSION_H_
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -106,4 +106,4 @@ void mir_trust_session_release(MirTrustSession* trust_session);
 /**@}*/
 #endif
 
-#endif /* MIR_CLIENT_LIBRARY_TRUST_SESSION_H_ */
+#endif /* MIR_TOOLKIT_MIR_TRUST_SESSION_H_ */

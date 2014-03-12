@@ -19,7 +19,7 @@
 #define _POSIX_SOURCE
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_trust_session.h"
+#include "mir_toolkit/mir_trust_session.h"
 
 #include <assert.h>
 #include <string.h>

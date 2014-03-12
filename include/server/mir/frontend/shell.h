@@ -56,9 +56,9 @@ public:
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
     virtual std::shared_ptr<TrustSession> start_trust_session_for(std::string& error,
-                                                std::shared_ptr<Session> const& session,
-                                                shell::TrustSessionCreationParameters const& params,
-                                                std::shared_ptr<EventSink> const& sink) = 0;
+                                                                  std::shared_ptr<Session> const& session,
+                                                                  shell::TrustSessionCreationParameters const& params,
+                                                                  std::shared_ptr<EventSink> const& sink) = 0;
     virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
 protected:

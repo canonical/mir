@@ -19,7 +19,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_trust_session.h"
+#include "mir_toolkit/mir_trust_session.h"
 
 #include <gtest/gtest.h>
 
@@ -30,7 +30,7 @@ namespace
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
-using MirClientLibraryTrustSessionTest = DefaultDisplayServerTestFixture;
+using MirClientTrustSessionAPITest = DefaultDisplayServerTestFixture;
 
 namespace mir
 {
@@ -77,7 +77,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 };
 }
 
-TEST_F(MirClientLibraryTrustSessionTest, client_library_trust_session)
+TEST_F(MirClientTrustSessionAPITest, client_trust_session_api)
 {
     struct ClientConfig : ClientConfigCommon
     {

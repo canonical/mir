@@ -157,8 +157,7 @@ void ms::ApplicationSession::hide()
     }
 
     children->for_each(
-        []
-        (std::shared_ptr<shell::Session> const& child_session)
+        [](std::shared_ptr<shell::Session> const& child_session)
         {
             child_session->hide();
         }
@@ -174,8 +173,7 @@ void ms::ApplicationSession::show()
     }
 
     children->for_each(
-        []
-        (std::shared_ptr<shell::Session> const& child_session)
+        [](std::shared_ptr<shell::Session> const& child_session)
         {
             child_session->show();
         }
@@ -202,8 +200,7 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
     event_sink->handle_lifecycle_event(state);
 
     children->for_each(
-        [state]
-        (std::shared_ptr<shell::Session> const& child_session)
+        [state](std::shared_ptr<shell::Session> const& child_session)
         {
             child_session->set_lifecycle_state(state);
         }

@@ -57,24 +57,22 @@ std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<m
                                                                    std::shared_ptr<SessionContainer> const& container,
                                                                    std::shared_ptr<mf::EventSink> const& sink)
 {
-    TrustSession* impl = new TrustSession(trusted_helper, parameters, sink);
-    std::shared_ptr<msh::TrustSession> ptr(impl);
+    auto const trust_session = std::make_shared<TrustSession>(trusted_helper, parameters, sink);
 
-    impl->state = mir_trust_session_state_started;
-    trusted_helper->set_trust_session(ptr);
+    trust_session->state = mir_trust_session_state_started;
+    trusted_helper->set_trust_session(trust_session);
 
-    for (pid_t application_pid : impl->applications)
+    for (pid_t application_pid : trust_session->applications)
     {
         std::vector<std::shared_ptr<msh::Session>> added_sessions;
 
         container->for_each(
-            [&]
-            (std::shared_ptr<msh::Session> const& container_session)
+            [&](std::shared_ptr<msh::Session> const& container_session)
             {
                 if (container_session->process_id() == application_pid)
                 {
-                    impl->add_child_session(container_session);
-                    container_session->set_trust_session(ptr);
+                    trust_session->add_child_session(container_session);
+                    container_session->set_trust_session(trust_session);
                     added_sessions.push_back(container_session);
                 }
             }
@@ -83,10 +81,10 @@ std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<m
 
     MirEvent start_session;
     start_session.type = mir_event_type_trust_session_state_change;
-    start_session.trust_session.new_state = impl->state;
+    start_session.trust_session.new_state = trust_session->state;
     sink->handle_event(start_session);
 
-    return ptr;
+    return trust_session;
 }
 
 void ms::TrustSession::stop()
@@ -95,8 +93,7 @@ void ms::TrustSession::stop()
         return;
 
     trusted_helper->get_children()->for_each(
-        [this]
-        (std::shared_ptr<msh::Session> const& child_session)
+        [this](std::shared_ptr<msh::Session> const& child_session)
         {
             child_session->set_parent(NULL);
             child_session->set_trust_session(NULL);

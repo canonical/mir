@@ -30,8 +30,7 @@ MirTrustSession::MirTrustSession(
       state(mir_trust_session_state_stopped)
 {
     event_distributor_fn_id = event_distributor->register_event_handler(
-        [this]
-        (MirEvent const& event)
+        [this](MirEvent const& event)
         {
             if (event.type != mir_event_type_trust_session_state_change)
                 return;
@@ -78,7 +77,7 @@ MirTrustSessionAddTrustResult MirTrustSession::add_trusted_pid(pid_t pid)
     return mir_trust_session_pid_added;
 }
 
-MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void * context)
+MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void* context)
 {
     mir::protobuf::TrustSessionParameters parameters;
     {
@@ -100,7 +99,7 @@ MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void 
     return &start_wait_handle;
 }
 
-MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void * context)
+MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void* context)
 {
     server.stop_trust_session(
         0,
@@ -112,13 +111,14 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void *
     return &stop_wait_handle;
 }
 
-void MirTrustSession::register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context)
+void MirTrustSession::register_trust_session_event_callback(
+    mir_trust_session_event_callback callback,
+    void* context)
 {
     std::lock_guard<decltype(mutex_event_handler)> lock(mutex_event_handler);
 
     handle_trust_session_event =
-        [this, callback, context]
-        (MirTrustSessionState new_state)
+        [this, callback, context](MirTrustSessionState new_state)
         {
             callback(this, new_state, context);
         };
@@ -151,7 +151,7 @@ void MirTrustSession::done_stop(mir_trust_session_callback callback, void* conte
     stop_wait_handle.result_received();
 }
 
-char const * MirTrustSession::get_error_message()
+char const* MirTrustSession::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 

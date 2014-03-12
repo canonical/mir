@@ -32,7 +32,7 @@ namespace frontend
 class TrustSession
 {
 public:
-    virtual ~TrustSession() {}
+    virtual ~TrustSession() = default;
 
     virtual std::vector<pid_t> get_applications() const = 0;
 

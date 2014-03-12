@@ -41,21 +41,21 @@ struct MirTrustSession
 {
 public:
     MirTrustSession(mir::protobuf::DisplayServer& server,
-                      std::shared_ptr<mir::client::EventDistributor> const& event_distributor);
+                    std::shared_ptr<mir::client::EventDistributor> const& event_distributor);
 
     ~MirTrustSession();
 
-    MirTrustSession(MirTrustSession const &) = delete;
-    MirTrustSession& operator=(MirTrustSession const &) = delete;
+    MirTrustSession(MirTrustSession const&) = delete;
+    MirTrustSession& operator=(MirTrustSession const&) = delete;
 
     MirTrustSessionAddTrustResult add_trusted_pid(pid_t pid);
 
-    MirWaitHandle* start(mir_trust_session_callback callback, void * context);
-    MirWaitHandle* stop(mir_trust_session_callback callback, void * context);
+    MirWaitHandle* start(mir_trust_session_callback callback, void* context);
+    MirWaitHandle* stop(mir_trust_session_callback callback, void* context);
 
     void register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context);
 
-    char const * get_error_message();
+    char const* get_error_message();
     void set_error_message(std::string const& error);
 
     MirTrustSessionState get_state() const;

@@ -32,7 +32,7 @@ class EventDistributor
 {
 public:
     EventDistributor();
-    ~EventDistributor();
+    ~EventDistributor() = default;
 
     int register_event_handler(std::function<void(MirEvent const&)> const&);
     void unregister_event_handler(int id);
@@ -42,7 +42,7 @@ public:
 private:
     int next_id();
 
-    std::mutex mutable guard;
+    mutable std::mutex mutex;
     std::map<int, std::function<void(MirEvent const&)>> event_handlers;
     int next_fn_id;
 };

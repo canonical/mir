@@ -25,13 +25,9 @@ mcl::EventDistributor::EventDistributor() :
 {
 }
 
-mcl::EventDistributor::~EventDistributor()
-{
-}
-
 int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent const&)> const& fn)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     int id = next_id();
     event_handlers[id] = fn;
@@ -40,14 +36,14 @@ int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent co
 
 void mcl::EventDistributor::unregister_event_handler(int id)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     event_handlers.erase(id);
 }
 
 void mcl::EventDistributor::handle_event(MirEvent const& event)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     for (auto const& fn : event_handlers)
     {
