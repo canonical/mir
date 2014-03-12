@@ -203,9 +203,13 @@ struct StubCurrentConfiguration : public mgm::CurrentConfiguration
 
 struct StubCursorImage : public mg::CursorImage
 {
-    void const* raw_argb(geom::Size const& /* size */)
+    void const* raw_argb()
     {
         return image_data;
+    }
+    geom::Size size()
+    {
+        return geom::Size{geom::Width{64}, geom::Height{64}};
     }
     constexpr static void const* image_data{reinterpret_cast<void*>(0x5678)};
 };
@@ -252,18 +256,25 @@ TEST_F(MesaCursorTest, set_cursor_writes_to_bo)
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, StubCursorImage::image_data, cursor_size_bytes));
 
-    cursor.set_image(mt::fake_shared(image), cursor_size);
+    cursor.set_image(mt::fake_shared(image));
 }
 
 TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
 {
     using namespace testing;
 
-    size_t const cursor_side{48};
-    geom::Size const cursor_size{cursor_side, cursor_side};
+    struct InvalidlySizedCursorImage : public StubCursorImage
+    {
+        geom::Size size()
+        {
+            return invalid_cursor_size;
+        }
+        size_t const cursor_side{48};
+        geom::Size const invalid_cursor_size{cursor_side, cursor_side};
+    };
 
     EXPECT_THROW(
-        cursor.set_image(std::make_shared<StubCursorImage>(), cursor_size);
+        cursor.set_image(std::make_shared<InvalidlySizedCursorImage>());
     , std::logic_error);
 }
 

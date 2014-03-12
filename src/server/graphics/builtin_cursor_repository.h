@@ -35,7 +35,8 @@ public:
     virtual ~BuiltinCursorRepository() = default;
 
     std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
-                                               std::string const& cursor_name);
+                                               std::string const& cursor_name,
+                                               geometry::Size const& size);
 
 protected:
     BuiltinCursorRepository(BuiltinCursorRepository const&) = delete;
