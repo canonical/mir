@@ -123,7 +123,7 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
     return std::make_shared<mga::AndroidPlatform>(nullptr, display_report);
 }
 
-extern "C" void add_platform_options(mo::PlatformConfiguration& config)
+extern "C" void add_platform_options(mo::AppendableConfiguration& config)
 {
     config.add_option_string(
         std::string{"hwc-report"},

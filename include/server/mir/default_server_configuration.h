@@ -26,7 +26,6 @@
 
 namespace mir
 {
-class SharedLibrary;
 namespace compositor
 {
 class Renderer;

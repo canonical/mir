@@ -68,7 +68,7 @@ protected:
     Configuration& operator=(Configuration const&) = delete;
 };
 
-class PlatformConfiguration
+class AppendableConfiguration
 {
 public:
     virtual void add_option_int(
@@ -77,10 +77,10 @@ public:
         std::string const& option_name, std::string const& description, std::string) = 0;
 
 protected:
-    PlatformConfiguration() = default;
-    virtual ~PlatformConfiguration() = default;
-    PlatformConfiguration(PlatformConfiguration const&) = delete;
-    PlatformConfiguration& operator=(PlatformConfiguration const&) = delete;
+    AppendableConfiguration() = default;
+    virtual ~AppendableConfiguration() = default;
+    AppendableConfiguration(AppendableConfiguration const&) = delete;
+    AppendableConfiguration& operator=(AppendableConfiguration const&) = delete;
 };
 }
 }

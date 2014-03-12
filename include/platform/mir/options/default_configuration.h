@@ -24,7 +24,6 @@
 
 namespace mir
 {
-class SharedLibrary;
 namespace options
 {
 class DefaultConfiguration : public Configuration
@@ -33,6 +32,8 @@ public:
     DefaultConfiguration(int argc, char const* argv[]);
     virtual ~DefaultConfiguration() = default;
 
+    // add_options() allows users to add their own options. This MUST be called
+    // before the first invocation of the_options() - typically during initialization.
     boost::program_options::options_description_easy_init add_options();
 
 private:
@@ -57,10 +58,9 @@ private:
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
-    std::shared_ptr<ProgramOption> mutable options;
-    bool mutable parsed;
+    std::shared_ptr<Option> mutable options;
 };
+}
+}
 
-}
-}
 #endif /* MIR_OPTIONS_DEFAULT_CONFIGURATION_H_ */
