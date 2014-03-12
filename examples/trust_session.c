@@ -35,10 +35,10 @@
 ///\page trust_session.c trust_session.c: A mir client which starts a trust session and trusted client app.
 /// mir_demo_client_trust_session shows the use of mir trust session API.
 /// This program opens a mir connection and creates a trust session.
-///\section demo_client_trusted_helper demo_client_trusted_helper()
+///\section trusted_helper trusted_helper()
 /// Opens a mir connection and creates a trust session
 /// before closing the trust session and connection.
-///\section demo_client_trust_session_app demo_client_trust_session_app()
+///\section trust_session_app trust_session_app()
 /// Opens a mir connection and creates a surface
 /// before releasing the surface and closing the connection.
 ///\example trust_session.c A mir client demonstrating trust sessions.
@@ -47,7 +47,8 @@
 ///\snippet trust_session.c MirDemoState_tag
 ///\section Callbacks Callbacks
 ///\snippet trust_session.c Callback_tag
-/// This program opens a mir connection and starts a trust session.
+/// This program creates two processes, both opening a mir connection, one starting
+/// a trust session with the other process.
 
 ///\internal [MirDemoState_tag]
 // Utility structure for the state of a single session.
@@ -63,7 +64,9 @@ typedef struct MirDemoState
 
 ///\internal [Callback_tag]
 // Callback to update MirDemoState on trust_session_event
-static void trust_session_event_callback(MirTrustSession* trust_session, MirTrustSessionState state, void* context)
+static void trust_session_event_callback(MirTrustSession* trust_session,
+                                         MirTrustSessionState state,
+                                         void* context)
 {
     (void)trust_session;
     MirDemoState* demo_state = (MirDemoState*)context;
@@ -87,7 +90,7 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
     assert(mcd->connection != NULL);
     assert(mir_connection_is_valid(mcd->connection));
     assert(strcmp(mir_connection_get_error_message(mcd->connection), "") == 0);
-    printf("Connected for '%s'\n", name);
+    printf("%s: Connected\n", name);
 
     // We can query information about the platform we're running on
     {
@@ -101,13 +104,13 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
     }
 }
 
-void stop_session(MirDemoState* mcd)
+void stop_session(MirDemoState* mcd, const char* name)
 {
     if (mcd->trust_session)
     {
         mir_trust_session_release(mcd->trust_session);
         mcd->trust_session = 0;
-        puts("Trust session released for 'demo_client_trusted_helper'");
+        printf("%s: Trust session released \n", name);
     }
 
     if (mcd->surface)
@@ -115,22 +118,22 @@ void stop_session(MirDemoState* mcd)
         // We should release our surface
         mir_surface_release_sync(mcd->surface);
         mcd->surface = 0;
-        puts("Surface released for 'demo_client_app2'");
+        printf("%s: Surface released\n", name);
     }
 
     // We should release our connection
     mir_connection_release(mcd->connection);
-    puts("Connection released for 'demo_client_trusted_helper'");
+    printf("%s: Connection released\n", name);
 }
 
-void demo_client_trusted_helper(const char* server, pid_t child_pid)
+void trusted_helper(const char* server, pid_t child_pid)
 {
     MirDemoState mcd;
     mcd.connection = 0;
     mcd.surface = 0;
     mcd.trust_session = 0;
     mcd.child_pid = child_pid;
-    start_session(server, "demo_client_trust_session_trusted_helper", &mcd);
+    start_session(server, "trusted_helper", &mcd);
 
     // We create a trust session
     mcd.trust_session = mir_connection_create_trust_session(mcd.connection);
@@ -140,32 +143,37 @@ void demo_client_trusted_helper(const char* server, pid_t child_pid)
 
     mir_trust_session_start_sync(mcd.trust_session);
     assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_started);
-    puts("Started Trust Helper for 'demo_client_trusted_helper'");
+    puts("trusted_helper: Started trust session");
 
     // Case where the session is stopped by server.
     mir_trust_session_set_event_callback(mcd.trust_session, trust_session_event_callback, &mcd);
 
     int status;
-    printf("Waiting on child app: %d\n", child_pid);
+    printf("trusted_helper: waiting on child app: %d\n", child_pid);
     waitpid(child_pid, &status, 0);
 
     if (mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_started)
     {
         mir_trust_session_stop_sync(mcd.trust_session);
         assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_stopped);
-        puts("Stopped Trust Helper for 'demo_client_trusted_helper'");
+        puts("trusted_helper: Stopped trust session");
     }
+    else
+    {
+        puts("trusted_helper: Trusted session stoped by server");
+    }
+    puts("trusted_helper: Done");
 
-    stop_session(&mcd);
+    stop_session(&mcd, "trusted_helper");
 }
 
-void demo_client_trust_session_app(const char* server)
+void trust_session_app(const char* server)
 {
     MirDemoState mcd;
     mcd.connection = 0;
     mcd.surface = 0;
     mcd.trust_session = 0;
-    start_session(server, "demo_client_trust_session_app", &mcd);
+    start_session(server, "trust_session_app", &mcd);
 
     // Identify a supported pixel format
     MirPixelFormat pixel_format;
@@ -184,16 +192,14 @@ void demo_client_trust_session_app(const char* server)
     assert(mcd.surface != NULL);
     assert(mir_surface_is_valid(mcd.surface));
     assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
-    puts("Surface created for 'demo_client_trust_session_app'");
+    puts("trust_session_app: Surface created");
 
+    puts("trust_session_app: Press any key to exit");
     // Wait for stdin
-    char buff[1];
-    if (read(STDIN_FILENO, &buff, 1) > 0 )
-    {
-        puts("demo_client_trust_session_app Done");
-    }
+    getchar();
+    puts("trust_session_app: Done");
 
-    stop_session(&mcd);
+    stop_session(&mcd, "trust_session_app");
 }
 
 // The main() function deals with parsing arguments and defaults
@@ -230,12 +236,12 @@ int main(int argc, char* argv[])
 
     if (pid == 0)
     {
-        demo_client_trust_session_app(server);
+        trust_session_app(server);
     }
     else if (pid > 0)
     {
-        printf("demo_client_trusted_helper: this:%d , child:%d\n", getpid(), pid);
-        demo_client_trusted_helper(server, pid);
+        printf("trusted_helper: pid:%d , child:%d\n", getpid(), pid);
+        trusted_helper(server, pid);
     }
 
     return 0;
