@@ -22,7 +22,7 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
 
   if(VALGRIND_EXECUTABLE)
-    set(VALGRIND_ARGS "--error-exitcode=1" "--trace-children=yes")
+    set(VALGRIND_ARGS "--error-exitcode=1" "--trace-children=yes --leak-check=full --show-leak-kinds=definite")
     set(VALGRIND_ARGS ${VALGRIND_ARGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
     set(DISCOVER_FLAGS "--enable-memcheck")
     set(DISCOVER_FLAGS ${DISCOVER_FLAGS} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
