@@ -197,7 +197,7 @@ MirWaitHandle* MirConnection::release_surface(
 
 MirTrustSession* MirConnection::create_trust_session()
 {
-    return new MirTrustSession(server, event_distributor);
+    return new MirTrustSession(display_server(), event_distributor);
 }
 
 namespace

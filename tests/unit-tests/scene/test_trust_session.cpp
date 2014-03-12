@@ -100,8 +100,8 @@ TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
 
-    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_started))).Times(1);
-    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_stopped))).Times(1);
+    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
+    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_stopped))).Times(1);
 
     msh::TrustSessionCreationParameters parameters;
     auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),

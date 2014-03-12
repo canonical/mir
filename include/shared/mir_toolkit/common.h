@@ -89,8 +89,8 @@ typedef enum MirPowerMode
 
 typedef enum MirTrustSessionState
 {
-    mir_trust_session_stopped = 0,
-    mir_trust_session_started
+    mir_trust_session_state_stopped = 0,
+    mir_trust_session_state_started
 } MirTrustSessionState;
 
 /**

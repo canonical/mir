@@ -23,11 +23,11 @@ namespace mp = mir::protobuf;
 namespace mcl = mir::client;
 
 MirTrustSession::MirTrustSession(
-    mp::DisplayServer::Stub & server,
+    mp::DisplayServer& server,
     std::shared_ptr<mcl::EventDistributor> const& event_distributor)
     : server(server),
       event_distributor(event_distributor),
-      state(mir_trust_session_stopped)
+      state(mir_trust_session_state_stopped)
 {
     event_distributor_fn_id = event_distributor->register_event_handler(
         [this]
@@ -122,7 +122,7 @@ void MirTrustSession::done_start(mir_trust_session_callback callback, void* cont
     if (session.has_state())
         state.store((MirTrustSessionState)session.state());
     else
-        state.store(mir_trust_session_stopped);
+        state.store(mir_trust_session_state_stopped);
 
     callback(this, context);
     start_wait_handle.result_received();
@@ -130,7 +130,7 @@ void MirTrustSession::done_start(mir_trust_session_callback callback, void* cont
 
 void MirTrustSession::done_stop(mir_trust_session_callback callback, void* context)
 {
-    state.store(mir_trust_session_stopped);
+    state.store(mir_trust_session_state_stopped);
     callback(this, context);
     stop_wait_handle.result_received();
 }

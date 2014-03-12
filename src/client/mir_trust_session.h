@@ -40,7 +40,7 @@ class EventDistributor;
 struct MirTrustSession
 {
 public:
-    MirTrustSession(mir::protobuf::DisplayServer::Stub & server,
+    MirTrustSession(mir::protobuf::DisplayServer& server,
                       std::shared_ptr<mir::client::EventDistributor> const& event_distributor);
 
     ~MirTrustSession();
@@ -65,7 +65,7 @@ private:
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
              race in session, last_buffer_id */
-    mir::protobuf::DisplayServer::Stub & server;
+    mir::protobuf::DisplayServer& server;
     mir::protobuf::TrustSession session;
     mir::protobuf::TrustSessionParameters parameters;
     mir::protobuf::Void protobuf_void;
