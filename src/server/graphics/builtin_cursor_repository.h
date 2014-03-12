@@ -34,7 +34,6 @@ public:
     BuiltinCursorRepository() = default;
     virtual ~BuiltinCursorRepository() = default;
 
-    // TODO: Document
     std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
                                                std::string const& cursor_name);
 

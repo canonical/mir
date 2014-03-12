@@ -29,10 +29,12 @@ namespace graphics
 {
 class CursorImage;
 
+/// CursorRepository is used to lookup cursor images within cursor themes.
 class CursorRepository
 {
 public:
-    // TODO: Document
+    /// Looks up the image for a named cursor in a given cursor theme. Cursor names
+    /// follow the XCursor naming conventions.
     virtual std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
                                                        std::string const& cursor_name) = 0;
 
