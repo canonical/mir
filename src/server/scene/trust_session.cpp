@@ -22,6 +22,8 @@
 #include "mir/shell/session.h"
 #include "mir/frontend/event_sink.h"
 
+#include <cstring>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -79,10 +81,11 @@ std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<m
         );
     }
 
-    MirEvent start_session;
-    start_session.type = mir_event_type_trust_session_state_change;
-    start_session.trust_session.new_state = trust_session->state;
-    sink->handle_event(start_session);
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_trust_session_state_change;
+    start_event.trust_session.new_state = trust_session->state;
+    sink->handle_event(start_event);
 
     return trust_session;
 }
@@ -104,10 +107,11 @@ void ms::TrustSession::stop()
 
     state = mir_trust_session_state_stopped;
 
-    MirEvent start_session;
-    start_session.type = mir_event_type_trust_session_state_change;
-    start_session.trust_session.new_state = state;
-    event_sink->handle_event(start_session);
+    MirEvent stop_event;
+    memset(&stop_event, 0, sizeof stop_event);
+    stop_event.type = mir_event_type_trust_session_state_change;
+    stop_event.trust_session.new_state = state;
+    event_sink->handle_event(stop_event);
 }
 
 std::vector<pid_t> ms::TrustSession::get_applications() const
