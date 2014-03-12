@@ -247,7 +247,6 @@ public:
     virtual std::shared_ptr<time::Clock> the_clock();
 
 protected:
-    mir::SharedLibrary const* load_library(std::string const& libname);
     std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();

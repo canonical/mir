@@ -36,7 +36,7 @@
 
 namespace mg = mir::graphics;
 
-mir::SharedLibrary const* mir::DefaultServerConfiguration::load_library(std::string const& libname)
+mir::SharedLibrary const* mir::load_library(std::string const& libname)
 {
     // There's no point in loading twice, and it isn't safe to unload...
     static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
@@ -77,7 +77,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = load_library(the_options()->get<std::string>(options::platform_graphics_lib));
+            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
 
             if (!the_options()->is_set(options::host_socket_opt))
             {

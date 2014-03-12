@@ -33,8 +33,6 @@
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
 
-#include <boost/program_options/variables_map.hpp>
-#include <boost/program_options/options_description.hpp>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -125,12 +123,10 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
     return std::make_shared<mga::AndroidPlatform>(nullptr, display_report);
 }
 
-extern "C" void add_platform_options(mo::Configuration& config)
+extern "C" void add_platform_options(mo::PlatformConfiguration& config)
 {
-    static char const hwc_report_opt[] = "hwc-report";
-    static char const hwc_report_default[] = "off";
-    namespace po = boost::program_options;
-    config.add_options()
-        (hwc_report_opt, po::value<std::string>()->default_value(hwc_report_default),
-            "[platform-specific] How to handle the HWC logging report. [{off}]");
+    config.add_option_string(
+        std::string{"hwc-report"},
+        std::string{"[platform-specific] How to handle the HWC logging report. [{off}]"},
+        std::string{"off"});
 }

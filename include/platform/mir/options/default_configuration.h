@@ -36,6 +36,7 @@ public:
     boost::program_options::options_description_easy_init add_options();
 
 private:
+    void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
     std::shared_ptr<options::Option> the_options() const override;
 
@@ -58,20 +59,6 @@ private:
     std::shared_ptr<boost::program_options::options_description> const program_options;
     std::shared_ptr<ProgramOption> mutable options;
     bool mutable parsed;
-};
-
-class GraphicsPlatformConfiguration : public Configuration
-{
-public:
-    GraphicsPlatformConfiguration(
-        std::shared_ptr<Configuration> const&,
-        std::function<mir::SharedLibrary const*(std::string const&)> const& load_library);
-
-    virtual ~GraphicsPlatformConfiguration() = default;
-    std::shared_ptr<options::Option> the_options() const override;
-    boost::program_options::options_description_easy_init add_options();
-private:
-    std::shared_ptr<Configuration> const default_config;
 };
 
 }

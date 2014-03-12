@@ -49,6 +49,8 @@ private:
     SharedLibrary(SharedLibrary const&) = delete;
     SharedLibrary& operator=(SharedLibrary const&) = delete;
 };
+
+SharedLibrary const* load_library(std::string const& libname);
 }
 
 

@@ -48,17 +48,12 @@ namespace msh = mir::shell;
 namespace mi = mir::input;
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
-        DefaultServerConfiguration(
-            std::make_shared<mo::GraphicsPlatformConfiguration>(
-                std::make_shared<mo::DefaultConfiguration>(argc, argv),
-                std::bind(&mir::DefaultServerConfiguration::load_library, this, std::placeholders::_1)))
+        DefaultServerConfiguration(std::make_shared<mo::DefaultConfiguration>(argc, argv))
 {
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
-    configuration_options(
-        std::make_shared<mo::GraphicsPlatformConfiguration>(configuration_options,
-                std::bind(&mir::DefaultServerConfiguration::load_library, this, std::placeholders::_1))),
+    configuration_options(configuration_options),
         default_filter(std::make_shared<mi::VTFilter>())
 {
 }
