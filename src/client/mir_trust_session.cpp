@@ -36,12 +36,12 @@ MirTrustSession::MirTrustSession(
             if (event.type != mir_event_type_trust_session_state_change)
                 return;
 
-            std::lock_guard<std::recursive_mutex> lock(mutex);
+            std::lock_guard<decltype(mutex_event_handler)> lock(mutex_event_handler);
 
+            set_state(event.trust_session.new_state);
             if (handle_trust_session_event) {
                 handle_trust_session_event(event.trust_session.new_state);
             }
-            this->state.store(event.trust_session.new_state);
         }
     );
 }
@@ -53,32 +53,42 @@ MirTrustSession::~MirTrustSession()
 
 MirTrustSessionState MirTrustSession::get_state() const
 {
-    return state.load();
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    return state;
+}
+
+void MirTrustSession::set_state(MirTrustSessionState new_state)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    state = new_state;
 }
 
 MirTrustSessionAddTrustResult MirTrustSession::add_trusted_pid(pid_t pid)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
-    // check for duplicates
-    for (auto i=0; i < parameters.application_size(); i++)
-    {
-        auto const& application = parameters.application(i);
-        if (application.has_pid() && application.pid() == pid)
-        {
+    for (auto it = process_ids.begin(); it != process_ids.end(); ++it) {
+        if (*it == pid)
             return mir_trust_session_pid_already_exists;
-        }
     }
 
-    auto app = parameters.add_application();
-    app->set_pid(pid);
-
+    process_ids.push_back(pid);
     return mir_trust_session_pid_added;
 }
 
 MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    mir::protobuf::TrustSessionParameters parameters;
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        for (auto it = process_ids.begin(); it != process_ids.end(); ++it) {
+            auto app = parameters.add_application();
+            app->set_pid(*it);
+        }
+    }
 
     server.start_trust_session(
         0,
@@ -92,8 +102,6 @@ MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void 
 
 MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     server.stop_trust_session(
         0,
         &protobuf_void,
@@ -106,23 +114,30 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void *
 
 void MirTrustSession::register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context)
 {
+    std::lock_guard<decltype(mutex_event_handler)> lock(mutex_event_handler);
+
     handle_trust_session_event =
         [this, callback, context]
-        (MirTrustSessionState state)
+        (MirTrustSessionState new_state)
         {
-            std::lock_guard<std::recursive_mutex> lock(mutex);
-            callback(this, state, context);
-        }
-    ;
+            callback(this, new_state, context);
+        };
 }
 
 void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
-    set_error_message(session.error());
-    if (session.has_state())
-        state.store((MirTrustSessionState)session.state());
-    else
-        state.store(mir_trust_session_state_stopped);
+    std::string error;
+    MirTrustSessionState new_state = mir_trust_session_state_stopped;
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (session.has_state())
+            new_state = (MirTrustSessionState)session.state();
+
+        error = session.error();
+    }
+    set_error_message(error);
+    set_state(new_state);
 
     callback(this, context);
     start_wait_handle.result_received();
@@ -130,14 +145,15 @@ void MirTrustSession::done_start(mir_trust_session_callback callback, void* cont
 
 void MirTrustSession::done_stop(mir_trust_session_callback callback, void* context)
 {
-    state.store(mir_trust_session_state_stopped);
+    set_state(mir_trust_session_state_stopped);
+
     callback(this, context);
     stop_wait_handle.result_received();
 }
 
 char const * MirTrustSession::get_error_message()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (session.has_error())
     {
@@ -151,7 +167,7 @@ char const * MirTrustSession::get_error_message()
 
 void MirTrustSession::set_error_message(std::string const& error)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     error_message = error;
 }

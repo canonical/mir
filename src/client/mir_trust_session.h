@@ -59,17 +59,17 @@ public:
     void set_error_message(std::string const& error);
 
     MirTrustSessionState get_state() const;
+    void set_state(MirTrustSessionState new_state);
 
 private:
-    mutable std::recursive_mutex mutex; // Protects all members of *this
+    mutable std::mutex mutex; // Protects members of *this
+    mutable std::mutex mutex_event_handler; // Need another mutex for callback access to members
 
-    /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
-             race in session, last_buffer_id */
     mir::protobuf::DisplayServer& server;
     mir::protobuf::TrustSession session;
-    mir::protobuf::TrustSessionParameters parameters;
     mir::protobuf::Void protobuf_void;
     std::string error_message;
+    std::vector<pid_t> process_ids;
 
     std::shared_ptr<mir::client::EventDistributor> const event_distributor;
     std::function<void(MirTrustSessionState)> handle_trust_session_event;
@@ -77,7 +77,7 @@ private:
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
-    std::atomic<MirTrustSessionState> state;
+    MirTrustSessionState state;
 
     void done_start(mir_trust_session_callback callback, void* context);
     void done_stop(mir_trust_session_callback callback, void* context);
