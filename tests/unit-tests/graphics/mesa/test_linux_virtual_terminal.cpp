@@ -518,7 +518,7 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
     sig_handler(SIGUSR1);
 }
 
-TEST_F(LinuxVirtualTerminalTest, DoesNotTryToReaquireSessionLeader)
+TEST_F(LinuxVirtualTerminalTest, does_not_try_to_reaquire_session_leader)
 {
     using namespace testing;
 
@@ -546,7 +546,7 @@ TEST_F(LinuxVirtualTerminalTest, DoesNotTryToReaquireSessionLeader)
     mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
 }
 
-TEST_F(LinuxVirtualTerminalTest, RelinquishesGroupLeaderBeforeClaimingSessionLeader)
+TEST_F(LinuxVirtualTerminalTest, relinquishes_group_leader_before_claiming_session_leader)
 {
     using namespace testing;
 
@@ -585,7 +585,7 @@ TEST_F(LinuxVirtualTerminalTest, RelinquishesGroupLeaderBeforeClaimingSessionLea
     mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
 }
 
-TEST_F(LinuxVirtualTerminalTest, ExceptionIfSettingProcessGroupFails)
+TEST_F(LinuxVirtualTerminalTest, exception_if_setting_process_group_fails)
 {
     using namespace testing;
 
@@ -615,13 +615,12 @@ TEST_F(LinuxVirtualTerminalTest, ExceptionIfSettingProcessGroupFails)
         .Times(1)
         .WillOnce(Return(-1));
 
-
     EXPECT_THROW({
         mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
     }, std::runtime_error);
 }
 
-TEST_F(LinuxVirtualTerminalTest, ExceptionIfBecomingSessionLeaderFails)
+TEST_F(LinuxVirtualTerminalTest, exception_if_becoming_session_leader_fails)
 {
     using namespace testing;
 
