@@ -37,7 +37,7 @@ public:
     void post_update() {}
     bool can_bypass() const override { return false; }
     void render_and_post_update(
-        std::list<std::shared_ptr<graphics::Renderable>> const&,
+        graphics::RenderableList const&,
         std::function<void(graphics::Renderable const&)> const&) {}
     MirOrientation orientation() const override { return mir_orientation_normal; }
 };

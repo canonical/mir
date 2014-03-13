@@ -89,7 +89,7 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
 
 void mga::HwcDevice::render_gl_and_overlays(
     SwappingGLContext const& context,
-    std::list<std::shared_ptr<Renderable>> const& renderables,
+    RenderableList const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
     if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))

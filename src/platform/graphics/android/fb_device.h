@@ -40,7 +40,7 @@ public:
     virtual void render_gl(SwappingGLContext const& context);
     virtual void render_gl_and_overlays(
         SwappingGLContext const& context,
-        std::list<std::shared_ptr<Renderable>> const& list,
+        RenderableList const& list,
         std::function<void(Renderable const&)> const& render_fn);
     void post(Buffer const& buffer);
 
