@@ -82,7 +82,15 @@ endfunction ()
 function (mir_add_memcheck_test)
   if (ENABLE_MEMCHECK_OPTION)
       if(DISABLE_GTEST_TEST_DISCOVERY)
-          ADD_TEST("memcheck-test" "sh" "-c" "${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error; if [ $? != 0 ]; then exit 0; else exit 1; fi")
+	add_custom_target(
+	  memcheck_test ALL
+	)
+	ADD_TEST("memcheck-test" ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
+	add_dependencies(
+	  memcheck_test
+
+	  mir_test_memory_error
+	)
       else()
         add_custom_target(
           memcheck_test ALL
