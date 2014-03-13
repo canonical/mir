@@ -430,7 +430,7 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
                 }
                 catch (std::exception const& x)
                 {
-                    rpc_report->result_processing_failed(result, x);
+                    rpc_report->event_parsing_failed(event);
                     // Eat this exception as it doesn't affect other events
                 }
             }
