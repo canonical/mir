@@ -36,11 +36,12 @@
 
 namespace mgm = mir::graphics::mesa;
 
-mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(
-    std::shared_ptr<VTFileOperations> const& fops,
+mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
+    std::unique_ptr<PosixProcessOperations> pops,
     int vt_number,
     std::shared_ptr<DisplayReport> const& report)
     : fops{fops},
+      pops{std::move(pops)},
       report{report},
       vt_fd{fops, open_vt(vt_number)},
       prev_kd_mode{0},
@@ -233,9 +234,9 @@ int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
     {
         // we should only try to create a new session in order to become the session
         // and group leader if we are not already the session leader
-        if (getpid() != getsid(0))
+        if (pops->getpid() != pops->getsid(0))
         {
-            if (getpid() == getpgid(0) && setpgid(0, getpgid(getppid())) < 0)
+            if (pops->getpid() == pops->getpgid(0) && pops->setpgid(0, pops->getpgid(pops->getppid())) < 0)
             {
                 BOOST_THROW_EXCEPTION(
                     boost::enable_error_info(
@@ -244,7 +245,7 @@ int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
             }
 
             /* become process group leader */
-            if (setsid() < 0)
+            if (pops->setsid() < 0)
             {
                 BOOST_THROW_EXCEPTION(
                     boost::enable_error_info(

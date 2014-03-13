@@ -34,7 +34,6 @@ class Surface;
 namespace options
 {
 class Option;
-class AppendableConfiguration;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and

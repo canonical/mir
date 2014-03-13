@@ -31,7 +31,6 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
-#include "mir/options/configuration.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
