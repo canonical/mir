@@ -27,6 +27,13 @@
     obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
+{
+    ld_stat64
+    Memcheck:Param
+    stat64(file_name)
+    obj:/lib/arm-linux-gnueabihf/ld-2.*.so
+}
+
 # Android libs
 
 {
@@ -96,6 +103,14 @@
     ...
     fun:dlsym
     ...
+}
+
+{
+   dlopen_cond
+   Memcheck:Cond
+   fun:calloc
+   fun:_dl_new_object
+   ...
 }
 
 # mir::SharedLibrary
