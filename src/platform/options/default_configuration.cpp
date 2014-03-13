@@ -144,7 +144,6 @@ void mo::DefaultConfiguration::add_platform_options()
     add_platform_options(*this->program_options);
 }
 
-
 boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()
 {
     if (options)
