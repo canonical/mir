@@ -67,7 +67,7 @@ struct HwcWrapper : public ::testing::Test
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
     std::shared_ptr<MockHwcLogger> const mock_logger;
     hwc_display_contents_1_t *virtual_display;
-    hwc_display_contents_1_t*external_display;
+    hwc_display_contents_1_t *external_display;
     hwc_display_contents_1_t *primary_display;
 };
 
