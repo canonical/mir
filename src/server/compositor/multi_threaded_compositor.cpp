@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -67,7 +67,7 @@ public:
     {
     }
 
-    void operator()()
+    void operator()() noexcept  // noexcept is important! (LP: #1237332)
     {
         std::unique_lock<std::mutex> lock{run_mutex};
 
@@ -90,10 +90,7 @@ public:
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
-            while (!frames_scheduled && running)
-                run_cv.wait(lock);
-
-            frames_scheduled--;
+            run_cv.wait(lock, [&]{ return frames_scheduled || !running; });
 
             /*
              * Check if we are running before compositing, since we may have
@@ -101,9 +98,19 @@ public:
              */
             if (running)
             {
+                frames_scheduled = false;
                 lock.unlock();
-                display_buffer_compositor->composite();
+                auto more_frames_pending = display_buffer_compositor->composite();
+
+                /*
+                 * Each surface could have a number of frames ready in its buffer
+                 * queue. And we need to ensure that we render all of them so that
+                 * none linger in the queue indefinitely (seen as input lag).
+                 * more_frames_pending indicates that there are we need to schedule
+                 * more frames to ensure all surfaces' queues are fully drained.
+                 */
                 lock.lock();
+                frames_scheduled |= more_frames_pending;
             }
         }
     }
@@ -112,15 +119,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
-        /*
-         * Each surface could have a number of frames ready in its buffer
-         * queue. And we need to ensure that we render all of them so that
-         * none linger in the queue indefinitely (seen as input lag). So while
-         * there's no API support for finding out queue lengths, assume the
-         * worst and schedule enough frames to ensure all surfaces' queues
-         * are fully drained.
-         */
-        frames_scheduled = max_client_buffers;
+        frames_scheduled = true;
         run_cv.notify_one();
     }
 
@@ -135,7 +134,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
     bool running;
-    int frames_scheduled;
+    bool frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
@@ -148,18 +147,28 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
-    std::shared_ptr<CompositorReport> const& compositor_report)
+    std::shared_ptr<CompositorReport> const& compositor_report,
+    bool compose_on_start)
     : display{display},
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      started{false}
+      started{false},
+      compose_on_start{compose_on_start}
 {
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 {
     stop();
+}
+
+void mc::MultiThreadedCompositor::schedule_compositing()
+{
+    std::unique_lock<std::mutex> lk(started_guard);
+    report->scheduled();
+    for (auto& f : thread_functors)
+        f->schedule_compositing();
 }
 
 void mc::MultiThreadedCompositor::start()
@@ -185,16 +194,18 @@ void mc::MultiThreadedCompositor::start()
     /* Recomposite whenever the scene changes */
     scene->set_change_callback([this]()
     {
-        report->scheduled();
-        for (auto& f : thread_functors)
-            f->schedule_compositing();
+        schedule_compositing();
     });
 
-    /* First render */
-    for (auto& f : thread_functors)
-        f->schedule_compositing();
-
     started = true;
+
+    /* Optional first render */
+    if (compose_on_start)
+    {
+        lk.unlock();
+        schedule_compositing();
+    }
+
 }
 
 void mc::MultiThreadedCompositor::stop()
@@ -205,7 +216,9 @@ void mc::MultiThreadedCompositor::stop()
         return;
     }
 
+    lk.unlock();
     scene->set_change_callback([]{});
+    lk.lock();
 
     for (auto& f : thread_functors)
         f->stop();
@@ -219,4 +232,8 @@ void mc::MultiThreadedCompositor::stop()
     report->stopped();
 
     started = false;
+
+    // If the compositor is restarted we've likely got clients blocked
+    // so we will need to schedule compositing immediately
+    compose_on_start = true;
 }

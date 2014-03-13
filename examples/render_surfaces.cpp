@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/server_status_listener.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -28,10 +29,12 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
+#include "mir/raii.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -45,8 +48,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -84,6 +85,7 @@ namespace me = mir::examples;
 
 namespace
 {
+std::atomic<bool> created{false};
 bool input_is_on = false;
 std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
@@ -197,7 +199,7 @@ public:
           h{static_cast<float>(s->size().height.as_uint32_t())},
           dx{dx},
           dy{dy},
-          rotation_axis{rotation_axis},
+          rotation_axis(rotation_axis),
           alpha_offset{alpha_offset}
     {
     }
@@ -296,12 +298,17 @@ public:
         class RenderResourcesBufferInitializer : public mg::BufferInitializer
         {
         public:
-            RenderResourcesBufferInitializer()
+            RenderResourcesBufferInitializer(std::unique_ptr<mg::GLContext> gl_context)
+                : gl_context{std::move(gl_context)}
             {
             }
 
             void operator()(mg::Buffer& buffer)
             {
+                auto using_gl_context = mir::raii::paired_calls(
+                    [this] { gl_context->make_current(); },
+                    [this] { gl_context->release_current(); });
+
                 mt::ImageRenderer img_renderer{mir_image.pixel_data,
                                geom::Size{mir_image.width, mir_image.height},
                                mir_image.bytes_per_pixel};
@@ -309,11 +316,40 @@ public:
                 brt.make_current();
                 img_renderer.render();
             }
+
+        private:
+            std::unique_ptr<mg::GLContext> const gl_context;
+
         };
 
-        return std::make_shared<RenderResourcesBufferInitializer>();
+        return std::make_shared<RenderResourcesBufferInitializer>(the_display()->create_gl_context());
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
+
+    // Unless the compositor starts before we create the surfaces it won't respond to
+    // the change notification that causes.
+    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener()
+    {
+        struct ServerStatusListener : mir::ServerStatusListener
+        {
+            ServerStatusListener(std::function<void()> create_surfaces, std::shared_ptr<mir::ServerStatusListener> wrapped) :
+                create_surfaces(create_surfaces), wrapped(wrapped) {}
+
+            virtual void paused() override { wrapped->paused(); }
+            virtual void resumed() override { wrapped->resumed(); }
+            virtual void started() override { wrapped->started(); create_surfaces(); create_surfaces = []{}; }
+
+            std::function<void()> create_surfaces;
+            std::shared_ptr<mir::ServerStatusListener> const wrapped;
+        };
+
+        return server_status_listener(
+            [this]()
+            {
+                auto wrapped = ServerConfiguration::the_server_status_listener();
+                return std::make_shared<ServerStatusListener>([this] { create_surfaces(); }, wrapped);
+            });
+    }
 
     ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
     // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
@@ -331,8 +367,9 @@ public:
             {
             }
 
-            void composite()
+            bool composite()
             {
+                while (!created) std::this_thread::yield();
                 animate_cursor();
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
@@ -349,6 +386,7 @@ public:
                     m.step();
 
                 frames++;
+                return false;
             }
 
         private:
@@ -448,6 +486,8 @@ public:
                     2.0f * M_PI * cos(i));
             ++i;
         }
+
+        created = true;
     }
 
     bool input_is_on()
@@ -481,8 +521,6 @@ try
 
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
-        conf.create_surfaces();
-
         cursor = conf.the_cursor();
 
         input_is_on = conf.input_is_on();

@@ -32,7 +32,6 @@ add_library(
   internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
-  overlapping_output_grouping.cpp
   native_platform.cpp
   anonymous_shm_file.cpp
   shm_buffer.cpp
@@ -54,6 +53,8 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
+install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/mesa)
+
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   add_custom_command(TARGET mirplatformgraphicsmesa
     POST_BUILD
@@ -61,6 +62,11 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa")
     COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirplatformgraphicsmesa> libmirplatformgraphics.so
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
-endif()
 
-install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/mesa)
+  install(CODE
+    "execute_process(
+       COMMAND ln -sf mir/platformgraphics/mesa/libmirplatformgraphics.so
+       WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
+     )"
+  )
+endif()

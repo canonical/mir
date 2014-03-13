@@ -209,35 +209,27 @@ TEST_F(AndroidDisplay, configures_display_buffer)
     mga::AndroidDisplay display(stub_db_factory, mock_display_report);
 
     auto configuration = display.configuration();
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
-        configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index,
-            output.current_format, mir_power_mode_on, output.orientation);
+        output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
-        configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index,
-            output.current_format, mir_power_mode_standby, output.orientation);
+        output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
-        configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index,
-            output.current_format, mir_power_mode_off, output.orientation);
+        output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
     {
-        configuration->configure_output(
-            output.id, output.used, output.top_left, output.current_mode_index,
-            output.current_format, mir_power_mode_suspend, output.orientation);
+        output.power_mode = mir_power_mode_suspend;
     });
     display.configure(*configuration);
 }

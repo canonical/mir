@@ -27,6 +27,8 @@ target_link_libraries(
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 
+install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/mesa)
+
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   add_custom_command(TARGET mirclientplatformmesa
     POST_BUILD
@@ -34,7 +36,12 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa")
     COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirclientplatformmesa> libmirclientplatform.so
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
-endif()
 
-install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/mesa)
+  install(CODE
+    "execute_process(
+       COMMAND ln -sf mir/clientplatform/mesa/libmirclientplatform.so
+       WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
+     )"
+  )
+endif()
 
