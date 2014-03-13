@@ -70,7 +70,7 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_UNIT_TESTS)
-  mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=debug-blocks)
+  mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_UNIT_TESTS)
 
 install(
