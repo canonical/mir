@@ -121,38 +121,6 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
         add_platform_options();
 }
 
-namespace
-{
-class PlatformOptionAdder : public mo::AppendableConfiguration
-{
-public:
-    PlatformOptionAdder(
-        std::shared_ptr<boost::program_options::options_description> const& program_options)
-        : program_options(program_options)
-    {
-    }
-
-    virtual void add_option_int(
-        std::string const& option_name, std::string const& description, int default_value)
-    {
-        namespace po = boost::program_options;
-        program_options->add_options()
-            (option_name.c_str(), po::value<int>()->default_value(default_value), description.c_str());
-    }
-    virtual void add_option_string(
-        std::string const& option_name, std::string const& description, std::string default_value)
-    {
-        namespace po = boost::program_options;
-        program_options->add_options()
-            (option_name.c_str(), po::value<std::string>()->default_value(default_value), description.c_str());
-    }
-
-private:
-    std::shared_ptr<boost::program_options::options_description> const program_options;
-};
-}
-
-//This private fn might be convenient for external implementers of mo::Configuration
 void mo::DefaultConfiguration::add_platform_options()
 {
     std::string graphics_libname;
@@ -173,8 +141,7 @@ void mo::DefaultConfiguration::add_platform_options()
     }
     auto graphics_lib = load_library(graphics_libname);
     auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
-    PlatformOptionAdder adder(this->program_options);
-    add_platform_options(adder);
+    add_platform_options(*this->program_options);
 }
 
 

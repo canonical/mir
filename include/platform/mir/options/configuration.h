@@ -67,21 +67,6 @@ protected:
     Configuration(Configuration const&) = delete;
     Configuration& operator=(Configuration const&) = delete;
 };
-
-class AppendableConfiguration
-{
-public:
-    virtual void add_option_int(
-        std::string const& option_name, std::string const& description, int) = 0;
-    virtual void add_option_string(
-        std::string const& option_name, std::string const& description, std::string) = 0;
-
-protected:
-    AppendableConfiguration() = default;
-    virtual ~AppendableConfiguration() = default;
-    AppendableConfiguration(AppendableConfiguration const&) = delete;
-    AppendableConfiguration& operator=(AppendableConfiguration const&) = delete;
-};
 }
 }
 

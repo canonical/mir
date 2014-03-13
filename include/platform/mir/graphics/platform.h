@@ -22,6 +22,7 @@
 
 #include "basic_platform.h"
 
+#include <boost/program_options/options_description.hpp>
 #include <memory>
 
 namespace mir
@@ -120,8 +121,10 @@ public:
  */
 extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
 extern "C" std::shared_ptr<Platform> create_platform (std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
-extern "C" typedef void(*AddPlatformOptions)(options::AppendableConfiguration& config);
-extern "C" void add_platform_options(options::AppendableConfiguration& config);
+extern "C" typedef void(*AddPlatformOptions)(
+    boost::program_options::options_description& config);
+extern "C" void add_platform_options(
+    boost::program_options::options_description& config);
 }
 }
 
