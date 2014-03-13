@@ -29,7 +29,6 @@
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
-#include <vector>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -75,6 +74,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
+      last_pass_rendered_anything{false},
       local_frameno{global_frameno}
 {
 }
@@ -140,13 +140,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
-        // preserves buffers used in rendering until after post_update()
-        std::vector<std::shared_ptr<void>> saved_resources;
-        auto save_resource = [&](std::shared_ptr<void> const& r)
-        {
-            saved_resources.push_back(r);
-        };
-
         display_buffer.make_current();
 
         auto const& view_area = display_buffer.view_area();
@@ -157,7 +150,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, uncomposited_buffers);
+        mc::RenderingOperator applicator(*renderer, local_frameno);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();
@@ -165,12 +158,12 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.post_update();
 
         // This is a frig to avoid lp:1286190
-        if (size_of_last_pass)
+        if (last_pass_rendered_anything)
         {
-            uncomposited_buffers |= saved_resources.empty();
+            uncomposited_buffers |= applicator.uncomposited_buffers();
         }
 
-        size_of_last_pass = saved_resources.size();
+        last_pass_rendered_anything = applicator.anything_was_rendered();
         // End of frig
     }
 
