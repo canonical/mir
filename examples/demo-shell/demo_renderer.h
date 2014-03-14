@@ -34,6 +34,8 @@ public:
     void tessellate(graphics::Renderable const& renderable,
                     std::vector<Primitive>& primitives) const override;
 
+private:
+    GLuint shadow_tex;
 };
 
 } // namespace examples
