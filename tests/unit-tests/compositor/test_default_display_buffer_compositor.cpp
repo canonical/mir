@@ -16,17 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/server/compositor/default_display_buffer_compositor_factory.h"
+#include "src/server/compositor/default_display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/fake_renderable.h"
 #include "mir_test_doubles/null_display_buffer.h"
@@ -89,110 +87,58 @@ struct FakeScene : mc::Scene
     std::vector<mg::Renderable*> surfaces;
 };
 
-struct WrappingRenderer : mc::Renderer
+struct DefaultDisplayBufferCompositor : public testing::Test
 {
-    WrappingRenderer(mc::Renderer* renderer)
-        : renderer{renderer}
+    DefaultDisplayBufferCompositor()
     {
-    }
-
-    void set_viewport(geom::Rectangle const& rect) override
-    {
-        renderer->set_viewport(rect);
-    }
-
-    void set_rotation(float degrees) override
-    {
-        renderer->set_rotation(degrees);
-    }
-
-    void begin() const override
-    {
-        renderer->begin();
-    }
-
-    void render(mg::Renderable const& renderable, mg::Buffer& buffer) const override
-    {
-        renderer->render(renderable, buffer);
-    }
-
-    void end() const override
-    {
-        renderer->end();
-    }
-
-    void suspend() override
-    {
-        renderer->suspend();
-    }
-
-    mc::Renderer* const renderer;
-};
-
-struct StubRendererFactory : mc::RendererFactory
-{
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
-    {
-        return std::unique_ptr<WrappingRenderer>(
-            new WrappingRenderer{&mock_renderer});
+        using namespace testing;
+        ON_CALL(display_buffer, orientation())
+            .WillByDefault(Return(mir_orientation_normal));
+        ON_CALL(display_buffer, view_area())
+            .WillByDefault(Return(screen));
+        ON_CALL(display_buffer, can_bypass())
+            .WillByDefault(Return(false));
     }
 
     testing::NiceMock<mtd::MockRenderer> mock_renderer;
+    geom::Rectangle screen{{0, 0}, {1366, 768}};
+    mtd::FakeRenderable small{10, 20, 30, 40};
+    mtd::FakeRenderable big{5, 10, 100, 200};
+    mtd::FakeRenderable fullscreen{0, 0, 1366, 768};
+    testing::NiceMock<mtd::MockDisplayBuffer> display_buffer;
 };
-
-ACTION_P(InvokeArgWithParam, param)
-{
-    arg0(param);
 }
 
-}
-
-TEST(DefaultDisplayBufferCompositor, render)
+TEST_F(DefaultDisplayBufferCompositor, render)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
     mtd::MockScene scene;
-    NiceMock<mtd::MockDisplayBuffer> display_buffer;
 
-    ON_CALL(display_buffer, orientation())
-        .WillByDefault(Return(mir_orientation_normal));
-
-    EXPECT_CALL(renderer_factory.mock_renderer, render(_,_)).Times(0);
-
+    EXPECT_CALL(mock_renderer, render(_,_))
+        .Times(0);
     EXPECT_CALL(display_buffer, view_area())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(geom::Rectangle()));
-
+        .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-
-    EXPECT_CALL(display_buffer, post_update())
-            .Times(1);
-
     EXPECT_CALL(scene, for_each_if(_,_))
-                .Times(1);
-
+        .Times(1);
     EXPECT_CALL(scene, reverse_for_each_if(_,_))
         .Times(1);
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(1);
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
+TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
     mtd::NullDisplayBuffer display_buffer;
-
     mtd::MockRenderable mock_renderable1, mock_renderable2, mock_renderable3;
 
     auto buf = std::make_shared<mtd::StubBuffer>();
@@ -228,7 +174,6 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(mock_renderable3, shaped())
         .WillOnce(Return(false));
 
-    geom::Rectangle rect;
     EXPECT_CALL(mock_renderable1, screen_position())
         .WillOnce(Return(geom::Rectangle{{1,2}, {3,4}}));
     EXPECT_CALL(mock_renderable2, screen_position())
@@ -236,64 +181,48 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(mock_renderable3, screen_position())
         .WillOnce(Return(geom::Rectangle{{5,6}, {7,8}}));
 
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&mock_renderable1);
-    renderable_vec.push_back(&mock_renderable2);
-    renderable_vec.push_back(&mock_renderable3);
+    FakeScene scene({
+        &mock_renderable1,
+        &mock_renderable2,
+        &mock_renderable3
+    });
 
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_renderable1),_)).Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_renderable2),_)).Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(mock_renderable3),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable1),_))
+        .Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable2),_))
+        .Times(0);
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable3),_))
+        .Times(1);
 
-    FakeScene scene(renderable_vec);
-
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
+TEST_F(DefaultDisplayBufferCompositor, bypass_skips_composition)
 {
     using namespace testing;
+    ON_CALL(display_buffer, can_bypass())
+        .WillByDefault(Return(true));
 
-    StubRendererFactory renderer_factory;
+    FakeScene scene({
+        &small,
+        &fullscreen
+    });
 
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
-
-    mtd::MockDisplayBuffer display_buffer;
-    EXPECT_CALL(display_buffer, view_area())
-        .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, make_current())
-        .Times(0);
-    EXPECT_CALL(display_buffer, post_update())
-        .Times(0);
-    EXPECT_CALL(display_buffer, can_bypass())
-        .WillRepeatedly(Return(true));
-
-    mtd::FakeRenderable small(10, 20, 30, 40);
-    mtd::FakeRenderable fullscreen(0, 0, 1366, 768);
-
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&small);
-    renderable_vec.push_back(&fullscreen);
-
-    EXPECT_CALL(renderer_factory.mock_renderer, suspend())
+    EXPECT_CALL(mock_renderer, suspend())
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, begin())
+    EXPECT_CALL(mock_renderer, begin())
         .Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
         .Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, end())
+    EXPECT_CALL(mock_renderer, end())
         .Times(0);
-
-    FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     fullscreen.set_buffer(compositor_buffer);
@@ -304,109 +233,74 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     EXPECT_CALL(*report, began_frame(_));
     EXPECT_CALL(*report, finished_frame(true,_));
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         report);
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
+TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
-
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
-
-    mtd::MockDisplayBuffer display_buffer;
-
-    EXPECT_CALL(display_buffer, view_area())
-        .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, can_bypass())
-        .WillRepeatedly(Return(false));
-
-    mtd::FakeRenderable big(5, 10, 100, 200);
-    mtd::FakeRenderable small(10, 20, 30, 40);
-
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&big);
-    renderable_vec.push_back(&small);
+    FakeScene scene({
+        &big,
+        &small
+    });
 
     Sequence render_seq;
-
-    EXPECT_CALL(renderer_factory.mock_renderer, suspend())
+    EXPECT_CALL(mock_renderer, suspend())
         .Times(0);
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(render_seq);
     EXPECT_CALL(display_buffer, orientation())
         .InSequence(render_seq)
         .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(renderer_factory.mock_renderer, set_rotation(_))
+    EXPECT_CALL(mock_renderer, set_rotation(_))
         .InSequence(render_seq);
-    EXPECT_CALL(renderer_factory.mock_renderer, begin())
+    EXPECT_CALL(mock_renderer, begin())
         .InSequence(render_seq);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(big),_))
+    EXPECT_CALL(mock_renderer, render(Ref(big),_))
         .InSequence(render_seq);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .InSequence(render_seq);
-    EXPECT_CALL(renderer_factory.mock_renderer, end())
+    EXPECT_CALL(mock_renderer, end())
         .InSequence(render_seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(render_seq);
-
-    FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
+TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
 {
     using namespace testing;
+    ON_CALL(display_buffer, can_bypass())
+        .WillByDefault(Return(true));
 
-    StubRendererFactory renderer_factory;
+    FakeScene scene({
+        &fullscreen,
+        &small
+    });
 
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
-
-    mtd::MockDisplayBuffer display_buffer;
-    EXPECT_CALL(display_buffer, view_area())
-        .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(display_buffer, orientation())
-        .WillOnce(Return(mir_orientation_normal));
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+        .Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+        .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
-    EXPECT_CALL(display_buffer, can_bypass())
-        .WillRepeatedly(Return(true));
-
-    mtd::FakeRenderable fullscreen(0, 0, 1366, 768);
-    mtd::FakeRenderable small(10, 20, 30, 40);
-
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&fullscreen);
-    renderable_vec.push_back(&small);
-
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
-        .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
-        .Times(1);
-
-    FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
@@ -416,24 +310,17 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     EXPECT_CALL(*report, began_frame(_));
     EXPECT_CALL(*report, finished_frame(false,_));
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         report);
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
+TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
-
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
-
     mtd::MockDisplayBuffer display_buffer;
     EXPECT_CALL(display_buffer, view_area())
         .WillRepeatedly(Return(screen));
@@ -446,41 +333,31 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(false));
 
-    mtd::FakeRenderable small(10, 20, 30, 40);
-    mtd::FakeRenderable fullscreen(0, 0, 1366, 768);
+    FakeScene scene({
+        &small,
+        &fullscreen
+    });
 
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&small);
-    renderable_vec.push_back(&fullscreen);
-
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(0);  // zero due to occlusion detection
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
         .Times(1);
-
-    FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
+TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
-
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
 
     mtd::MockDisplayBuffer display_buffer;
     EXPECT_CALL(display_buffer, view_area())
@@ -494,43 +371,32 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(true));
 
-    mtd::FakeRenderable small(10, 20, 30, 40);
-    mtd::FakeRenderable fullscreen(0, 0, 1366, 768);
+    FakeScene scene({
+        &small,
+        &fullscreen
+    });
 
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&small);
-    renderable_vec.push_back(&fullscreen);
-
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(0);  // zero due to occlusion detection
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
         .Times(1);
-
-    FakeScene scene(renderable_vec);
 
     auto nonbypassable = std::make_shared<mtd::MockBuffer>();
     fullscreen.set_buffer(nonbypassable);
     EXPECT_CALL(*nonbypassable, can_bypass())
         .WillRepeatedly(Return(false));
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
+TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
-
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
-
     mtd::MockDisplayBuffer display_buffer;
     EXPECT_CALL(display_buffer, view_area())
         .WillRepeatedly(Return(screen));
@@ -543,77 +409,65 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(true));
 
-    mtd::FakeRenderable fullscreen(0, 0, 1366, 768);
-    mtd::FakeRenderable small(10, 20, 30, 40);
+    FakeScene scene({
+        &fullscreen,
+        &small
+    });
 
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&fullscreen);
-    renderable_vec.push_back(&small);
-
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
         .Times(1);
-
-    FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
     fullscreen.set_buffer(compositor_buffer);
 
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
-    auto comp = factory.create_compositor_for(display_buffer);
-
     // Frame 1: small window over fullscreen = no bypass
-    comp->composite();
+    compositor.composite();
 
     // Frame 2: fullscreen over small window = bypass
-    renderable_vec.resize(0);
-    renderable_vec.push_back(&small);
-    renderable_vec.push_back(&fullscreen);
-    scene.change(renderable_vec);
+    scene.change({
+        &small,
+        &fullscreen
+    });
     EXPECT_CALL(display_buffer, make_current())
         .Times(0);
     EXPECT_CALL(display_buffer, post_update())
         .Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
         .Times(0);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillOnce(Return(true));
-    comp->composite();
+    compositor.composite();
 
     // Frame 3: only a small window = no bypass
-    renderable_vec.resize(0);
-    renderable_vec.push_back(&small);
-    scene.change(renderable_vec);
+    scene.change({&small});
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(1);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
         .Times(0);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
-    comp->composite();
+    compositor.composite();
 }
 
-TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
+TEST_F(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
 {
     using namespace testing;
-
-    StubRendererFactory renderer_factory;
-
-    geom::Rectangle screen{{0, 0}, {1366, 768}};
-
     mtd::MockDisplayBuffer display_buffer;
     EXPECT_CALL(display_buffer, view_area())
         .WillRepeatedly(Return(screen));
@@ -627,27 +481,20 @@ TEST(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
         .WillRepeatedly(Return(false));
 
     mtd::FakeRenderable large(0, 0, 100, 100);
-    mtd::FakeRenderable small(10, 20, 30, 40);
+    FakeScene scene({
+        &small,
+        &large
+    });
 
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&small);
-    renderable_vec.push_back(&large);
-
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(small),_))
         .Times(0);
-    EXPECT_CALL(renderer_factory.mock_renderer, render(Ref(large),_))
+    EXPECT_CALL(mock_renderer, render(Ref(large),_))
         .Times(1);
 
-    FakeScene scene(renderable_vec);
-
-    mc::DefaultDisplayBufferCompositorFactory factory(
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(scene),
-        mt::fake_shared(renderer_factory),
+        mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-
-    auto comp = factory.create_compositor_for(display_buffer);
-
-    comp->composite();
+    compositor.composite();
 }
-
-
