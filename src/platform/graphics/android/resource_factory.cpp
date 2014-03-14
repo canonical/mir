@@ -94,13 +94,13 @@ namespace
 {
 struct NullHwcLogger : public mga::HwcLogger
 {
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) override
+    void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override
     {
     }
-    void log_prepare_done(hwc_display_contents_1_t const&) override
+    void log_prepare_done(hwc_display_contents_1_t const&) const override
     {
     }
-    void log_set_list(hwc_display_contents_1_t const&) override
+    void log_set_list(hwc_display_contents_1_t const&) const override
     {
     }
 };

@@ -92,11 +92,11 @@ TEST_F(HwcLogger, log_pre_prepare)
 {
     std::stringstream str;
     str << "before prepare():" << std::endl
-        << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending |" << std::endl
-        << " 0 | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     |" << std::endl
-        << " 1 | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  |" << std::endl
-        << " 2 | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE |" << std::endl
-        << " 3 | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     |" << std::endl;
+        << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | " << std::endl
+        << " 0 | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     | " << std::endl
+        << " 1 | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  | " << std::endl
+        << " 2 | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE | " << std::endl
+        << " 3 | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     | " << std::endl;
     mga::HwcFormattedLogger logger;
     logger.log_list_submitted_to_prepare(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
@@ -106,11 +106,11 @@ TEST_F(HwcLogger, log_post_prepare)
 {
     std::stringstream str;
     str << "after prepare():" << std::endl 
-        << " # | Type      |" << std::endl
-        << " 0 | OVERLAY   |" << std::endl
-        << " 1 | GL_RENDER |" << std::endl
-        << " 2 | FORCE_GL  |" << std::endl
-        << " 3 | FB_TARGET |" << std::endl;
+        << " # | Type      | " << std::endl
+        << " 0 | OVERLAY   | " << std::endl
+        << " 1 | GL_RENDER | " << std::endl
+        << " 2 | FORCE_GL  | " << std::endl
+        << " 3 | FB_TARGET | " << std::endl;
     mga::HwcFormattedLogger logger;
     logger.log_prepare_done(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 

@@ -29,9 +29,9 @@ namespace
 {
 struct MockHwcLogger : public mga::HwcLogger
 {
-    MOCK_METHOD1(log_list_submitted_to_prepare, void(hwc_display_contents_1_t const&));
-    MOCK_METHOD1(log_prepare_done, void(hwc_display_contents_1_t const&));
-    MOCK_METHOD1(log_set_list, void(hwc_display_contents_1_t const&));
+    MOCK_CONST_METHOD1(log_list_submitted_to_prepare, void(hwc_display_contents_1_t const&));
+    MOCK_CONST_METHOD1(log_prepare_done, void(hwc_display_contents_1_t const&));
+    MOCK_CONST_METHOD1(log_set_list, void(hwc_display_contents_1_t const&));
 };
 }
 

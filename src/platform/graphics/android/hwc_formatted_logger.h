@@ -30,10 +30,10 @@ namespace android
 class HwcFormattedLogger : public HwcLogger
 {
 public:
-    HwcFormattedLogger();
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) override;
-    void log_prepare_done(hwc_display_contents_1_t const& list) override;
-    void log_set_list(hwc_display_contents_1_t const& list) override;
+    HwcFormattedLogger() = default;
+    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
+    void log_prepare_done(hwc_display_contents_1_t const& list) const override;
+    void log_set_list(hwc_display_contents_1_t const& list) const override;
 };
 }
 }

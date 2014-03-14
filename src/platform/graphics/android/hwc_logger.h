@@ -32,9 +32,9 @@ class HwcLogger
 public:
     virtual ~HwcLogger() = default;
 
-    virtual void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) = 0;
-    virtual void log_prepare_done(hwc_display_contents_1_t const& list) = 0;
-    virtual void log_set_list(hwc_display_contents_1_t const& list) = 0;
+    virtual void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const = 0;
+    virtual void log_prepare_done(hwc_display_contents_1_t const& list) const = 0;
+    virtual void log_set_list(hwc_display_contents_1_t const& list) const = 0;
 protected:
     HwcLogger() = default;
     HwcLogger& operator=(HwcLogger const&) = delete;
