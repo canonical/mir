@@ -25,6 +25,7 @@
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
+#include "mir_test_doubles/mock_scene.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -114,16 +115,6 @@ public:
 private:
     std::function<void()> callback;
     std::mutex callback_mutex;
-};
-
-class MockScene : public mc::Scene
-{
-public:
-    MOCK_METHOD2(for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
-    MOCK_METHOD2(reverse_for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
-    MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
 };
 
 class RecordingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -554,7 +545,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 {
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
-    auto mock_scene = std::make_shared<MockScene>();
+    auto mock_scene = std::make_shared<mtd::MockScene>();
     auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
     EXPECT_CALL(*mock_report, started())
