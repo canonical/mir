@@ -157,10 +157,12 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         display_buffer.post_update();
 
+        uncomposited_buffers |= applicator.uncomposited_buffers();
+
         // This is a frig to avoid lp:1286190
-        if (last_pass_rendered_anything)
+        if (last_pass_rendered_anything && !applicator.anything_was_rendered())
         {
-            uncomposited_buffers |= applicator.uncomposited_buffers();
+            uncomposited_buffers = true;
         }
 
         last_pass_rendered_anything = applicator.anything_was_rendered();
