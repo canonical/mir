@@ -120,13 +120,13 @@ TEST_F(HwcLogger, log_set)
 {
     std::stringstream str;
     str << "set list():" << std::endl
-        << " # | handle"
+        << " # | handle" << std::endl
         << " 0 | " << &native_handle1 << std::endl 
         << " 1 | " << &native_handle2 << std::endl 
         << " 2 | " << &native_handle3 << std::endl 
         << " 3 | " << &native_handle4 << std::endl; 
 
     mga::HwcFormattedLogger logger;
-    logger.log_prepare_done(*display_list);
+    logger.log_set_list(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
