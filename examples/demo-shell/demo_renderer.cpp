@@ -82,6 +82,12 @@ DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     generate_shadow_textures(0.4f, shadow_edge_tex, shadow_corner_tex);
 }
 
+DemoRenderer::~DemoRenderer()
+{
+    glDeleteTextures(1, &shadow_edge_tex);
+    glDeleteTextures(1, &shadow_corner_tex);
+}
+
 void DemoRenderer::begin() const
 {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
