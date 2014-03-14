@@ -33,7 +33,6 @@ class MutableSurfaceState
 public:
     virtual void move_to(geometry::Point const&) = 0;
     virtual bool resize(geometry::Size const& size) = 0;
-    virtual void frame_posted() = 0;
     virtual void set_hidden(bool hidden) = 0;
     virtual void set_alpha(float alpha) = 0;
     virtual void set_rotation(float degrees, glm::vec3 const&) = 0;
