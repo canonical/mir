@@ -102,9 +102,9 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     float radius = 80.0f; // TODO configurable?
 
     auto n = primitives.size();
-    primitives.resize(n + 4);
+    primitives.resize(n + 8);
 
-    auto& right_shadow = primitives[n];
+    auto& right_shadow = primitives[n++];
     right_shadow.tex_id = shadow_edge_tex;
     right_shadow.type = GL_TRIANGLE_FAN;
     right_shadow.vertices.resize(4);
@@ -113,7 +113,7 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     right_shadow.vertices[2] = {{right + radius, bottom, 0.0f}, {1.0f, 1.0f}};
     right_shadow.vertices[3] = {{right,          bottom, 0.0f}, {0.0f, 1.0f}};
 
-    auto& left_shadow = primitives[n+1];
+    auto& left_shadow = primitives[n++];
     left_shadow.tex_id = shadow_edge_tex;
     left_shadow.type = GL_TRIANGLE_FAN;
     left_shadow.vertices.resize(4);
@@ -122,7 +122,7 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     left_shadow.vertices[2] = {{left,          bottom, 0.0f}, {0.0f, 0.0f}};
     left_shadow.vertices[3] = {{left - radius, bottom, 0.0f}, {1.0f, 0.0f}};
 
-    auto& top_shadow = primitives[n+2];
+    auto& top_shadow = primitives[n++];
     top_shadow.tex_id = shadow_edge_tex;
     top_shadow.type = GL_TRIANGLE_FAN;
     top_shadow.vertices.resize(4);
@@ -131,7 +131,7 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     top_shadow.vertices[2] = {{right, top,          0.0f}, {0.0f, 1.0f}};
     top_shadow.vertices[3] = {{left,  top,          0.0f}, {0.0f, 0.0f}};
 
-    auto& bottom_shadow = primitives[n+3];
+    auto& bottom_shadow = primitives[n++];
     bottom_shadow.tex_id = shadow_edge_tex;
     bottom_shadow.type = GL_TRIANGLE_FAN;
     bottom_shadow.vertices.resize(4);
@@ -139,6 +139,42 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     bottom_shadow.vertices[1] = {{right, bottom,          0.0f}, {0.0f, 0.0f}};
     bottom_shadow.vertices[2] = {{right, bottom + radius, 0.0f}, {1.0f, 0.0f}};
     bottom_shadow.vertices[3] = {{left,  bottom + radius, 0.0f}, {1.0f, 1.0f}};
+
+    auto& tr_shadow = primitives[n++];
+    tr_shadow.tex_id = shadow_corner_tex;
+    tr_shadow.type = GL_TRIANGLE_FAN;
+    tr_shadow.vertices.resize(4);
+    tr_shadow.vertices[0] = {{right, top,                   0.0f}, {0.0f, 0.0f}};
+    tr_shadow.vertices[1] = {{right, top - radius,          0.0f}, {1.0f, 0.0f}};
+    tr_shadow.vertices[2] = {{right + radius, top - radius, 0.0f}, {1.0f, 1.0f}};
+    tr_shadow.vertices[3] = {{right + radius, top,          0.0f}, {0.0f, 1.0f}};
+
+    auto& br_shadow = primitives[n++];
+    br_shadow.tex_id = shadow_corner_tex;
+    br_shadow.type = GL_TRIANGLE_FAN;
+    br_shadow.vertices.resize(4);
+    br_shadow.vertices[0] = {{right, bottom,                   0.0f}, {0.0f, 0.0f}};
+    br_shadow.vertices[1] = {{right + radius, bottom,          0.0f}, {1.0f, 0.0f}};
+    br_shadow.vertices[2] = {{right + radius, bottom + radius, 0.0f}, {1.0f, 1.0f}};
+    br_shadow.vertices[3] = {{right, bottom + radius,          0.0f}, {0.0f, 1.0f}};
+
+    auto& bl_shadow = primitives[n++];
+    bl_shadow.tex_id = shadow_corner_tex;
+    bl_shadow.type = GL_TRIANGLE_FAN;
+    bl_shadow.vertices.resize(4);
+    bl_shadow.vertices[0] = {{left, bottom,                   0.0f}, {0.0f, 0.0f}};
+    bl_shadow.vertices[1] = {{left, bottom + radius,          0.0f}, {1.0f, 0.0f}};
+    bl_shadow.vertices[2] = {{left - radius, bottom + radius, 0.0f}, {1.0f, 1.0f}};
+    bl_shadow.vertices[3] = {{left - radius, bottom,          0.0f}, {0.0f, 1.0f}};
+
+    auto& tl_shadow = primitives[n++];
+    tl_shadow.tex_id = shadow_corner_tex;
+    tl_shadow.type = GL_TRIANGLE_FAN;
+    tl_shadow.vertices.resize(4);
+    tl_shadow.vertices[0] = {{left, top,                   0.0f}, {0.0f, 0.0f}};
+    tl_shadow.vertices[1] = {{left - radius, top,          0.0f}, {1.0f, 0.0f}};
+    tl_shadow.vertices[2] = {{left - radius, top - radius, 0.0f}, {1.0f, 1.0f}};
+    tl_shadow.vertices[3] = {{left, top - radius,          0.0f}, {0.0f, 1.0f}};
 
     // Shadows always need blending...
     glEnable(GL_BLEND);
