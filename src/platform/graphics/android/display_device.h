@@ -44,7 +44,7 @@ public:
     virtual void render_gl(SwappingGLContext const& context) = 0;
     virtual void render_gl_and_overlays(
         SwappingGLContext const& context,
-        std::list<std::shared_ptr<Renderable>> const& list,
+        RenderableList const& list,
         std::function<void(Renderable const&)> const& render_fn) = 0;
     virtual void post(Buffer const& buffer) = 0;
     virtual bool apply_orientation(MirOrientation orientation) const = 0;
