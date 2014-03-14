@@ -55,10 +55,30 @@ protected:
     VTFileOperations& operator=(VTFileOperations const&) = delete;
 };
 
+class PosixProcessOperations
+{
+public:
+    virtual ~PosixProcessOperations() = default;
+
+    virtual pid_t getpid() const = 0;
+    virtual pid_t getppid() const = 0;
+    virtual pid_t getpgid(pid_t process) const = 0;
+    virtual pid_t getsid(pid_t process) const = 0;
+
+    virtual int setpgid(pid_t process, pid_t group) = 0;
+    virtual pid_t setsid() = 0;
+
+protected:
+    PosixProcessOperations() = default;
+    PosixProcessOperations(PosixProcessOperations const&) = delete;
+    PosixProcessOperations& operator=(PosixProcessOperations const&) = delete;
+};
+
 class LinuxVirtualTerminal : public VirtualTerminal
 {
 public:
     LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
+                         std::unique_ptr<PosixProcessOperations> pops,
                          int vt_number,
                          std::shared_ptr<DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
@@ -89,6 +109,7 @@ private:
 
 
     std::shared_ptr<VTFileOperations> const fops;
+    std::unique_ptr<PosixProcessOperations> const pops;
     std::shared_ptr<DisplayReport> const report;
     FDWrapper const vt_fd;
     int prev_kd_mode;

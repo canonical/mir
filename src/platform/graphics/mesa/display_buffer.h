@@ -59,7 +59,7 @@ public:
 
     bool can_bypass() const override;
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
-    void render_and_post_update(std::list<std::shared_ptr<Renderable>> const& renderlist,
+    void render_and_post_update(RenderableList const& renderlist,
                                 std::function<void(Renderable const&)> const& render_fn);
     MirOrientation orientation() const override;
     void schedule_set_crtc();

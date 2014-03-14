@@ -17,6 +17,7 @@
  */
 
 #include "platform.h"
+#include "native_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
 #include "internal_client.h"
@@ -86,6 +87,34 @@ struct RealVTFileOperations : public mgm::VTFileOperations
     int tcgetattr(int d, struct termios *tcattr)
     {
         return ::tcgetattr(d, tcattr);
+    }
+};
+
+struct RealPosixProcessOperations : public mgm::PosixProcessOperations
+{
+    pid_t getpid() const override
+    {
+        return ::getpid();
+    }
+    pid_t getppid() const override
+    {
+        return ::getppid();
+    }
+    pid_t getpgid(pid_t process) const override
+    {
+        return ::getpgid(process);
+    }
+    pid_t getsid(pid_t process) const override
+    {
+        return ::getsid(process);
+    }
+    int setpgid(pid_t process, pid_t group) override
+    {
+        return ::setpgid(process, group);
+    }
+    pid_t setsid() override
+    {
+        return ::setsid();
     }
 };
 
@@ -169,8 +198,10 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
         real_fops,
+        std::move(real_pops),
         options->get<int>("vt"), // TODO This option is mesa specific
         report);
 
@@ -179,6 +210,12 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
-    return ((mgm::Platform::internal_display_clients_present) &&
-            (display == mgm::Platform::internal_native_display.get()));
+    bool nested_internal_display_in_use = mgm::NativePlatform::internal_native_display_in_use();
+    bool host_internal_display_in_use = mgm::Platform::internal_display_clients_present;
+
+    if (host_internal_display_in_use)
+        return (display == mgm::Platform::internal_native_display.get());
+    else if (nested_internal_display_in_use)
+        return (display == mgm::NativePlatform::internal_native_display().get());
+    return 0;
 }
