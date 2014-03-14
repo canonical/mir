@@ -91,7 +91,7 @@ struct HwcLogger : public ::testing::Test
 TEST_F(HwcLogger, log_pre_prepare)
 {
     std::stringstream str;
-    str << "Before Prepare():" << std::endl
+    str << "before prepare():" << std::endl
         << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending |" << std::endl
         << " 0 | {   1,   1,   2,   1} | {   3,   2,   5,   3} | ROT_90    | NONE     |" << std::endl
         << " 1 | {   8,   5,  13,   8} | {  21,  13,  34,  21} | ROT_180   | PREMULT  |" << std::endl
@@ -119,7 +119,7 @@ TEST_F(HwcLogger, log_post_prepare)
 TEST_F(HwcLogger, log_set)
 {
     std::stringstream str;
-    str << "Set list():" << std::endl
+    str << "set list():" << std::endl
         << " # | handle"
         << " 0 | " << &native_handle1 << std::endl 
         << " 1 | " << &native_handle2 << std::endl 

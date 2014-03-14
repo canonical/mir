@@ -42,7 +42,6 @@ std::string rotation(int rotation_key)
             return std::string{"ROT_270  "};
         default:
             return std::string{"UNKNOWN"};
-            break;
     }
 }
 
@@ -58,13 +57,30 @@ std::string blending(int blending_key)
             return std::string{"COVERAGE"};
         default:
             return std::string{"UNKNOWN"};
-            break;
+    }
+}
+
+std::string type(int type, int flags)
+{
+    switch(type)
+    {
+        case HWC_OVERLAY:
+            return std::string{"OVERLAY  "};
+        case HWC_FRAMEBUFFER:
+            if (flags == HWC_SKIP_LAYER)
+                return std::string{"FORCE_GL "};
+            else
+                return std::string{"GL_RENDER"};
+        case HWC_FRAMEBUFFER_TARGET:
+            return std::string{"FB_TARGET"};
+        default:
+            return std::string{"UNKNOWN"};
     }
 }
 }
 void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const& list)
 {
-    std::cout << "Before Prepare():" << std::endl
+    std::cout << "before prepare():" << std::endl
               << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending |" << std::endl;
     for(auto i = 0u; i < list.numHwLayers; i++)
     {
@@ -89,7 +105,14 @@ void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents
 
 void mga::HwcFormattedLogger::log_prepare_done(hwc_display_contents_1_t const& list)
 {
-    (void) list;
+    std::cout << "after prepare():" << std::endl
+              << " # | Type      |" << std::endl;
+    for(auto i = 0u; i < list.numHwLayers; i++)
+    {
+        std::cout << std::setw(2) << i << std::setw(0)
+                  << " | " << type(list.hwLayers[i].compositionType,list.hwLayers[i].flags)
+                  << " |" << std::endl;
+    }
 }
 
 void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
