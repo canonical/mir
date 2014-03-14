@@ -31,6 +31,9 @@ class DemoRenderer : public compositor::GLRenderer
 public:
     DemoRenderer(geometry::Rectangle const& display_area);
     void begin() const override;
+    void tessellate(graphics::Renderable const& renderable,
+                    std::vector<Primitive>& primitives) const override;
+
 };
 
 } // namespace examples

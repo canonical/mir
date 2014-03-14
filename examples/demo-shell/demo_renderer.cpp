@@ -31,3 +31,9 @@ void DemoRenderer::begin() const
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
+
+void DemoRenderer::tessellate(graphics::Renderable const& renderable,
+                              std::vector<Primitive>& primitives) const
+{
+    GLRenderer::tessellate(renderable, primitives);
+}
