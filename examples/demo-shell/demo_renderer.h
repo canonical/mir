@@ -35,7 +35,8 @@ public:
                     std::vector<Primitive>& primitives) const override;
 
 private:
-    GLuint shadow_tex;
+    GLuint shadow_edge_tex;
+    GLuint shadow_corner_tex;
 };
 
 } // namespace examples

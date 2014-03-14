@@ -26,29 +26,52 @@ using namespace mir::examples;
 namespace
 {
 
-GLuint generate_shadow_texture(float opacity)
+float shadow_curve(float x)
 {
-    GLuint shadow_tex = 0;
-    const int width = 256;
-    const int height = 1;
-    GLubyte shadow_tex_image[width * 2];
-    GLubyte *px = shadow_tex_image;
-    for (int x = 0; x < width; ++x)
+    return 1.0f - sinf(x * M_PI / 2.0f);
+}
+
+void generate_shadow_textures(float opacity, GLuint& edge, GLuint& corner)
+{
+    typedef struct
     {
-         px[0] = 0;
-         px[1] = opacity * 255.0f * (1.0f - sinf(x * M_PI / (width * 2)));
-         px += 2;
+        GLubyte luminance;
+        GLubyte alpha;
+    } Texel;
+
+    const int width = 256;
+    Texel image[width][width];
+    for (int y = 0; y < width; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            Texel *t = &image[y][x];
+            t->luminance = 0;
+            t->alpha = opacity * 255.0f *
+                shadow_curve((float)x / width) *
+                shadow_curve((float)y / width);
+        }
     }
-    glGenTextures(1, &shadow_tex);
-    glBindTexture(GL_TEXTURE_2D, shadow_tex);
+
+    glGenTextures(1, &edge);
+    glBindTexture(GL_TEXTURE_2D, edge);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                 width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                 shadow_tex_image);
-    return shadow_tex;
+                 width, 1, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                 image);
+
+    glGenTextures(1, &corner);
+    glBindTexture(GL_TEXTURE_2D, corner);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                 width, width, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                 image);
 }
 
 } // namespace
@@ -56,7 +79,7 @@ GLuint generate_shadow_texture(float opacity)
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
-    shadow_tex = generate_shadow_texture(0.4f);
+    generate_shadow_textures(0.4f, shadow_edge_tex, shadow_corner_tex);
 }
 
 void DemoRenderer::begin() const
@@ -82,7 +105,7 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     primitives.resize(n + 4);
 
     auto& right_shadow = primitives[n];
-    right_shadow.tex_id = shadow_tex;
+    right_shadow.tex_id = shadow_edge_tex;
     right_shadow.type = GL_TRIANGLE_FAN;
     right_shadow.vertices.resize(4);
     right_shadow.vertices[0] = {{right,          top,    0.0f}, {0.0f, 0.0f}};
@@ -91,7 +114,7 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     right_shadow.vertices[3] = {{right,          bottom, 0.0f}, {0.0f, 1.0f}};
 
     auto& left_shadow = primitives[n+1];
-    left_shadow.tex_id = shadow_tex;
+    left_shadow.tex_id = shadow_edge_tex;
     left_shadow.type = GL_TRIANGLE_FAN;
     left_shadow.vertices.resize(4);
     left_shadow.vertices[0] = {{left - radius, top,    0.0f}, {1.0f, 1.0f}};
@@ -100,22 +123,22 @@ void DemoRenderer::tessellate(graphics::Renderable const& renderable,
     left_shadow.vertices[3] = {{left - radius, bottom, 0.0f}, {1.0f, 0.0f}};
 
     auto& top_shadow = primitives[n+2];
-    top_shadow.tex_id = shadow_tex;
+    top_shadow.tex_id = shadow_edge_tex;
     top_shadow.type = GL_TRIANGLE_FAN;
     top_shadow.vertices.resize(4);
-    top_shadow.vertices[0] = {{left,  top,          0.0f}, {0.0f, 0.0f}};
-    top_shadow.vertices[1] = {{left,  top - radius, 0.0f}, {1.0f, 0.0f}};
-    top_shadow.vertices[2] = {{right, top - radius, 0.0f}, {1.0f, 1.0f}};
-    top_shadow.vertices[3] = {{right, top,          0.0f}, {0.0f, 1.0f}};
+    top_shadow.vertices[0] = {{left,  top - radius, 0.0f}, {1.0f, 0.0f}};
+    top_shadow.vertices[1] = {{right, top - radius, 0.0f}, {1.0f, 1.0f}};
+    top_shadow.vertices[2] = {{right, top,          0.0f}, {0.0f, 1.0f}};
+    top_shadow.vertices[3] = {{left,  top,          0.0f}, {0.0f, 0.0f}};
 
     auto& bottom_shadow = primitives[n+3];
-    bottom_shadow.tex_id = shadow_tex;
+    bottom_shadow.tex_id = shadow_edge_tex;
     bottom_shadow.type = GL_TRIANGLE_FAN;
     bottom_shadow.vertices.resize(4);
-    bottom_shadow.vertices[0] = {{left,  bottom + radius, 0.0f}, {1.0f, 1.0f}};
-    bottom_shadow.vertices[1] = {{left,  bottom,          0.0f}, {0.0f, 1.0f}};
-    bottom_shadow.vertices[2] = {{right, bottom,          0.0f}, {0.0f, 0.0f}};
-    bottom_shadow.vertices[3] = {{right, bottom + radius, 0.0f}, {1.0f, 0.0f}};
+    bottom_shadow.vertices[0] = {{left,  bottom,          0.0f}, {0.0f, 1.0f}};
+    bottom_shadow.vertices[1] = {{right, bottom,          0.0f}, {0.0f, 0.0f}};
+    bottom_shadow.vertices[2] = {{right, bottom + radius, 0.0f}, {1.0f, 0.0f}};
+    bottom_shadow.vertices[3] = {{left,  bottom + radius, 0.0f}, {1.0f, 1.0f}};
 
     // Shadows always need blending...
     glEnable(GL_BLEND);
