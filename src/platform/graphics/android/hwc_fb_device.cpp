@@ -91,7 +91,7 @@ void mga::HwcFbDevice::render_gl(SwappingGLContext const&)
 
 void mga::HwcFbDevice::render_gl_and_overlays(
     SwappingGLContext const&,
-    std::list<std::shared_ptr<Renderable>> const& renderables,
+    RenderableList const& renderables,
     std::function<void(Renderable const&)> const& render_fn)
 {
     prepare();

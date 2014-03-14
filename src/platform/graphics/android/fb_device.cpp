@@ -51,7 +51,7 @@ void mga::FBDevice::render_gl(SwappingGLContext const& context)
 
 void mga::FBDevice::render_gl_and_overlays(
     SwappingGLContext const& context,
-    std::list<std::shared_ptr<Renderable>> const& renderables,
+    RenderableList const& renderables,
     std::function<void(Renderable const&)> const& render_fn) 
 {
     for(auto const& renderable : renderables)

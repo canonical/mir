@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
+#include "mir_test_doubles/mock_scene.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -46,16 +47,6 @@ namespace mr = mir::report;
 
 namespace
 {
-
-struct MockScene : mc::Scene
-{
-    MOCK_METHOD2(for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
-    MOCK_METHOD2(reverse_for_each_if, void(mc::FilterForScene&,
-                                           mc::OperatorForScene&));
-    MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
-};
 
 struct FakeScene : mc::Scene
 {
@@ -161,7 +152,7 @@ TEST(DefaultDisplayBufferCompositor, render)
     using namespace testing;
 
     StubRendererFactory renderer_factory;
-    MockScene scene;
+    mtd::MockScene scene;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
 
     ON_CALL(display_buffer, orientation())
