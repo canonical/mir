@@ -123,22 +123,25 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
 
 void mo::DefaultConfiguration::add_platform_options()
 {
+    namespace po = boost::program_options;
+    po::options_description program_options;
+    program_options.add_options()
+        (platform_graphics_lib,
+         po::value<std::string>()->default_value(default_platform_graphics_lib), "");
+    mo::ProgramOption options;
+    options.parse_arguments(program_options, argc, argv);
+
     std::string graphics_libname;
-    if (auto libname = getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB"))
+    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
+    if (!options.is_set(platform_graphics_lib) && env_libname)
     {
-        graphics_libname = std::string{libname};
+        graphics_libname = std::string{env_libname};
     }
     else
     {
-        namespace po = boost::program_options;
-        po::options_description program_options;
-        program_options.add_options()
-            (platform_graphics_lib,
-             po::value<std::string>()->default_value(default_platform_graphics_lib), "");
-        mo::ProgramOption options;
-        options.parse_arguments(program_options, argc, argv);
         graphics_libname = options.get<std::string>(platform_graphics_lib);
     }
+
     auto graphics_lib = load_library(graphics_libname);
     auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
     add_platform_options(*this->program_options);
