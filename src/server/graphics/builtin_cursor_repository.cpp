@@ -28,7 +28,7 @@ namespace
 {
 struct BlackArrowCursorImage : public mg::CursorImage
 {
-    void const* raw_argb()
+    void const* as_argb_8888()
     {
         return black_arrow.pixel_data;
     }

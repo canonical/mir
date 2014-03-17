@@ -114,7 +114,7 @@ struct ExampleCursorImage : public mg::CursorImage
         }
     }
     
-    void const* raw_argb()
+    void const* as_argb_8888()
     {
         return image.data();
     }

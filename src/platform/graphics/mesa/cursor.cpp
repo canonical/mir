@@ -99,7 +99,7 @@ void mgm::Cursor::set_image(std::shared_ptr<CursorImage> const& cursor_image)
 
     auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
 
-    if (auto result = gbm_bo_write(buffer, cursor_image->raw_argb(), count))
+    if (auto result = gbm_bo_write(buffer, cursor_image->as_argb_8888(), count))
     {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
