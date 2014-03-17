@@ -58,27 +58,14 @@ struct MockSessionContainer : public ms::SessionContainer
 struct TrustSession : public testing::Test
 {
     TrustSession()
-    : set_parent_count(0)
     {
         container.insert_session(mt::fake_shared(trusted_helper));
         container.insert_session(mt::fake_shared(trusted_app1));
         container.insert_session(mt::fake_shared(trusted_app2));
 
-        ON_CALL(trusted_helper, name()).WillByDefault(testing::Return("trusted_helper"));
-        ON_CALL(trusted_helper, process_id()).WillByDefault(testing::Return(1));
-        ON_CALL(trusted_helper, get_children()).WillByDefault(testing::Return(mt::fake_shared(child_container)));
-
-        ON_CALL(trusted_app1, name()).WillByDefault(testing::Return("trusted_app1"));
-        ON_CALL(trusted_app1, process_id()).WillByDefault(testing::Return(2));
-        ON_CALL(trusted_app1, set_parent(testing::_)).WillByDefault(Invoke(this, &TrustSession::set_parent));
-
-        ON_CALL(trusted_app2, name()).WillByDefault(testing::Return("trusted_app2"));
-        ON_CALL(trusted_app2, process_id()).WillByDefault(testing::Return(3));
-        ON_CALL(trusted_app2, set_parent(testing::_)).WillByDefault(Invoke(this, &TrustSession::set_parent));
-    }
-
-    void set_parent(std::shared_ptr<msh::Session> const&) {
-        set_parent_count++;
+        ON_CALL(trusted_helper, process_id()).WillByDefault(testing::Return(__LINE__));
+        ON_CALL(trusted_app1, process_id()).WillByDefault(testing::Return(__LINE__));
+        ON_CALL(trusted_app2, process_id()).WillByDefault(testing::Return(__LINE__));
     }
 
     ms::DefaultSessionContainer container;
@@ -88,26 +75,26 @@ struct TrustSession : public testing::Test
     testing::NiceMock<mtd::MockShellSession> trusted_helper;
     testing::NiceMock<mtd::MockShellSession> trusted_app1;
     testing::NiceMock<mtd::MockShellSession> trusted_app2;
-    int set_parent_count;
 };
-}
-
-MATCHER_P(EqTrustedEventState, state, "") {
-  return arg.type == mir_event_type_trust_session_state_change && arg.trust_session.new_state == state;
 }
 
 TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
 
-    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
-    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_stopped))).Times(1);
+    auto helper = mt::fake_shared(trusted_helper);
+    auto app1 = mt::fake_shared(trusted_app1);
+    auto app2 = mt::fake_shared(trusted_app2);
+
+    EXPECT_CALL(trusted_helper, begin_trust_session(_, ElementsAre(app1, app2))).Times(1);
+    EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
 
     msh::TrustSessionCreationParameters parameters;
-    auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
-                                                      parameters,
-                                                      mt::fake_shared(container),
-                                                      mt::fake_shared(sender));
+    auto trust_session = ms::TrustSession::start_for(helper,
+                                                      parameters.add_application(trusted_app1.process_id())
+                                                                .add_application(trusted_app2.process_id()),
+                                                      mt::fake_shared(container));
+
     trust_session->stop();
 }
 
@@ -118,40 +105,18 @@ TEST_F(TrustSession, multi_trust_sessions)
     msh::TrustSessionCreationParameters parameters;
     auto trust_session1 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
-                                                      mt::fake_shared(container),
-                                                      mt::fake_shared(sender));
+                                                      mt::fake_shared(container));
 
     auto trust_session2 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
-                                                      mt::fake_shared(container),
-                                                      mt::fake_shared(sender));
+                                                      mt::fake_shared(container));
 
     auto trust_session3 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
                                                       parameters,
-                                                      mt::fake_shared(container),
-                                                      mt::fake_shared(sender));
+                                                      mt::fake_shared(container));
 
     EXPECT_THAT(trust_session1, Ne(std::shared_ptr<mf::TrustSession>()));
     EXPECT_THAT(trust_session2, Ne(std::shared_ptr<mf::TrustSession>()));
     EXPECT_THAT(trust_session3, Ne(std::shared_ptr<mf::TrustSession>()));
-}
-
-TEST_F(TrustSession, parenting)
-{
-    using namespace testing;
-
-    EXPECT_CALL(trusted_app1, set_parent(_)).Times(1);
-    EXPECT_CALL(trusted_app2, set_parent(_)).Times(1);
-    EXPECT_CALL(child_container, insert_session(_)).Times(2);
-
-    msh::TrustSessionCreationParameters parameters;
-    auto trust_session = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
-                                                      parameters.add_application(trusted_app1.process_id())
-                                                                .add_application(trusted_app2.process_id()),
-                                                      mt::fake_shared(container),
-                                                      mt::fake_shared(sender));
-
-    EXPECT_CALL(child_container, clear()).Times(1);
-    trust_session->stop();
 }
 

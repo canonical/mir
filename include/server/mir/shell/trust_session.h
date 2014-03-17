@@ -33,7 +33,7 @@ class Session;
 class TrustSession : public frontend::TrustSession
 {
 public:
-    virtual std::shared_ptr<shell::Session> get_trusted_helper() const = 0;
+    virtual std::weak_ptr<shell::Session> get_trusted_helper() const = 0;
     virtual void add_child_session(std::shared_ptr<shell::Session> const& session) = 0;
 };
 

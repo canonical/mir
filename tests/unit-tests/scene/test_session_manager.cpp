@@ -93,6 +93,7 @@ struct SessionManagerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     msh::NullSessionListener session_listener;
+    mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager;
 };
@@ -108,7 +109,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     EXPECT_CALL(focus_setter, set_focus_to(_));
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session_manager.close_session(session);
 }
 
@@ -130,7 +131,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session->create_surface(msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
@@ -144,7 +145,7 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     EXPECT_EQ(session, new_session);
 }
 
@@ -154,7 +155,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
         Return(std::make_shared<ms::SurfaceImpl>(
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
-           msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
+           msh::a_surface(),mf::SurfaceId{}, mt::fake_shared(event_sink))));
 
     // Once for session creation and once for surface creation
     {
@@ -165,7 +166,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
-    auto session1 = session_manager.open_session(__LINE__, "Weather Report", std::shared_ptr<mf::EventSink>());
+    auto session1 = session_manager.open_session(__LINE__, "Weather Report", mt::fake_shared(event_sink));
     session_manager.create_surface_for(session1, msh::a_surface());
 }
 
@@ -190,6 +191,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     mtd::MockSessionListener session_listener;
+    mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager;
 };
@@ -204,7 +206,7 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
     EXPECT_CALL(session_listener, stopping(_)).Times(1);
     EXPECT_CALL(session_listener, unfocused()).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
     session_manager.close_session(session);
 }
 
@@ -218,12 +220,12 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_trust
     EXPECT_CALL(session_listener, trust_session_started(_)).Times(1);
     EXPECT_CALL(session_listener, trust_session_stopped(_)).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
 
     std::string error;
     msh::TrustSessionCreationParameters parameters;
 
-    auto trust_session = session_manager.start_trust_session_for(error, session, parameters, std::make_shared<mtd::NullEventSink>());
+    auto trust_session = session_manager.start_trust_session_for(error, session, parameters);
     session_manager.stop_trust_session(trust_session);
 }
 
@@ -248,6 +250,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     MockSessionEventSink session_event_sink;
+    mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager;
 };
@@ -260,8 +263,8 @@ TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifec
 
     EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(2);
 
-    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
-    auto session1 = session_manager.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
+    auto session1 = session_manager.open_session(__LINE__, "Bla", mt::fake_shared(event_sink));
 
     Mock::VerifyAndClearExpectations(&session_event_sink);
 

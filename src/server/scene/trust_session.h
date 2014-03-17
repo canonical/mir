@@ -26,10 +26,6 @@
 
 namespace mir
 {
-namespace frontend
-{
-class EventSink;
-}
 namespace shell
 {
 class TrustSessionCreationParameters;
@@ -42,33 +38,29 @@ class SessionContainer;
 class TrustSession : public shell::TrustSession
 {
 public:
-    TrustSession(std::shared_ptr<shell::Session> const& session,
-                       shell::TrustSessionCreationParameters const& parameters,
-                       std::shared_ptr<frontend::EventSink> const& sink);
+    TrustSession(std::weak_ptr<shell::Session> const& session,
+                 shell::TrustSessionCreationParameters const& parameters);
     virtual ~TrustSession();
 
     std::vector<pid_t> get_applications() const override;
 
     MirTrustSessionState get_state() const override;
-    std::shared_ptr<shell::Session> get_trusted_helper() const override;
+    std::weak_ptr<shell::Session> get_trusted_helper() const override;
     void stop() override;
 
     void add_child_session(std::shared_ptr<shell::Session> const& session) override;
 
     static std::shared_ptr<shell::TrustSession> start_for(std::shared_ptr<shell::Session> const& session,
-                                                            shell::TrustSessionCreationParameters const& parameters,
-                                                            std::shared_ptr<SessionContainer> const& container,
-                                                            std::shared_ptr<frontend::EventSink> const& sink);
+                                                          shell::TrustSessionCreationParameters const& parameters,
+                                                          std::shared_ptr<SessionContainer> const& container);
 
 protected:
     TrustSession(const TrustSession&) = delete;
     TrustSession& operator=(const TrustSession&) = delete;
 
 private:
-    std::shared_ptr<shell::Session> const trusted_helper;
+    std::weak_ptr<shell::Session> const trusted_helper;
     std::vector<pid_t> const applications;
-
-    std::shared_ptr<frontend::EventSink> const event_sink;
 
     MirTrustSessionState state;
 };

@@ -20,21 +20,15 @@
 #include "mir/shell/trust_session_creation_parameters.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/session.h"
-#include "mir/frontend/event_sink.h"
 
-#include <cstring>
-
-namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 ms::TrustSession::TrustSession(
-    std::shared_ptr<msh::Session> const& session,
-    msh::TrustSessionCreationParameters const& parameters,
-    std::shared_ptr<mf::EventSink> const& sink) :
+    std::weak_ptr<msh::Session> const& session,
+    msh::TrustSessionCreationParameters const& parameters) :
     trusted_helper(session),
     applications(parameters.applications),
-    event_sink(sink),
     state(mir_trust_session_state_stopped)
 {
 }
@@ -49,43 +43,34 @@ MirTrustSessionState  ms::TrustSession::get_state() const
     return state;
 }
 
-std::shared_ptr<msh::Session> ms::TrustSession::get_trusted_helper() const
+std::weak_ptr<msh::Session> ms::TrustSession::get_trusted_helper() const
 {
     return trusted_helper;
 }
 
 std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<msh::Session> const& trusted_helper,
-                                                                   msh::TrustSessionCreationParameters const& parameters,
-                                                                   std::shared_ptr<SessionContainer> const& container,
-                                                                   std::shared_ptr<mf::EventSink> const& sink)
+                                                               msh::TrustSessionCreationParameters const& parameters,
+                                                               std::shared_ptr<SessionContainer> const& container)
 {
-    auto const trust_session = std::make_shared<TrustSession>(trusted_helper, parameters, sink);
+    auto const trust_session = std::make_shared<TrustSession>(trusted_helper, parameters);
 
     trust_session->state = mir_trust_session_state_started;
-    trusted_helper->set_trust_session(trust_session);
+
+    std::vector<std::shared_ptr<msh::Session>> added_sessions;
 
     for (pid_t application_pid : trust_session->applications)
     {
-        std::vector<std::shared_ptr<msh::Session>> added_sessions;
-
         container->for_each(
             [&](std::shared_ptr<msh::Session> const& container_session)
             {
                 if (container_session->process_id() == application_pid)
                 {
-                    trust_session->add_child_session(container_session);
-                    container_session->set_trust_session(trust_session);
                     added_sessions.push_back(container_session);
                 }
             }
         );
     }
-
-    MirEvent start_event;
-    memset(&start_event, 0, sizeof start_event);
-    start_event.type = mir_event_type_trust_session_state_change;
-    start_event.trust_session.new_state = trust_session->state;
-    sink->handle_event(start_event);
+    trusted_helper->begin_trust_session(trust_session, added_sessions);
 
     return trust_session;
 }
@@ -95,23 +80,12 @@ void ms::TrustSession::stop()
     if (state == mir_trust_session_state_stopped)
         return;
 
-    trusted_helper->get_children()->for_each(
-        [this](std::shared_ptr<msh::Session> const& child_session)
-        {
-            child_session->set_parent(NULL);
-            child_session->set_trust_session(NULL);
-        }
-    );
-    trusted_helper->get_children()->clear();
-    trusted_helper->set_trust_session(NULL);
-
     state = mir_trust_session_state_stopped;
 
-    MirEvent stop_event;
-    memset(&stop_event, 0, sizeof stop_event);
-    stop_event.type = mir_event_type_trust_session_state_change;
-    stop_event.trust_session.new_state = state;
-    event_sink->handle_event(stop_event);
+    auto helper = trusted_helper.lock();
+    if (helper) {
+        helper->end_trust_session();
+    }
 }
 
 std::vector<pid_t> ms::TrustSession::get_applications() const
@@ -124,6 +98,8 @@ void ms::TrustSession::add_child_session(std::shared_ptr<msh::Session> const& se
     if (state == mir_trust_session_state_stopped)
         return;
 
-    session->set_parent(trusted_helper);
-    trusted_helper->get_children()->insert_session(session);
+    auto helper = trusted_helper.lock();
+    if (helper) {
+        helper->add_trusted_child(session);
+    }
 }

@@ -74,8 +74,7 @@ public:
 
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& error,
                                                   std::shared_ptr<frontend::Session> const& session,
-                                                  shell::TrustSessionCreationParameters const& params,
-                                                  std::shared_ptr<frontend::EventSink> const& sink) override;
+                                                  shell::TrustSessionCreationParameters const& params) override;
     void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
 
 protected:

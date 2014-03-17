@@ -54,12 +54,17 @@ struct MockShellSession : public shell::Session
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
 
+    MOCK_CONST_METHOD0(get_parent, shell::Session*());
+    MOCK_METHOD1(set_parent, void(shell::Session*));
+    MOCK_CONST_METHOD0(get_children, std::shared_ptr<scene::SessionContainer>());
+
     MOCK_CONST_METHOD0(get_trust_session, std::shared_ptr<shell::TrustSession>());
     MOCK_METHOD1(set_trust_session, void(std::shared_ptr<shell::TrustSession> const&));
 
-    MOCK_CONST_METHOD0(get_parent, std::shared_ptr<shell::Session>());
-    MOCK_METHOD1(set_parent, void(std::shared_ptr<shell::Session> const&));
-    MOCK_CONST_METHOD0(get_children, std::shared_ptr<scene::SessionContainer>());
+    MOCK_METHOD2(begin_trust_session, void(std::shared_ptr<shell::TrustSession> const&,
+                                           std::vector<std::shared_ptr<shell::Session>> const&));
+    MOCK_METHOD1(add_trusted_child, void(std::shared_ptr<shell::Session> const&));
+    MOCK_METHOD0(end_trust_session, void());
 };
 
 }
