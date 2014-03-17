@@ -34,10 +34,8 @@ struct BlackArrowCursorImage : public mg::CursorImage
     }
     geom::Size size()
     {
-        return {cursor_width, cursor_height};
+        return { black_arrow.width, black_arrow.height };
     }
-    const int cursor_width = 64;
-    const int cursor_height = 64;
 };
 }
 
