@@ -83,3 +83,8 @@ void mc::BufferStreamSurfaces::allow_framedropping(bool allow)
 {
     buffer_bundle->allow_framedropping(allow);
 }
+
+int mc::BufferStreamSurfaces::buffers_ready_for_compositor() const
+{
+    return buffer_bundle->buffers_ready_for_compositor();
+}

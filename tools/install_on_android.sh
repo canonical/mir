@@ -54,4 +54,4 @@ pushd ${BUILD_DIR} > /dev/null
     adb pull "${RUN_DIR}/mir_integration_tests.xml"
     adb pull "${RUN_DIR}/mir_unit_tests.xml"
 
-popd ${BUILD_DIR} > /dev/null 
+popd > /dev/null 

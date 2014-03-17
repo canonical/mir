@@ -67,9 +67,9 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             return std::make_shared<mi::NullInputConfiguration>();
         }
-        // TODO (default-nested): don't fallback to standalone if host socket is unset in 14.04
-        else if (options->is_set(options::standalone_opt) || !options->is_set(options::host_socket_opt))
+        else if (!options->is_set(options::host_socket_opt))
         {
+            // fallback to standalone if host socket is unset
             return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
                 the_input_region(),

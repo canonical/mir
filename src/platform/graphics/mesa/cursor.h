@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_MESA_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
+#include "mir_toolkit/common.h"
 
 #include <gbm.h>
 #include <memory>
@@ -73,7 +74,7 @@ public:
 
 private:
     enum ForceCursorState { UpdateState, ForceState };
-    void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&)> const& f);
+    void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
 
     KMSOutputContainer& output_container;

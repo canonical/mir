@@ -43,10 +43,11 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* and the depth buffer */
+    auto const buf_size = buffer.size();
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-                          rect.size.width.as_uint32_t(),
-                          rect.size.height.as_uint32_t());
+                          buf_size.width.as_uint32_t(),
+                          buf_size.height.as_uint32_t());
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                               GL_RENDERBUFFER, depth_rbo);
 

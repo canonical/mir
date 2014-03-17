@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <sstream>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -143,6 +144,17 @@ void mga::GLContext::make_current() const
 void mga::GLContext::release_current() const
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
+void mga::GLContext::swap_buffers() const
+{
+    eglGetError();
+    if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
+    {
+        std::stringstream sstream;
+        sstream << "eglSwapBuffers failure: EGL error code " << std::hex << eglGetError();
+        BOOST_THROW_EXCEPTION(std::runtime_error(sstream.str()));
+    }
 }
 
 mga::GLContext::~GLContext()

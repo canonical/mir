@@ -30,6 +30,7 @@
 #include "hwc_layerlist.h"
 #include "hwc_vsync.h"
 #include "android_display.h"
+#include "real_hwc_wrapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -93,7 +94,8 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(hwc_native_device, syncer, file_ops);
+    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device); 
+    return std::make_shared<mga::HwcDevice>(hwc_native_device, wrapper, syncer, file_ops);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(

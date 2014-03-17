@@ -18,6 +18,7 @@
 
 /// \example demo_shell.cpp A simple mir shell
 
+#include "demo_renderer.h"
 #include "window_manager.h"
 #include "fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
@@ -27,6 +28,7 @@
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/compositor/renderer_factory.h"
 
 #include <iostream>
 
@@ -42,8 +44,19 @@ namespace mir
 namespace examples
 {
 
-struct DemoServerConfiguration : mir::examples::ServerConfiguration
+class DemoRendererFactory : public compositor::RendererFactory
 {
+public:
+    std::unique_ptr<compositor::Renderer> create_renderer_for(
+        geometry::Rectangle const& rect) override
+    {
+        return std::unique_ptr<compositor::Renderer>(new DemoRenderer(rect));
+    }
+};
+
+class DemoServerConfiguration : public mir::examples::ServerConfiguration
+{
+public:
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
       : ServerConfiguration([argc, argv]
@@ -82,6 +95,12 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
         return composite_filter;
     }
 
+    std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override
+    {
+        return std::make_shared<DemoRendererFactory>();
+    }
+
+private:
     std::vector<std::shared_ptr<mi::EventFilter>> const filter_list;
 };
 

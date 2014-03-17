@@ -31,23 +31,6 @@ namespace
 
 void null_callback(MirScreencast*, void*) {}
 
-geom::Size mir_output_get_size(MirDisplayOutput const& output)
-{
-    if (output.connected && output.used &&
-        output.current_mode < output.num_modes)
-    {
-        auto& current_mode = output.modes[output.current_mode];
-        return geom::Size{current_mode.horizontal_resolution,
-                          current_mode.vertical_resolution};
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Couldn't get size from invalid output"));
-    }
-}
-
-
 void populate_buffer_package(
     MirBufferPackage& buffer_package,
     mir::protobuf::Buffer const& protobuf_buffer)
@@ -86,24 +69,38 @@ void populate_buffer_package(
 }
 
 MirScreencast::MirScreencast(
-    MirDisplayOutput const& output,
+    geom::Rectangle const& region,
+    geom::Size const& size,
+    MirPixelFormat pixel_format,
     mir::protobuf::DisplayServer& server,
     std::shared_ptr<mcl::EGLNativeWindowFactory> const& egl_native_window_factory,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     mir_screencast_callback callback, void* context)
     : server(server),
-      output_id{output.output_id},
-      output_size{mir_output_get_size(output)},
-      output_format{output.current_format},
+      output_size{size},
+      output_format{pixel_format},
       egl_native_window_factory{egl_native_window_factory},
       buffer_depository{factory, mir::frontend::client_buffer_cache_size}
 {
+    if (output_size.width.as_int()  == 0 ||
+        output_size.height.as_int() == 0 ||
+        region.size.width.as_int()  == 0 ||
+        region.size.height.as_int() == 0 ||
+        pixel_format == mir_pixel_format_invalid)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
+    }
     protobuf_screencast.set_error("Not initialized");
 
     mir::protobuf::ScreencastParameters parameters;
-    parameters.set_output_id(output_id);
+
+    parameters.mutable_region()->set_left(region.top_left.x.as_int());
+    parameters.mutable_region()->set_top(region.top_left.y.as_int());
+    parameters.mutable_region()->set_width(region.size.width.as_uint32_t());
+    parameters.mutable_region()->set_height(region.size.height.as_uint32_t());
     parameters.set_width(output_size.width.as_uint32_t());
     parameters.set_height(output_size.height.as_uint32_t());
+    parameters.set_pixel_format(pixel_format);
 
     server.create_screencast(
         nullptr,
@@ -132,7 +129,7 @@ MirSurfaceParameters MirScreencast::get_parameters() const
         output_size.height.as_int(),
         output_format,
         mir_buffer_usage_hardware,
-        output_id};
+        mir_display_output_id_invalid};
 }
 
 std::shared_ptr<mcl::ClientBuffer> MirScreencast::get_current_buffer()

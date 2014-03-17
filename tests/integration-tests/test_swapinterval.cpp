@@ -19,7 +19,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "src/server/compositor/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
@@ -75,6 +75,7 @@ public:
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
+    int buffers_ready_for_compositor() const override { return 1; }
 
 private:
     int render_operations_fd;

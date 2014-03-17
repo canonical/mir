@@ -28,15 +28,32 @@
 #include <stdexcept>
 #include <vector>
 
+namespace mgm = mir::graphics::mesa;
+namespace geom = mir::geometry;
+
 namespace
 {
 #include "black_arrow.c"
 int const width = black_arrow.width;
 int const height = black_arrow.height;
-}
 
-namespace mgm = mir::graphics::mesa;
-namespace geom = mir::geometry;
+// Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
+geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
+{
+    switch(orientation)
+    {
+    case mir_orientation_left:
+        return {vector.dy.as_int(), rect.size.width.as_int() -vector.dx.as_int()};
+    case mir_orientation_inverted:
+        return {rect.size.width.as_int() -vector.dx.as_int(), rect.size.height.as_int() - vector.dy.as_int()};
+    case mir_orientation_right:
+        return {rect.size.height.as_int() -vector.dy.as_int(), vector.dx.as_int()};
+    default:
+    case mir_orientation_normal:
+        return vector;
+    }
+}
+}
 
 mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
@@ -103,7 +120,7 @@ void mgm::Cursor::hide()
 }
 
 void mgm::Cursor::for_each_used_output(
-    std::function<void(KMSOutput&, geom::Rectangle const&)> const& f)
+    std::function<void(KMSOutput&, geom::Rectangle const&, MirOrientation orientation)> const& f)
 {
     current_configuration->with_current_configuration_do(
         [this,&f](KMSDisplayConfiguration const& kms_conf)
@@ -115,13 +132,7 @@ void mgm::Cursor::for_each_used_output(
                     uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
                     auto output = output_container.get_kms_output_for(connector_id);
 
-                    // TODO: Cursor rotation support (conf_output.extents())
-                    geom::Rectangle output_rect
-                    {
-                        conf_output.top_left,
-                        conf_output.modes[conf_output.current_mode_index].size
-                    };
-                    f(*output, output_rect);
+                    f(*output, conf_output.extents(), conf_output.orientation);
                 }
             });
         });
@@ -131,15 +142,15 @@ void mgm::Cursor::place_cursor_at(
     geometry::Point position,
     ForceCursorState force_state)
 {
-    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect)
+    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
     {
         if (output_rect.contains(position))
         {
-            auto dp = position - output_rect.top_left;
+            auto dp = transform(output_rect, position - output_rect.top_left, orientation);
             output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
-            if (force_state || !output.has_cursor())
+            if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
-                output.set_cursor(buffer);
+                output.set_cursor(buffer);// TODO - select rotated buffer image
             }
         }
         else

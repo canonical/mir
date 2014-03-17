@@ -15,11 +15,12 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gl_renderer.h"
-#include "mir/compositor/compositing_criteria.h"
+#include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 
+#define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -42,9 +43,13 @@ const GLchar* vertex_shader_src =
     "uniform mat4 screen_to_gl_coords;\n"
     "uniform mat4 display_transform;\n"
     "uniform mat4 transform;\n"
+    "uniform vec2 centre;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_Position = display_transform * screen_to_gl_coords * transform * vec4(position, 1.0);\n"
+    "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
+    "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
+    "   transformed.z = 0.0;\n" // avoid clipping while we lack depth/perspective
+    "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
@@ -59,39 +64,6 @@ const GLchar* fragment_shader_src =
     "   vec4 frag = texture2D(tex, v_texcoord);\n"
     "   gl_FragColor = vec4(frag.xyz, frag.a * alpha);\n"
     "}\n"
-};
-
-struct VertexAttributes
-{
-    glm::vec3 position;
-    glm::vec2 texcoord;
-};
-
-/*
- * The texture coordinates are y-inverted to account for the difference in the
- * texture and renderable pixel data row order. In particular, GL textures
- * expect pixel data in rows starting from the bottom and moving up the image,
- * whereas our renderables provide data in rows starting from the top and
- * moving down the image.
- */
-VertexAttributes vertex_attribs[4] =
-{
-    {
-        glm::vec3{-0.5f, -0.5f, 0.0f},
-        glm::vec2{0.0f, 0.0f}
-    },
-    {
-        glm::vec3{-0.5f, 0.5f, 0.0f},
-        glm::vec2{0.0f, 1.0f},
-    },
-    {
-        glm::vec3{0.5f, -0.5f, 0.0f},
-        glm::vec2{1.0f, 0.0f},
-    },
-    {
-        glm::vec3{0.5f, 0.5f, 0.0f},
-        glm::vec2{1.0f, 1.0f}
-    }
 };
 
 typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
@@ -126,9 +98,9 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     program(0),
     position_attr_loc(0),
     texcoord_attr_loc(0),
+    centre_uniform_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    vertex_attribs_vbo(0),
     rotation(NAN) // ensure the first set_rotation succeeds
 {
     /*
@@ -189,15 +161,9 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     alpha_uniform_loc = glGetUniformLocation(program, "alpha");
     position_attr_loc = glGetAttribLocation(program, "position");
     texcoord_attr_loc = glGetAttribLocation(program, "texcoord");
+    centre_uniform_loc = glGetUniformLocation(program, "centre");
 
     glUniform1i(tex_loc, 0);
-
-    /* Create VBO */
-    glGenBuffers(1, &vertex_attribs_vbo);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_attribs),
-            glm::value_ptr(vertex_attribs[0].position), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
@@ -214,17 +180,32 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteShader(fragment_shader);
     if (program)
         glDeleteProgram(program);
-    if (vertex_attribs_vbo)
-        glDeleteBuffers(1, &vertex_attribs_vbo);
     for (auto& t : textures)
         glDeleteTextures(1, &t.second.id);
 }
 
-void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buffer) const
+GLenum mc::GLRenderer::tessellate(graphics::Renderable const& renderable,
+                                  std::vector<Vertex>& vertices) const
+{
+    auto const& rect = renderable.screen_position();
+    GLfloat left = rect.top_left.x.as_int();
+    GLfloat right = left + rect.size.width.as_int();
+    GLfloat top = rect.top_left.y.as_int();
+    GLfloat bottom = top + rect.size.height.as_int();
+
+    vertices.resize(4);
+    vertices[0] = {{left,  top,    0.0f}, {0.0f, 0.0f}};
+    vertices[1] = {{left,  bottom, 0.0f}, {0.0f, 1.0f}};
+    vertices[2] = {{right, top,    0.0f}, {1.0f, 0.0f}};
+    vertices[3] = {{right, bottom, 0.0f}, {1.0f, 1.0f}};
+    return GL_TRIANGLE_STRIP;
+}
+
+void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
 {
     glUseProgram(program);
 
-    if (criteria.shaped() || criteria.alpha() < 1.0f)
+    if (renderable.shaped() || renderable.alpha() < 1.0f)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -235,19 +216,26 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     }
     glActiveTexture(GL_TEXTURE0);
 
+    auto const& rect = renderable.screen_position();
+    GLfloat centrex = rect.top_left.x.as_int() +
+                      rect.size.width.as_int() / 2.0f;
+    GLfloat centrey = rect.top_left.y.as_int() +
+                      rect.size.height.as_int() / 2.0f;
+    glUniform2f(centre_uniform_loc, centrex, centrey);
+
     glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
-                       glm::value_ptr(criteria.transformation()));
-    glUniform1f(alpha_uniform_loc, criteria.alpha());
+                       glm::value_ptr(renderable.transformation()));
+    glUniform1f(alpha_uniform_loc, renderable.alpha());
 
-    /* Set up vertex attribute data */
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_attribs_vbo);
+    std::vector<Vertex> vertices;
+    GLenum draw_mode = tessellate(renderable, vertices);
+   
     glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                          GL_FALSE, sizeof(VertexAttributes), 0);
+                          GL_FALSE, sizeof(Vertex), &vertices[0].position);
     glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                          GL_FALSE, sizeof(VertexAttributes),
-                          reinterpret_cast<void*>(sizeof(glm::vec3)));
+                          GL_FALSE, sizeof(Vertex), &vertices[0].texcoord);
 
-    SurfaceID surf = &criteria; // temporary hack till we rearrange classes
+    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];
     bool changed = true;
     auto const& buf_id = buffer.id();
@@ -273,7 +261,7 @@ void mc::GLRenderer::render(CompositingCriteria const& criteria, mg::Buffer& buf
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(draw_mode, 0, vertices.size());
     glDisableVertexAttribArray(texcoord_attr_loc);
     glDisableVertexAttribArray(position_attr_loc);
 }

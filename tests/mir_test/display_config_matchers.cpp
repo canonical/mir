@@ -176,10 +176,13 @@ public:
             f(output);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t, MirPixelFormat, MirPowerMode,
-                          MirOrientation) override
+    void for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f) override
     {
+        for (auto& output : outputs)
+        {
+            mg::UserDisplayConfigurationOutput user(output);
+            f(user);
+        }
     }
 
 private:

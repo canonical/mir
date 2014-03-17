@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,11 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
-#define MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
+#define MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
 
-#include "mir/compositor/compositing_criteria.h"
-#include <gmock/gmock.h>
+#include <mir/graphics/renderable.h>
 
 namespace mir
 {
@@ -29,17 +28,13 @@ namespace test
 namespace doubles
 {
 
-class MockCompositingCriteria : public compositor::CompositingCriteria
+struct MockRenderFunction
 {
-public:
-    ~MockCompositingCriteria() noexcept {}
-    MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
-    MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const&));
-    MOCK_CONST_METHOD0(shaped, bool());
+    MOCK_METHOD1(called, void(graphics::Renderable const&));
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_ */

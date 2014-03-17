@@ -120,9 +120,13 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
               write(server_tool->pipe.write_fd(), cookie.data(), cookie.size()));
 
     mir::protobuf::ScreencastParameters protobuf_parameters;
-    protobuf_parameters.set_output_id(0);
     protobuf_parameters.set_width(0);
     protobuf_parameters.set_height(0);
+    protobuf_parameters.mutable_region()->set_left(0);
+    protobuf_parameters.mutable_region()->set_top(0);
+    protobuf_parameters.mutable_region()->set_width(0);
+    protobuf_parameters.mutable_region()->set_height(0);
+    protobuf_parameters.set_pixel_format(0);
     mir::protobuf::Screencast protobuf_screencast;
 
     WaitObject wait_rpc;

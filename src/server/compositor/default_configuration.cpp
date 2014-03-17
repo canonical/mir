@@ -25,6 +25,7 @@
 #include "compositing_screencast.h"
 
 #include "mir/frontend/screencast.h"
+#include "mir/options/configuration.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -59,10 +60,12 @@ mir::DefaultServerConfiguration::the_compositor()
     return compositor(
         [this]()
         {
-            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_scene(),
-                                                                 the_display_buffer_compositor_factory(),
-                                                                 the_compositor_report());
+            return std::make_shared<mc::MultiThreadedCompositor>(
+                the_display(),
+                the_scene(),
+                the_display_buffer_compositor_factory(),
+                the_compositor_report(),
+                !the_options()->is_set(options::host_socket_opt));
         });
 }
 

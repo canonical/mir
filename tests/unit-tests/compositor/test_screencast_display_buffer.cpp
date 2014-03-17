@@ -104,6 +104,23 @@ TEST_F(ScreencastDisplayBufferTest, cleans_up_gl_resources_on_construction_failu
     }, std::runtime_error);
 }
 
+TEST_F(ScreencastDisplayBufferTest, sets_render_buffer_size_to_supplied_buffer_size)
+{
+    using namespace testing;
+
+    geom::Rectangle const rect{{100,100}, {800,600}};
+    testing::NiceMock<mtd::MockBuffer> mock_buffer{
+        rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
+
+    /* Set the buffer as rendering target */
+    EXPECT_CALL(mock_gl,
+                glRenderbufferStorage(_, _,
+                           mock_buffer.size().width.as_int(),
+                           mock_buffer.size().height.as_int()));
+
+    mc::ScreencastDisplayBuffer db{rect, mock_buffer};
+}
+
 TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
 {
     using namespace testing;
