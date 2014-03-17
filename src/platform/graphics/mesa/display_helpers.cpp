@@ -219,7 +219,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
         sv.drm_dd_major = -1;     /* Don't care */
         sv.drm_dd_minor = -1;     /* Don't care */
 
-        if ((error = drmSetInterfaceVersion(tmp_fd, &sv)))
+        if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
         {
             close(tmp_fd);
             tmp_fd = -1;
