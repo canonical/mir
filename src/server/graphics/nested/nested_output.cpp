@@ -83,7 +83,7 @@ bool mgn::detail::NestedOutput::can_bypass() const
 }
 
 void mgn::detail::NestedOutput::render_and_post_update(
-    std::list<std::shared_ptr<Renderable>> const&,
+    RenderableList const&,
     std::function<void(Renderable const&)> const&)
 {
 }

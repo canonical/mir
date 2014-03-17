@@ -71,7 +71,7 @@ public:
     MirOrientation orientation() const override;
 
     void render_and_post_update(
-        std::list<std::shared_ptr<Renderable>> const& renderlist,
+        RenderableList const& renderlist,
         std::function<void(Renderable const&)> const& render_fn);
 
 private:

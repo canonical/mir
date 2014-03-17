@@ -22,6 +22,7 @@
 #include <mir/geometry/rectangle.h>
 #include <glm/glm.hpp>
 #include <memory>
+#include <list>
 
 namespace mir
 {
@@ -79,6 +80,9 @@ protected:
     Renderable(Renderable const&) = delete;
     Renderable& operator=(Renderable const&) = delete;
 };
+
+// XXX Would performance be better with a vector?
+typedef std::list<std::shared_ptr<Renderable>> RenderableList;
 
 }
 }
