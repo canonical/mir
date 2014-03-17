@@ -31,94 +31,105 @@ int const rotation_column_size{9};
 int const rect_entry_column_size{4};
 int const type_column_size{9};
 
+class StreamFormatter
+{
+public:
+    StreamFormatter(std::ostream& str, unsigned int const width, std::ios_base::fmtflags flags)
+    : stream(str),
+      old_width(stream.width(width)),
+      old_flags(stream.setf(flags,std::ios::adjustfield))
+    {
+    }
+
+   ~StreamFormatter()
+    {
+        stream.setf(old_flags, std::ios::adjustfield);
+        stream.width(old_width);
+    }
+private:
+    std::ostream& stream;
+    unsigned int const old_width;
+    std::ios_base::fmtflags const old_flags;
+};
+
 struct LayerNumber{ unsigned int const num; };
 std::ostream& operator<<(std::ostream& str, LayerNumber l)
 {
-    return str << std::setw(layer_num_column_size) << l.num % 100 << std::setw(0);
+    StreamFormatter stream_format(str, layer_num_column_size, std::ios_base::right);
+    return str << l.num % 100;
 }
 
 struct HwcRotation{ unsigned int const key; };
 std::ostream& operator<<(std::ostream& str, HwcRotation rotation_key)
 {
-    str << std::setw(rotation_column_size) << std::left;
+    StreamFormatter stream_format(str, rotation_column_size, std::ios_base::left);
     switch(rotation_key.key)
     {
         case 0:
-            str << std::string{"NONE"};
-            break;
+            return str << std::string{"NONE"};
         case HWC_TRANSFORM_ROT_90:
-            str << std::string{"ROT_90"}; 
-            break;
+            return str << std::string{"ROT_90"}; 
         case HWC_TRANSFORM_ROT_180:
-            str << std::string{"ROT_180"}; 
-            break;
+            return str << std::string{"ROT_180"}; 
         case HWC_TRANSFORM_ROT_270:
-            str << std::string{"ROT_270"};
-            break;
+            return str << std::string{"ROT_270"};
         default:
-            str << std::string{"UNKNOWN"};
-            break;
+            return str << std::string{"UNKNOWN"};
     }
-    return str << std::setw(0) << std::right;
 }
 
 struct HwcBlending{ int const key; };
 std::ostream& operator<<(std::ostream& str, HwcBlending blending_key)
 {
-    str << std::setw(blending_column_size) << std::left;
+    StreamFormatter stream_format(str, blending_column_size, std::ios_base::left);
     switch(blending_key.key)
     {
         case HWC_BLENDING_NONE:
-            str << std::string{"NONE"};
-            break;
+            return str << std::string{"NONE"};
         case HWC_BLENDING_PREMULT:
-            str << std::string{"PREMULT"};
-            break;
+            return str << std::string{"PREMULT"};
         case HWC_BLENDING_COVERAGE:
-            str << std::string{"COVERAGE"};
-            break;
+            return str << std::string{"COVERAGE"};
         default:
-            str << std::string{"UNKNOWN"};
-            break;
+            return str << std::string{"UNKNOWN"};
     }
-    return str << std::setw(0) << std::right;
 }
 
 struct HwcType{ int const type; unsigned int const flags; };
 std::ostream& operator<<(std::ostream& str, HwcType type)
 {
-    str << std::setw(type_column_size) << std::left;
+    StreamFormatter stream_format(str, type_column_size, std::ios_base::left);
     switch(type.type)
     {
         case HWC_OVERLAY:
-            str << std::string{"OVERLAY"};
-            break;
+            return str << std::string{"OVERLAY"};
         case HWC_FRAMEBUFFER:
             if (type.flags == HWC_SKIP_LAYER)
-                str << std::string{"FORCE_GL"};
+                return str << std::string{"FORCE_GL"};
             else
-                str << std::string{"GL_RENDER"};
-            break;
+                return str << std::string{"GL_RENDER"};
         case HWC_FRAMEBUFFER_TARGET:
-            str << std::string{"FB_TARGET"};
-            break;
+            return str << std::string{"FB_TARGET"};
         default:
-            str << std::string{"UNKNOWN"};
-            break;
+            return str << std::string{"UNKNOWN"};
     }
-    return str << std::setw(0) << std::right;
+}
+
+struct HwcRectMember { int member; };
+std::ostream& operator<<(std::ostream& str, HwcRectMember rect) 
+{
+    StreamFormatter stream_format(str, rect_entry_column_size, std::ios_base::right);
+    return str << rect.member; 
 }
 
 struct HwcRect { hwc_rect_t const& rect; };
 std::ostream& operator<<(std::ostream& str, HwcRect r)
 {
-    auto rect = r.rect;
     return str << "{"
-               << std::setw(rect_entry_column_size) << rect.left << ","
-               << std::setw(rect_entry_column_size) << rect.top << ","
-               << std::setw(rect_entry_column_size) << rect.right << ","
-               << std::setw(rect_entry_column_size) << rect.bottom << "}"
-               << std::setw(0);
+               << HwcRectMember{r.rect.left} << ","
+               << HwcRectMember{r.rect.top} << ","
+               << HwcRectMember{r.rect.right} << ","
+               << HwcRectMember{r.rect.bottom} << "}";
 }
 }
 
