@@ -24,7 +24,7 @@
 #include "kms_output.h"
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
-#include "overlapping_output_grouping.h"
+#include "mir/graphics/overlapping_output_grouping.h"
 
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
@@ -128,6 +128,12 @@ std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration() const
 
 void mgm::Display::configure(mg::DisplayConfiguration const& conf)
 {
+    if (!conf.valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Invalid or inconsistent display configuration"));
+    }
+
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
 

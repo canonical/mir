@@ -45,46 +45,31 @@ bool mi::NestedInputRelay::handle(MirEvent const& event)
         return false;
     }
 
-    // TODO it isn't obvious what to pass to injectInputEvent()
-    // TODO can reviewers look carefully at these?
-    static auto const injector_pid = 0;
-    static auto const injector_uid = 0;
-    static auto const sync_mode = ::android::INPUT_EVENT_INJECTION_SYNC_NONE;
-    static auto const timeout_millis = 0;
-    static auto const policy_flags = ::android::POLICY_FLAG_INJECTED | ::android::POLICY_FLAG_TRUSTED;
+    static auto const policy_flags = 0;
 
     switch (event.type)
     {
     case mir_event_type_key:
     {
-        ::android::KeyEvent input_event;
+        ::android::NotifyKeyArgs const notify_key_args(
+            event.key.event_time,
+            event.key.device_id,
+            event.key.source_id,
+            policy_flags,
+            event.key.action,
+            event.key.flags,
+            event.key.key_code,
+            event.key.scan_code,
+            event.key.modifiers,
+            event.key.down_time);
 
-        input_event.initialize(
-            event.key.device_id,    //int32_t deviceId,
-            event.key.source_id,    //int32_t source,
-            event.key.action,       //int32_t action,
-            event.key.flags,        //int32_t flags,
-            event.key.key_code,     //int32_t keyCode,
-            event.key.scan_code,    //int32_t scanCode,
-            event.key.modifiers,    //int32_t metaState,
-            event.key.repeat_count, //int32_t repeatCount,
-            event.key.down_time,    //nsecs_t downTime,
-            event.key.event_time);  //nsecs_t eventTime
+        dispatcher->notifyKey(&notify_key_args);
 
-        dispatcher->injectInputEvent(
-            &input_event,   //const InputEvent* event,
-            injector_pid,   //int32_t injectorPid,
-            injector_uid,   //int32_t injectorUid,
-            sync_mode,      //int32_t syncMode,
-            timeout_millis, //int32_t timeoutMillis,
-            policy_flags);  //uint32_t policyFlags
         break;
     }
 
     case mir_event_type_motion:
     {
-        ::android::MotionEvent input_event;
-
         std::vector<::android::PointerProperties> pointer_properties(event.motion.pointer_count);
         std::vector<::android::PointerCoords> pointer_coords(event.motion.pointer_count);
 
@@ -102,31 +87,25 @@ bool mi::NestedInputRelay::handle(MirEvent const& event)
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, event.motion.pointer_coordinates[i].orientation);
         }
 
-        input_event.initialize(
-            event.motion.device_id,     //int32_t deviceId,
-            event.motion.source_id,     //int32_t source,
-            event.motion.action,        //int32_t action,
-            event.motion.flags,         //int32_t flags,
-            event.motion.edge_flags,    //int32_t edgeFlags,
-            event.motion.modifiers,     //int32_t metaState,
-            event.motion.button_state,  //int32_t buttonState,
-            event.motion.x_offset,      //float xOffset,
-            event.motion.y_offset,      //float yOffset,
-            event.motion.x_precision,   //float xPrecision,
-            event.motion.y_precision,   //float yPrecision,
-            event.motion.down_time,     //nsecs_t downTime,
-            event.motion.event_time,    //nsecs_t eventTime,
-            event.motion.pointer_count, //size_t pointerCount,
-            pointer_properties.data(),  //const PointerProperties* pointerProperties,
-            pointer_coords.data());     //const PointerCoords* pointerCoords);
+        ::android::NotifyMotionArgs const notify_motion_args(
+            event.motion.event_time,
+            event.motion.device_id,
+            event.motion.source_id,
+            policy_flags,
+            event.motion.action,
+            event.motion.flags,
+            event.motion.modifiers,
+            event.motion.button_state,
+            event.motion.edge_flags,
+            event.motion.pointer_count,
+            pointer_properties.data(),
+            pointer_coords.data(),
+            event.motion.x_precision,
+            event.motion.y_precision,
+            event.motion.down_time);
 
-        dispatcher->injectInputEvent(
-            &input_event,   //const InputEvent* event,
-            injector_pid,   //int32_t injectorPid,
-            injector_uid,   //int32_t injectorUid,
-            sync_mode,      //int32_t syncMode,
-            timeout_millis, //int32_t timeoutMillis,
-            policy_flags);  //uint32_t policyFlags
+        dispatcher->notifyMotion(&notify_motion_args);
+
         break;
     }
 

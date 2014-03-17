@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
 
+#include "mir_test_doubles/stub_buffer.h"
 #include <mir/graphics/renderable.h>
 #include <memory>
 
@@ -32,9 +33,9 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
-    std::shared_ptr<graphics::Buffer> buffer() const
+    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
     {
-        return {};
+        return std::make_shared<StubBuffer>();
     }
     bool alpha_enabled() const
     {
@@ -44,6 +45,30 @@ public:
     {
         return {{},{}};
     }
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+    glm::mat4 transformation() const override
+    {
+        return trans;
+    }
+    bool should_be_rendered_in(geometry::Rectangle const&) const override
+    {
+        return true;
+    }
+    bool shaped() const override
+    {
+        return false;
+    }
+
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
+
+private:
+    glm::mat4 trans;
 };
 
 }

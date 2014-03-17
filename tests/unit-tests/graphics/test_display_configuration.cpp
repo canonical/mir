@@ -266,3 +266,44 @@ TEST(DisplayConfiguration, output_extents_rotates_with_orientation)
     out.orientation = mir_orientation_right;
     EXPECT_EQ(swapped, out.extents());
 }
+
+TEST(DisplayConfiguration, default_valid)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    EXPECT_TRUE(out.valid());
+}
+
+TEST(DisplayConfiguration, used_and_disconnected_invalid)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    out.used = true;
+    out.connected = false;
+
+    EXPECT_FALSE(out.valid());
+}
+
+TEST(DisplayConfiguration, unsupported_format_invalid)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.current_format = mir_pixel_format_xbgr_8888;
+
+    EXPECT_FALSE(out.valid());
+}
+
+TEST(DisplayConfiguration, unsupported_current_mode_invalid)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.current_mode_index = 123;
+
+    EXPECT_FALSE(out.valid());
+}
+
+TEST(DisplayConfiguration, unsupported_preferred_mode_invalid)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.preferred_mode_index = 456;
+
+    EXPECT_FALSE(out.valid());
+}

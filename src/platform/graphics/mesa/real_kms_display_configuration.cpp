@@ -66,11 +66,6 @@ kms_connector_type_to_output_type(uint32_t connector_type)
     return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
 }
 
-bool format_available_in_pixel_formats(MirPixelFormat format, mg::DisplayConfigurationOutput const& output)
-{
-    return output.pixel_formats.end() != find(output.pixel_formats.begin(), output.pixel_formats.end(), format);
-}
-
 }
 
 mgm::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(int drm_fd)
@@ -112,36 +107,13 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
         f(output);
 }
 
-void mgm::RealKMSDisplayConfiguration::configure_output(
-    DisplayConfigurationOutputId id, bool used,
-    geometry::Point top_left, size_t mode_index,
-    MirPixelFormat format, MirPowerMode power_mode, MirOrientation orientation)
+void mgm::RealKMSDisplayConfiguration::for_each_output(
+    std::function<void(UserDisplayConfigurationOutput&)> f)
 {
-    auto iter = find_output_with_id(id);
-
-    if (iter != outputs.end())
+    for (auto& output : outputs)
     {
-        auto& output = *iter;
-
-        if (used && mode_index >= output.modes.size())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
-
-        if (used && !valid_pixel_format(format))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format for used output"));
-
-        if (used && !format_available_in_pixel_formats(format, output))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Format not available for used output"));
-
-        output.used = used;
-        output.top_left = top_left;
-        output.current_mode_index = mode_index;
-        output.current_format = format;
-        output.power_mode = power_mode;
-        output.orientation = orientation;
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
+        UserDisplayConfigurationOutput user(output);
+        f(user);
     }
 }
 

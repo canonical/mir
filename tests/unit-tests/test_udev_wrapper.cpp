@@ -40,7 +40,9 @@ bool KilledByInvalidMemoryAccess(int exit_status)
 {
     return testing::KilledBySignal(SIGSEGV)(exit_status) ||
            testing::KilledBySignal(SIGBUS)(exit_status) ||
-           testing::KilledBySignal(SIGABRT)(exit_status);
+           testing::KilledBySignal(SIGABRT)(exit_status) ||
+           // It seems that valgrind kills us with SIGKILL
+           testing::KilledBySignal(SIGKILL)(exit_status);
 }
 
 class UdevWrapperTest : public ::testing::Test

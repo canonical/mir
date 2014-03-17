@@ -18,8 +18,8 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_buffer.h"
-#include "src/server/compositor/renderer.h"
-#include "src/server/compositor/renderer_factory.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
@@ -97,7 +97,7 @@ public:
     {
     }
 
-    void render(mc::CompositingCriteria const&, mg::Buffer&) const override
+    void render(mg::Renderable const&, mg::Buffer&) const override
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }

@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_test/draw/patterns.h"
+#include "testdraw/patterns.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>

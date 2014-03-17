@@ -39,7 +39,6 @@ extern char const* const connector_report_opt;
 extern char const* const scene_report_opt;
 extern char const* const input_report_opt;
 extern char const* const host_socket_opt;
-extern char const* const standalone_opt;
 extern char const* const frontend_threads_opt;
 
 extern char const* const name_opt;

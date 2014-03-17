@@ -58,7 +58,7 @@ public:
     void configure(DisplayConfigurationOutput const&);
 
 private:
-    void render_and_post();
+    void post();
 
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
