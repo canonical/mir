@@ -50,8 +50,6 @@
 #include <sstream>
 #include <vector>
 
-#include <assert.h>
-
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
