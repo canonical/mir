@@ -38,7 +38,7 @@ public:
     MOCK_METHOD1(render_gl, void(graphics::android::SwappingGLContext const&));
     MOCK_METHOD3(render_gl_and_overlays, void(
         graphics::android::SwappingGLContext const&,
-        std::list<std::shared_ptr<graphics::Renderable>> const&,
+        graphics::RenderableList const&,
         std::function<void(graphics::Renderable const&)> const&));
     MOCK_METHOD1(post, void(graphics::Buffer const&));
     MOCK_CONST_METHOD1(apply_orientation, bool(MirOrientation));
