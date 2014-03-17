@@ -540,6 +540,9 @@ TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
     wait_handle = connection->release_surface(surface, &surface_callback, nullptr);
     wait_handle->wait_for_all();
 
+    wait_handle = connection->disconnect();
+    wait_handle->wait_for_all();
+
     EXPECT_TRUE(unfocused_received);
 }
 
@@ -573,6 +576,9 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
     surface->set_event_handler(&event_delegate);
 
     wait_handle = connection->release_surface(surface, &surface_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    wait_handle = connection->disconnect();
     wait_handle->wait_for_all();
 
     EXPECT_FALSE(unfocused_received);
