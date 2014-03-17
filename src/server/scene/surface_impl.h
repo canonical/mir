@@ -59,7 +59,7 @@ public:
 
     virtual void force_requests_to_complete();
 
-    virtual std::string name() const;
+    virtual std::string const& name() const;
 
     virtual void move_to(geometry::Point const& top_left);
 
@@ -86,7 +86,7 @@ public:
 
     virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller);
 
-    virtual void resize(geometry::Size const& size);
+    virtual bool resize(geometry::Size const& size);
 
     virtual void set_rotation(float degrees, glm::vec3 const& axis);
 

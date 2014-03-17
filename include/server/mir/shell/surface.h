@@ -37,7 +37,7 @@ class InputTargeter;
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
-    virtual std::string name() const = 0;
+    virtual std::string const& name() const = 0;
     virtual MirSurfaceType type() const = 0;
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
@@ -52,7 +52,7 @@ public:
 
     virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller) = 0;
 
-    virtual void resize(geometry::Size const& size) = 0;
+    virtual bool resize(geometry::Size const& size) = 0;
     virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
 
     virtual float alpha() const = 0;

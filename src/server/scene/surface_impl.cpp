@@ -93,7 +93,7 @@ mir::geometry::Point ms::SurfaceImpl::top_left() const
     return surface->top_left();
 }
 
-std::string ms::SurfaceImpl::name() const
+std::string const& ms::SurfaceImpl::name() const
 {
     return surface->name();
 }
@@ -116,8 +116,7 @@ void ms::SurfaceImpl::allow_framedropping(bool allow)
 void ms::SurfaceImpl::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
-    auto buf = surface->snapshot_buffer();
-    exec(*buf);
+    surface->with_most_recent_buffer_do(exec);
 }
 
 bool ms::SurfaceImpl::supports_input() const
@@ -243,7 +242,7 @@ void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller
     controller->raise(surface);
 }
 
-void ms::SurfaceImpl::resize(geom::Size const& size)
+bool ms::SurfaceImpl::resize(geom::Size const& size)
 {
     if (surface->resize(size))  // if size changed
     {
@@ -254,7 +253,9 @@ void ms::SurfaceImpl::resize(geom::Size const& size)
         e.resize.width = size.width.as_int();
         e.resize.height = size.height.as_int();
         event_sink->handle_event(e);
+        return true;
     }
+    return false;
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
