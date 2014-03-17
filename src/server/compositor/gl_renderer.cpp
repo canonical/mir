@@ -255,6 +255,12 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     if (changed)  // Don't upload a new texture unless the surface has changed
         buffer.bind_to_texture();
 
+    auto const& buf_size = buffer.size();
+    GLfloat tex_scale_u = static_cast<GLfloat>(rect.size.width.as_int()) /
+                          buf_size.width.as_int();
+    GLfloat tex_scale_v = static_cast<GLfloat>(rect.size.height.as_int()) /
+                          buf_size.height.as_int();
+
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
@@ -262,13 +268,21 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     std::vector<Primitive> primitives;
     tessellate(renderable, primitives);
    
-    for (auto const& p : primitives)
+    for (auto& p : primitives)
     {
-        // Note a primitive tex_id of zero means use the surface texture,
-        // which is what you normally want. Other textures could be used
-        // in decorations etc.
-
-        glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : tex.id);
+        if (!p.tex_id) // the main surface texture
+        {
+            for (auto& v : p.vertices)
+            {
+                v.texcoord[0] *= tex_scale_u;
+                v.texcoord[1] *= tex_scale_v;
+            }
+            glBindTexture(GL_TEXTURE_2D, tex.id);
+        }
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, p.tex_id);
+        }
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                               GL_FALSE, sizeof(Vertex),

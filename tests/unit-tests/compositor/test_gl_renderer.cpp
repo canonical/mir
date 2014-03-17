@@ -325,6 +325,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _));
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_buffer, size())
+        .WillOnce(Return(mir::geometry::Size{123, 456}));
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
@@ -372,6 +374,8 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _));
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_buffer, size())
+        .WillOnce(Return(mir::geometry::Size{123, 456}));
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
@@ -388,6 +392,9 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
 {
     mtd::MockBuffer mock_buffer;
+
+    EXPECT_CALL(mock_buffer, size())
+        .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
 
     InSequence seq;
 
