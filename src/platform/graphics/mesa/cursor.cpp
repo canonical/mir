@@ -74,13 +74,13 @@ mgm::Cursor::Cursor(
     gbm_device* gbm,
     KMSOutputContainer& output_container,
     std::shared_ptr<CurrentConfiguration> const& current_configuration,
-    std::shared_ptr<mg::CursorImage> const& image) :
+    std::shared_ptr<mg::CursorImage> const& initial_image) :
         output_container(output_container),
         current_position(),
         buffer(gbm),
         current_configuration(current_configuration)
 {
-    set_image(image, {width, height});
+    set_image(initial_image);
 
     show_at_last_known_position();
 }
@@ -90,14 +90,16 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::set_image(std::shared_ptr<CursorImage> const& cursor_image, geometry::Size size)
+void mgm::Cursor::set_image(std::shared_ptr<CursorImage> const& cursor_image)
 {
+    auto const& size = cursor_image->size();
+
     if (size != geometry::Size{width, height})
         BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
 
     auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
 
-    if (auto result = gbm_bo_write(buffer, cursor_image->raw_argb(size), count))
+    if (auto result = gbm_bo_write(buffer, cursor_image->as_argb_8888(), count))
     {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))

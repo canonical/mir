@@ -50,8 +50,6 @@
 #include <sstream>
 #include <vector>
 
-#include <assert.h>
-
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -116,11 +114,14 @@ struct ExampleCursorImage : public mg::CursorImage
         }
     }
     
-    void const* raw_argb(geom::Size const& size)
+    void const* as_argb_8888()
     {
-        assert(size.width.as_uint32_t() == width);
-        assert(size.width.as_uint32_t() == height);
         return image.data();
+    }
+    
+    geom::Size size()
+    {
+        return geom::Size{width, height};
     }
 
     std::vector<uint32_t> image;
@@ -130,7 +131,7 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
 {
     if (auto cursor = ::cursor.lock())
     {
-        cursor->set_image(std::make_shared<ExampleCursorImage>(bg_color, fg_color), geom::Size{width, height});
+        cursor->set_image(std::make_shared<ExampleCursorImage>(bg_color, fg_color));
     }
 }
 

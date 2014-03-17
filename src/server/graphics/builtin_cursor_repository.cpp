@@ -21,8 +21,6 @@
 
 #include "mir/graphics/cursor_image.h"
 
-#include <assert.h>
-
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -30,21 +28,26 @@ namespace
 {
 struct BlackArrowCursorImage : public mg::CursorImage
 {
-    void const* raw_argb(geom::Size const& size)
+    void const* as_argb_8888()
     {
-        // Builtin cursor does not support resizing atm.
-        assert(size.width.as_uint32_t() == black_arrow.width);
-        assert(size.height.as_uint32_t() == black_arrow.width);
-        assert(black_arrow.bytes_per_pixel == 4);
-        
         return black_arrow.pixel_data;
+    }
+    geom::Size size()
+    {
+        return { black_arrow.width, black_arrow.height };
     }
 };
 }
 
-std::shared_ptr<mg::CursorImage> mg::BuiltinCursorRepository::lookup_cursor(std::string const& /* theme_name */,
-    std::string const& /* cursor_name */)
+mg::BuiltinCursorRepository::BuiltinCursorRepository()
+    : builtin_image(std::make_shared<BlackArrowCursorImage>())
 {
-    // Builtin repository only has one cursor and theme.
-    return std::make_shared<BlackArrowCursorImage>();
+}
+
+std::shared_ptr<mg::CursorImage> mg::BuiltinCursorRepository::lookup_cursor(std::string const& /* theme_name */,
+                                                                            std::string const& /* cursor_name */,
+                                                                            geom::Size const& /* size */)
+{
+    // Builtin repository only has one cursor and theme at a single size.
+    return builtin_image;
 }
