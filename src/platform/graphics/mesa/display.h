@@ -77,7 +77,7 @@ public:
     void pause();
     void resume();
 
-    std::shared_ptr<graphics::Cursor> create_hardware_cursor();
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image);
     std::unique_ptr<GLContext> create_gl_context();
 
 private:

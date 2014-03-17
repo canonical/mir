@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,37 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 
-#ifndef MIR_GRAPHICS_CURSOR_H_
-#define MIR_GRAPHICS_CURSOR_H_
+#ifndef MIR_GRAPHICS_CURSOR_IMAGE_H_
+#define MIR_GRAPHICS_CURSOR_IMAGE_H_
 
 #include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-
-#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-class CursorImage;
-class Cursor
+class CursorImage
 {
 public:
-    virtual void set_image(std::shared_ptr<CursorImage> const& cursor_image, geometry::Size size) = 0;
-    virtual void move_to(geometry::Point position) = 0;
+    virtual void const* raw_argb(geometry::Size const& size) = 0;
 
 protected:
-    Cursor() = default;
-    virtual ~Cursor() = default;
-    Cursor(Cursor const&) = delete;
-    Cursor& operator=(Cursor const&) = delete;
+    CursorImage() = default;
+    virtual ~CursorImage() = default;
+    CursorImage(CursorImage const&) = delete;
+    CursorImage& operator=(CursorImage const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_GRAPHICS_CURSOR_H_ */
+#endif /* MIR_GRAPHICS_CURSOR_IMAGE_H_ */
