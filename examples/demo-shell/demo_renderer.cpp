@@ -26,30 +26,32 @@ using namespace mir::examples;
 namespace
 {
 
-float shadow_curve(float x)
+float penumbra_curve(float x)
 {
-    return 1.0f - sinf(x * M_PI / 2.0f);
+    return 1.0f - std::sin(x * M_PI / 2.0f);
 }
 
 void generate_shadow_textures(float opacity, GLuint& edge, GLuint& corner)
 {
-    typedef struct
+    struct Texel
     {
         GLubyte luminance;
         GLubyte alpha;
-    } Texel;
+    };
 
-    const int width = 256;
+    int const width = 256;
     Texel image[width][width];
+
+    int const max = width - 1;
     for (int y = 0; y < width; ++y)
     {
+        float curve_y = opacity * 255.0f *
+                        penumbra_curve(static_cast<float>(y) / max);
         for (int x = 0; x < width; ++x)
         {
             Texel *t = &image[y][x];
             t->luminance = 0;
-            t->alpha = opacity * 255.0f *
-                shadow_curve((float)x / width) *
-                shadow_curve((float)y / width);
+            t->alpha = curve_y * penumbra_curve(static_cast<float>(x) / max);
         }
     }
 
