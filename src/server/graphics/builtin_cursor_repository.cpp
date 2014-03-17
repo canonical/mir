@@ -21,8 +21,6 @@
 
 #include "mir/graphics/cursor_image.h"
 
-#include <assert.h>
-
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
