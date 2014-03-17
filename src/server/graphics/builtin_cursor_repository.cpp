@@ -39,10 +39,15 @@ struct BlackArrowCursorImage : public mg::CursorImage
 };
 }
 
+mg::BuiltinCursorRepository::BuiltinCursorRepository()
+    : builtin_image(std::make_shared<BlackArrowCursorImage>())
+{
+}
+
 std::shared_ptr<mg::CursorImage> mg::BuiltinCursorRepository::lookup_cursor(std::string const& /* theme_name */,
                                                                             std::string const& /* cursor_name */,
                                                                             geom::Size const& /* size */)
 {
     // Builtin repository only has one cursor and theme at a single size.
-    return std::make_shared<BlackArrowCursorImage>();
+    return builtin_image;
 }

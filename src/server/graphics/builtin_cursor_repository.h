@@ -31,7 +31,7 @@ class CursorImage;
 class BuiltinCursorRepository : public CursorRepository
 {
 public:
-    BuiltinCursorRepository() = default;
+    BuiltinCursorRepository();
     virtual ~BuiltinCursorRepository() = default;
 
     std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
@@ -41,6 +41,9 @@ public:
 protected:
     BuiltinCursorRepository(BuiltinCursorRepository const&) = delete;
     BuiltinCursorRepository& operator=(BuiltinCursorRepository const&) = delete;
+
+private:
+    std::shared_ptr<CursorImage> const builtin_image;
 };
 }
 }
