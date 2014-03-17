@@ -26,6 +26,7 @@
 #define MIR_CLIENT_LTTNG_RPC_REPORT_TP_H_
 
 #include <lttng/tracepoint.h>
+#include <stdint.h>
 
 #ifdef __clang__
 /*
