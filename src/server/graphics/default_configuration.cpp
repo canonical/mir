@@ -130,6 +130,17 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
+std::shared_ptr<mg::Cursor>
+mir::DefaultServerConfiguration::the_cursor()
+{
+    return cursor(
+        [this]() -> std::shared_ptr<mg::Cursor>
+        {
+            // For now we only support a hardware cursor.
+            return the_display()->create_hardware_cursor();
+        });
+}
+
 auto mir::DefaultServerConfiguration::the_host_connection()
 -> std::shared_ptr<graphics::nested::HostConnection>
 {
