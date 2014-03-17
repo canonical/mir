@@ -41,29 +41,37 @@ TEST(RenderingOperator, render_operator_saves_resources)
     mtd::MockRenderable mock_renderable;
     auto stub_buffer0 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(mock_renderable, buffer(frameno))
-        .Times(2)
+        .Times(3)
         .WillOnce(Return(stub_buffer0))
-        .WillOnce(Return(stub_buffer1));
+        .WillOnce(Return(stub_buffer1))
+        .WillOnce(Return(stub_buffer2));
 
     Sequence seq;
     EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer0)))
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer1)))
         .InSequence(seq);
+    EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer2)))
+        .InSequence(seq);
 
     auto use_count_before0 = stub_buffer0.use_count(); 
     auto use_count_before1 = stub_buffer1.use_count(); 
+    auto use_count_before2 = stub_buffer2.use_count(); 
     {
         mc::RenderingOperator rendering_operator(mock_renderer, frameno);
+        rendering_operator(mock_renderable);
         rendering_operator(mock_renderable);
         rendering_operator(mock_renderable);
 
         EXPECT_EQ(use_count_before0 + 1, stub_buffer0.use_count());
         EXPECT_EQ(use_count_before1 + 1, stub_buffer1.use_count());
+        EXPECT_EQ(use_count_before2 + 1, stub_buffer2.use_count());
     }
 
     EXPECT_EQ(use_count_before0, stub_buffer0.use_count());
     EXPECT_EQ(use_count_before1, stub_buffer1.use_count());
+    EXPECT_EQ(use_count_before2, stub_buffer2.use_count());
 }
