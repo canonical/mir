@@ -133,7 +133,7 @@ void generate_frame_textures(GLuint& corner, GLuint& title)
     glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing please
 
     // Reuse the right-hand edge of the corner texture for the titlebar
-    for (int x = 0; x < width - 1; ++x)
+    for (int x = 0; x < width; ++x)
         image[0][x] = image[x][width - 1];
 
     glGenTextures(1, &title);
