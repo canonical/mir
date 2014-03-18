@@ -242,7 +242,7 @@ void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller
     controller->raise(surface);
 }
 
-bool ms::SurfaceImpl::resize(geom::Size const& size)
+void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     if (surface->resize(size))  // if size changed
     {
@@ -253,9 +253,7 @@ bool ms::SurfaceImpl::resize(geom::Size const& size)
         e.resize.width = size.width.as_int();
         e.resize.height = size.height.as_int();
         event_sink->handle_event(e);
-        return true;
     }
-    return false;
 }
 
 void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)

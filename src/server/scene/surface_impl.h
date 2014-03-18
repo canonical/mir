@@ -86,7 +86,7 @@ public:
 
     virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller);
 
-    virtual bool resize(geometry::Size const& size);
+    virtual void resize(geometry::Size const& size);
 
     virtual void set_rotation(float degrees, glm::vec3 const& axis);
 
