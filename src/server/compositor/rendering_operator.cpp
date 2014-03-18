@@ -36,8 +36,8 @@ mc::RenderingOperator::RenderingOperator(
 
 void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
 {
+    uncomposited_buffers |= renderable.buffers_ready_for_compositor() > 1;
     auto compositor_buffer = renderable.buffer(frameno);
     renderer.render(renderable, *compositor_buffer);
     save_resource(compositor_buffer);
-    uncomposited_buffers |= renderable.buffers_ready_for_compositor() > 1;
 }
