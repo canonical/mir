@@ -119,6 +119,10 @@ struct RectangleCompare
     }
 };
 
+void null_surface_callback(MirSurface*, void*)
+{
+}
+
 }
 
 using SurfacesWithOutputId = BespokeDisplayServerTestFixture;
@@ -154,12 +158,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
                     {
                         bool operator()(mg::Renderable const& rend)
                         {
-                            auto const& trans = rend.transformation();
-                            int width = trans[0][0];
-                            int height = trans[1][1];
-                            int x = trans[3][0] - width / 2;
-                            int y = trans[3][1] - height / 2;
-                            rects.push_back({{x, y}, {width, height}});
+                            rects.push_back(rend.screen_position());
                             return false;
                         }
 
@@ -306,6 +305,7 @@ TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 
                 auto surface = mir_connection_create_surface_sync(connection, &request_params);
                 EXPECT_FALSE(mir_surface_is_valid(surface));
+                mir_surface_release(surface, &null_surface_callback, nullptr);
             }
 
             mir_display_config_destroy(config);

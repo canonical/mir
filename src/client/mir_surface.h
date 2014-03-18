@@ -106,8 +106,6 @@ private:
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
     void release_cpu_region();
 
-    /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
-             race in surface, last_buffer_id */
     mir::protobuf::DisplayServer::Stub & server;
     mir::protobuf::Surface surface;
     std::string error_message;

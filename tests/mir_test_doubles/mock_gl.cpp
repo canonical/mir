@@ -123,6 +123,12 @@ void glUniform1f(GLint location, GLfloat x)
     global_mock_gl->glUniform1f(location, x);
 }
 
+void glUniform2f(GLint location, GLfloat x, GLfloat y)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glUniform2f(location, x, y);
+}
+
 void glBindBuffer(GLenum buffer, GLuint name)
 {
     CHECK_GLOBAL_VOID_MOCK();

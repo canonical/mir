@@ -17,3 +17,8 @@ set_target_properties(
   mir_test_memory_error PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/mir_gtest
 )
+
+file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/fail_on_success.sh
+  DESTINATION ${CMAKE_BINARY_DIR}/mir_gtest
+  USE_SOURCE_PERMISSIONS
+)

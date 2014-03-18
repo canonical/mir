@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "overlapping_output_grouping.h"
+#include "mir/graphics/overlapping_output_grouping.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
@@ -25,7 +25,6 @@
 #include <unordered_set>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
 namespace
@@ -33,7 +32,7 @@ namespace
 
 struct DCOutputHash
 {
-    size_t operator()(mg::DisplayConfigurationOutput const& o) const { return o.id.as_value(); };
+    size_t operator()(mg::DisplayConfigurationOutput const& o) const { return o.id.as_value(); }
 };
 
 struct DCOutputEqual
@@ -51,7 +50,7 @@ struct DCOutputEqual
  * OverlappingOutputGroup *
  **************************/
 
-geom::Rectangle mgm::OverlappingOutputGroup::bounding_rectangle() const
+geom::Rectangle mg::OverlappingOutputGroup::bounding_rectangle() const
 {
     geom::Rectangles rectangles;
 
@@ -61,7 +60,7 @@ geom::Rectangle mgm::OverlappingOutputGroup::bounding_rectangle() const
     return rectangles.bounding_rectangle();
 }
 
-void mgm::OverlappingOutputGroup::for_each_output(
+void mg::OverlappingOutputGroup::for_each_output(
     std::function<void(DisplayConfigurationOutput const&)> const& f) const
 {
     for (auto const& output : outputs)
@@ -72,7 +71,7 @@ void mgm::OverlappingOutputGroup::for_each_output(
  * OverlappingOutputGrouping *
  *****************************/
 
-mgm::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration const& conf)
+mg::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration const& conf)
 {
     conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
@@ -85,14 +84,14 @@ mgm::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration c
 
 }
 
-void mgm::OverlappingOutputGrouping::for_each_group(
+void mg::OverlappingOutputGrouping::for_each_group(
     std::function<void(OverlappingOutputGroup const& group)> const& f)
 {
     for (auto const& g : groups)
         f(g);
 }
 
-void mgm::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const& conf_output)
+void mg::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const& conf_output)
 {
     std::vector<size_t> overlapping_groups;
 

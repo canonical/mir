@@ -61,6 +61,7 @@ public:
     MOCK_METHOD3(glDrawArrays, void(GLenum, GLint, GLsizei));
     MOCK_METHOD1(glEnable, void(GLenum));
     MOCK_METHOD1(glEnableVertexAttribArray, void(GLuint));
+    MOCK_METHOD0(glFinish, void());
     MOCK_METHOD4(glFramebufferRenderbuffer,
                  void(GLenum, GLenum, GLenum, GLuint));
     MOCK_METHOD5(glFramebufferTexture2D,
@@ -92,7 +93,8 @@ public:
                  void(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum,
                       GLenum,const GLvoid*));
     MOCK_METHOD3(glTexParameteri, void(GLenum, GLenum, GLenum));
-    MOCK_METHOD2(glUniform1f, void(GLuint, GLfloat));
+    MOCK_METHOD2(glUniform1f, void(GLint, GLfloat));
+    MOCK_METHOD3(glUniform2f, void(GLint, GLfloat, GLfloat));
     MOCK_METHOD2(glUniform1i, void(GLint, GLint));
     MOCK_METHOD4(glUniformMatrix4fv,
                  void(GLuint, GLsizei, GLboolean, const GLfloat *));
@@ -101,7 +103,6 @@ public:
                  void(GLuint, GLint, GLenum, GLboolean, GLsizei,
                       const GLvoid *));
     MOCK_METHOD4(glViewport, void(GLint, GLint, GLsizei, GLsizei));
-    MOCK_METHOD0(glFinish, void());
 };
 
 }

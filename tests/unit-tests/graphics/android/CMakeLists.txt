@@ -24,6 +24,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_interpreter_buffer_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_external_refcount.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_builder.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_wrapper.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

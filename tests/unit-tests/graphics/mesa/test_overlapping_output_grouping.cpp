@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/overlapping_output_grouping.h"
+#include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"
@@ -27,7 +27,6 @@
 #include <algorithm>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
 namespace
@@ -105,12 +104,12 @@ public:
                          std::vector<geom::Rectangles> const& expected_groups)
     {
         StubDisplayConfiguration conf{info};
-        mgm::OverlappingOutputGrouping grouping{conf};
+        mg::OverlappingOutputGrouping grouping{conf};
 
         std::vector<std::vector<mg::DisplayConfigurationOutput>> grouping_results;
 
         grouping.for_each_group(
-            [&](mgm::OverlappingOutputGroup const& group)
+            [&](mg::OverlappingOutputGroup const& group)
             {
                 std::vector<mg::DisplayConfigurationOutput> outputs;
                 group.for_each_output([&](mg::DisplayConfigurationOutput const& output)

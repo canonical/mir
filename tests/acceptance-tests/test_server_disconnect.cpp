@@ -73,6 +73,8 @@ struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
         {
             mir_surface_swap_buffers_sync(surface);
         }
+        mir_surface_release_sync(surface);
+        mir_connection_release(connection);
     }
 
     mtf::CrossProcessSync sync;

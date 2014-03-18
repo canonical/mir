@@ -46,7 +46,8 @@ public:
     MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,
                             std::shared_ptr<Scene> const& scene,
                             std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
-                            std::shared_ptr<CompositorReport> const& compositor_report);
+                            std::shared_ptr<CompositorReport> const& compositor_report,
+                            bool compose_on_start);
     ~MultiThreadedCompositor();
 
     void start();
@@ -63,6 +64,9 @@ private:
 
     std::mutex started_guard;
     bool started;
+    bool compose_on_start;
+
+    void schedule_compositing();
 };
 
 }
