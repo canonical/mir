@@ -1,3 +1,15 @@
+mir (0.1.7+14.04.20140318-0ubuntu1) trusty; urgency=low
+
+  [ Alberto Aguirre ]
+  * Fix not compositing the client's last posted buffer (LP: #1294048,
+    LP: #1294051, LP: #1294053, LP: #1290306) In single-display cases
+    the number of ready buffers decreases after a buffer is acquired by
+    the rendering operator. Determine if there will be uncomposited
+    buffers before acquiring a buffer so it works for single and multi
+    display use cases. (LP: #1294048, #1290306, #1294051, #1294053)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 18 Mar 2014 18:38:01 +0000
+
 mir (0.1.7+14.04.20140317.1-0ubuntu1) trusty; urgency=medium
 
   [ Daniel van Vugt ]
