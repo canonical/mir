@@ -38,6 +38,7 @@ public:
     void send(std::string const& body, FdSets const& fd_set);
 
     void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer);
+    boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer);
     pid_t client_pid();
 
 private:

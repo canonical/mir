@@ -48,14 +48,37 @@ struct StubReceiver : public mfd::MessageReceiver
         callback_function = callback;
     }
 
+    boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) override
+    {
+        using namespace testing;
+
+        if (ba::buffer_cast<void*>(buffer) == nullptr)
+            throw std::runtime_error("StubReceiver::receive_msg got null buffer");
+        if (ba::buffer_size(buffer) != message.size())
+            throw std::runtime_error("StubReceiver::receive_msg buffer size not equal to message size");
+
+        memcpy(ba::buffer_cast<void*>(buffer),
+               message.data(), ba::buffer_size(buffer));
+
+        return boost::system::error_code();
+    }
+
     void fake_receive_msg(char* buffer, size_t size)
     {
         using namespace testing;
+
+        message.assign(buffer, buffer + size);
+
         ASSERT_NE(nullptr, callback_function);
         ASSERT_THAT(ba::buffer_cast<void*>(async_buffer), NotNull());
-        ASSERT_THAT(ba::buffer_size(async_buffer), Eq(size));
+        ASSERT_THAT(message.size(), Ge(ba::buffer_size(async_buffer)));
 
-        memcpy(ba::buffer_cast<void*>(async_buffer), buffer, size);
+        memcpy(ba::buffer_cast<void*>(async_buffer),
+               buffer, ba::buffer_size(async_buffer));
+
+        message.erase(
+            message.begin(),
+            message.begin() + ba::buffer_size(async_buffer));
 
         boost::system::error_code code;
         callback_function(code, size);
@@ -64,6 +87,7 @@ struct StubReceiver : public mfd::MessageReceiver
 private:
     std::function<void(boost::system::error_code const&, size_t)> callback_function;
     boost::asio::mutable_buffers_1 async_buffer;
+    std::vector<char> message;
 
     MOCK_METHOD0(client_pid, pid_t());
 };
@@ -103,8 +127,7 @@ TEST_F(SocketSessionTest, basic_msg_is_received_and_dispatched)
 
     buffer[0] = body_size / 0x100;
     buffer[1] = body_size % 0x100;
-    stub_receiver.fake_receive_msg(buffer, header_size);
+    invocation.SerializeToArray(buffer + header_size, sizeof buffer - header_size);
 
-    invocation.SerializeToArray(buffer, sizeof buffer);
-    stub_receiver.fake_receive_msg(buffer, body_size);
+    stub_receiver.fake_receive_msg(buffer, header_size + body_size);
 }

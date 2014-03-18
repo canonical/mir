@@ -128,3 +128,15 @@ void mfd::SocketMessenger::async_receive_msg(
          boost::asio::transfer_exactly(ba::buffer_size(buffer)),
          handler);
 }
+
+bs::error_code mfd::SocketMessenger::receive_msg(
+    ba::mutable_buffers_1 const& buffer)
+{
+    bs::error_code e;
+    boost::asio::read(
+         *socket,
+         buffer,
+         boost::asio::transfer_exactly(ba::buffer_size(buffer)),
+         e);
+    return e;
+}
