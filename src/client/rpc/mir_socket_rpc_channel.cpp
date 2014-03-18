@@ -266,7 +266,8 @@ void mclr::MirSocketRpcChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    mir::protobuf::wire::Invocation invocation = invocation_for(method, parameters);
+    mir::protobuf::wire::Invocation invocation;
+    invocation_for(invocation, method, parameters);
 
     rpc_report->invocation_requested(invocation);
 
@@ -345,7 +346,7 @@ void mclr::MirSocketRpcChannel::read_message()
     {
         const size_t body_size = read_message_header();
 
-        result = read_message_body(body_size);
+        read_message_body(result, body_size);
 
         rpc_report->result_receipt_succeeded(result);
     }
@@ -431,7 +432,9 @@ size_t mclr::MirSocketRpcChannel::read_message_header()
     return body_size;
 }
 
-mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const size_t body_size)
+void mclr::MirSocketRpcChannel::read_message_body(
+    mir::protobuf::wire::Result& result,
+    size_t const body_size)
 {
     boost::system::error_code error;
     body_bytes.resize(body_size);
@@ -441,7 +444,5 @@ mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const s
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message body: " + error.message()));
     }
 
-    mir::protobuf::wire::Result result;
-    result.ParseFromArray(body_bytes.data(), body_bytes.size());
-    return result;
+    result.ParseFromArray(body_bytes.data(), body_size);
 }

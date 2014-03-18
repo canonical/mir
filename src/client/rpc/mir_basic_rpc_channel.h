@@ -95,8 +95,10 @@ public:
     ~MirBasicRpcChannel();
 
 protected:
-    mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,
-        const google::protobuf::Message* request);
+    void invocation_for(
+        mir::protobuf::wire::Invocation& invoke,
+        google::protobuf::MethodDescriptor const* method,
+        google::protobuf::Message const* request);
     int next_id();
 
 private:

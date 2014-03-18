@@ -101,9 +101,10 @@ mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
 }
 
 
-mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
-    const google::protobuf::MethodDescriptor* method,
-    const google::protobuf::Message* request)
+void mclr::MirBasicRpcChannel::invocation_for(
+    mir::protobuf::wire::Invocation& invoke,
+    google::protobuf::MethodDescriptor const* method,
+    google::protobuf::Message const* request)
 {
     char buffer[mir::frontend::serialization_buffer_size];
 
@@ -113,14 +114,10 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
 
     request->SerializeToArray(buffer, sizeof buffer);
 
-    mir::protobuf::wire::Invocation invoke;
-
     invoke.set_id(next_id());
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer, size);
     invoke.set_protocol_version(1);
-
-    return invoke;
 }
 
 int mclr::MirBasicRpcChannel::next_id()
