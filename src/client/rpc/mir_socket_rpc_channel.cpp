@@ -142,8 +142,39 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 {
     if (!disconnected.load())
     {
-        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
-        mir::protobuf::Screencast* screencast{nullptr};
+        auto const message_type = response->GetTypeName();
+
+        mir::protobuf::Surface* surface = nullptr;
+        mir::protobuf::Buffer* buffer = nullptr;
+        mir::protobuf::Platform* platform = nullptr;
+
+        if (message_type == "mir.protobuf.Buffer")
+        {
+            buffer = static_cast<mir::protobuf::Buffer*>(response);
+        }
+        else if (message_type == "mir.protobuf.Surface")
+        {
+            surface = static_cast<mir::protobuf::Surface*>(response);
+            if (surface && surface->has_buffer())
+                buffer = surface->mutable_buffer();
+        }
+        else if (message_type == "mir.protobuf.Screencast")
+        {
+            auto screencast = static_cast<mir::protobuf::Screencast*>(response);
+            if (screencast && screencast->has_buffer())
+                buffer = screencast->mutable_buffer();
+        }
+        else if (message_type == "mir.protobuf.Platform")
+        {
+            platform = static_cast<mir::protobuf::Platform*>(response);
+        }
+        else if (message_type == "mir.protobuf.Connection")
+        {
+            auto connection = static_cast<mir::protobuf::Connection*>(response);
+            if (connection && connection->has_platform())
+                platform = connection->mutable_platform();
+        }
+
         if (surface)
         {
             surface->clear_fd();
@@ -157,19 +188,6 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
                 rpc_report->file_descriptors_received(*response, fds);
             }
-        }
-        else
-        {
-            screencast = dynamic_cast<mir::protobuf::Screencast*>(response);
-        }
-
-        auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
-        if (!buffer)
-        {
-            if (surface && surface->has_buffer())
-                buffer = surface->mutable_buffer();
-            else if (screencast && screencast->has_buffer())
-                buffer = screencast->mutable_buffer();
         }
 
         if (buffer)
@@ -185,14 +203,6 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
                 rpc_report->file_descriptors_received(*response, fds);
             }
-        }
-
-        auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
-        if (!platform)
-        {
-            auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
-            if (connection && connection->has_platform())
-                platform = connection->mutable_platform();
         }
 
         if (platform)
