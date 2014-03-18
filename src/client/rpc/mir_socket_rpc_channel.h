@@ -80,6 +80,7 @@ private:
 
     static size_t const size_of_header = 2;
     unsigned char header_bytes[size_of_header];
+    std::vector<char> body_bytes;
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
     void receive_file_descriptors(std::vector<int> &fds);

@@ -434,15 +434,14 @@ size_t mclr::MirSocketRpcChannel::read_message_header()
 mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const size_t body_size)
 {
     boost::system::error_code error;
-    boost::asio::streambuf message;
-    boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
+    body_bytes.resize(body_size);
+    boost::asio::read(socket, boost::asio::buffer(body_bytes), error);
     if (error)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message body: " + error.message()));
     }
 
-    std::istream in(&message);
     mir::protobuf::wire::Result result;
-    result.ParseFromIstream(&in);
+    result.ParseFromArray(body_bytes.data(), body_bytes.size());
     return result;
 }

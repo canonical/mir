@@ -28,6 +28,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace mt = mir::test;
@@ -36,13 +38,13 @@ namespace
 {
 struct StubReceiver : public mfd::MessageReceiver
 {
+    StubReceiver() : async_buffer{nullptr, 0} {}
+
     void async_receive_msg(
         std::function<void(boost::system::error_code const&, size_t)> const& callback,
-        boost::asio::streambuf& stream,
-        size_t size)
+        boost::asio::mutable_buffers_1 const& buffer) override
     {
-        read_size = size;
-        pstream = &stream;
+        async_buffer = buffer;
         callback_function = callback;
     }
 
@@ -50,11 +52,10 @@ struct StubReceiver : public mfd::MessageReceiver
     {
         using namespace testing;
         ASSERT_NE(nullptr, callback_function);
-        ASSERT_THAT(pstream, NotNull());
-        ASSERT_THAT(read_size, Eq(size));
+        ASSERT_THAT(ba::buffer_cast<void*>(async_buffer), NotNull());
+        ASSERT_THAT(ba::buffer_size(async_buffer), Eq(size));
 
-        pstream->sputn(buffer, size);
-        pstream->commit(size);
+        memcpy(ba::buffer_cast<void*>(async_buffer), buffer, size);
 
         boost::system::error_code code;
         callback_function(code, size);
@@ -62,8 +63,7 @@ struct StubReceiver : public mfd::MessageReceiver
 
 private:
     std::function<void(boost::system::error_code const&, size_t)> callback_function;
-    boost::asio::streambuf* pstream = nullptr;
-    size_t read_size = 0;
+    boost::asio::mutable_buffers_1 async_buffer;
 
     MOCK_METHOD0(client_pid, pid_t());
 };
@@ -73,6 +73,7 @@ struct MockProcessor : public mfd::MessageProcessor
     MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation));
 };
 }
+
 struct SocketSessionTest : public ::testing::Test
 {
     testing::NiceMock<MockProcessor> mock_processor;

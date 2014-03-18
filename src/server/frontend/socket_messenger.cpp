@@ -119,11 +119,12 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
 }
 
 void mfd::SocketMessenger::async_receive_msg(
-    MirReadHandler const& handler, ba::streambuf& buffer, size_t size)
+    MirReadHandler const& handler,
+    ba::mutable_buffers_1 const& buffer)
 {
     boost::asio::async_read(
          *socket,
          buffer,
-         boost::asio::transfer_exactly(size),
+         boost::asio::transfer_exactly(ba::buffer_size(buffer)),
          handler);
 }
