@@ -108,7 +108,13 @@ void generate_frame_textures(GLuint& corner, GLuint& title)
 
             // Set gradient
             if (y < cy)
-                lum += (255 - lum) * (1.0f - (static_cast<float>(y) / cy));
+            {
+                float brighten = (1.0f - (static_cast<float>(y) / cy));
+                if (x < cx)
+                    brighten *= std::sin(x * M_PI / width);
+
+                lum += (255 - lum) * brighten;
+            }
 
             image[y][x] = {lum, lum, lum, alpha};
         }
