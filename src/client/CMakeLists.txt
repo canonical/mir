@@ -75,6 +75,7 @@ set(
   mirsharedinput
   mirsharedlogging
   mirsharedenv
+  mirsharedgeometry
   mirsharedsharedlibrary
   mirclientrpc
   mirclientlttngstatic

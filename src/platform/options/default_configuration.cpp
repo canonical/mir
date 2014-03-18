@@ -34,7 +34,6 @@ char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
 char const* const mo::host_socket_opt             = "host-socket";
-char const* const mo::standalone_opt              = "standalone";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
@@ -70,12 +69,10 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     namespace po = boost::program_options;
 
     add_options()
-        (standalone_opt, po::value<bool>(),
-            "Run mir in standalone mode. [bool:default=false]")
         (host_socket_opt, po::value<std::string>(),
-            "Host socket filename. [string:default={$MIR_SOCKET,$XDG_RUNTIME_DIR/mir_socket}]")
+            "Host socket filename")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
-            "Socket filename.")
+            "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
             "Library to use for platform graphics support")

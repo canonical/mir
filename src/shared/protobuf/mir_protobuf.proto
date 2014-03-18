@@ -151,10 +151,18 @@ message EventSequence {
   optional string error = 127;
 }
 
+message Rectangle {
+  required int32 left = 1;
+  required int32 top = 2;
+  required uint32 width = 3;
+  required uint32 height = 4;
+}
+
 message ScreencastParameters {
-  required uint32 output_id = 1;
+  required Rectangle region = 1;
   required uint32 width = 2;
   required uint32 height = 3;
+  required int32 pixel_format = 4;
 }
 
 message ScreencastId {

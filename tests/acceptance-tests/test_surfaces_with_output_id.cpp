@@ -18,8 +18,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/scene.h"
-#include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/renderable.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -119,6 +119,10 @@ struct RectangleCompare
     }
 };
 
+void null_surface_callback(MirSurface*, void*)
+{
+}
+
 }
 
 using SurfacesWithOutputId = BespokeDisplayServerTestFixture;
@@ -152,14 +156,9 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
                     struct VerificationFilter : public mc::FilterForScene
                     {
-                        bool operator()(mc::CompositingCriteria const& criteria)
+                        bool operator()(mg::Renderable const& rend)
                         {
-                            auto const& trans = criteria.transformation();
-                            int width = trans[0][0];
-                            int height = trans[1][1];
-                            int x = trans[3][0] - width / 2;
-                            int y = trans[3][1] - height / 2;
-                            rects.push_back({{x, y}, {width, height}});
+                            rects.push_back(rend.screen_position());
                             return false;
                         }
 
@@ -168,8 +167,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
                     struct NullOperator : public mc::OperatorForScene
                     {
-                        void operator()(mc::CompositingCriteria const&,
-                                        mc::BufferStream&) {}
+                        void operator()(mg::Renderable const&) {}
                     } null_operator;
 
                     scene->for_each_if(filter, null_operator);
@@ -307,6 +305,7 @@ TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 
                 auto surface = mir_connection_create_surface_sync(connection, &request_params);
                 EXPECT_FALSE(mir_surface_is_valid(surface));
+                mir_surface_release(surface, &null_surface_callback, nullptr);
             }
 
             mir_display_config_destroy(config);

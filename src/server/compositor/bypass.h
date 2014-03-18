@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_BYPASS_H_
 
 #include "mir/compositor/scene.h"
-#include "glm/glm.hpp"
 
 namespace mir
 {
@@ -30,32 +29,29 @@ class DisplayBuffer;
 }
 namespace compositor
 {
-class CompositingCriteria;
 
 class BypassFilter : public FilterForScene
 {
 public:
     BypassFilter(const graphics::DisplayBuffer &display_buffer);
-    bool operator()(const CompositingCriteria &criteria) override;
+    bool operator()(const graphics::Renderable &) override;
     bool fullscreen_on_top() const;
 
 private:
     bool all_orthogonal = true;
     bool topmost_fits = false;
-    glm::mat4 fullscreen;
     const graphics::DisplayBuffer &display_buffer;
 };
 
 class BypassMatch : public OperatorForScene
 {
 public:
-    void operator()(const CompositingCriteria &,
-                    compositor::BufferStream &stream) override;
-    compositor::BufferStream *topmost_fullscreen() const;
+    void operator()(const graphics::Renderable &) override;
+    const graphics::Renderable *topmost_fullscreen() const;
 
 private:
-    // This has to be a pointer. We have no control over BufferStream lifetime
-    compositor::BufferStream *latest = nullptr;
+    // This has to be a pointer. We have no control over Renderable lifetime
+    const graphics::Renderable *latest = nullptr;
 };
 
 } // namespace compositor

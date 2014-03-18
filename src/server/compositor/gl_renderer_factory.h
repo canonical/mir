@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
 #define MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
 
-#include "renderer_factory.h"
+#include "mir/compositor/renderer_factory.h"
 
 namespace mir
 {

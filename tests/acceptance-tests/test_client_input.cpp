@@ -608,3 +608,41 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     launch_client_process(*client_config_1);
     launch_client_process(*client_config_2);
 }
+
+TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_window)
+{
+    using namespace ::testing;
+
+    static int const screen_width = 1000;
+    static int const screen_height = 800;
+    static int const client_height = screen_height/2;
+    static int const client_width = screen_width/2;
+    static std::string const test_client = "tc";
+    mtf::CrossProcessSync fence;
+
+    static GeometryMap positions;
+    positions[test_client] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
+                                             geom::Size{client_width, client_height}};
+
+    auto server_config = make_event_producing_server(fence, 1,
+         [&](mtf::InputTestingServerConfiguration& server)
+         {
+            server.the_session_container()->for_each([&](std::shared_ptr<msh::Session> const& session) -> void
+            {
+                session->default_surface()->move_to(geom::Point{screen_width/2-40, screen_height/2-80});
+            });
+            server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2+40, screen_height/2+90));
+        }, positions, DepthMap());
+    launch_server_process(*server_config);
+
+    auto client = make_event_expecting_client(test_client, fence,
+         [&](MockHandler& handler, mt::WaitCondition& events_received)
+         {
+             InSequence seq;
+             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
+             EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(80, 170))).Times(AnyNumber())
+                 .WillOnce(mt::WakeUp(&events_received));
+        });
+
+    launch_client_process(*client);
+}

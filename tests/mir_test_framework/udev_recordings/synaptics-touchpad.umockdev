@@ -1,0 +1,65 @@
+P: /devices/platform/i8042/serio2/input/input11/event12
+N: input/event12
+S: input/by-path/platform-i8042-serio-2-event-mouse
+E: DEVLINKS=/dev/input/by-path/platform-i8042-serio-2-event-mouse
+E: DEVNAME=/dev/input/event12
+E: ID_INPUT=1
+E: ID_INPUT_TOUCHPAD=1
+E: ID_PATH=platform-i8042-serio-2
+E: ID_PATH_TAG=platform-i8042-serio-2
+E: ID_SERIAL=noserial
+E: MAJOR=13
+E: MINOR=76
+E: SUBSYSTEM=input
+A: dev=13:76
+L: device=../../input11
+
+P: /devices/platform/i8042/serio2/input/input11
+E: ABS=660800011000003
+E: EV=b
+E: ID_FOR_SEAT=input-platform-i8042-serio-2
+E: ID_INPUT=1
+E: ID_INPUT_TOUCHPAD=1
+E: ID_PATH=platform-i8042-serio-2
+E: ID_PATH_TAG=platform-i8042-serio-2
+E: ID_SERIAL=noserial
+E: KEY=e520 10000 0 0 0 0
+E: MODALIAS=input:b0011v0002p0007e01B1-e0,1,3,k110,145,148,14A,14D,14E,14F,ra0,1,18,1C,2F,35,36,39,3A,mlsfw
+E: NAME="SynPS/2 Synaptics TouchPad"
+E: PHYS="isa0060/serio2/input0"
+E: PRODUCT=11/2/7/1b1
+E: PROP=5
+E: SUBSYSTEM=input
+E: TAGS=:seat:
+L: device=../../../serio2
+A: modalias=input:b0011v0002p0007e01B1-e0,1,3,k110,145,148,14A,14D,14E,14F,ra0,1,18,1C,2F,35,36,39,3A,mlsfw
+A: name=SynPS/2 Synaptics TouchPad
+A: phys=isa0060/serio2/input0
+A: properties=5
+A: uniq=
+
+P: /devices/platform/i8042/serio2
+E: DRIVER=psmouse
+E: MODALIAS=serio:ty01pr00id00ex00
+E: SERIO_EXTRA=00
+E: SERIO_ID=00
+E: SERIO_PROTO=00
+E: SERIO_TYPE=01
+E: SUBSYSTEM=serio
+A: bind_mode=auto
+A: description=i8042 AUX1 port
+L: driver=../../../../bus/serio/drivers/psmouse
+A: modalias=serio:ty01pr00id00ex00
+A: protocol=SynPS/2
+A: rate=80
+A: resetafter=5
+A: resolution=200
+A: resync_time=0
+
+P: /devices/platform/i8042
+E: DRIVER=i8042
+E: MODALIAS=platform:i8042
+E: SUBSYSTEM=platform
+L: driver=../../../bus/platform/drivers/i8042
+A: modalias=platform:i8042
+
