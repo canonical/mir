@@ -47,25 +47,20 @@ pid_t mfd::SocketMessenger::client_pid()
     return cr.pid;
 }
 
-void mfd::SocketMessenger::send(std::string const& body)
+void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
 {
-    send(body, {});
-}
-
-void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
-{
-    const size_t size = body.size();
     const unsigned char header_bytes[2] =
     {
-        static_cast<unsigned char>((size >> 8) & 0xff),
-        static_cast<unsigned char>((size >> 0) & 0xff)
+        static_cast<unsigned char>((length >> 8) & 0xff),
+        static_cast<unsigned char>((length >> 0) & 0xff)
     };
 
     std::unique_lock<std::mutex> lg(message_lock);
 
-    whole_message.resize(sizeof header_bytes + size);
+    whole_message.resize(sizeof header_bytes + length);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
+    std::copy(data, data + length, whole_message.begin() + sizeof header_bytes);
+
 
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
