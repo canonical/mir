@@ -28,6 +28,7 @@
 #include "mir/graphics/buffer_initializer.h"
 
 #include "mir/shared_library.h"
+#include "mir/shared_library_loader.h"
 #include "mir/abnormal_exit.h"
 
 #include <boost/throw_exception.hpp>
