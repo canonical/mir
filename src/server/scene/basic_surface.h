@@ -19,6 +19,7 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
@@ -62,6 +63,7 @@ class BasicSurface :
 {
 public:
     BasicSurface(
+        frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
         std::function<void()> change_cb,
@@ -124,6 +126,7 @@ private:
     BasicSurface& operator=(BasicSurface const&) = delete;
 
     std::mutex mutable guard;
+    frontend::SurfaceId const id;
     std::function<void()> const notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;

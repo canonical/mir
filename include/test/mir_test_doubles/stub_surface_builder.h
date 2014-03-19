@@ -39,6 +39,7 @@ class StubSurfaceBuilder : public scene::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         dummy_surface(std::make_shared<scene::BasicSurface>(
+            frontend::SurfaceId(),
             std::string("stub"),
             geometry::Rectangle{{},{}},
             [](){},
@@ -51,6 +52,7 @@ public:
     }
 
     std::weak_ptr<scene::BasicSurface> create_surface(
+        frontend::SurfaceId,
         shell::SurfaceCreationParameters const&,
         std::shared_ptr<frontend::EventSink> const&) override
     {

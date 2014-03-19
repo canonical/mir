@@ -24,7 +24,6 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/frontend/surface_id.h"
 
 #include "mir_toolkit/event.h"
 
@@ -50,7 +49,7 @@ ms::SurfaceImpl::SurfaceImpl(
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
     configurator(configurator),
-    surface(builder->create_surface(params, event_sink)),
+    surface(builder->create_surface(id, params, event_sink)),
     id(id),
     event_sink(event_sink),
     type_value(mir_surface_type_normal),

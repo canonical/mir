@@ -33,6 +33,7 @@
 
 #include <stdexcept>
 
+namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
@@ -204,6 +205,7 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -225,6 +227,7 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -240,6 +243,7 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -256,6 +260,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
 {
     using namespace testing;
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -283,6 +288,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     mtd::StubBuffer stub_buffer;
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -304,6 +310,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
 {
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -322,6 +329,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     geom::Point p{55, 66};
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -344,6 +352,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         .Times(1);
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -367,6 +376,7 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
         .Times(1);
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -395,6 +405,7 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         .WillOnce(Throw(std::runtime_error("bad resize")));
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -425,6 +436,7 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
     };
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -449,6 +461,7 @@ TEST_F(SurfaceCreation, test_get_input_channel)
 {
     auto mock_channel = std::make_shared<MockInputChannel>();
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -467,6 +480,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     float alpha = 0.5f;
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -487,6 +501,7 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
     EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -507,6 +522,7 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
         .Times(1);
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -522,6 +538,7 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -547,6 +564,7 @@ TEST_F(SurfaceCreation, input_fds)
     using namespace testing;
 
     ms::BasicSurface surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,
@@ -565,6 +583,7 @@ TEST_F(SurfaceCreation, input_fds)
     EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
 
     ms::BasicSurface input_surf(
+        mf::SurfaceId(),
         surface_name,
         rect,
         change_notification,

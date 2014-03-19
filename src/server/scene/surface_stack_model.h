@@ -19,6 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_STACK_MODEL_H_
 #define MIR_SCENE_SURFACE_STACK_MODEL_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/scene/depth_id.h"
 
 #include <memory>
@@ -42,6 +43,7 @@ public:
     virtual ~SurfaceStackModel() {}
 
     virtual std::weak_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
 

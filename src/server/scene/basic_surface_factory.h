@@ -19,6 +19,7 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_FACTORY_H_
 #define MIR_SCENE_BASIC_SURFACE_FACTORY_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include <memory>
 #include <functional>
@@ -37,6 +38,7 @@ public:
     virtual ~BasicSurfaceFactory() = default;
 
     virtual std::shared_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::function<void()> const&  change_callback,
         std::shared_ptr<frontend::EventSink> const& event_sink) = 0;

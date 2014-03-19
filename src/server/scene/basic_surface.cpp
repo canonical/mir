@@ -39,6 +39,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::BasicSurface::BasicSurface(
+    frontend::SurfaceId id,
     std::string const& name,
     geometry::Rectangle rect,
     std::function<void()> change_cb,
@@ -47,6 +48,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<SceneReport> const& report) :
+    id(id),
     notify_change(change_cb),
     surface_name(name),
     surface_rect(rect),

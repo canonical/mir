@@ -31,6 +31,7 @@
 #include <gmock/gmock.h>
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace mr = mir::report;
 namespace ms = mir::scene;
@@ -84,6 +85,7 @@ struct BasicSurfaceTest : public testing::Test
 TEST_F(BasicSurfaceTest, basics)
 {
     ms::BasicSurface data{
+        mf::SurfaceId(),
         name,
         rect,
         null_change_cb,
@@ -105,6 +107,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
         .Times(1);
 
     ms::BasicSurface storage{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -129,6 +132,7 @@ TEST_F(BasicSurfaceTest, update_size)
         .Times(1);
 
     ms::BasicSurface storage{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -155,6 +159,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
         .Times(1);
 
     ms::BasicSurface storage{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -178,6 +183,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         .Times(1);
 
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -196,6 +202,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         null_change_cb,
@@ -215,6 +222,7 @@ TEST_F(BasicSurfaceTest, test_surface_apply_rotation)
         .Times(1);
 
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -230,6 +238,7 @@ TEST_F(BasicSurfaceTest, test_surface_apply_rotation)
 TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
 {
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -268,6 +277,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         .Times(1);
 
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -287,6 +297,7 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         .Times(1);
 
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,
@@ -305,6 +316,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         geom::Rectangle{pt, one_by_one},
         mock_change_cb,
@@ -345,6 +357,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
     };
 
     ms::BasicSurface surface_state{
+        mf::SurfaceId(),
         name,
         rect,
         mock_change_cb,

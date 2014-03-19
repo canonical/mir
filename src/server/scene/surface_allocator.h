@@ -40,6 +40,7 @@ public:
                      std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::function<void()> const&  change_callback,
         std::shared_ptr<frontend::EventSink> const& event_sink) override;

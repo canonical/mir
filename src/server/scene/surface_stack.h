@@ -78,6 +78,7 @@ public:
 
     // From SurfaceStackModel
     std::weak_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink) override;
 

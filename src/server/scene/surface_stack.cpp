@@ -98,11 +98,12 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 }
 
 std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(
+    frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink)
 {
     auto change_cb = [this]() { emit_change_notification(); };
-    auto surface = surface_factory->create_surface(params, change_cb, event_sink);
+    auto surface = surface_factory->create_surface(id, params, change_cb, event_sink);
     {
         std::lock_guard<std::recursive_mutex> lg(guard);
         layers_by_depth[params.depth].push_back(surface);
