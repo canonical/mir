@@ -34,7 +34,7 @@ mclrd::PendingCallCache::PendingCallCache(
 }
 
 void mclrd::PendingCallCache::save_completion_details(
-    mir::protobuf::wire::Invocation& invoke,
+    mir::protobuf::wire::Invocation const& invoke,
     google::protobuf::Message* response,
     std::shared_ptr<google::protobuf::Closure> const& complete)
 {
@@ -101,8 +101,7 @@ mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
 }
 
 
-void mclr::MirBasicRpcChannel::invocation_for(
-    mir::protobuf::wire::Invocation& invoke,
+mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     google::protobuf::MethodDescriptor const* method,
     google::protobuf::Message const* request)
 {
@@ -114,10 +113,14 @@ void mclr::MirBasicRpcChannel::invocation_for(
 
     request->SerializeToArray(buffer, sizeof buffer);
 
+    mir::protobuf::wire::Invocation invoke;
+
     invoke.set_id(next_id());
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer, size);
     invoke.set_protocol_version(1);
+
+    return invoke;
 }
 
 int mclr::MirBasicRpcChannel::next_id()

@@ -276,8 +276,7 @@ void mclr::MirSocketRpcChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    mir::protobuf::wire::Invocation invocation;
-    invocation_for(invocation, method, parameters);
+    auto const& invocation = invocation_for(method, parameters);
 
     rpc_report->invocation_requested(invocation);
 
