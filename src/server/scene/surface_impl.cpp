@@ -19,9 +19,7 @@
 #include "surface_impl.h"
 #include "basic_surface.h"
 #include "surface_builder.h"
-#include "mir/shell/surface_configurator.h"
 #include "surface_ranker.h"
-#include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
 
@@ -51,9 +49,7 @@ ms::SurfaceImpl::SurfaceImpl(
     configurator(configurator),
     surface(builder->create_surface(id, params, event_sink, configurator)),
     id(id),
-    event_sink(event_sink),
-    type_value(mir_surface_type_normal),
-    state_value(mir_surface_state_restored)
+    event_sink(event_sink)
 {
 }
 
@@ -64,12 +60,12 @@ ms::SurfaceImpl::~SurfaceImpl() noexcept
 
 void ms::SurfaceImpl::hide()
 {
-    surface->set_hidden(true);
+    surface->hide();
 }
 
 void ms::SurfaceImpl::show()
 {
-    surface->set_hidden(false);
+    surface->show();
 }
 
 void ms::SurfaceImpl::force_requests_to_complete()
@@ -130,105 +126,22 @@ int ms::SurfaceImpl::client_input_fd() const
 
 int ms::SurfaceImpl::configure(MirSurfaceAttrib attrib, int value)
 {
-    int result = 0;
-    bool allow_dropping = false;
-    /*
-     * TODO: In future, query the shell implementation for the subset of
-     *       attributes/types it implements.
-     */
-    value = configurator->select_attribute_value(*this, attrib, value);
-    switch (attrib)
-    {
-    case mir_surface_attrib_type:
-        if (!set_type(static_cast<MirSurfaceType>(value)))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                                   "type."));
-        result = type();
-        break;
-    case mir_surface_attrib_state:
-        if (value != mir_surface_state_unknown &&
-            !set_state(static_cast<MirSurfaceState>(value)))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
-        result = state();
-        break;
-    case mir_surface_attrib_focus:
-        notify_change(attrib, value);
-        break;
-    case mir_surface_attrib_swapinterval:
-        allow_dropping = (value == 0);
-        allow_framedropping(allow_dropping);
-        result = value;
-        break;
-    default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                               "attribute."));
-        break;
-    }
-
-    configurator->attribute_set(*this, attrib, result);
-
-    return result;
+    return surface->configure(attrib, value);
 }
 
 MirSurfaceType ms::SurfaceImpl::type() const
 {
-    return type_value;
-}
-
-bool ms::SurfaceImpl::set_type(MirSurfaceType t)
-{
-    bool valid = false;
-
-    if (t >= 0 && t < mir_surface_types)
-    {
-        type_value = t;
-        valid = true;
-    }
-
-    return valid;
+    return surface->type();
 }
 
 MirSurfaceState ms::SurfaceImpl::state() const
 {
-    return state_value;
-}
-
-bool ms::SurfaceImpl::set_state(MirSurfaceState s)
-{
-    bool valid = false;
-
-    if (s > mir_surface_state_unknown &&
-        s < mir_surface_states)
-    {
-        state_value = s;
-        valid = true;
-
-        notify_change(mir_surface_attrib_state, s);
-    }
-
-    return valid;
-}
-
-void ms::SurfaceImpl::notify_change(MirSurfaceAttrib attrib, int value)
-{
-    MirEvent e;
-
-    // This memset is not really required. However it does avoid some
-    // harmless uninitialized memory reads that valgrind will complain
-    // about, due to gaps in MirEvent.
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_surface;
-    e.surface.id = id.as_value();
-    e.surface.attrib = attrib;
-    e.surface.value = value;
-
-    event_sink->handle_event(e);
+    return surface->state();
 }
 
 void ms::SurfaceImpl::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
-    targeter->focus_changed(surface->input_channel());
+    surface->take_input_focus(targeter);
 }
 
 void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& region)
@@ -238,6 +151,7 @@ void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& regio
 
 void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller)
 {
+    // TODO - BasicSurface hasn't got the pointer to pass to controller
     controller->raise(surface);
 }
 

@@ -60,7 +60,7 @@ class BasicSurface :
     public graphics::Renderable,
     public input::Surface,
     public MutableSurfaceState,
-    public shell::SurfaceBufferAccess
+    public shell::Surface
 {
 public:
     BasicSurface(
@@ -115,12 +115,21 @@ public:
     geometry::Rectangle screen_position() const override;
     int buffers_ready_for_compositor() const override;
 
-    virtual void with_most_recent_buffer_do(
-        std::function<void(graphics::Buffer&)> const& exec);
+    void with_most_recent_buffer_do(
+        std::function<void(graphics::Buffer&)> const& exec) override;
+
+    MirSurfaceType type() const override;
+    MirSurfaceState state() const override;
+    void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) override;
+    void raise(std::shared_ptr<SurfaceRanker> const& controller) override;
+    int configure(MirSurfaceAttrib attrib, int value) override;
+    void hide() override;
+    void show() override;
 
 private:
-    BasicSurface(BasicSurface const&) = delete;
-    BasicSurface& operator=(BasicSurface const&) = delete;
+    bool set_type(MirSurfaceType t);  // Use configure() to make public changes
+    bool set_state(MirSurfaceState s);
+    void notify_attrib_change(MirSurfaceAttrib attrib, int value);
 
     std::mutex mutable guard;
     frontend::SurfaceId const id;
@@ -138,6 +147,9 @@ private:
     std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<shell::SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
+
+    MirSurfaceType type_value;
+    MirSurfaceState state_value;
 };
 
 }
