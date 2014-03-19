@@ -53,7 +53,7 @@ private:
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<CompositorReport> const report;
 
-    int size_of_last_pass = 0;
+    bool last_pass_rendered_anything;
     unsigned long local_frameno;
 };
 

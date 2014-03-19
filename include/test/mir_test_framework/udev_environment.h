@@ -56,6 +56,7 @@ public:
     void add_standard_device(std::string const& name);
 
     UMockdevTestbed *testbed;
+    std::string const recordings_path;
 };
 
 }

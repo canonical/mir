@@ -184,8 +184,8 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteTextures(1, &t.second.id);
 }
 
-void mc::GLRenderer::tessellate(graphics::Renderable const& renderable,
-                                std::vector<Primitive>& primitives) const
+void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
+                                graphics::Renderable const& renderable) const
 {
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
@@ -266,7 +266,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     std::vector<Primitive> primitives;
-    tessellate(renderable, primitives);
+    tessellate(primitives, renderable);
    
     for (auto& p : primitives)
     {

@@ -67,14 +67,18 @@ public:
      * However you can override its behaviour to tessellate more finely and
      * deform freely for effects like wobbly windows.
      *
+     * \param [in,out] primitives The list of rendering primitives to be
+     *                            grown and/or modified.
+     * \param [in]     renderable The renderable surface being tessellated.
+     *
      * \note The cohesion of this function to GLRenderer is quite loose and it
      *       does not strictly need to reside here.
      *       However it seems a good choice under GLRenderer while this remains
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
-    virtual void tessellate(graphics::Renderable const& renderable,
-                            std::vector<Primitive>& primitives) const;
+    virtual void tessellate(std::vector<Primitive>& primitives,
+                            graphics::Renderable const& renderable) const;
 
 private:
     GLuint vertex_shader;
