@@ -74,7 +74,16 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
 
     body.resize(body_size);
 
-    on_new_message(socket_receiver->receive_msg(ba::buffer(body)));
+    if (socket_receiver->available_bytes() >= body_size)
+    {
+        on_new_message(socket_receiver->receive_msg(ba::buffer(body)));
+    }
+    else
+    {
+        auto callback = std::bind(&mfd::SocketSession::on_new_message,
+                                  this, std::placeholders::_1);
+        socket_receiver->async_receive_msg(callback, ba::buffer(body));
+    }
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)

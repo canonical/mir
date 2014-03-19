@@ -63,6 +63,11 @@ struct StubReceiver : public mfd::MessageReceiver
         return boost::system::error_code();
     }
 
+    size_t available_bytes() override
+    {
+        return message.size();
+    }
+
     void fake_receive_msg(char* buffer, size_t size)
     {
         using namespace testing;

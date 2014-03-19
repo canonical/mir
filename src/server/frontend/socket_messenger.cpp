@@ -135,3 +135,10 @@ bs::error_code mfd::SocketMessenger::receive_msg(
          e);
     return e;
 }
+
+size_t mfd::SocketMessenger::available_bytes()
+{
+    boost::asio::socket_base::bytes_readable command{true};
+    socket->io_control(command);
+    return command.get();
+}

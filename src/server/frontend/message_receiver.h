@@ -34,6 +34,7 @@ public:
     typedef std::function<void(boost::system::error_code const&, size_t)> MirReadHandler;
     virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer) = 0;
     virtual boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) = 0;
+    virtual size_t available_bytes() = 0;
     virtual pid_t client_pid() = 0;
 
 protected:
