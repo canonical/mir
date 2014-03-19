@@ -31,6 +31,7 @@
 #include "hwc_vsync.h"
 #include "android_display.h"
 #include "real_hwc_wrapper.h"
+#include "hwc_logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -89,12 +90,29 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
     return std::make_shared<mga::FBDevice>(fb_native_device);
 }
 
+namespace
+{
+struct NullHwcLogger : public mga::HwcLogger
+{
+    void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override
+    {
+    }
+    void log_prepare_done(hwc_display_contents_1_t const&) const override
+    {
+    }
+    void log_set_list(hwc_display_contents_1_t const&) const override
+    {
+    }
+};
+}
+
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
     std::shared_ptr<hwc_composer_device_1> const& hwc_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device); 
+    auto logger = std::make_shared<NullHwcLogger>();
+    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device, logger); 
     return std::make_shared<mga::HwcDevice>(hwc_native_device, wrapper, syncer, file_ops);
 }
 
