@@ -20,6 +20,7 @@
 
 #include "basic_surface.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/input/input_channel.h"
 #include "mir/graphics/buffer.h"
 
@@ -31,6 +32,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
+#include <cstring>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -194,6 +196,13 @@ bool ms::BasicSurface::resize(geom::Size const& size)
         surface_rect.size = size;
     }
     notify_change();
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = id.as_value();
+    e.resize.width = size.width.as_int();
+    e.resize.height = size.height.as_int();
+    event_sink->handle_event(e);
 
     return true;
 }
