@@ -96,10 +96,10 @@ void DemoRenderer::begin() const
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void DemoRenderer::tessellate(graphics::Renderable const& renderable,
-                              std::vector<Primitive>& primitives) const
+void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
+                              graphics::Renderable const& renderable) const
 {
-    GLRenderer::tessellate(renderable, primitives);
+    GLRenderer::tessellate(primitives, renderable);
 
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();

@@ -33,8 +33,8 @@ public:
     ~DemoRenderer();
 
     void begin() const override;
-    void tessellate(graphics::Renderable const& renderable,
-                    std::vector<Primitive>& primitives) const override;
+    void tessellate(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable) const override;
 
 private:
     GLuint shadow_edge_tex;
