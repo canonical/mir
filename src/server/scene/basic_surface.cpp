@@ -45,6 +45,7 @@ ms::BasicSurface::BasicSurface(
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
+    std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<SceneReport> const& report) :
     notify_change(change_cb),
     surface_name(name),
@@ -56,6 +57,7 @@ ms::BasicSurface::BasicSurface(
     input_rectangles{surface_rect},
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
+    event_sink(event_sink),
     report(report)
 {
     report->surface_created(this, surface_name);

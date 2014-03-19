@@ -25,6 +25,7 @@
 
 namespace mir
 {
+namespace frontend { class EventSink; }
 namespace scene
 {
 
@@ -36,7 +37,9 @@ public:
     virtual ~BasicSurfaceFactory() = default;
 
     virtual std::shared_ptr<BasicSurface> create_surface(
-        shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
+        shell::SurfaceCreationParameters const& params,
+        std::function<void()> const&  change_callback,
+        std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
 private:
     BasicSurfaceFactory(const BasicSurfaceFactory&) = delete;
     BasicSurfaceFactory& operator=(const BasicSurfaceFactory&) = delete;

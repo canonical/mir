@@ -18,6 +18,7 @@
 
 #include "src/server/scene/basic_surface.h"
 
+#include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -45,6 +46,14 @@ public:
     MOCK_METHOD0(call, void());
 };
 
+class StubEventSink : public mir::frontend::EventSink
+{
+public:
+    void handle_event(MirEvent const&) override {}
+    void handle_lifecycle_event(MirLifecycleState) override {}
+    void handle_display_config_change(mir::graphics::DisplayConfiguration const&) override {}
+};
+
 struct BasicSurfaceTest : public testing::Test
 {
     void SetUp()
@@ -66,6 +75,7 @@ struct BasicSurfaceTest : public testing::Test
     std::function<void()> mock_change_cb;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream =
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+    std::shared_ptr<StubEventSink> const stub_event_sink = std::make_shared<StubEventSink>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
@@ -80,6 +90,7 @@ TEST_F(BasicSurfaceTest, basics)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     EXPECT_EQ(name, data.name());
@@ -100,6 +111,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     EXPECT_EQ(rect.top_left, storage.top_left());
@@ -123,6 +135,7 @@ TEST_F(BasicSurfaceTest, update_size)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     EXPECT_EQ(rect.size, storage.size());
@@ -148,6 +161,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     auto original_transformation = storage.transformation();
@@ -170,6 +184,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     float alpha = 0.5f;
@@ -187,6 +202,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
@@ -205,6 +221,7 @@ TEST_F(BasicSurfaceTest, test_surface_apply_rotation)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     surface_state.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
@@ -219,6 +236,7 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
@@ -256,6 +274,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     surface_state.set_hidden(true);
@@ -274,6 +293,7 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     surface_state.frame_posted();
@@ -291,6 +311,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     std::vector<geom::Point> contained_pt
@@ -330,6 +351,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
         report};
 
     surface_state.set_input_region(rectangles);

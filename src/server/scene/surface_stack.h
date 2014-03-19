@@ -77,7 +77,9 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel
-    virtual std::weak_ptr<BasicSurface> create_surface(const shell::SurfaceCreationParameters& params);
+    std::weak_ptr<BasicSurface> create_surface(
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
     virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface);
 

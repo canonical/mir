@@ -39,7 +39,10 @@ public:
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
                      std::shared_ptr<SceneReport> const& report);
 
-    std::shared_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
+    std::shared_ptr<BasicSurface> create_surface(
+        shell::SurfaceCreationParameters const& params,
+        std::function<void()> const&  change_callback,
+        std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
