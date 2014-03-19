@@ -20,6 +20,7 @@ add_library(
   hwc_layerlist.cpp
   hwc_layers.cpp
   hwc_fb_device.cpp
+  hwc_formatted_logger.cpp
   hwc_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp

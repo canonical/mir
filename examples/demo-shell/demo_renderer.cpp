@@ -31,7 +31,7 @@ float penumbra_curve(float x)
     return 1.0f - std::sin(x * M_PI / 2.0f);
 }
 
-void generate_shadow_textures(float opacity, GLuint& edge, GLuint& corner)
+void generate_shadow_textures(GLuint& edge, GLuint& corner, float opacity)
 {
     struct Texel
     {
@@ -154,7 +154,7 @@ void generate_frame_textures(GLuint& corner, GLuint& title)
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
-    generate_shadow_textures(0.4f, shadow_edge_tex, shadow_corner_tex);
+    generate_shadow_textures(shadow_edge_tex, shadow_corner_tex, 0.4f);
     generate_frame_textures(titlebar_corner_tex, titlebar_tex);
 }
 
@@ -172,16 +172,16 @@ void DemoRenderer::begin() const
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void DemoRenderer::tessellate(graphics::Renderable const& renderable,
-                              std::vector<Primitive>& primitives) const
+void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
+                              graphics::Renderable const& renderable) const
 {
-    GLRenderer::tessellate(renderable, primitives);
-    tessellate_shadow(renderable, primitives, 80.0f);
-    tessellate_frame(renderable, primitives, 30.0f);
+    GLRenderer::tessellate(primitives, renderable);
+    tessellate_shadow(primitives, renderable, 80.0f);
+    tessellate_frame(primitives, renderable, 30.0f);
 }
 
-void DemoRenderer::tessellate_shadow(graphics::Renderable const& renderable,
-                                     std::vector<Primitive>& primitives,
+void DemoRenderer::tessellate_shadow(std::vector<Primitive>& primitives,
+                                     graphics::Renderable const& renderable,
                                      float radius) const
 {
     auto const& rect = renderable.screen_position();
@@ -275,8 +275,8 @@ void DemoRenderer::tessellate_shadow(graphics::Renderable const& renderable,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void DemoRenderer::tessellate_frame(graphics::Renderable const& renderable,
-                                    std::vector<Primitive>& primitives,
+void DemoRenderer::tessellate_frame(std::vector<Primitive>& primitives,
+                                    graphics::Renderable const& renderable,
                                     float titlebar_height) const
 {
     auto const& rect = renderable.screen_position();

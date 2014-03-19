@@ -26,6 +26,8 @@
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
+#include "mir/raii.h"
+
 #include <cstdlib>
 #include <cstring>
 
@@ -64,12 +66,21 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     geom::Point const default_surface_top_left = geom::Point{geom::X{10}, geom::Y{10}};
     std::string const testing_surface_name = "Test";
 
-    // We need a real open fd, as InputWindowHandle's constructor will fcntl() it, and
-    // InputWindowHandle's destructor will close() it.
-    char *filename = strdup("/tmp/mir_unit_test_XXXXXX");
-    int const testing_server_fd = mkstemp(filename);
-    // We don't actually need the file to exist after this test.
-    unlink(filename);
+    int testing_server_fd;
+    auto fd_wrapper = mir::raii::paired_calls([&testing_server_fd]()
+        {
+            // We need a real open fd, as InputWindowHandle's constructor will fcntl() it, and
+            // InputWindowHandle's destructor will close() it.
+            char *filename = strdup("/tmp/mir_unit_test_XXXXXX");
+            testing_server_fd = mkstemp(filename);
+            // We don't actually need the file to exist after this test.
+            unlink(filename);
+            free(filename);
+        },
+        [&testing_server_fd]()
+        {
+            if (testing_server_fd > 0) close(testing_server_fd);
+        });
 
     MockInputChannel mock_channel;
     mtd::MockInputSurface mock_surface;
@@ -108,6 +119,4 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     EXPECT_EQ(info->frameTop, info->touchableRegionTop);
     EXPECT_EQ(info->frameRight, info->touchableRegionRight);
     EXPECT_EQ(info->frameBottom, info->touchableRegionBottom);
-
-    free(filename);
 }

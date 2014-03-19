@@ -33,13 +33,13 @@ public:
     ~DemoRenderer();
 
     void begin() const override;
-    void tessellate(graphics::Renderable const& renderable,
-                    std::vector<Primitive>& primitives) const override;
-    void tessellate_shadow(graphics::Renderable const& renderable,
-                    std::vector<Primitive>& primitives,
+    void tessellate(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable) const override;
+    void tessellate_shadow(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable,
                     float radius) const;
-    void tessellate_frame(graphics::Renderable const& renderable,
-                    std::vector<Primitive>& primitives,
+    void tessellate_frame(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable,
                     float titlebar_height) const;
 
 private:

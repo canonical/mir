@@ -99,7 +99,7 @@ public:
     bool resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
     bool contains(geometry::Point const& point) const override;
-    void frame_posted() override;
+    void frame_posted();
     void set_alpha(float alpha) override;
     void set_rotation(float degrees, glm::vec3 const&) override;
     glm::mat4 transformation() const override;

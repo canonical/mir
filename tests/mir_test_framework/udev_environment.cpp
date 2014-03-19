@@ -24,17 +24,37 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 
 
 namespace mtf = mir::mir_test_framework;
 
+namespace
+{
+std::string binary_path()
+{
+    char buf[1024];
+    auto tmp = readlink("/proc/self/exe", buf, sizeof buf);
+    if (tmp < 0)
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+                                  std::runtime_error("Failed to find our executable path"))
+                              << boost::errinfo_errno(errno));
+    if (tmp > static_cast<ssize_t>(sizeof(buf) - 1))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Path to executable is too long!"));
+    buf[tmp] = '\0';
+    return dirname(buf);
+}
+}
+
 mtf::UdevEnvironment::UdevEnvironment()
+    : recordings_path(binary_path() + "/udev_recordings")
 {
     testbed = umockdev_testbed_new();
 }
@@ -84,7 +104,7 @@ void mtf::UdevEnvironment::emit_device_changed(std::string const& device_path)
 
 void mtf::UdevEnvironment::add_standard_device(std::string const& name)
 {
-    auto descriptor_filename = std::string(UDEVMOCK_DIR) + "/" + name + ".umockdev";
+    auto descriptor_filename = recordings_path + "/" + name + ".umockdev";
     GError* err = nullptr;
     if (!umockdev_testbed_add_from_file(testbed, descriptor_filename.c_str(), &err))
     {
@@ -92,7 +112,7 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
                                                  err->message));
     }
     
-    auto ioctls_filename = std::string(UDEVMOCK_DIR) + "/" + name + ".ioctl";
+    auto ioctls_filename = recordings_path + "/" + name + ".ioctl";
     struct stat sb;
     if (stat(ioctls_filename.c_str(), &sb) == 0)
     {
