@@ -20,22 +20,10 @@
 #include "basic_surface.h"
 #include "surface_builder.h"
 #include "surface_ranker.h"
-#include "mir/input/input_channel.h"
-#include "mir/frontend/event_sink.h"
-
-#include "mir_toolkit/event.h"
-
-#include <boost/throw_exception.hpp>
-
-#include <stdexcept>
-#include <cstring>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace mi = mir::input;
-namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
@@ -46,10 +34,7 @@ ms::SurfaceImpl::SurfaceImpl(
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
-    configurator(configurator),
-    surface(builder->create_surface(id, params, event_sink, configurator)),
-    id(id),
-    event_sink(event_sink)
+    surface(builder->create_surface(id, params, event_sink, configurator))
 {
 }
 
