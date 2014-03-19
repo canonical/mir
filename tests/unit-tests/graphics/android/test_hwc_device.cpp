@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test/fake_shared.h"
 #include "hwc_struct_helpers.h"
 #include "mir_test_doubles/mock_render_function.h"
@@ -107,11 +108,6 @@ struct MockFileOps : public mga::SyncFileOps
     MOCK_METHOD1(close, int(int));
 };
 
-struct MockHWCDeviceWrapper : public mga::HwcWrapper
-{
-    MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
-    MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));
-};
 }
 
 class HwcDevice : public ::testing::Test
@@ -197,7 +193,7 @@ protected:
         empty_prepare_fn = [] (hwc_display_contents_1_t&) {};
         empty_render_fn = [] (mg::Renderable const&) {};
 
-        mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<MockHWCDeviceWrapper>>();
+        mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
     }
 
     std::shared_ptr<MockFileOps> mock_file_ops;
@@ -222,7 +218,7 @@ protected:
     geom::Rectangle screen_position{{9,8},{245, 250}};
     std::shared_ptr<StubRenderable> stub_renderable1;
     std::shared_ptr<StubRenderable> stub_renderable2;
-    std::shared_ptr<MockHWCDeviceWrapper> mock_hwc_device_wrapper;
+    std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
 
     std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
     std::function<void(mg::Renderable const&)> empty_render_fn;

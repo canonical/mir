@@ -27,6 +27,7 @@
 #include "mir_test_doubles/mock_render_function.h"
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -51,6 +52,19 @@ protected:
             width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+
+        hwc_rect_t empty_region = {0,0,0,0};
+        skip_layer.compositionType = HWC_FRAMEBUFFER;
+        skip_layer.hints = 0;
+        skip_layer.flags = HWC_SKIP_LAYER;
+        skip_layer.handle = 0;
+        skip_layer.transform = 0;
+        skip_layer.blending = HWC_BLENDING_NONE;
+        skip_layer.sourceCrop = empty_region;
+        skip_layer.displayFrame = empty_region;
+        skip_layer.visibleRegionScreen = {1, &empty_region};
+        skip_layer.acquireFenceFd = -1;
+        skip_layer.releaseFenceFd = -1;
     }
 
     int fake_dpy = 0;
@@ -67,6 +81,7 @@ protected:
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     mtd::StubSwappingGLContext stub_context;
+    hwc_layer_1_t skip_layer;
 };
 
 TEST_F(HwcFbDevice, hwc10_render_gl_only)
