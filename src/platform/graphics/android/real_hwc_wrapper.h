@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_REAL_HWC_WRAPPER_H_
 #define MIR_GRAPHICS_ANDROID_REAL_HWC_WRAPPER_H_
 
-#include "hwc_device.h"
+#include "hwc_wrapper.h"
 #include <memory>
 #include <hardware/hwcomposer.h>
 

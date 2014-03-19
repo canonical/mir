@@ -102,7 +102,7 @@ TEST_F(HwcFbDevice, hwc10_render_gl_only)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
-    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
 
     device.render_gl(stub_context);
 }
@@ -136,7 +136,7 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
-    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
 
     device.render_gl_and_overlays(stub_context, renderlist, [&](mg::Renderable const& renderable)
     {

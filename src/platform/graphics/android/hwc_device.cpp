@@ -21,6 +21,7 @@
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
+#include "hwc_wrapper.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
 #include "mir/graphics/buffer.h"
