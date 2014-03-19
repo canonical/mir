@@ -72,10 +72,9 @@ struct StubInputSurface : public mi::Surface
     {
         return geom::Size();
     }
-    std::string const& name() const
+    std::string name() const
     {
-        static std::string const name;
-        return name;
+        return {};
     }
     bool contains(geom::Point const&) const
     {

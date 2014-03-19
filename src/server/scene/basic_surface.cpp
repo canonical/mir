@@ -76,7 +76,7 @@ std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const
     return surface_buffer_stream;
 }
 
-std::string const& ms::BasicSurface::name() const
+std::string ms::BasicSurface::name() const
 {
     return surface_name;
 }
@@ -286,4 +286,11 @@ geom::Rectangle ms::BasicSurface::screen_position() const
 int ms::BasicSurface::buffers_ready_for_compositor() const
 {
     return surface_buffer_stream->buffers_ready_for_compositor();
+}
+
+void ms::BasicSurface::with_most_recent_buffer_do(
+    std::function<void(mg::Buffer&)> const& exec)
+{
+    auto buf = snapshot_buffer();
+    exec(*buf);
 }
