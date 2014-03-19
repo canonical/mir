@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
+#include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -45,13 +46,13 @@ protected:
         int width = 88;
         int height = 4;
         test_size = geom::Size{width, height};
-        test_pf = mir_pixel_format_abgr_8888;
         int fbnum = 558;
         mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
             width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
 
         hwc_rect_t empty_region = {0,0,0,0};
         skip_layer.compositionType = HWC_FRAMEBUFFER;
@@ -74,12 +75,12 @@ protected:
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
 
-    MirPixelFormat test_pf;
     geom::Size test_size;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
     mtd::StubSwappingGLContext stub_context;
     hwc_layer_1_t skip_layer;
 };
@@ -87,8 +88,10 @@ protected:
 TEST_F(HwcFbDevice, hwc10_render_gl_only)
 {
     using namespace testing;
+    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
+
     Sequence seq;
-    EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
         .InSequence(seq);
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
         .InSequence(seq)
@@ -96,35 +99,18 @@ TEST_F(HwcFbDevice, hwc10_render_gl_only)
     EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
         .InSequence(seq)
         .WillOnce(Return(sur));
-    EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
     mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
 
     device.render_gl(stub_context);
-
-    //prepare expectations
-    EXPECT_THAT(mock_hwc_device->display0_prepare_content.retireFenceFd, Eq(-1));
-    EXPECT_THAT(mock_hwc_device->display0_prepare_content.flags, Eq(HWC_GEOMETRY_CHANGED)); 
-    EXPECT_THAT(mock_hwc_device->display0_prepare_content.numHwLayers, Eq(1u));
-    ASSERT_THAT(mock_hwc_device->display0_prepare_content.hwLayers, Ne(nullptr));
-    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
-    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
-
-    //set expectations
-    EXPECT_THAT(mock_hwc_device->display0_set_content.dpy, Eq(dpy));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.sur, Eq(sur));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.retireFenceFd, Eq(-1));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.flags, Eq(HWC_GEOMETRY_CHANGED));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.numHwLayers, Eq(1u));
-    ASSERT_THAT(mock_hwc_device->display0_set_content.hwLayers, Ne(nullptr));
-    EXPECT_THAT(mock_hwc_device->set_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
-    EXPECT_THAT(mock_hwc_device->set_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
 }
 
 TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 {
     using namespace testing;
+    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
     auto renderable1 = std::make_shared<mtd::StubRenderable>();
     auto renderable2 = std::make_shared<mtd::StubRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist
@@ -135,7 +121,7 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
 
     mtd::MockRenderFunction mock_call_counter;
     testing::Sequence seq;
-    EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), 1, _))
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
         .InSequence(seq);
     EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
         .InSequence(seq);
@@ -147,7 +133,7 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
         .InSequence(seq)
         .WillOnce(Return(sur));
-    EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), 1, _))
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
     mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
@@ -156,52 +142,4 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     {
         mock_call_counter.called(renderable);
     });
-
-    //prepare expectations
-    EXPECT_THAT(mock_hwc_device->display0_prepare_content.retireFenceFd, Eq(-1));
-    EXPECT_THAT(mock_hwc_device->display0_prepare_content.flags, Eq(HWC_GEOMETRY_CHANGED)); 
-    EXPECT_THAT(mock_hwc_device->display0_prepare_content.numHwLayers, Eq(1u));
-    ASSERT_THAT(mock_hwc_device->display0_prepare_content.hwLayers, Ne(nullptr));
-    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
-    EXPECT_THAT(mock_hwc_device->prepare_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
-
-    //set expectations
-    EXPECT_THAT(mock_hwc_device->display0_set_content.dpy, Eq(dpy));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.sur, Eq(sur));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.retireFenceFd, Eq(-1));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.flags, Eq(HWC_GEOMETRY_CHANGED));
-    EXPECT_THAT(mock_hwc_device->display0_set_content.numHwLayers, Eq(1u));
-    ASSERT_THAT(mock_hwc_device->display0_set_content.hwLayers, Ne(nullptr));
-    EXPECT_THAT(mock_hwc_device->set_layerlist[0].compositionType, Eq(HWC_FRAMEBUFFER));
-    EXPECT_THAT(mock_hwc_device->set_layerlist[0].flags, Eq(HWC_SKIP_LAYER));
-}
-
-TEST_F(HwcFbDevice, hwc10_prepare_frame_failure)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_hwc_device, prepare_interface(mock_hwc_device.get(), _, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
-
-    EXPECT_THROW({
-        device.render_gl(stub_context);
-    }, std::runtime_error);
-}
-
-TEST_F(HwcFbDevice, hwc10_commit_frame_failure)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_hwc_device, set_interface(mock_hwc_device.get(), _, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    mga::HwcFbDevice device(mock_hwc_device, mock_fb_device, mock_vsync);
-
-    EXPECT_THROW({
-        device.render_gl(stub_context);
-    }, std::runtime_error);
 }
