@@ -142,11 +142,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     mtd::MockRenderable mock_renderable1, mock_renderable2, mock_renderable3;
 
     auto buf = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(mock_renderable1, buffer(_))
+    EXPECT_CALL(mock_renderable1, buffer())
         .WillOnce(Return(buf));
-    EXPECT_CALL(mock_renderable2, buffer(_))
+    EXPECT_CALL(mock_renderable2, buffer())
         .Times(0);
-    EXPECT_CALL(mock_renderable3, buffer(_))
+    EXPECT_CALL(mock_renderable3, buffer())
         .WillOnce(Return(buf));
 
     glm::mat4 simple;
