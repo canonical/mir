@@ -1,0 +1,7 @@
+{
+   Supress incorrect unaddressable memory warning about EVIOCSSUSPENDBLOCK ioctl
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:ioctl
+}

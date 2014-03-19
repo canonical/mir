@@ -16,12 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_REAL_HWC_WRAPPER_H_
-#define MIR_GRAPHICS_ANDROID_REAL_HWC_WRAPPER_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
 
-#include "hwc_device.h"
-#include <memory>
-#include <hardware/hwcomposer.h>
+#include "hwc_logger.h"
 
 namespace mir
 {
@@ -29,23 +27,15 @@ namespace graphics
 {
 namespace android
 {
-class HwcLogger;
-class RealHwcWrapper : public HwcWrapper
+class HwcFormattedLogger : public HwcLogger
 {
 public:
-    RealHwcWrapper(
-        std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<HwcLogger> const& logger);
-
-    void prepare(hwc_display_contents_1_t&) const override;
-    void set(hwc_display_contents_1_t&) const override;
-private:
-    static size_t const num_displays{3}; //primary, external, virtual
-    std::shared_ptr<hwc_composer_device_1> const hwc_device;
-    std::shared_ptr<HwcLogger> const logger;
+    HwcFormattedLogger() = default;
+    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
+    void log_prepare_done(hwc_display_contents_1_t const& list) const override;
+    void log_set_list(hwc_display_contents_1_t const& list) const override;
 };
-
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_REAL_HWC_WRAPPER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_ */

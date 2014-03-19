@@ -27,6 +27,13 @@
     obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
+{
+    ld_stat64
+    Memcheck:Param
+    stat64(file_name)
+    obj:/lib/arm-linux-gnueabihf/ld-2.*.so
+}
+
 # Android libs
 
 {
@@ -98,6 +105,14 @@
     ...
 }
 
+{
+   dlopen_cond
+   Memcheck:Cond
+   fun:calloc
+   fun:_dl_new_object
+   ...
+}
+
 # mir::SharedLibrary
 # Valgrind thinks that dlopen returns an uninitialized
 # value, so all checks using that value cause spurious
@@ -108,4 +123,19 @@
     Memcheck:Cond
     fun:_ZN3mir13SharedLibraryC1EPKc
     ...
+}
+
+# glib is not valgrind-friendly
+
+{
+   glib_create_type_instance
+   Memcheck:Addr4
+   fun:g_type_create_instance
+}
+
+{
+   glib_slice_alloc0
+   Memcheck:Addr4
+   fun:memset
+   fun:g_slice_alloc0
 }
