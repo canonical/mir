@@ -173,10 +173,10 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
     this->input_rectangles = input_rectangles;
 }
 
-bool ms::BasicSurface::resize(geom::Size const& size)
+void ms::BasicSurface::resize(geom::Size const& size)
 {
     if (size == this->size())
-        return false;
+        return;
 
     if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
     {
@@ -203,8 +203,6 @@ bool ms::BasicSurface::resize(geom::Size const& size)
     e.resize.width = size.width.as_int();
     e.resize.height = size.height.as_int();
     event_sink->handle_event(e);
-
-    return true;
 }
 
 geom::Point ms::BasicSurface::top_left() const

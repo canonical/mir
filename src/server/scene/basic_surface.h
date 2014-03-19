@@ -97,12 +97,7 @@ public:
 
     std::shared_ptr<compositor::BufferStream> buffer_stream() const;
 
-    /**
-     * Resize the surface.
-     * \returns true if the size changed, false if it was already that size.
-     * \throws std::logic_error For impossible sizes like {0,0}.
-     */
-    bool resize(geometry::Size const& size) override;
+    void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
     bool contains(geometry::Point const& point) const override;
     void frame_posted();

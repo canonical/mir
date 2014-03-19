@@ -162,6 +162,10 @@ public:
     void handle_display_config_change(mir::graphics::DisplayConfiguration const&) override {}
 };
 
+struct MockEventSink : StubEventSink
+{
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+};
 
 struct SurfaceCreation : public ::testing::Test
 {
@@ -351,6 +355,8 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     EXPECT_CALL(*mock_buffer_stream, resize(new_size))
         .Times(1);
 
+    auto const mock_event_sink = std::make_shared<MockEventSink>();
+
     ms::BasicSurface surf(
         mf::SurfaceId(),
         surface_name,
@@ -359,21 +365,21 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
+        mock_event_sink,
         report);
 
-    ASSERT_NE(new_size, surf.size());
-    EXPECT_TRUE(surf.resize(new_size));
-    EXPECT_EQ(new_size, surf.size());
+    ASSERT_THAT(surf.size(), Ne(new_size));
+
+    EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
+    surf.resize(new_size);
+    EXPECT_THAT(surf.size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, duplicate_resize_ignored)
 {
     using namespace testing;
     geom::Size const new_size{123, 456};
-
-    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
-        .Times(1);
+    auto const mock_event_sink = std::make_shared<MockEventSink>();
 
     ms::BasicSurface surf(
         mf::SurfaceId(),
@@ -383,16 +389,23 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
+        mock_event_sink,
         report);
 
-    ASSERT_NE(new_size, surf.size());
+    ASSERT_THAT(surf.size(), Ne(new_size));
 
-    EXPECT_TRUE(surf.resize(new_size));
-    EXPECT_EQ(new_size, surf.size());
+    EXPECT_CALL(*mock_buffer_stream, resize(new_size)).Times(1);
+    EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
+    surf.resize(new_size);
+    EXPECT_THAT(surf.size(), Eq(new_size));
 
-    EXPECT_FALSE(surf.resize(new_size));
-    EXPECT_EQ(new_size, surf.size());
+    Mock::VerifyAndClearExpectations(mock_buffer_stream.get());
+    Mock::VerifyAndClearExpectations(mock_event_sink.get());
+
+    EXPECT_CALL(*mock_buffer_stream, resize(_)).Times(0);
+    EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(0);
+    surf.resize(new_size);
+    EXPECT_THAT(surf.size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
