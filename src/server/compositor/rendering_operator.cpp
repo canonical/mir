@@ -23,17 +23,15 @@
 namespace mc=mir::compositor;
 
 mc::RenderingOperator::RenderingOperator(
-    Renderer& renderer,
-    unsigned long frameno)
+    Renderer& renderer)
     : renderer(renderer),
-      frameno(frameno),
       uncomposited_buffers_{false}
 {
 }
 
 void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
 {
-    auto compositor_buffer = renderable.buffer(frameno);
+    auto compositor_buffer = renderable.buffer();
     // preserves buffers used in rendering until after post_update()
     saved_resources.push_back(compositor_buffer);
     renderer.render(renderable, *compositor_buffer);

@@ -36,8 +36,18 @@ public:
     virtual ~BufferBundle() noexcept {}
     virtual void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) = 0;
     virtual void client_release(graphics::Buffer*) = 0;
+
+    /**
+     * Acquire the next buffer that's ready to display/composite.
+     *
+     * \param [in] compositor_id A unique identifier of who is going to use the
+     *                           buffer, to ensure that separate compositors
+     *                           for separate monitors that need the same frame
+     *                           will get the same buffer. You may use any
+     *                           unique identifier such as a this pointer.
+     */
     virtual std::shared_ptr<graphics::Buffer>
-        compositor_acquire(unsigned long frameno) = 0;
+        compositor_acquire(void const* compositor_id) = 0;
     virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
     virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
     virtual void snapshot_release(std::shared_ptr<graphics::Buffer> const&) = 0;

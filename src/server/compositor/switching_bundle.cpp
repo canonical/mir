@@ -295,13 +295,14 @@ void mc::SwitchingBundle::client_release(graphics::Buffer* released_buffer)
 }
 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
-    unsigned long frameno)
+    void const* compositor_id)
 {
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
     // Multi-monitor acquires close to each other get the same frame:
-    bool same_frame = last_consumed && (frameno == *last_consumed);
+    bool same_frame = !users.empty() &&
+                      users.find(compositor_id) == users.end();
 
     int avail = nfree();
     bool can_recycle = ncompositors || avail;
@@ -330,8 +331,11 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
         first_ready = next(first_ready);
         nready--;
         ncompositors++;
-        last_consumed = frameno;
+
+        // Fresh frame! Ensure all users get it at most once...
+        users.clear();
     }
+    users.insert(compositor_id);
 
     overlapping_compositors = (ncompositors > 1);
 
