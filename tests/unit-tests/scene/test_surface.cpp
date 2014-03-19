@@ -20,6 +20,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/surface_configurator.h"
 #include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -167,6 +168,14 @@ struct MockEventSink : StubEventSink
     MOCK_METHOD1(handle_event, void(MirEvent const&));
 };
 
+struct StubSurfaceConfigurator : msh::SurfaceConfigurator
+{
+    int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int) override { return 0; }
+
+    void attribute_set(msh::Surface const&, MirSurfaceAttrib, int) override { }
+};
+
+
 struct SurfaceCreation : public ::testing::Test
 {
     virtual void SetUp()
@@ -201,6 +210,7 @@ struct SurfaceCreation : public ::testing::Test
     int notification_count;
     mtd::StubBuffer stub_buffer;
     std::shared_ptr<StubEventSink> const stub_event_sink = std::make_shared<StubEventSink>();
+    std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
 };
 
 }
@@ -217,6 +227,7 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
@@ -239,6 +250,7 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_EQ(surface_name, surf.name());
@@ -255,6 +267,7 @@ TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_EQ(size, surf.size());
@@ -272,6 +285,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     mtd::StubBuffer graphics_resource;
@@ -300,6 +314,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
@@ -322,6 +337,7 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     auto ret_top_left = surf.top_left();
@@ -341,6 +357,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     surf.move_to(p);
@@ -366,6 +383,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         mock_event_sink,
+        stub_configurator,
         report);
 
     ASSERT_THAT(surf.size(), Ne(new_size));
@@ -390,6 +408,7 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         mock_event_sink,
+        stub_configurator,
         report);
 
     ASSERT_THAT(surf.size(), Ne(new_size));
@@ -426,6 +445,7 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_THROW({
@@ -457,6 +477,7 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_CALL(*mock_buffer_stream, resize(size))
@@ -482,6 +503,7 @@ TEST_F(SurfaceCreation, test_get_input_channel)
         mock_buffer_stream,
         mock_channel,
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_EQ(mock_channel, surf.input_channel());
@@ -501,6 +523,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     surf.set_alpha(alpha);
@@ -522,6 +545,7 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     surf.force_requests_to_complete();
@@ -543,6 +567,7 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     surf.allow_framedropping(true);
@@ -559,6 +584,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     mg::Buffer* buffer{nullptr};
@@ -585,6 +611,7 @@ TEST_F(SurfaceCreation, input_fds)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_THROW({
@@ -603,6 +630,7 @@ TEST_F(SurfaceCreation, input_fds)
         false,
         mock_buffer_stream,mt::fake_shared(channel),
         stub_event_sink,
+        stub_configurator,
         report);
 
     EXPECT_EQ(client_fd, input_surf.client_input_fd());

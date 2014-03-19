@@ -27,6 +27,7 @@
 namespace mir
 {
 namespace frontend { class EventSink; }
+namespace shell { class SurfaceConfigurator; }
 namespace scene
 {
 
@@ -41,7 +42,8 @@ public:
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::function<void()> const&  change_callback,
-        std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 private:
     BasicSurfaceFactory(const BasicSurfaceFactory&) = delete;
     BasicSurfaceFactory& operator=(const BasicSurfaceFactory&) = delete;

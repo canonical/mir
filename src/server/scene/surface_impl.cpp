@@ -49,7 +49,7 @@ ms::SurfaceImpl::SurfaceImpl(
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
     configurator(configurator),
-    surface(builder->create_surface(id, params, event_sink)),
+    surface(builder->create_surface(id, params, event_sink, configurator)),
     id(id),
     event_sink(event_sink),
     type_value(mir_surface_type_normal),
