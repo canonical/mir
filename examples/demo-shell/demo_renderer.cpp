@@ -31,7 +31,7 @@ float penumbra_curve(float x)
     return 1.0f - std::sin(x * M_PI / 2.0f);
 }
 
-void generate_shadow_textures(float opacity, GLuint& edge, GLuint& corner)
+void generate_shadow_textures(GLuint& edge, GLuint& corner, float opacity)
 {
     struct Texel
     {
@@ -81,7 +81,7 @@ void generate_shadow_textures(float opacity, GLuint& edge, GLuint& corner)
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
-    generate_shadow_textures(0.4f, shadow_edge_tex, shadow_corner_tex);
+    generate_shadow_textures(shadow_edge_tex, shadow_corner_tex, 0.4f);
 }
 
 DemoRenderer::~DemoRenderer()
