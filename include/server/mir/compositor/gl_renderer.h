@@ -54,14 +54,22 @@ public:
         GLfloat texcoord[2];
     };
 
+    struct Primitive
+    {
+        GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
+        GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
+        std::vector<Vertex> vertices;
+    };
+
     /**
      * tessellate defines the list of triangles that will be used to render
      * the surface. By default it just returns 4 vertices for a rectangle.
      * However you can override its behaviour to tessellate more finely and
      * deform freely for effects like wobbly windows.
      *
-     * \returns The mode to be passed to glDrawArrays, e.g. GL_TRIANGLE_STRIP,
-     *          GL_TRIANGLE_FAN or GL_TRIANGLES.
+     * \param [in,out] primitives The list of rendering primitives to be
+     *                            grown and/or modified.
+     * \param [in]     renderable The renderable surface being tessellated.
      *
      * \note The cohesion of this function to GLRenderer is quite loose and it
      *       does not strictly need to reside here.
@@ -69,8 +77,8 @@ public:
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
-    virtual GLenum tessellate(graphics::Renderable const& renderable,
-                              std::vector<Vertex>& vertices) const;
+    virtual void tessellate(std::vector<Primitive>& primitives,
+                            graphics::Renderable const& renderable) const;
 
 private:
     GLuint vertex_shader;
