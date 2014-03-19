@@ -76,7 +76,7 @@ std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const
     return surface_buffer_stream;
 }
 
-std::string const& ms::BasicSurface::name() const
+std::string ms::BasicSurface::name() const
 {
     return surface_name;
 }

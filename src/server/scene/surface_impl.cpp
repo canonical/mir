@@ -93,7 +93,7 @@ mir::geometry::Point ms::SurfaceImpl::top_left() const
     return surface->top_left();
 }
 
-std::string const& ms::SurfaceImpl::name() const
+std::string ms::SurfaceImpl::name() const
 {
     return surface->name();
 }

@@ -59,7 +59,7 @@ public:
 
     virtual void force_requests_to_complete();
 
-    virtual std::string const& name() const;
+    virtual std::string name() const;
 
     virtual void move_to(geometry::Point const& top_left);
 

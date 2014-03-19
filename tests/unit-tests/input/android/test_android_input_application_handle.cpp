@@ -40,7 +40,7 @@ TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_ti
 
     EXPECT_CALL(*surface_info, name())
         .Times(2)
-        .WillRepeatedly(ReturnRef(testing_surface_name));
+        .WillRepeatedly(Return(testing_surface_name));
 
     mia::InputApplicationHandle application_handle(surface_info);
     EXPECT_TRUE(application_handle.updateInfo());

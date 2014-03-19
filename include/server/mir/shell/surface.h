@@ -37,7 +37,7 @@ class InputTargeter;
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
-    virtual std::string const& name() const = 0;
+    virtual std::string name() const = 0;
     virtual MirSurfaceType type() const = 0;
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
