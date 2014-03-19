@@ -116,8 +116,7 @@ void ms::SurfaceImpl::allow_framedropping(bool allow)
 void ms::SurfaceImpl::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
 {
-    auto buf = surface->snapshot_buffer();
-    exec(*buf);
+    surface->with_most_recent_buffer_do(exec);
 }
 
 bool ms::SurfaceImpl::supports_input() const
