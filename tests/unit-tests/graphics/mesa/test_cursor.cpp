@@ -211,8 +211,9 @@ struct StubCursorImage : public mg::CursorImage
     {
         return geom::Size{geom::Width{64}, geom::Height{64}};
     }
-    constexpr static void const* image_data{reinterpret_cast<void*>(0x5678)};
+    static void const* image_data;
 };
+void const* StubCursorImage::image_data = reinterpret_cast<void*>(0x1729);
 
 struct MesaCursorTest : public ::testing::Test
 {
