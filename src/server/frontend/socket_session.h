@@ -59,8 +59,9 @@ private:
     std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
 
-    boost::asio::streambuf header;
-    boost::asio::streambuf message;
+    static size_t const header_size = 2;
+    char header[header_size];
+    std::vector<char> body;
 };
 
 }

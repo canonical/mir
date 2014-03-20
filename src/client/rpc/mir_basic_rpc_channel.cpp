@@ -34,7 +34,7 @@ mclrd::PendingCallCache::PendingCallCache(
 }
 
 void mclrd::PendingCallCache::save_completion_details(
-    mir::protobuf::wire::Invocation& invoke,
+    mir::protobuf::wire::Invocation const& invoke,
     google::protobuf::Message* response,
     std::shared_ptr<google::protobuf::Closure> const& complete)
 {
@@ -102,8 +102,8 @@ mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
 
 
 mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
-    const google::protobuf::MethodDescriptor* method,
-    const google::protobuf::Message* request)
+    google::protobuf::MethodDescriptor const* method,
+    google::protobuf::Message const* request)
 {
     char buffer[mir::frontend::serialization_buffer_size];
 
