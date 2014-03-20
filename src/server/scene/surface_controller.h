@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -40,10 +40,15 @@ class SurfaceController : public SurfaceBuilder, public SurfaceRanker
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params);
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface);
+    std::weak_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
 
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface);
+    void destroy_surface(std::weak_ptr<BasicSurface> const& surface) override;
+
+    void raise(std::weak_ptr<BasicSurface> const& surface) override;
 
 private:
     std::shared_ptr<SurfaceStackModel> const surface_stack;

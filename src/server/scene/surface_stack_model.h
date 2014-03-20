@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,15 +19,18 @@
 #ifndef MIR_SCENE_SURFACE_STACK_MODEL_H_
 #define MIR_SCENE_SURFACE_STACK_MODEL_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/scene/depth_id.h"
 
 #include <memory>
 
 namespace mir
 {
+namespace frontend { class EventSink; }
 namespace shell
 {
 struct SurfaceCreationParameters;
+class SurfaceConfigurator;
 }
 
 namespace scene
@@ -40,7 +43,12 @@ class SurfaceStackModel
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
+
     virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
 
     virtual void raise(std::weak_ptr<BasicSurface> const& surface) = 0;

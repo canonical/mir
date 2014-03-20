@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,12 +19,15 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_FACTORY_H_
 #define MIR_SCENE_BASIC_SURFACE_FACTORY_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include <memory>
 #include <functional>
 
 namespace mir
 {
+namespace frontend { class EventSink; }
+namespace shell { class SurfaceConfigurator; }
 namespace scene
 {
 
@@ -36,7 +39,11 @@ public:
     virtual ~BasicSurfaceFactory() = default;
 
     virtual std::shared_ptr<BasicSurface> create_surface(
-        shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
+        frontend::SurfaceId id,
+        shell::SurfaceCreationParameters const& params,
+        std::function<void()> const&  change_callback,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 private:
     BasicSurfaceFactory(const BasicSurfaceFactory&) = delete;
     BasicSurfaceFactory& operator=(const BasicSurfaceFactory&) = delete;
