@@ -18,8 +18,8 @@
 
 #include "trust_session.h"
 #include "mir/shell/trust_session_creation_parameters.h"
-#include "mir/scene/session_container.h"
 #include "mir/shell/session.h"
+#include "session_container.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -83,9 +83,8 @@ void ms::TrustSession::stop()
     state = mir_trust_session_state_stopped;
 
     auto helper = trusted_helper.lock();
-    if (helper) {
+    if (helper)
         helper->end_trust_session();
-    }
 }
 
 std::vector<pid_t> ms::TrustSession::get_applications() const
@@ -93,13 +92,22 @@ std::vector<pid_t> ms::TrustSession::get_applications() const
   return applications;
 }
 
-void ms::TrustSession::add_child_session(std::shared_ptr<msh::Session> const& session)
+void ms::TrustSession::add_trusted_child(std::shared_ptr<msh::Session> const& session)
 {
     if (state == mir_trust_session_state_stopped)
         return;
 
     auto helper = trusted_helper.lock();
-    if (helper) {
+    if (helper)
         helper->add_trusted_child(session);
-    }
+}
+
+void ms::TrustSession::remove_trusted_child(std::shared_ptr<shell::Session> const& session)
+{
+    if (state == mir_trust_session_state_stopped)
+        return;
+
+    auto helper = trusted_helper.lock();
+    if (helper)
+        helper->remove_trusted_child(session);
 }

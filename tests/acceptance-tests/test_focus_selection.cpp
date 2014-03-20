@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/scene/session_container.h"
+#include "src/server/scene/session_container.h"
 #include "src/server/shell/consuming_placement_strategy.h"
 #include "src/server/shell/organising_surface_factory.h"
 #include "src/server/scene/session_manager.h"

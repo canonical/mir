@@ -50,13 +50,6 @@ void ms::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> c
     }
 }
 
-void ms::DefaultSessionContainer::clear()
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    apps.clear();
-}
-
 void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<msh::Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -64,28 +57,6 @@ void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<ms
     for (auto const ptr : apps)
     {
         f(ptr);
-    }
-}
-
-void ms::DefaultSessionContainer::for_each(std::function<bool(std::shared_ptr<msh::Session> const&)> f, bool reverse) const
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    if (reverse)
-    {
-        for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
-        {
-            if (!f(*rit))
-                break;
-        }
-    }
-    else
-    {
-        for (auto it = apps.begin(); it != apps.end(); ++it)
-        {
-            if (!f(*it))
-                break;
-        }
     }
 }
 

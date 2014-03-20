@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/global_event_sender.h"
-#include "mir/scene/session_container.h"
+#include "src/server/scene/session_container.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -38,9 +38,7 @@ class MockSessionStorage : public ms::SessionContainer
 public:
     MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD0(clear, void());
     MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
-    MOCK_CONST_METHOD2(for_each, void(std::function<bool(std::shared_ptr<msh::Session> const&)>, bool));
     MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
 };
 }

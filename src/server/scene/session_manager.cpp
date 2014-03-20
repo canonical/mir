@@ -18,7 +18,7 @@
 
 #include "session_manager.h"
 #include "application_session.h"
-#include "mir/scene/session_container.h"
+#include "session_container.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
@@ -104,7 +104,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
         {
             auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(*it);
 
-            shell_trust_session->add_child_session(new_session);
+            shell_trust_session->add_trusted_child(new_session);
             it++;
         }
     }
@@ -149,13 +149,6 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(shell_session);
 
-    auto session_parent = shell_session->get_parent();
-    if (session_parent)
-    {
-        shell_session->set_parent(nullptr);
-        session_parent->get_children()->remove_session(shell_session);
-    }
-
     auto trust_session = shell_session->get_trust_session();
     if (trust_session)
     {
@@ -163,6 +156,10 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
         if (trusted_helper == shell_session)
         {
             stop_trust_session(trust_session);
+        }
+        else
+        {
+            trust_session->remove_trusted_child(shell_session);
         }
     }
     session_listener->stopping(shell_session);

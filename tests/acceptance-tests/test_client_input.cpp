@@ -21,7 +21,7 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
-#include "mir/scene/session_container.h"
+#include "src/server/scene/session_container.h"
 #include "mir/shell/session.h"
 #include "src/server/scene/surface_controller.h"
 #include "src/server/scene/surface_stack_model.h"

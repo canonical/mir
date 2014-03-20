@@ -23,8 +23,8 @@
 #include "mir/input/input_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/shell/session.h"
-#include "mir/scene/session_container.h"
 
+#include "session_container.h"
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
 #include "gl_pixel_buffer.h"

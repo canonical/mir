@@ -49,7 +49,11 @@ class NullTrustSession : public shell::TrustSession
       return std::weak_ptr<shell::Session>();
     }
 
-    void add_child_session(std::shared_ptr<shell::Session> const&) override
+    void add_trusted_child(std::shared_ptr<shell::Session> const&) override
+    {
+    }
+
+    void remove_trusted_child(std::shared_ptr<shell::Session> const&) override
     {
     }
 };

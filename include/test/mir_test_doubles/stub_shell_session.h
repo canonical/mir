@@ -87,18 +87,13 @@ struct StubShellSession : public shell::Session
     {
     }
 
-    shell::Session* get_parent() const override
-    {
-        return nullptr;
-    }
-
-    void set_parent(shell::Session* /* new_parent */) override
+    void begin_trust_session(std::shared_ptr<shell::TrustSession> const&,
+                             std::vector<std::shared_ptr<shell::Session>> const&) override
     {
     }
 
-    std::shared_ptr<scene::SessionContainer> get_children() const override
+    void end_trust_session() override
     {
-        return children;
     }
 
     std::shared_ptr<shell::TrustSession> get_trust_session() const override
@@ -106,12 +101,7 @@ struct StubShellSession : public shell::Session
         return std::shared_ptr<shell::TrustSession>();
     }
 
-    void set_trust_session(std::shared_ptr<shell::TrustSession> const& /* trust_session */) override
-    {
-    }
-
-    void begin_trust_session(std::shared_ptr<shell::TrustSession> const&,
-                             std::vector<std::shared_ptr<shell::Session>> const&) override
+    void set_trust_session(std::shared_ptr<shell::TrustSession> const&) override
     {
     }
 
@@ -119,7 +109,12 @@ struct StubShellSession : public shell::Session
     {
     }
 
-    void end_trust_session() override
+    void remove_trusted_child(std::shared_ptr<Session> const&) override
+    {
+    }
+
+    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)>,
+                                bool) const override
     {
     }
 
