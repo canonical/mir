@@ -100,7 +100,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         if (filter.fullscreen_on_top())
         {
-            auto bypass_buf = match.topmost_fullscreen()->buffer();
+            /*
+             * Notice the user_id we pass to buffer() here has to be
+             * different to the one used in the Renderer. This is in case
+             * the below if() fails we want to complete the frame using the
+             * same buffer (different user_id required).
+             */
+            auto bypass_buf = match.topmost_fullscreen()->buffer(this);
 
             if (bypass_buf->can_bypass())
             {

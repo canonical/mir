@@ -30,8 +30,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <pthread.h>
-
 #include <stdexcept>
 
 namespace mc = mir::compositor;
@@ -269,10 +267,8 @@ bool ms::BasicSurface::shaped() const
     return nonrectangular;
 }
 
-std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer() const
+std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer(void const* user_id) const
 {
-    // C++ threads can't give us nice simple thread IDs compatible with void*
-    void const* user_id = reinterpret_cast<void const*>(pthread_self());
     return buffer_stream()->lock_compositor_buffer(user_id);
 }
 

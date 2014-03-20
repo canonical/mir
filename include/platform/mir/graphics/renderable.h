@@ -35,12 +35,15 @@ class Renderable
 public:
     /**
      * Return the next buffer that should be composited/rendered.
-     * Results will be recycled by thread ID. So concurrent calls from
-     * different threads will get the same buffers. However no single thread
-     * will get the same buffer twice iff there are new buffers available
-     * from the client.
+     *
+     * \param [in] user_id An arbitrary unique identifier used to distinguish
+     *                     separate threads/monitors/components which need
+     *                     to concurrently receive the same buffer. Calling
+     *                     with the same user_id will return a new (different)
+     *                     buffer to that user each time. Suggested values
+     *                     for user_id are a "this" pointer or a thread ID.
      */
-    virtual std::shared_ptr<Buffer> buffer() const = 0;
+    virtual std::shared_ptr<Buffer> buffer(void const* user_id) const = 0;
 
     virtual bool alpha_enabled() const = 0;
     virtual geometry::Rectangle screen_position() const = 0;
