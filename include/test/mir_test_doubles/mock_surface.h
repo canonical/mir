@@ -41,7 +41,7 @@ struct MockSurface : public scene::SurfaceImpl
 {
     MockSurface(std::shared_ptr<scene::SurfaceBuilder> const& builder) :
         scene::SurfaceImpl(
-            builder->create_surface(frontend::SurfaceId{}, shell::a_surface(), std::make_shared<NullEventSink>(), std::make_shared<NullSurfaceConfigurator>()).lock(),
+            builder->create_surface(frontend::SurfaceId{}, shell::a_surface(), std::make_shared<NullEventSink>(), std::make_shared<NullSurfaceConfigurator>()),
             builder)
     {
     }

@@ -46,7 +46,7 @@ class SurfaceImpl : public shell::Surface
 {
 public:
     SurfaceImpl(
-        std::shared_ptr<BasicSurface> const& surface,
+        std::weak_ptr<BasicSurface> const& surface,
         std::shared_ptr<SurfaceBuilder> const& builder);
 
     ~SurfaceImpl() noexcept;
