@@ -61,7 +61,14 @@ ms::SurfaceStack::SurfaceStack(
 
 mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 {
-    return mg::RenderableList{};
+    std::lock_guard<std::recursive_mutex> lg(guard);
+    mg::RenderableList list;
+    for (auto &layer : layers_by_depth)
+    {
+        auto surfaces = layer.second;
+        std::copy(surfaces.begin(), surfaces.end(), std::back_inserter(list));
+    }
+    return list;
 }
 
 void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)

@@ -99,7 +99,7 @@ private:
 
     void emit_change_notification();
 
-    std::recursive_mutex guard;
+    std::recursive_mutex mutable guard;
     std::shared_ptr<BasicSurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
