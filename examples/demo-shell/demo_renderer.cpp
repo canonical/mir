@@ -76,18 +76,94 @@ void generate_shadow_textures(GLuint& edge, GLuint& corner, float opacity)
                  image);
 }
 
+void generate_frame_textures(GLuint& corner, GLuint& title)
+{
+    struct Texel
+    {
+        GLubyte r, g, b, a;
+    };
+
+    int const width = 256;
+    Texel image[width][width];
+
+    int cx = width / 2;
+    int cy = width / 2;
+    int radius_sqr = cx * cx;
+
+    for (int y = 0; y < width; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            GLubyte lum = 128;
+            GLubyte alpha = 255;
+
+            // Cut out the corner in a circular shape.
+            if (x < cx && y < cy)
+            {
+                int dx = cx - x;
+                int dy = cy - y;
+                if (dx * dx + dy * dy >= radius_sqr)
+                    alpha = 0;
+            }
+
+            // Set gradient
+            if (y < cy)
+            {
+                float brighten = (1.0f - (static_cast<float>(y) / cy));
+                if (x < cx)
+                    brighten *= std::sin(x * M_PI / width);
+
+                lum += (255 - lum) * brighten;
+            }
+
+            image[y][x] = {lum, lum, lum, alpha};
+        }
+    }
+
+    glGenTextures(1, &corner);
+    glBindTexture(GL_TEXTURE_2D, corner);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                   GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                 width, width, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 image);
+    glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing please
+
+    // Reuse the right-hand edge of the corner texture for the titlebar
+    for (int x = 0; x < width; ++x)
+        image[0][x] = image[x][width - 1];
+
+    glGenTextures(1, &title);
+    glBindTexture(GL_TEXTURE_2D, title);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                   GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                 1, width, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 image);
+    glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing please
+}
+
 } // namespace
 
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
     generate_shadow_textures(shadow_edge_tex, shadow_corner_tex, 0.4f);
+    generate_frame_textures(titlebar_corner_tex, titlebar_tex);
 }
 
 DemoRenderer::~DemoRenderer()
 {
     glDeleteTextures(1, &shadow_edge_tex);
     glDeleteTextures(1, &shadow_corner_tex);
+    glDeleteTextures(1, &titlebar_corner_tex);
+    glDeleteTextures(1, &titlebar_tex);
 }
 
 void DemoRenderer::begin() const
@@ -100,14 +176,19 @@ void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
     GLRenderer::tessellate(primitives, renderable);
+    tessellate_shadow(primitives, renderable, 80.0f);
+    tessellate_frame(primitives, renderable, 30.0f);
+}
 
+void DemoRenderer::tessellate_shadow(std::vector<Primitive>& primitives,
+                                     graphics::Renderable const& renderable,
+                                     float radius) const
+{
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
     GLfloat right = left + rect.size.width.as_int();
     GLfloat top = rect.top_left.y.as_int();
     GLfloat bottom = top + rect.size.height.as_int();
-
-    float radius = 80.0f; // TODO configurable?
 
     auto n = primitives.size();
     primitives.resize(n + 8);
@@ -193,3 +274,52 @@ void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
+
+void DemoRenderer::tessellate_frame(std::vector<Primitive>& primitives,
+                                    graphics::Renderable const& renderable,
+                                    float titlebar_height) const
+{
+    auto const& rect = renderable.screen_position();
+    GLfloat left = rect.top_left.x.as_int();
+    GLfloat right = left + rect.size.width.as_int();
+    GLfloat top = rect.top_left.y.as_int();
+
+    auto n = primitives.size();
+    primitives.resize(n + 3);
+
+    GLfloat htop = top - titlebar_height;
+    GLfloat inleft = left + titlebar_height;  // Square proportions for corners
+    GLfloat inright = right - titlebar_height;
+
+    GLfloat mid = (left + right) / 2.0f;
+    if (inleft > mid) inleft = mid;
+    if (inright < mid) inright = mid;
+
+    auto& top_left_corner = primitives[n++];
+    top_left_corner.tex_id = titlebar_corner_tex;
+    top_left_corner.type = GL_TRIANGLE_FAN;
+    top_left_corner.vertices.resize(4);
+    top_left_corner.vertices[0] = {{left,   htop, 0.0f}, {0.0f, 0.0f}};
+    top_left_corner.vertices[1] = {{inleft, htop, 0.0f}, {1.0f, 0.0f}};
+    top_left_corner.vertices[2] = {{inleft, top,  0.0f}, {1.0f, 1.0f}};
+    top_left_corner.vertices[3] = {{left,   top,  0.0f}, {0.0f, 1.0f}};
+
+    auto& top_right_corner = primitives[n++];
+    top_right_corner.tex_id = titlebar_corner_tex;
+    top_right_corner.type = GL_TRIANGLE_FAN;
+    top_right_corner.vertices.resize(4);
+    top_right_corner.vertices[0] = {{inright, htop, 0.0f}, {1.0f, 0.0f}};
+    top_right_corner.vertices[1] = {{right,   htop, 0.0f}, {0.0f, 0.0f}};
+    top_right_corner.vertices[2] = {{right,   top,  0.0f}, {0.0f, 1.0f}};
+    top_right_corner.vertices[3] = {{inright, top,  0.0f}, {1.0f, 1.0f}};
+
+    auto& titlebar = primitives[n++];
+    titlebar.tex_id = titlebar_tex;
+    titlebar.type = GL_TRIANGLE_FAN;
+    titlebar.vertices.resize(4);
+    titlebar.vertices[0] = {{inleft,  htop, 0.0f}, {0.0f, 0.0f}};
+    titlebar.vertices[1] = {{inright, htop, 0.0f}, {1.0f, 0.0f}};
+    titlebar.vertices[2] = {{inright, top,  0.0f}, {1.0f, 1.0f}};
+    titlebar.vertices[3] = {{inleft,  top,  0.0f}, {0.0f, 1.0f}};
+}
+
