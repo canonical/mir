@@ -99,7 +99,7 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 }
 
 void ms::SurfaceStack::add_surface(
-    std::shared_ptr<BasicSurface> const& surface,
+    std::shared_ptr<Surface> const& surface,
     DepthId depth,
     mi::InputReceptionMode input_mode)
 {
@@ -112,7 +112,7 @@ void ms::SurfaceStack::add_surface(
     emit_change_notification();
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
@@ -124,7 +124,7 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(
     return surface;
 }
 
-void ms::SurfaceStack::remove_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 {
     auto const keep_alive = surface.lock();
 
@@ -171,7 +171,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<BasicSurface> const& s)
+void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
 {
     auto surface = s.lock();
 

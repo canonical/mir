@@ -52,7 +52,7 @@ public:
     {
     }
 
-    std::weak_ptr<scene::BasicSurface> create_surface(
+    std::weak_ptr<scene::Surface> create_surface(
         frontend::SurfaceId,
         shell::SurfaceCreationParameters const&,
         std::shared_ptr<frontend::EventSink> const&,
@@ -61,7 +61,7 @@ public:
         return dummy_surface;
     }
 
-    void destroy_surface(std::weak_ptr<scene::BasicSurface> const& ) override
+    void destroy_surface(std::weak_ptr<scene::Surface> const& ) override
     {
     }
 

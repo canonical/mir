@@ -28,7 +28,7 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
 ms::SurfaceImpl::SurfaceImpl(
-    std::weak_ptr<BasicSurface> const& surface,
+    std::weak_ptr<ms::Surface> const& surface,
     std::shared_ptr<SurfaceBuilder> const& builder) :
     surface(surface),
     builder(builder)

@@ -87,7 +87,7 @@ public:
     bool supports_input() const;
     int client_input_fd() const;
     void allow_framedropping(bool);
-    std::shared_ptr<input::InputChannel> input_channel() const;
+    std::shared_ptr<input::InputChannel> input_channel() const override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 

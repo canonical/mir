@@ -76,7 +76,7 @@ public:
     {
     }
 
-    std::weak_ptr<ms::BasicSurface> create_surface(
+    std::weak_ptr<ms::Surface> create_surface(
         mf::SurfaceId id,
         msh::SurfaceCreationParameters const&,
         std::shared_ptr<mf::EventSink> const& event_sink,
@@ -96,7 +96,7 @@ public:
         return dummy_surface;
     }
 
-    void destroy_surface(std::weak_ptr<ms::BasicSurface> const& )
+    void destroy_surface(std::weak_ptr<ms::Surface> const& )
     {
         reset_surface();
     }
@@ -131,13 +131,13 @@ public:
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
     }
 
-    MOCK_METHOD4(create_surface, std::weak_ptr<ms::BasicSurface>(
+    MOCK_METHOD4(create_surface, std::weak_ptr<ms::Surface>(
         mf::SurfaceId,
         const msh::SurfaceCreationParameters&,
         std::shared_ptr<mf::EventSink> const&,
         std::shared_ptr<msh::SurfaceConfigurator> const& configurator));
 
-    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::BasicSurface> const&));
+    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
 
 private:
     StubSurfaceBuilder self;

@@ -78,15 +78,15 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel
-    std::weak_ptr<BasicSurface> create_surface(
+    std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
 
-    virtual void remove_surface(std::weak_ptr<BasicSurface> const& surface) override;
+    virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface) override;
+    virtual void raise(std::weak_ptr<Surface> const& surface) override;
 
     virtual void lock();
     virtual void unlock();
@@ -95,7 +95,7 @@ public:
     // as that complicates client code wrapping the default implementation.
     // For now add_surface() is called by create_surface
     void add_surface(
-        std::shared_ptr<BasicSurface> const& surface,
+        std::shared_ptr<Surface> const& surface,
         DepthId depth,
         input::InputReceptionMode input_mode);
 
@@ -111,7 +111,7 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::function<void()> const change_cb;
 
-    typedef std::vector<std::shared_ptr<BasicSurface>> Layer;
+    typedef std::vector<std::shared_ptr<Surface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
 
     std::mutex notify_change_mutex;
