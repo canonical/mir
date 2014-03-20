@@ -42,7 +42,7 @@ TEST(RenderingOperator, render_operator_saves_resources)
     auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(mock_renderable, buffer())
+    EXPECT_CALL(mock_renderable, buffer(_))
         .Times(3)
         .WillOnce(Return(stub_buffer0))
         .WillOnce(Return(stub_buffer1))

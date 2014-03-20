@@ -16,6 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#if 0
 #include "src/server/compositor/switching_bundle.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -926,3 +927,4 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
         }
     }
 }
+#endif
