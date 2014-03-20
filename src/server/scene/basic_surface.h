@@ -22,6 +22,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
+#include "mir/shell/surface.h"
 
 #include "mutable_surface_state.h"
 #include "mir_toolkit/common.h"
@@ -55,7 +56,8 @@ class SceneReport;
 class BasicSurface :
     public graphics::Renderable,
     public input::Surface,
-    public MutableSurfaceState
+    public MutableSurfaceState,
+    public shell::SurfaceBufferAccess
 {
 public:
     BasicSurface(
@@ -69,7 +71,7 @@ public:
 
     ~BasicSurface() noexcept;
 
-    std::string const& name() const override;
+    std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
     float alpha() const override;
     void set_hidden(bool is_hidden) override;
@@ -111,6 +113,9 @@ public:
     bool alpha_enabled() const override;
     geometry::Rectangle screen_position() const override;
     int buffers_ready_for_compositor() const override;
+
+    virtual void with_most_recent_buffer_do(
+        std::function<void(graphics::Buffer&)> const& exec);
 
 private:
     BasicSurface(BasicSurface const&) = delete;

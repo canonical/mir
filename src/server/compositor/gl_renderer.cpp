@@ -184,8 +184,8 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteTextures(1, &t.second.id);
 }
 
-GLenum mc::GLRenderer::tessellate(graphics::Renderable const& renderable,
-                                  std::vector<Vertex>& vertices) const
+void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
+                                graphics::Renderable const& renderable) const
 {
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
@@ -193,12 +193,17 @@ GLenum mc::GLRenderer::tessellate(graphics::Renderable const& renderable,
     GLfloat top = rect.top_left.y.as_int();
     GLfloat bottom = top + rect.size.height.as_int();
 
+    primitives.resize(1);
+    auto& client = primitives[0];
+    client.tex_id = 0;
+    client.type = GL_TRIANGLE_STRIP;
+
+    auto& vertices = client.vertices;
     vertices.resize(4);
     vertices[0] = {{left,  top,    0.0f}, {0.0f, 0.0f}};
     vertices[1] = {{left,  bottom, 0.0f}, {0.0f, 1.0f}};
     vertices[2] = {{right, top,    0.0f}, {1.0f, 0.0f}};
     vertices[3] = {{right, bottom, 0.0f}, {1.0f, 1.0f}};
-    return GL_TRIANGLE_STRIP;
 }
 
 void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
@@ -227,14 +232,6 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                        glm::value_ptr(renderable.transformation()));
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
-    std::vector<Vertex> vertices;
-    GLenum draw_mode = tessellate(renderable, vertices);
-   
-    glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                          GL_FALSE, sizeof(Vertex), &vertices[0].position);
-    glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                          GL_FALSE, sizeof(Vertex), &vertices[0].texcoord);
-
     SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];
     bool changed = true;
@@ -261,7 +258,28 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
-    glDrawArrays(draw_mode, 0, vertices.size());
+
+    std::vector<Primitive> primitives;
+    tessellate(primitives, renderable);
+   
+    for (auto const& p : primitives)
+    {
+        // Note a primitive tex_id of zero means use the surface texture,
+        // which is what you normally want. Other textures could be used
+        // in decorations etc.
+
+        glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : tex.id);
+
+        glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
+                              GL_FALSE, sizeof(Vertex),
+                              &p.vertices[0].position);
+        glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
+                              GL_FALSE, sizeof(Vertex),
+                              &p.vertices[0].texcoord);
+
+        glDrawArrays(p.type, 0, p.vertices.size());
+    }
+
     glDisableVertexAttribArray(texcoord_attr_loc);
     glDisableVertexAttribArray(position_attr_loc);
 }
