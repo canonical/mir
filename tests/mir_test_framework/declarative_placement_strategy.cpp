@@ -25,10 +25,10 @@ namespace msh = mir::shell;
 namespace mtf = mir_test_framework;
 
 mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
-    std::shared_ptr<msh::PlacementStrategy> const& defaulting_strategy,
+    std::shared_ptr<msh::PlacementStrategy> const& default_strategy,
     SurfaceGeometries const& positions, 
     SurfaceDepths const& depths)
-    : defaulting_strategy(defaulting_strategy),
+    : default_strategy(default_strategy),
     surface_geometries_by_name(positions),
     surface_depths_by_name(depths)
 {
@@ -36,8 +36,7 @@ mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
 
 msh::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(msh::Session const& session, msh::SurfaceCreationParameters const& request_parameters)
 {
-    auto placed = request_parameters;
-    placed = defaulting_strategy->place(session, placed);
+    auto placed = default_strategy->place(session, request_parameters);
 
     auto const& name = request_parameters.name;
     
