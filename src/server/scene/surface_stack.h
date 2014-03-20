@@ -23,6 +23,7 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/depth_id.h"
+#include "mir/input/input_reception_mode.h"
 #include "mir/input/input_targets.h"
 
 #include <memory>
@@ -83,12 +84,20 @@ public:
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) override;
+    virtual void remove_surface(std::weak_ptr<BasicSurface> const& surface) override;
 
     virtual void raise(std::weak_ptr<BasicSurface> const& surface) override;
 
     virtual void lock();
     virtual void unlock();
+
+    // I plan decouple the creation of surface from adding to the scene
+    // as that complicates client code wrapping the default implementation.
+    // For now add_surface() is called by create_surface
+    void add_surface(
+        std::shared_ptr<BasicSurface> const& surface,
+        DepthId depth,
+        input::InputReceptionMode input_mode);
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;

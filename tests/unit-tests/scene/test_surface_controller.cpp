@@ -39,7 +39,7 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
         msh::SurfaceCreationParameters const&,
         std::shared_ptr<mir::frontend::EventSink> const&,
         std::shared_ptr<msh::SurfaceConfigurator> const&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::BasicSurface> const&));
+    MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::BasicSurface> const&));
     MOCK_METHOD1(raise, void(std::weak_ptr<ms::BasicSurface> const&));
 };
 }
@@ -55,7 +55,7 @@ TEST(SurfaceController, create_and_destroy_surface)
 
     InSequence seq;
     EXPECT_CALL(model, create_surface(_,_,_,_)).Times(1).WillOnce(Return(null_surface));
-    EXPECT_CALL(model, destroy_surface(_)).Times(1);
+    EXPECT_CALL(model, remove_surface(_)).Times(1);
 
     auto surface = controller.create_surface(mf::SurfaceId(), msh::a_surface(), {}, {});
     controller.destroy_surface(surface);

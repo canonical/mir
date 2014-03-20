@@ -98,29 +98,35 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
+void ms::SurfaceStack::add_surface(
+    std::shared_ptr<BasicSurface> const& surface,
+    DepthId depth,
+    mi::InputReceptionMode input_mode)
+{
+    {
+        std::lock_guard < std::recursive_mutex > lg(guard);
+        layers_by_depth[depth].push_back(surface);
+    }
+    input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
+    report->surface_added(surface.get(), surface.get()->name());
+    emit_change_notification();
+}
+
 std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
-    auto surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
-    {
-        std::lock_guard<std::recursive_mutex> lg(guard);
-        layers_by_depth[params.depth].push_back(surface);
-    }
+    auto const& surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
 
-    input_registrar->input_channel_opened(surface->input_channel(), surface, params.input_mode);
-
-    report->surface_added(surface.get(), surface.get()->name());
-    emit_change_notification();
-
+    add_surface(surface, params.depth, params.input_mode);
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceStack::remove_surface(std::weak_ptr<BasicSurface> const& surface)
 {
-    auto keep_alive = surface.lock();
+    auto const keep_alive = surface.lock();
 
     bool found_surface = false;
     {
@@ -129,7 +135,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surfac
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;
-            auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+            auto const p = std::find(surfaces.begin(), surfaces.end(), keep_alive);
 
             if (p != surfaces.end())
             {

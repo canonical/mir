@@ -49,7 +49,7 @@ public:
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void remove_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
 
     virtual void raise(std::weak_ptr<BasicSurface> const& surface) = 0;
 

@@ -38,7 +38,7 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(
 
 void ms::SurfaceController::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
 {
-    surface_stack->destroy_surface(surface);
+    surface_stack->remove_surface(surface);
 }
 
 void ms::SurfaceController::raise(std::weak_ptr<BasicSurface> const& surface)
