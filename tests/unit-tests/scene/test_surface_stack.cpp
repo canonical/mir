@@ -736,12 +736,12 @@ TEST_F(SurfaceStack, generate_renderlist)
             {}, {}).lock());
 
     auto list = stack.generate_renderable_list();
-    ASSERT_EQ(num_surface, list.size());
+    ASSERT_EQ(num_surfaces, list.size());
 
-    auto& surface = surfacelist.begin();
+    auto surface_it = surfacelist.begin();
     for(auto& renderable : list)
     {
-        EXPECT_EQ(renderable.screen_position(), (*surface++)->screen_position());
+        EXPECT_EQ(renderable->screen_position(), (*surface_it++)->screen_position());
     }
 
     for(auto& surface : surfacelist)

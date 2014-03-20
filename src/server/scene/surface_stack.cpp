@@ -59,6 +59,11 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
+mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
+{
+    return mg::RenderableList{};
+}
+
 void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
 {
     std::lock_guard<std::recursive_mutex> lg(guard);
