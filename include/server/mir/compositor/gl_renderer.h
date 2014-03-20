@@ -80,6 +80,15 @@ public:
     virtual void tessellate(std::vector<Primitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
+    /**
+     * Load the texture for a surface any which way you like. The default
+     * implementation does so with efficient GPU-side caching built in.
+     *
+     * \returns The OpenGL texture name for the surface.
+     */
+    virtual GLuint load_texture(graphics::Renderable const& renderable,
+                                graphics::Buffer& buffer) const;
+
 private:
     GLuint vertex_shader;
     GLuint fragment_shader;
