@@ -265,12 +265,54 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
         auto client_id = client->id();
         bundle.client_release(client);
 
+        auto compositor = bundle.compositor_acquire(nullptr);
+        ASSERT_EQ(client_id, compositor->id());
+        bundle.compositor_release(compositor);
+    }
+}
+
+TEST_F(SwitchingBundleTest, multimonitor_frame_sync)
+{
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         ++nbuffers)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        auto client = client_acquire_blocking(bundle);
+        auto client_id = client->id();
+        bundle.client_release(client);
+
         for (int monitor = 0; monitor < 10; monitor++)
         {
-            auto compositor = bundle.compositor_acquire(nullptr);
+            void const* user_id = reinterpret_cast<void const*>(monitor);
+            auto compositor = bundle.compositor_acquire(user_id);
             ASSERT_EQ(client_id, compositor->id());
             bundle.compositor_release(compositor);
         }
+    }
+}
+
+TEST_F(SwitchingBundleTest, frames_in_order)
+{
+    int const nbuffers = 3;
+    mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+    mg::Buffer* clients[nbuffers];
+    for (auto& client : clients)
+    {
+        client = client_acquire_blocking(bundle);
+        bundle.client_release(client);
+    }
+
+    for (int frame = 0; frame < nbuffers; ++frame)
+    {
+        if (frame > 0)
+            ASSERT_NE(clients[frame-1]->id(), clients[frame]->id());
+
+        auto compositor = bundle.compositor_acquire(nullptr);
+        ASSERT_EQ(clients[frame]->id(), compositor->id());
+        bundle.compositor_release(compositor);
     }
 }
 
