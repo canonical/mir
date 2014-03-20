@@ -40,6 +40,10 @@ class NullTrustSession : public shell::TrustSession
       return mir_trust_session_state_stopped;
     }
 
+    void start() override
+    {
+    }
+
     void stop() override
     {
     }

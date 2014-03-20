@@ -231,10 +231,14 @@ void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSessi
     start_event.type = mir_event_type_trust_session_state_change;
     start_event.trust_session.new_state = mir_trust_session_state_started;
     event_sink->handle_event(start_event);
+
+    session_listener->trust_session_started(*this, trust_session);
 }
 
 void ms::ApplicationSession::end_trust_session()
 {
+    session_listener->trust_session_stopping(*this, get_trust_session());
+
     for_each_trusted_child([](std::shared_ptr<msh::Session> const& child_session)
         {
             child_session->end_trust_session();

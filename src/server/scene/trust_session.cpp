@@ -48,31 +48,12 @@ std::weak_ptr<msh::Session> ms::TrustSession::get_trusted_helper() const
     return trusted_helper;
 }
 
-std::shared_ptr<msh::TrustSession> ms::TrustSession::start_for(std::shared_ptr<msh::Session> const& trusted_helper,
-                                                               msh::TrustSessionCreationParameters const& parameters,
-                                                               std::shared_ptr<SessionContainer> const& container)
+void ms::TrustSession::start()
 {
-    auto const trust_session = std::make_shared<TrustSession>(trusted_helper, parameters);
+    if (state == mir_trust_session_state_started)
+        return;
 
-    trust_session->state = mir_trust_session_state_started;
-
-    std::vector<std::shared_ptr<msh::Session>> added_sessions;
-
-    for (pid_t application_pid : trust_session->applications)
-    {
-        container->for_each(
-            [&](std::shared_ptr<msh::Session> const& container_session)
-            {
-                if (container_session->process_id() == application_pid)
-                {
-                    added_sessions.push_back(container_session);
-                }
-            }
-        );
-    }
-    trusted_helper->begin_trust_session(trust_session, added_sessions);
-
-    return trust_session;
+    state = mir_trust_session_state_started;
 }
 
 void ms::TrustSession::stop()

@@ -79,42 +79,4 @@ struct TrustSession : public testing::Test
 TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
-
-    auto helper = mt::fake_shared(trusted_helper);
-    auto app1 = mt::fake_shared(trusted_app1);
-    auto app2 = mt::fake_shared(trusted_app2);
-
-    EXPECT_CALL(trusted_helper, begin_trust_session(_, ElementsAre(app1, app2))).Times(1);
-    EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
-
-    msh::TrustSessionCreationParameters parameters;
-    auto trust_session = ms::TrustSession::start_for(helper,
-                                                      parameters.add_application(trusted_app1.process_id())
-                                                                .add_application(trusted_app2.process_id()),
-                                                      mt::fake_shared(container));
-
-    trust_session->stop();
 }
-
-TEST_F(TrustSession, multi_trust_sessions)
-{
-    using namespace testing;
-
-    msh::TrustSessionCreationParameters parameters;
-    auto trust_session1 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
-                                                      parameters,
-                                                      mt::fake_shared(container));
-
-    auto trust_session2 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
-                                                      parameters,
-                                                      mt::fake_shared(container));
-
-    auto trust_session3 = ms::TrustSession::start_for(mt::fake_shared(trusted_helper),
-                                                      parameters,
-                                                      mt::fake_shared(container));
-
-    EXPECT_THAT(trust_session1, Ne(std::shared_ptr<mf::TrustSession>()));
-    EXPECT_THAT(trust_session2, Ne(std::shared_ptr<mf::TrustSession>()));
-    EXPECT_THAT(trust_session3, Ne(std::shared_ptr<mf::TrustSession>()));
-}
-

@@ -38,6 +38,7 @@ public:
 
     virtual MirTrustSessionState get_state() const = 0;
 
+    virtual void start() = 0;
     virtual void stop() = 0;
 
 protected:

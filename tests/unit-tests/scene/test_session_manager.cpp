@@ -188,7 +188,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
-    mtd::MockSessionListener session_listener;
+    testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager;
@@ -212,11 +212,8 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_trust
 {
     using namespace ::testing;
 
-    EXPECT_CALL(session_listener, starting(_)).Times(testing::AtLeast(0));
-    EXPECT_CALL(session_listener, focused(_)).Times(testing::AtLeast(0));
-
-    EXPECT_CALL(session_listener, trust_session_started(_)).Times(1);
-    EXPECT_CALL(session_listener, trust_session_stopped(_)).Times(1);
+    EXPECT_CALL(session_listener, trust_session_started(_,_)).Times(1);
+    EXPECT_CALL(session_listener, trust_session_stopping(_,_)).Times(1);
 
     auto session = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
 

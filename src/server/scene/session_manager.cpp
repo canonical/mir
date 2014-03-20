@@ -221,13 +221,14 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
                                             shell::TrustSessionCreationParameters const& params)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
 
     auto it = std::find_if(trust_sessions.begin(), trust_sessions.end(),
-        [session](std::shared_ptr<frontend::TrustSession> const& trust_session)
+        [shell_session](std::shared_ptr<frontend::TrustSession> const& trust_session)
         {
             auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
 
-            return shell_trust_session->get_trusted_helper().lock() == session;
+            return shell_trust_session->get_trusted_helper().lock() == shell_session;
         }
     );
     if (it != trust_sessions.end())
@@ -236,11 +237,27 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
         return std::shared_ptr<mf::TrustSession>();
     }
 
-    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
-    std::shared_ptr<msh::TrustSession> trust_session = TrustSession::start_for(shell_session, params, app_container);
+
+    auto const trust_session = std::make_shared<TrustSession>(shell_session, params);
+
+    std::vector<std::shared_ptr<msh::Session>> added_sessions;
+
+    for (pid_t application_pid : trust_session->get_applications())
+    {
+        app_container->for_each(
+            [&](std::shared_ptr<msh::Session> const& container_session)
+            {
+                if (container_session->process_id() == application_pid)
+                {
+                    added_sessions.push_back(container_session);
+                }
+            }
+        );
+    }
     trust_sessions.push_back(trust_session);
 
-    session_listener->trust_session_started(trust_session);
+    trust_session->start();
+    shell_session->begin_trust_session(trust_session, added_sessions);
 
     return trust_session;
 }
@@ -253,8 +270,6 @@ void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> co
     if (it != trust_sessions.end())
     {
         (*it)->stop();
-        session_listener->trust_session_stopped(std::dynamic_pointer_cast<msh::TrustSession>(trust_session));
-
         trust_sessions.erase(it);
     }
 }

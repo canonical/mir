@@ -46,14 +46,11 @@ public:
 
     MirTrustSessionState get_state() const override;
     std::weak_ptr<shell::Session> get_trusted_helper() const override;
+    void start() override;
     void stop() override;
 
     void add_trusted_child(std::shared_ptr<shell::Session> const& session) override;
     void remove_trusted_child(std::shared_ptr<shell::Session> const& session) override;
-
-    static std::shared_ptr<shell::TrustSession> start_for(std::shared_ptr<shell::Session> const& session,
-                                                          shell::TrustSessionCreationParameters const& parameters,
-                                                          std::shared_ptr<SessionContainer> const& container);
 
 protected:
     TrustSession(const TrustSession&) = delete;
