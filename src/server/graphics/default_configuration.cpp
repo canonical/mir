@@ -37,22 +37,6 @@
 
 namespace mg = mir::graphics;
 
-mir::SharedLibrary const* mir::load_library(std::string const& libname)
-{
-    // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
-
-    if (auto& ptr = libraries_cache[libname])
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
-}
-
 std::shared_ptr<mg::BufferInitializer>
 mir::DefaultServerConfiguration::the_buffer_initializer()
 {
