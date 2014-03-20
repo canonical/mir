@@ -55,6 +55,7 @@ ms::SurfaceStack::SurfaceStack(
     surface_factory{surface_factory},
     input_registrar{input_registrar},
     report{report},
+    change_cb{[this]() { emit_change_notification(); }},
     notify_change{[]{}}
 {
 }
@@ -103,7 +104,6 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
-    auto change_cb = [this]() { emit_change_notification(); };
     auto surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
     {
         std::lock_guard<std::recursive_mutex> lg(guard);

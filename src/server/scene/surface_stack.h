@@ -100,6 +100,7 @@ private:
     std::shared_ptr<BasicSurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
+    std::function<void()> const change_cb;
 
     typedef std::vector<std::shared_ptr<BasicSurface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
