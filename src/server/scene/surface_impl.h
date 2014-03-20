@@ -46,11 +46,8 @@ class SurfaceImpl : public shell::Surface
 {
 public:
     SurfaceImpl(
-        std::shared_ptr<SurfaceBuilder> const& builder,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
-        shell::SurfaceCreationParameters const& params,
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& event_sink);
+        std::shared_ptr<BasicSurface> const& surface,
+        std::shared_ptr<SurfaceBuilder> const& builder);
 
     ~SurfaceImpl() noexcept;
 
@@ -94,8 +91,8 @@ public:
     virtual void set_alpha(float alpha);
 
 private:
-    std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<BasicSurface> const surface;
+    std::shared_ptr<SurfaceBuilder> const builder;
 };
 }
 }
