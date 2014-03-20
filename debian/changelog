@@ -1,7 +1,21 @@
-mir (0.1.7-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.1.7+14.04.20140318-0ubuntu1) trusty; urgency=low
 
+  [ Alberto Aguirre ]
+  * Fix not compositing the client's last posted buffer (LP: #1294048,
+    LP: #1294051, LP: #1294053, LP: #1290306) In single-display cases
+    the number of ready buffers decreases after a buffer is acquired by
+    the rendering operator. Determine if there will be uncomposited
+    buffers before acquiring a buffer so it works for single and multi
+    display use cases. (LP: #1294048, #1290306, #1294051, #1294053)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 18 Mar 2014 18:38:01 +0000
+
+mir (0.1.7+14.04.20140317.1-0ubuntu1) trusty; urgency=medium
+
+  [ Daniel van Vugt ]
   * New upstream release 0.1.7 (https://launchpad.net/mir/+milestone/0.1.7)
-    - mirserver ABI bumped to 17 (soon)
+    - mirserver ABI bumped to 17
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - Server API changes (AKA why doesn't my code build any more?):
       . Class "CompositingCriteria" has been removed. It's replaced by the more
         flexible "Renderable" interface. This also resulted in parameter
@@ -22,9 +36,39 @@ mir (0.1.7-0ubuntu1) UNRELEASED; urgency=medium
     - Major simplification to how surface size/position/transformation
       interact, making transformations much easier to manage and work with.
     - Bugs fixed:
-      <fill this in once tagged and released when proposing to archive>
+      . ./cross-compile-chroot.sh: line 83: popd: build-android-arm: invalid
+        argument popd: usage: popd [-n] [+N | -N] (LP: #1287600)
+      . Key events sent to the wrong client (and delayed) (LP: #1213804)
+      . Nested servers never receive input events (in their filters)
+        (LP: #1260612)
+      . Software clients crash immediately on nested servers - what(): Failed
+        to mmap buffer (LP: #1261286)
+      . MirMotionEvent lacks local coordinates. Reports only screen
+        coordinates. (LP: #1268819)
+      . Nested Mir crashes with - what():
+        MesaNativePlatform::create_internal_client is not implemented yet!
+        (LP: #1279092)
+      . clients fail to find some libraries if mir installed via "make install"
+        (LP: #1285566)
+      . Nested server hangs with multimonitor and internal clients.
+        (LP: #1287282)
+      . [regression] Multi-monitor frame sync no longer works (not
+        synchronized), and frames skip/jump/stutter (LP: #1288570)
+      . Mir FTBFS: /usr/bin/ld: cannot find -lmirtestdraw (when cmake ..
+        -DMIR_ENABLE_TESTS=OFF) (LP: #1283951)
+      . nested Mir library calls next_buffer() during startup (LP: #1284739)
+      . Building Mir produces lots of warnings from GLM headers about
+        deprecated degrees values vs radians (LP: #1286010)
+      . [enhancement] screencast of a single window (LP: #1288478)
+      . Nexus4 + mir_demo_client_eglplasma starts to stutter after a while
+        (LP: #1189753)
+      . --host-socket documented default argument isn't used as default
+        (LP: #1262091)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 12 Mar 2014 11:05:20 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 17 Mar 2014 15:12:00 +0000
 
 mir (0.1.6+14.04.20140310-0ubuntu1) trusty; urgency=medium
 
