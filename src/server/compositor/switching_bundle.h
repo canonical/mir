@@ -53,7 +53,7 @@ public:
     void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) override;
     void client_release(graphics::Buffer* buffer);
     std::shared_ptr<graphics::Buffer>
-        compositor_acquire(void const* compositor_id) override;
+        compositor_acquire(void const* user_id) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
     std::shared_ptr<graphics::Buffer> snapshot_acquire();
     void snapshot_release(std::shared_ptr<graphics::Buffer> const& released_buffer);

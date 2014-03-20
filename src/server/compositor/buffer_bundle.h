@@ -40,14 +40,16 @@ public:
     /**
      * Acquire the next buffer that's ready to display/composite.
      *
-     * \param [in] compositor_id A unique identifier of who is going to use the
-     *                           buffer, to ensure that separate compositors
-     *                           for separate monitors that need the same frame
-     *                           will get the same buffer. You may use any
-     *                           unique identifier such as a this pointer.
+     * \param [in] user_id A unique identifier of who is going to use the
+     *                     buffer, to ensure that separate users representing
+     *                     separate monitors who need the same frame will get
+     *                     the same buffer. However consecutive calls for the
+     *                     same user will get different buffers. You may pass
+     *                     any unique value for user_id, such as a "this"
+     *                     pointer or a thread ID.
      */
     virtual std::shared_ptr<graphics::Buffer>
-        compositor_acquire(void const* compositor_id) = 0;
+        compositor_acquire(void const* user_id) = 0;
     virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
     virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
     virtual void snapshot_release(std::shared_ptr<graphics::Buffer> const&) = 0;

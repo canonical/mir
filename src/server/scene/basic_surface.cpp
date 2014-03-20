@@ -272,8 +272,8 @@ bool ms::BasicSurface::shaped() const
 std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer() const
 {
     // C++ threads can't give us nice simple thread IDs compatible with void*
-    void const* compositor_id = reinterpret_cast<void const*>(pthread_self());
-    return buffer_stream()->lock_compositor_buffer(compositor_id);
+    void const* user_id = reinterpret_cast<void const*>(pthread_self());
+    return buffer_stream()->lock_compositor_buffer(user_id);
 }
 
 bool ms::BasicSurface::alpha_enabled() const

@@ -38,10 +38,10 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
-    void const* compositor_id)
+    void const* user_id)
 {
     return std::make_shared<mc::TemporaryCompositorBuffer>(
-        buffer_bundle, compositor_id);
+        buffer_bundle, user_id);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()

@@ -29,8 +29,8 @@ mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buf
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
-    std::shared_ptr<BufferBundle> const& bun, void const* compositor_id)
-    : TemporaryBuffer(bun->compositor_acquire(compositor_id)),
+    std::shared_ptr<BufferBundle> const& bun, void const* user_id)
+    : TemporaryBuffer(bun->compositor_acquire(user_id)),
       bundle(bun)
 {
 }
