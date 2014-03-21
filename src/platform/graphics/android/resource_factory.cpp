@@ -39,6 +39,11 @@
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
+mga::ResourceFactory::ResourceFactory(bool should_log_hwc)
+    : should_log_hwc{should_log_hwc}
+{
+}
+
 std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_device() const
 {
     hw_module_t const* module;
