@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -94,19 +94,8 @@ public:
     virtual void set_alpha(float alpha);
 
 private:
-    bool set_type(MirSurfaceType t);  // Use configure() to make public changes
-    bool set_state(MirSurfaceState s);
-    void notify_change(MirSurfaceAttrib attrib, int value);
-
     std::shared_ptr<SurfaceBuilder> const builder;
-    std::shared_ptr<shell::SurfaceConfigurator> const configurator;
     std::shared_ptr<BasicSurface> const surface;
-
-    frontend::SurfaceId const id;
-    std::shared_ptr<frontend::EventSink> const event_sink;
-
-    MirSurfaceType type_value;
-    MirSurfaceState state_value;
 };
 }
 }

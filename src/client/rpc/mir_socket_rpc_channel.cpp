@@ -142,8 +142,39 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 {
     if (!disconnected.load())
     {
-        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
-        mir::protobuf::Screencast* screencast{nullptr};
+        auto const message_type = response->GetTypeName();
+
+        mir::protobuf::Surface* surface = nullptr;
+        mir::protobuf::Buffer* buffer = nullptr;
+        mir::protobuf::Platform* platform = nullptr;
+
+        if (message_type == "mir.protobuf.Buffer")
+        {
+            buffer = static_cast<mir::protobuf::Buffer*>(response);
+        }
+        else if (message_type == "mir.protobuf.Surface")
+        {
+            surface = static_cast<mir::protobuf::Surface*>(response);
+            if (surface && surface->has_buffer())
+                buffer = surface->mutable_buffer();
+        }
+        else if (message_type == "mir.protobuf.Screencast")
+        {
+            auto screencast = static_cast<mir::protobuf::Screencast*>(response);
+            if (screencast && screencast->has_buffer())
+                buffer = screencast->mutable_buffer();
+        }
+        else if (message_type == "mir.protobuf.Platform")
+        {
+            platform = static_cast<mir::protobuf::Platform*>(response);
+        }
+        else if (message_type == "mir.protobuf.Connection")
+        {
+            auto connection = static_cast<mir::protobuf::Connection*>(response);
+            if (connection && connection->has_platform())
+                platform = connection->mutable_platform();
+        }
+
         if (surface)
         {
             surface->clear_fd();
@@ -157,19 +188,6 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
                 rpc_report->file_descriptors_received(*response, fds);
             }
-        }
-        else
-        {
-            screencast = dynamic_cast<mir::protobuf::Screencast*>(response);
-        }
-
-        auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
-        if (!buffer)
-        {
-            if (surface && surface->has_buffer())
-                buffer = surface->mutable_buffer();
-            else if (screencast && screencast->has_buffer())
-                buffer = screencast->mutable_buffer();
         }
 
         if (buffer)
@@ -185,14 +203,6 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
                 rpc_report->file_descriptors_received(*response, fds);
             }
-        }
-
-        auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
-        if (!platform)
-        {
-            auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
-            if (connection && connection->has_platform())
-                platform = connection->mutable_platform();
         }
 
         if (platform)
@@ -266,7 +276,7 @@ void mclr::MirSocketRpcChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    mir::protobuf::wire::Invocation invocation = invocation_for(method, parameters);
+    auto const& invocation = invocation_for(method, parameters);
 
     rpc_report->invocation_requested(invocation);
 
@@ -345,7 +355,7 @@ void mclr::MirSocketRpcChannel::read_message()
     {
         const size_t body_size = read_message_header();
 
-        result = read_message_body(body_size);
+        read_message_body(result, body_size);
 
         rpc_report->result_receipt_succeeded(result);
     }
@@ -431,18 +441,17 @@ size_t mclr::MirSocketRpcChannel::read_message_header()
     return body_size;
 }
 
-mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const size_t body_size)
+void mclr::MirSocketRpcChannel::read_message_body(
+    mir::protobuf::wire::Result& result,
+    size_t const body_size)
 {
     boost::system::error_code error;
-    boost::asio::streambuf message;
-    boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
+    body_bytes.resize(body_size);
+    boost::asio::read(socket, boost::asio::buffer(body_bytes), error);
     if (error)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message body: " + error.message()));
     }
 
-    std::istream in(&message);
-    mir::protobuf::wire::Result result;
-    result.ParseFromIstream(&in);
-    return result;
+    result.ParseFromArray(body_bytes.data(), body_size);
 }

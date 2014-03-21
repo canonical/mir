@@ -39,22 +39,29 @@ class StubSurfaceBuilder : public scene::SurfaceBuilder
 public:
     StubSurfaceBuilder() :
         dummy_surface(std::make_shared<scene::BasicSurface>(
+            frontend::SurfaceId(),
             std::string("stub"),
             geometry::Rectangle{{},{}},
             [](){},
             false,
             std::make_shared<StubBufferStream>(),
             std::shared_ptr<input::InputChannel>(),
+            std::shared_ptr<frontend::EventSink>(),
+            std::shared_ptr<shell::SurfaceConfigurator>(),
             mir::report::null_scene_report()))
     {
     }
 
-    std::weak_ptr<scene::BasicSurface> create_surface(shell::SurfaceCreationParameters const&)
+    std::weak_ptr<scene::BasicSurface> create_surface(
+        frontend::SurfaceId,
+        shell::SurfaceCreationParameters const&,
+        std::shared_ptr<frontend::EventSink> const&,
+        std::shared_ptr<shell::SurfaceConfigurator> const&) override
     {
         return dummy_surface;
     }
 
-    void destroy_surface(std::weak_ptr<scene::BasicSurface> const& )
+    void destroy_surface(std::weak_ptr<scene::BasicSurface> const& ) override
     {
     }
 

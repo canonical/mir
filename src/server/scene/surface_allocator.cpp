@@ -46,7 +46,11 @@ ms::SurfaceAllocator::SurfaceAllocator(
 }
 
 std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
-    msh::SurfaceCreationParameters const& params, std::function<void()> const& change_callback)
+    frontend::SurfaceId id,
+    msh::SurfaceCreationParameters const& params,
+    std::function<void()> const& change_callback,
+    std::shared_ptr<frontend::EventSink> const& event_sink,
+    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
     mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
@@ -57,11 +61,14 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
     bool nonrectangular = has_alpha(params.pixel_format);
     auto input_channel = input_factory->make_input_channel();
     return std::make_shared<BasicSurface>(
+        id,
         params.name,
         actual_size,
         change_callback,
         nonrectangular,
         buffer_stream,
         input_channel,
+        event_sink,
+        configurator,
         report);
 }

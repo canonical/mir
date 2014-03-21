@@ -232,28 +232,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                        glm::value_ptr(renderable.transformation()));
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
-    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
-    auto& tex = textures[surf];
-    bool changed = true;
-    auto const& buf_id = buffer.id();
-    if (!tex.id)
-    {
-        glGenTextures(1, &tex.id);
-        glBindTexture(GL_TEXTURE_2D, tex.id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, tex.id);
-        changed = (tex.origin != buf_id) || skipped;
-    }
-    tex.origin = buf_id;
-    tex.used = true;
-    if (changed)  // Don't upload a new texture unless the surface has changed
-        buffer.bind_to_texture();
+    GLuint surface_tex = load_texture(renderable, buffer);
 
     auto const& buf_size = buffer.size();
     GLfloat tex_scale_u = static_cast<GLfloat>(rect.size.width.as_int()) /
@@ -277,7 +256,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                 v.texcoord[0] *= tex_scale_u;
                 v.texcoord[1] *= tex_scale_v;
             }
-            glBindTexture(GL_TEXTURE_2D, tex.id);
+            glBindTexture(GL_TEXTURE_2D, surface_tex);
         }
         else
         {
@@ -296,6 +275,35 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
 
     glDisableVertexAttribArray(texcoord_attr_loc);
     glDisableVertexAttribArray(position_attr_loc);
+}
+
+GLuint mc::GLRenderer::load_texture(mg::Renderable const& renderable,
+                                    mg::Buffer& buffer) const
+{
+    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
+    auto& tex = textures[surf];
+    bool changed = true;
+    auto const& buf_id = buffer.id();
+    if (!tex.id)
+    {
+        glGenTextures(1, &tex.id);
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        changed = (tex.origin != buf_id) || skipped;
+    }
+    tex.origin = buf_id;
+    tex.used = true;
+    if (changed)  // Don't upload a new texture unless the surface has changed
+        buffer.bind_to_texture();
+
+    return tex.id;
 }
 
 void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
