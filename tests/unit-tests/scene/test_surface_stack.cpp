@@ -146,7 +146,7 @@ struct StubInputChannel : public mi::InputChannel
 
 struct MockSurfaceAllocator : public ms::BasicSurfaceFactory
 {
-    MOCK_METHOD5(create_surface, std::shared_ptr<ms::BasicSurface>(
+    MOCK_METHOD5(create_surface, std::shared_ptr<ms::Surface>(
         mf::SurfaceId id,
         msh::SurfaceCreationParameters const&,
         std::function<void()> const&,
