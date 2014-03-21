@@ -35,7 +35,7 @@ public:
     virtual void resize(geometry::Size const& size) = 0;
     virtual void set_hidden(bool hidden) = 0;
     virtual void set_alpha(float alpha) = 0;
-    virtual void set_rotation(float degrees, glm::vec3 const&) = 0;
+    virtual void set_transformation(glm::mat4 const&) = 0;
     virtual void set_input_region(
         std::vector<geometry::Rectangle> const& input_rectangles) = 0;
 
