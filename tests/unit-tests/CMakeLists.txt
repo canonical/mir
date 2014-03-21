@@ -11,11 +11,8 @@ set(
   test_asio_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
+  test_udev_wrapper.cpp
 )
-
-if (UMOCKDEV_REQUIRED)
-  list(APPEND UNIT_TEST_SOURCES test_udev_wrapper.cpp)
-endif ()
 
 add_subdirectory(options/)
 add_subdirectory(client/)
@@ -58,14 +55,12 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
+  ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (UMOCKDEV_REQUIRED)
-  target_link_libraries(mir_unit_tests ${UMOCKDEV_LIBRARIES})
-  # Umockdev uses glib, which uses the deprecated "register" allocation specifier
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
-endif ()
+# Umockdev uses glib, which uses the deprecated "register" allocation specifier
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS
@@ -75,11 +70,7 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_UNIT_TESTS)
-  if (UMOCKDEV_REQUIRED)
-    mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0)
-  else ()
-    mir_discover_tests(mir_unit_tests)
-  endif ()
+  mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_UNIT_TESTS)
 
 install(

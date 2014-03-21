@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -27,17 +27,21 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 {
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(
+    frontend::SurfaceId id,
+    shell::SurfaceCreationParameters const& params,
+    std::shared_ptr<frontend::EventSink> const& event_sink,
+    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
-    return surface_stack->create_surface(params);
+    return surface_stack->create_surface(id, params, event_sink, configurator);
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
 {
-    surface_stack->destroy_surface(surface);
+    surface_stack->remove_surface(surface);
 }
 
-void ms::SurfaceController::raise(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::raise(std::weak_ptr<Surface> const& surface)
 {
     surface_stack->raise(surface);
 }

@@ -34,10 +34,11 @@ class SocketMessenger : public MessageSender,
 public:
     SocketMessenger(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
-    void send(std::string const& body);
-    void send(std::string const& body, FdSets const& fd_set);
+    void send(char const* data, size_t length, FdSets const& fds) override;
 
-    void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size);
+    void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer);
+    boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer);
+    size_t available_bytes() override;
     pid_t client_pid();
 
 private:

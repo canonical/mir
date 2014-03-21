@@ -30,24 +30,28 @@ namespace graphics
 {
 namespace android
 {
+class HwcWrapper;
 
 class HwcFbDevice : public HWCCommonDevice
 {
 public:
     HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                 std::shared_ptr<framebuffer_device_t> const& fb_device,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     virtual void render_gl(SwappingGLContext const& context);
     virtual void render_gl_and_overlays(
         SwappingGLContext const& context,
-        std::list<std::shared_ptr<Renderable>> const& list,
+        RenderableList const& list,
         std::function<void(Renderable const&)> const& render_fn);
     void post(Buffer const& buffer);
 
 private:
     void prepare();
     void gpu_render();
+
+    std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> const fb_device;
     static int const num_displays{1};
     LayerList layer_list;

@@ -119,6 +119,10 @@ struct RectangleCompare
     }
 };
 
+void null_surface_callback(MirSurface*, void*)
+{
+}
+
 }
 
 using SurfacesWithOutputId = BespokeDisplayServerTestFixture;
@@ -301,6 +305,7 @@ TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 
                 auto surface = mir_connection_create_surface_sync(connection, &request_params);
                 EXPECT_FALSE(mir_surface_is_valid(surface));
+                mir_surface_release(surface, &null_surface_callback, nullptr);
             }
 
             mir_display_config_destroy(config);
