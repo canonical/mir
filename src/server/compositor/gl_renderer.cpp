@@ -310,13 +310,13 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      * scales {x,y} by 1/w. So modify the final part of the projection matrix
      * to set w ([3]) to be the incoming z coordinate ([2]).
      */
-    screen_to_gl_coords[2][3] = 1.0f;
+    screen_to_gl_coords[2][3] = -1.0f;
 
     /*
      * Make the projection look like the screen is the middle slice of a cube
      * of size viewport width. So things at depth Z=0 will map 1:1 with pixel
-     * sizes looking flat like regular windows. Vertices at positive depth will
-     * appear to got "into" the screen, and negative depth comes "out of" the
+     * sizes looking flat like regular windows. Vertices at negative depth will
+     * appear to got "into" the screen, and positive depth comes "out of" the
      * screen.
      */
     float vanishing_point_depth = rect.size.width.as_float() / 2.0f;
