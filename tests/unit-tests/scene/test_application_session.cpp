@@ -409,7 +409,7 @@ TEST(ApplicationSession, begin_trust_session)
 
     EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
 
-    app_session.begin_trust_session(mt::fake_shared(trust_session), std::vector<std::shared_ptr<msh::Session>>());
+    app_session.begin_trust_session(mt::fake_shared(trust_session));
 }
 
 TEST(ApplicationSession, end_trust_session)

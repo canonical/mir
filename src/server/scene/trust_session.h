@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <atomic>
+#include <mutex>
 
 namespace mir
 {
@@ -49,8 +50,9 @@ public:
     void start() override;
     void stop() override;
 
-    void add_trusted_child(std::shared_ptr<shell::Session> const& session) override;
-    void remove_trusted_child(std::shared_ptr<shell::Session> const& session) override;
+    void add_trusted_child(std::shared_ptr<shell::Session> const& session);
+    void remove_trusted_child(std::shared_ptr<shell::Session> const& session);
+    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)> f, bool reverse) const;
 
 protected:
     TrustSession(const TrustSession&) = delete;
@@ -61,6 +63,10 @@ private:
     std::vector<pid_t> const applications;
 
     MirTrustSessionState state;
+
+    std::mutex mutable mutex;
+    std::vector<std::weak_ptr<shell::Session>> trusted_children;
+    void clear_trusted_children();
 };
 
 }

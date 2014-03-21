@@ -64,8 +64,6 @@ ms::ApplicationSession::~ApplicationSession()
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
     }
-
-    clear_trusted_children();
 }
 
 mf::SurfaceId ms::ApplicationSession::next_id()
@@ -157,15 +155,6 @@ void ms::ApplicationSession::hide()
     {
         id_s.second->hide();
     }
-
-    for_each_trusted_child(
-        [](std::shared_ptr<shell::Session> const& child_session)
-        {
-            child_session->hide();
-            return true;
-        },
-        false
-    );
 }
 
 void ms::ApplicationSession::show()
@@ -175,15 +164,6 @@ void ms::ApplicationSession::show()
     {
         id_s.second->show();
     }
-
-    for_each_trusted_child(
-        [](std::shared_ptr<shell::Session> const& child_session)
-        {
-            child_session->show();
-            return true;
-        },
-        false
-    );
 }
 
 int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
@@ -204,26 +184,11 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
-
-
-    for_each_trusted_child(
-        [state](std::shared_ptr<shell::Session> const& child_session)
-        {
-            child_session->set_lifecycle_state(state);
-            return true;
-        },
-        false
-    );
 }
 
-void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSession> const& trust_session,
-                                                 std::vector<std::shared_ptr<msh::Session>> const& trusted_children)
+void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSession> const& trust_session)
 {
     set_trust_session(trust_session);
-    for(auto const& trusted_child : trusted_children)
-    {
-        add_trusted_child(trusted_child);
-    }
 
     // All sessions which are part of the trust session get this event.
     MirEvent start_event;
@@ -238,15 +203,6 @@ void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSessi
 void ms::ApplicationSession::end_trust_session()
 {
     session_listener->trust_session_stopping(*this, get_trust_session());
-
-    for_each_trusted_child([](std::shared_ptr<msh::Session> const& child_session)
-        {
-            child_session->end_trust_session();
-            return true;
-        },
-        false
-    );
-    clear_trusted_children();
     set_trust_session(nullptr);
 
     MirEvent stop_event;
@@ -254,52 +210,6 @@ void ms::ApplicationSession::end_trust_session()
     stop_event.type = mir_event_type_trust_session_state_change;
     stop_event.trust_session.new_state = mir_trust_session_state_stopped;
     event_sink->handle_event(stop_event);
-}
-
-void ms::ApplicationSession::add_trusted_child(std::shared_ptr<msh::Session> const& session)
-{
-    {
-        std::unique_lock<std::mutex> lock(mutex_trusted_children);
-        trusted_children.push_back(session);
-    }
-
-    session->begin_trust_session(get_trust_session(), std::vector<std::shared_ptr<Session>>());
-}
-
-void ms::ApplicationSession::remove_trusted_child(std::shared_ptr<msh::Session> const& session)
-{
-    std::unique_lock<std::mutex> lock(mutex_trusted_children);
-
-    for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it) {
-        if (*it == session) {
-            trusted_children.erase(it);
-            break;
-        }
-    }
-}
-
-void ms::ApplicationSession::for_each_trusted_child(
-    std::function<bool(std::shared_ptr<shell::Session> const&)> f,
-    bool reverse) const
-{
-    std::unique_lock<std::mutex> lk(mutex_trusted_children);
-
-    if (reverse)
-    {
-        for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
-        {
-            if (!f(*rit))
-                break;
-        }
-    }
-    else
-    {
-        for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
-        {
-            if (!f(*it))
-                break;
-        }
-    }
 }
 
 std::shared_ptr<msh::TrustSession> ms::ApplicationSession::get_trust_session() const
@@ -314,10 +224,4 @@ void ms::ApplicationSession::set_trust_session(std::shared_ptr<msh::TrustSession
     std::unique_lock<std::mutex> lock(mutex_trusted_session);
 
     trust_session = _trust_session;
-}
-
-void ms::ApplicationSession::clear_trusted_children()
-{
-    std::unique_lock<std::mutex> lock(mutex_trusted_children);
-    trusted_children.clear();
 }

@@ -105,6 +105,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
             auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(*it);
 
             shell_trust_session->add_trusted_child(new_session);
+            new_session->begin_trust_session(shell_trust_session);
             it++;
         }
     }
@@ -240,16 +241,14 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 
     auto const trust_session = std::make_shared<TrustSession>(shell_session, params);
 
-    std::vector<std::shared_ptr<msh::Session>> added_sessions;
-
     for (pid_t application_pid : trust_session->get_applications())
     {
         app_container->for_each(
-            [&](std::shared_ptr<msh::Session> const& container_session)
+            [trust_session, application_pid](std::shared_ptr<msh::Session> const& container_session)
             {
                 if (container_session->process_id() == application_pid)
                 {
-                    added_sessions.push_back(container_session);
+                    trust_session->add_trusted_child(container_session);
                 }
             }
         );
@@ -257,7 +256,16 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
     trust_sessions.push_back(trust_session);
 
     trust_session->start();
-    shell_session->begin_trust_session(trust_session, added_sessions);
+
+    shell_session->begin_trust_session(trust_session);
+    trust_session->for_each_trusted_child(
+        [trust_session](std::shared_ptr<msh::Session> const& child_session)
+        {
+            child_session->begin_trust_session(trust_session);
+            return true;
+        },
+        false
+    );
 
     return trust_session;
 }

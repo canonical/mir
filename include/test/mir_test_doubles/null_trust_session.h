@@ -60,6 +60,11 @@ class NullTrustSession : public shell::TrustSession
     void remove_trusted_child(std::shared_ptr<shell::Session> const&) override
     {
     }
+
+    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)>,
+                                bool) const override
+    {
+    }
 };
 
 }

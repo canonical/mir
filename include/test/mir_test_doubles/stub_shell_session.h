@@ -87,8 +87,7 @@ struct StubShellSession : public shell::Session
     {
     }
 
-    void begin_trust_session(std::shared_ptr<shell::TrustSession> const&,
-                             std::vector<std::shared_ptr<shell::Session>> const&) override
+    void begin_trust_session(std::shared_ptr<shell::TrustSession> const&) override
     {
     }
 
@@ -99,23 +98,6 @@ struct StubShellSession : public shell::Session
     std::shared_ptr<shell::TrustSession> get_trust_session() const override
     {
         return std::shared_ptr<shell::TrustSession>();
-    }
-
-    void set_trust_session(std::shared_ptr<shell::TrustSession> const&) override
-    {
-    }
-
-    void add_trusted_child(std::shared_ptr<Session> const&) override
-    {
-    }
-
-    void remove_trusted_child(std::shared_ptr<Session> const&) override
-    {
-    }
-
-    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)>,
-                                bool) const override
-    {
     }
 
 private:

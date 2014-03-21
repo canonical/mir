@@ -73,17 +73,10 @@ public:
 
     void set_lifecycle_state(MirLifecycleState state);
 
-    void begin_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session,
-                             std::vector<std::shared_ptr<shell::Session>> const& trusted_children) override;
+    void begin_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session) override;
     void end_trust_session() override;
 
     std::shared_ptr<shell::TrustSession> get_trust_session() const override;
-    void set_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session) override;
-
-    void add_trusted_child(std::shared_ptr<Session> const& session) override;
-    void remove_trusted_child(std::shared_ptr<Session> const& session) override;
-    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)> f,
-                                bool reverse) const override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -109,9 +102,7 @@ private:
     // trust sessions
     std::mutex mutable mutex_trusted_session;
     std::shared_ptr<shell::TrustSession> trust_session;
-    std::mutex mutable mutex_trusted_children;
-    std::vector<std::shared_ptr<shell::Session>> trusted_children;
-    void clear_trusted_children();
+    void set_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session);
 };
 
 }

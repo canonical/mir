@@ -44,16 +44,10 @@ public:
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 
-    virtual void begin_trust_session(std::shared_ptr<TrustSession> const& trust_session,
-                                     std::vector<std::shared_ptr<Session>> const& trusted_children) = 0;
+    virtual void begin_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
     virtual void end_trust_session() = 0;
 
     virtual std::shared_ptr<TrustSession> get_trust_session() const = 0;
-    virtual void set_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
-
-    virtual void add_trusted_child(std::shared_ptr<Session> const& session) = 0;
-    virtual void remove_trusted_child(std::shared_ptr<Session> const& session) = 0;
-    virtual void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)> f, bool reverse) const = 0;
 };
 }
 }
