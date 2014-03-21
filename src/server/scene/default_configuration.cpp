@@ -51,7 +51,6 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
             auto const scene_report = the_scene_report();
 
             auto const ss = std::make_shared<ms::SurfaceStack>(
-                the_surface_factory(),
                 the_input_registrar(),
                 scene_report);
 
@@ -70,7 +69,6 @@ mir::DefaultServerConfiguration::the_scene()
             auto const scene_report = the_scene_report();
 
             auto const ss = std::make_shared<ms::SurfaceStack>(
-                the_surface_factory(),
                 the_input_registrar(),
                 scene_report);
 
@@ -105,7 +103,9 @@ mir::DefaultServerConfiguration::the_surface_controller()
     return surface_controller(
         [this]()
         {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+            return std::make_shared<ms::SurfaceController>(
+                the_surface_factory(),
+                the_surface_stack_model());
         });
 }
 
