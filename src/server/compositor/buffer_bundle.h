@@ -44,9 +44,9 @@ public:
      *                     buffer, to ensure that separate users representing
      *                     separate monitors who need the same frame will get
      *                     the same buffer. However consecutive calls for the
-     *                     same user will get different buffers. You may pass
-     *                     any unique value for user_id, such as a "this"
-     *                     pointer or a thread ID.
+     *                     same user will get different buffers. To avoid
+     *                     collisions, all callers should determine user_id
+     *                     in the same way (e.g. always use "this" pointer).
      */
     virtual std::shared_ptr<graphics::Buffer>
         compositor_acquire(void const* user_id) = 0;

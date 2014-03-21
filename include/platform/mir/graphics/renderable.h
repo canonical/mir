@@ -40,8 +40,9 @@ public:
      *                     separate threads/monitors/components which need
      *                     to concurrently receive the same buffer. Calling
      *                     with the same user_id will return a new (different)
-     *                     buffer to that user each time. Suggested values
-     *                     for user_id are a "this" pointer or a thread ID.
+     *                     buffer to that user each time. For consistency,
+     *                     all callers need to determine their user_id in the
+     *                     same way (e.g. always use "this" pointer).
      */
     virtual std::shared_ptr<Buffer> buffer(void const* user_id) const = 0;
 
