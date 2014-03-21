@@ -26,12 +26,12 @@ namespace mir
 {
 namespace scene
 {
-class BasicSurface;
+class Surface;
 
 class SurfaceRanker
 {
 public:
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
 protected:
     SurfaceRanker() = default;

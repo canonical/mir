@@ -40,15 +40,15 @@ class SurfaceController : public SurfaceBuilder, public SurfaceRanker
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    std::weak_ptr<BasicSurface> create_surface(
+    std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
 
-    void destroy_surface(std::weak_ptr<BasicSurface> const& surface) override;
+    void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
-    void raise(std::weak_ptr<BasicSurface> const& surface) override;
+    void raise(std::weak_ptr<Surface> const& surface) override;
 
 private:
     std::shared_ptr<SurfaceStackModel> const surface_stack;
