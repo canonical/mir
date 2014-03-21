@@ -39,7 +39,7 @@ public:
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
                      std::shared_ptr<SceneReport> const& report);
 
-    std::shared_ptr<BasicSurface> create_surface(
+    std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::function<void()> const&  change_callback,
