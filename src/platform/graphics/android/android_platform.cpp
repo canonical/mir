@@ -105,10 +105,11 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& display_report)
 {
+    auto should_log_hwc = (options->get<std::string>("hwc-report") == "log");
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(should_log_hwc);
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, display_report);
@@ -128,5 +129,5 @@ extern "C" void add_platform_options(
     config.add_options()
         ("hwc-report",
          boost::program_options::value<std::string>()->default_value(std::string{"off"}),
-         "[platform-specific] How to handle the HWC logging report.");
+         "[platform-specific] How to handle the HWC logging report [{log,off}]");
 }

@@ -48,6 +48,8 @@ public:
 
     std::shared_ptr<ANativeWindow> create_native_window(
         std::shared_ptr<FramebufferBundle> const& fb_bundle) const;
+private:
+    bool const should_log_hwc;
 };
 
 }
