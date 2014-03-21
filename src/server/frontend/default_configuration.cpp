@@ -18,12 +18,14 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/session_authorizer.h"
 
 #include "resource_cache.h"
 #include "protobuf_ipc_factory.h"
 #include "published_socket_connector.h"
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"
+#include "unauthorized_screencast.h"
 
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
@@ -44,14 +46,16 @@ public:
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mf::DisplayChanger> const& display_changer,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<mf::Screencast> const& screencast) :
+        std::shared_ptr<mf::Screencast> const& screencast,
+        std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer) :
         shell(shell),
         sm_report(sm_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         display_changer(display_changer),
         buffer_allocator(buffer_allocator),
-        screencast(screencast)
+        screencast(screencast),
+        session_authorizer(session_authorizer)
     {
     }
 
@@ -63,20 +67,31 @@ private:
     std::shared_ptr<mf::DisplayChanger> const display_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::Screencast> const screencast;
+    std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         pid_t client_pid,
-        std::shared_ptr<mf::EventSink> const& sink,
-        bool authorized_to_resize_display) override
+        std::shared_ptr<mf::EventSink> const& sink) override
     {
         std::shared_ptr<mf::DisplayChanger> changer;
-        if(authorized_to_resize_display)
+        std::shared_ptr<mf::Screencast> effective_screencast;
+
+        if (session_authorizer->configure_display_is_allowed(client_pid))
         {
             changer = display_changer;
         }
         else
         {
             changer = std::make_shared<mf::UnauthorizedDisplayChanger>(display_changer);
+        }
+
+        if (session_authorizer->screencast_is_allowed(client_pid))
+        {
+            effective_screencast = screencast;
+        }
+        else
+        {
+            effective_screencast = std::make_shared<mf::UnauthorizedScreencast>();
         }
 
         return std::make_shared<mf::SessionMediator>(
@@ -88,7 +103,7 @@ private:
             sm_report,
             sink,
             resource_cache(),
-            screencast);
+            effective_screencast);
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
@@ -150,6 +165,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_graphics_platform(),
                 the_frontend_display_changer(),
                 allocator,
-                the_screencast());
+                the_screencast(),
+                the_session_authorizer());
         });
 }

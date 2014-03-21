@@ -14,6 +14,7 @@ set(
   event_sender.cpp
   surface.cpp
   unauthorized_display_changer.cpp
+  unauthorized_screencast.cpp
 
   default_configuration.cpp
 
