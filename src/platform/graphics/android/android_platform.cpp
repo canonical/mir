@@ -42,6 +42,22 @@ namespace mga=mir::graphics::android;
 namespace mf=mir::frontend;
 namespace mo = mir::options;
 
+namespace
+{
+char const* const hwc_log_opt = "hwc-report";
+bool should_log_hwc(mo::Option const& options)
+{
+    auto opt = options.get<std::string>(hwc_log_opt);
+    if (opt == mo::log_opt_value)
+        return true;
+    else if (opt != mo::off_opt_value)
+        throw mir::AbnormalExit(
+            std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
+            mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
+    return false;
+}
+}
+
 mga::AndroidPlatform::AndroidPlatform(
     std::shared_ptr<mga::DisplayBuilder> const& display_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
@@ -109,17 +125,8 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
 
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& display_report)
 {
-    bool should_log_hwc{false};
-    auto opt = options->get<std::string>("hwc-report");
-    if (opt == mo::log_opt_value)
-        should_log_hwc = true;
-    else if (opt != mo::off_opt_value)
-        throw AbnormalExit(
-            std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
-            mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
-
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(should_log_hwc);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(should_log_hwc(*options));
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, display_report);
@@ -137,7 +144,7 @@ extern "C" void add_platform_options(
     boost::program_options::options_description& config)
 {
     config.add_options()
-        ("hwc-report",
-         boost::program_options::value<std::string>()->default_value(std::string{"off"}),
+        (hwc_log_opt,
+         boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
          "[platform-specific] How to handle the HWC logging report. [{log,off}]");
 }
