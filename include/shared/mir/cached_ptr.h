@@ -42,6 +42,11 @@ public:
         }
         return result;
     }
+
+    std::shared_ptr<Type> operator*() const
+    {
+        return cache.lock();
+    }
 };
 } // namespace mir
 

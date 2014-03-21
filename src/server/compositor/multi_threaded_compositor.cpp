@@ -237,3 +237,8 @@ void mc::MultiThreadedCompositor::stop()
     // so we will need to schedule compositing immediately
     compose_on_start = true;
 }
+
+void mc::MultiThreadedCompositor::cursor_moved_to(float abs_x, float abs_y)
+{
+    fprintf(stderr, "Cursor at %.1f, %.1f\n", abs_x, abs_y);
+}

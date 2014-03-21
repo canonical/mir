@@ -35,6 +35,7 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
+#include "mir/compositor/compositor.h"
 
 #include <map>
 
@@ -91,8 +92,9 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 {
     struct DefaultCursorListener : mi::CursorListener
     {
-        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
-            cursor(cursor)
+        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor,
+                              CachedPtr<mc::Compositor> const& comp)
+            : cursor(cursor), compositor(comp)
         {
         }
 
@@ -102,14 +104,22 @@ mir::DefaultServerConfiguration::the_cursor_listener()
             {
                 c->move_to(geom::Point{abs_x, abs_y});
             }
+            auto comp = *compositor;
+            if (comp)
+                comp->cursor_moved_to(abs_x, abs_y);
         }
 
         std::weak_ptr<mg::Cursor> const cursor;
+
+        // We use the cached ptr because a shared_ptr would force early
+        // construction resulting in a constructor cycle, and crash.
+        CachedPtr<mc::Compositor> const& compositor;
     };
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<DefaultCursorListener>(the_display()->the_cursor());
+            return std::make_shared<DefaultCursorListener>(
+                the_display()->the_cursor(), compositor);
         });
 }
 

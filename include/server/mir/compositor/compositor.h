@@ -19,18 +19,27 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_H_
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
+#include <mir/input/cursor_listener.h>
+
 namespace mir
 {
 namespace compositor
 {
 
-class Compositor
+/*
+ * Why do Compositors need to know about the cursor? Multiple reasons:
+ *  1. To force screen redraw if we're rendering software cursors.
+ *  2. To force screen redraw during desktop zoom on pointer movement.
+ */
+
+class Compositor : public input::CursorListener
 {
 public:
     virtual ~Compositor() {}
 
     virtual void start() = 0;
     virtual void stop() = 0;
+    virtual void cursor_moved_to(float, float) {}
 
 protected:
     Compositor() = default;
