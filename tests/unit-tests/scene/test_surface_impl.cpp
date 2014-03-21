@@ -76,15 +76,22 @@ public:
     {
     }
 
-    std::weak_ptr<ms::BasicSurface> create_surface(msh::SurfaceCreationParameters const& ) override
+    std::weak_ptr<ms::BasicSurface> create_surface(
+        mf::SurfaceId id,
+        msh::SurfaceCreationParameters const&,
+        std::shared_ptr<mf::EventSink> const& event_sink,
+        std::shared_ptr<msh::SurfaceConfigurator> const& configurator) override
     {
         dummy_surface = std::make_shared<ms::BasicSurface>(
+            id,
             std::string("stub"), 
             geom::Rectangle{{},{}}, 
             [](){},
             false, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),
+            event_sink,
+            configurator,
             report);
         return dummy_surface;
     }
@@ -117,14 +124,18 @@ public:
     MockSurfaceBuilder()
     {
         using namespace testing;
-        ON_CALL(*this, create_surface(_)).
+        ON_CALL(*this, create_surface(_, _, _, _)).
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::create_surface));
 
         ON_CALL(*this, destroy_surface(_)).
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
     }
 
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::BasicSurface>(const msh::SurfaceCreationParameters&));
+    MOCK_METHOD4(create_surface, std::weak_ptr<ms::BasicSurface>(
+        mf::SurfaceId,
+        const msh::SurfaceCreationParameters&,
+        std::shared_ptr<mf::EventSink> const&,
+        std::shared_ptr<msh::SurfaceConfigurator> const& configurator));
 
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::BasicSurface> const&));
 
@@ -165,7 +176,7 @@ TEST_F(SurfaceImpl, creation_and_destruction)
     MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(params)).Times(1);
+    EXPECT_CALL(surface_builder, create_surface(_, params, _, _)).Times(1);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
 
     ms::SurfaceImpl test(
@@ -181,7 +192,7 @@ TEST_F(SurfaceImpl, creation_throws_means_no_destroy)
     MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(params)).Times(1)
+    EXPECT_CALL(surface_builder, create_surface(_, params, _, _)).Times(1)
         .WillOnce(Throw(std::runtime_error(__PRETTY_FUNCTION__)));
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(Exactly(0));
 
@@ -198,7 +209,7 @@ TEST_F(SurfaceImpl, destroy)
     MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(_)).Times(AnyNumber());
+    EXPECT_CALL(surface_builder, create_surface(_, _, _, _)).Times(AnyNumber());
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 
     {

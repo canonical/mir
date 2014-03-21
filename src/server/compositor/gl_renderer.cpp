@@ -232,6 +232,40 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                        glm::value_ptr(renderable.transformation()));
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
+    GLuint surface_tex = load_texture(renderable, buffer);
+
+    /* Draw */
+    glEnableVertexAttribArray(position_attr_loc);
+    glEnableVertexAttribArray(texcoord_attr_loc);
+
+    std::vector<Primitive> primitives;
+    tessellate(primitives, renderable);
+   
+    for (auto const& p : primitives)
+    {
+        // Note a primitive tex_id of zero means use the surface texture,
+        // which is what you normally want. Other textures could be used
+        // in decorations etc.
+
+        glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : surface_tex);
+
+        glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
+                              GL_FALSE, sizeof(Vertex),
+                              &p.vertices[0].position);
+        glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
+                              GL_FALSE, sizeof(Vertex),
+                              &p.vertices[0].texcoord);
+
+        glDrawArrays(p.type, 0, p.vertices.size());
+    }
+
+    glDisableVertexAttribArray(texcoord_attr_loc);
+    glDisableVertexAttribArray(position_attr_loc);
+}
+
+GLuint mc::GLRenderer::load_texture(mg::Renderable const& renderable,
+                                    mg::Buffer& buffer) const
+{
     SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
     auto& tex = textures[surf];
     bool changed = true;
@@ -255,33 +289,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     if (changed)  // Don't upload a new texture unless the surface has changed
         buffer.bind_to_texture();
 
-    /* Draw */
-    glEnableVertexAttribArray(position_attr_loc);
-    glEnableVertexAttribArray(texcoord_attr_loc);
-
-    std::vector<Primitive> primitives;
-    tessellate(primitives, renderable);
-   
-    for (auto const& p : primitives)
-    {
-        // Note a primitive tex_id of zero means use the surface texture,
-        // which is what you normally want. Other textures could be used
-        // in decorations etc.
-
-        glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : tex.id);
-
-        glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                              GL_FALSE, sizeof(Vertex),
-                              &p.vertices[0].position);
-        glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                              GL_FALSE, sizeof(Vertex),
-                              &p.vertices[0].texcoord);
-
-        glDrawArrays(p.type, 0, p.vertices.size());
-    }
-
-    glDisableVertexAttribArray(texcoord_attr_loc);
-    glDisableVertexAttribArray(position_attr_loc);
+    return tex.id;
 }
 
 void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)

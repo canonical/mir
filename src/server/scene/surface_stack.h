@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -77,11 +77,15 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel
-    virtual std::weak_ptr<BasicSurface> create_surface(const shell::SurfaceCreationParameters& params);
+    std::weak_ptr<BasicSurface> create_surface(
+        frontend::SurfaceId id,
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface);
+    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) override;
 
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface);
+    virtual void raise(std::weak_ptr<BasicSurface> const& surface) override;
 
     virtual void lock();
     virtual void unlock();
