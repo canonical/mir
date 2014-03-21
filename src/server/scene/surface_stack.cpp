@@ -104,7 +104,7 @@ void ms::SurfaceStack::add_surface(
     mi::InputReceptionMode input_mode)
 {
     {
-        std::lock_guard < std::recursive_mutex > lg(guard);
+        std::lock_guard<std::recursive_mutex> lg(guard);
         layers_by_depth[depth].push_back(surface);
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);

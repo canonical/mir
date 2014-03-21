@@ -36,14 +36,13 @@ class Surface :
 {
 public:
     // resolve ambiguous member function names
-    std::string name() const =0;
+    std::string name() const = 0;
     geometry::Size size() const = 0;
     geometry::Point top_left() const = 0;
     float alpha() const = 0;
 
-    // New member functions
+    // member functions that don't exist in base classes
     virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
-
 };
 }
 }

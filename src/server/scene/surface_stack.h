@@ -91,8 +91,8 @@ public:
     virtual void lock();
     virtual void unlock();
 
-    // I plan decouple the creation of surface from adding to the scene
-    // as that complicates client code wrapping the default implementation.
+    // TODO I plan decouple the creation of surface from adding to the scene
+    // (as that complicates client code wrapping the default implementation).
     // For now add_surface() is called by create_surface
     void add_surface(
         std::shared_ptr<Surface> const& surface,
