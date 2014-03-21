@@ -146,10 +146,9 @@ struct StubInputChannel : public mi::InputChannel
 
 struct MockSurfaceAllocator : public ms::BasicSurfaceFactory
 {
-    MOCK_METHOD5(create_surface, std::shared_ptr<ms::Surface>(
+    MOCK_METHOD4(create_surface, std::shared_ptr<ms::Surface>(
         mf::SurfaceId id,
         msh::SurfaceCreationParameters const&,
-        std::function<void()> const&,
         std::shared_ptr<mf::EventSink> const&,
         std::shared_ptr<msh::SurfaceConfigurator> const& configurator));
 };
@@ -180,7 +179,6 @@ struct SurfaceStack : public ::testing::Test
             mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
-            [](){},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
@@ -192,7 +190,6 @@ struct SurfaceStack : public ::testing::Test
             mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
-            [](){},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
@@ -204,7 +201,6 @@ struct SurfaceStack : public ::testing::Test
             mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
-            [](){},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
@@ -212,7 +208,7 @@ struct SurfaceStack : public ::testing::Test
             std::shared_ptr<msh::SurfaceConfigurator>(),
             report);
 
-        ON_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+        ON_CALL(mock_surface_allocator, create_surface(_,_,_,_))
             .WillByDefault(Return(stub_surface1));
     }
 
@@ -232,7 +228,7 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .Times(1)
         .WillOnce(Return(stub_surface1));
 
@@ -256,7 +252,7 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));
@@ -298,7 +294,7 @@ TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));
@@ -340,7 +336,7 @@ TEST_F(SurfaceStack, stacking_order_reverse)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));
@@ -374,7 +370,7 @@ TEST_F(SurfaceStack, stacking_order)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));
@@ -425,7 +421,7 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));
@@ -501,7 +497,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));
@@ -545,7 +541,7 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_,_))
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_,_))
         .WillOnce(Return(stub_surface1))
         .WillOnce(Return(stub_surface2))
         .WillOnce(Return(stub_surface3));

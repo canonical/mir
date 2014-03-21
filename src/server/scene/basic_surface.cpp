@@ -47,7 +47,6 @@ ms::BasicSurface::BasicSurface(
     frontend::SurfaceId id,
     std::string const& name,
     geometry::Rectangle rect,
-    std::function<void()> change_cb,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
@@ -55,7 +54,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     id(id),
-    notify_change(change_cb),
+    notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
@@ -173,6 +172,12 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 {
     return server_input_channel;
 }
+
+void ms::BasicSurface::update_change_notification(std::function<void()> change_notification)
+{
+    notify_change = change_notification;
+}
+
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {

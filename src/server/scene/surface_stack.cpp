@@ -109,6 +109,7 @@ void ms::SurfaceStack::add_surface(
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
     report->surface_added(surface.get(), surface.get()->name());
+    surface->update_change_notification(change_cb);
     emit_change_notification();
 }
 
@@ -118,7 +119,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
-    auto const& surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
+    auto const& surface = surface_factory->create_surface(id, params, event_sink, configurator);
 
     add_surface(surface, params.depth, params.input_mode);
     return surface;
