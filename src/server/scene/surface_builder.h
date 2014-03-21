@@ -35,18 +35,18 @@ class SurfaceConfigurator;
 
 namespace scene
 {
-class BasicSurface;
+class Surface;
 
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<BasicSurface> create_surface(
+    virtual std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:
     SurfaceBuilder() = default;
     virtual ~SurfaceBuilder() = default;

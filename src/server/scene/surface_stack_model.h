@@ -36,22 +36,22 @@ class SurfaceConfigurator;
 namespace scene
 {
 
-class BasicSurface;
+class Surface;
 
 class SurfaceStackModel
 {
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<BasicSurface> create_surface(
+    virtual std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
 protected:
     SurfaceStackModel() = default;
