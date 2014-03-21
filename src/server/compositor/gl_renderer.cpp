@@ -312,14 +312,10 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      */
     screen_to_gl_coords[2][3] = -1.0f;
 
-    /*
-     * Make the projection look like the screen is the middle slice of a cube
-     * of size viewport width. So things at depth Z=0 will map 1:1 with pixel
-     * sizes looking flat like regular windows. Vertices at negative depth will
-     * appear to got "into" the screen, and positive depth comes "out of" the
-     * screen.
-     */
-    float vanishing_point_depth = rect.size.width.as_float() / 2.0f;
+    float const vertical_fov_degrees = 60.0f;
+    float const vanishing_point_depth =
+        rect.size.height.as_float() /
+        std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
             glm::vec3{2.0f / rect.size.width.as_float(),
