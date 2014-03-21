@@ -17,3 +17,8 @@
 add_library(mirsharedsharedlibrary STATIC
   shared_library.cpp
 )
+
+target_link_libraries(
+    mirsharedsharedlibrary
+    dl
+)
