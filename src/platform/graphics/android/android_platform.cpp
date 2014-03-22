@@ -47,14 +47,18 @@ namespace
 char const* const hwc_log_opt = "hwc-report";
 bool should_log_hwc(mo::Option const& options)
 {
+    if (!options.is_set(hwc_log_opt))
+        return false;
+
     auto opt = options.get<std::string>(hwc_log_opt);
     if (opt == mo::log_opt_value)
         return true;
-    else if (opt != mo::off_opt_value)
+    else if (opt == mo::off_opt_value)
+        return false;
+    else
         throw mir::AbnormalExit(
             std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
             mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
-    return false;
 }
 }
 
