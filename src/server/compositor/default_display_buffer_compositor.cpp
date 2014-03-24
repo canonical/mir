@@ -127,8 +127,8 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer);
         FilterForVisibleSceneInRegion selector(occlusion_match);
+        mc::RenderingOperator applicator(*renderer);
         scene->for_each_if(selector, applicator);
         renderer->end();
 

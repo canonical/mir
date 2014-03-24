@@ -26,7 +26,8 @@
 using namespace testing;
 using namespace mir::geometry;
 using namespace mir::compositor;
-using namespace mir::test::doubles;
+namespace mg=mir::graphics;
+namespace mtd=mir::test::doubles;
 
 struct OcclusionFilterTest : public Test
 {
@@ -41,13 +42,15 @@ struct OcclusionFilterTest : public Test
 
 TEST_F(OcclusionFilterTest, single_window_not_occluded)
 {
-    OcclusionFilter filter(monitor_rect);
-
-    FakeRenderable win(12, 34, 56, 78);
-
-    EXPECT_FALSE(filter(win));
+    auto window = std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78);
+    mg::RenderableList list{window};
+ 
+    filter_occlusions_from(list);
+    ASSERT_EQ(1u, list.size());
+    EXPECT_EQ(window, list[0]);
 }
 
+#if 0
 TEST_F(OcclusionFilterTest, smaller_window_occluded)
 {
     OcclusionFilter filter(monitor_rect);
@@ -157,4 +160,4 @@ TEST(OcclusionMatchTest, remembers_matches)
     match(win);
     EXPECT_TRUE(match.occluded(win));
 }
-
+#endif
