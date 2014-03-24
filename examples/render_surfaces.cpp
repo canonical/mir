@@ -90,6 +90,7 @@ bool input_is_on = false;
 std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
 static const uint32_t fg_color = 0xffdd4814;
+static const float min_alpha = 0.3f;
 
 void update_cursor(uint32_t bg_color, uint32_t fg_color)
 {
@@ -234,7 +235,11 @@ public:
         }
 
         surface->set_rotation(total_elapsed_sec * 120.0f, rotation_axis);
-        surface->set_alpha(0.5 + 0.5 * sin(alpha_offset + 2 * M_PI * total_elapsed_sec / 3.0));
+        float const alpha_amplitude = (1.0f - min_alpha) / 2.0f;
+        surface->set_alpha(min_alpha + alpha_amplitude +
+                           alpha_amplitude *
+                           sin(alpha_offset + 2 * M_PI * total_elapsed_sec /
+                               3.0));
     }
 
 private:
