@@ -27,7 +27,7 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 {
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
@@ -36,12 +36,12 @@ std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(
     return surface_stack->create_surface(id, params, event_sink, configurator);
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
 {
-    surface_stack->destroy_surface(surface);
+    surface_stack->remove_surface(surface);
 }
 
-void ms::SurfaceController::raise(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::raise(std::weak_ptr<Surface> const& surface)
 {
     surface_stack->raise(surface);
 }

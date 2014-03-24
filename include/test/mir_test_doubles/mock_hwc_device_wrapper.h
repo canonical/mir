@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,34 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 
-#ifndef MIR_SHELL_SURFACE_RANKER_H_
-#define MIR_SHELL_SURFACE_RANKER_H_
+#include "src/platform/graphics/android/hwc_wrapper.h"
 
-#include <memory>
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace scene
+namespace test
 {
-class Surface;
-
-class SurfaceRanker
+namespace doubles
 {
-public:
-    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
-protected:
-    SurfaceRanker() = default;
-    virtual ~SurfaceRanker() = default;
-    SurfaceRanker(SurfaceRanker const&) = delete;
-    SurfaceRanker& operator=(SurfaceRanker const&) = delete;
+struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
+{
+    MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
+    MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));
 };
+
 }
 }
-
-
-#endif /* MIR_SHELL_SURFACE_RANKER_H_ */
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_ */

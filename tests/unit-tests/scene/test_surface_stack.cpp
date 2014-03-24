@@ -66,7 +66,7 @@ class NullBufferBundle : public mc::BufferBundle
 public:
     virtual void client_acquire(std::function<void(mg::Buffer* buffer)> complete) { complete(nullptr); }
     virtual void client_release(mg::Buffer*) {}
-    virtual std::shared_ptr<mg::Buffer> compositor_acquire(unsigned long)
+    virtual std::shared_ptr<mg::Buffer> compositor_acquire(void const*) override
         { return std::shared_ptr<mg::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mg::Buffer> const&){}
     virtual std::shared_ptr<mg::Buffer> snapshot_acquire(){ return std::shared_ptr<mg::Buffer>(); };
@@ -247,7 +247,7 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
     EXPECT_EQ(stub_surface1, surface.lock());
     EXPECT_LT(use_count, stub_surface1.use_count());
 
-    stack.destroy_surface(surface);
+    stack.remove_surface(surface);
 
     EXPECT_EQ(use_count, stub_surface1.use_count());
 }
@@ -418,7 +418,7 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
 
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
     auto surface = stack.create_surface(mf::SurfaceId(__LINE__), default_params, {}, {});
-    stack.destroy_surface(surface);
+    stack.remove_surface(surface);
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
@@ -473,7 +473,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
         report);
 
     auto s = stack.create_surface(mf::SurfaceId(), msh::a_surface(), {}, {});
-    stack.destroy_surface(s);
+    stack.remove_surface(s);
 }
 
 TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
@@ -494,7 +494,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
         report);
 
     auto s = stack.create_surface(mf::SurfaceId(), msh::a_surface().with_input_mode(mi::InputReceptionMode::receives_all_input), {}, {});
-    stack.destroy_surface(s);
+    stack.remove_surface(s);
 }
 
 TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)

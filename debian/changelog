@@ -1,3 +1,25 @@
+mir (0.1.8-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.1.8 (https://launchpad.net/mir/+milestone/0.1.8)
+    - mirserver ABI bumped to 18 (TODO - expected anyway)
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - Server API changes affecting shells:
+      . GLRenderer::tessellate() changed syntax.
+    - Switch EventHub device enumeration and hotplug to Udev. NOTE! This means
+      mir_test_* can't run natively on touch devices any more without some
+      preparation first:
+        sudo mount -o remount,rw /
+        sudo apt-get update
+        sudo apt-get install -y umockdev
+    - Added logging for HWC events.
+    - Continued consolidation of Surface classes toward a simpler architecture.
+    - Added some decorations to demo-shell; shadows and basic title bars, all
+      anti-aliased and high-DPI-scalable.
+    - Bugs fixed:
+      . TODO (during merge proposal to distro)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 20 Mar 2014 14:05:25 +0800
+
 mir (0.1.7+14.04.20140318-0ubuntu1) trusty; urgency=low
 
   [ Alberto Aguirre ]

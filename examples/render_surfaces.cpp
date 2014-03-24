@@ -41,6 +41,9 @@
 #include "image_renderer.h"
 #include "server_configuration.h"
 
+#define GLM_FORCE_RADIANS
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -233,7 +236,10 @@ public:
             y = new_y;
         }
 
-        surface->set_rotation(total_elapsed_sec * 120.0f, rotation_axis);
+        glm::mat4 trans = glm::rotate(glm::mat4(1.0f),
+                                      glm::radians(total_elapsed_sec * 120.0f),
+                                      rotation_axis);
+        surface->set_transformation(trans);
         surface->set_alpha(0.5 + 0.5 * sin(alpha_offset + 2 * M_PI * total_elapsed_sec / 3.0));
     }
 

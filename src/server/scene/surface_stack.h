@@ -24,6 +24,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/graphics/renderable.h"
 #include "mir/scene/depth_id.h"
+#include "mir/input/input_reception_mode.h"
 #include "mir/input/input_targets.h"
 
 #include <memory>
@@ -83,15 +84,24 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel
-    std::weak_ptr<BasicSurface> create_surface(
+    std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) override;
+    virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface) override;
+    virtual void raise(std::weak_ptr<Surface> const& surface) override;
+
+    // TODO I plan decouple the creation of surface from adding to the scene
+    // (as that complicates client code wrapping the default implementation).
+    // For now add_surface() is called by create_surface
+    void add_surface(
+        std::shared_ptr<Surface> const& surface,
+        DepthId depth,
+        input::InputReceptionMode input_mode);
+
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
@@ -102,8 +112,9 @@ private:
     std::shared_ptr<BasicSurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
+    std::function<void()> const change_cb;
 
-    typedef std::vector<std::shared_ptr<BasicSurface>> Layer;
+    typedef std::vector<std::shared_ptr<Surface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
 
     std::mutex notify_change_mutex;
