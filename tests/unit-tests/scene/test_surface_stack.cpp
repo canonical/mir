@@ -726,7 +726,7 @@ TEST_F(SurfaceStack, generate_renderlist)
         mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar), report);
 
-    std::list<std::shared_ptr<ms::BasicSurface>> surfacelist;
+    std::list<std::shared_ptr<ms::Surface>> surfacelist;
     for(auto i = 0u; i < num_surfaces; i++)
         surfacelist.emplace_back(stack.create_surface(
             mf::SurfaceId(),
@@ -745,5 +745,5 @@ TEST_F(SurfaceStack, generate_renderlist)
     }
 
     for(auto& surface : surfacelist)
-        stack.destroy_surface(surface);
+        stack.remove_surface(surface);
 }
