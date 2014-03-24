@@ -36,14 +36,13 @@ TEST(RenderingOperator, render_operator_saves_resources)
 {
     using namespace testing;
 
-    unsigned long frameno = 84;
     mtd::MockRenderer mock_renderer;
     mtd::MockRenderable mock_renderable;
     auto stub_buffer0 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(mock_renderable, buffer(frameno))
+    EXPECT_CALL(mock_renderable, buffer(_))
         .Times(3)
         .WillOnce(Return(stub_buffer0))
         .WillOnce(Return(stub_buffer1))
@@ -61,7 +60,7 @@ TEST(RenderingOperator, render_operator_saves_resources)
     auto use_count_before1 = stub_buffer1.use_count(); 
     auto use_count_before2 = stub_buffer2.use_count(); 
     {
-        mc::RenderingOperator rendering_operator(mock_renderer, frameno);
+        mc::RenderingOperator rendering_operator(mock_renderer);
         rendering_operator(mock_renderable);
         rendering_operator(mock_renderable);
         rendering_operator(mock_renderable);

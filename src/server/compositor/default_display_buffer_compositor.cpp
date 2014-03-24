@@ -55,14 +55,6 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     mc::OcclusionMatch const& occlusions;
 };
 
-std::mutex global_frameno_lock;
-unsigned long global_frameno = 0;
-
-bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
-{
-    return (a - b) < (~0UL / 2UL);
-}
-
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -74,8 +66,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
-      last_pass_rendered_anything{false},
-      local_frameno{global_frameno}
+      last_pass_rendered_anything{false}
 {
 }
 
@@ -83,20 +74,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
-
-    /*
-     * Increment frame counts for each tick of the fastest instance of
-     * DefaultDisplayBufferCompositor. This means for the fastest refresh
-     * rate of all attached outputs.
-     */
-    local_frameno++;
-    {
-        std::lock_guard<std::mutex> lock(global_frameno_lock);
-        if (wrapped_greater_or_equal(local_frameno, global_frameno))
-            global_frameno = local_frameno;
-        else
-            local_frameno = global_frameno;
-    }
 
     static bool const bypass_env{[]
     {
@@ -123,8 +100,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         if (filter.fullscreen_on_top())
         {
-            auto bypass_buf =
-                match.topmost_fullscreen()->buffer(local_frameno);
+            /*
+             * Notice the user_id we pass to buffer() here has to be
+             * different to the one used in the Renderer. This is in case
+             * the below if() fails we want to complete the frame using the
+             * same buffer (different user_id required).
+             */
+            auto bypass_buf = match.topmost_fullscreen()->buffer(this);
 
             if (bypass_buf->can_bypass())
             {
@@ -150,7 +132,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer, local_frameno);
+        mc::RenderingOperator applicator(*renderer);
         FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();

@@ -66,7 +66,7 @@ class NullBufferBundle : public mc::BufferBundle
 public:
     virtual void client_acquire(std::function<void(mg::Buffer* buffer)> complete) { complete(nullptr); }
     virtual void client_release(mg::Buffer*) {}
-    virtual std::shared_ptr<mg::Buffer> compositor_acquire(unsigned long)
+    virtual std::shared_ptr<mg::Buffer> compositor_acquire(void const*) override
         { return std::shared_ptr<mg::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mg::Buffer> const&){}
     virtual std::shared_ptr<mg::Buffer> snapshot_acquire(){ return std::shared_ptr<mg::Buffer>(); };
