@@ -523,8 +523,7 @@ void tinker_scene(mc::Scene &scene,
 
 }
 
-// TODO figure out why expectations are wrong
-TEST_F(SurfaceStack, DISABLED_is_locked_during_iteration)
+TEST_F(SurfaceStack, is_locked_during_iteration)
 {
     using namespace ::testing;
 
@@ -533,18 +532,6 @@ TEST_F(SurfaceStack, DISABLED_is_locked_during_iteration)
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
-
-    MockFilterForScene filter;
-    Sequence seq1;
-    EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
-        .InSequence(seq1)
-        .WillRepeatedly(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
-        .InSequence(seq1)
-        .WillRepeatedly(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
-        .InSequence(seq1)
-        .WillRepeatedly(Return(true));
 
     const char *owner = "";
     UniqueOperatorForScene op(owner);
@@ -561,6 +548,18 @@ TEST_F(SurfaceStack, DISABLED_is_locked_during_iteration)
         std::this_thread::yield();
         owner = "";
         stack.unlock();
+
+        MockFilterForScene filter;
+        Sequence seq1;
+        EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
+            .InSequence(seq1)
+            .WillOnce(Return(true));
+        EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
+            .InSequence(seq1)
+            .WillOnce(Return(false));
+        EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
+            .InSequence(seq1)
+            .WillOnce(Return(true));
 
         stack.for_each_if(filter, op);
 
