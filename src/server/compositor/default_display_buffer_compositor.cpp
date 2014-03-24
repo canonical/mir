@@ -36,9 +36,9 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct FilterForVisibleSceneInRegion : public mc::FilterForScene
+struct FilterForUndrawnSurfaces : public mc::FilterForScene
 {
-    FilterForVisibleSceneInRegion(
+    FilterForUndrawnSurfaces(
         mc::OcclusionMatch const& occlusions)
         : occlusions(occlusions)
     {
@@ -128,7 +128,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);
-        FilterForVisibleSceneInRegion selector(occlusion_match);
+        FilterForUndrawnSurfaces selector(occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();
 
