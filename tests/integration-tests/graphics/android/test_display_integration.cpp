@@ -49,7 +49,7 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        display_resource_factory = std::make_shared<mga::ResourceFactory>();
+        display_resource_factory = std::make_shared<mga::ResourceFactory>(false);
     }
 
     static void TearDownTestCase()
