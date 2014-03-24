@@ -32,6 +32,7 @@ namespace graphics
 {
 
 class DisplayReport;
+class AncillaryBuffersConfig;
 
 namespace mesa
 {
@@ -49,6 +50,7 @@ public:
                   GBMSurfaceUPtr surface_gbm,
                   geometry::Rectangle const& area,
                   MirOrientation rot,
+                  AncillaryBuffersConfig const& ancillary_buffers_config,
                   EGLContext shared_context);
     ~DisplayBuffer();
 
