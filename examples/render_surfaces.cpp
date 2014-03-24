@@ -94,6 +94,16 @@ static const uint32_t fg_color = 0xffdd4814;
 static const int width = 64;
 static const int height = 64;
 
+struct NullCursor : public mg::Cursor 
+{
+    void set_image(std::shared_ptr<mg::CursorImage> const& /* image */) 
+    {
+    }
+    void move_to(geom::Point /* position */)
+    {
+    }
+};
+
 struct ExampleCursorImage : public mg::CursorImage
 {
     ExampleCursorImage(uint32_t bg_color, uint32_t fg_color)
@@ -523,7 +533,7 @@ public:
         }
         else
         {
-            return {};
+            return std::make_shared<NullCursor>();
         }
     }
 
