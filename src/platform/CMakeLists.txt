@@ -3,13 +3,14 @@ include_directories(${UDEV_INCLUDE_DIRS})
 
 add_library(
   mirplatform SHARED
-
+  shared_library_loader.cpp
   udev_wrapper.cpp
 )
 
 target_link_libraries(
   mirplatform
   mirplatformgraphicscommon
+  mirsharedsharedlibrary
 
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )

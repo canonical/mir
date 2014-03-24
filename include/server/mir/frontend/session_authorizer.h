@@ -29,10 +29,12 @@ namespace frontend
 class SessionAuthorizer
 {
 public:
-    virtual ~SessionAuthorizer() {}
+    virtual ~SessionAuthorizer() = default;
 
     virtual bool connection_is_allowed(pid_t pid) = 0;
     virtual bool configure_display_is_allowed(pid_t pid) = 0;
+    virtual bool screencast_is_allowed(pid_t pid) = 0;
+
 protected:
     SessionAuthorizer() = default;
     SessionAuthorizer(SessionAuthorizer const&) = delete;
