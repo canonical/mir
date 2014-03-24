@@ -61,7 +61,6 @@ public:
         frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
-        std::function<void()> change_cb,
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
@@ -88,6 +87,7 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
+    void update_change_notification(std::function<void()> change_notification) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -127,7 +127,7 @@ private:
 
     std::mutex mutable guard;
     frontend::SurfaceId const id;
-    std::function<void()> const notify_change;
+    std::function<void()> notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 rotation_matrix;
