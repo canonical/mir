@@ -55,7 +55,7 @@ struct FakeScene : mc::Scene
 
     mg::RenderableList generate_renderable_list() const
     {
-        return mg::RenderableList{};
+        return renderlist;
     }
 
     // Ugly...should we use delegation?
@@ -128,9 +128,9 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(scene, for_each_if(_,_))
+    EXPECT_CALL(scene, generate_renderable_list())
         .Times(1);
-    EXPECT_CALL(scene, reverse_for_each_if(_,_))
+    EXPECT_CALL(scene, for_each_if(_,_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -282,10 +282,6 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .InSequence(render_seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(render_seq);
-
-    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(*compositor_buffer, can_bypass())
-        .Times(0);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,

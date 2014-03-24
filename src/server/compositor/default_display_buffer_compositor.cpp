@@ -29,6 +29,7 @@
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
+#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -36,19 +37,26 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct FilterForVisibleSceneInRegion : public mc::FilterForScene
+class FilterForVisibleSceneInRegion : public mc::FilterForScene
 {
+public:
     FilterForVisibleSceneInRegion(
-        mc::OcclusionMatch const& occlusions)
-        : occlusions(occlusions)
+        mg::RenderableList const& renderable_list)
+        : list(renderable_list)
     {
     }
     bool operator()(mg::Renderable const& r)
     {
-        return !occlusions.occluded(r);
+        return (list.end() != std::find_if(
+            list.begin(), list.end(),
+            [&](std::shared_ptr<mg::Renderable> renderable)
+            {
+                return (renderable.get() == &r); 
+            }));
     }
 
-    mc::OcclusionMatch const& occlusions;
+private:
+    mg::RenderableList const& list;
 };
 
 }
@@ -120,18 +128,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     {
         display_buffer.make_current();
 
-//        auto renderable_list = scene.generate_renderables_list()
-        //filter_occlusions(list, area);
-        //FilterForVisibleSceneInRegion selector(occluded_surfaces);
-
- //       auto const& view_area = display_buffer.view_area();
- //       mc::OcclusionFilter occlusion_search(view_area);
-       mc::OcclusionMatch occlusion_match;
- //       scene->reverse_for_each_if(occlusion_search, occlusion_match);
+        auto const& view_area = display_buffer.view_area();
+        auto renderable_list = scene->generate_renderable_list();
+        mc::filter_occlusions_from(renderable_list, view_area);
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        FilterForVisibleSceneInRegion selector(occlusion_match);
+        FilterForVisibleSceneInRegion selector(renderable_list);
         mc::RenderingOperator applicator(*renderer);
         scene->for_each_if(selector, applicator);
         renderer->end();
