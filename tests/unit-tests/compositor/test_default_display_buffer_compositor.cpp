@@ -295,23 +295,23 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     compositor.composite();
 }
 
-#if 0
 TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
 {
     using namespace testing;
     ON_CALL(display_buffer, can_bypass())
         .WillByDefault(Return(true));
 
-    FakeScene scene({
-        &fullscreen,
-        &small
-    });
+    mg::RenderableList list{
+        fullscreen,
+        small
+    };
+    FakeScene scene(list);
 
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -347,14 +347,15 @@ TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(false));
 
-    FakeScene scene({
-        &small,
-        &fullscreen
-    });
+    mg::RenderableList list{
+        small,
+        fullscreen
+    };
+    FakeScene scene(list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(0);  // zero due to occlusion detection
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(1);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
@@ -385,18 +386,19 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(true));
 
-    FakeScene scene({
-        &small,
-        &fullscreen
-    });
+    mg::RenderableList list{
+        small,
+        fullscreen
+    };
+    FakeScene scene(list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(0);  // zero due to occlusion detection
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(1);
 
     auto nonbypassable = std::make_shared<mtd::MockBuffer>();
-    fullscreen.set_buffer(nonbypassable);
+    fullscreen->set_buffer(nonbypassable);
     EXPECT_CALL(*nonbypassable, can_bypass())
         .WillRepeatedly(Return(false));
 
@@ -423,20 +425,21 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(true));
 
-    FakeScene scene({
-        &fullscreen,
-        &small
-    });
+    mg::RenderableList first_list
+    {
+        fullscreen, small
+    };
+    FakeScene scene(first_list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(1);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
-    fullscreen.set_buffer(compositor_buffer);
+    fullscreen->set_buffer(compositor_buffer);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -448,31 +451,31 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     compositor.composite();
 
     // Frame 2: fullscreen over small window = bypass
-    scene.change({
-        &small,
-        &fullscreen
-    });
+    mg::RenderableList second_list{small, fullscreen};
+    scene.change(second_list);
+
     EXPECT_CALL(display_buffer, make_current())
         .Times(0);
     EXPECT_CALL(display_buffer, post_update())
         .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(0);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillOnce(Return(true));
     compositor.composite();
 
     // Frame 3: only a small window = no bypass
-    scene.change({&small});
+    mg::RenderableList third_list{small};
+    scene.change(third_list);
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(0);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
@@ -494,15 +497,16 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(false));
 
-    mtd::FakeRenderable large(0, 0, 100, 100);
-    FakeScene scene({
-        &small,
-        &large
+    auto large = std::make_shared<mtd::FakeRenderable>(0,0,100,100);
+    mg::RenderableList list({
+        small,
+        large
     });
+    FakeScene scene(list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
         .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(large),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*large),_))
         .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
@@ -512,4 +516,3 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
         mr::null_compositor_report());
     compositor.composite();
 }
-#endif
