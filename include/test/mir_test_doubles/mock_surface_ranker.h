@@ -33,7 +33,7 @@ namespace doubles
 
 struct MockSurfaceRanker : public scene::SurfaceRanker
 {
-    MOCK_METHOD1(raise, void(std::weak_ptr<scene::BasicSurface> const&));
+    MOCK_METHOD1(raise, void(std::weak_ptr<scene::Surface> const&));
 };
 
 }

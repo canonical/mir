@@ -146,6 +146,11 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return true;
         }
+
+        bool screencast_is_allowed(pid_t /* pid */)
+        {
+            return true;
+        }
     };
     return session_authorizer(
         [&]()

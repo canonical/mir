@@ -31,7 +31,7 @@ namespace doubles
 
 struct StubSurfaceRanker : public scene::SurfaceRanker
 {
-    void raise(std::weak_ptr<scene::BasicSurface> const&) override
+    void raise(std::weak_ptr<scene::Surface> const&) override
     {
     }
 };
