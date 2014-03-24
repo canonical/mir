@@ -182,15 +182,3 @@ TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
         it++;
     }
 }
-
-#if 0
-TEST(OcclusionMatchTest, remembers_matches)
-{
-    OcclusionMatch match;
-    FakeRenderable win(1, 2, 3, 4);
-
-    EXPECT_FALSE(match.occluded(win));
-    match(win);
-    EXPECT_TRUE(match.occluded(win));
-}
-#endif

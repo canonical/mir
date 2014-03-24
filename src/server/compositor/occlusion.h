@@ -31,31 +31,6 @@ namespace compositor
 
 void filter_occlusions_from(graphics::RenderableList& list, geometry::Rectangle const& area);
 
-class OcclusionFilter : public FilterForScene
-{
-public:
-    OcclusionFilter(const geometry::Rectangle &area);
-    bool operator()(const graphics::Renderable &renderable) override;
-
-private:
-    const geometry::Rectangle &area;
-
-    typedef std::vector<geometry::Rectangle> RectangleList;
-    RectangleList coverage;
-};
-
-class OcclusionMatch : public OperatorForScene
-{
-public:
-    void operator()(const graphics::Renderable &renderable) override;
-
-    bool occluded(const graphics::Renderable &renderable) const;
-
-private:
-    typedef std::set<const graphics::Renderable*> RenderableSet;
-    RenderableSet hidden;
-};
-
 } // namespace compositor
 } // namespace mir
 

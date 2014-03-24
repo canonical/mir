@@ -24,10 +24,6 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mg=mir::graphics;
 
-mc::OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
-    : area(area)
-{
-}
 namespace
 {
 bool filter(
@@ -60,11 +56,6 @@ bool filter(
 }
 }
 
-bool mc::OcclusionFilter::operator()(mg::Renderable const& renderable)
-{
-    return filter(renderable, area, coverage);
-}
-
 void mc::filter_occlusions_from(
     mg::RenderableList& list,
     geom::Rectangle const& area)
@@ -79,14 +70,4 @@ void mc::filter_occlusions_from(
         it++;
     }
     list = l;
-}
-
-void mc::OcclusionMatch::operator()(mg::Renderable const& renderable)
-{
-    hidden.insert(&renderable);
-}
-
-bool mc::OcclusionMatch::occluded(mg::Renderable const& renderable) const
-{
-    return hidden.find(&renderable) != hidden.end();
 }
