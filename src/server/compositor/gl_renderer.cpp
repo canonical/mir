@@ -312,15 +312,16 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      */
     screen_to_gl_coords[2][3] = -1.0f;
 
-    float const vertical_fov_degrees = 60.0f;
-    float const vanishing_point_depth =
-        rect.size.height.as_float() /
+    float const vertical_fov_degrees = 30.0f;
+    float const near =
+        (rect.size.height.as_float() / 2.0f) /
         std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
+    float const far = -near;
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
             glm::vec3{2.0f / rect.size.width.as_float(),
                       -2.0f / rect.size.height.as_float(),
-                      1.0f / vanishing_point_depth});
+                      2.0f / (near - far)});
     screen_to_gl_coords = glm::translate(screen_to_gl_coords,
             glm::vec3{-rect.top_left.x.as_float(),
                       -rect.top_left.y.as_float(),
