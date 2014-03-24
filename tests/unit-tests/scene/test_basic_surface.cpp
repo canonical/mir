@@ -167,7 +167,7 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_EQ(old_transformation, surface.transformation());
 }
 
-TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
+TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
 {
     EXPECT_CALL(mock_callback, call())
         .Times(1);
@@ -186,10 +186,15 @@ TEST_F(BasicSurfaceTest, test_surface_set_rotation_updates_transform)
     surface.update_change_notification(mock_change_cb);
 
     auto original_transformation = surface.transformation();
+    glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
+                    0.2f, 0.6f, 1.0f, 1.4f,
+                    0.3f, 0.7f, 1.1f, 1.5f,
+                    0.4f, 0.8f, 1.2f, 1.6f};
 
-    surface.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
-    auto rotated_transformation = surface.transformation();
-    EXPECT_NE(original_transformation, rotated_transformation);
+    surface.set_transformation(trans);
+    auto got = surface.transformation();
+    EXPECT_NE(original_transformation, got);
+    EXPECT_EQ(trans, got);
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
@@ -232,27 +237,6 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 
     EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
     EXPECT_FALSE(surface.shaped());
-}
-
-TEST_F(BasicSurfaceTest, test_surface_apply_rotation)
-{
-    EXPECT_CALL(mock_callback, call())
-        .Times(1);
-
-    ms::BasicSurface surface{
-        mf::SurfaceId(),
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
-        stub_configurator,
-        report};
-
-    surface.update_change_notification(mock_change_cb);
-
-    surface.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
 TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
