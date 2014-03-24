@@ -325,11 +325,12 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _));
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
-    EXPECT_CALL(mock_buffer, size())
-        .WillOnce(Return(mir::geometry::Size{123, 456}));
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
+
+    EXPECT_CALL(mock_buffer, size())
+        .WillOnce(Return(mir::geometry::Size{123, 456}));
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,

@@ -185,7 +185,8 @@ mc::GLRenderer::~GLRenderer() noexcept
 }
 
 void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
-                                graphics::Renderable const& renderable) const
+                                graphics::Renderable const& renderable,
+                                geometry::Size const& buf_size) const
 {
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
@@ -198,12 +199,17 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
     client.tex_id = 0;
     client.type = GL_TRIANGLE_STRIP;
 
+    GLfloat tex_right = static_cast<GLfloat>(rect.size.width.as_int()) /
+                        buf_size.width.as_int();
+    GLfloat tex_bottom = static_cast<GLfloat>(rect.size.height.as_int()) /
+                         buf_size.height.as_int();
+
     auto& vertices = client.vertices;
     vertices.resize(4);
-    vertices[0] = {{left,  top,    0.0f}, {0.0f, 0.0f}};
-    vertices[1] = {{left,  bottom, 0.0f}, {0.0f, 1.0f}};
-    vertices[2] = {{right, top,    0.0f}, {1.0f, 0.0f}};
-    vertices[3] = {{right, bottom, 0.0f}, {1.0f, 1.0f}};
+    vertices[0] = {{left,  top,    0.0f}, {0.0f,      0.0f}};
+    vertices[1] = {{left,  bottom, 0.0f}, {0.0f,      tex_bottom}};
+    vertices[2] = {{right, top,    0.0f}, {tex_right, 0.0f}};
+    vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
 }
 
 void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
@@ -234,34 +240,20 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
 
     GLuint surface_tex = load_texture(renderable, buffer);
 
-    auto const& buf_size = buffer.size();
-    GLfloat tex_scale_u = static_cast<GLfloat>(rect.size.width.as_int()) /
-                          buf_size.width.as_int();
-    GLfloat tex_scale_v = static_cast<GLfloat>(rect.size.height.as_int()) /
-                          buf_size.height.as_int();
-
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     std::vector<Primitive> primitives;
-    tessellate(primitives, renderable);
+    tessellate(primitives, renderable, buffer.size());
    
-    for (auto& p : primitives)
+    for (auto const& p : primitives)
     {
-        if (!p.tex_id) // the main surface texture
-        {
-            for (auto& v : p.vertices)
-            {
-                v.texcoord[0] *= tex_scale_u;
-                v.texcoord[1] *= tex_scale_v;
-            }
-            glBindTexture(GL_TEXTURE_2D, surface_tex);
-        }
-        else
-        {
-            glBindTexture(GL_TEXTURE_2D, p.tex_id);
-        }
+        // Note a primitive tex_id of zero means use the surface texture,
+        // which is what you normally want. Other textures could be used
+        // in decorations etc.
+
+        glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : surface_tex);
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                               GL_FALSE, sizeof(Vertex),
