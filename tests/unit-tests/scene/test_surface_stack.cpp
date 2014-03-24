@@ -17,29 +17,21 @@
  */
 
 #include "src/server/scene/surface_stack.h"
-#include "src/server/compositor/buffer_stream_surfaces.h"
-#include "mir/scene/buffer_stream_factory.h"
-#include "src/server/compositor/buffer_bundle.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/compositor/renderer.h"
+//#include "mir/compositor/renderer.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
-#include "mir/input/input_channel.h"
-#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_input_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
 
 #include <memory>
 #include <stdexcept>
@@ -59,26 +51,6 @@ namespace mr = mir::report;
 
 namespace
 {
-
-class NullBufferBundle : public mc::BufferBundle
-{
-public:
-    virtual void client_acquire(std::function<void(mg::Buffer* buffer)> complete) { complete(nullptr); }
-    virtual void client_release(mg::Buffer*) {}
-    virtual std::shared_ptr<mg::Buffer> compositor_acquire(unsigned long)
-        { return std::shared_ptr<mg::Buffer>(); };
-    virtual void compositor_release(std::shared_ptr<mg::Buffer> const&){}
-    virtual std::shared_ptr<mg::Buffer> snapshot_acquire(){ return std::shared_ptr<mg::Buffer>(); };
-    virtual void snapshot_release(std::shared_ptr<mg::Buffer> const&){}
-    virtual void force_client_abort() {}
-    void force_requests_to_complete() {}
-    virtual void allow_framedropping(bool) {}
-    virtual mg::BufferProperties properties() const { return mg::BufferProperties{}; };
-    void resize(const geom::Size &) override {}
-    int buffers_ready_for_compositor() const override { return 1; }
-};
-
-
 struct MockFilterForScene : public mc::FilterForScene
 {
     // Can not mock operator overload so need to forward
@@ -141,15 +113,6 @@ struct StubInputChannel : public mi::InputChannel
 
     int const s_fd;
     int const c_fd;
-};
-
-struct StubBufferStreamFactory : public ms::BufferStreamFactory
-{
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&)
-    {
-        return std::make_shared<mc::BufferStreamSurfaces>(
-            std::make_shared<NullBufferBundle>());
-    }
 };
 
 class MockCallback
