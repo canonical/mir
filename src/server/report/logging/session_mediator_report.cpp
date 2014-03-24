@@ -73,9 +73,9 @@ void mrl::SessionMediatorReport::session_configure_display_called(std::string co
     log->log(ml::Logger::informational, "session_configure_display_called(\"" + app_name + "\")", component);
 }
 
-void mrl::SessionMediatorReport::session_start_trust_session_called(std::string const& app_name)
+void mrl::SessionMediatorReport::session_start_trust_session_called(std::string const& app_name, std::string const& trust_info)
 {
-    log->log(ml::Logger::informational, "session_start_trust_session_called(\"" + app_name + "\")", component);
+    log->log(ml::Logger::informational, "session_start_trust_session_called(\"" + app_name + "\"):\n" + trust_info, component);
 }
 
 void mrl::SessionMediatorReport::session_stop_trust_session_called(std::string const& app_name)

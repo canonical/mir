@@ -51,7 +51,7 @@ struct MockApplicationMediatorReport : mf::SessionMediatorReport
         EXPECT_CALL(*this, session_disconnect_called(testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, session_start_trust_session_called(testing::_)).
+        EXPECT_CALL(*this, session_start_trust_session_called(testing::_, testing::_)).
             Times(testing::AtLeast(0));
 
         EXPECT_CALL(*this, session_stop_trust_session_called(testing::_)).
@@ -63,7 +63,7 @@ struct MockApplicationMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
-    MOCK_METHOD1(session_start_trust_session_called, void (std::string const&));
+    MOCK_METHOD2(session_start_trust_session_called, void (std::string const&, std::string const&));
     MOCK_METHOD1(session_stop_trust_session_called, void (std::string const&));
 
     void session_drm_auth_magic_called(const std::string&) override {};
@@ -376,7 +376,7 @@ TEST_F(ApplicationMediatorReport, session_start_trust_session_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, session_start_trust_session_called(testing::_)).
+            EXPECT_CALL(*result, session_start_trust_session_called(testing::_, testing::_)).
                 Times(1);
 
             return result;
@@ -427,7 +427,7 @@ TEST_F(ApplicationMediatorReport, session_stop_trust_session_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, session_start_trust_session_called(testing::_)).
+            EXPECT_CALL(*result, session_stop_trust_session_called(testing::_)).
                 Times(1);
 
             return result;
@@ -471,7 +471,6 @@ TEST_F(ApplicationMediatorReport, session_stop_trust_session_called)
                 &client.ignored,
                 google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_stop_done));
             client.wait_for_trust_session_stop_done();
-
         }
     } client_process;
 

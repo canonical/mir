@@ -469,18 +469,24 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_start_trust_session_called(session->name());
-
+        std::ostringstream stream;
+        stream << "trusted process ids: ";
         msh::TrustSessionCreationParameters parameters;
         for (auto i=0; i < request->application_size(); i++)
         {
             auto& application = request->application(i);
             parameters.add_application(application.pid());
+
+            if (i > 0)
+                stream << ", ";
+            stream << application.pid();
         }
+
+        report->session_start_trust_session_called(session->name(), stream.str());
 
         auto current_trust_session = weak_trust_session.lock();
         if (current_trust_session.get() != nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Cannot start another trust session"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another trust session"));
 
         std::string error;
         auto trust_session = shell->start_trust_session_for(error, session, parameters);

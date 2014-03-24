@@ -419,19 +419,13 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
                 event_distributor->handle_event(e);
 
                 // todo - surfaces should use event distributor.
-                // only surface events have e.surface.id . Other events will throw exception.
-                try
-                {
+               if (e.type == mir_event_type_surface)
+               {
                     surface_map->with_surface_do(e.surface.id,
                         [&e](MirSurface* surface)
                         {
                             surface->handle_event(e);
                         });
-                }
-                catch (std::exception const& x)
-                {
-                    rpc_report->event_parsing_failed(event);
-                    // Eat this exception as it doesn't affect other events
                 }
             }
             else

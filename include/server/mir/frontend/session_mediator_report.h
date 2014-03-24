@@ -48,7 +48,7 @@ public:
 
     virtual void session_configure_display_called(std::string const& app_name) = 0;
 
-    virtual void session_start_trust_session_called(std::string const& app_name) = 0;
+    virtual void session_start_trust_session_called(std::string const& app_name, std::string const& trust_info) = 0;
 
     virtual void session_stop_trust_session_called(std::string const& app_name) = 0;
 
