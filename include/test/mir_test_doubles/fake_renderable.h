@@ -72,7 +72,7 @@ public:
         buf = b;
     }
 
-    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override
+    std::shared_ptr<graphics::Buffer> buffer(void const*) const override
     {
         return buf;
     }
