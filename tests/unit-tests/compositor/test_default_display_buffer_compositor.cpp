@@ -68,17 +68,6 @@ struct FakeScene : mc::Scene
         }
     }
 
-    void reverse_for_each_if(mc::FilterForScene &filter,
-                             mc::OperatorForScene &op)
-    {
-        for (auto it = renderlist.rbegin(); it != renderlist.rend(); ++it)
-        {
-            mg::Renderable &renderable = **it;
-            if (filter(renderable))
-                op(renderable);
-        }
-    }
-
     void set_change_callback(std::function<void()> const&) {}
 
     void change(mg::RenderableList const& new_renderlist)

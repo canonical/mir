@@ -47,12 +47,12 @@ public:
     }
     bool operator()(mg::Renderable const& r)
     {
-        return (list.end() != std::find_if(
-            list.begin(), list.end(),
-            [&](std::shared_ptr<mg::Renderable> renderable)
-            {
-                return (renderable.get() == &r); 
-            }));
+        return std::find_if(
+                   list.begin(), list.end(),
+                   [&](std::shared_ptr<mg::Renderable> renderable)
+                   {
+                       return (renderable.get() == &r); 
+                   }) != list.end();
     }
 
 private:
@@ -156,4 +156,3 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     report->finished_frame(bypassed, this);
     return uncomposited_buffers;
 }
-

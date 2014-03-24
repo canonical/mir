@@ -73,8 +73,6 @@ public:
     virtual void set_change_callback(std::function<void()> const& f);
     //to be deprecated
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
-    virtual void reverse_for_each_if(compositor::FilterForScene& filter,
-                                     compositor::OperatorForScene& op);
     virtual void lock();
     virtual void unlock();
     //end to be deprecated

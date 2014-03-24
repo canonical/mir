@@ -95,8 +95,6 @@ public:
     {
     }
 
-    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&) {}
-
     void set_change_callback(std::function<void()> const& f)
     {
         std::lock_guard<std::mutex> lock{callback_mutex};
