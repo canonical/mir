@@ -118,19 +118,26 @@ MirWaitHandle* mir_default_connect(
 
 void mir_default_connection_release(MirConnection * connection)
 {
-    // Use a unique_ptr to ensure connection gets deleted even if we have
-    // thrown an exception (LP: #1295231)
-    std::unique_ptr<MirConnection> ptr(connection);
-
     if (!error_connections.contains(connection))
     {
-        auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
+        try
+        {
+            auto wait_handle = connection->disconnect();
+            wait_handle->wait_for_all();
+        }
+        catch (std::exception const&)
+        {
+            // We're implementing a C API so no exceptions are to be
+            // propagated. And that's OK because if disconnect() fails,
+            // we don't care why. We're finished with the connection anyway.
+        }
     }
     else
     {
         error_connections.remove(connection);
     }
+
+    delete connection;
 }
 
 //mir_connect and mir_connection_release can be overridden by test code that sets these function
@@ -161,10 +168,6 @@ void mir_connection_release(MirConnection *connection)
     }
     catch (std::exception const&)
     {
-        // The only real exception that can happen here during a release is
-        // some kind of failure to communicate with the server. But if that
-        // happens then we simply don't care. Because we're disconnecting
-        // anyway.
     }
 }
 
