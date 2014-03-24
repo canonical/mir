@@ -85,77 +85,105 @@ TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
     EXPECT_EQ(0u, list.size());
 }
 
-#if 0
 TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
 {
-    OcclusionFilter filter(monitor_rect);
+    auto front = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, true, false);
+    auto back = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
+    mg::RenderableList list{front, back};
 
-    FakeRenderable front(10, 10, 10, 10, 1.0f, true, false);
-    EXPECT_TRUE(filter(front));
+    filter_occlusions_from(list, monitor_rect);
 
-    FakeRenderable back(12, 12, 5, 5);
-    EXPECT_FALSE(filter(back));
+    ASSERT_EQ(1u, list.size());
+    EXPECT_EQ(back, list.front());
 }
 
 TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
 {
-    OcclusionFilter filter(monitor_rect);
+    auto front = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, false, true);
+    auto back = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
+    mg::RenderableList list{front, back};
 
-    FakeRenderable front(10, 10, 10, 10, 1.0f, false, true);
-    EXPECT_FALSE(filter(front));
+    filter_occlusions_from(list, monitor_rect);
 
-    FakeRenderable back(12, 12, 5, 5);
-    EXPECT_FALSE(filter(back));
+    ASSERT_EQ(2u, list.size());
+    EXPECT_EQ(front, list.front());
+    EXPECT_EQ(back, list.back());
 }
 
 TEST_F(OcclusionFilterTest, identical_window_occluded)
 {
-    OcclusionFilter filter(monitor_rect);
+    auto front = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
+    auto back = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
+    mg::RenderableList list{front, back};
 
-    FakeRenderable front(10, 10, 10, 10);
-    EXPECT_FALSE(filter(front));
+    filter_occlusions_from(list, monitor_rect);
 
-    FakeRenderable back(10, 10, 10, 10);
-    EXPECT_TRUE(filter(back));
+    ASSERT_EQ(1u, list.size());
+    EXPECT_EQ(front, list.front());
 }
 
 TEST_F(OcclusionFilterTest, larger_window_never_occluded)
 {
-    OcclusionFilter filter(monitor_rect);
+    auto front = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
+    auto back = std::make_shared<mtd::FakeRenderable>(9, 9, 12, 12);
+    mg::RenderableList list{front, back};
 
-    FakeRenderable front(10, 10, 10, 10);
-    EXPECT_FALSE(filter(front));
+    filter_occlusions_from(list, monitor_rect);
 
-    FakeRenderable back(9, 9, 12, 12);
-    EXPECT_FALSE(filter(back));
+    ASSERT_EQ(2u, list.size());
+    EXPECT_EQ(front, list.front());
+    EXPECT_EQ(back, list.back());
 }
 
 TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
 {
-    OcclusionFilter filter(monitor_rect);
+    mg::RenderableList list;
+    unsigned int const num_windows{10u};
+    for (auto x = 0u; x < num_windows; x++)
+        list.push_back(std::make_shared<mtd::FakeRenderable>(x, x, 200, 100));
 
-    for (int x = 0; x < 10; x++)
-    {
-        FakeRenderable win(x, x, 200, 100);
-        ASSERT_FALSE(filter(win));
-    }
+    filter_occlusions_from(list, monitor_rect);
+    EXPECT_EQ(num_windows, list.size());
 }
 
 TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
 {
-    OcclusionFilter filter(monitor_rect);
+    auto window0 = std::make_shared<mtd::FakeRenderable>(10, 20, 400, 300);
+    auto window1 = std::make_shared<mtd::FakeRenderable>(10, 20, 5, 5);
+    auto window2 = std::make_shared<mtd::FakeRenderable>(100, 100, 20, 20);
+    auto window3 = std::make_shared<mtd::FakeRenderable>(200, 200, 50, 50);
+    auto window4 = std::make_shared<mtd::FakeRenderable>(500, 600, 34, 56);
+    auto window5 = std::make_shared<mtd::FakeRenderable>(200, 200, 1000, 1000);
+    mg::RenderableList list{
+        window0, window1, window2, window3, window4, window5};
 
-    FakeRenderable front(10, 20, 400, 300);
-    EXPECT_FALSE(filter(front));
+    filter_occlusions_from(list, monitor_rect);
 
-    EXPECT_TRUE(filter(FakeRenderable(10, 20, 5, 5)));
-    EXPECT_TRUE(filter(FakeRenderable(100, 100, 20, 20)));
-    EXPECT_TRUE(filter(FakeRenderable(200, 200, 50, 50)));
-
-    EXPECT_FALSE(filter(FakeRenderable(500, 600, 34, 56)));
-    EXPECT_FALSE(filter(FakeRenderable(200, 200, 1000, 1000)));
+    auto expected_size = 3u;
+    ASSERT_EQ(expected_size, list.size());
+    auto it = list.begin();
+    for(auto count = 0u; count < expected_size; count++)
+    {
+        switch (count)
+        {
+            case 0u:
+                EXPECT_EQ(window0, *it);
+                break;
+            case 1u:
+                EXPECT_EQ(window4, *it);
+                break;
+            case 2u:
+                EXPECT_EQ(window5, *it);
+                break;
+            default:
+                FAIL();
+                break;
+        }
+        it++;
+    }
 }
 
+#if 0
 TEST(OcclusionMatchTest, remembers_matches)
 {
     OcclusionMatch match;
