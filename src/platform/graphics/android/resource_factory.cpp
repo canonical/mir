@@ -121,5 +121,7 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    return std::make_shared<mga::HwcFbDevice>(hwc_native_device, fb_native_device, syncer);
+    auto logger = std::make_shared<NullHwcLogger>();
+    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device, logger); 
+    return std::make_shared<mga::HwcFbDevice>(hwc_native_device, wrapper, fb_native_device, syncer);
 }

@@ -121,3 +121,12 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
     return std::make_shared<mga::AndroidPlatform>(nullptr, display_report);
 }
+
+extern "C" void add_platform_options(
+    boost::program_options::options_description& config)
+{
+    config.add_options()
+        ("hwc-report",
+         boost::program_options::value<std::string>()->default_value(std::string{"off"}),
+         "[platform-specific] How to handle the HWC logging report.");
+}

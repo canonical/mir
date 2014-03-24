@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,13 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 
-#include "mir/frontend/session_authorizer.h"
+#include "src/platform/graphics/android/hwc_wrapper.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -28,24 +30,13 @@ namespace test
 namespace doubles
 {
 
-class StubSessionAuthorizer : public frontend::SessionAuthorizer
+struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
 {
-    bool connection_is_allowed(pid_t)
-    {
-        return true;
-    }
-    bool configure_display_is_allowed(pid_t)
-    {
-        return true;
-    }
-    bool screencast_is_allowed(pid_t)
-    {
-        return true;
-    }
+    MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
+    MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));
 };
 
 }
 }
-} // namespace mir
-
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_ */

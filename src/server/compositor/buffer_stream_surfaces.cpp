@@ -38,10 +38,10 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
-    unsigned long frameno)
+    void const* user_id)
 {
     return std::make_shared<mc::TemporaryCompositorBuffer>(
-        buffer_bundle, frameno);
+        buffer_bundle, user_id);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
