@@ -70,7 +70,19 @@ void mc::filter_occlusions_from(
     geom::Rectangle const& area)
 {
     std::vector<geom::Rectangle> coverage;
-    (void) list; (void) area;
+
+    auto it = list.begin();
+    while (it != list.end())
+    {
+        if (filter(**it, area, coverage))
+        {
+            it = list.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
 }
 
 void mc::OcclusionMatch::operator()(mg::Renderable const& renderable)
