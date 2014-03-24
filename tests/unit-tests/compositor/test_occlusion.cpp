@@ -45,22 +45,23 @@ TEST_F(OcclusionFilterTest, single_window_not_occluded)
     auto window = std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78);
     mg::RenderableList list{window};
  
-    filter_occlusions_from(list);
+    filter_occlusions_from(list, monitor_rect);
     ASSERT_EQ(1u, list.size());
-    EXPECT_EQ(window, list[0]);
+    EXPECT_EQ(window, list.front());
 }
 
-#if 0
 TEST_F(OcclusionFilterTest, smaller_window_occluded)
 {
-    OcclusionFilter filter(monitor_rect);
+    auto front = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
+    auto back = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
+    mg::RenderableList list{front, back};
 
-    FakeRenderable front(10, 10, 10, 10);
-    EXPECT_FALSE(filter(front));
+    filter_occlusions_from(list, monitor_rect);
 
-    FakeRenderable back(12, 12, 5, 5);
-    EXPECT_TRUE(filter(back));
+    ASSERT_EQ(1u, list.size());
+    EXPECT_EQ(front, list.front());
 }
+#if 0
 
 TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 {

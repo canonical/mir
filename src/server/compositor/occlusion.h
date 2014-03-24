@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_OCCLUSION_H_
 #define MIR_COMPOSITOR_OCCLUSION_H_
 
+#include "mir/graphics/renderable.h"
 #include "mir/compositor/scene.h"
 #include <vector>
 #include <set>
@@ -27,6 +28,8 @@ namespace mir
 {
 namespace compositor
 {
+
+void filter_occlusions_from(graphics::RenderableList& list, geometry::Rectangle const& area);
 
 class OcclusionFilter : public FilterForScene
 {

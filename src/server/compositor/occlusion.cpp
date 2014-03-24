@@ -20,16 +20,20 @@
 #include "mir/graphics/renderable.h"
 #include "occlusion.h"
 
-using namespace mir;
-using namespace mir::compositor;
-using namespace mir::graphics;
+namespace mc=mir::compositor;
+namespace geom=mir::geometry;
+namespace mg=mir::graphics;
 
-OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
-        : area(area)
+mc::OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
+    : area(area)
 {
 }
-
-bool OcclusionFilter::operator()(const Renderable &renderable)
+namespace
+{
+bool filter(
+    mg::Renderable const& renderable, 
+    geom::Rectangle const& area,
+    std::vector<geom::Rectangle>& coverage)
 {
     static const glm::mat4 identity;
     if (renderable.transformation() != identity)
@@ -39,7 +43,7 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
         return true;  // Not on the display, or invisible; definitely occluded.
 
     bool occluded = false;
-    geometry::Rectangle const& window = renderable.screen_position();
+    geom::Rectangle const& window = renderable.screen_position();
     for (const auto &r : coverage)
     {
         if (r.contains(window))
@@ -54,13 +58,27 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
 
     return occluded;
 }
+}
 
-void OcclusionMatch::operator()(const Renderable &renderable)
+bool mc::OcclusionFilter::operator()(mg::Renderable const& renderable)
+{
+    return filter(renderable, area, coverage);
+}
+
+void mc::filter_occlusions_from(
+    mg::RenderableList& list,
+    geom::Rectangle const& area)
+{
+    std::vector<geom::Rectangle> coverage;
+    (void) list; (void) area;
+}
+
+void mc::OcclusionMatch::operator()(mg::Renderable const& renderable)
 {
     hidden.insert(&renderable);
 }
 
-bool OcclusionMatch::occluded(const Renderable &renderable) const
+bool mc::OcclusionMatch::occluded(mg::Renderable const& renderable) const
 {
     return hidden.find(&renderable) != hidden.end();
 }
