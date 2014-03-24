@@ -379,11 +379,6 @@ void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> cons
     targeter->focus_changed(input_channel());
 }
 
-void ms::BasicSurface::raise(std::shared_ptr<ms::SurfaceRanker> const& /*controller*/)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("Need refactoring to implement here"));
-}
-
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;

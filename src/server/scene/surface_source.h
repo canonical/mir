@@ -47,7 +47,9 @@ public:
         shell::Session* session,
         shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink) override;
+
+    void destroy_surface(std::shared_ptr<shell::Surface> const& surface) override;
 
 protected:
     SurfaceSource(const SurfaceSource&) = delete;

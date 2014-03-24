@@ -131,12 +131,6 @@ void ms::SurfaceImpl::set_input_region(std::vector<geom::Rectangle> const& regio
     surface->set_input_region(region);
 }
 
-void ms::SurfaceImpl::raise(std::shared_ptr<ms::SurfaceRanker> const& controller)
-{
-    // TODO - BasicSurface hasn't got the pointer to pass to controller
-    controller->raise(surface);
-}
-
 void ms::SurfaceImpl::resize(geom::Size const& size)
 {
     surface->resize(size);

@@ -465,17 +465,3 @@ TEST_F(SurfaceImpl, with_most_recent_buffer_do_uses_compositor_buffer)
     EXPECT_EQ(surface_builder.stub_buffer_stream()->stub_compositor_buffer.get(),
               buf_ptr);
 }
-
-TEST_F(SurfaceImpl, raise)
-{
-    using namespace ::testing;
-
-    mtd::MockSurfaceRanker surface_ranker;
-    ms::SurfaceImpl test(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
-
-    EXPECT_CALL(surface_ranker, raise(_)).Times(1);
-
-    test.raise(mt::fake_shared(surface_ranker));
-}

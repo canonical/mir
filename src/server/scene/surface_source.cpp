@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,6 +19,8 @@
 #include "surface_source.h"
 #include "surface_builder.h"
 #include "surface_impl.h"
+
+#include "mir/scene/surface.h"
 
 #include <cassert>
 
@@ -44,6 +46,10 @@ std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
     std::shared_ptr<mf::EventSink> const& sender)
 {
     auto const surface = surface_builder->create_surface(id, params, sender, surface_configurator).lock();
-    return std::make_shared<SurfaceImpl>(surface, surface_builder);
+    return surface;
 }
 
+void ms::SurfaceSource::destroy_surface(std::shared_ptr<msh::Surface> const& surface)
+{
+    surface_builder->destroy_surface(std::static_pointer_cast<Surface>(surface));
+}

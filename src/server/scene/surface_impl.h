@@ -81,8 +81,6 @@ public:
 
     virtual void allow_framedropping(bool);
 
-    virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller);
-
     virtual void resize(geometry::Size const& size);
 
     virtual void set_rotation(float degrees, glm::vec3 const& axis);

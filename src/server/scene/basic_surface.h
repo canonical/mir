@@ -115,7 +115,6 @@ public:
     MirSurfaceType type() const override;
     MirSurfaceState state() const override;
     void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) override;
-    void raise(std::shared_ptr<SurfaceRanker> const& controller) override;
     int configure(MirSurfaceAttrib attrib, int value) override;
     void hide() override;
     void show() override;

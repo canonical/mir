@@ -44,26 +44,6 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-TEST(DefaultFocusMechanism, raises_default_surface)
-{
-    using namespace ::testing;
-
-    NiceMock<mtd::MockShellSession> app1;
-    NiceMock<mtd::MockSurface> mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    {
-        InSequence seq;
-        EXPECT_CALL(app1, default_surface()).Times(1)
-            .WillOnce(Return(mt::fake_shared(mock_surface)));
-    }
-
-    auto controller = std::make_shared<mtd::StubSurfaceRanker>();
-    EXPECT_CALL(mock_surface, raise(Eq(controller))).Times(1);
-    mtd::StubInputTargeter targeter;
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), controller);
-
-    focus_mechanism.set_focus_to(mt::fake_shared(app1));
-}
-
 TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
 {
     using namespace ::testing;

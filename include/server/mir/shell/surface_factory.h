@@ -43,6 +43,8 @@ public:
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& sink) = 0;
 
+    virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
+
 protected:
     virtual ~SurfaceFactory() {}
     SurfaceFactory() = default;
