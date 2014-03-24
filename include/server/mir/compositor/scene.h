@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
+#include "mir/graphics/renderable.h"
 
 #include <memory>
 #include <functional>
@@ -61,6 +62,8 @@ class Scene
 {
 public:
     virtual ~Scene() {}
+
+    virtual graphics::RenderableList generate_renderable_list() const = 0;
 
     // Back to front; normal rendering order
     virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;

@@ -32,6 +32,7 @@ namespace doubles
 class MockScene : public compositor::Scene
 {
 public:
+    MOCK_CONST_METHOD0(generate_renderable_list, graphics::RenderableList());
     MOCK_METHOD2(for_each_if, void(compositor::FilterForScene&,
                                    compositor::OperatorForScene&));
     MOCK_METHOD2(reverse_for_each_if, void(compositor::FilterForScene&,

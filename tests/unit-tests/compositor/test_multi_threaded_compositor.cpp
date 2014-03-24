@@ -86,6 +86,11 @@ class StubScene : public mc::Scene
 public:
     StubScene() : callback{[]{}} {}
 
+    mg::RenderableList generate_renderable_list() const
+    {
+        return mg::RenderableList{};
+    }
+
     void for_each_if(mc::FilterForScene&, mc::OperatorForScene&)
     {
     }

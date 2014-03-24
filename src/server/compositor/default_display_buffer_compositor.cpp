@@ -120,6 +120,10 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     {
         display_buffer.make_current();
 
+        //scene.generate_renderables_list()
+        //filter_occlusions(list, area);
+        //FilterForVisibleSceneInRegion selector(occluded_surfaces);
+
         auto const& view_area = display_buffer.view_area();
         mc::OcclusionFilter occlusion_search(view_area);
         mc::OcclusionMatch occlusion_match;
