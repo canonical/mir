@@ -55,6 +55,7 @@ ms::SurfaceStack::SurfaceStack(
     surface_factory{surface_factory},
     input_registrar{input_registrar},
     report{report},
+    change_cb{[this]() { emit_change_notification(); }},
     notify_change{[]{}}
 {
 }
@@ -97,30 +98,35 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceStack::create_surface(
+void ms::SurfaceStack::add_surface(
+    std::shared_ptr<Surface> const& surface,
+    DepthId depth,
+    mi::InputReceptionMode input_mode)
+{
+    {
+        std::lock_guard<std::recursive_mutex> lg(guard);
+        layers_by_depth[depth].push_back(surface);
+    }
+    input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
+    report->surface_added(surface.get(), surface.get()->name());
+    emit_change_notification();
+}
+
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
-    auto change_cb = [this]() { emit_change_notification(); };
-    auto surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
-    {
-        std::lock_guard<std::recursive_mutex> lg(guard);
-        layers_by_depth[params.depth].push_back(surface);
-    }
+    auto const& surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
 
-    input_registrar->input_channel_opened(surface->input_channel(), surface, params.input_mode);
-
-    report->surface_added(surface.get(), surface.get()->name());
-    emit_change_notification();
-
+    add_surface(surface, params.depth, params.input_mode);
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 {
-    auto keep_alive = surface.lock();
+    auto const keep_alive = surface.lock();
 
     bool found_surface = false;
     {
@@ -129,7 +135,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<BasicSurface> const& surfac
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;
-            auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+            auto const p = std::find(surfaces.begin(), surfaces.end(), keep_alive);
 
             if (p != surfaces.end())
             {
@@ -165,7 +171,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<BasicSurface> const& s)
+void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
 {
     auto surface = s.lock();
 

@@ -219,3 +219,11 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
         return (display == mgm::NativePlatform::internal_native_display().get());
     return 0;
 }
+
+extern "C" void add_platform_options(boost::program_options::options_description& config)
+{
+    config.add_options()
+        ("vt",
+         boost::program_options::value<int>()->default_value(0),
+         "[platform-specific] VT to run on or 0 to use current.");
+}
