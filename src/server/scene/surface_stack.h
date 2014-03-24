@@ -68,10 +68,9 @@ public:
         std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    // From Scene
     graphics::RenderableList generate_renderable_list() const;
+    // From Scene
     virtual void set_change_callback(std::function<void()> const& f);
-
     //to be deprecated
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
     virtual void reverse_for_each_if(compositor::FilterForScene& filter,
