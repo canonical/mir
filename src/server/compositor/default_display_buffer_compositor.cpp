@@ -49,7 +49,7 @@ public:
     {
         return std::find_if(
                    list.begin(), list.end(),
-                   [&](std::shared_ptr<mg::Renderable> renderable)
+                   [&](std::shared_ptr<mg::Renderable> const& renderable)
                    {
                        return (renderable.get() == &r); 
                    }) != list.end();
@@ -132,6 +132,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         auto renderable_list = scene->generate_renderable_list();
         mc::filter_occlusions_from(renderable_list, view_area);
 
+        printf("rendering %i\n", renderable_list.size());
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);

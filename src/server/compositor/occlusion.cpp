@@ -66,7 +66,13 @@ void mc::filter_occlusions_from(
     while (it != list.crend())
     {
         if (!renderable_is_occluded(**it, area, coverage))
+        {
+            printf("not occluded.\n");
             non_occluded_renderables.push_back(*it);
+        } else
+        {
+            printf("OCCLUDED.\n");
+        }
         it++;
     }
     std::swap(list, non_occluded_renderables);
