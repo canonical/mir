@@ -555,3 +555,43 @@ TEST_F(SurfaceStack, is_recursively_lockable)
     stack.unlock();
     stack.unlock();
 }
+
+TEST_F(SurfaceStack, generate_renderlist)
+{
+    using namespace testing;
+
+    size_t num_surfaces{3};
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+
+    std::list<std::shared_ptr<ms::Surface>> surfacelist;
+    for(auto i = 0u; i < num_surfaces; i++)
+    {
+        auto const surface = std::make_shared<ms::BasicSurface>(
+            mf::SurfaceId(__LINE__),
+            std::string("stub"),
+            geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+            true,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mf::EventSink>(),
+            std::shared_ptr<msh::SurfaceConfigurator>(),
+            report);
+
+        surfacelist.emplace_back(surface);
+        stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    }
+
+    auto list = stack.generate_renderable_list();
+
+    ASSERT_THAT(list.size(), Eq(num_surfaces));
+
+    auto surface_it = surfacelist.begin();
+    for(auto& renderable : list)
+    {
+        EXPECT_THAT(renderable->screen_position(), Eq((*surface_it++)->screen_position()));
+    }
+
+    for(auto& surface : surfacelist)
+        stack.remove_surface(surface);
+}
