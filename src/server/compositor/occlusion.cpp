@@ -26,7 +26,7 @@ namespace mg=mir::graphics;
 
 namespace
 {
-bool filter(
+bool renderable_is_occluded(
     mg::Renderable const& renderable, 
     geom::Rectangle const& area,
     std::vector<geom::Rectangle>& coverage)
@@ -60,14 +60,14 @@ void mc::filter_occlusions_from(
     mg::RenderableList& list,
     geom::Rectangle const& area)
 {
-    mg::RenderableList l;
+    mg::RenderableList non_occluded_renderables;
     std::vector<geom::Rectangle> coverage;
-    auto it = list.rbegin();
-    while (it != list.rend())
+    auto it = list.crbegin();
+    while (it != list.crend())
     {
-        if (!filter(**it, area, coverage))
-            l.push_back(*it);
+        if (!renderable_is_occluded(**it, area, coverage))
+            non_occluded_renderables.push_back(*it);
         it++;
     }
-    list = l;
+    std::swap(list, non_occluded_renderables);
 }
