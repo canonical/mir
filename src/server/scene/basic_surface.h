@@ -54,6 +54,23 @@ namespace scene
 {
 class SceneReport;
 
+// Thread safe wrapper around notification callback
+class NotifyChange
+{
+public:
+    NotifyChange(std::function<void()> const& notify_change);
+
+    NotifyChange& operator=(std::function<void()> const& notify_change);
+
+    void operator()() const;
+
+private:
+    NotifyChange(NotifyChange const&) = delete;
+    NotifyChange& operator =(NotifyChange const&) = delete;
+    std::mutex mutable mutex;
+    std::function<void()> notify_change;
+};
+
 class BasicSurface : public Surface
 {
 public:
@@ -127,7 +144,7 @@ private:
 
     std::mutex mutable guard;
     frontend::SurfaceId const id;
-    std::function<void()> notify_change;
+    NotifyChange notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;

@@ -40,6 +40,24 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+ms::NotifyChange::NotifyChange(std::function<void()> const& notify_change) :
+        notify_change(notify_change) {}
+
+ms::NotifyChange& ms::NotifyChange::operator=(std::function<void()> const& notify_change)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    this->notify_change = notify_change;
+    return *this;
+}
+
+void ms::NotifyChange::operator()() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    auto const notifier = notify_change;
+    lock.unlock();
+    notifier();
+}
+
 ms::BasicSurface::BasicSurface(
     frontend::SurfaceId id,
     std::string const& name,
@@ -174,7 +192,6 @@ void ms::BasicSurface::update_change_notification(std::function<void()> change_n
 {
     notify_change = change_notification;
 }
-
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
