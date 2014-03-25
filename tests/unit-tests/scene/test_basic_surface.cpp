@@ -57,11 +57,11 @@ public:
     void handle_display_config_change(mir::graphics::DisplayConfiguration const&) override {}
 };
 
-struct StubSurfaceConfigurator : msh::SurfaceConfigurator
+struct StubSurfaceConfigurator : ms::SurfaceConfigurator
 {
-    int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int) override { return 0; }
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int) override { return 0; }
 
-    void attribute_set(msh::Surface const&, MirSurfaceAttrib, int) override { }
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
 };
 
 struct BasicSurfaceTest : public testing::Test

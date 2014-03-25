@@ -30,7 +30,7 @@ namespace mf = mir::frontend;
 
 
 ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                                  std::shared_ptr<msh::SurfaceConfigurator> const& surface_configurator)
+                                  std::shared_ptr<SurfaceConfigurator> const& surface_configurator)
     : surface_builder(surface_builder),
       surface_configurator(surface_configurator)
 {

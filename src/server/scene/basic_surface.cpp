@@ -66,7 +66,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     id(id),
     notify_change([](){}),

@@ -168,11 +168,11 @@ struct MockEventSink : StubEventSink
     MOCK_METHOD1(handle_event, void(MirEvent const&));
 };
 
-struct StubSurfaceConfigurator : msh::SurfaceConfigurator
+struct StubSurfaceConfigurator : ms::SurfaceConfigurator
 {
-    int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int) override { return 0; }
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int) override { return 0; }
 
-    void attribute_set(msh::Surface const&, MirSurfaceAttrib, int) override { }
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
 };
 
 

@@ -43,7 +43,7 @@ public:
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
+        std::shared_ptr<SurfaceConfigurator> const& configurator) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;

@@ -79,7 +79,7 @@ struct Surface : testing::Test
     }
     mf::SurfaceId stub_id;
     std::shared_ptr<mf::EventSink> stub_sender;
-    std::shared_ptr<msh::SurfaceConfigurator> null_configurator;
+    std::shared_ptr<ms::SurfaceConfigurator> null_configurator;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 }

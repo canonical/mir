@@ -46,7 +46,7 @@ public:
             std::make_shared<StubBufferStream>(),
             std::shared_ptr<input::InputChannel>(),
             std::shared_ptr<frontend::EventSink>(),
-            std::shared_ptr<shell::SurfaceConfigurator>(),
+            std::shared_ptr<scene::SurfaceConfigurator>(),
             mir::report::null_scene_report()))
     {
     }
@@ -55,7 +55,7 @@ public:
         frontend::SurfaceId,
         shell::SurfaceCreationParameters const&,
         std::shared_ptr<frontend::EventSink> const&,
-        std::shared_ptr<shell::SurfaceConfigurator> const&) override
+        std::shared_ptr<scene::SurfaceConfigurator> const&) override
     {
         return dummy_surface;
     }

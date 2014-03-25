@@ -61,7 +61,6 @@ class PlacementStrategy;
 class SessionListener;
 class FocusController;
 class DisplayLayout;
-class SurfaceConfigurator;
 }
 namespace time
 {
@@ -80,6 +79,7 @@ class SessionEventHandlerRegister;
 class SessionManager;
 class SnapshotStrategy;
 class SurfaceBuilder;
+class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceRanker;
@@ -204,7 +204,7 @@ public:
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
+    virtual std::shared_ptr<scene::SurfaceConfigurator> the_shell_surface_configurator();
     /** @} */
 
     /** @name internal scene configuration
@@ -295,7 +295,7 @@ protected:
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
+    CachedPtr<scene::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;

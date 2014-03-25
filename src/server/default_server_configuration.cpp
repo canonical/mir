@@ -113,15 +113,15 @@ mir::DefaultServerConfiguration::the_cursor_listener()
         });
 }
 
-std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_shell_surface_configurator()
+std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_shell_surface_configurator()
 {
-    struct DefaultSurfaceConfigurator : public msh::SurfaceConfigurator
+    struct DefaultSurfaceConfigurator : public ms::SurfaceConfigurator
     {
-        int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int requested_value)
+        int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value)
         {
             return requested_value;
         }
-        void attribute_set(msh::Surface const&, MirSurfaceAttrib, int)
+        void attribute_set(ms::Surface const&, MirSurfaceAttrib, int)
         {
         }
     };

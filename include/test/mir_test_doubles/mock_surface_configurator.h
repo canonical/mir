@@ -30,10 +30,10 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceConfigurator : public shell::SurfaceConfigurator
+struct MockSurfaceConfigurator : public scene::SurfaceConfigurator
 {
-    MOCK_METHOD3(select_attribute_value, int(shell::Surface const&, MirSurfaceAttrib, int));
-    MOCK_METHOD3(attribute_set, void(shell::Surface const&, MirSurfaceAttrib, int));
+    MOCK_METHOD3(select_attribute_value, int(scene::Surface const&, MirSurfaceAttrib, int));
+    MOCK_METHOD3(attribute_set, void(scene::Surface const&, MirSurfaceAttrib, int));
 };
 
 }

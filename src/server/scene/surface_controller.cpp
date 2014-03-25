@@ -35,7 +35,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
+    std::shared_ptr<SurfaceConfigurator> const& configurator)
 {
     auto const surface = surface_factory->create_surface(id, params, event_sink, configurator);
     surface_stack->add_surface(surface, params.depth, params.input_mode);

@@ -29,18 +29,18 @@ namespace mir
 namespace shell
 {
 class Session;
-class SurfaceConfigurator;
 }
 
 namespace scene
 {
 class SurfaceBuilder;
+class SurfaceConfigurator;
 
 class SurfaceSource : public shell::SurfaceFactory
 {
 public:
     SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                  std::shared_ptr<shell::SurfaceConfigurator> const& surface_configurator);
+                  std::shared_ptr<SurfaceConfigurator> const& surface_configurator);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<shell::Surface> create_surface(
@@ -57,7 +57,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
-    std::shared_ptr<shell::SurfaceConfigurator> const surface_configurator;
+    std::shared_ptr<SurfaceConfigurator> const surface_configurator;
 };
 
 }

@@ -49,10 +49,10 @@ namespace input
 class InputChannel;
 class Surface;
 }
-namespace shell { class SurfaceConfigurator; }
 namespace scene
 {
 class SceneReport;
+class SurfaceConfigurator;
 
 // Thread safe wrapper around notification callback
 class NotifyChange
@@ -82,7 +82,7 @@ public:
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<SceneReport> const& report);
 
     ~BasicSurface() noexcept;
@@ -155,7 +155,7 @@ private:
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<frontend::EventSink> const event_sink;
-    std::shared_ptr<shell::SurfaceConfigurator> const configurator;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 
     MirSurfaceType type_value;

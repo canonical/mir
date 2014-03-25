@@ -49,7 +49,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     frontend::SurfaceId id,
     msh::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
+    std::shared_ptr<SurfaceConfigurator> const& configurator)
 {
     mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,

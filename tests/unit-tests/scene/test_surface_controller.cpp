@@ -39,7 +39,7 @@ struct MockSurfaceAllocator : public ms::BasicSurfaceFactory
         mf::SurfaceId id,
         msh::SurfaceCreationParameters const&,
         std::shared_ptr<mf::EventSink> const&,
-        std::shared_ptr<msh::SurfaceConfigurator> const& configurator));
+        std::shared_ptr<ms::SurfaceConfigurator> const& configurator));
 };
 
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
