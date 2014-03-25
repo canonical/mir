@@ -87,7 +87,7 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
             return std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(),
                 the_input_channel_factory(),
-                the_shell_surface_configurator(),
+                the_surface_configurator(),
                 the_scene_report());
         });
 }

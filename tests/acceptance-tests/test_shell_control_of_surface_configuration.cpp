@@ -74,7 +74,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
-        std::shared_ptr<ms::SurfaceConfigurator> the_shell_surface_configurator() override
+        std::shared_ptr<ms::SurfaceConfigurator> the_surface_configurator() override
         {
             return mt::fake_shared(mock_configurator);
         }
@@ -113,7 +113,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
-        std::shared_ptr<ms::SurfaceConfigurator> the_shell_surface_configurator() override
+        std::shared_ptr<ms::SurfaceConfigurator> the_surface_configurator() override
         {
             return mt::fake_shared(mock_configurator);
         }

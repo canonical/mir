@@ -113,7 +113,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
         });
 }
 
-std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_shell_surface_configurator()
+std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_surface_configurator()
 {
     struct DefaultSurfaceConfigurator : public ms::SurfaceConfigurator
     {
@@ -125,7 +125,7 @@ std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_sh
         {
         }
     };
-    return shell_surface_configurator(
+    return surface_configurator(
         [this]()
         {
             return std::make_shared<DefaultSurfaceConfigurator>();

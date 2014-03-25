@@ -204,7 +204,6 @@ public:
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<scene::SurfaceConfigurator> the_shell_surface_configurator();
     /** @} */
 
     /** @name internal scene configuration
@@ -219,6 +218,7 @@ public:
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<scene::SurfaceRanker>     the_surface_ranker();
     virtual std::shared_ptr<scene::BasicSurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -295,7 +295,7 @@ protected:
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<scene::SurfaceConfigurator> shell_surface_configurator;
+    CachedPtr<scene::SurfaceConfigurator> surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
