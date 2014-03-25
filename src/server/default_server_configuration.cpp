@@ -25,7 +25,7 @@
 
 #include "mir/options/program_option.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"

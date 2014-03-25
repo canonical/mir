@@ -20,7 +20,7 @@
 
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test/fake_shared.h"

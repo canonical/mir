@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_SURFACE_CONFIGURATOR_H_
 #define MIR_TEST_DOUBLES_NULL_SURFACE_CONFIGURATOR_H_
 
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 
 namespace mir
 {

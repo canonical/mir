@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface.h"
 
 #include "mir_test/fake_shared.h"

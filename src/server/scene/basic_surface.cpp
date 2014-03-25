@@ -26,7 +26,7 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 
 #include <boost/throw_exception.hpp>
 

@@ -20,7 +20,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
