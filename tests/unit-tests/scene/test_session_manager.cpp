@@ -21,7 +21,6 @@
 #include "src/server/scene/default_session_container.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/session.h"
-#include "src/server/scene/surface_impl.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"

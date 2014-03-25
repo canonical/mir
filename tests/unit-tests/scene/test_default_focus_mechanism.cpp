@@ -28,7 +28,6 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/mock_surface.h"
-#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
@@ -49,8 +48,8 @@ TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
     using namespace ::testing;
 
     NiceMock<mtd::MockShellSession> app1, app2;
-    NiceMock<mtd::MockSurface> mock_surface1(std::make_shared<mtd::StubSurfaceBuilder>());
-    NiceMock<mtd::MockSurface> mock_surface2(std::make_shared<mtd::StubSurfaceBuilder>());
+    NiceMock<mtd::MockSurface> mock_surface1;
+    NiceMock<mtd::MockSurface> mock_surface2;
     
     ON_CALL(app1, default_surface()).WillByDefault(Return(mt::fake_shared(mock_surface1)));
     ON_CALL(app2, default_surface()).WillByDefault(Return(mt::fake_shared(mock_surface2)));
@@ -75,7 +74,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
     using namespace ::testing;
 
     NiceMock<mtd::MockShellSession> app1;
-    NiceMock<mtd::MockSurface> mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    NiceMock<mtd::MockSurface> mock_surface;
     {
         InSequence seq;
         EXPECT_CALL(app1, default_surface()).Times(1)

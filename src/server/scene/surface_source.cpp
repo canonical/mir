@@ -18,7 +18,6 @@
 
 #include "surface_source.h"
 #include "surface_builder.h"
-#include "surface_impl.h"
 
 #include "mir/scene/surface.h"
 

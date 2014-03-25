@@ -14,6 +14,5 @@ ADD_LIBRARY(
   surface_stack.cpp
   surface_controller.cpp
   surface_source.cpp
-  surface_impl.cpp
   threaded_snapshot_strategy.cpp
 )
