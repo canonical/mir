@@ -37,9 +37,13 @@ struct BypassFilterTest : public testing::Test
 TEST_F(BypassFilterTest, nothing_matches_nothing)
 {
     mg::RenderableList empty_list{};
-    EXPECT_EQ(empty_list.end(), mc::find_bypass_buffer_from(empty_list, primary_monitor));
+    mc::BypassMatcher matcher(primary_monitor);
+
+    EXPECT_EQ(empty_list.end(), std::find_if(empty_list.begin(), empty_list.end(), matcher));
 }
 
+#if 0
+//osnteoh
 TEST_F(BypassFilterTest, small_window_not_bypassed)
 {
     mg::RenderableList list{
@@ -49,27 +53,24 @@ TEST_F(BypassFilterTest, small_window_not_bypassed)
     EXPECT_EQ(list.end(), mc::find_bypass_buffer_from(list, primary_monitor));
 }
 
-#if 0
 TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
 {
-    BypassFilter filter(display_buffer[0]);
+    auto window = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
+    mg::RenderableList list{window};
 
-    FakeRenderable win(0, 0, 1920, 1200);
-
-    EXPECT_TRUE(filter(win));
-    EXPECT_TRUE(filter.fullscreen_on_top());
+    EXPECT_EQ(window, *mc::find_bypass_buffer_from(list, primary_monitor));
 }
 
 TEST_F(BypassFilterTest, translucent_fullscreen_window_not_bypassed)
 {
-    BypassFilter filter(display_buffer[0]);
+    mg::RenderableList list{
+        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.5f)
+    };
 
-    FakeRenderable win(0, 0, 1920, 1200, 0.5f);
-
-    EXPECT_FALSE(filter(win));
-    EXPECT_FALSE(filter.fullscreen_on_top());
+    EXPECT_EQ(list.end(), mc::find_bypass_buffer_from(list, primary_monitor));
 }
-
+#endif
+#if 0
 TEST_F(BypassFilterTest, hidden_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer[0]);

@@ -31,10 +31,18 @@ class DisplayBuffer;
 namespace compositor
 {
 
+class BypassMatcher
+{
+public:
+    BypassMatcher(geometry::Rectangle const& rect);
+private:
+    geometry::Rectangle const view_area;
+};
+
 graphics::RenderableList::iterator find_bypass_buffer_from(
     graphics::RenderableList const& list,
     geometry::Rectangle const& view_area);
-    
+
 class BypassFilter : public FilterForScene
 {
 public:
