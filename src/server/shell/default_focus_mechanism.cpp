@@ -18,7 +18,7 @@
 
 #include "default_focus_mechanism.h"
 #include "mir/frontend/session.h"
-#include "../scene/surface_ranker.h" // TODO publish interface
+#include "mir/scene/surface_ranker.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/session.h"
