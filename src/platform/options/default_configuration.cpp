@@ -16,7 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/shared_library.h"
+#include "mir/shared_library_loader.h"
 #include "mir/options/default_configuration.h"
+#include "mir/graphics/platform.h"
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
@@ -114,9 +117,35 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
-            "Render to offscreen buffers instead of the real outputs.")
-        ("vt", po::value<int>()->default_value(0), // TODO this not applicable on all graphics platforms
-            "VT to run on or 0 to use current.");
+            "Render to offscreen buffers instead of the real outputs.");
+
+        add_platform_options();
+}
+
+void mo::DefaultConfiguration::add_platform_options()
+{
+    namespace po = boost::program_options;
+    po::options_description program_options;
+    program_options.add_options()
+        (platform_graphics_lib,
+         po::value<std::string>()->default_value(default_platform_graphics_lib), "");
+    mo::ProgramOption options;
+    options.parse_arguments(program_options, argc, argv);
+
+    std::string graphics_libname;
+    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
+    if (!options.is_set(platform_graphics_lib) && env_libname)
+    {
+        graphics_libname = std::string{env_libname};
+    }
+    else
+    {
+        graphics_libname = options.get<std::string>(platform_graphics_lib);
+    }
+
+    auto graphics_lib = load_library(graphics_libname);
+    auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
+    add_platform_options(*this->program_options);
 }
 
 boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()

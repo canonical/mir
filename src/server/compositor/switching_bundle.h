@@ -25,8 +25,7 @@
 #include <mutex>
 #include <memory>
 #include <iosfwd>
-
-#include <boost/optional/optional.hpp>
+#include <unordered_set>
 
 namespace mir
 {
@@ -54,7 +53,7 @@ public:
     void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) override;
     void client_release(graphics::Buffer* buffer);
     std::shared_ptr<graphics::Buffer>
-        compositor_acquire(unsigned long frameno) override;
+        compositor_acquire(void const* user_id) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
     std::shared_ptr<graphics::Buffer> snapshot_acquire();
     void snapshot_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
@@ -105,7 +104,7 @@ private:
     mutable std::mutex guard;
     std::condition_variable cond;
 
-    boost::optional<unsigned long> last_consumed;
+    std::unordered_set<void const*> users;
 
     bool overlapping_compositors;
 

@@ -98,8 +98,8 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     auto client1_id = client1->id();
     buffer_stream.swap_client_buffers_blocking(client1);
 
-    auto comp1 = buffer_stream.lock_compositor_buffer(1);
-    auto comp2 = buffer_stream.lock_compositor_buffer(1);
+    auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
+    auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
 
     EXPECT_EQ(comp1->id(), comp2->id());
     EXPECT_EQ(comp1->id(), client1_id);
@@ -107,7 +107,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     comp1.reset();
 
     buffer_stream.swap_client_buffers_blocking(client1);
-    auto comp3 = buffer_stream.lock_compositor_buffer(2);
+    auto comp3 = buffer_stream.lock_compositor_buffer(nullptr);
 
     EXPECT_NE(client1_id, comp3->id());
 
@@ -115,7 +115,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     auto comp3_id = comp3->id();
     comp3.reset();
 
-    auto comp4 = buffer_stream.lock_compositor_buffer(2);
+    auto comp4 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(comp3_id, comp4->id());
 }
 
@@ -125,13 +125,14 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
     for (int i = 0; i !=  nbuffers; i++)
         buffer_stream.swap_client_buffers_blocking(client_buffer);
 
-    auto first_monitor = buffer_stream.lock_compositor_buffer(1);
+    auto first_monitor = buffer_stream.lock_compositor_buffer(0);
     auto first_compositor_id = first_monitor->id();
     first_monitor.reset();
 
-    for (int m = 0; m < 10; m++)
+    for (int m = 1; m <= 10; m++)
     {
-        auto monitor = buffer_stream.lock_compositor_buffer(1);
+        const void *th = reinterpret_cast<const void*>(m);
+        auto monitor = buffer_stream.lock_compositor_buffer(th);
         ASSERT_EQ(first_compositor_id, monitor->id());
     }
 }
@@ -144,10 +145,10 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
     if (nbuffers > 1)
     {
         buffer_stream.swap_client_buffers_blocking(client_buffer);
-        auto comp1 = buffer_stream.lock_compositor_buffer(1);
+        auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
 
         buffer_stream.swap_client_buffers_blocking(client_buffer);
-        auto comp2 = buffer_stream.lock_compositor_buffer(2);
+        auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
 
         EXPECT_NE(comp1->id(), comp2->id());
 
@@ -200,17 +201,17 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     buffer_stream.swap_client_buffers_blocking(client);
     buffer_stream.swap_client_buffers_blocking(client);
 
-    auto comp1 = buffer_stream.lock_compositor_buffer(1);
+    auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(old_size, comp1->size());
     comp1.reset();
 
-    auto comp2 = buffer_stream.lock_compositor_buffer(2);
+    auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(new_size, comp2->size());
     comp2.reset();
 
     buffer_stream.swap_client_buffers_blocking(client);
 
-    auto comp3 = buffer_stream.lock_compositor_buffer(3);
+    auto comp3 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(new_size, comp3->size());
     comp3.reset();
 
@@ -219,13 +220,13 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 
     // No client frames "drawn" since resize(old_size), so compositor gets new_size
     buffer_stream.swap_client_buffers_blocking(client);
-    auto comp4 = buffer_stream.lock_compositor_buffer(4);
+    auto comp4 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(new_size, comp4->size());
     comp4.reset();
 
     // Generate a new frame, which should be back to old_size now
     buffer_stream.swap_client_buffers_blocking(client);
-    auto comp5 = buffer_stream.lock_compositor_buffer(5);
+    auto comp5 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(old_size, comp5->size());
     comp5.reset();
 }
@@ -236,14 +237,15 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
     buffer_stream.swap_client_buffers_blocking(client);
     buffer_stream.swap_client_buffers_blocking(client);
 
-    auto comp1 = buffer_stream.lock_compositor_buffer(123);
-    auto comp2 = buffer_stream.lock_compositor_buffer(123);
+    int a, b, c;
+    auto comp1 = buffer_stream.lock_compositor_buffer(&a);
+    auto comp2 = buffer_stream.lock_compositor_buffer(&b);
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
-    auto comp3 = buffer_stream.lock_compositor_buffer(123);
+    auto comp3 = buffer_stream.lock_compositor_buffer(&c);
 
     EXPECT_EQ(comp2->id(), comp3->id());
 }
@@ -265,15 +267,13 @@ void client_loop(int nframes, BufferStreamSurfaces& stream)
 void compositor_loop(mc::BufferStream &stream,
                      std::atomic<bool> &done)
 {
-    unsigned long count = 0;
-
     while (!done.load())
     {
-        auto comp1 = stream.lock_compositor_buffer(++count);
+        auto comp1 = stream.lock_compositor_buffer(nullptr);
         ASSERT_NE(nullptr, comp1);
 
         // Also stress test getting a second compositor buffer before yielding
-        auto comp2 = stream.lock_compositor_buffer(count);
+        auto comp2 = stream.lock_compositor_buffer(nullptr);
         ASSERT_NE(nullptr, comp2);
 
         std::this_thread::yield();

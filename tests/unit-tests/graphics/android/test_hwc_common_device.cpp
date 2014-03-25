@@ -19,6 +19,7 @@
 #include "mir/graphics/android/sync_fence.h"
 #include "src/platform/graphics/android/hwc_fb_device.h"
 #include "src/platform/graphics/android/hwc_device.h"
+#include "src/platform/graphics/android/hwc_wrapper.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "src/platform/graphics/android/hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
@@ -66,7 +67,8 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HwcFbDevice>(
     std::shared_ptr<framebuffer_device_t> const& fb_device,
     std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
-    return std::make_shared<mga::HwcFbDevice>(hwc_device, fb_device, coordinator);
+    auto stub_wrapper = std::make_shared<StubHWCWrapper>();
+    return std::make_shared<mga::HwcFbDevice>(hwc_device, stub_wrapper, fb_device, coordinator);
 }
 
 template <>

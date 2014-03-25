@@ -35,20 +35,7 @@ namespace android
 {
 class HWCVsyncCoordinator;
 class SyncFileOps;
-
-class HwcWrapper
-{
-public:
-    virtual ~HwcWrapper() = default;
-
-    virtual void prepare(hwc_display_contents_1_t&) const = 0;
-    virtual void set(hwc_display_contents_1_t&) const = 0;
-
-protected:
-    HwcWrapper() = default;
-    HwcWrapper& operator=(HwcWrapper const&) = delete;
-    HwcWrapper(HwcWrapper const&) = delete;
-};
+class HwcWrapper;
 
 class HwcDevice : public HWCCommonDevice
 {

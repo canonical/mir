@@ -42,7 +42,7 @@ public:
     void swap_client_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
 
     std::shared_ptr<graphics::Buffer>
-        lock_compositor_buffer(unsigned long frameno) override;
+        lock_compositor_buffer(void const* user_id) override;
     std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
     MirPixelFormat get_stream_pixel_format() override;

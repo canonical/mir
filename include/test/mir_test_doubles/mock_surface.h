@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
 #include "src/server/scene/surface_impl.h"
+#include "src/server/scene/surface_builder.h"
 
 #include "mir/shell/surface_creation_parameters.h"
 #include "null_event_sink.h"
@@ -39,7 +40,9 @@ namespace doubles
 struct MockSurface : public scene::SurfaceImpl
 {
     MockSurface(std::shared_ptr<scene::SurfaceBuilder> const& builder) :
-        scene::SurfaceImpl(builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(), frontend::SurfaceId{}, std::make_shared<NullEventSink>())
+        scene::SurfaceImpl(
+            builder->create_surface(frontend::SurfaceId{}, shell::a_surface(), std::make_shared<NullEventSink>(), std::make_shared<NullSurfaceConfigurator>()),
+            builder)
     {
     }
 
@@ -53,7 +56,7 @@ struct MockSurface : public scene::SurfaceImpl
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
 
-    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(name, std::string()); // not used in any tests!
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 

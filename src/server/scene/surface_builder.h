@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-14 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,25 +20,33 @@
 #ifndef MIR_SCENE_SURFACE_BUILDER_H_
 #define MIR_SCENE_SURFACE_BUILDER_H_
 
+#include "mir/frontend/surface_id.h"
+
 #include <memory>
 
 namespace mir
 {
+namespace frontend { class EventSink; }
 namespace shell
 {
 struct SurfaceCreationParameters;
+class SurfaceConfigurator;
 }
 
 namespace scene
 {
-class BasicSurface;
+class Surface;
 
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<Surface> create_surface(
+        frontend::SurfaceId id,
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:
     SurfaceBuilder() = default;
     virtual ~SurfaceBuilder() = default;

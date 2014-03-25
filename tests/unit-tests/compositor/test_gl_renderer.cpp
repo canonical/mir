@@ -313,8 +313,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(renderable, alpha())
         .WillOnce(Return(0.0f));
     EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2, GL_FLOAT, GL_FALSE, _, _));
 
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
@@ -330,6 +328,12 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
+
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
+                                               GL_FLOAT, GL_FALSE, _, _));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_location, 2,
+                                               GL_FLOAT, GL_FALSE, _, _));
 
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
@@ -369,6 +373,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
     EXPECT_CALL(mock_buffer, bind_to_texture());
 
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     renderer->begin();
@@ -399,12 +404,14 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                                          _));
     EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _))
         .Times(0);
 
     // Second render() - texture found in cache and not re-uploaded
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _))
         .Times(0);
@@ -414,6 +421,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)))
         .Times(0);
 
@@ -422,12 +430,14 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)))
         .Times(0);
 
     // Fifth render() - texture found in cache and not re-uploaded
     EXPECT_CALL(mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _))
         .Times(0);

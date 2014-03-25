@@ -36,17 +36,16 @@ TEST(RenderingOperator, render_operator_saves_resources)
 {
     using namespace testing;
 
-    unsigned long frameno = 84;
     mtd::MockRenderer mock_renderer;
     mtd::MockRenderable mock_renderable;
     auto stub_buffer0 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(mock_renderable, buffer(frameno))
+    EXPECT_CALL(mock_renderable, buffer(_))
         .Times(3)
         .WillOnce(Return(stub_buffer0))
-        .WillOnce(Return(stub_buffer1)) 
+        .WillOnce(Return(stub_buffer1))
         .WillOnce(Return(stub_buffer2));
 
     Sequence seq;
@@ -56,21 +55,22 @@ TEST(RenderingOperator, render_operator_saves_resources)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(Ref(mock_renderable), Ref(*stub_buffer2)))
         .InSequence(seq);
- 
-    std::vector<std::shared_ptr<void>> saved_resources;
 
+    auto use_count_before0 = stub_buffer0.use_count(); 
+    auto use_count_before1 = stub_buffer1.use_count(); 
+    auto use_count_before2 = stub_buffer2.use_count(); 
     {
-        bool uncomposited_buffers{false};
-        auto save_fn = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
-        mc::RenderingOperator rendering_operator(mock_renderer, save_fn, frameno, uncomposited_buffers);
+        mc::RenderingOperator rendering_operator(mock_renderer);
+        rendering_operator(mock_renderable);
+        rendering_operator(mock_renderable);
+        rendering_operator(mock_renderable);
 
-        rendering_operator(mock_renderable);
-        rendering_operator(mock_renderable);
-        rendering_operator(mock_renderable);
+        EXPECT_EQ(use_count_before0 + 1, stub_buffer0.use_count());
+        EXPECT_EQ(use_count_before1 + 1, stub_buffer1.use_count());
+        EXPECT_EQ(use_count_before2 + 1, stub_buffer2.use_count());
     }
 
-    ASSERT_EQ(3u, saved_resources.size());
-    EXPECT_EQ(stub_buffer0, saved_resources[0]);
-    EXPECT_EQ(stub_buffer1, saved_resources[1]);
-    EXPECT_EQ(stub_buffer2, saved_resources[2]);
+    EXPECT_EQ(use_count_before0, stub_buffer0.use_count());
+    EXPECT_EQ(use_count_before1, stub_buffer1.use_count());
+    EXPECT_EQ(use_count_before2, stub_buffer2.use_count());
 }
