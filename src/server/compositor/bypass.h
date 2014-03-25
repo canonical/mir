@@ -38,8 +38,7 @@ public:
     bool operator()(std::shared_ptr<graphics::Renderable> const&);
 private:
     geometry::Rectangle const view_area;
-    bool all_orthogonal = true;
-    bool topmost_fits = false;
+    bool bypass_eliminated;
 };
 
 } // namespace compositor

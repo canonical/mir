@@ -26,38 +26,30 @@ namespace mg=mir::graphics;
 
 mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
     : view_area(rect),
-      all_orthogonal(true),
-      topmost_fits(false)
+      bypass_eliminated(false)
 {
 }
 
 bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
-    if (!all_orthogonal)
-        return false;
-
-    // Any weird transformations? Then we can't risk any bypass
-    static const glm::mat4 identity;
-    if (renderable->transformation() != identity)
-    {
-        all_orthogonal = false;
-        return false;
-    }
-
-    // Not weirdly transformed but also not on this monitor? Don't care...
-    // This will also check the surface is not hidden and has been posted.
+    //if not in the monitor's view area, just skip over
     if (!renderable->should_be_rendered_in(view_area))
         return false;
 
-    topmost_fits = false;
+    auto is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
+    auto fits = (renderable->screen_position() == view_area);
+    auto is_opaque_and_fits = is_opaque && fits;
 
-    if (renderable->alpha() != 1.0f || renderable->shaped())
+    static const glm::mat4 identity;
+    if (bypass_eliminated || //if we already determined bypass is not possible, return false
+        renderable->transformation() != identity ||
+        !is_opaque_and_fits)
+    {
+        bypass_eliminated = true;
         return false;
-
-    // Transformed perfectly to fit the monitor? Bypass!
-    topmost_fits = renderable->screen_position() == view_area;
-
-    auto bypassable = all_orthogonal && topmost_fits;
-    printf("BYPASS? %i\n", bypassable);
-    return bypassable;
+    }
+    else
+    {
+        return true;
+    }
 }
