@@ -43,8 +43,7 @@ public:
     virtual std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<SurfaceConfigurator> const& configurator) = 0;
+        std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:

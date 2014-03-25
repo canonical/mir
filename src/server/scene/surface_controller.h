@@ -46,8 +46,7 @@ public:
     std::weak_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<SurfaceConfigurator> const& configurator) override;
+        std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 

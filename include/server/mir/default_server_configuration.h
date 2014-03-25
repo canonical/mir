@@ -324,7 +324,6 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
     std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
     std::shared_ptr<scene::SessionManager>       the_session_manager();
-    std::shared_ptr<scene::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;

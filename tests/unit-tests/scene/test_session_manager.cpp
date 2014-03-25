@@ -116,7 +116,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
        Return(std::shared_ptr<ms::Surface>(
-           surface_builder.create_surface(mf::SurfaceId{}, msh::a_surface(), std::shared_ptr<mf::EventSink>(), std::make_shared<mtd::NullSurfaceConfigurator>()))));
+           surface_builder.create_surface(mf::SurfaceId{}, msh::a_surface(), std::shared_ptr<mf::EventSink>()))));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -147,7 +147,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     using namespace ::testing;
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
        Return(std::shared_ptr<ms::Surface>(
-           surface_builder.create_surface(mf::SurfaceId{}, msh::a_surface(), std::shared_ptr<mf::EventSink>(), std::make_shared<mtd::NullSurfaceConfigurator>()))));
+           surface_builder.create_surface(mf::SurfaceId{}, msh::a_surface(), std::shared_ptr<mf::EventSink>()))));
 
     // Once for session creation and once for surface creation
     {

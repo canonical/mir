@@ -54,8 +54,7 @@ public:
     std::weak_ptr<scene::Surface> create_surface(
         frontend::SurfaceId,
         shell::SurfaceCreationParameters const&,
-        std::shared_ptr<frontend::EventSink> const&,
-        std::shared_ptr<scene::SurfaceConfigurator> const&) override
+        std::shared_ptr<frontend::EventSink> const&) override
     {
         return dummy_surface;
     }
