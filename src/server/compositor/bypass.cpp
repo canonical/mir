@@ -29,6 +29,8 @@ BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
 {
 }
 
+
+
 bool BypassFilter::operator()(const Renderable &renderable)
 {
     if (!all_orthogonal)

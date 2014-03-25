@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_BYPASS_H_
 #define MIR_COMPOSITOR_BYPASS_H_
 
+#include "mir/graphics/renderable.h"
 #include "mir/compositor/scene.h"
 
 namespace mir
@@ -30,6 +31,10 @@ class DisplayBuffer;
 namespace compositor
 {
 
+graphics::RenderableList::iterator find_bypass_buffer_from(
+    graphics::RenderableList const& list,
+    geometry::Rectangle const& view_area);
+    
 class BypassFilter : public FilterForScene
 {
 public:
