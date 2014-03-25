@@ -48,7 +48,6 @@ const GLchar* vertex_shader_src =
     "void main() {\n"
     "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
     "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
-    "   transformed.z = 0.0;\n" // avoid clipping while we lack depth/perspective
     "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
@@ -304,10 +303,25 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
      * (top-left is (-1,1), bottom-right is (1,-1))
      */
     glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
+
+    /*
+     * Perspective division is one thing that can't be done in a matrix
+     * multiplication. It happens after the matrix multiplications. GL just
+     * scales {x,y} by 1/w. So modify the final part of the projection matrix
+     * to set w ([3]) to be the incoming z coordinate ([2]).
+     */
+    screen_to_gl_coords[2][3] = -1.0f;
+
+    float const vertical_fov_degrees = 30.0f;
+    float const near =
+        (rect.size.height.as_float() / 2.0f) /
+        std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
+    float const far = -near;
+
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
             glm::vec3{2.0f / rect.size.width.as_float(),
                       -2.0f / rect.size.height.as_float(),
-                      1.0f});
+                      2.0f / (near - far)});
     screen_to_gl_coords = glm::translate(screen_to_gl_coords,
             glm::vec3{-rect.top_left.x.as_float(),
                       -rect.top_left.y.as_float(),
