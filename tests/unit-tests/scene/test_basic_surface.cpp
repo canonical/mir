@@ -127,7 +127,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
 
@@ -154,7 +154,7 @@ TEST_F(BasicSurfaceTest, update_size)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_NE(new_size, surface.size());
@@ -183,7 +183,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     auto original_transformation = surface.transformation();
     glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
@@ -214,7 +214,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     float alpha = 0.5f;
     surface.set_alpha(0.5f);
@@ -291,7 +291,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     surface.set_hidden(true);
 }
@@ -313,7 +313,7 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     surface.frame_posted();
 }
@@ -334,7 +334,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     std::vector<geom::Point> contained_pt
     {
@@ -377,7 +377,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
         stub_configurator,
         report};
 
-    surface.update_change_notification(mock_change_cb);
+    surface.on_change(mock_change_cb);
 
     surface.set_input_region(rectangles);
 

@@ -188,7 +188,7 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
     return server_input_channel;
 }
 
-void ms::BasicSurface::update_change_notification(std::function<void()> change_notification)
+void ms::BasicSurface::on_change(std::function<void()> change_notification)
 {
     notify_change = change_notification;
 }

@@ -571,7 +571,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         stub_configurator,
         report);
 
-    surf.update_change_notification(change_notification);
+    surf.on_change(change_notification);
 
     mg::Buffer* buffer{nullptr};
 

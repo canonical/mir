@@ -104,7 +104,7 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
-    void update_change_notification(std::function<void()> change_notification) override;
+    void on_change(std::function<void()> change_notification) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
