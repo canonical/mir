@@ -40,8 +40,8 @@ public:
     virtual void set_rotation(float degrees) = 0;
     virtual void begin() const = 0;
 
-    // XXX The buffer parameter here could now be replaced with a "frameno"
-    //     instead, and use renderable.buffer(frameno). Is that better?
+    // XXX The buffer parameter here could now be replaced with
+    //     renderable::buffer().
     virtual void render(graphics::Renderable const& renderable,
                         graphics::Buffer& buffer) const = 0;
     virtual void end() const = 0;

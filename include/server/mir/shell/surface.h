@@ -53,7 +53,7 @@ public:
     virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller) = 0;
 
     virtual void resize(geometry::Size const& size) = 0;
-    virtual void set_rotation(float degrees, glm::vec3 const& axis) = 0;
+    virtual void set_transformation(glm::mat4 const& t) = 0;
 
     virtual float alpha() const = 0;
     virtual void set_alpha(float alpha) = 0;

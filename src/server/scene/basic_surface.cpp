@@ -28,9 +28,6 @@
 #include "mir/scene/scene_report.h"
 #include "mir/shell/surface_configurator.h"
 
-#define GLM_FORCE_RADIANS
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
@@ -253,11 +250,11 @@ void ms::BasicSurface::set_alpha(float alpha)
 }
 
 
-void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
+void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(degrees), axis);
+        transformation_matrix = t;
     }
     notify_change();
 }
@@ -265,9 +262,7 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 glm::mat4 ms::BasicSurface::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
-
-    // By default the only transformation implemented is rotation...
-    return rotation_matrix;
+    return transformation_matrix;
 }
 
 bool ms::BasicSurface::should_be_rendered_in(geom::Rectangle const& rect) const
@@ -285,10 +280,9 @@ bool ms::BasicSurface::shaped() const
     return nonrectangular;
 }
 
-std::shared_ptr<mg::Buffer>
-    ms::BasicSurface::buffer(unsigned long frameno) const
+std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer(void const* user_id) const
 {
-    return buffer_stream()->lock_compositor_buffer(frameno);
+    return buffer_stream()->lock_compositor_buffer(user_id);
 }
 
 bool ms::BasicSurface::alpha_enabled() const

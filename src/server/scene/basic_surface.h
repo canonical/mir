@@ -98,13 +98,13 @@ public:
     bool contains(geometry::Point const& point) const override;
     void frame_posted();
     void set_alpha(float alpha) override;
-    void set_rotation(float degrees, glm::vec3 const&) override;
+    void set_transformation(glm::mat4 const&) override;
     glm::mat4 transformation() const override;
     bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
     bool shaped() const  override;  // meaning the pixel format has alpha
 
     // Renderable interface
-    std::shared_ptr<graphics::Buffer> buffer(unsigned long) const override;
+    std::shared_ptr<graphics::Buffer> buffer(void const*) const override;
     bool alpha_enabled() const override;
     geometry::Rectangle screen_position() const override;
     int buffers_ready_for_compositor() const override;
@@ -130,7 +130,7 @@ private:
     std::function<void()> const notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
-    glm::mat4 rotation_matrix;
+    glm::mat4 transformation_matrix;
     float surface_alpha;
     bool first_frame_posted;
     bool hidden;
