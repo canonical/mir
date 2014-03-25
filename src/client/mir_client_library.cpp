@@ -120,8 +120,17 @@ void mir_default_connection_release(MirConnection * connection)
 {
     if (!error_connections.contains(connection))
     {
-        auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
+        try
+        {
+            auto wait_handle = connection->disconnect();
+            wait_handle->wait_for_all();
+        }
+        catch (std::exception const&)
+        {
+            // We're implementing a C API so no exceptions are to be
+            // propagated. And that's OK because if disconnect() fails,
+            // we don't care why. We're finished with the connection anyway.
+        }
     }
     else
     {

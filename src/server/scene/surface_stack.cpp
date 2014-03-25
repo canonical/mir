@@ -106,7 +106,7 @@ void ms::SurfaceStack::add_surface(
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
     report->surface_added(surface.get(), surface.get()->name());
-    surface->update_change_notification(change_cb);
+    surface->on_change(change_cb);
     emit_change_notification();
 }
 
