@@ -37,10 +37,10 @@ namespace mg = mir::graphics;
 namespace
 {
 
-class FilterForVisibleSceneInRegion : public mc::FilterForScene
+struct FilterForUndrawnSurfaces : public mc::FilterForScene
 {
 public:
-    FilterForVisibleSceneInRegion(
+    FilterForUndrawnSurfaces(
         mg::RenderableList const& renderable_list)
         : list(renderable_list)
     {
@@ -134,8 +134,8 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        FilterForVisibleSceneInRegion selector(renderable_list);
         mc::RenderingOperator applicator(*renderer);
+        FilterForUndrawnSurfaces selector(renderable_list);
         scene->for_each_if(selector, applicator);
         renderer->end();
 

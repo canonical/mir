@@ -31,6 +31,8 @@ namespace android
 class ResourceFactory : public DisplayResourceFactory
 {
 public:
+    ResourceFactory(bool should_log_hwc);
+
     //native allocations
     std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const;
     std::shared_ptr<framebuffer_device_t> create_fb_native_device() const;
@@ -46,6 +48,8 @@ public:
 
     std::shared_ptr<ANativeWindow> create_native_window(
         std::shared_ptr<FramebufferBundle> const& fb_bundle) const;
+private:
+    bool const should_log_hwc;
 };
 
 }
