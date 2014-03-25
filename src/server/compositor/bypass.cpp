@@ -21,17 +21,26 @@
 #include "bypass.h"
 
 using namespace mir;
-using namespace mir::compositor;
-using namespace mir::graphics;
+namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 
-BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
+mc::BypassMatcher::BypassMatcher(geometry::Rectangle const& rect)
+    : view_area(rect)
+{
+}
+
+bool mc::BypassMatcher::operator()(std::shared_ptr<graphics::Renderable> const&)
+{
+    printf("yo\n");
+    return false;
+}
+
+mc::BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
         : display_buffer(display_buffer)
 {
 }
 
-
-
-bool BypassFilter::operator()(const Renderable &renderable)
+bool mc::BypassFilter::operator()(const mg::Renderable &renderable)
 {
     if (!all_orthogonal)
         return false;
@@ -61,17 +70,17 @@ bool BypassFilter::operator()(const Renderable &renderable)
     return topmost_fits;
 }
 
-bool BypassFilter::fullscreen_on_top() const
+bool mc::BypassFilter::fullscreen_on_top() const
 {
     return all_orthogonal && topmost_fits;
 }
 
-void BypassMatch::operator()(const Renderable &r)
+void mc::BypassMatch::operator()(const mg::Renderable &r)
 {
     latest = &r;
 }
 
-const Renderable *BypassMatch::topmost_fullscreen() const
+const mg::Renderable *mc::BypassMatch::topmost_fullscreen() const
 {
     return latest;
 }

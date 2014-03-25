@@ -35,13 +35,10 @@ class BypassMatcher
 {
 public:
     BypassMatcher(geometry::Rectangle const& rect);
+    bool operator()(std::shared_ptr<graphics::Renderable> const&);
 private:
     geometry::Rectangle const view_area;
 };
-
-graphics::RenderableList::iterator find_bypass_buffer_from(
-    graphics::RenderableList const& list,
-    geometry::Rectangle const& view_area);
 
 class BypassFilter : public FilterForScene
 {
