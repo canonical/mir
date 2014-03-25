@@ -718,3 +718,32 @@ TEST_F(SurfaceStack, is_recursively_lockable)
     stack.unlock();
     stack.unlock();
 }
+
+TEST_F(SurfaceStack, generate_renderlist)
+{
+    size_t num_surfaces{3};
+    ms::SurfaceStack stack(
+        mt::fake_shared(mock_surface_allocator),
+        mt::fake_shared(input_registrar), report);
+
+    std::list<std::shared_ptr<ms::Surface>> surfacelist;
+    for(auto i = 0u; i < num_surfaces; i++)
+        surfacelist.emplace_back(stack.create_surface(
+            mf::SurfaceId(),
+            msh::a_surface()
+                .of_size(geom::Size{1 * i, 2 * i})
+                .of_position(geom::Point{3 * i, 4 * i}),
+            {}, {}).lock());
+
+    auto list = stack.generate_renderable_list();
+    ASSERT_EQ(num_surfaces, list.size());
+
+    auto surface_it = surfacelist.begin();
+    for(auto& renderable : list)
+    {
+        EXPECT_EQ(renderable->screen_position(), (*surface_it++)->screen_position());
+    }
+
+    for(auto& surface : surfacelist)
+        stack.remove_surface(surface);
+}
