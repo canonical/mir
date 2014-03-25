@@ -41,8 +41,7 @@ std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    auto const surface = surface_builder->create_surface(id, params, sender).lock();
-    return surface;
+    return surface_builder->create_surface(id, params, sender);
 }
 
 void ms::SurfaceSource::destroy_surface(std::shared_ptr<msh::Surface> const& surface)

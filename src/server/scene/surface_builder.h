@@ -40,7 +40,7 @@ class SurfaceConfigurator;
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<Surface> create_surface(
+    virtual std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink) = 0;

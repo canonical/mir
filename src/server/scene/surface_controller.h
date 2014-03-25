@@ -43,7 +43,7 @@ public:
         std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    std::weak_ptr<Surface> create_surface(
+    std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink) override;

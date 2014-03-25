@@ -31,7 +31,7 @@ ms::SurfaceController::SurfaceController(
 {
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(
+std::shared_ptr<ms::Surface> ms::SurfaceController::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink)
