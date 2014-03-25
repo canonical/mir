@@ -26,30 +26,19 @@ namespace mg=mir::graphics;
 
 mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
     : view_area(rect),
-      bypass_eliminated(false)
+      bypass_is_feasible(true)
 {
 }
 
 bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
-    //if not in the monitor's view area, just skip over
+    if (!bypass_is_feasible)
+        return false;
     if (!renderable->should_be_rendered_in(view_area))
         return false;
 
     auto is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
     auto fits = (renderable->screen_position() == view_area);
-    auto is_opaque_and_fits = is_opaque && fits;
-
-    static const glm::mat4 identity;
-    if (bypass_eliminated || //if we already determined bypass is not possible, return false
-        renderable->transformation() != identity ||
-        !is_opaque_and_fits)
-    {
-        bypass_eliminated = true;
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    auto is_orthogonal = (renderable->transformation() == identity);
+    return bypass_is_feasible = (is_opaque && fits && is_orthogonal);
 }

@@ -38,7 +38,8 @@ public:
     bool operator()(std::shared_ptr<graphics::Renderable> const&);
 private:
     geometry::Rectangle const view_area;
-    bool bypass_eliminated;
+    bool bypass_is_feasible;
+    glm::mat4 const identity;
 };
 
 } // namespace compositor
