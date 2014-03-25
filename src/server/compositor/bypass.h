@@ -31,37 +31,15 @@ class DisplayBuffer;
 namespace compositor
 {
 
-class BypassMatcher
+class BypassMatch
 {
 public:
-    BypassMatcher(geometry::Rectangle const& rect);
+    BypassMatch(geometry::Rectangle const& rect);
     bool operator()(std::shared_ptr<graphics::Renderable> const&);
 private:
     geometry::Rectangle const view_area;
-};
-
-class BypassFilter : public FilterForScene
-{
-public:
-    BypassFilter(const graphics::DisplayBuffer &display_buffer);
-    bool operator()(const graphics::Renderable &) override;
-    bool fullscreen_on_top() const;
-
-private:
     bool all_orthogonal = true;
     bool topmost_fits = false;
-    const graphics::DisplayBuffer &display_buffer;
-};
-
-class BypassMatch : public OperatorForScene
-{
-public:
-    void operator()(const graphics::Renderable &) override;
-    const graphics::Renderable *topmost_fullscreen() const;
-
-private:
-    // This has to be a pointer. We have no control over Renderable lifetime
-    const graphics::Renderable *latest = nullptr;
 };
 
 } // namespace compositor

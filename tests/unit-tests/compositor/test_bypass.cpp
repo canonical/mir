@@ -28,23 +28,23 @@ namespace geom=mir::geometry;
 namespace mc=mir::compositor;
 namespace mtd=mir::test::doubles;
 
-struct BypassFilterTest : public testing::Test
+struct BypassMatchTest : public testing::Test
 {
     geom::Rectangle const primary_monitor{{0, 0},{1920, 1200}};
     geom::Rectangle const secondary_monitor{{1920, 0},{1920, 1200}};
 };
 
-TEST_F(BypassFilterTest, nothing_matches_nothing)
+TEST_F(BypassMatchTest, nothing_matches_nothing)
 {
     mg::RenderableList empty_list{};
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     EXPECT_EQ(empty_list.end(), std::find_if(empty_list.begin(), empty_list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, small_window_not_bypassed)
+TEST_F(BypassMatchTest, small_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78)
     };
@@ -52,10 +52,10 @@ TEST_F(BypassFilterTest, small_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
+TEST_F(BypassMatchTest, single_fullscreen_window_bypassed)
 {
     auto window = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{window};
 
     auto it = std::find_if(list.begin(), list.end(), matcher);
@@ -63,9 +63,9 @@ TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
     EXPECT_EQ(window, *it);
 }
 
-TEST_F(BypassFilterTest, translucent_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, translucent_fullscreen_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.5f)
     };
@@ -73,9 +73,9 @@ TEST_F(BypassFilterTest, translucent_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, hidden_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, hidden_fullscreen_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, false)
     };
@@ -83,9 +83,9 @@ TEST_F(BypassFilterTest, hidden_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, unposted_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, unposted_fullscreen_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, true, false)
     };
@@ -93,9 +93,9 @@ TEST_F(BypassFilterTest, unposted_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, shaped_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, shaped_fullscreen_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, false)
@@ -104,9 +104,9 @@ TEST_F(BypassFilterTest, shaped_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, offset_fullscreen_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(10, 50, 1920, 1200)
@@ -115,9 +115,9 @@ TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, obscured_fullscreen_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50),
@@ -127,9 +127,9 @@ TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, translucently_obscured_fullscreen_window_not_bypassed)
+TEST_F(BypassMatchTest, translucently_obscured_fullscreen_window_not_bypassed)
 {   // Regression test for LP: #1266385
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50, 0.5f),
@@ -139,9 +139,9 @@ TEST_F(BypassFilterTest, translucently_obscured_fullscreen_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
+TEST_F(BypassMatchTest, unobscured_fullscreen_window_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     mg::RenderableList list{
@@ -154,9 +154,9 @@ TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
     EXPECT_EQ(bypassed, *it);
 }
 
-TEST_F(BypassFilterTest, unobscured_fullscreen_alpha_window_not_bypassed)
+TEST_F(BypassMatchTest, unobscured_fullscreen_alpha_window_not_bypassed)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.9f),
@@ -166,9 +166,9 @@ TEST_F(BypassFilterTest, unobscured_fullscreen_alpha_window_not_bypassed)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top)
+TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto fullscreen_not_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
@@ -187,9 +187,9 @@ TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top)
     EXPECT_EQ(bypassed, *it);
 }
 
-TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top_rectangular)
+TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top_rectangular)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     mg::RenderableList list{
@@ -208,9 +208,9 @@ TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top_rectangular)
     EXPECT_EQ(bypassed, *it);
 }
 
-TEST_F(BypassFilterTest, nonrectangular_not_bypassable)
+TEST_F(BypassMatchTest, nonrectangular_not_bypassable)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto fullscreen_not_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
@@ -222,9 +222,9 @@ TEST_F(BypassFilterTest, nonrectangular_not_bypassable)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, nonvisible_not_bypassble)
+TEST_F(BypassMatchTest, nonvisible_not_bypassble)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, false, true)
     };
@@ -232,19 +232,19 @@ TEST_F(BypassFilterTest, nonvisible_not_bypassble)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, offscreen_not_bypassable)
+TEST_F(BypassMatchTest, offscreen_not_bypassable)
 {
-    mc::BypassMatcher matcher(primary_monitor);
+    mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, true, false)
     };
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
 }
 
-TEST_F(BypassFilterTest, multimonitor_one_bypassed)
+TEST_F(BypassMatchTest, multimonitor_one_bypassed)
 {
-    mc::BypassMatcher primary_matcher(primary_monitor);
-    mc::BypassMatcher secondary_matcher(primary_monitor);
+    mc::BypassMatch primary_matcher(primary_monitor);
+    mc::BypassMatch secondary_matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(1920, 0, 1920, 1200);
     mg::RenderableList list{
@@ -259,10 +259,10 @@ TEST_F(BypassFilterTest, multimonitor_one_bypassed)
     EXPECT_EQ(bypassed, *it);
 }
 
-TEST_F(BypassFilterTest, dual_bypass)
+TEST_F(BypassMatchTest, dual_bypass)
 {
-    mc::BypassMatcher primary_matcher(primary_monitor);
-    mc::BypassMatcher secondary_matcher(primary_monitor);
+    mc::BypassMatch primary_matcher(primary_monitor);
+    mc::BypassMatch secondary_matcher(primary_monitor);
 
     auto primary_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto secondary_bypassed = std::make_shared<mtd::FakeRenderable>(1920, 0, 1920, 1200);
@@ -280,10 +280,10 @@ TEST_F(BypassFilterTest, dual_bypass)
     EXPECT_EQ(secondary_bypassed, *it);
 }
 
-TEST_F(BypassFilterTest, multimonitor_oversized_no_bypass)
+TEST_F(BypassMatchTest, multimonitor_oversized_no_bypass)
 {
-    mc::BypassMatcher primary_matcher(primary_monitor);
-    mc::BypassMatcher secondary_matcher(primary_monitor);
+    mc::BypassMatch primary_matcher(primary_monitor);
+    mc::BypassMatch secondary_matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 3840, 1200)
@@ -292,31 +292,3 @@ TEST_F(BypassFilterTest, multimonitor_oversized_no_bypass)
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), primary_matcher));
     EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), secondary_matcher));
 }
-
-#if 0
-TEST(BypassMatchTest, returns_one)
-{
-    BypassMatch match;
-    FakeRenderable win(1, 2, 3, 4);
-
-    EXPECT_EQ(nullptr, match.topmost_fullscreen());
-    match(win);
-    EXPECT_EQ(&win, match.topmost_fullscreen());
-}
-
-TEST(BypassMatchTest, returns_latest)
-{
-    BypassMatch match;
-    FakeRenderable a(1, 2, 3, 4), b(5, 6, 7, 8), c(9, 10, 11, 12);
-
-    EXPECT_EQ(nullptr, match.topmost_fullscreen());
-    match(a);
-    EXPECT_EQ(&a, match.topmost_fullscreen());
-    match(b);
-    EXPECT_EQ(&b, match.topmost_fullscreen());
-    match(c);
-    EXPECT_EQ(&c, match.topmost_fullscreen());
-    EXPECT_EQ(&c, match.topmost_fullscreen());
-    EXPECT_EQ(&c, match.topmost_fullscreen());
-}
-#endif
