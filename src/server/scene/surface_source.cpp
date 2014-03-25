@@ -46,5 +46,7 @@ std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
 
 void ms::SurfaceSource::destroy_surface(std::shared_ptr<msh::Surface> const& surface)
 {
-    surface_builder->destroy_surface(std::static_pointer_cast<Surface>(surface));
+    auto const scene_surface = std::dynamic_pointer_cast<Surface>(surface);
+    assert(scene_surface);
+    surface_builder->destroy_surface(scene_surface);
 }
