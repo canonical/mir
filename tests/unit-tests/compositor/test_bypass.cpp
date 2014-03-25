@@ -244,7 +244,7 @@ TEST_F(BypassMatchTest, offscreen_not_bypassable)
 TEST_F(BypassMatchTest, multimonitor_one_bypassed)
 {
     mc::BypassMatch primary_matcher(primary_monitor);
-    mc::BypassMatch secondary_matcher(primary_monitor);
+    mc::BypassMatch secondary_matcher(secondary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(1920, 0, 1920, 1200);
     mg::RenderableList list{
@@ -262,7 +262,7 @@ TEST_F(BypassMatchTest, multimonitor_one_bypassed)
 TEST_F(BypassMatchTest, dual_bypass)
 {
     mc::BypassMatch primary_matcher(primary_monitor);
-    mc::BypassMatch secondary_matcher(primary_monitor);
+    mc::BypassMatch secondary_matcher(secondary_monitor);
 
     auto primary_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto secondary_bypassed = std::make_shared<mtd::FakeRenderable>(1920, 0, 1920, 1200);
@@ -283,7 +283,7 @@ TEST_F(BypassMatchTest, dual_bypass)
 TEST_F(BypassMatchTest, multimonitor_oversized_no_bypass)
 {
     mc::BypassMatch primary_matcher(primary_monitor);
-    mc::BypassMatch secondary_matcher(primary_monitor);
+    mc::BypassMatch secondary_matcher(secondary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 3840, 1200)

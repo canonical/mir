@@ -57,5 +57,7 @@ bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& re
     // Transformed perfectly to fit the monitor? Bypass!
     topmost_fits = renderable->screen_position() == view_area;
 
-    return all_orthogonal && topmost_fits;
+    auto bypassable = all_orthogonal && topmost_fits;
+    printf("BYPASS? %i\n", bypassable);
+    return bypassable;
 }
