@@ -36,22 +36,18 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct FilterForVisibleSceneInRegion : public mc::FilterForScene
+struct FilterForUndrawnSurfaces : public mc::FilterForScene
 {
-    FilterForVisibleSceneInRegion(
-        mir::geometry::Rectangle const& enclosing_region,
+    FilterForUndrawnSurfaces(
         mc::OcclusionMatch const& occlusions)
-        : enclosing_region(enclosing_region),
-          occlusions(occlusions)
+        : occlusions(occlusions)
     {
     }
     bool operator()(mg::Renderable const& r)
     {
-        return r.should_be_rendered_in(enclosing_region) &&
-               !occlusions.occluded(r);
+        return !occlusions.occluded(r);
     }
 
-    mir::geometry::Rectangle const& enclosing_region;
     mc::OcclusionMatch const& occlusions;
 };
 
@@ -125,7 +121,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         auto const& view_area = display_buffer.view_area();
-
         mc::OcclusionFilter occlusion_search(view_area);
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
@@ -133,7 +128,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);
-        FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
+        FilterForUndrawnSurfaces selector(occlusion_match);
         scene->for_each_if(selector, applicator);
         renderer->end();
 

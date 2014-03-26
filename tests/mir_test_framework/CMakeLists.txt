@@ -20,6 +20,7 @@ set(
   process.cpp
   using_stub_client_platform.cpp
   udev_environment.cpp
+  declarative_placement_strategy.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS

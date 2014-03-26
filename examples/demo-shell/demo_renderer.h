@@ -34,7 +34,8 @@ public:
 
     void begin() const override;
     void tessellate(std::vector<Primitive>& primitives,
-                    graphics::Renderable const& renderable) const override;
+                    graphics::Renderable const& renderable,
+                    geometry::Size const& buf_size) const override;
     void tessellate_shadow(std::vector<Primitive>& primitives,
                     graphics::Renderable const& renderable,
                     float radius) const;
