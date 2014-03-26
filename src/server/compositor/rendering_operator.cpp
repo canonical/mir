@@ -37,13 +37,3 @@ void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
     saved_resources.push_back(compositor_buffer);
     renderer.render(renderable, *compositor_buffer);
 }
-
-bool mc::RenderingOperator::uncomposited_buffers() const
-{
-    return uncomposited_buffers_;
-}
-
-bool mc::RenderingOperator::anything_was_rendered() const
-{
-    return !saved_resources.empty();
-}
