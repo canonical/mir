@@ -524,125 +524,6 @@ TEST_F(SurfaceStack, raise_throw_behavior)
     }, std::runtime_error);
 }
 
-namespace
-{
-
-struct UniqueOperatorForScene : public mc::OperatorForScene
-{
-    UniqueOperatorForScene(const char *&owner)
-        : owner(owner)
-    {
-    }
-
-    void operator()(const mg::Renderable &)
-    {
-        ASSERT_STREQ("", owner);
-        owner = "UniqueOperatorForScene";
-        std::this_thread::yield();
-        owner = "";
-    }
-
-    const char *&owner;
-};
-
-void tinker_scene(mc::Scene &scene,
-                  const char *&owner,
-                  const std::atomic_bool &done)
-{
-    while (!done.load())
-    {
-        std::this_thread::yield();
-
-        std::lock_guard<mc::Scene> lock(scene);
-        ASSERT_STREQ("", owner);
-        owner = "tinkerer";
-        std::this_thread::yield();
-        owner = "";
-    }
-}
-
-}
-
-TEST_F(SurfaceStack, is_locked_during_iteration)
-{
-    using namespace ::testing;
-
-    ms::SurfaceStack stack(
-        mt::fake_shared(mock_surface_allocator),
-        mt::fake_shared(input_registrar),
-        report);
-
-    auto s1 = stack.create_surface(mf::SurfaceId(__LINE__), default_params, {}, {});
-    auto renderable1 = s1.lock();
-    auto s2 = stack.create_surface(mf::SurfaceId(__LINE__), default_params, {}, {});
-    auto renderable2 = s2.lock();
-    auto s3 = stack.create_surface(mf::SurfaceId(__LINE__), default_params, {}, {});
-    auto renderable3 = s3.lock();
-
-    MockFilterForScene filter;
-    Sequence seq1;
-    EXPECT_CALL(filter, filter(Ref(*renderable1)))
-        .InSequence(seq1)
-        .WillRepeatedly(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*renderable2)))
-        .InSequence(seq1)
-        .WillRepeatedly(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*renderable3)))
-        .InSequence(seq1)
-        .WillRepeatedly(Return(true));
-
-    const char *owner = "";
-    UniqueOperatorForScene op(owner);
-
-    std::atomic_bool done(false);
-    std::thread tinkerer(tinker_scene,
-        std::ref(stack), std::ref(owner), std::ref(done));
-
-    for (int i = 0; i < 1000; i++)
-    {
-        stack.lock();
-        ASSERT_STREQ("", owner);
-        owner = "main_before";
-        std::this_thread::yield();
-        owner = "";
-        stack.unlock();
-
-        stack.for_each_if(filter, op);
-
-        stack.lock();
-        ASSERT_STREQ("", owner);
-        owner = "main_after";
-        std::this_thread::yield();
-        owner = "";
-        stack.unlock();
-    }
-
-    done = true;
-    tinkerer.join();
-}
-
-TEST_F(SurfaceStack, is_recursively_lockable)
-{
-    ms::SurfaceStack stack(
-        mt::fake_shared(mock_surface_allocator),
-        mt::fake_shared(input_registrar),
-        report);
-
-    StubFilterForScene filter;
-    StubOperatorForScene op;
-
-    stack.lock();
-    stack.for_each_if(filter, op);
-    stack.unlock();
-
-    stack.lock();
-    stack.lock();
-    stack.lock();
-    stack.unlock();
-    stack.unlock();
-    stack.unlock();
-}
-
 TEST_F(SurfaceStack, generate_renderlist)
 {
     size_t num_surfaces{3};
@@ -670,4 +551,36 @@ TEST_F(SurfaceStack, generate_renderlist)
 
     for(auto& surface : surfacelist)
         stack.remove_surface(surface);
+}
+
+TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
+{
+    size_t num_surfaces{3};
+    ms::SurfaceStack stack(
+        mt::fake_shared(mock_surface_allocator),
+        mt::fake_shared(input_registrar), report);
+
+    std::list<std::shared_ptr<ms::Surface>> surfacelist;
+    for(auto i = 0u; i < num_surfaces; i++)
+        surfacelist.emplace_back(stack.create_surface(
+            mf::SurfaceId(),
+            msh::a_surface()
+                .of_size(geom::Size{1 * i, 2 * i})
+                .of_position(geom::Point{3 * i, 4 * i}),
+            {}, {}).lock());
+
+    auto list = stack.generate_renderable_list();
+
+    //change position
+    for(auto const& surface : surfacelist)
+        surface->move_to({0,0});
+
+    //check that the renderables are not at 0,0
+    auto i = 0u;
+    for(auto& renderable : list)
+    {
+        auto point = geom::Rectangle{geom::Point{3*i,4*i}, geom::Size{1*i, 2*i}};
+        EXPECT_EQ(renderable->screen_position(), point);
+        i++;
+    }
 }

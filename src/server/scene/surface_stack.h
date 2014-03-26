@@ -73,8 +73,6 @@ public:
     virtual void set_change_callback(std::function<void()> const& f);
     //to be deprecated
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
-    virtual void lock();
-    virtual void unlock();
     //end to be deprecated
     
     // From InputTargets
@@ -104,18 +102,24 @@ private:
     SurfaceStack& operator=(const SurfaceStack&) = delete;
 
     void emit_change_notification();
+    
+    std::mutex mutable list_mutex;
+    //protected by list_mutex
+    typedef std::vector<std::shared_ptr<Surface>> Layer;
+    std::map<DepthId, Layer> layers_by_depth;
+    //end protected by list_mutex
 
-    std::recursive_mutex mutable guard;
+    //consts, threadsafe
     std::shared_ptr<BasicSurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
     std::function<void()> const change_cb;
-
-    typedef std::vector<std::shared_ptr<Surface>> Layer;
-    std::map<DepthId, Layer> layers_by_depth;
+    //end const
 
     std::mutex notify_change_mutex;
+    //protected by notify_change_mutex
     std::function<void()> notify_change;
+    //end protected by notify_change_mutex
 };
 
 }
