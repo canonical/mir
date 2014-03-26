@@ -42,7 +42,6 @@ public:
 private:
     Renderer& renderer;
     std::vector<std::shared_ptr<void>> saved_resources;
-    bool uncomposited_buffers_;
 };
 
 }
