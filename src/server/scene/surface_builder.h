@@ -35,7 +35,6 @@ struct SurfaceCreationParameters;
 namespace scene
 {
 class Surface;
-class SurfaceConfigurator;
 
 class SurfaceBuilder
 {

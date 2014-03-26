@@ -79,7 +79,7 @@ mir::DefaultServerConfiguration::the_scene()
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
--> std::shared_ptr<ms::BasicSurfaceFactory>
+-> std::shared_ptr<ms::SurfaceFactory>
 {
     return surface_factory(
         [this]()

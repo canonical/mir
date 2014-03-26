@@ -18,7 +18,7 @@
 
 #include "src/server/scene/surface_controller.h"
 #include "src/server/scene/surface_stack_model.h"
-#include "src/server/scene/basic_surface_factory.h"
+#include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
@@ -33,7 +33,7 @@ namespace mt = mir::test;
 
 namespace
 {
-struct MockSurfaceAllocator : public ms::BasicSurfaceFactory
+struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
     MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
         mf::SurfaceId id,

@@ -33,14 +33,14 @@ class Session;
 namespace scene
 {
 class SurfaceStackModel;
-class BasicSurfaceFactory;
+class SurfaceFactory;
 
 /// Will grow up to provide synchronization of model updates
 class SurfaceController : public SurfaceBuilder, public SurfaceRanker
 {
 public:
     SurfaceController(
-        std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
     std::shared_ptr<Surface> create_surface(
@@ -53,7 +53,7 @@ public:
     void raise(std::weak_ptr<Surface> const& surface) override;
 
 private:
-    std::shared_ptr<BasicSurfaceFactory> const surface_factory;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 

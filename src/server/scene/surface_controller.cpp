@@ -18,13 +18,13 @@
 
 #include "surface_controller.h"
 #include "surface_stack_model.h"
-#include "basic_surface_factory.h"
+#include "mir/scene/surface_factory.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 ms::SurfaceController::SurfaceController(
-    std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<SurfaceStackModel> const& surface_stack) :
     surface_factory(surface_factory),
     surface_stack(surface_stack)
