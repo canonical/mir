@@ -473,26 +473,35 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
     mtd::MockDisplayBuffer display_buffer;
     EXPECT_CALL(display_buffer, view_area())
         .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, make_current())
-        .Times(1);
     EXPECT_CALL(display_buffer, orientation())
         .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(display_buffer, post_update())
-        .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(false));
 
-    auto large = std::make_shared<mtd::FakeRenderable>(0,0,100,100);
+    auto window0 = std::make_shared<mtd::FakeRenderable>(0,0,500,500, 1.0f, true, false, true);
+    auto window1 = std::make_shared<mtd::FakeRenderable>(0,0,100,100);
+    auto window2 = std::make_shared<mtd::FakeRenderable>(0,0,100,100);
+    auto window3 = std::make_shared<mtd::FakeRenderable>(10, 10, 20, 20);
+    auto window4 = std::make_shared<mtd::FakeRenderable>(99, 99, 2, 2);
+
     mg::RenderableList list({
-        large,
-        small
+        window0, //invisible
+        window1, //not occluded
+        window2, //occluded
+        window3, //occluded
+        window4  //not occluded
     });
     FakeScene scene(list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
-        .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(*large),_))
-        .Times(1);
+    Sequence seq;
+    EXPECT_CALL(display_buffer, make_current())
+        .InSequence(seq);
+    EXPECT_CALL(mock_renderer, render(Ref(*window4),_))
+        .InSequence(seq);
+    EXPECT_CALL(mock_renderer, render(Ref(*window1),_))
+        .InSequence(seq);
+    EXPECT_CALL(display_buffer, post_update())
+        .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
