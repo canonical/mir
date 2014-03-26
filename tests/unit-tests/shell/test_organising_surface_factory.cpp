@@ -56,15 +56,11 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-
-        surface_coordinator = std::make_shared<MockSurfaceCoordinator>();
         ON_CALL(*surface_coordinator, add_surface(_, _, _)).WillByDefault(Return(null_surface));
-
-        placement_strategy = std::make_shared<MockPlacementStrategy>();
     }
     std::shared_ptr<ms::Surface> null_surface;
-    std::shared_ptr<MockSurfaceCoordinator> surface_coordinator;
-    std::shared_ptr<MockPlacementStrategy> placement_strategy;
+    std::shared_ptr<MockSurfaceCoordinator> surface_coordinator = std::make_shared<MockSurfaceCoordinator>();
+    std::shared_ptr<MockPlacementStrategy> placement_strategy = std::make_shared<MockPlacementStrategy>();
 };
 
 } // namespace

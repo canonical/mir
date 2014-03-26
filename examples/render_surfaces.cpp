@@ -446,7 +446,7 @@ public:
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
-        auto const surface_factory = the_surface_coordinator();
+        auto const surface_coordinator = the_surface_coordinator();
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
         display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
@@ -465,7 +465,7 @@ public:
         int i = 0;
         for (auto& m : moveables)
         {
-            auto const s = surface_factory->add_surface(
+            auto const s = surface_coordinator->add_surface(
                     mf::SurfaceId(),
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
