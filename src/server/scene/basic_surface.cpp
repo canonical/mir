@@ -40,17 +40,17 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::NotifyChange::NotifyChange(std::function<void()> const& notify_change) :
+ms::ThreadsafeCallback::ThreadsafeCallback(std::function<void()> const& notify_change) :
         notify_change(notify_change) {}
 
-ms::NotifyChange& ms::NotifyChange::operator=(std::function<void()> const& notify_change)
+ms::ThreadsafeCallback& ms::ThreadsafeCallback::operator=(std::function<void()> const& notify_change)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     this->notify_change = notify_change;
     return *this;
 }
 
-void ms::NotifyChange::operator()() const
+void ms::ThreadsafeCallback::operator()() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     auto const notifier = notify_change;
