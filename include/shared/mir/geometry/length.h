@@ -40,10 +40,9 @@ public:
     };
 
     Length() : magnitude(0) {}
-    Length(float mag, Units units)
-    {
-        magnitude = mag * units;
-    }
+    Length(Length const&) = default;
+    Length& operator=(Length const&) = default;
+    Length(float mag, Units units) : magnitude(mag * units) {}
 
     float as(Units units) const
     {
@@ -58,6 +57,11 @@ public:
     bool operator==(Length const& rhs) const
     {
         return magnitude == rhs.magnitude;
+    }
+
+    bool operator!=(Length const& rhs) const
+    {
+        return magnitude != rhs.magnitude;
     }
 
 private:

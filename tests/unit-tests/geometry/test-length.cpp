@@ -100,3 +100,25 @@ TEST(Length, DPI)
 
     EXPECT_EQ(123456, Length(123456, Length::inches).as_pixels(1.0f));
 }
+
+TEST(Length, assign)
+{
+    auto const a = 123.45_in;
+    Length b;
+
+    EXPECT_NE(a, b);
+    EXPECT_EQ(0, b.as(Length::inches));
+
+    b = a;
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(3135630, b.as(Length::micrometres));
+}
+
+TEST(Length, copy)
+{
+    auto const a = 123.45_in;
+    Length b(a);
+
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(3135630, b.as(Length::micrometres));
+}
