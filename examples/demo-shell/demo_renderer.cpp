@@ -173,9 +173,10 @@ void DemoRenderer::begin() const
 }
 
 void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
-                              graphics::Renderable const& renderable) const
+                              graphics::Renderable const& renderable,
+                              geometry::Size const& buf_size) const
 {
-    GLRenderer::tessellate(primitives, renderable);
+    GLRenderer::tessellate(primitives, renderable, buf_size);
     tessellate_shadow(primitives, renderable, 80.0f);
     tessellate_frame(primitives, renderable, 30.0f);
 }

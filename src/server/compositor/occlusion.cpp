@@ -66,7 +66,7 @@ void mc::filter_occlusions_from(
     while (it != list.crend())
     {
         if (!renderable_is_occluded(**it, area, coverage))
-            non_occluded_renderables.push_back(*it);
+            non_occluded_renderables.push_front(*it);
 
         it++;
     }
