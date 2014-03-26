@@ -31,7 +31,7 @@ ms::SurfaceController::SurfaceController(
 {
 }
 
-std::shared_ptr<ms::Surface> ms::SurfaceController::create_surface(
+std::shared_ptr<ms::Surface> ms::SurfaceController::add_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink)
@@ -41,7 +41,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceController::create_surface(
     return surface;
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
+void ms::SurfaceController::remove_surface(std::weak_ptr<Surface> const& surface)
 {
     surface_stack->remove_surface(surface);
 }

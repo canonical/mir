@@ -52,7 +52,7 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
 };
 }
 
-TEST(SurfaceController, create_and_destroy_surface)
+TEST(SurfaceController, add_and_remove_surface)
 {
     using namespace ::testing;
 
@@ -67,8 +67,8 @@ TEST(SurfaceController, create_and_destroy_surface)
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto surface = controller.create_surface(mf::SurfaceId(), msh::a_surface(), {});
-    controller.destroy_surface(surface);
+    auto surface = controller.add_surface(mf::SurfaceId(), msh::a_surface(), {});
+    controller.remove_surface(surface);
 }
 
 TEST(SurfaceController, raise_surface)

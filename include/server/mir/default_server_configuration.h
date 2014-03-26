@@ -78,7 +78,7 @@ class SessionEventSink;
 class SessionEventHandlerRegister;
 class SessionManager;
 class SnapshotStrategy;
-class SurfaceBuilder;
+class SurfaceCoordinator;
 class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;

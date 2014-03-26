@@ -17,7 +17,7 @@
  */
 
 #include "surface_source.h"
-#include "surface_builder.h"
+#include "mir/scene/surface_coordinator.h"
 
 #include "mir/scene/surface.h"
 
@@ -29,10 +29,10 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 
 
-ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder)
-    : surface_builder(surface_builder)
+ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator)
+    : surface_coordinator(surface_coordinator)
 {
-    assert(surface_builder);
+    assert(surface_coordinator);
 }
 
 std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
@@ -41,12 +41,12 @@ std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    return surface_builder->create_surface(id, params, sender);
+    return surface_coordinator->add_surface(id, params, sender);
 }
 
 void ms::SurfaceSource::destroy_surface(std::shared_ptr<msh::Surface> const& surface)
 {
     auto const scene_surface = std::dynamic_pointer_cast<Surface>(surface);
     assert(scene_surface);
-    surface_builder->destroy_surface(scene_surface);
+    surface_coordinator->remove_surface(scene_surface);
 }

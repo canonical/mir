@@ -33,12 +33,12 @@ class Session;
 
 namespace scene
 {
-class SurfaceBuilder;
+class SurfaceCoordinator;
 
 class SurfaceSource : public shell::SurfaceFactory
 {
 public:
-    SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder);
+    SurfaceSource(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<shell::Surface> create_surface(
@@ -54,7 +54,7 @@ protected:
     SurfaceSource& operator=(const SurfaceSource&) = delete;
 
 private:
-    std::shared_ptr<SurfaceBuilder> const surface_builder;
+    std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
 };
 
 }

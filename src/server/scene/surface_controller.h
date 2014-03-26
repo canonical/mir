@@ -20,7 +20,7 @@
 #ifndef MIR_SCENE_SURFACE_CONTROLLER_H_
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
-#include "surface_builder.h"
+#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_ranker.h"
 
 namespace mir
@@ -36,19 +36,19 @@ class SurfaceStackModel;
 class SurfaceFactory;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public SurfaceBuilder, public SurfaceRanker
+class SurfaceController : public SurfaceCoordinator, public SurfaceRanker
 {
 public:
     SurfaceController(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    std::shared_ptr<Surface> create_surface(
+    std::shared_ptr<Surface> add_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
-    void destroy_surface(std::weak_ptr<Surface> const& surface) override;
+    void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
     void raise(std::weak_ptr<Surface> const& surface) override;
 
