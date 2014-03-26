@@ -34,9 +34,9 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+//TODO remove FilterForUndrawnSurfaces once we don't need filters/operators for rendering
 namespace
 {
-
 struct FilterForUndrawnSurfaces : public mc::FilterForScene
 {
 public:
@@ -45,20 +45,19 @@ public:
         : list(renderable_list)
     {
     }
+
     bool operator()(mg::Renderable const& r)
     {
-        return std::find_if(
-                   list.begin(), list.end(),
-                   [&](std::shared_ptr<mg::Renderable> const& renderable)
-                   {
-                       return (renderable.get() == &r); 
-                   }) != list.end();
+        auto matcher = [&r](std::shared_ptr<mg::Renderable> const& renderable)
+        {
+            return (renderable.get() == &r);
+        };
+        return (std::find_if(list.begin(), list.end(), matcher) != list.end());
     }
 
 private:
     mg::RenderableList const& list;
 };
-
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -73,7 +72,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       last_pass_rendered_anything{false}
 {
 }
-
 
 bool mc::DefaultDisplayBufferCompositor::composite()
 {
