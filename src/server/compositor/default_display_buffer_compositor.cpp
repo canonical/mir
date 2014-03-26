@@ -88,9 +88,9 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->generate_renderable_list();
 
-    mc::BypassMatch bypass_match(view_area);
     if (bypass_env && display_buffer.can_bypass())
     {
+        mc::BypassMatch bypass_match(view_area);
         auto bypass_it = std::find_if(renderable_list.begin(), renderable_list.end(), bypass_match);
         if (bypass_it != renderable_list.end())
         {
@@ -114,6 +114,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
+        printf("NOT BYPASSED\n");
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, view_area);
