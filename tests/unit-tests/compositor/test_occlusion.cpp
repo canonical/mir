@@ -54,7 +54,7 @@ TEST_F(OcclusionFilterTest, smaller_window_occluded)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
-    mg::RenderableList list{bottom, top};
+    mg::RenderableList list{top, bottom};
 
     filter_occlusions_from(list, monitor_rect);
 
@@ -66,13 +66,13 @@ TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 0.5f);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5, 1.0f);
-    mg::RenderableList list{bottom, top};
+    mg::RenderableList list{top, bottom};
 
     filter_occlusions_from(list, monitor_rect);
 
     ASSERT_EQ(2u, list.size());
-    EXPECT_EQ(bottom, list.front());
-    EXPECT_EQ(top, list.back());
+    EXPECT_EQ(top, list.front());
+    EXPECT_EQ(bottom, list.back());
 }
 
 TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
@@ -89,7 +89,7 @@ TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, true, false);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
-    mg::RenderableList list{bottom, top};
+    mg::RenderableList list{top, bottom};
 
     filter_occlusions_from(list, monitor_rect);
 
@@ -101,20 +101,20 @@ TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, false, true);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
-    mg::RenderableList list{bottom, top};
+    mg::RenderableList list{top, bottom};
 
     filter_occlusions_from(list, monitor_rect);
 
     ASSERT_EQ(2u, list.size());
-    EXPECT_EQ(bottom, list.front());
-    EXPECT_EQ(top, list.back());
+    EXPECT_EQ(top, list.front());
+    EXPECT_EQ(bottom, list.back());
 }
 
 TEST_F(OcclusionFilterTest, identical_window_occluded)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
     auto bottom = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
-    mg::RenderableList list{bottom, top};
+    mg::RenderableList list{top, bottom};
 
     filter_occlusions_from(list, monitor_rect);
 
@@ -126,13 +126,13 @@ TEST_F(OcclusionFilterTest, larger_window_never_occluded)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
     auto bottom = std::make_shared<mtd::FakeRenderable>(9, 9, 12, 12);
-    mg::RenderableList list{bottom, top};
+    mg::RenderableList list{top, bottom};
 
     filter_occlusions_from(list, monitor_rect);
 
     ASSERT_EQ(2u, list.size());
-    EXPECT_EQ(bottom, list.front());
-    EXPECT_EQ(top, list.back());
+    EXPECT_EQ(top, list.front());
+    EXPECT_EQ(bottom, list.back());
 }
 
 TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
@@ -155,7 +155,7 @@ TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
     auto window4 = std::make_shared<mtd::FakeRenderable>(500, 600, 34, 56);
     auto window5 = std::make_shared<mtd::FakeRenderable>(200, 200, 1000, 1000);
     mg::RenderableList list{
-        window5, window4, window3, window2, window1, window0};
+        window0, window1, window2, window3, window4, window5};
 
     filter_occlusions_from(list, monitor_rect);
 
@@ -167,13 +167,13 @@ TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
         switch (count)
         {
             case 0u:
-                EXPECT_EQ(window5, *it);
+                EXPECT_EQ(window0, *it);
                 break;
             case 1u:
                 EXPECT_EQ(window4, *it);
                 break;
             case 2u:
-                EXPECT_EQ(window0, *it);
+                EXPECT_EQ(window5, *it);
                 break;
             default:
                 FAIL();
