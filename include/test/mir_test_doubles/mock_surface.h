@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,16 +19,10 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "src/server/scene/surface_impl.h"
-#include "src/server/scene/surface_builder.h"
-
-#include "mir/shell/surface_creation_parameters.h"
-#include "null_event_sink.h"
-#include "null_surface_configurator.h"
+#include "src/server/scene/basic_surface.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <gmock/gmock.h>
-
-#include <memory>
 
 namespace mir
 {
@@ -37,12 +31,19 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public scene::SurfaceImpl
+struct MockSurface : public scene::BasicSurface
 {
-    MockSurface(std::shared_ptr<scene::SurfaceBuilder> const& builder) :
-        scene::SurfaceImpl(
-            builder->create_surface(frontend::SurfaceId{}, shell::a_surface(), std::make_shared<NullEventSink>(), std::make_shared<NullSurfaceConfigurator>()),
-            builder)
+    MockSurface() :
+        scene::BasicSurface(
+            frontend::SurfaceId{},
+            {},
+            {{},{}},
+            true,
+            {},
+            {},
+            {},
+            {},
+            mir::report::null_scene_report())
     {
     }
 
@@ -56,7 +57,6 @@ struct MockSurface : public scene::SurfaceImpl
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
 
-    MOCK_CONST_METHOD0(name, std::string()); // not used in any tests!
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 

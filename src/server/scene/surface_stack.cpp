@@ -21,7 +21,6 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "surface_stack.h"
-#include "basic_surface_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
@@ -49,10 +48,8 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(
-    std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
     std::shared_ptr<InputRegistrar> const& input_registrar,
     std::shared_ptr<SceneReport> const& report) :
-    surface_factory{surface_factory},
     input_registrar{input_registrar},
     report{report},
     change_cb{[this]() { emit_change_notification(); }},
@@ -118,20 +115,10 @@ void ms::SurfaceStack::add_surface(
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
     report->surface_added(surface.get(), surface.get()->name());
+    surface->on_change(change_cb);
     emit_change_notification();
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(
-    frontend::SurfaceId id,
-    shell::SurfaceCreationParameters const& params,
-    std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
-{
-    auto const& surface = surface_factory->create_surface(id, params, change_cb, event_sink, configurator);
-
-    add_surface(surface, params.depth, params.input_mode);
-    return surface;
-}
 
 void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 {

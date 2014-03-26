@@ -36,7 +36,6 @@
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
-#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_screencast.h"
@@ -141,7 +140,6 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    mtd::StubSurfaceBuilder surface_builder;
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
