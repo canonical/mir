@@ -55,18 +55,18 @@ class SceneReport;
 class SurfaceConfigurator;
 
 // Thread safe wrapper around notification callback
-class NotifyChange
+class ThreadsafeCallback
 {
 public:
-    NotifyChange(std::function<void()> const& notify_change);
+    ThreadsafeCallback(std::function<void()> const& notify_change);
 
-    NotifyChange& operator=(std::function<void()> const& notify_change);
+    ThreadsafeCallback& operator=(std::function<void()> const& notify_change);
 
     void operator()() const;
 
 private:
-    NotifyChange(NotifyChange const&) = delete;
-    NotifyChange& operator =(NotifyChange const&) = delete;
+    ThreadsafeCallback(ThreadsafeCallback const&) = delete;
+    ThreadsafeCallback& operator =(ThreadsafeCallback const&) = delete;
     std::mutex mutable mutex;
     std::function<void()> notify_change;
 };
@@ -143,7 +143,7 @@ private:
 
     std::mutex mutable guard;
     frontend::SurfaceId const id;
-    NotifyChange notify_change;
+    ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
