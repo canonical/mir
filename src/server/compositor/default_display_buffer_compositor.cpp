@@ -91,23 +91,26 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     auto renderable_list = scene->generate_renderable_list();
 
     mc::BypassMatch bypass_match(view_area);
-    auto bypass_it = std::find_if(renderable_list.begin(), renderable_list.end(), bypass_match);
-    if (bypass_env && display_buffer.can_bypass() && bypass_it != renderable_list.end())
+    if (bypass_env && display_buffer.can_bypass())
     {
-        /*
-         * Notice the user_id we pass to buffer() here has to be
-         * different to the one used in the Renderer. This is in case
-         * the below if() fails we want to complete the frame using the
-         * same buffer (different user_id required).
-         */
-        auto bypass_buf = (*bypass_it)->buffer(this);
-        if (bypass_buf->can_bypass())
+        auto bypass_it = std::find_if(renderable_list.begin(), renderable_list.end(), bypass_match);
+        if (bypass_it != renderable_list.end())
         {
-            uncomposited_buffers = (*bypass_it)->buffers_ready_for_compositor() > 1;
+            /*
+             * Notice the user_id we pass to buffer() here has to be
+             * different to the one used in the Renderer. This is in case
+             * the below if() fails we want to complete the frame using the
+             * same buffer (different user_id required).
+             */
+            auto bypass_buf = (*bypass_it)->buffer(this);
+            if (bypass_buf->can_bypass())
+            {
+                uncomposited_buffers = (*bypass_it)->buffers_ready_for_compositor() > 1;
 
-            display_buffer.post_update(bypass_buf);
-            bypassed = true;
-            renderer->suspend();
+                display_buffer.post_update(bypass_buf);
+                bypassed = true;
+                renderer->suspend();
+            }
         }
     }
 

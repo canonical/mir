@@ -301,10 +301,6 @@ TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
 
-    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(*compositor_buffer, can_bypass())
-        .Times(0);
-
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
     EXPECT_CALL(*report, finished_frame(false,_));
