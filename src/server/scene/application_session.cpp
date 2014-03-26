@@ -59,6 +59,7 @@ ms::ApplicationSession::~ApplicationSession()
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
+        surface_factory->destroy_surface(pair_id_surface.second);
     }
 }
 
