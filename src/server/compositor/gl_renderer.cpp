@@ -184,7 +184,8 @@ mc::GLRenderer::~GLRenderer() noexcept
 }
 
 void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
-                                graphics::Renderable const& renderable) const
+                                graphics::Renderable const& renderable,
+                                geometry::Size const& buf_size) const
 {
     auto const& rect = renderable.screen_position();
     GLfloat left = rect.top_left.x.as_int();
@@ -197,12 +198,17 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
     client.tex_id = 0;
     client.type = GL_TRIANGLE_STRIP;
 
+    GLfloat tex_right = static_cast<GLfloat>(rect.size.width.as_int()) /
+                        buf_size.width.as_int();
+    GLfloat tex_bottom = static_cast<GLfloat>(rect.size.height.as_int()) /
+                         buf_size.height.as_int();
+
     auto& vertices = client.vertices;
     vertices.resize(4);
-    vertices[0] = {{left,  top,    0.0f}, {0.0f, 0.0f}};
-    vertices[1] = {{left,  bottom, 0.0f}, {0.0f, 1.0f}};
-    vertices[2] = {{right, top,    0.0f}, {1.0f, 0.0f}};
-    vertices[3] = {{right, bottom, 0.0f}, {1.0f, 1.0f}};
+    vertices[0] = {{left,  top,    0.0f}, {0.0f,      0.0f}};
+    vertices[1] = {{left,  bottom, 0.0f}, {0.0f,      tex_bottom}};
+    vertices[2] = {{right, top,    0.0f}, {tex_right, 0.0f}};
+    vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
 }
 
 void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
@@ -238,7 +244,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     std::vector<Primitive> primitives;
-    tessellate(primitives, renderable);
+    tessellate(primitives, renderable, buffer.size());
    
     for (auto const& p : primitives)
     {
