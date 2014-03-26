@@ -97,4 +97,6 @@ TEST(Length, DPI)
     EXPECT_EQ(24, (0.25_in).as_pixels(96.0f));
 
     EXPECT_FLOAT_EQ(3543.3070866f, (30_cm).as_pixels(300.0f));
+
+    EXPECT_EQ(123456, Length(123456, Length::inches).as_pixels(1.0f));
 }
