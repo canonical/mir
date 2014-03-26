@@ -39,7 +39,7 @@ TEST_F(BypassMatchTest, nothing_matches_nothing)
     mg::RenderableList empty_list{};
     mc::BypassMatch matcher(primary_monitor);
 
-    EXPECT_EQ(empty_list.end(), std::find_if(empty_list.begin(), empty_list.end(), matcher));
+    EXPECT_EQ(empty_list.rend(), std::find_if(empty_list.rbegin(), empty_list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, small_window_not_bypassed)
@@ -49,7 +49,7 @@ TEST_F(BypassMatchTest, small_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, single_fullscreen_window_bypassed)
@@ -58,8 +58,8 @@ TEST_F(BypassMatchTest, single_fullscreen_window_bypassed)
     mc::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{window};
 
-    auto it = std::find_if(list.begin(), list.end(), matcher);
-    EXPECT_NE(list.end(), it);
+    auto it = std::find_if(list.rbegin(), list.rend(), matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(window, *it);
 }
 
@@ -70,7 +70,7 @@ TEST_F(BypassMatchTest, translucent_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.5f)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, hidden_fullscreen_window_not_bypassed)
@@ -80,7 +80,7 @@ TEST_F(BypassMatchTest, hidden_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, false)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, unposted_fullscreen_window_not_bypassed)
@@ -90,7 +90,7 @@ TEST_F(BypassMatchTest, unposted_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, true, false)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, shaped_fullscreen_window_not_bypassed)
@@ -101,7 +101,7 @@ TEST_F(BypassMatchTest, shaped_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, false)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, offset_fullscreen_window_not_bypassed)
@@ -112,7 +112,7 @@ TEST_F(BypassMatchTest, offset_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(10, 50, 1920, 1200)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, obscured_fullscreen_window_not_bypassed)
@@ -124,7 +124,7 @@ TEST_F(BypassMatchTest, obscured_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, translucently_obscured_fullscreen_window_not_bypassed)
@@ -136,7 +136,7 @@ TEST_F(BypassMatchTest, translucently_obscured_fullscreen_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50, 0.5f)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, unobscured_fullscreen_window_bypassed)
@@ -149,8 +149,8 @@ TEST_F(BypassMatchTest, unobscured_fullscreen_window_bypassed)
         bypassed
     };
 
-    auto it = std::find_if(list.begin(), list.end(), matcher);
-    EXPECT_NE(list.end(), it);
+    auto it = std::find_if(list.rbegin(), list.rend(), matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(bypassed, *it);
 }
 
@@ -163,7 +163,7 @@ TEST_F(BypassMatchTest, unobscured_fullscreen_alpha_window_not_bypassed)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.9f)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top)
@@ -182,8 +182,8 @@ TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top)
         bypassed
     };
 
-    auto it = std::find_if(list.begin(), list.end(), matcher);
-    EXPECT_NE(list.end(), it);
+    auto it = std::find_if(list.rbegin(), list.rend(), matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(bypassed, *it);
 }
 
@@ -203,8 +203,8 @@ TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top_rectangular)
         bypassed
     };
 
-    auto it = std::find_if(list.begin(), list.end(), matcher);
-    EXPECT_NE(list.end(), it);
+    auto it = std::find_if(list.rbegin(), list.rend(), matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(bypassed, *it);
 }
 
@@ -219,7 +219,7 @@ TEST_F(BypassMatchTest, nonrectangular_not_bypassable)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, false)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, nonvisible_not_bypassble)
@@ -229,7 +229,7 @@ TEST_F(BypassMatchTest, nonvisible_not_bypassble)
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, false, true)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, offscreen_not_bypassable)
@@ -238,7 +238,7 @@ TEST_F(BypassMatchTest, offscreen_not_bypassable)
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, true, false)
     };
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, multimonitor_one_bypassed)
@@ -252,10 +252,10 @@ TEST_F(BypassMatchTest, multimonitor_one_bypassed)
         bypassed
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), primary_matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), primary_matcher));
 
-    auto it = std::find_if(list.begin(), list.end(), secondary_matcher);
-    EXPECT_NE(list.end(), it);
+    auto it = std::find_if(list.rbegin(), list.rend(), secondary_matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(bypassed, *it);
 }
 
@@ -271,12 +271,12 @@ TEST_F(BypassMatchTest, dual_bypass)
         secondary_bypassed
     };
 
-    auto it = std::find_if(list.begin(), list.end(), primary_matcher);
-    EXPECT_NE(list.end(), it);
+    auto it = std::find_if(list.rbegin(), list.rend(), primary_matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(primary_bypassed, *it);
 
-    it = std::find_if(list.begin(), list.end(), secondary_matcher);
-    EXPECT_NE(list.end(), it);
+    it = std::find_if(list.rbegin(), list.rend(), secondary_matcher);
+    EXPECT_NE(list.rend(), it);
     EXPECT_EQ(secondary_bypassed, *it);
 }
 
@@ -289,6 +289,6 @@ TEST_F(BypassMatchTest, multimonitor_oversized_no_bypass)
         std::make_shared<mtd::FakeRenderable>(0, 0, 3840, 1200)
     };
 
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), primary_matcher));
-    EXPECT_EQ(list.end(), std::find_if(list.begin(), list.end(), secondary_matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), primary_matcher));
+    EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), secondary_matcher));
 }
