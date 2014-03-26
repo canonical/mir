@@ -86,7 +86,6 @@ public:
             id,
             std::string("stub"), 
             geom::Rectangle{{},{}}, 
-            [](){},
             false, 
             stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(),

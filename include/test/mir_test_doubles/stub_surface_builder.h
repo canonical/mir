@@ -42,7 +42,6 @@ public:
             frontend::SurfaceId(),
             std::string("stub"),
             geometry::Rectangle{{},{}},
-            [](){},
             false,
             std::make_shared<StubBufferStream>(),
             std::shared_ptr<input::InputChannel>(),

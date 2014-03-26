@@ -94,11 +94,10 @@ struct BasicSurfaceTest : public testing::Test
 
 TEST_F(BasicSurfaceTest, basics)
 {
-    ms::BasicSurface data{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        null_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -106,10 +105,10 @@ TEST_F(BasicSurfaceTest, basics)
         stub_configurator,
         report};
 
-    EXPECT_EQ(name, data.name());
-    EXPECT_EQ(rect.size, data.size());
-    EXPECT_EQ(rect.top_left, data.top_left());
-    EXPECT_FALSE(data.shaped());
+    EXPECT_EQ(name, surface.name());
+    EXPECT_EQ(rect.size, surface.size());
+    EXPECT_EQ(rect.top_left, surface.top_left());
+    EXPECT_FALSE(surface.shaped());
 }
 
 TEST_F(BasicSurfaceTest, update_top_left)
@@ -117,11 +116,10 @@ TEST_F(BasicSurfaceTest, update_top_left)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface storage{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -129,11 +127,13 @@ TEST_F(BasicSurfaceTest, update_top_left)
         stub_configurator,
         report};
 
-    EXPECT_EQ(rect.top_left, storage.top_left());
+    surface.on_change(mock_change_cb);
+
+    EXPECT_EQ(rect.top_left, surface.top_left());
 
     auto new_top_left = geom::Point{geom::X{6}, geom::Y{10}};
-    storage.move_to(new_top_left);
-    EXPECT_EQ(new_top_left, storage.top_left());
+    surface.move_to(new_top_left);
+    EXPECT_EQ(new_top_left, surface.top_left());
 }
 
 TEST_F(BasicSurfaceTest, update_size)
@@ -143,11 +143,10 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface storage{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -155,15 +154,17 @@ TEST_F(BasicSurfaceTest, update_size)
         stub_configurator,
         report};
 
-    EXPECT_EQ(rect.size, storage.size());
-    EXPECT_NE(new_size, storage.size());
+    surface.on_change(mock_change_cb);
 
-    auto old_transformation = storage.transformation();
+    EXPECT_EQ(rect.size, surface.size());
+    EXPECT_NE(new_size, surface.size());
 
-    storage.resize(new_size);
-    EXPECT_EQ(new_size, storage.size());
+    auto old_transformation = surface.transformation();
+
+    surface.resize(new_size);
+    EXPECT_EQ(new_size, surface.size());
     // Size no longer affects transformation:
-    EXPECT_EQ(old_transformation, storage.transformation());
+    EXPECT_EQ(old_transformation, surface.transformation());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
@@ -171,11 +172,10 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface storage{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -183,14 +183,16 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         stub_configurator,
         report};
 
-    auto original_transformation = storage.transformation();
+    surface.on_change(mock_change_cb);
+
+    auto original_transformation = surface.transformation();
     glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
                     0.2f, 0.6f, 1.0f, 1.4f,
                     0.3f, 0.7f, 1.1f, 1.5f,
                     0.4f, 0.8f, 1.2f, 1.6f};
 
-    storage.set_transformation(trans);
-    auto got = storage.transformation();
+    surface.set_transformation(trans);
+    auto got = surface.transformation();
     EXPECT_NE(original_transformation, got);
     EXPECT_EQ(trans, got);
 }
@@ -201,11 +203,10 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -213,19 +214,20 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         stub_configurator,
         report};
 
+    surface.on_change(mock_change_cb);
+
     float alpha = 0.5f;
-    surface_state.set_alpha(0.5f);
-    EXPECT_THAT(alpha, FloatEq(surface_state.alpha()));
+    surface.set_alpha(0.5f);
+    EXPECT_THAT(alpha, FloatEq(surface.alpha()));
 }
 
 TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        null_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -233,17 +235,16 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
         stub_configurator,
         report};
 
-    EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
-    EXPECT_FALSE(surface_state.shaped());
+    EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
+    EXPECT_FALSE(surface.shaped());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
 {
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -254,23 +255,23 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
     geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
 
     //not renderable by default
-    EXPECT_FALSE(surface_state.should_be_rendered_in(rect));
+    EXPECT_FALSE(surface.should_be_rendered_in(rect));
 
-    surface_state.set_hidden(false);
+    surface.set_hidden(false);
     //not renderable if no first frame has been posted by client, regardless of hide state
-    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect));
-    surface_state.set_hidden(true);
-    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    surface.set_hidden(true);
+    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
-    surface_state.frame_posted();
-    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect));
+    surface.frame_posted();
+    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
-    surface_state.set_hidden(false);
-    EXPECT_TRUE(surface_state.should_be_rendered_in(output_rect));
+    surface.set_hidden(false);
+    EXPECT_TRUE(surface.should_be_rendered_in(output_rect));
 
     // Not renderable if not overlapping with supplied rect
     geom::Rectangle output_rect1{geom::Point{100,100}, geom::Size{100, 100}};
-    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect1));
+    EXPECT_FALSE(surface.should_be_rendered_in(output_rect1));
 }
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
@@ -279,11 +280,10 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -291,7 +291,9 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         stub_configurator,
         report};
 
-    surface_state.set_hidden(true);
+    surface.on_change(mock_change_cb);
+
+    surface.set_hidden(true);
 }
 
 TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
@@ -300,11 +302,10 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -312,7 +313,9 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         stub_configurator,
         report};
 
-    surface_state.frame_posted();
+    surface.on_change(mock_change_cb);
+
+    surface.frame_posted();
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)
@@ -320,17 +323,18 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
 {
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         geom::Rectangle{pt, one_by_one},
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
         stub_configurator,
         report};
+
+    surface.on_change(mock_change_cb);
 
     std::vector<geom::Point> contained_pt
     {
@@ -342,7 +346,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{x, y};
-            auto contains = surface_state.contains(test_pt);
+            auto contains = surface.contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
@@ -362,11 +366,10 @@ TEST_F(BasicSurfaceTest, set_input_region)
         {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
-    ms::BasicSurface surface_state{
+    ms::BasicSurface surface{
         mf::SurfaceId(),
         name,
         rect,
-        mock_change_cb,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -374,7 +377,9 @@ TEST_F(BasicSurfaceTest, set_input_region)
         stub_configurator,
         report};
 
-    surface_state.set_input_region(rectangles);
+    surface.on_change(mock_change_cb);
+
+    surface.set_input_region(rectangles);
 
     std::vector<geom::Point> contained_pt
     {
@@ -389,7 +394,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{x, y};
-            auto contains = surface_state.contains(test_pt);
+            auto contains = surface.contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);

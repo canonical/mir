@@ -45,10 +45,9 @@ ms::SurfaceAllocator::SurfaceAllocator(
 {
 }
 
-std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
+std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     frontend::SurfaceId id,
     msh::SurfaceCreationParameters const& params,
-    std::function<void()> const& change_callback,
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
@@ -64,7 +63,6 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
         id,
         params.name,
         actual_size,
-        change_callback,
         nonrectangular,
         buffer_stream,
         input_channel,

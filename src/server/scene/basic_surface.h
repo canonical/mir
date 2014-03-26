@@ -54,6 +54,23 @@ namespace scene
 {
 class SceneReport;
 
+// Thread safe wrapper around notification callback
+class ThreadsafeCallback
+{
+public:
+    ThreadsafeCallback(std::function<void()> const& notify_change);
+
+    ThreadsafeCallback& operator=(std::function<void()> const& notify_change);
+
+    void operator()() const;
+
+private:
+    ThreadsafeCallback(ThreadsafeCallback const&) = delete;
+    ThreadsafeCallback& operator =(ThreadsafeCallback const&) = delete;
+    std::mutex mutable mutex;
+    std::function<void()> notify_change;
+};
+
 class BasicSurface : public Surface
 {
 public:
@@ -61,7 +78,6 @@ public:
         frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
-        std::function<void()> change_cb,
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
@@ -88,6 +104,7 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
+    void on_change(std::function<void()> change_notification) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -127,7 +144,7 @@ private:
 
     std::mutex mutable guard;
     frontend::SurfaceId const id;
-    std::function<void()> const notify_change;
+    ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
