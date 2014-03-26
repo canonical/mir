@@ -114,7 +114,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
-        printf("NOT BYPASSED\n");
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, view_area);
