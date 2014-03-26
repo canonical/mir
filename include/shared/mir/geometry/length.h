@@ -19,8 +19,6 @@
 #ifndef MIR_GEOMETRY_LENGTH_H_
 #define MIR_GEOMETRY_LENGTH_H_
 
-#include <iosfwd>
-
 namespace mir
 {
 namespace geometry
