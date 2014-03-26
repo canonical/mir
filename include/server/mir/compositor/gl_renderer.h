@@ -70,6 +70,11 @@ public:
      * \param [in,out] primitives The list of rendering primitives to be
      *                            grown and/or modified.
      * \param [in]     renderable The renderable surface being tessellated.
+     * \param [in]     buf_size   The dimensions of the buffer being rendered,
+     *                            which can be particularly useful in
+     *                            calculating texcoords for a surface being
+     *                            actively resized (as the buf_size doesn't
+     *                            yet match renderable.size()).
      *
      * \note The cohesion of this function to GLRenderer is quite loose and it
      *       does not strictly need to reside here.
@@ -78,7 +83,8 @@ public:
      *       tessellation is very much OpenGL-specific.
      */
     virtual void tessellate(std::vector<Primitive>& primitives,
-                            graphics::Renderable const& renderable) const;
+                            graphics::Renderable const& renderable,
+                            geometry::Size const& buf_size) const;
 
     /**
      * Load the texture for a surface any which way you like. The default
