@@ -26,6 +26,7 @@
 #include "offscreen/display.h"
 
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/gl_config.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
@@ -107,7 +108,8 @@ mir::DefaultServerConfiguration::the_display()
             else
             {
                 return the_graphics_platform()->create_display(
-                    the_display_configuration_policy());
+                    the_display_configuration_policy(),
+                    the_gl_config());
             }
         });
 }
@@ -146,5 +148,20 @@ auto mir::DefaultServerConfiguration::the_host_connection()
             return std::make_shared<graphics::nested::HostConnection>(
                 host_socket,
                 my_name);
+        });
+}
+
+std::shared_ptr<mg::GLConfig>
+mir::DefaultServerConfiguration::the_gl_config()
+{
+    return gl_config(
+        [this]
+        {
+            struct NoGLConfig : public mg::GLConfig
+            {
+                int depth_buffer_bits() const override { return 0; }
+                int stencil_buffer_bits() const override { return 0; }
+            };
+            return std::make_shared<NoGLConfig>();
         });
 }
