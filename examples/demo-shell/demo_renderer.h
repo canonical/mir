@@ -44,10 +44,8 @@ public:
                     float titlebar_height) const;
 
 private:
-    GLuint shadow_edge_tex;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
-    GLuint titlebar_tex;
 };
 
 } // namespace examples
