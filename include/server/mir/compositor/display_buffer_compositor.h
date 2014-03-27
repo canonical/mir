@@ -34,6 +34,8 @@ public:
     /// has additional buffers ready to composite or during animation
     virtual bool composite() = 0;
 
+    virtual void zoom(float, float, float) {} // Optional
+
 protected:
     DisplayBufferCompositor() = default;
     DisplayBufferCompositor& operator=(DisplayBufferCompositor const&) = delete;

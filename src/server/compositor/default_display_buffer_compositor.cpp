@@ -150,3 +150,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     return uncomposited_buffers;
 }
 
+void mc::DefaultDisplayBufferCompositor::zoom(float mag, float x, float y)
+{
+    fprintf(stderr, "Will zoom %.1f, %.1fx%.1f\n", mag, x, y);
+}

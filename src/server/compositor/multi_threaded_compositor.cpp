@@ -63,7 +63,9 @@ public:
           buffer(buffer),
           running{true},
           frames_scheduled{0},
-          report{report}
+          report{report},
+          cursor_x{0.0f}, cursor_y{0.0f},
+          zoom_mag{1.0f}
     {
     }
 
@@ -99,6 +101,7 @@ public:
             if (running)
             {
                 frames_scheduled = false;
+                display_buffer_compositor->zoom(zoom_mag, cursor_x, cursor_y);
                 lock.unlock();
                 auto more_frames_pending = display_buffer_compositor->composite();
 
@@ -123,6 +126,24 @@ public:
         run_cv.notify_one();
     }
 
+    void on_cursor_movement(float x, float y)
+    {
+        std::lock_guard<std::mutex> lock{run_mutex};
+        cursor_x = x;
+        cursor_y = y;
+        if (zoom_mag != 1.0f)
+        {
+            frames_scheduled = true;
+            run_cv.notify_one();
+        }
+    }
+
+    void zoom(float magnification)
+    {
+        std::lock_guard<std::mutex> lock{run_mutex};
+        zoom_mag = magnification;
+    }
+
     void stop()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
@@ -138,6 +159,8 @@ private:
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
+    float cursor_x, cursor_y;
+    float zoom_mag;
 };
 
 }
@@ -240,5 +263,17 @@ void mc::MultiThreadedCompositor::stop()
 
 void mc::MultiThreadedCompositor::cursor_moved_to(float abs_x, float abs_y)
 {
-    fprintf(stderr, "Cursor at %.1f, %.1f\n", abs_x, abs_y);
+    std::unique_lock<std::mutex> lk(started_guard);
+    for (auto& f : thread_functors)
+        f->on_cursor_movement(abs_x, abs_y);
+}
+
+void mc::MultiThreadedCompositor::zoom(float magnification)
+{
+    std::unique_lock<std::mutex> lk(started_guard);
+    for (auto& f : thread_functors)
+    {
+        f->zoom(magnification);
+        f->schedule_compositing();
+    }
 }

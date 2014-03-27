@@ -44,7 +44,9 @@ const int min_swipe_distance = 100;  // How long must a swipe be to act on?
 }
 
 me::WindowManager::WindowManager()
-    : old_pinch_diam(0.0f), max_fingers(0)
+    : old_pinch_diam(0.0f)
+    , max_fingers(0)
+    , zoom_exponent(0)
 {
 }
 
@@ -194,6 +196,14 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
+
+        if (event.motion.modifiers & mir_key_modifier_meta &&
+            action == mir_motion_action_scroll)
+        {
+            zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
+            compositor->zoom(powf(1.1f, zoom_exponent));
+            handled = true;
+        }
 
         std::shared_ptr<msh::Session> app =
             focus_controller->focussed_application().lock();

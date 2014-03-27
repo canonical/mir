@@ -27,9 +27,10 @@ namespace compositor
 {
 
 /*
- * Why do Compositors need to know about the cursor? Multiple reasons:
- *  1. To force screen redraw if we're rendering software cursors.
+ * Why would Compositors need to know about the cursor? Multiple reasons:
+ *  1. To force screen redraw if rendering software cursors.
  *  2. To force screen redraw during desktop zoom on pointer movement.
+ * Maybe there's a nicer way to deliver these events to Compositor?...
  */
 
 class Compositor : public input::CursorListener
@@ -39,7 +40,9 @@ public:
 
     virtual void start() = 0;
     virtual void stop() = 0;
-    virtual void cursor_moved_to(float, float) {}
+
+    virtual void cursor_moved_to(float, float) {}  // Optional
+    virtual void zoom(float) {} // Optional. TODO: Generalize set(Effect)?
 
 protected:
     Compositor() = default;

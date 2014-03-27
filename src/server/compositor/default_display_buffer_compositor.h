@@ -45,6 +45,7 @@ public:
         std::shared_ptr<CompositorReport> const& report);
 
     bool composite() override;
+    void zoom(float mag, float cursor_x, float cursor_y) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;

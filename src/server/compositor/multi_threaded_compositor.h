@@ -52,7 +52,9 @@ public:
 
     void start();
     void stop();
+
     void cursor_moved_to(float abs_x, float abs_y);
+    void zoom(float mag);
 
 private:
     std::shared_ptr<graphics::Display> const display;
