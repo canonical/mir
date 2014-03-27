@@ -31,6 +31,7 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/pipe.h"
 #include "mir_test/cross_process_action.h"
@@ -336,10 +337,9 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
     {
         std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
         {
-            class StubAuthorizer : public mf::SessionAuthorizer
+            class StubAuthorizer : public mtd::StubSessionAuthorizer
             {
-                bool connection_is_allowed(pid_t) { return true; }
-                bool configure_display_is_allowed(pid_t) { return false; }
+                bool configure_display_is_allowed(pid_t) override { return false; }
             };
 
             if (!authorizer)

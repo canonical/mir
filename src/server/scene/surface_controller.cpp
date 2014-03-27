@@ -18,30 +18,36 @@
 
 #include "surface_controller.h"
 #include "surface_stack_model.h"
+#include "basic_surface_factory.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+ms::SurfaceController::SurfaceController(
+    std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
+    std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+    surface_factory(surface_factory),
     surface_stack(surface_stack)
 {
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
     std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
 {
-    return surface_stack->create_surface(id, params, event_sink, configurator);
+    auto const surface = surface_factory->create_surface(id, params, event_sink, configurator);
+    surface_stack->add_surface(surface, params.depth, params.input_mode);
+    return surface;
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
 {
-    surface_stack->destroy_surface(surface);
+    surface_stack->remove_surface(surface);
 }
 
-void ms::SurfaceController::raise(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::raise(std::weak_ptr<Surface> const& surface)
 {
     surface_stack->raise(surface);
 }

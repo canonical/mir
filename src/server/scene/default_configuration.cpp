@@ -50,13 +50,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
         {
             auto const scene_report = the_scene_report();
 
-            auto const factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(),
-                the_input_channel_factory(),
-                scene_report);
-
             auto const ss = std::make_shared<ms::SurfaceStack>(
-                factory,
                 the_input_registrar(),
                 scene_report);
 
@@ -74,13 +68,7 @@ mir::DefaultServerConfiguration::the_scene()
         {
             auto const scene_report = the_scene_report();
 
-            auto const factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(),
-                the_input_channel_factory(),
-                scene_report);
-
             auto const ss = std::make_shared<ms::SurfaceStack>(
-                factory,
                 the_input_registrar(),
                 scene_report);
 
@@ -90,6 +78,18 @@ mir::DefaultServerConfiguration::the_scene()
         });
 }
 
+auto mir::DefaultServerConfiguration::the_surface_factory()
+-> std::shared_ptr<ms::BasicSurfaceFactory>
+{
+    return surface_factory(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceAllocator>(
+                the_buffer_stream_factory(),
+                the_input_channel_factory(),
+                the_scene_report());
+        });
+}
 
 std::shared_ptr<ms::SurfaceBuilder>
 mir::DefaultServerConfiguration::the_surface_builder()
@@ -103,7 +103,9 @@ mir::DefaultServerConfiguration::the_surface_controller()
     return surface_controller(
         [this]()
         {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+            return std::make_shared<ms::SurfaceController>(
+                the_surface_factory(),
+                the_surface_stack_model());
         });
 }
 

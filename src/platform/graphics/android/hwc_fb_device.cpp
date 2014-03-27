@@ -21,6 +21,7 @@
 #include "hwc_vsync_coordinator.h"
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
+#include "hwc_wrapper.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 
@@ -33,9 +34,11 @@ namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                               std::shared_ptr<framebuffer_device_t> const& fb_device,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
+      hwc_wrapper(hwc_wrapper), 
       fb_device(fb_device),
       layer_list{{},1}
 {
@@ -44,41 +47,33 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
 void mga::HwcFbDevice::gpu_render()
 {
-    auto rc = 0; 
-    auto display_list = layer_list.native_list().lock();
-    if (display_list)
+    if (auto display_list = layer_list.native_list().lock())
     {
         display_list->dpy = eglGetCurrentDisplay();
         display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
         //set() may affect EGL state by calling eglSwapBuffers.
         //HWC 1.0 is the only version of HWC that can do this.
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
-        rc = hwc_device->set(hwc_device.get(), num_displays, displays);
+        hwc_wrapper->set(*display_list);
     }
-
-    if ((rc != 0) || (!display_list))
+    else
     {
         std::stringstream ss;
-        ss << "error during hwc set(). rc = " << std::hex << rc;
+        ss << "error locking list during hwc set()";
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
 void mga::HwcFbDevice::prepare()
 {
-    auto rc = 0;
-    auto display_list = layer_list.native_list().lock();
-    if (display_list)
+    if (auto display_list = layer_list.native_list().lock())
     {
-        hwc_display_contents_1_t* displays[num_displays] {display_list.get()};
-        rc = hwc_device->prepare(hwc_device.get(), num_displays, displays);
+        hwc_wrapper->prepare(*display_list);
     }
-
-    if ((rc != 0) || (!display_list))
+    else
     {
         std::stringstream ss;
-        ss << "error during hwc prepare(). rc = " << std::hex << rc;
+        ss << "error accessing list during hwc prepare()";
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }

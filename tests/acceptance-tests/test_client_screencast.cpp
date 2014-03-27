@@ -27,6 +27,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_screencast.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -227,6 +228,55 @@ TEST_F(MirScreencastTest, fails_on_client_when_server_request_fails)
 
     EXPECT_CALL(mock_screencast(), create_session(_, _, _))
         .WillOnce(Throw(std::runtime_error("")));
+
+    auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+    ASSERT_EQ(nullptr, screencast);
+
+    mir_connection_release(connection);
+}
+
+namespace
+{
+
+struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
+{
+    MOCK_METHOD1(screencast_is_allowed, bool(pid_t));
+};
+
+struct MockAuthorizerServerConfig : mir_test_framework::StubbedServerConfiguration
+{
+    std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
+    {
+        return mt::fake_shared(mock_authorizer);
+    }
+
+    MockSessionAuthorizer mock_authorizer;
+};
+
+class UnauthorizedMirScreencastTest : public mir_test_framework::InProcessServer
+{
+public:
+    mir::DefaultServerConfiguration& server_config() override { return server_config_; }
+
+    MockSessionAuthorizer& mock_authorizer() { return server_config_.mock_authorizer; }
+
+    MockAuthorizerServerConfig server_config_;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
+    MirScreencastParameters default_screencast_params {
+        {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
+};
+
+}
+
+TEST_F(UnauthorizedMirScreencastTest, fails_to_create_screencast)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_authorizer(), screencast_is_allowed(_))
+        .WillOnce(Return(false));
+
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_EQ(nullptr, screencast);

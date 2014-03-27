@@ -103,7 +103,7 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
         {
             auto const val_raw = getenv("MIR_CLIENT_PLATFORM_LIB");
             std::string const val{val_raw ? val_raw : default_platform_lib};
-            auto const platform_lib = load_library(val);
+            auto const platform_lib = ::load_library(val);
 
             auto const create_client_platform_factory =
                 platform_lib->load_function<mcl::CreateClientPlatformFactory>(

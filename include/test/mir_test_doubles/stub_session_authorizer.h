@@ -38,6 +38,10 @@ class StubSessionAuthorizer : public frontend::SessionAuthorizer
     {
         return true;
     }
+    bool screencast_is_allowed(pid_t)
+    {
+        return true;
+    }
 };
 
 }

@@ -31,17 +31,16 @@ namespace shell { class SurfaceConfigurator; }
 namespace scene
 {
 
-class BasicSurface;
+class Surface;
 class BasicSurfaceFactory
 {
 public:
     BasicSurfaceFactory() = default;
     virtual ~BasicSurfaceFactory() = default;
 
-    virtual std::shared_ptr<BasicSurface> create_surface(
+    virtual std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::function<void()> const&  change_callback,
         std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
 private:

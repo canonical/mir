@@ -28,13 +28,10 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
 ms::SurfaceImpl::SurfaceImpl(
-    std::shared_ptr<SurfaceBuilder> const& builder,
-    std::shared_ptr<msh::SurfaceConfigurator> const& configurator,
-    msh::SurfaceCreationParameters const& params,
-    frontend::SurfaceId id,
-    std::shared_ptr<mf::EventSink> const& event_sink)
-  : builder(builder),
-    surface(builder->create_surface(id, params, event_sink, configurator))
+    std::weak_ptr<ms::Surface> const& surface,
+    std::shared_ptr<SurfaceBuilder> const& builder) :
+    surface(surface),
+    builder(builder)
 {
 }
 
@@ -145,9 +142,9 @@ void ms::SurfaceImpl::resize(geom::Size const& size)
     surface->resize(size);
 }
 
-void ms::SurfaceImpl::set_rotation(float degrees, glm::vec3 const& axis)
+void ms::SurfaceImpl::set_transformation(glm::mat4 const& t)
 {
-    surface->set_rotation(degrees, axis);
+    surface->set_transformation(t);
 }
 
 float ms::SurfaceImpl::alpha() const

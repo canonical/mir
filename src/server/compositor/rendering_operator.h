@@ -34,8 +34,7 @@ class RenderingOperator : public OperatorForScene
 {
 public:
     explicit RenderingOperator(
-        Renderer& renderer,
-        unsigned long frameno);
+        Renderer& renderer);
     ~RenderingOperator() = default;
 
     void operator()(graphics::Renderable const&);
@@ -45,7 +44,6 @@ public:
 private:
     Renderer& renderer;
     std::vector<std::shared_ptr<void>> saved_resources;
-    unsigned long const frameno;
     bool uncomposited_buffers_;
 };
 
