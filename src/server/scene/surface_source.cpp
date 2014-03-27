@@ -21,18 +21,16 @@
 
 #include "mir/scene/surface.h"
 
-#include <cassert>
+#include <cstdlib>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 
-
 ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder)
     : surface_builder(surface_builder)
 {
-    assert(surface_builder);
 }
 
 std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
@@ -46,7 +44,14 @@ std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
 
 void ms::SurfaceSource::destroy_surface(std::shared_ptr<msh::Surface> const& surface)
 {
-    auto const scene_surface = std::dynamic_pointer_cast<Surface>(surface);
-    assert(scene_surface);
-    surface_builder->destroy_surface(scene_surface);
+    if (auto const scene_surface = std::dynamic_pointer_cast<Surface>(surface))
+    {
+        surface_builder->destroy_surface(scene_surface);
+    }
+    else
+    {
+        // We shouldn't be destroying surfaces we didn't create,
+        // so we ought to be able to restore the original type!
+        std::abort();
+    }
 }
