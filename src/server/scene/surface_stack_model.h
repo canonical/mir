@@ -31,7 +31,6 @@ namespace frontend { class EventSink; }
 namespace shell
 {
 struct SurfaceCreationParameters;
-class SurfaceConfigurator;
 }
 
 namespace scene
