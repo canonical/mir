@@ -20,8 +20,7 @@
 #ifndef MIR_SCENE_SURFACE_CONTROLLER_H_
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
-#include "surface_builder.h"
-#include "surface_ranker.h"
+#include "mir/scene/surface_coordinator.h"
 
 namespace mir
 {
@@ -33,28 +32,27 @@ class Session;
 namespace scene
 {
 class SurfaceStackModel;
-class BasicSurfaceFactory;
+class SurfaceFactory;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public SurfaceBuilder, public SurfaceRanker
+class SurfaceController : public SurfaceCoordinator
 {
 public:
     SurfaceController(
-        std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    std::weak_ptr<Surface> create_surface(
+    std::shared_ptr<Surface> add_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
+        std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
-    void destroy_surface(std::weak_ptr<Surface> const& surface) override;
+    void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
     void raise(std::weak_ptr<Surface> const& surface) override;
 
 private:
-    std::shared_ptr<BasicSurfaceFactory> const surface_factory;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 

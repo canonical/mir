@@ -61,7 +61,6 @@ class PlacementStrategy;
 class SessionListener;
 class FocusController;
 class DisplayLayout;
-class SurfaceConfigurator;
 }
 namespace time
 {
@@ -69,7 +68,7 @@ class Clock;
 }
 namespace scene
 {
-class BasicSurfaceFactory;
+class SurfaceFactory;
 class BroadcastingSessionEventSink;
 class BufferStreamFactory;
 class MediatingDisplayChanger;
@@ -79,7 +78,8 @@ class SessionEventSink;
 class SessionEventHandlerRegister;
 class SessionManager;
 class SnapshotStrategy;
-class SurfaceBuilder;
+class SurfaceCoordinator;
+class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceRanker;
@@ -201,12 +201,10 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
-    virtual std::shared_ptr<shell::SurfaceFactory>      the_scene_surface_factory();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
     /** @} */
 
     /** @name internal scene configuration
@@ -220,7 +218,9 @@ public:
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<scene::SurfaceRanker>     the_surface_ranker();
-    virtual std::shared_ptr<scene::BasicSurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
+    virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
+    virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -288,8 +288,7 @@ protected:
     CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
-    CachedPtr<shell::SurfaceFactory> scene_surface_factory;
-    CachedPtr<scene::BasicSurfaceFactory> surface_factory;
+    CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
@@ -297,7 +296,7 @@ protected:
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
+    CachedPtr<scene::SurfaceConfigurator> surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
@@ -327,7 +326,6 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
     std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
     std::shared_ptr<scene::SessionManager>       the_session_manager();
-    std::shared_ptr<scene::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;

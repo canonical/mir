@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -42,6 +42,8 @@ public:
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& sink) = 0;
+
+    virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
 
 protected:
     virtual ~SurfaceFactory() {}
