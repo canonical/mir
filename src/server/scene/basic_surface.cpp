@@ -28,9 +28,6 @@
 #include "mir/scene/scene_report.h"
 #include "mir/shell/surface_configurator.h"
 
-#define GLM_FORCE_RADIANS
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
@@ -43,11 +40,28 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+ms::ThreadsafeCallback::ThreadsafeCallback(std::function<void()> const& notify_change) :
+        notify_change(notify_change) {}
+
+ms::ThreadsafeCallback& ms::ThreadsafeCallback::operator=(std::function<void()> const& notify_change)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    this->notify_change = notify_change;
+    return *this;
+}
+
+void ms::ThreadsafeCallback::operator()() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    auto const notifier = notify_change;
+    lock.unlock();
+    notifier();
+}
+
 ms::BasicSurface::BasicSurface(
     frontend::SurfaceId id,
     std::string const& name,
     geometry::Rectangle rect,
-    std::function<void()> change_cb,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
@@ -55,7 +69,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     id(id),
-    notify_change(change_cb),
+    notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
@@ -174,6 +188,11 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
     return server_input_channel;
 }
 
+void ms::BasicSurface::on_change(std::function<void()> change_notification)
+{
+    notify_change = change_notification;
+}
+
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -253,11 +272,11 @@ void ms::BasicSurface::set_alpha(float alpha)
 }
 
 
-void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
+void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(degrees), axis);
+        transformation_matrix = t;
     }
     notify_change();
 }
@@ -265,9 +284,7 @@ void ms::BasicSurface::set_rotation(float degrees, glm::vec3 const& axis)
 glm::mat4 ms::BasicSurface::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
-
-    // By default the only transformation implemented is rotation...
-    return rotation_matrix;
+    return transformation_matrix;
 }
 
 bool ms::BasicSurface::should_be_rendered_in(geom::Rectangle const& rect) const

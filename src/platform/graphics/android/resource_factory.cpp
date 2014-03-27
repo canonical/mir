@@ -31,7 +31,7 @@
 #include "hwc_vsync.h"
 #include "android_display.h"
 #include "real_hwc_wrapper.h"
-#include "hwc_logger.h"
+#include "hwc_formatted_logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -39,6 +39,11 @@
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
+
+mga::ResourceFactory::ResourceFactory(bool should_log_hwc)
+    : should_log_hwc{should_log_hwc}
+{
+}
 
 std::shared_ptr<framebuffer_device_t> mga::ResourceFactory::create_fb_native_device() const
 {
@@ -104,6 +109,15 @@ struct NullHwcLogger : public mga::HwcLogger
     {
     }
 };
+
+std::shared_ptr<mga::HwcLogger> make_logger(bool should_log)
+{
+    if (should_log)
+        return std::make_shared<mga::HwcFormattedLogger>();
+    else
+        return std::make_shared<NullHwcLogger>();
+}
+
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
@@ -111,8 +125,7 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    auto logger = std::make_shared<NullHwcLogger>();
-    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device, logger); 
+    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device, make_logger(should_log_hwc));
     return std::make_shared<mga::HwcDevice>(hwc_native_device, wrapper, syncer, file_ops);
 }
 
@@ -122,6 +135,6 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto logger = std::make_shared<NullHwcLogger>();
-    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device, logger); 
+    auto wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native_device, make_logger(should_log_hwc));
     return std::make_shared<mga::HwcFbDevice>(hwc_native_device, wrapper, fb_native_device, syncer);
 }

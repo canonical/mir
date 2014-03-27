@@ -41,6 +41,9 @@
 #include "image_renderer.h"
 #include "server_configuration.h"
 
+#define GLM_FORCE_RADIANS
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -90,6 +93,7 @@ bool input_is_on = false;
 std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
 static const uint32_t fg_color = 0xffdd4814;
+static const float min_alpha = 0.3f;
 
 void update_cursor(uint32_t bg_color, uint32_t fg_color)
 {
@@ -233,8 +237,16 @@ public:
             y = new_y;
         }
 
-        surface->set_rotation(total_elapsed_sec * 120.0f, rotation_axis);
-        surface->set_alpha(0.5 + 0.5 * sin(alpha_offset + 2 * M_PI * total_elapsed_sec / 3.0));
+        glm::mat4 trans = glm::rotate(glm::mat4(1.0f),
+                                      glm::radians(total_elapsed_sec * 120.0f),
+                                      rotation_axis);
+        surface->set_transformation(trans);
+
+        float const alpha_amplitude = (1.0f - min_alpha) / 2.0f;
+        surface->set_alpha(min_alpha + alpha_amplitude +
+                           alpha_amplitude *
+                           sin(alpha_offset + 2 * M_PI * total_elapsed_sec /
+                               3.0));
     }
 
 private:

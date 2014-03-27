@@ -97,8 +97,8 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
     auto scene_report = mr::null_scene_report();
     auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, scene_report);
-    auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar, scene_report);
-    auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
+    auto ss = std::make_shared<ms::SurfaceStack>(stub_input_registrar, scene_report);
+    auto surface_controller = std::make_shared<ms::SurfaceController>(surface_allocator, ss);
     auto surface_source = std::make_shared<ms::SurfaceSource>(surface_controller, std::make_shared<mtd::NullSurfaceConfigurator>());
     auto surface = surface_source->create_surface(nullptr, params, id, std::shared_ptr<mf::EventSink>());
     surface->allow_framedropping(true);
