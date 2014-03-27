@@ -25,6 +25,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/geometry/rectangle.h"
 #include "bypass.h"
 #include "occlusion.h"
 #include <mutex>
@@ -150,7 +151,34 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     return uncomposited_buffers;
 }
 
-void mc::DefaultDisplayBufferCompositor::zoom(float mag, float x, float y)
+void mc::DefaultDisplayBufferCompositor::zoom(float mag,
+                                              float cursor_x, float cursor_y)
 {
-    fprintf(stderr, "Will zoom %.1f, %.1fx%.1f\n", mag, x, y);
+    auto const& view_area = display_buffer.view_area();
+
+    if (mag == 1.0f)
+    {
+        renderer->set_viewport(view_area);
+    }
+    else
+    {
+        int desktop_width = view_area.size.width.as_int();
+        int desktop_height = view_area.size.height.as_int();
+        int desktop_x = view_area.top_left.x.as_int();
+        int desktop_y = view_area.top_left.y.as_int();
+    
+        float zoom_width = desktop_width / mag;
+        float zoom_height = desktop_height / mag;
+    
+        float screen_x = cursor_x - desktop_x;
+        float screen_y = cursor_y - desktop_y;
+
+        float normal_x = screen_x / desktop_width;
+        float normal_y = screen_y / desktop_height;
+    
+        int x = desktop_x + (desktop_width - zoom_width) * normal_x;
+        int y = desktop_y + (desktop_height - zoom_height) * normal_y;
+    
+        renderer->set_viewport({{x, y}, {zoom_width, zoom_height}});
+    }
 }
