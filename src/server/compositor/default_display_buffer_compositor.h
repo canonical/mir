@@ -21,6 +21,7 @@
 
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/compositor_report.h"
+#include "mir/geometry/rectangle.h"
 #include <memory>
 
 namespace mir
@@ -55,6 +56,7 @@ private:
     std::shared_ptr<CompositorReport> const report;
 
     bool last_pass_rendered_anything;
+    geometry::Rectangle viewport;
 };
 
 }

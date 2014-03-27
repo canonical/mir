@@ -63,7 +63,8 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
-      last_pass_rendered_anything{false}
+      last_pass_rendered_anything{false},
+      viewport(display_buffer.view_area())
 {
 }
 
@@ -79,8 +80,9 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     }()};
     bool bypassed = false;
     bool uncomposited_buffers{false};
+    bool should_bypass = bypass_env && viewport == display_buffer.view_area();
 
-    if (bypass_env && display_buffer.can_bypass())
+    if (should_bypass && display_buffer.can_bypass())
     {
         // It would be *really* nice not to lock the scene for a composite pass.
         // (C.f. lp:1234018)
@@ -121,11 +123,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     {
         display_buffer.make_current();
 
-        auto const& view_area = display_buffer.view_area();
-        mc::OcclusionFilter occlusion_search(view_area);
+        mc::OcclusionFilter occlusion_search(viewport);
         mc::OcclusionMatch occlusion_match;
         scene->reverse_for_each_if(occlusion_search, occlusion_match);
 
+        renderer->set_viewport(viewport);
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);
@@ -158,7 +160,10 @@ void mc::DefaultDisplayBufferCompositor::zoom(float mag,
 
     if (mag == 1.0f)
     {
-        renderer->set_viewport(view_area);
+        // The below calculations should yield the same result as this, but
+        // just in case there are any floating point precision errors,
+        // set it precisely:
+        viewport = display_buffer.view_area();
     }
     else
     {
@@ -176,9 +181,12 @@ void mc::DefaultDisplayBufferCompositor::zoom(float mag,
         float normal_x = screen_x / desktop_width;
         float normal_y = screen_y / desktop_height;
     
+        // Position the viewport so the cursor location matches up.
+        // This assumes the hardware cursor still traverses the physical
+        // screen even during zoom.
         int x = desktop_x + (desktop_width - zoom_width) * normal_x;
         int y = desktop_y + (desktop_height - zoom_height) * normal_y;
-    
-        renderer->set_viewport({{x, y}, {zoom_width, zoom_height}});
+
+        viewport = {{x, y}, {zoom_width, zoom_height}};
     }
 }
