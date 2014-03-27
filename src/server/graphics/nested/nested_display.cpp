@@ -135,12 +135,13 @@ mgn::NestedDisplay::NestedDisplay(
     event_handler{event_handler},
     display_report{display_report},
     egl_display{*connection},
-    outputs{}
+    outputs{},
+    initial_setup(true)
 {
-
     std::shared_ptr<DisplayConfiguration> conf(configuration());
     initial_conf_policy->apply_to(*conf);
     configure(*conf);
+    initial_setup = false;
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
@@ -224,14 +225,18 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
     if (result.empty())
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one output for display"));
 
-    auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
     {
         std::unique_lock<std::mutex> lock(outputs_mutex);
         outputs.swap(result);
     }
 
-    mir_connection_apply_display_config(*connection, conf);
+    if (!initial_setup)
+    {
+        auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
+
+        mir_connection_apply_display_config(*connection, conf);
+    }
 }
 
 namespace

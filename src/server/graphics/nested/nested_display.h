@@ -130,6 +130,8 @@ private:
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
     void complete_display_initialization(MirPixelFormat format);
+
+    bool initial_setup;
 };
 
 }
