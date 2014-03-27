@@ -201,7 +201,7 @@ bool me::WindowManager::handle(MirEvent const& event)
             action == mir_motion_action_scroll)
         {
             zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
-            compositor->zoom(powf(1.1f, zoom_exponent));
+            compositor->zoom(powf(1.5f, zoom_exponent));
             handled = true;
         }
 
