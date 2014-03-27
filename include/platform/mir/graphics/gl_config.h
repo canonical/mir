@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANCILLARY_BUFFERS_CONFIG_H_
-#define MIR_GRAPHICS_ANCILLARY_BUFFERS_CONFIG_H_
+#ifndef MIR_GRAPHICS_GL_CONFIG_H_
+#define MIR_GRAPHICS_GL_CONFIG_H_
 
 namespace mir
 {
@@ -25,12 +25,12 @@ namespace graphics
 {
 
 /**
- * Interface to the configuration of ancillary buffers.
+ * Interface for customizing aspects of the GL config used by the server.
  */
-class AncillaryBuffersConfig
+class GLConfig
 {
 public:
-    virtual ~AncillaryBuffersConfig() = default;
+    virtual ~GLConfig() = default;
 
     /**
      * Gets the bits to use for each pixel in the depth buffer.
@@ -43,12 +43,12 @@ public:
     virtual int stencil_buffer_bits() const = 0;
 
 protected:
-    AncillaryBuffersConfig() = default;
-    AncillaryBuffersConfig(AncillaryBuffersConfig const&) = delete;
-    AncillaryBuffersConfig& operator=(AncillaryBuffersConfig const&) = delete;
+    GLConfig() = default;
+    GLConfig(GLConfig const&) = delete;
+    GLConfig& operator=(GLConfig const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_GRAPHICS_ANCILLARY_BUFFERS_CONFIG_H_ */
+#endif /* MIR_GRAPHICS_GL_CONFIG_H_ */

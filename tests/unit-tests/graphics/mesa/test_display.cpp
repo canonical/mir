@@ -30,8 +30,8 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir_test_doubles/stub_ancillary_buffers_config.h"
-#include "mir_test_doubles/mock_ancillary_buffers_config.h"
+#include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/mock_gl_config.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -135,7 +135,7 @@ public:
         return std::make_shared<mgm::Display>(
             platform,
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubAncillaryBuffersConfig>(),
+            std::make_shared<mtd::StubGLConfig>(),
             null_report);
     }
 
@@ -522,7 +522,7 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
     auto display = std::make_shared<mgm::Display>(
                         create_platform(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-                        std::make_shared<mtd::StubAncillaryBuffersConfig>(),
+                        std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 }
 
@@ -693,7 +693,7 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     auto display = std::make_shared<mgm::Display>(
                         platform,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-                        std::make_shared<mtd::StubAncillaryBuffersConfig>(),
+                        std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 
     EXPECT_THROW({
@@ -804,18 +804,18 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
 }
 }
 
-TEST_F(MesaDisplayTest, respects_ancillary_buffers_config)
+TEST_F(MesaDisplayTest, respects_gl_config)
 {
     using namespace testing;
 
-    mtd::MockAncillaryBuffersConfig mock_ancillary_buffers_config;
+    mtd::MockGLConfig mock_gl_config;
     EGLint const depth_bits{24};
     EGLint const stencil_bits{8};
 
-    EXPECT_CALL(mock_ancillary_buffers_config, depth_buffer_bits())
+    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
         .Times(AtLeast(1))
         .WillRepeatedly(Return(depth_bits));
-    EXPECT_CALL(mock_ancillary_buffers_config, stencil_buffer_bits())
+    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
         .Times(AtLeast(1))
         .WillRepeatedly(Return(stencil_bits));
 
@@ -833,6 +833,6 @@ TEST_F(MesaDisplayTest, respects_ancillary_buffers_config)
     mgm::Display display{
         create_platform(),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-        mir::test::fake_shared(mock_ancillary_buffers_config),
+        mir::test::fake_shared(mock_gl_config),
         null_report};
 }

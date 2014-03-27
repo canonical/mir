@@ -55,9 +55,9 @@ class GBMGLContext : public mg::GLContext
 {
 public:
     GBMGLContext(mgm::helpers::GBMHelper const& gbm,
-                 mg::AncillaryBuffersConfig const& ancillary_buffers_config,
+                 mg::GLConfig const& gl_config,
                  EGLContext shared_context)
-        : egl{ancillary_buffers_config}
+        : egl{gl_config}
     {
         egl.setup(gbm, shared_context);
     }
@@ -80,16 +80,16 @@ private:
 
 mgm::Display::Display(std::shared_ptr<Platform> const& platform,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-                      std::shared_ptr<AncillaryBuffersConfig> const& ancillary_buffers_config,
+                      std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
       monitor(mir::udev::Context()),
-      shared_egl{*ancillary_buffers_config},
+      shared_egl{*gl_config},
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
       current_display_configuration{platform->drm.fd},
-      ancillary_buffers_config{ancillary_buffers_config}
+      gl_config{gl_config}
 {
     platform->vt->set_graphics_mode();
 
@@ -209,7 +209,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                                   std::move(surface),
                                   bounding_rect,
                                   orientation,
-                                  *ancillary_buffers_config,
+                                  *gl_config,
                                   shared_egl.context()}};
 
             display_buffers_new.push_back(std::move(db));
@@ -329,7 +329,7 @@ std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()
     return std::unique_ptr<GBMGLContext>{
         new GBMGLContext{
             platform->gbm,
-            *ancillary_buffers_config,
+            *gl_config,
             shared_egl.context()}};
 }
 

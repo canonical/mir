@@ -37,7 +37,7 @@ namespace mir
 {
 namespace graphics
 {
-class AncillaryBuffersConfig;
+class GLConfig;
 
 namespace mesa
 {
@@ -94,7 +94,7 @@ public:
 class EGLHelper
 {
 public:
-    EGLHelper(AncillaryBuffersConfig const& ancillary_buffers_config);
+    EGLHelper(GLConfig const& gl_config);
     ~EGLHelper() noexcept;
 
     EGLHelper(const EGLHelper&) = delete;

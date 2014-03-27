@@ -24,7 +24,7 @@
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/stub_ancillary_buffers_config.h"
+#include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mock_kms_output.h"
 
@@ -97,7 +97,7 @@ protected:
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
     std::shared_ptr<MockKMSOutput> mock_kms_output;
-    StubAncillaryBuffersConfig ancillary_buffers_config;
+    StubGLConfig gl_config;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
@@ -111,7 +111,7 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
         nullptr,
         area,
         mir_orientation_normal,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 
     EXPECT_EQ(area, db.view_area());
@@ -128,7 +128,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
         nullptr,
         area,
         mir_orientation_normal,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 
     EXPECT_TRUE(db.can_bypass());
@@ -145,7 +145,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
         nullptr,
         area,
         mir_orientation_right,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 
     EXPECT_FALSE(db.can_bypass());
@@ -162,7 +162,7 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
         nullptr,
         area,
         mir_orientation_left,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 
     EXPECT_EQ(mir_orientation_left, db.orientation());
@@ -186,7 +186,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
         nullptr,
         area,
         mir_orientation_normal,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 }
 
@@ -208,7 +208,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
         nullptr,
         area,
         mir_orientation_left,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 }
 
@@ -230,7 +230,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
         nullptr,
         area,
         mir_orientation_inverted,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 }
 
@@ -252,7 +252,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         nullptr,
         area,
         mir_orientation_right,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 }
 
@@ -272,7 +272,7 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
         nullptr,
         area,
         mir_orientation_normal,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 
     db.post_update();
@@ -302,7 +302,7 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
         nullptr,
         area,
         mir_orientation_normal,
-        ancillary_buffers_config,
+        gl_config,
         mock_egl.fake_egl_context);
 
     db.post_update();

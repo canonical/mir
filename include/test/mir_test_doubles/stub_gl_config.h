@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_ANCILLARY_BUFFERS_CONFIG_H_
-#define MIR_TEST_DOUBLES_MOCK_ANCILLARY_BUFFERS_CONFIG_H_
+#ifndef MIR_TEST_DOUBLES_STUB_GL_CONFIG_H_
+#define MIR_TEST_DOUBLES_STUB_GL_CONFIG_H_
 
-#include "mir/graphics/ancillary_buffers_config.h"
+#include "mir/graphics/gl_config.h"
 
 #include <gmock/gmock.h>
 
@@ -30,14 +30,14 @@ namespace test
 namespace doubles
 {
 
-struct MockAncillaryBuffersConfig : public graphics::AncillaryBuffersConfig
+struct StubGLConfig : public graphics::GLConfig
 {
-    MOCK_CONST_METHOD0(depth_buffer_bits, int());
-    MOCK_CONST_METHOD0(stencil_buffer_bits, int());
+    int depth_buffer_bits() const override { return 0; }
+    int stencil_buffer_bits() const override { return 0; }
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_ANCILLARY_BUFFERS_CONFIG_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_GL_CONFIG_H_ */

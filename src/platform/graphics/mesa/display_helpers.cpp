@@ -19,7 +19,7 @@
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
-#include "mir/graphics/ancillary_buffers_config.h"
+#include "mir/graphics/gl_config.h"
 #include "mir/udev/wrapper.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -296,9 +296,9 @@ mgmh::GBMHelper::~GBMHelper()
  * EGLHelper *
  *************/
 
-mgmh::EGLHelper::EGLHelper(AncillaryBuffersConfig const& ancillary_buffers_config)
-    : depth_buffer_bits{ancillary_buffers_config.depth_buffer_bits()},
-      stencil_buffer_bits{ancillary_buffers_config.stencil_buffer_bits()},
+mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
+    : depth_buffer_bits{gl_config.depth_buffer_bits()},
+      stencil_buffer_bits{gl_config.stencil_buffer_bits()},
       egl_display{EGL_NO_DISPLAY}, egl_config{0},
       egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
       should_terminate_egl{false}

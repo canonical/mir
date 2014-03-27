@@ -23,7 +23,7 @@
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/stub_ancillary_buffers_config.h"
+#include "mir_test_doubles/stub_gl_config.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
@@ -87,7 +87,7 @@ public:
 #endif
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubAncillaryBuffersConfig>());
+            std::make_shared<mtd::StubGLConfig>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

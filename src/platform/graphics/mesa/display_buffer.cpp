@@ -101,7 +101,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     GBMSurfaceUPtr surface_gbm_param,
     geom::Rectangle const& area,
     MirOrientation rot,
-    AncillaryBuffersConfig const& ancillary_buffers_config,
+    GLConfig const& gl_config,
     EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       scheduled_bufobj{nullptr},
@@ -110,7 +110,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       drm(platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
-      egl{ancillary_buffers_config},
+      egl{gl_config},
       area(area),
       rotation(rot),
       needs_set_crtc{false},

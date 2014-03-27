@@ -26,7 +26,7 @@
 #include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir_test_doubles/stub_ancillary_buffers_config.h"
+#include "mir_test_doubles/stub_gl_config.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -147,7 +147,7 @@ public:
     {
         return platform->create_display(
             std::make_shared<ClonedDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubAncillaryBuffersConfig>());
+            std::make_shared<mtd::StubGLConfig>());
     }
 
     std::shared_ptr<mg::Display> create_display_side_by_side(
@@ -155,7 +155,7 @@ public:
     {
         return platform->create_display(
             std::make_shared<SideBySideDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubAncillaryBuffersConfig>());
+            std::make_shared<mtd::StubGLConfig>());
     }
 
     void setup_outputs(int connected, int disconnected)

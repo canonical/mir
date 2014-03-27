@@ -170,7 +170,7 @@ try
     auto platform = conf.the_graphics_platform();
     auto display = platform->create_display(
         conf.the_display_configuration_policy(),
-        conf.the_ancillary_buffers_config());
+        conf.the_gl_config());
     auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
 
      mg::BufferProperties buffer_properties{
