@@ -20,6 +20,7 @@
 #ifndef MIR_SCENE_SURFACE_COORDINATOR_H_
 #define MIR_SCENE_SURFACE_COORDINATOR_H_
 
+#include "mir/scene/surface_ranker.h"
 #include "mir/frontend/surface_id.h"
 
 #include <memory>
@@ -36,7 +37,7 @@ namespace scene
 {
 class Surface;
 
-class SurfaceCoordinator
+class SurfaceCoordinator : public SurfaceRanker
 {
 public:
     virtual std::shared_ptr<Surface> add_surface(

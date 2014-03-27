@@ -44,6 +44,7 @@ struct MockSurfaceCoordinator : public ms::SurfaceCoordinator
         std::shared_ptr<mf::EventSink> const&));
 
     void remove_surface(std::weak_ptr<ms::Surface> const& /*surface*/) override {}
+    void raise(std::weak_ptr<ms::Surface> const& /*surface*/)  override {}
 };
 
 struct MockPlacementStrategy : public msh::PlacementStrategy

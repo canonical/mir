@@ -21,7 +21,6 @@
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
 #include "mir/scene/surface_coordinator.h"
-#include "mir/scene/surface_ranker.h"
 
 namespace mir
 {
@@ -36,7 +35,7 @@ class SurfaceStackModel;
 class SurfaceFactory;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public SurfaceCoordinator, public SurfaceRanker
+class SurfaceController : public SurfaceCoordinator
 {
 public:
     SurfaceController(
