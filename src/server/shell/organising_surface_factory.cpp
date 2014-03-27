@@ -22,6 +22,8 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 
+#include <cstdlib>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -51,7 +53,15 @@ std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
 
 void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<Surface> const& surface)
 {
-    auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface);
-    assert(scene_surface);
-    surface_coordinator->remove_surface(scene_surface);
+    if (auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface))
+    {
+        surface_coordinator->remove_surface(scene_surface);
+    }
+    else
+    {
+        // We shouldn't be destroying surfaces we didn't create,
+        // so we ought to be able to restore the original type!
+        std::abort();
+    }
+
 }
