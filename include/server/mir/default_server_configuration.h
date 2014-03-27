@@ -69,6 +69,7 @@ class Clock;
 }
 namespace scene
 {
+class BasicSurfaceFactory;
 class BroadcastingSessionEventSink;
 class BufferStreamFactory;
 class MediatingDisplayChanger;
@@ -216,7 +217,8 @@ public:
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
-    virtual std::shared_ptr<scene::SurfaceRanker>   the_surface_ranker();
+    virtual std::shared_ptr<scene::SurfaceRanker>     the_surface_ranker();
+    virtual std::shared_ptr<scene::BasicSurfaceFactory> the_surface_factory();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -285,6 +287,7 @@ protected:
 
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SurfaceFactory> scene_surface_factory;
+    CachedPtr<scene::BasicSurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
