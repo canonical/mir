@@ -513,3 +513,42 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
         mr::null_compositor_report());
     compositor.composite();
 }
+
+//tests associated with for lp:1290306, 1293896, 1294048, 1294051, 1294053
+TEST_F(DefaultDisplayBufferCompositor, recomposite_tests)
+{
+    using namespace testing;
+    ON_CALL(display_buffer, view_area())
+        .WillByDefault(Return(screen));
+    ON_CALL(display_buffer, orientation())
+        .WillByDefault(Return(mir_orientation_normal));
+    ON_CALL(display_buffer, can_bypass())
+        .WillByDefault(Return(false));
+
+    auto mock_renderable = std::make_shared<mtd::MockRenderable>();
+
+    //check for how many buffers should come before accessing the buffers.
+    Sequence seq;
+    EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
+        .InSequence(seq)
+        .WillOnce(Return(2));
+    EXPECT_CALL(*mock_renderable, buffer(_))
+        .InSequence(seq); 
+    EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
+        .InSequence(seq)
+        .WillOnce(Return(1));
+    EXPECT_CALL(*mock_renderable, buffer(_))
+        .InSequence(seq); 
+
+    mg::RenderableList list({mock_renderable});
+    FakeScene scene(list);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
+    EXPECT_TRUE(compositor.composite());
+    EXPECT_FALSE(compositor.composite());
+}

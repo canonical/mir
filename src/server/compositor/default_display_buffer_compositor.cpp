@@ -131,6 +131,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         mc::filter_occlusions_from(renderable_list, view_area);
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
+
         mc::RenderingOperator applicator(*renderer);
         FilterForUndrawnSurfaces selector(renderable_list);
         scene->for_each_if(selector, applicator);
