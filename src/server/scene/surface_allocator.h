@@ -31,23 +31,25 @@ namespace scene
 {
 class BufferStreamFactory;
 class SceneReport;
+class SurfaceConfigurator;
 
 class SurfaceAllocator : public BasicSurfaceFactory
 {
 public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
+                     std::shared_ptr<SurfaceConfigurator> const& configurator,
                      std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
+        std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 };
 

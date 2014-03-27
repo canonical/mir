@@ -45,3 +45,7 @@ std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
     return underlying_factory->create_surface(session, placed_params, id, sender);
 }
 
+void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<Surface> const& surface)
+{
+    underlying_factory->destroy_surface(surface);
+}
