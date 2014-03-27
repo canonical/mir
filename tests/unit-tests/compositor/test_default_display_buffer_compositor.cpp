@@ -515,7 +515,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
 }
 
 //test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
-TEST_F(DefaultDisplayBufferCompositor, recomposite_tests)
+TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_rendering)
 {
     using namespace testing;
     ON_CALL(display_buffer, view_area())
