@@ -21,7 +21,6 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 
-#include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_input_targeter.h"
@@ -63,7 +62,6 @@ typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 struct Surface : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
-    mtd::StubSurfaceRanker surface_ranker;
 
     Surface() :
         buffer_stream(std::make_shared<StubBufferStream>()),
