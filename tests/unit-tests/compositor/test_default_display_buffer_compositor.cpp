@@ -136,9 +136,9 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
     mtd::NullDisplayBuffer display_buffer;
-    auto mock_renderable1 = std::make_shared<mtd::MockRenderable>();
-    auto mock_renderable2 = std::make_shared<mtd::MockRenderable>();
-    auto mock_renderable3 = std::make_shared<mtd::MockRenderable>();
+    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto mock_renderable3 = std::make_shared<NiceMock<mtd::MockRenderable>>();
 
     auto buf = std::make_shared<mtd::StubBuffer>();
     EXPECT_CALL(*mock_renderable1, buffer(_))
@@ -514,7 +514,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     compositor.composite();
 }
 
-//tests associated with for lp:1290306, 1293896, 1294048, 1294051, 1294053
+//test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
 TEST_F(DefaultDisplayBufferCompositor, recomposite_tests)
 {
     using namespace testing;
@@ -525,7 +525,9 @@ TEST_F(DefaultDisplayBufferCompositor, recomposite_tests)
     ON_CALL(display_buffer, can_bypass())
         .WillByDefault(Return(false));
 
-    auto mock_renderable = std::make_shared<mtd::MockRenderable>();
+    auto mock_renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    ON_CALL(*mock_renderable, screen_position())
+        .WillByDefault(Return(geom::Rectangle{{0,0},{200,200}})); 
 
     //check for how many buffers should come before accessing the buffers.
     Sequence seq;

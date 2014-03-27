@@ -129,18 +129,18 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         auto const& view_area = display_buffer.view_area();
         auto renderable_list = scene->generate_renderable_list();
         mc::filter_occlusions_from(renderable_list, view_area);
+
+        for(auto const& renderable : renderable_list)
+            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
+
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-
         mc::RenderingOperator applicator(*renderer);
         FilterForUndrawnSurfaces selector(renderable_list);
         scene->for_each_if(selector, applicator);
         renderer->end();
 
         display_buffer.post_update();
-
-        for(auto const& renderable : renderable_list)
-            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
         // This is a frig to avoid lp:1286190
         if (last_pass_rendered_anything && renderable_list.empty())

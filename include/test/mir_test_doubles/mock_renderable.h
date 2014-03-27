@@ -39,6 +39,12 @@ struct MockRenderable : public graphics::Renderable
             .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
         ON_CALL(*this, buffers_ready_for_compositor())
             .WillByDefault(testing::Return(1));
+        ON_CALL(*this, alpha())
+            .WillByDefault(testing::Return(1.0f));
+        ON_CALL(*this, transformation())
+            .WillByDefault(testing::Return(glm::mat4{}));
+        ON_CALL(*this, should_be_rendered_in(testing::_))
+            .WillByDefault(testing::Return(true));
     }
 
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<graphics::Buffer>(void const*));
