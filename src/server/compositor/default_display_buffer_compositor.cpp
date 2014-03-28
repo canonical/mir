@@ -34,13 +34,13 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-//TODO remove FilterForUndrawnSurfaces once we don't need filters/operators for rendering
+//TODO remove VisibilityFilter once we don't need filters/operators for rendering
 namespace
 {
-struct FilterForUndrawnSurfaces : public mc::FilterForScene
+struct VisibilityFilter : public mc::FilterForScene
 {
 public:
-    FilterForUndrawnSurfaces(
+    VisibilityFilter(
         mg::RenderableList const& renderable_list)
         : list(renderable_list)
     {
@@ -132,7 +132,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);
-        FilterForUndrawnSurfaces selector(renderable_list);
+        VisibilityFilter selector(renderable_list);
         scene->for_each_if(selector, applicator);
         renderer->end();
 

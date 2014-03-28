@@ -20,9 +20,9 @@
 #include "mir/graphics/renderable.h"
 #include "occlusion.h"
 
-namespace mc=mir::compositor;
-namespace geom=mir::geometry;
-namespace mg=mir::graphics;
+namespace mc = mir::compositor;
+namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 namespace
 {
