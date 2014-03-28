@@ -71,9 +71,36 @@ private:
     std::function<void()> notify_change;
 };
 
+// Initially just a class to pull notification implementation code out
+// of BasicSurface. This should end up in a proper Observer hierarchy.
+class FrontendObserver
+{
+public:
+    FrontendObserver(
+        frontend::SurfaceId id,
+        std::shared_ptr<frontend::EventSink> const& event_sink);
+
+    void attrib_change(MirSurfaceAttrib attrib, int value);
+    void resize(geometry::Size const& size);
+
+private:
+    frontend::SurfaceId const id;
+    std::shared_ptr<frontend::EventSink> const event_sink;
+};
+
 class BasicSurface : public Surface
 {
 public:
+    BasicSurface(
+        std::shared_ptr<FrontendObserver> const& observer,
+        std::string const& name,
+        geometry::Rectangle rect,
+        bool nonrectangular,
+        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
+        std::shared_ptr<SceneReport> const& report);
+
     BasicSurface(
         frontend::SurfaceId id,
         std::string const& name,
@@ -139,10 +166,9 @@ public:
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
-    void notify_attrib_change(MirSurfaceAttrib attrib, int value);
 
+    std::shared_ptr<FrontendObserver> const observer;
     std::mutex mutable guard;
-    frontend::SurfaceId const id;
     ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
@@ -154,7 +180,6 @@ private:
     std::vector<geometry::Rectangle> input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
-    std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 

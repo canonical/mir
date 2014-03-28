@@ -58,17 +58,53 @@ void ms::ThreadsafeCallback::operator()() const
     notifier();
 }
 
-ms::BasicSurface::BasicSurface(
+ms::FrontendObserver::FrontendObserver(
     frontend::SurfaceId id,
+    std::shared_ptr<frontend::EventSink> const& event_sink) :
+    id(id),
+    event_sink(event_sink)
+{
+}
+
+void ms::FrontendObserver::resize(geom::Size const& size)
+{
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_resize;
+    e.resize.surface_id = id.as_value();
+    e.resize.width = size.width.as_int();
+    e.resize.height = size.height.as_int();
+    event_sink->handle_event(e);
+}
+
+
+void ms::FrontendObserver::attrib_change(MirSurfaceAttrib attrib, int value)
+{
+    MirEvent e;
+
+    // This memset is not really required. However it does avoid some
+    // harmless uninitialized memory reads that valgrind will complain
+    // about, due to gaps in MirEvent.
+    memset(&e, 0, sizeof e);
+
+    e.type = mir_event_type_surface;
+    e.surface.id = id.as_value();
+    e.surface.attrib = attrib;
+    e.surface.value = value;
+
+    event_sink->handle_event(e);
+}
+
+ms::BasicSurface::BasicSurface(
+    std::shared_ptr<FrontendObserver> const& observer,
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
-    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<compositor::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
-    std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
-    id(id),
+    observer(observer),
     notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
@@ -79,13 +115,34 @@ ms::BasicSurface::BasicSurface(
     input_rectangles{surface_rect},
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
-    event_sink(event_sink),
     configurator(configurator),
     report(report),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
     report->surface_created(this, surface_name);
+}
+
+ms::BasicSurface::BasicSurface(
+    frontend::SurfaceId id,
+    std::string const& name,
+    geometry::Rectangle rect,
+    bool nonrectangular,
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<input::InputChannel> const& input_channel,
+    std::shared_ptr<frontend::EventSink> const& event_sink,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
+    std::shared_ptr<SceneReport> const& report) :
+    BasicSurface(
+        std::make_shared<FrontendObserver>(id, event_sink),
+        name,
+        rect,
+        nonrectangular,
+        buffer_stream,
+        input_channel,
+        configurator,
+        report)
+{
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -222,13 +279,7 @@ void ms::BasicSurface::resize(geom::Size const& size)
         surface_rect.size = size;
     }
     notify_change();
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = id.as_value();
-    e.resize.width = size.width.as_int();
-    e.resize.height = size.height.as_int();
-    event_sink->handle_event(e);
+    observer->resize(size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -363,27 +414,10 @@ bool ms::BasicSurface::set_state(MirSurfaceState s)
         state_value = s;
         valid = true;
 
-        notify_attrib_change(mir_surface_attrib_state, s);
+        observer->attrib_change(mir_surface_attrib_state, s);
     }
 
     return valid;
-}
-
-void ms::BasicSurface::notify_attrib_change(MirSurfaceAttrib attrib, int value)
-{
-    MirEvent e;
-
-    // This memset is not really required. However it does avoid some
-    // harmless uninitialized memory reads that valgrind will complain
-    // about, due to gaps in MirEvent.
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_surface;
-    e.surface.id = id.as_value();
-    e.surface.attrib = attrib;
-    e.surface.value = value;
-
-    event_sink->handle_event(e);
 }
 
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
@@ -415,7 +449,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = state();
         break;
     case mir_surface_attrib_focus:
-        notify_attrib_change(attrib, value);
+        observer->attrib_change(attrib, value);
         break;
     case mir_surface_attrib_swapinterval:
         allow_dropping = (value == 0);
