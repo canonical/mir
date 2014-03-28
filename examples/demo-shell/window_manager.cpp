@@ -201,7 +201,12 @@ bool me::WindowManager::handle(MirEvent const& event)
             action == mir_motion_action_scroll)
         {
             zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
-            compositor->zoom(powf(1.5f, zoom_exponent));
+            // Negative exponents do work too, but disable them until there's
+            // a clear edge to the desktop.
+            if (zoom_exponent < 0)
+                zoom_exponent = 0;
+
+            compositor->zoom(powf(1.2f, zoom_exponent));
             handled = true;
         }
 
