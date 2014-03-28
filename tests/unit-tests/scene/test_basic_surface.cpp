@@ -239,7 +239,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
     EXPECT_FALSE(surface.shaped());
 }
 
-TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
+TEST_F(BasicSurfaceTest, test_surface_contained_by)
 {
     ms::BasicSurface surface{
         mf::SurfaceId(),
@@ -253,25 +253,38 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
         report};
 
     geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
+    geom::Rectangle output_rect1{geom::Point{100,100}, geom::Size{100, 100}};
+    EXPECT_TRUE(surface.contained_by(output_rect));
+    EXPECT_FALSE(surface.contained_by(output_rect1));
+}
 
-    //not renderable by default
-    EXPECT_FALSE(surface.should_be_rendered_in(rect));
+TEST_F(BasicSurfaceTest, test_surface_visibility)
+{
+    ms::BasicSurface surface{
+        mf::SurfaceId(),
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_event_sink,
+        stub_configurator,
+        report};
+
+    //not visible by default
+    EXPECT_FALSE(surface.iSvisible(rect));
 
     surface.set_hidden(false);
     //not renderable if no first frame has been posted by client, regardless of hide state
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.visible());
     surface.set_hidden(true);
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.visible());
 
     surface.frame_posted();
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.visible());
 
     surface.set_hidden(false);
-    EXPECT_TRUE(surface.should_be_rendered_in(output_rect));
-
-    // Not renderable if not overlapping with supplied rect
-    geom::Rectangle output_rect1{geom::Point{100,100}, geom::Size{100, 100}};
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect1));
+    EXPECT_TRUE(surface.visible());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
