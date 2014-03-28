@@ -64,7 +64,9 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       renderer{renderer},
       report{report},
       last_pass_rendered_anything{false},
-      viewport(display_buffer.view_area())
+      viewport(display_buffer.view_area()),
+      cursor_x{0.0f}, cursor_y{0.0f},
+      zoom_mag{1.0f}
 {
 }
 
@@ -153,12 +155,25 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     return uncomposited_buffers;
 }
 
-void mc::DefaultDisplayBufferCompositor::zoom(float mag,
-                                              float cursor_x, float cursor_y)
+void mc::DefaultDisplayBufferCompositor::cursor_moved_to(float x, float y)
+{
+    cursor_x = x;
+    cursor_y = y;
+    if (zoom_mag != 1.0f)
+        update_viewport();
+}
+
+void mc::DefaultDisplayBufferCompositor::zoom(float mag)
+{
+    zoom_mag = mag;
+    update_viewport();
+}
+
+void mc::DefaultDisplayBufferCompositor::update_viewport()
 {
     auto const& view_area = display_buffer.view_area();
 
-    if (mag == 1.0f)
+    if (zoom_mag == 1.0f)
     {
         // The below calculations should yield the same result as this, but
         // just in case there are any floating point precision errors,
@@ -172,8 +187,8 @@ void mc::DefaultDisplayBufferCompositor::zoom(float mag,
         int db_x = view_area.top_left.x.as_int();
         int db_y = view_area.top_left.y.as_int();
     
-        float zoom_width = db_width / mag;
-        float zoom_height = db_height / mag;
+        float zoom_width = db_width / zoom_mag;
+        float zoom_height = db_height / zoom_mag;
     
         float screen_x = cursor_x - db_x;
         float screen_y = cursor_y - db_y;

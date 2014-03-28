@@ -137,7 +137,7 @@ public:
         cursor_x = x;
         cursor_y = y;
         if (display_buffer_compositor)
-            display_buffer_compositor->zoom(zoom_mag, cursor_x, cursor_y);
+            display_buffer_compositor->cursor_moved_to(cursor_x, cursor_y);
         if (zoom_mag != 1.0f)
             schedule_compositing_unlocked();
     }
@@ -146,11 +146,11 @@ public:
     {
         std::lock_guard<std::mutex> lock{run_mutex};
         if (display_buffer_compositor)
-            display_buffer_compositor->zoom(magnification, cursor_x, cursor_y);
+            display_buffer_compositor->zoom(magnification);
         if (magnification != zoom_mag)
         {
-            schedule_compositing_unlocked();
             zoom_mag = magnification;
+            schedule_compositing_unlocked();
         }
     }
 

@@ -46,9 +46,12 @@ public:
         std::shared_ptr<CompositorReport> const& report);
 
     bool composite() override;
-    void zoom(float mag, float cursor_x, float cursor_y) override;
+    void cursor_moved_to(float x, float y) override;
+    void zoom(float mag) override;
 
 private:
+    void update_viewport();
+
     graphics::DisplayBuffer& display_buffer;
 
     std::shared_ptr<Scene> const scene;
@@ -57,6 +60,8 @@ private:
 
     bool last_pass_rendered_anything;
     geometry::Rectangle viewport;
+    float cursor_x, cursor_y;
+    float zoom_mag;
 };
 
 }
