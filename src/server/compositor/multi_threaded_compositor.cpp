@@ -79,7 +79,7 @@ public:
          */
         CurrentRenderingTarget target{buffer};
 
-        auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
@@ -101,7 +101,6 @@ public:
             if (running)
             {
                 frames_scheduled = false;
-                display_buffer_compositor->zoom(zoom_mag, cursor_x, cursor_y);
                 lock.unlock();
                 auto more_frames_pending = display_buffer_compositor->composite();
 
@@ -116,14 +115,20 @@ public:
                 frames_scheduled |= more_frames_pending;
             }
         }
+
+        display_buffer_compositor.release();
+    }
+
+    void schedule_compositing_unlocked()
+    {
+        frames_scheduled = true;
+        run_cv.notify_one();
     }
 
     void schedule_compositing()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-
-        frames_scheduled = true;
-        run_cv.notify_one();
+        schedule_compositing_unlocked();
     }
 
     void on_cursor_movement(float x, float y)
@@ -131,17 +136,22 @@ public:
         std::lock_guard<std::mutex> lock{run_mutex};
         cursor_x = x;
         cursor_y = y;
+        if (display_buffer_compositor)
+            display_buffer_compositor->zoom(zoom_mag, cursor_x, cursor_y);
         if (zoom_mag != 1.0f)
-        {
-            frames_scheduled = true;
-            run_cv.notify_one();
-        }
+            schedule_compositing_unlocked();
     }
 
     void zoom(float magnification)
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-        zoom_mag = magnification;
+        if (display_buffer_compositor)
+            display_buffer_compositor->zoom(magnification, cursor_x, cursor_y);
+        if (magnification != zoom_mag)
+        {
+            schedule_compositing_unlocked();
+            zoom_mag = magnification;
+        }
     }
 
     void stop()
@@ -159,6 +169,7 @@ private:
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
+    std::unique_ptr<DisplayBufferCompositor> display_buffer_compositor;
     float cursor_x, cursor_y;
     float zoom_mag;
 };
@@ -272,8 +283,5 @@ void mc::MultiThreadedCompositor::zoom(float magnification)
 {
     std::unique_lock<std::mutex> lk(started_guard);
     for (auto& f : thread_functors)
-    {
         f->zoom(magnification);
-        f->schedule_compositing();
-    }
 }
