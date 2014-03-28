@@ -21,6 +21,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
+#include "mir/graphics/cursor.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"

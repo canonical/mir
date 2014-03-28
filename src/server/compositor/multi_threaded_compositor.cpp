@@ -19,6 +19,7 @@
 #include "multi_threaded_compositor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/cursor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
