@@ -239,25 +239,6 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
     EXPECT_FALSE(surface.shaped());
 }
 
-TEST_F(BasicSurfaceTest, test_surface_contained_by)
-{
-    ms::BasicSurface surface{
-        mf::SurfaceId(),
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
-        stub_configurator,
-        report};
-
-    geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
-    geom::Rectangle output_rect1{geom::Point{100,100}, geom::Size{100, 100}};
-    EXPECT_TRUE(surface.contained_by(output_rect));
-    EXPECT_FALSE(surface.contained_by(output_rect1));
-}
-
 TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     ms::BasicSurface surface{
@@ -272,7 +253,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         report};
 
     //not visible by default
-    EXPECT_FALSE(surface.iSvisible(rect));
+    EXPECT_FALSE(surface.visible());
 
     surface.set_hidden(false);
     //not renderable if no first frame has been posted by client, regardless of hide state
