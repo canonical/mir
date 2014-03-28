@@ -20,6 +20,9 @@
 #ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 #define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
+#include <mir/graphics/cursor.h>
+#include <memory>
+
 namespace mir
 {
 namespace compositor
@@ -34,8 +37,9 @@ public:
     /// has additional buffers ready to composite or during animation
     virtual bool composite() = 0;
 
-    virtual void on_cursor_movement(float, float) {}  // Optional
-    virtual void zoom(float) {}                       // Optional
+    virtual std::weak_ptr<graphics::Cursor> cursor() const   // Optional
+        { return std::weak_ptr<graphics::Cursor>(); }
+    virtual void zoom(float) {}                              // Optional
 
 protected:
     DisplayBufferCompositor() = default;

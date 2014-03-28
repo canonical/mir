@@ -33,6 +33,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+using namespace mir;
 
 namespace
 {
@@ -52,6 +53,28 @@ struct FilterForUndrawnSurfaces : public mc::FilterForScene
     mc::OcclusionMatch const& occlusions;
 };
 
+class SoftCursor : public mg::Cursor
+{
+public:
+    SoftCursor(mc::DefaultDisplayBufferCompositor& compositor)
+        : compositor(compositor)
+    {
+    }
+
+    void set_image(void const*, geometry::Size) override
+    {
+        // TODO: Implement software cursor image setting later
+    }
+
+    void move_to(geometry::Point position) override
+    {
+        compositor.on_cursor_movement(position);
+    }
+
+private:
+    mc::DefaultDisplayBufferCompositor& compositor;
+};
+
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -63,9 +86,9 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
+      soft_cursor{new SoftCursor(*this)},
       last_pass_rendered_anything{false},
       viewport(display_buffer.view_area()),
-      cursor_x{0.0f}, cursor_y{0.0f},
       zoom_mag{1.0f}
 {
 }
@@ -155,10 +178,16 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     return uncomposited_buffers;
 }
 
-void mc::DefaultDisplayBufferCompositor::on_cursor_movement(float x, float y)
+std::weak_ptr<graphics::Cursor>
+mc::DefaultDisplayBufferCompositor::cursor() const
 {
-    cursor_x = x;
-    cursor_y = y;
+    return soft_cursor;
+}
+
+void mc::DefaultDisplayBufferCompositor::on_cursor_movement(
+    geometry::Point const& p)
+{
+    cursor_pos = p;
     if (zoom_mag != 1.0f)
         update_viewport();
 }
@@ -190,8 +219,8 @@ void mc::DefaultDisplayBufferCompositor::update_viewport()
         float zoom_width = db_width / zoom_mag;
         float zoom_height = db_height / zoom_mag;
     
-        float screen_x = cursor_x - db_x;
-        float screen_y = cursor_y - db_y;
+        float screen_x = cursor_pos.x.as_int() - db_x;
+        float screen_y = cursor_pos.y.as_int() - db_y;
 
         float normal_x = screen_x / db_width;
         float normal_y = screen_y / db_height;

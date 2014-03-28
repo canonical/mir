@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 
 #include "mir/compositor/compositor.h"
+#include "mir/geometry/point.h"
 
 #include <mutex>
 #include <memory>
@@ -55,7 +56,7 @@ public:
 
     std::weak_ptr<graphics::Cursor> cursor() const override;
     void zoom(float mag) override;
-    void on_cursor_movement(float abs_x, float abs_y);
+    void on_cursor_movement(geometry::Point const& p);
 
 private:
     std::shared_ptr<graphics::Display> const display;

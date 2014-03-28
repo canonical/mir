@@ -50,7 +50,7 @@ public:
 
     void move_to(geometry::Point position) override
     {
-        compositor.on_cursor_movement(position.x.as_float(), position.y.as_float());
+        compositor.on_cursor_movement(position);
     }
 
 private:
@@ -86,7 +86,6 @@ public:
           running{true},
           frames_scheduled{0},
           report{report},
-          cursor_x{0.0f}, cursor_y{0.0f},
           zoom_mag{1.0f}
     {
     }
@@ -153,13 +152,14 @@ public:
         schedule_compositing_unlocked();
     }
 
-    void on_cursor_movement(float x, float y)
+    void on_cursor_movement(geometry::Point const& p)
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-        cursor_x = x;
-        cursor_y = y;
         if (display_buffer_compositor)
-            display_buffer_compositor->on_cursor_movement(cursor_x, cursor_y);
+        {
+            if (auto cursor = display_buffer_compositor->cursor().lock())
+                cursor->move_to(p);
+        }
         if (zoom_mag != 1.0f)
             schedule_compositing_unlocked();
     }
@@ -192,7 +192,6 @@ private:
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
     std::unique_ptr<DisplayBufferCompositor> display_buffer_compositor;
-    float cursor_x, cursor_y;
     float zoom_mag;
 };
 
@@ -300,11 +299,11 @@ std::weak_ptr<mir::graphics::Cursor> mc::MultiThreadedCompositor::cursor() const
     return vcursor;
 }
 
-void mc::MultiThreadedCompositor::on_cursor_movement(float abs_x, float abs_y)
+void mc::MultiThreadedCompositor::on_cursor_movement(geometry::Point const& p)
 {
     std::unique_lock<std::mutex> lk(started_guard);
     for (auto& f : thread_functors)
-        f->on_cursor_movement(abs_x, abs_y);
+        f->on_cursor_movement(p);
 }
 
 void mc::MultiThreadedCompositor::zoom(float magnification)

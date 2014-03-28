@@ -19,11 +19,11 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_H_
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
-#include <mir/graphics/cursor.h>
 #include <memory>
 
 namespace mir
 {
+namespace graphics { class Cursor; }
 namespace compositor
 {
 
