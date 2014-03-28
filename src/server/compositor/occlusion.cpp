@@ -60,15 +60,15 @@ void mc::filter_occlusions_from(
     mg::RenderableList& list,
     geom::Rectangle const& area)
 {
-    mg::RenderableList non_occluded_renderables;
+    mg::RenderableList visible_renderables;
     std::vector<geom::Rectangle> coverage;
     auto it = list.crbegin();
     while (it != list.crend())
     {
         if (!renderable_is_occluded(**it, area, coverage))
-            non_occluded_renderables.push_front(*it);
+            visible_renderables.push_front(*it);
 
         it++;
     }
-    std::swap(list, non_occluded_renderables);
+    std::swap(list, visible_renderables);
 }
