@@ -67,7 +67,7 @@ private:
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::thread> threads;
 
-    std::shared_ptr<graphics::Cursor> vcursor;
+    std::shared_ptr<graphics::Cursor> const vcursor;
 
     std::mutex started_guard;
     bool started;
