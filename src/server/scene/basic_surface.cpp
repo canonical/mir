@@ -32,6 +32,7 @@
 
 #include <stdexcept>
 #include <cstring>
+#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -56,6 +57,34 @@ void ms::ThreadsafeCallback::operator()() const
     auto const notifier = notify_change;
     lock.unlock();
     notifier();
+}
+
+void ms::SurfaceObservers::attrib_change(MirSurfaceAttrib attrib, int value)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->attrib_change(attrib, value);
+}
+
+void ms::SurfaceObservers::resize(geometry::Size const& size)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->resize(size);
+}
+
+void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    observers.push_back(observer);
+}
+
+void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    observers.erase(std::remove(observers.begin(),observers.end(), observer), observers.end());
 }
 
 ms::FrontendObserver::FrontendObserver(
@@ -104,7 +133,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
-    observer(observer),
     notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
@@ -121,6 +149,7 @@ ms::BasicSurface::BasicSurface(
     state_value(mir_surface_state_restored)
 {
     report->surface_created(this, surface_name);
+    observers.add(observer);
 }
 
 ms::BasicSurface::BasicSurface(
@@ -279,7 +308,7 @@ void ms::BasicSurface::resize(geom::Size const& size)
         surface_rect.size = size;
     }
     notify_change();
-    observer->resize(size);
+    observers.resize(size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -414,7 +443,7 @@ bool ms::BasicSurface::set_state(MirSurfaceState s)
         state_value = s;
         valid = true;
 
-        observer->attrib_change(mir_surface_attrib_state, s);
+        observers.attrib_change(mir_surface_attrib_state, s);
     }
 
     return valid;
@@ -449,7 +478,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = state();
         break;
     case mir_surface_attrib_focus:
-        observer->attrib_change(attrib, value);
+        observers.attrib_change(attrib, value);
         break;
     case mir_surface_attrib_swapinterval:
         allow_dropping = (value == 0);

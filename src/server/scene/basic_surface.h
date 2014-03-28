@@ -86,6 +86,21 @@ protected:
     SurfaceObserver& operator=(SurfaceObserver const&) = delete;
 };
 
+class SurfaceObservers : public SurfaceObserver
+{
+public:
+
+    void attrib_change(MirSurfaceAttrib attrib, int value) override;
+    void resize(geometry::Size const& size) override;
+
+    void add(std::shared_ptr<SurfaceObserver> const& observer);
+    void remove(std::shared_ptr<SurfaceObserver> const& observer);
+
+private:
+    std::mutex mutex;
+    std::vector<std::shared_ptr<SurfaceObserver>> observers;
+};
+
 class FrontendObserver : public SurfaceObserver
 {
 public:
@@ -180,7 +195,7 @@ private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
 
-    std::shared_ptr<SurfaceObserver> const observer;
+    SurfaceObservers observers;
     std::mutex mutable guard;
     ThreadsafeCallback notify_change;
     std::string const surface_name;
