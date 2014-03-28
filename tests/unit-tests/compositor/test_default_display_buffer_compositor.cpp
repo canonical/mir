@@ -498,3 +498,59 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surface_is_never_rendered)
         mr::null_compositor_report());
     compositor.composite();
 }
+
+TEST_F(DefaultDisplayBufferCompositor, zooms_to_correct_region)
+{
+    using namespace testing;
+
+    mtd::MockDisplayBuffer display_buffer;
+
+    EXPECT_CALL(display_buffer, view_area())
+        .WillRepeatedly(Return(screen));
+    EXPECT_CALL(display_buffer, make_current())
+        .Times(3);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillRepeatedly(Return(mir_orientation_normal));
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(3);
+    EXPECT_CALL(display_buffer, can_bypass())
+        .WillRepeatedly(Return(false));
+
+    int left = screen.top_left.x.as_int();
+    int top = screen.top_left.y.as_int();
+    int width = screen.size.width.as_int();
+    int height = screen.size.height.as_int();
+
+    geom::Point middle{left + width/2, top + height/2};
+
+    EXPECT_CALL(mock_renderer, set_viewport(screen))
+        .Times(1);
+    EXPECT_CALL(mock_renderer, set_viewport(
+                     geom::Rectangle{{left, top}, {width/2,height/2}}))
+        .Times(1);
+    EXPECT_CALL(mock_renderer, set_viewport(
+                     geom::Rectangle{{left+width/4, top+height/4},
+                                     {width/2, height/2}}))
+        .Times(1);
+
+    FakeScene scene({});
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
+    auto cursor = compositor.cursor().lock();
+    ASSERT_NE(nullptr, cursor.get());
+
+    compositor.zoom(1.0f);
+    compositor.composite();
+
+    cursor->move_to(screen.top_left);
+    compositor.zoom(2.0f);
+    compositor.composite();
+
+    cursor->move_to(middle);
+    compositor.composite();
+}
