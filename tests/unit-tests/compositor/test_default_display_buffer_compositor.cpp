@@ -554,3 +554,38 @@ TEST_F(DefaultDisplayBufferCompositor, zooms_to_correct_region)
     cursor->move_to(middle);
     compositor.composite();
 }
+
+TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
+{
+    using namespace testing;
+    ON_CALL(display_buffer, can_bypass())
+        .WillByDefault(Return(true));
+
+    FakeScene scene({&fullscreen});
+
+    EXPECT_CALL(mock_renderer, begin())
+        .Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+        .Times(1);
+    EXPECT_CALL(mock_renderer, end())
+        .Times(1);
+
+    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
+    fullscreen.set_buffer(compositor_buffer);
+    EXPECT_CALL(*compositor_buffer, can_bypass())
+        .Times(0);
+
+    auto report = std::make_shared<mtd::MockCompositorReport>();
+    EXPECT_CALL(*report, began_frame(_));
+    EXPECT_CALL(*report, finished_frame(false,_));
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        report);
+
+    compositor.zoom(5.0f);
+    compositor.composite();
+}
+
