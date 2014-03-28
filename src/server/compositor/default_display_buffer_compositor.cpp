@@ -25,7 +25,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/geometry/rectangle.h"
 #include "bypass.h"
 #include "occlusion.h"
 #include <mutex>
