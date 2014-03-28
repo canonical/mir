@@ -17,6 +17,7 @@
  */
 
 #include "src/server/scene/basic_surface.h"
+#include "mir/scene/surface_observer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -196,15 +197,15 @@ TEST_F(Surface, emits_resize_events)
 
     geom::Size const new_size{123, 456};
     auto sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::FrontendObserver>(stub_id, sink);
 
     ms::BasicSurface surf(
-        stub_id,
+        observer,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        sink,
         null_configurator,
         report);
 
@@ -228,15 +229,15 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     geom::Size const new_size{123, 456};
     geom::Size const new_size2{789, 1011};
     auto sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::FrontendObserver>(stub_id, sink);
 
     ms::BasicSurface surf(
-        stub_id,
+        observer,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        sink,
         null_configurator,
         report);
 
@@ -311,14 +312,15 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
             .Times(1);
     }
 
+    auto const observer = std::make_shared<ms::FrontendObserver>(stub_id, mt::fake_shared(sink));
+
     ms::BasicSurface surf(
-        stub_id,
+        observer,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        mt::fake_shared(sink),
         null_configurator,
         report);
 

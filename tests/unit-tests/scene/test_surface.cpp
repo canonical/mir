@@ -366,15 +366,15 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         .Times(1);
 
     auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::FrontendObserver>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
+        observer,
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        mock_event_sink,
         stub_configurator,
         report);
 
@@ -390,15 +390,15 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     using namespace testing;
     geom::Size const new_size{123, 456};
     auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::FrontendObserver>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
+        observer,
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        mock_event_sink,
         stub_configurator,
         report);
 

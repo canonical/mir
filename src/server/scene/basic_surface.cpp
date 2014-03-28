@@ -156,17 +156,17 @@ ms::BasicSurface::BasicSurface(
 }
 
 ms::BasicSurface::BasicSurface(
-    frontend::SurfaceId id,
+    frontend::SurfaceId /*id*/,
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
-    std::shared_ptr<frontend::EventSink> const& event_sink,
+    std::shared_ptr<frontend::EventSink> const& /*event_sink*/,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     BasicSurface(
-        std::make_shared<FrontendObserver>(id, event_sink),
+        std::shared_ptr<SurfaceObserver>(),
         name,
         rect,
         nonrectangular,
