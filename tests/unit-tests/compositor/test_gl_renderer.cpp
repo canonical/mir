@@ -465,6 +465,7 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->end();
 
     renderer->suspend();
+
     renderer->begin();
     renderer->render(renderable, mock_buffer);
     renderer->end();
