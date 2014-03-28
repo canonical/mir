@@ -155,7 +155,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     return uncomposited_buffers;
 }
 
-void mc::DefaultDisplayBufferCompositor::cursor_moved_to(float x, float y)
+void mc::DefaultDisplayBufferCompositor::on_cursor_movement(float x, float y)
 {
     cursor_x = x;
     cursor_y = y;

@@ -20,14 +20,12 @@
 #ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 #define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
-#include <mir/input/cursor_listener.h>
-
 namespace mir
 {
 namespace compositor
 {
 
-class DisplayBufferCompositor : public input::CursorListener
+class DisplayBufferCompositor
 {
 public:
     virtual ~DisplayBufferCompositor() = default;
@@ -36,8 +34,8 @@ public:
     /// has additional buffers ready to composite or during animation
     virtual bool composite() = 0;
 
-    virtual void cursor_moved_to(float, float) override {}  // Optional
-    virtual void zoom(float) {}                             // Optional
+    virtual void on_cursor_movement(float, float) {}  // Optional
+    virtual void zoom(float) {}                       // Optional
 
 protected:
     DisplayBufferCompositor() = default;

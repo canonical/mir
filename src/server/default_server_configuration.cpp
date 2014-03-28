@@ -106,7 +106,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
             }
             auto comp = *compositor;
             if (comp)
-                comp->cursor_moved_to(abs_x, abs_y);
+                comp->on_cursor_movement(abs_x, abs_y);
         }
 
         std::weak_ptr<mg::Cursor> const cursor;

@@ -46,7 +46,7 @@ public:
         std::shared_ptr<CompositorReport> const& report);
 
     bool composite() override;
-    void cursor_moved_to(float x, float y) override;
+    void on_cursor_movement(float x, float y) override;
     void zoom(float mag) override;
 
 private:

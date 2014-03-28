@@ -137,7 +137,7 @@ public:
         cursor_x = x;
         cursor_y = y;
         if (display_buffer_compositor)
-            display_buffer_compositor->cursor_moved_to(cursor_x, cursor_y);
+            display_buffer_compositor->on_cursor_movement(cursor_x, cursor_y);
         if (zoom_mag != 1.0f)
             schedule_compositing_unlocked();
     }
@@ -272,7 +272,7 @@ void mc::MultiThreadedCompositor::stop()
     compose_on_start = true;
 }
 
-void mc::MultiThreadedCompositor::cursor_moved_to(float abs_x, float abs_y)
+void mc::MultiThreadedCompositor::on_cursor_movement(float abs_x, float abs_y)
 {
     std::unique_lock<std::mutex> lk(started_guard);
     for (auto& f : thread_functors)

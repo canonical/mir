@@ -53,7 +53,7 @@ public:
     void start();
     void stop();
 
-    void cursor_moved_to(float abs_x, float abs_y) override;
+    void on_cursor_movement(float abs_x, float abs_y) override;
     void zoom(float mag) override;
 
 private:
