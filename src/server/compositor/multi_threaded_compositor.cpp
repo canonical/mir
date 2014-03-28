@@ -35,6 +35,28 @@ namespace mir
 namespace compositor
 {
 
+class VirtualCursor : public graphics::Cursor
+{
+public:
+    VirtualCursor(MultiThreadedCompositor& compositor)
+        : compositor(compositor)
+    {
+    }
+
+    void set_image(void const*, geometry::Size) override
+    {
+        // Maybe later if we want to implement software-rendered cursors
+    }
+
+    void move_to(geometry::Point position) override
+    {
+        compositor.on_cursor_movement(position.x.as_float(), position.y.as_float());
+    }
+
+private:
+    MultiThreadedCompositor& compositor;
+};
+
 class CurrentRenderingTarget
 {
 public:
@@ -187,6 +209,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
+      vcursor(new VirtualCursor(*this)),
       started{false},
       compose_on_start{compose_on_start}
 {
@@ -270,6 +293,11 @@ void mc::MultiThreadedCompositor::stop()
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
     compose_on_start = true;
+}
+
+std::weak_ptr<mir::graphics::Cursor> mc::MultiThreadedCompositor::cursor() const
+{
+    return vcursor;
 }
 
 void mc::MultiThreadedCompositor::on_cursor_movement(float abs_x, float abs_y)

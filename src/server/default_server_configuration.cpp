@@ -92,24 +92,29 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 {
     struct DefaultCursorListener : mi::CursorListener
     {
-        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor,
-                              CachedPtr<mc::Compositor> const& comp)
-            : cursor(cursor), compositor(comp)
+        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& hw_cursor,
+                              CachedPtr<mc::Compositor> const& compositor)
+            : hw_cursor(hw_cursor), compositor(compositor)
         {
         }
 
         void cursor_moved_to(float abs_x, float abs_y)
         {
-            if (auto c = cursor.lock())
-            {
-                c->move_to(geom::Point{abs_x, abs_y});
-            }
+            geom::Point p{abs_x, abs_y};
+
+            if (auto c = hw_cursor.lock())
+                c->move_to(p);
+
             auto comp = *compositor;
             if (comp)
-                comp->on_cursor_movement(abs_x, abs_y);
+            {
+                auto sw_cursor = comp->cursor();
+                if (auto c = sw_cursor.lock())
+                    c->move_to(p);
+            }
         }
 
-        std::weak_ptr<mg::Cursor> const cursor;
+        std::weak_ptr<mg::Cursor> const hw_cursor;
 
         // We use the cached ptr because a shared_ptr would force early
         // construction resulting in a constructor cycle, and crash.

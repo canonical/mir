@@ -19,6 +19,9 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_H_
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
+#include <mir/graphics/cursor.h>
+#include <memory>
+
 namespace mir
 {
 namespace compositor
@@ -32,8 +35,10 @@ public:
     virtual void start() = 0;
     virtual void stop() = 0;
 
-    virtual void on_cursor_movement(float, float) {}  // Optional
-    virtual void zoom(float) {}                       // Optional
+    // Optional functions you may choose to implement:
+    virtual std::weak_ptr<graphics::Cursor> cursor() const
+        { return std::weak_ptr<graphics::Cursor>(); }
+    virtual void zoom(float) {}
 
 protected:
     Compositor() = default;

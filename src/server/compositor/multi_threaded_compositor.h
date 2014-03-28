@@ -53,8 +53,9 @@ public:
     void start();
     void stop();
 
-    void on_cursor_movement(float abs_x, float abs_y) override;
+    std::weak_ptr<graphics::Cursor> cursor() const override;
     void zoom(float mag) override;
+    void on_cursor_movement(float abs_x, float abs_y);
 
 private:
     std::shared_ptr<graphics::Display> const display;
@@ -64,6 +65,8 @@ private:
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::thread> threads;
+
+    std::shared_ptr<graphics::Cursor> vcursor;
 
     std::mutex started_guard;
     bool started;
