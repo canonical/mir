@@ -73,7 +73,20 @@ private:
 
 // Initially just a class to pull notification implementation code out
 // of BasicSurface. This should end up in a proper Observer hierarchy.
-class FrontendObserver
+class SurfaceObserver
+{
+public:
+    virtual void attrib_change(MirSurfaceAttrib attrib, int value) = 0;
+    virtual void resize(geometry::Size const& size) = 0;
+
+protected:
+    SurfaceObserver() = default;
+    virtual ~SurfaceObserver() = default;
+    SurfaceObserver(SurfaceObserver const&) = delete;
+    SurfaceObserver& operator=(SurfaceObserver const&) = delete;
+};
+
+class FrontendObserver : public SurfaceObserver
 {
 public:
     FrontendObserver(
@@ -92,7 +105,7 @@ class BasicSurface : public Surface
 {
 public:
     BasicSurface(
-        std::shared_ptr<FrontendObserver> const& observer,
+        std::shared_ptr<SurfaceObserver> const& observer,
         std::string const& name,
         geometry::Rectangle rect,
         bool nonrectangular,
@@ -167,7 +180,7 @@ private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
 
-    std::shared_ptr<FrontendObserver> const observer;
+    std::shared_ptr<SurfaceObserver> const observer;
     std::mutex mutable guard;
     ThreadsafeCallback notify_change;
     std::string const surface_name;

@@ -96,7 +96,7 @@ void ms::FrontendObserver::attrib_change(MirSurfaceAttrib attrib, int value)
 }
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<FrontendObserver> const& observer,
+    std::shared_ptr<SurfaceObserver> const& observer,
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
