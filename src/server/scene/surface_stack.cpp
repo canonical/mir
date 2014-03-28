@@ -60,6 +60,51 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
+namespace
+{
+class RenderableCopy : public mg::Renderable
+{
+public:
+    RenderableCopy(mg::Renderable const&, std::shared_ptr<BufferStream> const& buffer_stream)
+    : buffer_stream(buffer_stream),
+      alpha_enabled_(
+       
+    //bstream
+    std::shared_ptr<Buffer> buffer(void const* user_id) const override
+    {
+    }
+
+    //bstream
+    int buffers_ready_for_compositor() const override
+    { return buffers_ready
+
+    //copy
+    bool should_be_rendered_in(geometry::Rectangle const& rect) const override
+    { return
+
+    //copy
+    bool alpha_enabled() const override
+    { return alpha_enabled; }
+
+    //copy
+    geom::Rectangle screen_position() const override
+    { return position; }
+
+    //copy
+    float alpha() const override
+    { return alpha; }
+
+    //copy
+    glm::mat4 transformation() const override
+    { return transformation; }
+
+    //copy
+    bool shaped() const override
+    { return shaped; }
+private:
+};
+}
+
 mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 {
     std::unique_lock<decltype(list_mutex)> lk(list_mutex);

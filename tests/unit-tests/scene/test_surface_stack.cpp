@@ -580,7 +580,7 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
     for(auto& renderable : list)
     {
         auto point = geom::Rectangle{geom::Point{3*i,4*i}, geom::Size{1*i, 2*i}};
-        EXPECT_EQ(renderable->screen_position(), point);
+        EXPECT_EQ(point, renderable->screen_position());
         i++;
     }
 }
