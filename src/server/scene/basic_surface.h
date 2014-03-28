@@ -20,8 +20,8 @@
 #define MIR_SCENE_BASIC_SURFACE_H_
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_observer.h"
 
-#include "mir/frontend/surface_id.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_toolkit/common.h"
@@ -71,21 +71,6 @@ private:
     std::function<void()> notify_change;
 };
 
-// Initially just a class to pull notification implementation code out
-// of BasicSurface. This should end up in a proper Observer hierarchy.
-class SurfaceObserver
-{
-public:
-    virtual void attrib_change(MirSurfaceAttrib attrib, int value) = 0;
-    virtual void resize(geometry::Size const& size) = 0;
-
-protected:
-    SurfaceObserver() = default;
-    virtual ~SurfaceObserver() = default;
-    SurfaceObserver(SurfaceObserver const&) = delete;
-    SurfaceObserver& operator=(SurfaceObserver const&) = delete;
-};
-
 class SurfaceObservers : public SurfaceObserver
 {
 public:
@@ -99,21 +84,6 @@ public:
 private:
     std::mutex mutex;
     std::vector<std::shared_ptr<SurfaceObserver>> observers;
-};
-
-class FrontendObserver : public SurfaceObserver
-{
-public:
-    FrontendObserver(
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& event_sink);
-
-    void attrib_change(MirSurfaceAttrib attrib, int value);
-    void resize(geometry::Size const& size);
-
-private:
-    frontend::SurfaceId const id;
-    std::shared_ptr<frontend::EventSink> const event_sink;
 };
 
 class BasicSurface : public Surface

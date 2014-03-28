@@ -35,10 +35,9 @@ namespace
 {
 struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
-    MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
-        mf::SurfaceId id,
+    MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
         msh::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const&));
+        std::shared_ptr<ms::SurfaceObserver> const&));
 };
 
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
@@ -63,11 +62,11 @@ TEST(SurfaceController, add_and_remove_surface)
     ms::SurfaceController controller(mt::fake_shared(mock_surface_allocator), mt::fake_shared(model));
 
     InSequence seq;
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_)).Times(1).WillOnce(Return(null_surface));
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_)).Times(1).WillOnce(Return(null_surface));
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto surface = controller.add_surface(mf::SurfaceId(), msh::a_surface(), {});
+    auto surface = controller.add_surface(msh::a_surface(), std::shared_ptr<ms::SurfaceObserver>());
     controller.remove_surface(surface);
 }
 

@@ -42,13 +42,12 @@ msh::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 
 std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
     Session* session,
-    shell::SurfaceCreationParameters const& params,
-    frontend::SurfaceId id,
-    std::shared_ptr<mf::EventSink> const& sender)
+    SurfaceCreationParameters const& params,
+    std::shared_ptr<scene::SurfaceObserver> const& observer)
 {
     auto placed_params = placement_strategy->place(*session, params);
 
-    return surface_coordinator->add_surface(id, placed_params, sender);
+    return surface_coordinator->add_surface(placed_params, observer);
 }
 
 void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<Surface> const& surface)

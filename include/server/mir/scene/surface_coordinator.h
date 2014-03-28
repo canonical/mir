@@ -21,13 +21,11 @@
 #define MIR_SCENE_SURFACE_COORDINATOR_H_
 
 #include "mir/scene/surface_ranker.h"
-#include "mir/frontend/surface_id.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace frontend { class EventSink; }
 namespace shell
 {
 struct SurfaceCreationParameters;
@@ -36,14 +34,14 @@ struct SurfaceCreationParameters;
 namespace scene
 {
 class Surface;
+class SurfaceObserver;
 
 class SurfaceCoordinator : public SurfaceRanker
 {
 public:
     virtual std::shared_ptr<Surface> add_surface(
-        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
+        std::shared_ptr<SurfaceObserver> const& observer) = 0;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:

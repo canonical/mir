@@ -77,8 +77,11 @@ void ms::SurfaceObservers::resize(geometry::Size const& size)
 
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    observers.push_back(observer);
+    if (observer)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        observers.push_back(observer);
+    }
 }
 
 void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observer)

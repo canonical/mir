@@ -19,17 +19,15 @@
 #ifndef MIR_SCENE_SURFACE_FACTORY_H_
 #define MIR_SCENE_SURFACE_FACTORY_H_
 
-#include "mir/frontend/surface_id.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include <memory>
-#include <functional>
 
 namespace mir
 {
-namespace frontend { class EventSink; }
 namespace scene
 {
 class Surface;
+class SurfaceObserver;
 
 class SurfaceFactory
 {
@@ -38,9 +36,9 @@ public:
     virtual ~SurfaceFactory() = default;
 
     virtual std::shared_ptr<Surface> create_surface(
-        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
+        std::shared_ptr<SurfaceObserver> const& observer) = 0;
+
 private:
     SurfaceFactory(const SurfaceFactory&) = delete;
     SurfaceFactory& operator=(const SurfaceFactory&) = delete;
