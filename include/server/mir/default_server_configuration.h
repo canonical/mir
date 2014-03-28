@@ -61,7 +61,6 @@ class PlacementStrategy;
 class SessionListener;
 class FocusController;
 class DisplayLayout;
-class SurfaceConfigurator;
 }
 namespace time
 {
@@ -80,6 +79,7 @@ class SessionEventHandlerRegister;
 class SessionManager;
 class SnapshotStrategy;
 class SurfaceBuilder;
+class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceRanker;
@@ -94,6 +94,7 @@ class Display;
 class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
+class GLConfig;
 namespace nested { class HostConnection; }
 }
 namespace input
@@ -153,6 +154,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<input::EventFilter> the_nested_event_filter();
+    virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -204,7 +206,6 @@ public:
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
     /** @} */
 
     /** @name internal scene configuration
@@ -219,6 +220,7 @@ public:
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<scene::SurfaceRanker>     the_surface_ranker();
     virtual std::shared_ptr<scene::BasicSurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -295,7 +297,7 @@ protected:
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
+    CachedPtr<scene::SurfaceConfigurator> surface_configurator;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
@@ -307,6 +309,7 @@ protected:
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
+    CachedPtr<graphics::GLConfig> gl_config;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -324,7 +327,6 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
     std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
     std::shared_ptr<scene::SessionManager>       the_session_manager();
-    std::shared_ptr<scene::SurfaceBuilder>       the_surface_builder();
     std::shared_ptr<scene::SurfaceController>    the_surface_controller();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;

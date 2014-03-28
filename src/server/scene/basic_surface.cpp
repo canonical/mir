@@ -26,7 +26,7 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -66,7 +66,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     id(id),
     notify_change([](){}),
@@ -389,11 +389,6 @@ void ms::BasicSurface::notify_attrib_change(MirSurfaceAttrib attrib, int value)
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
     targeter->focus_changed(input_channel());
-}
-
-void ms::BasicSurface::raise(std::shared_ptr<ms::SurfaceRanker> const& /*controller*/)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("Need refactoring to implement here"));
 }
 
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)

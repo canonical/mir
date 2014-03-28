@@ -19,20 +19,21 @@
 #include "src/server/scene/session_manager.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/scene/default_session_container.h"
+#include "mir/scene/surface.h"
 #include "mir/shell/session.h"
-#include "src/server/scene/surface_impl.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/basic_surface.h"
+#include "src/server/report/null_report_factory.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
-#include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
@@ -43,6 +44,7 @@
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
+namespace mi = mir::input;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
@@ -83,7 +85,16 @@ struct SessionManagerSetup : public testing::Test
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
     }
 
-    mtd::StubSurfaceBuilder surface_builder;
+    std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
+        mf::SurfaceId(),
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mi::InputChannel>(),
+        std::shared_ptr<mf::EventSink>(),
+        std::shared_ptr<ms::SurfaceConfigurator>(),
+        mir::report::null_scene_report());
     mtd::StubSurfaceRanker surface_ranker;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
@@ -115,9 +126,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
 
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
-       Return(std::make_shared<ms::SurfaceImpl>(
-           surface_builder.create_surface(mf::SurfaceId{}, msh::a_surface(), std::shared_ptr<mf::EventSink>(), std::make_shared<mtd::NullSurfaceConfigurator>()),
-           mt::fake_shared(surface_builder))));
+       Return(dummy_surface));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -147,9 +156,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
 {
     using namespace ::testing;
     ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
-       Return(std::make_shared<ms::SurfaceImpl>(
-           surface_builder.create_surface(mf::SurfaceId{}, msh::a_surface(), std::shared_ptr<mf::EventSink>(), std::make_shared<mtd::NullSurfaceConfigurator>()),
-           mt::fake_shared(surface_builder))));
+       Return(dummy_surface));
 
     // Once for session creation and once for surface creation
     {

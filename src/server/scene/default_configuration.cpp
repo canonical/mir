@@ -87,14 +87,9 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
             return std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(),
                 the_input_channel_factory(),
+                the_surface_configurator(),
                 the_scene_report());
         });
-}
-
-std::shared_ptr<ms::SurfaceBuilder>
-mir::DefaultServerConfiguration::the_surface_builder()
-{
-    return the_surface_controller();
 }
 
 std::shared_ptr<ms::SurfaceController>
@@ -121,8 +116,7 @@ mir::DefaultServerConfiguration::the_scene_surface_factory()
     return scene_surface_factory(
         [this]()
         {
-            return std::make_shared<ms::SurfaceSource>(
-                the_surface_builder(), the_shell_surface_configurator());
+            return std::make_shared<ms::SurfaceSource>(the_surface_controller());
         });
 }
 
