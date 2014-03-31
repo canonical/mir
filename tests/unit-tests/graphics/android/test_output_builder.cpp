@@ -29,6 +29,7 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_gl_config.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -101,7 +102,9 @@ public:
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     testing::NiceMock<mtd::MockDisplayReport> mock_display_report;
     testing::NiceMock<MockGraphicBufferAllocator> mock_buffer_allocator;
-    mga::GLContext gl_context{mga::to_mir_format(mock_egl.fake_visual_id), mock_display_report};
+    mtd::StubGLConfig stub_gl_config;
+    mga::GLContext gl_context{
+        mga::to_mir_format(mock_egl.fake_visual_id), stub_gl_config, mock_display_report};
 };
 }
 TEST_F(OutputBuilder, hwc_version_10_success)
