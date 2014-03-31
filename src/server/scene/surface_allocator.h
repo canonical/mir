@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
 #define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
-#include "basic_surface_factory.h"
+#include "mir/scene/surface_factory.h"
 
 namespace mir
 {
@@ -33,7 +33,7 @@ class BufferStreamFactory;
 class SceneReport;
 class SurfaceConfigurator;
 
-class SurfaceAllocator : public BasicSurfaceFactory
+class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,

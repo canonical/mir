@@ -19,14 +19,20 @@
 #include "organising_surface_factory.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_coordinator.h"
+#include "mir/scene/surface.h"
+
+#include <cstdlib>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-msh::OrganisingSurfaceFactory::OrganisingSurfaceFactory(std::shared_ptr<msh::SurfaceFactory> const& underlying_factory,
-                                                          std::shared_ptr<msh::PlacementStrategy> const& placement_strategy)
- : underlying_factory(underlying_factory),
-   placement_strategy(placement_strategy)
+msh::OrganisingSurfaceFactory::OrganisingSurfaceFactory(
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<msh::PlacementStrategy> const& placement_strategy) :
+    surface_coordinator(surface_coordinator),
+    placement_strategy(placement_strategy)
 {
 }
 
@@ -42,10 +48,20 @@ std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
 {
     auto placed_params = placement_strategy->place(*session, params);
 
-    return underlying_factory->create_surface(session, placed_params, id, sender);
+    return surface_coordinator->add_surface(id, placed_params, sender);
 }
 
 void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<Surface> const& surface)
 {
-    underlying_factory->destroy_surface(surface);
+    if (auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface))
+    {
+        surface_coordinator->remove_surface(scene_surface);
+    }
+    else
+    {
+        // We shouldn't be destroying surfaces we didn't create,
+        // so we ought to be able to restore the original type!
+        std::abort();
+    }
+
 }

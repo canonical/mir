@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SCENE_BASIC_SURFACE_FACTORY_H_
-#define MIR_SCENE_BASIC_SURFACE_FACTORY_H_
+#ifndef MIR_SCENE_SURFACE_FACTORY_H_
+#define MIR_SCENE_SURFACE_FACTORY_H_
 
 #include "mir/frontend/surface_id.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -31,22 +31,22 @@ namespace scene
 {
 class Surface;
 
-class BasicSurfaceFactory
+class SurfaceFactory
 {
 public:
-    BasicSurfaceFactory() = default;
-    virtual ~BasicSurfaceFactory() = default;
+    SurfaceFactory() = default;
+    virtual ~SurfaceFactory() = default;
 
     virtual std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
 private:
-    BasicSurfaceFactory(const BasicSurfaceFactory&) = delete;
-    BasicSurfaceFactory& operator=(const BasicSurfaceFactory&) = delete;
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_SCENE_BASIC_SURFACE_FACTORY_H_ */
+#endif /* MIR_SCENE_SURFACE_FACTORY_H_ */
