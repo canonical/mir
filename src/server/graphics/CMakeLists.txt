@@ -7,7 +7,7 @@ add_library(
   default_display_configuration_policy.cpp
   gl_extensions_base.cpp
   surfaceless_egl_context.cpp
-  builtin_cursor_repository.cpp
+  builtin_cursor_loader.cpp
 )
 
 add_subdirectory(nested/)

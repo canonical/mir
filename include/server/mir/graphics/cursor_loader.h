@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_GRAPHICS_CURSOR_REPOSITORY_H_
-#define MIR_GRAPHICS_CURSOR_REPOSITORY_H_
+#ifndef MIR_GRAPHICS_CURSOR_LOADER_H_
+#define MIR_GRAPHICS_CURSOR_LOADER_H_
 
 #include "mir/geometry/size.h"
 
@@ -31,8 +31,8 @@ namespace graphics
 {
 class CursorImage;
 
-/// CursorRepository is used to lookup cursor images within cursor themes.
-class CursorRepository
+/// CursorLoader is used to lookup cursor images within cursor themes.
+class CursorLoader
 {
 public:
     /// Looks up the image for a named cursor in a given cursor theme. Cursor names
@@ -42,13 +42,13 @@ public:
                                                        geometry::Size const& size) = 0;
 
 protected:
-    CursorRepository() = default;
-    virtual ~CursorRepository() = default;
-    CursorRepository(CursorRepository const&) = delete;
-    CursorRepository& operator=(CursorRepository const&) = delete;
+    CursorLoader() = default;
+    virtual ~CursorLoader() = default;
+    CursorLoader(CursorLoader const&) = delete;
+    CursorLoader& operator=(CursorLoader const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_GRAPHICS_CURSOR_REPOSITORY_H_ */
+#endif /* MIR_GRAPHICS_CURSOR_LOADER_H_ */

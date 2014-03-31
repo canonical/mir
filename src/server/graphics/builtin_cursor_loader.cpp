@@ -17,7 +17,7 @@
  */
 
 #include "black_arrow.c"
-#include "builtin_cursor_repository.h"
+#include "builtin_cursor_loader.h"
 
 #include "mir/graphics/cursor_image.h"
 
@@ -39,12 +39,12 @@ struct BlackArrowCursorImage : public mg::CursorImage
 };
 }
 
-mg::BuiltinCursorRepository::BuiltinCursorRepository()
+mg::BuiltinCursorLoader::BuiltinCursorLoader()
     : builtin_image(std::make_shared<BlackArrowCursorImage>())
 {
 }
 
-std::shared_ptr<mg::CursorImage> mg::BuiltinCursorRepository::lookup_cursor(std::string const& /* theme_name */,
+std::shared_ptr<mg::CursorImage> mg::BuiltinCursorLoader::lookup_cursor(std::string const& /* theme_name */,
                                                                             std::string const& /* cursor_name */,
                                                                             geom::Size const& /* size */)
 {

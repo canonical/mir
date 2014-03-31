@@ -32,7 +32,7 @@
 
 #include <boost/throw_exception.hpp>
 
-#include "builtin_cursor_repository.h"
+#include "builtin_cursor_loader.h"
 
 #include <map>
 
@@ -151,17 +151,17 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
     return default_cursor_image(
         [this]()
         {
-            return the_cursor_repository()->lookup_cursor("default", "arrow", default_cursor_size);
+            return the_cursor_loader()->lookup_cursor("default", "arrow", default_cursor_size);
         });
 }
 
-std::shared_ptr<mg::CursorRepository>
-mir::DefaultServerConfiguration::the_cursor_repository()
+std::shared_ptr<mg::CursorLoader>
+mir::DefaultServerConfiguration::the_cursor_loader()
 {
-    return cursor_repository(
+    return cursor_loader(
         [this]()
         {
-            return std::make_shared<mg::BuiltinCursorRepository>();
+            return std::make_shared<mg::BuiltinCursorLoader>();
         });
 }
 

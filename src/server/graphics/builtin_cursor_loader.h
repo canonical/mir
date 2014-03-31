@@ -17,10 +17,10 @@
  */
 
 
-#ifndef MIR_GRAPHICS_BUILTIN_CURSOR_REPOSITORY_H_
-#define MIR_GRAPHICS_BUILTIN_CURSOR_REPOSITORY_H_
+#ifndef MIR_GRAPHICS_BUILTIN_CURSOR_LOADER_H_
+#define MIR_GRAPHICS_BUILTIN_CURSOR_LOADER_H_
 
-#include "mir/graphics/cursor_repository.h"
+#include "mir/graphics/cursor_loader.h"
 
 namespace mir
 {
@@ -28,19 +28,19 @@ namespace graphics
 {
 class CursorImage;
 
-class BuiltinCursorRepository : public CursorRepository
+class BuiltinCursorLoader : public CursorLoader
 {
 public:
-    BuiltinCursorRepository();
-    virtual ~BuiltinCursorRepository() = default;
+    BuiltinCursorLoader();
+    virtual ~BuiltinCursorLoader() = default;
 
     std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
                                                std::string const& cursor_name,
                                                geometry::Size const& size);
 
 protected:
-    BuiltinCursorRepository(BuiltinCursorRepository const&) = delete;
-    BuiltinCursorRepository& operator=(BuiltinCursorRepository const&) = delete;
+    BuiltinCursorLoader(BuiltinCursorLoader const&) = delete;
+    BuiltinCursorLoader& operator=(BuiltinCursorLoader const&) = delete;
 
 private:
     std::shared_ptr<CursorImage> const builtin_image;
@@ -49,4 +49,4 @@ private:
 }
 
 
-#endif /* MIR_GRAPHICS_BUILTIN_CURSOR_REPOSITORY_H_ */
+#endif /* MIR_GRAPHICS_BUILTIN_CURSOR_LOADER_H_ */
