@@ -18,6 +18,8 @@
 
 #include "mir/scene/surface_event_source.h"
 
+#include "mir/geometry/size.h"
+
 #include <cstring>
 #include <algorithm>
 
