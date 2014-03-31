@@ -20,18 +20,22 @@
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
 #include <mir/compositor/renderer.h>
+#include <mir/compositor/zoomable.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
+#include <mir/graphics/cursor.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 namespace mir
 {
 namespace compositor
 {
+class SoftCursor;
 
-class GLRenderer : public Renderer
+class GLRenderer : public Renderer, public Zoomable
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
@@ -47,6 +51,10 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
+
+    void zoom(float) override;
+    bool screen_transformed() const override;
+    std::weak_ptr<graphics::Cursor> cursor() const override;
 
     struct Vertex
     {
@@ -107,7 +115,11 @@ private:
     GLuint alpha_uniform_loc;
     float rotation;
 
+    geometry::Rectangle const screen;
     geometry::Rectangle viewport;
+    bool viewport_changed;
+    float zoom_mag;
+    std::shared_ptr<SoftCursor> soft_cursor;
 
     typedef graphics::Renderable const* SurfaceID;
     struct Texture

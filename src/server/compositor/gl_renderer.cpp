@@ -33,6 +33,34 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+using namespace mir;
+
+namespace mir { namespace compositor {
+
+class SoftCursor : public mg::Cursor
+{
+public:
+    void set_image(void const*, geometry::Size) override
+    {
+        // TODO: Implement software cursor image setting later
+    }
+
+    void move_to(geometry::Point p) override
+    {
+        pos = p;
+    }
+
+    geometry::Point const& position() const
+    {
+        return pos;
+    }
+
+private:
+    geometry::Point pos;
+};
+
+} }
+
 namespace
 {
 
@@ -100,7 +128,11 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     centre_uniform_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    rotation(NAN) // ensure the first set_rotation succeeds
+    rotation(NAN), // ensure the first set_rotation succeeds
+    screen(display_area),
+    viewport_changed(false),
+    zoom_mag(1.0f),
+    soft_cursor{std::make_shared<SoftCursor>()}
 {
     /*
      * We need to serialize renderer creation because some GL calls used
@@ -297,10 +329,42 @@ GLuint mc::GLRenderer::load_texture(mg::Renderable const& renderable,
     return tex.id;
 }
 
-void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
+void mc::GLRenderer::set_viewport(geometry::Rectangle const& vp)
 {
-    if (rect == viewport)
+    if (vp == viewport && !viewport_changed)
         return;
+
+    geometry::Rectangle rect;
+
+    if (zoom_mag == 1.0f)
+    {
+        rect = vp;
+    }
+    else
+    {
+        int db_width = vp.size.width.as_int();
+        int db_height = vp.size.height.as_int();
+        int db_x = vp.top_left.x.as_int();
+        int db_y = vp.top_left.y.as_int();
+    
+        float zoom_width = db_width / zoom_mag;
+        float zoom_height = db_height / zoom_mag;
+    
+        auto const& cursor_pos = soft_cursor->position();
+        float screen_x = cursor_pos.x.as_int() - db_x;
+        float screen_y = cursor_pos.y.as_int() - db_y;
+
+        float normal_x = screen_x / db_width;
+        float normal_y = screen_y / db_height;
+    
+        // Position the viewport so the cursor location matches up.
+        // This assumes the hardware cursor still traverses the physical
+        // screen and isn't being warped.
+        int zoom_x = db_x + (db_width - zoom_width) * normal_x;
+        int zoom_y = db_y + (db_height - zoom_height) * normal_y;
+
+        rect = {{zoom_x, zoom_y}, {zoom_width, zoom_height}};
+    }
 
     /*
      * Create and set screen_to_gl_coords transformation matrix.
@@ -339,6 +403,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
     glUseProgram(0);
 
     viewport = rect;
+    viewport_changed = false;
 }
 
 void mc::GLRenderer::set_rotation(float degrees)
@@ -388,4 +453,23 @@ void mc::GLRenderer::end() const
 void mc::GLRenderer::suspend()
 {
     skipped = true;
+}
+
+std::weak_ptr<graphics::Cursor> mc::GLRenderer::cursor() const
+{
+    return soft_cursor;
+}
+
+void mc::GLRenderer::zoom(float mag)
+{
+    if (mag != zoom_mag)
+    {
+        zoom_mag = mag;
+        viewport_changed = true;;
+    }
+}
+
+bool mc::GLRenderer::screen_transformed() const
+{
+    return viewport != screen || zoom_mag != 1.0f;
 }

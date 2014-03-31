@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_RENDERER_H_
 
 #include "mir/geometry/rectangle.h"
+#include <memory>
 
 namespace mir
 {
@@ -27,6 +28,7 @@ namespace graphics
 {
 class Buffer;
 class Renderable;
+class Cursor;
 }
 namespace compositor
 {
@@ -47,6 +49,10 @@ public:
     virtual void end() const = 0;
 
     virtual void suspend() = 0; // called when begin/render/end skipped
+
+    virtual bool screen_transformed() const { return false; }
+
+    virtual std::weak_ptr<graphics::Cursor> cursor() const { return {}; }
 
 protected:
     Renderer() = default;
