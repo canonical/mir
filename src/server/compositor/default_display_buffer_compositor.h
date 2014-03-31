@@ -59,7 +59,6 @@ private:
     std::shared_ptr<CompositorReport> const report;
 
     bool last_pass_rendered_anything;
-    float zoom_mag;
 };
 
 }

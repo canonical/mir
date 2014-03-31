@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
 #include <mir/compositor/renderer.h>
-#include <mir/compositor/zoomable.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/cursor.h>
@@ -33,9 +32,8 @@ namespace mir
 {
 namespace compositor
 {
-class SoftCursor;
 
-class GLRenderer : public Renderer, public Zoomable
+class GLRenderer : public Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
@@ -52,8 +50,6 @@ public:
     // This is called _without_ a GL context:
     void suspend() override;
 
-    void zoom(float) override;
-    bool screen_transformed() const override;
     std::weak_ptr<graphics::Cursor> cursor() const override;
 
     struct Vertex
@@ -103,6 +99,19 @@ public:
     virtual GLuint load_texture(graphics::Renderable const& renderable,
                                 graphics::Buffer& buffer) const;
 
+protected:
+    class SoftCursor : public graphics::Cursor
+    {
+    public:
+        void set_image(void const*, geometry::Size) override;
+        void move_to(geometry::Point p) override;
+        geometry::Point const& position() const;
+    private:
+        geometry::Point pos;
+    };
+
+    std::shared_ptr<SoftCursor> soft_cursor;
+
 private:
     GLuint vertex_shader;
     GLuint fragment_shader;
@@ -117,9 +126,6 @@ private:
 
     geometry::Rectangle const screen;
     geometry::Rectangle viewport;
-    bool viewport_changed;
-    float zoom_mag;
-    std::shared_ptr<SoftCursor> soft_cursor;
 
     typedef graphics::Renderable const* SurfaceID;
     struct Texture

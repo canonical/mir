@@ -20,19 +20,23 @@
 #define MIR_EXAMPLES_DEMO_RENDERER_H_
 
 #include "mir/compositor/gl_renderer.h"
+#include "mir/compositor/zoomable.h"
 
 namespace mir
 {
 namespace examples
 {
 
-class DemoRenderer : public compositor::GLRenderer
+class DemoRenderer : public compositor::GLRenderer, public compositor::Zoomable
 {
 public:
     DemoRenderer(geometry::Rectangle const& display_area);
     ~DemoRenderer();
 
     void begin() const override;
+    void zoom(float) override;
+    bool screen_transformed() const override;
+    void set_viewport(geometry::Rectangle const&) override;
     void tessellate(std::vector<Primitive>& primitives,
                     graphics::Renderable const& renderable,
                     geometry::Size const& buf_size) const override;
@@ -46,6 +50,7 @@ public:
 private:
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
+    float zoom_mag;
 };
 
 } // namespace examples

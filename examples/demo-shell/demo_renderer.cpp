@@ -133,6 +133,7 @@ GLuint generate_frame_corner_texture()
 
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
+    , zoom_mag(1.0f)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture();
@@ -148,6 +149,53 @@ void DemoRenderer::begin() const
 {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void DemoRenderer::zoom(float mag)
+{
+    zoom_mag = mag;
+}
+
+bool DemoRenderer::screen_transformed() const
+{
+    return GLRenderer::screen_transformed() || zoom_mag != 1.0f;
+}
+
+void DemoRenderer::set_viewport(geometry::Rectangle const& vp)
+{
+    geometry::Rectangle rect;
+
+    if (zoom_mag == 1.0f)
+    {
+        rect = vp;
+    }
+    else
+    {
+        int db_width = vp.size.width.as_int();
+        int db_height = vp.size.height.as_int();
+        int db_x = vp.top_left.x.as_int();
+        int db_y = vp.top_left.y.as_int();
+    
+        float zoom_width = db_width / zoom_mag;
+        float zoom_height = db_height / zoom_mag;
+    
+        auto const& cursor_pos = soft_cursor->position();
+        float screen_x = cursor_pos.x.as_int() - db_x;
+        float screen_y = cursor_pos.y.as_int() - db_y;
+
+        float normal_x = screen_x / db_width;
+        float normal_y = screen_y / db_height;
+    
+        // Position the viewport so the cursor location matches up.
+        // This assumes the hardware cursor still traverses the physical
+        // screen and isn't being warped.
+        int zoom_x = db_x + (db_width - zoom_width) * normal_x;
+        int zoom_y = db_y + (db_height - zoom_height) * normal_y;
+
+        rect = {{zoom_x, zoom_y}, {zoom_width, zoom_height}};
+    }
+
+    GLRenderer::set_viewport(rect);
 }
 
 void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
