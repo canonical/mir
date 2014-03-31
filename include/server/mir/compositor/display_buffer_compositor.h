@@ -37,8 +37,7 @@ public:
     /// has additional buffers ready to composite or during animation
     virtual bool composite() = 0;
 
-    virtual std::weak_ptr<graphics::Cursor> cursor() const   // Optional
-        { return std::weak_ptr<graphics::Cursor>(); }
+    virtual std::weak_ptr<graphics::Cursor> cursor() const { return {}; }
 
 protected:
     DisplayBufferCompositor() = default;

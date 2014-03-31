@@ -35,8 +35,7 @@ public:
     virtual void start() = 0;
     virtual void stop() = 0;
 
-    virtual std::weak_ptr<graphics::Cursor> cursor() const
-        { return std::weak_ptr<graphics::Cursor>(); }
+    virtual std::weak_ptr<graphics::Cursor> cursor() const { return {}; }
 
 protected:
     Compositor() = default;
