@@ -90,16 +90,6 @@ class BasicSurface : public Surface
 {
 public:
     BasicSurface(
-        std::shared_ptr<SurfaceObserver> const& observer,
-        std::string const& name,
-        geometry::Rectangle rect,
-        bool nonrectangular,
-        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
-        std::shared_ptr<input::InputChannel> const& input_channel,
-        std::shared_ptr<SurfaceConfigurator> const& configurator,
-        std::shared_ptr<SceneReport> const& report);
-
-    BasicSurface(
         std::string const& name,
         geometry::Rectangle rect,
         bool nonrectangular,
@@ -158,6 +148,9 @@ public:
     int configure(MirSurfaceAttrib attrib, int value) override;
     void hide() override;
     void show() override;
+
+    void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+    void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes

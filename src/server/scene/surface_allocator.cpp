@@ -59,8 +59,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
 
     bool nonrectangular = has_alpha(params.pixel_format);
     auto input_channel = input_factory->make_input_channel();
-    return std::make_shared<BasicSurface>(
-        observer,
+    auto const surface = std::make_shared<BasicSurface>(
         params.name,
         actual_size,
         nonrectangular,
@@ -68,4 +67,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
         input_channel,
         configurator,
         report);
+
+    surface->add_observer(observer);
+    return surface;
 }

@@ -355,7 +355,6 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
-        observer,
         surface_name,
         rect,
         false,
@@ -363,6 +362,8 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
         report);
+
+    surf.add_observer(observer);
 
     ASSERT_THAT(surf.size(), Ne(new_size));
 
@@ -379,7 +380,6 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
-        observer,
         surface_name,
         rect,
         false,
@@ -387,6 +387,8 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
         report);
+
+    surf.add_observer(observer);
 
     ASSERT_THAT(surf.size(), Ne(new_size));
 

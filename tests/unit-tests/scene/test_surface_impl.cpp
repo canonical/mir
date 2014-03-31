@@ -193,7 +193,6 @@ TEST_F(Surface, emits_resize_events)
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     ms::BasicSurface surf(
-        observer,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
@@ -201,6 +200,8 @@ TEST_F(Surface, emits_resize_events)
         std::shared_ptr<mi::InputChannel>(),
         null_configurator,
         report);
+
+    surf.add_observer(observer);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -225,7 +226,6 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     ms::BasicSurface surf(
-        observer,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
@@ -233,6 +233,8 @@ TEST_F(Surface, emits_resize_events_only_on_change)
         std::shared_ptr<mi::InputChannel>(),
         null_configurator,
         report);
+
+    surf.add_observer(observer);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -306,7 +308,6 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, mt::fake_shared(sink));
 
     ms::BasicSurface surf(
-        observer,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
@@ -314,6 +315,9 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
         std::shared_ptr<mi::InputChannel>(),
         null_configurator,
         report);
+
+    surf.add_observer(observer);
+
 
     surf.configure(mir_surface_attrib_focus, mir_surface_focused);
     surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);

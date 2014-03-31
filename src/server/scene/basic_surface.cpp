@@ -90,7 +90,6 @@ void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observ
 }
 
 ms::BasicSurface::BasicSurface(
-    std::shared_ptr<SurfaceObserver> const& observer,
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
@@ -114,27 +113,6 @@ ms::BasicSurface::BasicSurface(
     state_value(mir_surface_state_restored)
 {
     report->surface_created(this, surface_name);
-    observers.add(observer);
-}
-
-ms::BasicSurface::BasicSurface(
-    std::string const& name,
-    geometry::Rectangle rect,
-    bool nonrectangular,
-    std::shared_ptr<mc::BufferStream> const& buffer_stream,
-    std::shared_ptr<input::InputChannel> const& input_channel,
-    std::shared_ptr<SurfaceConfigurator> const& configurator,
-    std::shared_ptr<SceneReport> const& report) :
-    BasicSurface(
-        std::shared_ptr<SurfaceObserver>(),
-        name,
-        rect,
-        nonrectangular,
-        buffer_stream,
-        input_channel,
-        configurator,
-        report)
-{
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -469,3 +447,13 @@ void ms::BasicSurface::show()
     set_hidden(false);
 }
 
+
+void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    observers.add(observer);
+}
+
+void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    observers.remove(observer);
+}
