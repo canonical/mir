@@ -33,18 +33,16 @@ struct Point;
 
 namespace scene
 {
-// Initial cut - supporting the frontend requirement, more will follow
 class SurfaceObserver
 {
 public:
-    virtual void attrib_change(MirSurfaceAttrib attrib, int value) = 0;
-    virtual void resize(geometry::Size const& size) = 0;
-
-    virtual void move_to(geometry::Point const& /*top_left*/) {}
-    virtual void set_hidden(bool /*hide*/) {}
-    virtual void frame_posted() {}
-    virtual void set_alpha(float /*alpha*/) {}
-    virtual void set_transformation(glm::mat4 const& /*t*/) {}
+    virtual void attrib_change(MirSurfaceAttrib attrib, int value);
+    virtual void resize(geometry::Size const& size);
+    virtual void move_to(geometry::Point const& top_left);
+    virtual void set_hidden(bool hide);
+    virtual void frame_posted();
+    virtual void set_alpha(float alpha);
+    virtual void set_transformation(glm::mat4 const& t);
 
 protected:
     SurfaceObserver() = default;
