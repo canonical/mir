@@ -59,15 +59,13 @@ void mir::compositor::filter_occlusions_from(
     RenderableList& list,
     Rectangle const& area)
 {
-    RenderableList visible_renderables;
     std::vector<Rectangle> coverage;
-    auto it = list.crbegin();
-    while (it != list.crend())
+    auto it = list.rbegin();
+    while (it != list.rend())
     {
-        if (!renderable_is_occluded(**it, area, coverage))
-            visible_renderables.push_front(*it);
-
-        it++;
+        if (renderable_is_occluded(**it, area, coverage))
+            list.erase(std::prev(it.base()));
+        else
+            it++;
     }
-    std::swap(list, visible_renderables);
 }
