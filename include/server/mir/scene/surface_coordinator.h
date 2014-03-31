@@ -17,16 +17,15 @@
  */
 
 
-#ifndef MIR_SCENE_SURFACE_BUILDER_H_
-#define MIR_SCENE_SURFACE_BUILDER_H_
+#ifndef MIR_SCENE_SURFACE_COORDINATOR_H_
+#define MIR_SCENE_SURFACE_COORDINATOR_H_
 
-#include "mir/frontend/surface_id.h"
+#include "mir/scene/surface_ranker.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace frontend { class EventSink; }
 namespace shell
 {
 struct SurfaceCreationParameters;
@@ -35,25 +34,24 @@ struct SurfaceCreationParameters;
 namespace scene
 {
 class Surface;
-class SurfaceConfigurator;
+class SurfaceObserver;
 
-class SurfaceBuilder
+class SurfaceCoordinator : public SurfaceRanker
 {
 public:
-    virtual std::shared_ptr<Surface> create_surface(
-        frontend::SurfaceId id,
+    virtual std::shared_ptr<Surface> add_surface(
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink) = 0;
+        std::shared_ptr<SurfaceObserver> const& observer) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:
-    SurfaceBuilder() = default;
-    virtual ~SurfaceBuilder() = default;
-    SurfaceBuilder(SurfaceBuilder const&) = delete;
-    SurfaceBuilder& operator=(SurfaceBuilder const&) = delete;
+    SurfaceCoordinator() = default;
+    virtual ~SurfaceCoordinator() = default;
+    SurfaceCoordinator(SurfaceCoordinator const&) = delete;
+    SurfaceCoordinator& operator=(SurfaceCoordinator const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_SCENE_SURFACE_BUILDER_H_ */
+#endif /* MIR_SCENE_SURFACE_COORDINATOR_H_ */

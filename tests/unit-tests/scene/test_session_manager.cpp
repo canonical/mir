@@ -34,7 +34,6 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/stub_surface_ranker.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_session_event_sink.h"
@@ -86,16 +85,13 @@ struct SessionManagerSetup : public testing::Test
     }
 
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
-        mf::SurfaceId(),
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mi::InputChannel>(),
-        std::shared_ptr<mf::EventSink>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
         mir::report::null_scene_report());
-    mtd::StubSurfaceRanker surface_ranker;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
@@ -123,9 +119,9 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
 
-    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
        Return(dummy_surface));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -155,7 +151,7 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
-    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
        Return(dummy_surface));
 
     // Once for session creation and once for surface creation
@@ -163,7 +159,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         InSequence seq;
 
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
-        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
