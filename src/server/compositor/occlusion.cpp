@@ -20,16 +20,15 @@
 #include "mir/graphics/renderable.h"
 #include "occlusion.h"
 
-namespace mc = mir::compositor;
-namespace geom = mir::geometry;
-namespace mg = mir::graphics;
+using namespace mir::geometry;
+using namespace mir::graphics;
 
 namespace
 {
 bool renderable_is_occluded(
-    mg::Renderable const& renderable, 
-    geom::Rectangle const& area,
-    std::vector<geom::Rectangle>& coverage)
+    Renderable const& renderable, 
+    Rectangle const& area,
+    std::vector<Rectangle>& coverage)
 {
     static const glm::mat4 identity;
     if (renderable.transformation() != identity)
@@ -39,7 +38,7 @@ bool renderable_is_occluded(
         return true;  // Not on the display, or invisible; definitely occluded.
 
     bool occluded = false;
-    geom::Rectangle const& window = renderable.screen_position();
+    Rectangle const& window = renderable.screen_position();
     for (const auto &r : coverage)
     {
         if (r.contains(window))
@@ -56,12 +55,12 @@ bool renderable_is_occluded(
 }
 }
 
-void mc::filter_occlusions_from(
-    mg::RenderableList& list,
-    geom::Rectangle const& area)
+void mir::compositor::filter_occlusions_from(
+    RenderableList& list,
+    Rectangle const& area)
 {
-    mg::RenderableList visible_renderables;
-    std::vector<geom::Rectangle> coverage;
+    RenderableList visible_renderables;
+    std::vector<Rectangle> coverage;
     auto it = list.crbegin();
     while (it != list.crend())
     {
