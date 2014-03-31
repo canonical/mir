@@ -31,7 +31,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
-#include <cstring>
 #include <algorithm>
 
 namespace mc = mir::compositor;
@@ -90,43 +89,6 @@ void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observ
     observers.erase(std::remove(observers.begin(),observers.end(), observer), observers.end());
 }
 
-ms::FrontendObserver::FrontendObserver(
-    frontend::SurfaceId id,
-    std::shared_ptr<frontend::EventSink> const& event_sink) :
-    id(id),
-    event_sink(event_sink)
-{
-}
-
-void ms::FrontendObserver::resize(geom::Size const& size)
-{
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = id.as_value();
-    e.resize.width = size.width.as_int();
-    e.resize.height = size.height.as_int();
-    event_sink->handle_event(e);
-}
-
-
-void ms::FrontendObserver::attrib_change(MirSurfaceAttrib attrib, int value)
-{
-    MirEvent e;
-
-    // This memset is not really required. However it does avoid some
-    // harmless uninitialized memory reads that valgrind will complain
-    // about, due to gaps in MirEvent.
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_surface;
-    e.surface.id = id.as_value();
-    e.surface.attrib = attrib;
-    e.surface.value = value;
-
-    event_sink->handle_event(e);
-}
-
 ms::BasicSurface::BasicSurface(
     std::shared_ptr<SurfaceObserver> const& observer,
     std::string const& name,
@@ -156,13 +118,11 @@ ms::BasicSurface::BasicSurface(
 }
 
 ms::BasicSurface::BasicSurface(
-    frontend::SurfaceId /*id*/,
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
-    std::shared_ptr<frontend::EventSink> const& /*event_sink*/,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     BasicSurface(

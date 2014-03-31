@@ -100,13 +100,11 @@ public:
         std::shared_ptr<SceneReport> const& report);
 
     BasicSurface(
-        frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<SceneReport> const& report);
 

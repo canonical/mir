@@ -16,30 +16,34 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SCENE_SURFACE_OBSERVER_H_
-#define MIR_SCENE_SURFACE_OBSERVER_H_
+#ifndef MIR_SCENE_SURFACE_EVENT_SOURCE_H_
+#define MIR_SCENE_SURFACE_EVENT_SOURCE_H_
 
-#include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
+#include "mir/scene/surface_observer.h"
+#include "mir/frontend/surface_id.h"
+#include "mir/frontend/event_sink.h"
+
+#include <memory>
 
 namespace mir
 {
 namespace scene
 {
-// Initial cut - supporting the frontend requirement, more will follow
-class SurfaceObserver
+class SurfaceEventSource : public SurfaceObserver
 {
 public:
-    virtual void attrib_change(MirSurfaceAttrib attrib, int value) = 0;
-    virtual void resize(geometry::Size const& size) = 0;
+    SurfaceEventSource(
+        frontend::SurfaceId id,
+        std::shared_ptr<frontend::EventSink> const& event_sink);
 
-protected:
-    SurfaceObserver() = default;
-    virtual ~SurfaceObserver() = default;
-    SurfaceObserver(SurfaceObserver const&) = delete;
-    SurfaceObserver& operator=(SurfaceObserver const&) = delete;
+    void attrib_change(MirSurfaceAttrib attrib, int value);
+    void resize(geometry::Size const& size);
+
+private:
+    frontend::SurfaceId const id;
+    std::shared_ptr<frontend::EventSink> const event_sink;
 };
 }
 }
 
-#endif // MIR_SCENE_SURFACE_OBSERVER_H_
+#endif // MIR_SCENE_SURFACE_EVENT_SOURCE_H_

@@ -18,7 +18,7 @@
 
 #include "application_session.h"
 #include "mir/shell/surface.h"
-#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface_event_source.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
@@ -73,7 +73,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationP
 {
     auto const id = next_id();
 
-    auto const observer = std::make_shared<scene::FrontendObserver>(id, event_sink);
+    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_factory->create_surface(this, params, observer);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);

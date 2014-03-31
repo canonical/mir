@@ -21,7 +21,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface_coordinator.h"
 
 #include "mir_test_doubles/stub_shell_session.h"
@@ -62,7 +62,7 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     }
     std::shared_ptr<ms::Surface> null_surface;
     std::shared_ptr<MockSurfaceCoordinator> surface_coordinator = std::make_shared<MockSurfaceCoordinator>();
-    std::shared_ptr<ms::SurfaceObserver> const observer = std::make_shared<ms::FrontendObserver>(mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
+    std::shared_ptr<ms::SurfaceObserver> const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
     std::shared_ptr<MockPlacementStrategy> placement_strategy = std::make_shared<MockPlacementStrategy>();
 };
 

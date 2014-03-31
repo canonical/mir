@@ -35,11 +35,9 @@ struct MockSurface : public scene::BasicSurface
 {
     MockSurface() :
         scene::BasicSurface(
-            frontend::SurfaceId{},
             {},
             {{},{}},
             true,
-            {},
             {},
             {},
             {},

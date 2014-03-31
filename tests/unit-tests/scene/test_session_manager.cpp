@@ -85,13 +85,11 @@ struct SessionManagerSetup : public testing::Test
     }
 
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
-        mf::SurfaceId(),
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mi::InputChannel>(),
-        std::shared_ptr<mf::EventSink>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
         mir::report::null_scene_report());
     mtd::MockSurfaceFactory surface_factory;
