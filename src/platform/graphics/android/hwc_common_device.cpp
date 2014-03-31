@@ -44,8 +44,8 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 
 mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                       std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
-    : hwc_device(hwc_device),
-      coordinator(coordinator),
+    : coordinator(coordinator),
+      hwc_device(hwc_device),
       current_mode(mir_power_mode_on)
 {
     callbacks.hooks.invalidate = invalidate_hook;

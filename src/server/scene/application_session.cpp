@@ -59,6 +59,7 @@ ms::ApplicationSession::~ApplicationSession()
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
+        surface_factory->destroy_surface(pair_id_surface.second);
     }
 }
 
@@ -119,10 +120,14 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
+    auto const surface = p->second;
 
-    session_listener->destroying_surface(*this, p->second);
+    session_listener->destroying_surface(*this, surface);
 
     surfaces.erase(p);
+    lock.unlock();
+
+    surface_factory->destroy_surface(surface);
 }
 
 std::string ms::ApplicationSession::name() const

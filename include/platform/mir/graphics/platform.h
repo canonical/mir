@@ -22,6 +22,7 @@
 
 #include "basic_platform.h"
 
+#include <boost/program_options/options_description.hpp>
 #include <memory>
 
 namespace mir
@@ -48,6 +49,7 @@ class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
+class GLConfig;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -81,7 +83,8 @@ public:
      * Creates the display subsystem.
      */
     virtual std::shared_ptr<Display> create_display(
-        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy) = 0;
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config) = 0;
 
     /**
      * Gets the IPC package for the platform.
@@ -119,6 +122,10 @@ public:
  */
 extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
 extern "C" std::shared_ptr<Platform> create_platform (std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
+extern "C" typedef void(*AddPlatformOptions)(
+    boost::program_options::options_description& config);
+extern "C" void add_platform_options(
+    boost::program_options::options_description& config);
 }
 }
 

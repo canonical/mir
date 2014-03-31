@@ -26,8 +26,10 @@
 #include "offscreen/display.h"
 
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/gl_config.h"
 
 #include "mir/shared_library.h"
+#include "mir/shared_library_loader.h"
 #include "mir/abnormal_exit.h"
 
 #include <boost/throw_exception.hpp>
@@ -37,25 +39,6 @@
 #include <map>
 
 namespace mg = mir::graphics;
-
-namespace
-{
-mir::SharedLibrary const* load_library(std::string const& libname)
-{
-    // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
-
-    if (auto& ptr = libraries_cache[libname])
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
-}
-}
 
 std::shared_ptr<mg::BufferInitializer>
 mir::DefaultServerConfiguration::the_buffer_initializer()
@@ -82,7 +65,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = load_library(the_options()->get<std::string>(options::platform_graphics_lib));
+            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
 
             if (!the_options()->is_set(options::host_socket_opt))
             {
@@ -127,7 +110,8 @@ mir::DefaultServerConfiguration::the_display()
             else
             {
                 return the_graphics_platform()->create_display(
-                    the_display_configuration_policy());
+                    the_display_configuration_policy(),
+                    the_gl_config());
             }
         });
 }
@@ -199,5 +183,20 @@ auto mir::DefaultServerConfiguration::the_host_connection()
             return std::make_shared<graphics::nested::HostConnection>(
                 host_socket,
                 my_name);
+        });
+}
+
+std::shared_ptr<mg::GLConfig>
+mir::DefaultServerConfiguration::the_gl_config()
+{
+    return gl_config(
+        [this]
+        {
+            struct NoGLConfig : public mg::GLConfig
+            {
+                int depth_buffer_bits() const override { return 0; }
+                int stencil_buffer_bits() const override { return 0; }
+            };
+            return std::make_shared<NoGLConfig>();
         });
 }

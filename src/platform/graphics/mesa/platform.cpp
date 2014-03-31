@@ -147,11 +147,13 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocat
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
-    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy)
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+    std::shared_ptr<GLConfig> const& gl_config)
 {
     return std::make_shared<mgm::Display>(
         this->shared_from_this(),
         initial_conf_policy,
+        gl_config,
         listener);
 }
 
@@ -218,4 +220,12 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
     else if (nested_internal_display_in_use)
         return (display == mgm::NativePlatform::internal_native_display().get());
     return 0;
+}
+
+extern "C" void add_platform_options(boost::program_options::options_description& config)
+{
+    config.add_options()
+        ("vt",
+         boost::program_options::value<int>()->default_value(0),
+         "[platform-specific] VT to run on or 0 to use current.");
 }

@@ -13,40 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 
-#ifndef MIR_SCENE_SURFACE_BUILDER_H_
-#define MIR_SCENE_SURFACE_BUILDER_H_
+#ifndef MIR_SHELL_SURFACE_RANKER_H_
+#define MIR_SHELL_SURFACE_RANKER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace shell
-{
-struct SurfaceCreationParameters;
-}
-
 namespace scene
 {
-class BasicSurface;
+class Surface;
 
-class SurfaceBuilder
+class SurfaceRanker
 {
 public:
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
+    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
 protected:
-    SurfaceBuilder() = default;
-    virtual ~SurfaceBuilder() = default;
-    SurfaceBuilder(SurfaceBuilder const&) = delete;
-    SurfaceBuilder& operator=(SurfaceBuilder const&) = delete;
+    SurfaceRanker() = default;
+    virtual ~SurfaceRanker() = default;
+    SurfaceRanker(SurfaceRanker const&) = delete;
+    SurfaceRanker& operator=(SurfaceRanker const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_SCENE_SURFACE_BUILDER_H_ */
+#endif /* MIR_SHELL_SURFACE_RANKER_H_ */

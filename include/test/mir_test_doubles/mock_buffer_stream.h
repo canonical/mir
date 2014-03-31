@@ -33,7 +33,7 @@ struct MockBufferStream : public compositor::BufferStream
 {
     MOCK_METHOD2(swap_client_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> completee));
     MOCK_METHOD1(lock_compositor_buffer,
-                 std::shared_ptr<graphics::Buffer>(unsigned long));
+                 std::shared_ptr<graphics::Buffer>(void const*));
     MOCK_METHOD0(lock_snapshot_buffer, std::shared_ptr<graphics::Buffer>());
 
     MOCK_METHOD0(get_stream_pixel_format, MirPixelFormat());

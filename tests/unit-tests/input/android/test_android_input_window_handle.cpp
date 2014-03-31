@@ -24,7 +24,6 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_input_surface.h"
-#include "mir_test_doubles/stub_surface_builder.h"
 
 #include "mir/raii.h"
 
@@ -34,7 +33,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mf = mir::frontend;
@@ -99,7 +97,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
         .WillOnce(Return(default_surface_top_left));
     EXPECT_CALL(mock_surface, name())
         .Times(1)
-        .WillOnce(ReturnRef(testing_surface_name));
+        .WillOnce(Return(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
                                   mt::fake_shared(mock_channel), mt::fake_shared(mock_surface));
