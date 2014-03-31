@@ -8,6 +8,7 @@ ADD_LIBRARY(
   default_session_container.cpp
   gl_pixel_buffer.cpp
   global_event_sender.cpp
+  legacy_surface_change_notification.cpp
   mediating_display_changer.cpp
   session_manager.cpp
   surface_allocator.cpp

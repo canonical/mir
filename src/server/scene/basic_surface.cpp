@@ -40,24 +40,6 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::ThreadsafeCallback::ThreadsafeCallback(std::function<void()> const& notify_change) :
-        notify_change(notify_change) {}
-
-ms::ThreadsafeCallback& ms::ThreadsafeCallback::operator=(std::function<void()> const& notify_change)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    this->notify_change = notify_change;
-    return *this;
-}
-
-void ms::ThreadsafeCallback::operator()() const
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    auto const notifier = notify_change;
-    lock.unlock();
-    notifier();
-}
-
 void ms::SurfaceObservers::attrib_change(MirSurfaceAttrib attrib, int value)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -72,6 +54,46 @@ void ms::SurfaceObservers::resize(geometry::Size const& size)
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
         p->resize(size);
+}
+
+void ms::SurfaceObservers::move_to(geometry::Point const& top_left)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->move_to(top_left);
+}
+
+void ms::SurfaceObservers::set_hidden(bool hide)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->set_hidden(hide);
+}
+
+void ms::SurfaceObservers::frame_posted()
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->frame_posted();
+}
+
+void ms::SurfaceObservers::set_alpha(float alpha)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->set_alpha(alpha);
+}
+
+void ms::SurfaceObservers::set_transformation(glm::mat4 const& t)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->set_transformation(t);
 }
 
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
@@ -97,7 +119,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
-    notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
@@ -141,7 +162,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
         std::unique_lock<std::mutex> lk(guard);
         surface_rect.top_left = top_left;
     }
-    notify_change();
+    observers.move_to(top_left);
 }
 
 float ms::BasicSurface::alpha() const
@@ -156,7 +177,7 @@ void ms::BasicSurface::set_hidden(bool hide)
         std::unique_lock<std::mutex> lk(guard);
         hidden = hide;
     }
-    notify_change();
+    observers.set_hidden(hide);
 }
 
 mir::geometry::Size ms::BasicSurface::size() const
@@ -182,7 +203,7 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
         }
-        notify_change();
+        observers.frame_posted();
     }
 }
 
@@ -215,11 +236,6 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
     return server_input_channel;
 }
 
-void ms::BasicSurface::on_change(std::function<void()> change_notification)
-{
-    notify_change = change_notification;
-}
-
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -248,7 +264,6 @@ void ms::BasicSurface::resize(geom::Size const& size)
         std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = size;
     }
-    notify_change();
     observers.resize(size);
 }
 
@@ -280,7 +295,7 @@ void ms::BasicSurface::frame_posted()
         std::unique_lock<std::mutex> lk(guard);
         first_frame_posted = true;
     }
-    notify_change();
+    observers.frame_posted();
 }
 
 void ms::BasicSurface::set_alpha(float alpha)
@@ -289,7 +304,7 @@ void ms::BasicSurface::set_alpha(float alpha)
         std::unique_lock<std::mutex> lk(guard);
         surface_alpha = alpha;
     }
-    notify_change();
+    observers.set_alpha(alpha);
 }
 
 
@@ -299,7 +314,7 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
         std::unique_lock<std::mutex> lk(guard);
         transformation_matrix = t;
     }
-    notify_change();
+    observers.set_transformation(t);
 }
 
 glm::mat4 ms::BasicSurface::transformation() const

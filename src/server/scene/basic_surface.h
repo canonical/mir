@@ -54,29 +54,17 @@ namespace scene
 class SceneReport;
 class SurfaceConfigurator;
 
-// Thread safe wrapper around notification callback
-class ThreadsafeCallback
-{
-public:
-    ThreadsafeCallback(std::function<void()> const& notify_change);
-
-    ThreadsafeCallback& operator=(std::function<void()> const& notify_change);
-
-    void operator()() const;
-
-private:
-    ThreadsafeCallback(ThreadsafeCallback const&) = delete;
-    ThreadsafeCallback& operator =(ThreadsafeCallback const&) = delete;
-    std::mutex mutable mutex;
-    std::function<void()> notify_change;
-};
-
 class SurfaceObservers : public SurfaceObserver
 {
 public:
 
     void attrib_change(MirSurfaceAttrib attrib, int value) override;
     void resize(geometry::Size const& size) override;
+    void move_to(geometry::Point const& top_left) override;
+    void set_hidden(bool hide) override;
+    void frame_posted() override;
+    void set_alpha(float alpha) override;
+    void set_transformation(glm::mat4 const& t) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
@@ -117,7 +105,6 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
-    void on_change(std::function<void()> change_notification) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -158,7 +145,6 @@ private:
 
     SurfaceObservers observers;
     std::mutex mutable guard;
-    ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;

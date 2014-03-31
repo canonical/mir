@@ -17,6 +17,7 @@
  */
 
 #include "src/server/scene/basic_surface.h"
+#include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -545,7 +546,8 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         stub_configurator,
         report);
 
-    surf.on_change(change_notification);
+    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(change_notification);
+    surf.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};
 
