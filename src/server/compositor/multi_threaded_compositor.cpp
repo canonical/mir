@@ -209,7 +209,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      vcursor(new VirtualCursor(*this)),
+      vcursor(std::make_shared<VirtualCursor>(*this)),
       started{false},
       compose_on_start{compose_on_start}
 {

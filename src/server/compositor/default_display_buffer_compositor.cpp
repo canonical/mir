@@ -86,7 +86,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
-      soft_cursor{new SoftCursor(*this)},
+      soft_cursor{std::make_shared<SoftCursor>(*this)},
       last_pass_rendered_anything{false},
       viewport(display_buffer.view_area()),
       zoom_mag{1.0f}
