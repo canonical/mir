@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 
 #include "mir/compositor/compositor.h"
+#include "mir/compositor/zoomable.h"
 #include "mir/geometry/point.h"
 
 #include <mutex>
@@ -41,7 +42,7 @@ class CompositingFunctor;
 class Scene;
 class CompositorReport;
 
-class MultiThreadedCompositor : public Compositor
+class MultiThreadedCompositor : public Compositor, public Zoomable
 {
 public:
     MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,

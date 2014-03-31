@@ -25,6 +25,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
+#include "mir/compositor/zoomable.h"
 
 #include <linux/input.h>
 #include <android/keycodes.h>  // TODO remove this dependency
@@ -200,14 +201,18 @@ bool me::WindowManager::handle(MirEvent const& event)
         if (event.motion.modifiers & mir_key_modifier_meta &&
             action == mir_motion_action_scroll)
         {
-            zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
-            // Negative exponents do work too, but disable them until there's
-            // a clear edge to the desktop.
-            if (zoom_exponent < 0)
-                zoom_exponent = 0;
-
-            compositor->zoom(powf(1.2f, zoom_exponent));
-            handled = true;
+            if (auto zoomable =
+                  std::dynamic_pointer_cast<compositor::Zoomable>(compositor))
+            {
+                zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
+                // Negative exponents do work too, but disable them until
+                // there's a clear edge to the desktop.
+                if (zoom_exponent < 0)
+                    zoom_exponent = 0;
+    
+                zoomable->zoom(powf(1.2f, zoom_exponent));
+                handled = true;
+            }
         }
 
         std::shared_ptr<msh::Session> app =

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,38 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
-
-#include <memory>
+#ifndef MIR_COMPOSITOR_ZOOMABLE_H_
+#define MIR_COMPOSITOR_ZOOMABLE_H_
 
 namespace mir
 {
-namespace graphics { class Cursor; }
 namespace compositor
 {
 
-class Compositor
+class Zoomable
 {
 public:
-    virtual ~Compositor() {}
-
-    virtual void start() = 0;
-    virtual void stop() = 0;
-
-    virtual std::weak_ptr<graphics::Cursor> cursor() const
-        { return std::weak_ptr<graphics::Cursor>(); }
-
-protected:
-    Compositor() = default;
-    Compositor(Compositor const&) = delete;
-    Compositor& operator=(Compositor const&) = delete;
+    virtual ~Zoomable() = default;
+    virtual void zoom(float) = 0;
 };
 
-}
-}
+} // namespace compositor
+} // namespace mir
 
-#endif // MIR_COMPOSITOR_COMPOSITOR_H_
+#endif // MIR_COMPOSITOR_ZOOMABLE_H_
