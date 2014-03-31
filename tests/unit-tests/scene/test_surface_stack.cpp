@@ -135,7 +135,7 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         stub_surface2 = std::make_shared<ms::BasicSurface>(
@@ -146,7 +146,7 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         stub_surface3 = std::make_shared<ms::BasicSurface>(
@@ -157,7 +157,7 @@ struct SurfaceStack : public ::testing::Test
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
     }
 
@@ -575,7 +575,7 @@ TEST_F(SurfaceStack, generate_renderlist)
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         surfacelist.emplace_back(surface);

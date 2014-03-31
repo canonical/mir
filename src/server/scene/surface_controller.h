@@ -21,7 +21,7 @@
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
 #include "surface_builder.h"
-#include "surface_ranker.h"
+#include "mir/scene/surface_ranker.h"
 
 namespace mir
 {
@@ -43,11 +43,10 @@ public:
         std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    std::weak_ptr<Surface> create_surface(
+    std::shared_ptr<Surface> create_surface(
         frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
+        std::shared_ptr<frontend::EventSink> const& event_sink) override;
 
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 

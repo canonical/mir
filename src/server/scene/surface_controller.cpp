@@ -31,13 +31,12 @@ ms::SurfaceController::SurfaceController(
 {
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(
+std::shared_ptr<ms::Surface> ms::SurfaceController::create_surface(
     frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
-    std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
+    std::shared_ptr<frontend::EventSink> const& event_sink)
 {
-    auto const surface = surface_factory->create_surface(id, params, event_sink, configurator);
+    auto const surface = surface_factory->create_surface(id, params, event_sink);
     surface_stack->add_surface(surface, params.depth, params.input_mode);
     return surface;
 }

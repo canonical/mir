@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -29,7 +29,6 @@ namespace mir
 namespace shell
 {
 class Session;
-class SurfaceConfigurator;
 }
 
 namespace scene
@@ -39,15 +38,16 @@ class SurfaceBuilder;
 class SurfaceSource : public shell::SurfaceFactory
 {
 public:
-    SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                  std::shared_ptr<shell::SurfaceConfigurator> const& surface_configurator);
+    SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<shell::Surface> create_surface(
         shell::Session* session,
         shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink) override;
+
+    void destroy_surface(std::shared_ptr<shell::Surface> const& surface) override;
 
 protected:
     SurfaceSource(const SurfaceSource&) = delete;
@@ -55,7 +55,6 @@ protected:
 
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
-    std::shared_ptr<shell::SurfaceConfigurator> const surface_configurator;
 };
 
 }

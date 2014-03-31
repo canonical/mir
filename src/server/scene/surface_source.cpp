@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,23 +18,19 @@
 
 #include "surface_source.h"
 #include "surface_builder.h"
-#include "surface_impl.h"
 
-#include <cassert>
+#include "mir/scene/surface.h"
+
+#include <cstdlib>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 
-
-ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                                  std::shared_ptr<msh::SurfaceConfigurator> const& surface_configurator)
-    : surface_builder(surface_builder),
-      surface_configurator(surface_configurator)
+ms::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder)
+    : surface_builder(surface_builder)
 {
-    assert(surface_builder);
-    assert(surface_configurator);
 }
 
 std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
@@ -43,7 +39,19 @@ std::shared_ptr<msh::Surface> ms::SurfaceSource::create_surface(
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    auto const surface = surface_builder->create_surface(id, params, sender, surface_configurator).lock();
-    return std::make_shared<SurfaceImpl>(surface, surface_builder);
+    return surface_builder->create_surface(id, params, sender);
 }
 
+void ms::SurfaceSource::destroy_surface(std::shared_ptr<msh::Surface> const& surface)
+{
+    if (auto const scene_surface = std::dynamic_pointer_cast<Surface>(surface))
+    {
+        surface_builder->destroy_surface(scene_surface);
+    }
+    else
+    {
+        // We shouldn't be destroying surfaces we didn't create,
+        // so we ought to be able to restore the original type!
+        std::abort();
+    }
+}
