@@ -90,7 +90,7 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::set_image(std::shared_ptr<CursorImage> const& cursor_image)
+void mgm::Cursor::set_image(std::shared_ptr<CursorImage const> const& cursor_image)
 {
     auto const& size = cursor_image->size();
 

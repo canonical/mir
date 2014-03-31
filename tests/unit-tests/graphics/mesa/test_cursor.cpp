@@ -203,11 +203,11 @@ struct StubCurrentConfiguration : public mgm::CurrentConfiguration
 
 struct StubCursorImage : public mg::CursorImage
 {
-    void const* as_argb_8888()
+    void const* as_argb_8888() const
     {
         return image_data;
     }
-    geom::Size size()
+    geom::Size size() const
     {
         return geom::Size{geom::Width{64}, geom::Height{64}};
     }
@@ -266,7 +266,7 @@ TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
 
     struct InvalidlySizedCursorImage : public StubCursorImage
     {
-        geom::Size size()
+        geom::Size size() const
         {
             return invalid_cursor_size;
         }

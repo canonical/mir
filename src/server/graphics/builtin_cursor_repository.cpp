@@ -28,11 +28,11 @@ namespace
 {
 struct BlackArrowCursorImage : public mg::CursorImage
 {
-    void const* as_argb_8888()
+    void const* as_argb_8888() const
     {
         return black_arrow.pixel_data;
     }
-    geom::Size size()
+    geom::Size size() const
     {
         return { black_arrow.width, black_arrow.height };
     }

@@ -29,8 +29,8 @@ namespace graphics
 class CursorImage
 {
 public:
-    virtual void const* as_argb_8888() = 0;
-    virtual geometry::Size size() = 0;
+    virtual void const* as_argb_8888() const = 0;
+    virtual geometry::Size size() const = 0;
 
 protected:
     CursorImage() = default;

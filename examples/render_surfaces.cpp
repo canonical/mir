@@ -96,7 +96,7 @@ static const int height = 64;
 
 struct NullCursor : public mg::Cursor 
 {
-    void set_image(std::shared_ptr<mg::CursorImage> const& /* image */) 
+    void set_image(std::shared_ptr<mg::CursorImage const> const& /* image */) 
     {
     }
     void move_to(geom::Point /* position */)
@@ -124,12 +124,12 @@ struct ExampleCursorImage : public mg::CursorImage
         }
     }
     
-    void const* as_argb_8888()
+    void const* as_argb_8888() const
     {
         return image.data();
     }
     
-    geom::Size size()
+    geom::Size size() const
     {
         return geom::Size{width, height};
     }
