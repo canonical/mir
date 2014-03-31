@@ -44,7 +44,8 @@ public:
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<Display> create_display(
-        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&);
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
     void fill_ipc_package(BufferIPCPacker* packer, graphics::Buffer const* buffer) const;

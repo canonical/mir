@@ -49,6 +49,7 @@ class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
+class GLConfig;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -82,7 +83,8 @@ public:
      * Creates the display subsystem.
      */
     virtual std::shared_ptr<Display> create_display(
-        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy) = 0;
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config) = 0;
 
     /**
      * Gets the IPC package for the platform.
