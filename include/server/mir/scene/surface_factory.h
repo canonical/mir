@@ -27,7 +27,6 @@ namespace mir
 namespace scene
 {
 class Surface;
-class SurfaceObserver;
 
 class SurfaceFactory
 {
@@ -36,8 +35,7 @@ public:
     virtual ~SurfaceFactory() = default;
 
     virtual std::shared_ptr<Surface> create_surface(
-        shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<SurfaceObserver> const& observer) = 0;
+        shell::SurfaceCreationParameters const& params) = 0;
 
 private:
     SurfaceFactory(const SurfaceFactory&) = delete;

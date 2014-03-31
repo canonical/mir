@@ -42,8 +42,7 @@ public:
                      std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<Surface> create_surface(
-        shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<SurfaceObserver> const& observer) override;
+        shell::SurfaceCreationParameters const& params) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;

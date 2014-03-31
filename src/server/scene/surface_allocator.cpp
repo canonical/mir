@@ -48,8 +48,7 @@ ms::SurfaceAllocator::SurfaceAllocator(
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
-    shell::SurfaceCreationParameters const& params,
-    std::shared_ptr<SurfaceObserver> const& observer)
+    shell::SurfaceCreationParameters const& params)
 {
     mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
@@ -68,6 +67,5 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
         configurator,
         report);
 
-    surface->add_observer(observer);
     return surface;
 }

@@ -318,7 +318,6 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     surf.add_observer(observer);
 
-
     surf.configure(mir_surface_attrib_focus, mir_surface_focused);
     surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
