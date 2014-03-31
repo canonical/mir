@@ -53,6 +53,28 @@ struct FilterForUndrawnSurfaces : public mc::FilterForScene
     mc::OcclusionMatch const& occlusions;
 };
 
+class SoftCursor : public mg::Cursor
+{
+public:
+    SoftCursor(mc::DefaultDisplayBufferCompositor& compositor)
+        : compositor(compositor)
+    {
+    }
+
+    void set_image(void const*, geometry::Size) override
+    {
+        // TODO: Implement software cursor image setting later
+    }
+
+    void move_to(geometry::Point position) override
+    {
+        compositor.on_cursor_movement(position);
+    }
+
+private:
+    mc::DefaultDisplayBufferCompositor& compositor;
+};
+
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -64,7 +86,10 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
-      last_pass_rendered_anything{false}
+      soft_cursor{std::make_shared<SoftCursor>(*this)},
+      last_pass_rendered_anything{false},
+      viewport(display_buffer.view_area()),
+      zoom_mag{1.0f}
 {
 }
 
@@ -80,7 +105,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     }()};
     bool bypassed = false;
     bool uncomposited_buffers{false};
-    bool should_bypass = bypass_env && !renderer->screen_transformed();
+    bool should_bypass = bypass_env && viewport == display_buffer.view_area();
 
     if (should_bypass && display_buffer.can_bypass())
     {
@@ -121,7 +146,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
-        auto const& viewport = display_buffer.view_area();
         display_buffer.make_current();
 
         mc::OcclusionFilter occlusion_search(viewport);
@@ -157,12 +181,56 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 std::weak_ptr<graphics::Cursor>
 mc::DefaultDisplayBufferCompositor::cursor() const
 {
-    return renderer->cursor();
+    return soft_cursor;
+}
+
+void mc::DefaultDisplayBufferCompositor::on_cursor_movement(
+    geometry::Point const& p)
+{
+    cursor_pos = p;
+    if (zoom_mag != 1.0f)
+        update_viewport();
 }
 
 void mc::DefaultDisplayBufferCompositor::zoom(float mag)
 {
-    if (auto zoomable = std::dynamic_pointer_cast<Zoomable>(renderer))
-        zoomable->zoom(mag);
+    zoom_mag = mag;
+    update_viewport();
 }
 
+void mc::DefaultDisplayBufferCompositor::update_viewport()
+{
+    auto const& view_area = display_buffer.view_area();
+
+    if (zoom_mag == 1.0f)
+    {
+        // The below calculations should yield the same result as this, but
+        // just in case there are any floating point precision errors,
+        // set it precisely:
+        viewport = view_area;
+    }
+    else
+    {
+        int db_width = view_area.size.width.as_int();
+        int db_height = view_area.size.height.as_int();
+        int db_x = view_area.top_left.x.as_int();
+        int db_y = view_area.top_left.y.as_int();
+    
+        float zoom_width = db_width / zoom_mag;
+        float zoom_height = db_height / zoom_mag;
+    
+        float screen_x = cursor_pos.x.as_int() - db_x;
+        float screen_y = cursor_pos.y.as_int() - db_y;
+
+        float normal_x = screen_x / db_width;
+        float normal_y = screen_y / db_height;
+    
+        // Position the viewport so the cursor location matches up.
+        // This assumes the hardware cursor still traverses the physical
+        // screen and isn't being warped.
+        int zoom_x = db_x + (db_width - zoom_width) * normal_x;
+        int zoom_y = db_y + (db_height - zoom_height) * normal_y;
+
+        viewport = {{zoom_x, zoom_y}, {zoom_width, zoom_height}};
+    }
+}

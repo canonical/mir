@@ -91,24 +91,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 
 }
 
-using mir::compositor::GLRenderer;
-
-void GLRenderer::SoftCursor::set_image(void const*, geometry::Size)
-{
-}
-
-void GLRenderer::SoftCursor::move_to(geometry::Point p)
-{
-    pos = p;
-}
-
-geom::Point const& GLRenderer::SoftCursor::position() const
-{
-    return pos;
-}
-
 mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
-    soft_cursor{std::make_shared<GLRenderer::SoftCursor>()},
     vertex_shader(0),
     fragment_shader(0),
     program(0),
@@ -117,8 +100,7 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
     centre_uniform_loc(0),
     transform_uniform_loc(0),
     alpha_uniform_loc(0),
-    rotation(NAN), // ensure the first set_rotation succeeds
-    screen(display_area)
+    rotation(NAN) // ensure the first set_rotation succeeds
 {
     /*
      * We need to serialize renderer creation because some GL calls used
@@ -407,9 +389,3 @@ void mc::GLRenderer::suspend()
 {
     skipped = true;
 }
-
-std::weak_ptr<mg::Cursor> mc::GLRenderer::cursor() const
-{
-    return soft_cursor;
-}
-

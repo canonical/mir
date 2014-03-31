@@ -22,11 +22,9 @@
 #include <mir/compositor/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
-#include <mir/graphics/cursor.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 namespace mir
 {
@@ -49,8 +47,6 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
-
-    std::weak_ptr<graphics::Cursor> cursor() const override;
 
     struct Vertex
     {
@@ -99,19 +95,6 @@ public:
     virtual GLuint load_texture(graphics::Renderable const& renderable,
                                 graphics::Buffer& buffer) const;
 
-protected:
-    class SoftCursor : public graphics::Cursor
-    {
-    public:
-        void set_image(void const*, geometry::Size) override;
-        void move_to(geometry::Point p) override;
-        geometry::Point const& position() const;
-    private:
-        geometry::Point pos;
-    };
-
-    std::shared_ptr<SoftCursor> soft_cursor;
-
 private:
     GLuint vertex_shader;
     GLuint fragment_shader;
@@ -124,7 +107,6 @@ private:
     GLuint alpha_uniform_loc;
     float rotation;
 
-    geometry::Rectangle const screen;
     geometry::Rectangle viewport;
 
     typedef graphics::Renderable const* SurfaceID;
