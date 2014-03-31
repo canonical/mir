@@ -39,7 +39,6 @@ public:
 
     virtual std::weak_ptr<graphics::Cursor> cursor() const   // Optional
         { return std::weak_ptr<graphics::Cursor>(); }
-    virtual void zoom(float) {}                              // Optional
 
 protected:
     DisplayBufferCompositor() = default;

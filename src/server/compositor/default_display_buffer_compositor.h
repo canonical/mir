@@ -21,6 +21,7 @@
 
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/compositor_report.h"
+#include "mir/compositor/zoomable.h"
 #include "mir/geometry/rectangle.h"
 #include <memory>
 
@@ -36,7 +37,8 @@ namespace compositor
 class Scene;
 class Renderer;
 
-class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
+class DefaultDisplayBufferCompositor : public DisplayBufferCompositor,
+                                       public Zoomable
 {
 public:
     DefaultDisplayBufferCompositor(

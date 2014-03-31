@@ -168,13 +168,13 @@ public:
     void zoom(float magnification)
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-        if (display_buffer_compositor)
-            display_buffer_compositor->zoom(magnification);
-        if (magnification != zoom_mag)
+        if (auto db = dynamic_cast<Zoomable*>(display_buffer_compositor.get()))
         {
-            zoom_mag = magnification;
-            schedule_compositing_unlocked();
+            db->zoom(magnification);
+            if (magnification != zoom_mag)
+                schedule_compositing_unlocked();
         }
+        zoom_mag = magnification;
     }
 
     void stop()
