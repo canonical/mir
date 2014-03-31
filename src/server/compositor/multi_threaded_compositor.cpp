@@ -138,7 +138,7 @@ public:
             }
         }
 
-        display_buffer_compositor.release();
+        display_buffer_compositor.reset(nullptr);
     }
 
     void schedule_compositing_unlocked()
