@@ -28,7 +28,7 @@
 
 // TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
 // It is needed by the following member functions:
-//  for_each(), for_each_if(), reverse_for_each_if(), create_surface() and destroy_surface()
+//  for_each(), for_each_if(), create_surface() and destroy_surface()
 // to access:
 //  buffer_stream() and input_channel()
 #include "basic_surface.h"
@@ -73,23 +73,6 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
     {
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
-        {
-            mg::Renderable& r = **it;
-            if (filter(r)) op(r);
-        }
-    }
-}
-
-void ms::SurfaceStack::reverse_for_each_if(mc::FilterForScene& filter,
-                                           mc::OperatorForScene& op)
-{
-    std::lock_guard<std::recursive_mutex> lg(guard);
-    for (auto layer = layers_by_depth.rbegin();
-         layer != layers_by_depth.rend();
-         ++layer)
-    {
-        auto surfaces = layer->second;
-        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
             mg::Renderable& r = **it;
             if (filter(r)) op(r);

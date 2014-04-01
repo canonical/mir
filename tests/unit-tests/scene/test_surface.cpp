@@ -21,6 +21,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/scene/surface_configurator.h"
+#include "mir/scene/surface_event_source.h"
 #include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -209,7 +210,6 @@ struct SurfaceCreation : public ::testing::Test
     std::function<void()> change_notification;
     int notification_count;
     mtd::StubBuffer stub_buffer;
-    std::shared_ptr<StubEventSink> const stub_event_sink = std::make_shared<StubEventSink>();
     std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
 };
 
@@ -219,13 +219,11 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -241,13 +239,11 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -257,13 +253,11 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -274,13 +268,11 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
 {
     using namespace testing;
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -302,13 +294,11 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     mtd::StubBuffer stub_buffer;
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -324,13 +314,11 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
 {
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -343,13 +331,11 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     geom::Point p{55, 66};
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -366,17 +352,18 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         .Times(1);
 
     auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        mock_event_sink,
         stub_configurator,
         report);
+
+    surf.add_observer(observer);
 
     ASSERT_THAT(surf.size(), Ne(new_size));
 
@@ -390,17 +377,18 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     using namespace testing;
     geom::Size const new_size{123, 456};
     auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        mock_event_sink,
         stub_configurator,
         report);
+
+    surf.add_observer(observer);
 
     ASSERT_THAT(surf.size(), Ne(new_size));
 
@@ -428,13 +416,11 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         .WillOnce(Throw(std::runtime_error("bad resize")));
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -459,13 +445,11 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
     };
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -484,13 +468,11 @@ TEST_F(SurfaceCreation, test_get_input_channel)
 {
     auto mock_channel = std::make_shared<MockInputChannel>();
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         mock_channel,
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -503,13 +485,11 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     float alpha = 0.5f;
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -524,13 +504,11 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
     EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -545,13 +523,11 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
         .Times(1);
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -561,13 +537,11 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -589,13 +563,11 @@ TEST_F(SurfaceCreation, input_fds)
     using namespace testing;
 
     ms::BasicSurface surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report);
 
@@ -608,12 +580,10 @@ TEST_F(SurfaceCreation, input_fds)
     EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
 
     ms::BasicSurface input_surf(
-        mf::SurfaceId(),
         surface_name,
         rect,
         false,
         mock_buffer_stream,mt::fake_shared(channel),
-        stub_event_sink,
         stub_configurator,
         report);
 
