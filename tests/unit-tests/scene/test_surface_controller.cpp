@@ -18,7 +18,7 @@
 
 #include "src/server/scene/surface_controller.h"
 #include "src/server/scene/surface_stack_model.h"
-#include "src/server/scene/basic_surface_factory.h"
+#include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
@@ -33,7 +33,7 @@ namespace mt = mir::test;
 
 namespace
 {
-struct MockSurfaceAllocator : public ms::BasicSurfaceFactory
+struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
     MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
         mf::SurfaceId id,
@@ -52,7 +52,7 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
 };
 }
 
-TEST(SurfaceController, create_and_destroy_surface)
+TEST(SurfaceController, add_and_remove_surface)
 {
     using namespace ::testing;
 
@@ -67,8 +67,8 @@ TEST(SurfaceController, create_and_destroy_surface)
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto surface = controller.create_surface(mf::SurfaceId(), msh::a_surface(), {});
-    controller.destroy_surface(surface);
+    auto surface = controller.add_surface(mf::SurfaceId(), msh::a_surface(), {});
+    controller.remove_surface(surface);
 }
 
 TEST(SurfaceController, raise_surface)
