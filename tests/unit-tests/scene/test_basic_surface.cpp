@@ -24,6 +24,7 @@
 #include "mir/scene/surface_configurator.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
 #include "src/server/report/null_report_factory.h"
@@ -233,6 +234,11 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 
 TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
 {
+    using namespace testing;
+    mtd::StubBuffer mock_buffer;
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
+        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
+
     ms::BasicSurface surface{
         name,
         rect,
@@ -253,7 +259,9 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
     surface.set_hidden(true);
     EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
-    surface.frame_posted();
+    mir::graphics::Buffer* buffer = nullptr;
+    surface.swap_buffers_blocking(buffer);
+    surface.swap_buffers_blocking(buffer);
     EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
     surface.set_hidden(false);
@@ -288,8 +296,9 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
 TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 {
     using namespace testing;
-    EXPECT_CALL(mock_callback, call())
-        .Times(1);
+    mtd::StubBuffer mock_buffer;
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
+        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
 
     ms::BasicSurface surface{
         name,
@@ -303,7 +312,11 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
     auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
-    surface.frame_posted();
+    EXPECT_CALL(mock_callback, call()).Times(1);
+
+    mir::graphics::Buffer* buffer = nullptr;
+    surface.swap_buffers_blocking(buffer);
+    surface.swap_buffers_blocking(buffer);
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)
