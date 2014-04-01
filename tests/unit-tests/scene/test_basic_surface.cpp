@@ -239,6 +239,9 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
         .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
 
+    mir::graphics::Buffer* buffer = nullptr;
+    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
+
     ms::BasicSurface surface{
         name,
         rect,
@@ -259,9 +262,8 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
     surface.set_hidden(true);
     EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
-    mir::graphics::Buffer* buffer = nullptr;
-    surface.swap_buffers_blocking(buffer);
-    surface.swap_buffers_blocking(buffer);
+    surface.swap_buffers(buffer, callback);
+    surface.swap_buffers(buffer, callback);
     EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
     surface.set_hidden(false);
@@ -312,11 +314,13 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
     auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
+    mir::graphics::Buffer* buffer = nullptr;
+    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
+
     EXPECT_CALL(mock_callback, call()).Times(1);
 
-    mir::graphics::Buffer* buffer = nullptr;
-    surface.swap_buffers_blocking(buffer);
-    surface.swap_buffers_blocking(buffer);
+    surface.swap_buffers(buffer, callback);
+    surface.swap_buffers(buffer, callback);
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)
