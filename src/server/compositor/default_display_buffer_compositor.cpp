@@ -29,28 +29,35 @@
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
+#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+//TODO remove VisibilityFilter once we don't need filters/operators for rendering
 namespace
 {
-
-struct FilterForUndrawnSurfaces : public mc::FilterForScene
+struct VisibilityFilter : public mc::FilterForScene
 {
-    FilterForUndrawnSurfaces(
-        mc::OcclusionMatch const& occlusions)
-        : occlusions(occlusions)
+public:
+    VisibilityFilter(
+        mg::RenderableList const& renderable_list)
+        : list(renderable_list)
     {
     }
+
     bool operator()(mg::Renderable const& r)
     {
-        return !occlusions.occluded(r);
+        auto matcher = [&r](std::shared_ptr<mg::Renderable> const& renderable)
+        {
+            return (renderable.get() == &r);
+        };
+        return (std::find_if(list.begin(), list.end(), matcher) != list.end());
     }
 
-    mc::OcclusionMatch const& occlusions;
+private:
+    mg::RenderableList const& list;
 };
-
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -65,7 +72,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       last_pass_rendered_anything{false}
 {
 }
-
 
 bool mc::DefaultDisplayBufferCompositor::composite()
 {
@@ -121,14 +127,12 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         auto const& view_area = display_buffer.view_area();
-        mc::OcclusionFilter occlusion_search(view_area);
-        mc::OcclusionMatch occlusion_match;
-        scene->reverse_for_each_if(occlusion_search, occlusion_match);
-
+        auto renderable_list = scene->generate_renderable_list();
+        mc::filter_occlusions_from(renderable_list, view_area);
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);
-        FilterForUndrawnSurfaces selector(occlusion_match);
+        VisibilityFilter selector(renderable_list);
         scene->for_each_if(selector, applicator);
         renderer->end();
 
@@ -149,4 +153,3 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     report->finished_frame(bypassed, this);
     return uncomposited_buffers;
 }
-

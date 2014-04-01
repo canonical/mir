@@ -20,16 +20,15 @@
 #include "mir/graphics/renderable.h"
 #include "occlusion.h"
 
-using namespace mir;
-using namespace mir::compositor;
+using namespace mir::geometry;
 using namespace mir::graphics;
 
-OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
-        : area(area)
+namespace
 {
-}
-
-bool OcclusionFilter::operator()(const Renderable &renderable)
+bool renderable_is_occluded(
+    Renderable const& renderable, 
+    Rectangle const& area,
+    std::vector<Rectangle>& coverage)
 {
     static const glm::mat4 identity;
     if (renderable.transformation() != identity)
@@ -39,7 +38,7 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
         return true;  // Not on the display, or invisible; definitely occluded.
 
     bool occluded = false;
-    geometry::Rectangle const& window = renderable.screen_position();
+    Rectangle const& window = renderable.screen_position();
     for (const auto &r : coverage)
     {
         if (r.contains(window))
@@ -54,13 +53,19 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
 
     return occluded;
 }
-
-void OcclusionMatch::operator()(const Renderable &renderable)
-{
-    hidden.insert(&renderable);
 }
 
-bool OcclusionMatch::occluded(const Renderable &renderable) const
+void mir::compositor::filter_occlusions_from(
+    RenderableList& list,
+    Rectangle const& area)
 {
-    return hidden.find(&renderable) != hidden.end();
+    std::vector<Rectangle> coverage;
+    auto it = list.rbegin();
+    while (it != list.rend())
+    {
+        if (renderable_is_occluded(**it, area, coverage))
+            list.erase(std::prev(it.base()));
+        else
+            it++;
+    }
 }
