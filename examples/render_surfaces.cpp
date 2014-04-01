@@ -91,10 +91,6 @@ namespace me = mir::examples;
 namespace
 {
 std::atomic<bool> created{false};
-bool input_is_on = false;
-std::weak_ptr<mg::Cursor> cursor;
-static const uint32_t bg_color = 0x00000000;
-static const uint32_t fg_color = 0xffdd4814;
 static const int width = 64;
 static const int height = 64;
 
@@ -109,71 +105,6 @@ struct NullCursor : public mg::Cursor
     {
     }
 };
-
-struct ExampleCursorImage : public mg::CursorImage
-{
-    ExampleCursorImage(uint32_t bg_color, uint32_t fg_color)
-        : image(height*width, bg_color)
-    {
-        for (int i = 0; i != width-1; ++i)
-        {
-            if (i < 16)
-            {
-                image[0 * height + i] = fg_color;
-                image[1 * height + i] = fg_color;
-                image[i * height + 0] = fg_color;
-                image[i * height + 1] = fg_color;
-            }
-            image[i * height + i] = fg_color;
-            image[(i+1) * height + i] = fg_color;
-            image[i * height + i + 1] = fg_color;
-        }
-    }
-    
-    void const* as_argb_8888() const
-    {
-        return image.data();
-    }
-    
-    geom::Size size() const
-    {
-        return geom::Size{width, height};
-    }
-
-    std::vector<uint32_t> image;
-};
-
-void update_cursor(uint32_t bg_color, uint32_t fg_color)
-{
-    if (auto cursor = ::cursor.lock())
-    {
-        cursor->set_image(std::make_shared<ExampleCursorImage>(bg_color, fg_color));
-    }
-}
-
-void animate_cursor()
-{
-    if (!input_is_on)
-    {
-        if (auto cursor = ::cursor.lock())
-        {
-            static int cursor_pos = 0;
-            if (++cursor_pos == 300)
-            {
-                cursor_pos = 0;
-
-                static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
-                static int fg_color = 0;
-
-                if (++fg_color == 3) fg_color = 0;
-
-                update_cursor(bg_color, fg_colors[fg_color]);
-            }
-
-            cursor->move_to(geom::Point{cursor_pos, cursor_pos});
-        }
-    }
-}
 
 char const* const surfaces_to_render = "surfaces-to-render";
 char const* const display_cursor     = "display-cursor";
@@ -312,7 +243,7 @@ public:
                 (surfaces_to_render, po::value<int>()->default_value(5),
                     "Number of surfaces to render")
                 (display_cursor, po::value<bool>()->default_value(false),
-                    "Display test cursor. (If input is disabled it gets animated.)");
+                    "Display default cursor");
 
             return result;
         }())
@@ -414,7 +345,6 @@ public:
             bool composite()
             {
                 while (!created) std::this_thread::yield();
-                animate_cursor();
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
                 {
@@ -534,11 +464,6 @@ public:
         created = true;
     }
 
-    bool input_is_on()
-    {
-        return the_options()->get<bool>(mo::enable_input_opt);
-    }
-
     std::shared_ptr<mg::Cursor> the_cursor()
     {
         if (the_options()->get<bool>(display_cursor))
@@ -565,9 +490,6 @@ try
 
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
-        cursor = conf.the_cursor();
-
-        input_is_on = conf.input_is_on();
     });
     ///\internal [main_tag]
 
