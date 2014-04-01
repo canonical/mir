@@ -262,8 +262,10 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
     surface.set_hidden(true);
     EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
+    // The second call posts the buffer returned by first
     surface.swap_buffers(buffer, callback);
     surface.swap_buffers(buffer, callback);
+
     EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
 
     surface.set_hidden(false);
@@ -319,6 +321,7 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 
     EXPECT_CALL(mock_callback, call()).Times(1);
 
+    // The second call posts the buffer returned by first
     surface.swap_buffers(buffer, callback);
     surface.swap_buffers(buffer, callback);
 }
