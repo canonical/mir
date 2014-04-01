@@ -41,6 +41,7 @@ class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
 class EventHandlerRegister;
+class GLConfig;
 
 namespace mesa
 {
@@ -54,8 +55,9 @@ class Display : public graphics::Display
 {
 public:
     Display(std::shared_ptr<Platform> const& platform,
-               std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-               std::shared_ptr<DisplayReport> const& listener);
+            std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+            std::shared_ptr<GLConfig> const& gl_config,
+            std::shared_ptr<DisplayReport> const& listener);
     ~Display();
 
     geometry::Rectangle view_area() const;
@@ -92,6 +94,7 @@ private:
     RealKMSOutputContainer output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     std::shared_ptr<Cursor> cursor;
+    std::shared_ptr<GLConfig> const gl_config;
 };
 
 }

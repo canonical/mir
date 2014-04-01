@@ -83,9 +83,11 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_bu
 }
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
-    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+    std::shared_ptr<mg::GLConfig> const& gl_config)
 {
-    return std::make_shared<mga::AndroidDisplay>(display_builder, display_report);
+    return std::make_shared<mga::AndroidDisplay>(
+        display_builder, gl_config, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

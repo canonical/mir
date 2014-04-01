@@ -27,6 +27,7 @@
 #include "mir_test_doubles/mock_gl.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/stub_gl_config.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -99,8 +100,9 @@ public:
     std::shared_ptr<mg::Display> create_display(
         std::shared_ptr<mg::Platform> const& platform)
     {
-        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
-        return platform->create_display(conf_policy);
+        return platform->create_display(
+            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLConfig>());
     }
 
     void setup_sample_modes()

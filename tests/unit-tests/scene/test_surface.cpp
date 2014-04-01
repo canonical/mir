@@ -20,7 +20,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -168,11 +168,11 @@ struct MockEventSink : StubEventSink
     MOCK_METHOD1(handle_event, void(MirEvent const&));
 };
 
-struct StubSurfaceConfigurator : msh::SurfaceConfigurator
+struct StubSurfaceConfigurator : ms::SurfaceConfigurator
 {
-    int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int) override { return 0; }
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int) override { return 0; }
 
-    void attribute_set(msh::Surface const&, MirSurfaceAttrib, int) override { }
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
 };
 
 
@@ -222,7 +222,6 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -245,7 +244,6 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -262,7 +260,6 @@ TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -280,7 +277,6 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -309,7 +305,6 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -332,7 +327,6 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -352,7 +346,6 @@ TEST_F(SurfaceCreation, test_surface_move_to)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -378,7 +371,6 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -403,7 +395,6 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -440,7 +431,6 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -472,7 +462,6 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -498,7 +487,6 @@ TEST_F(SurfaceCreation, test_get_input_channel)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         mock_channel,
@@ -518,7 +506,6 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -540,7 +527,6 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -562,7 +548,6 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -579,13 +564,14 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_event_sink,
         stub_configurator,
         report);
+
+    surf.on_change(change_notification);
 
     mg::Buffer* buffer{nullptr};
 
@@ -606,7 +592,6 @@ TEST_F(SurfaceCreation, input_fds)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
@@ -626,7 +611,6 @@ TEST_F(SurfaceCreation, input_fds)
         mf::SurfaceId(),
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,mt::fake_shared(channel),
         stub_event_sink,

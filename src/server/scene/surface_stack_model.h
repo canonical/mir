@@ -21,6 +21,7 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir/scene/depth_id.h"
+#include "mir/input/input_reception_mode.h"
 
 #include <memory>
 
@@ -30,7 +31,6 @@ namespace frontend { class EventSink; }
 namespace shell
 {
 struct SurfaceCreationParameters;
-class SurfaceConfigurator;
 }
 
 namespace scene
@@ -43,11 +43,10 @@ class SurfaceStackModel
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<Surface> create_surface(
-        frontend::SurfaceId id,
-        shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) = 0;
+    virtual void add_surface(
+        std::shared_ptr<Surface> const& surface,
+        DepthId depth,
+        input::InputReceptionMode input_mode) = 0;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 

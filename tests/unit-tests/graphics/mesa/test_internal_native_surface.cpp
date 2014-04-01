@@ -24,7 +24,6 @@
 #include "mir_toolkit/mesa/native_display.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 
@@ -34,8 +33,6 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
-namespace mc = mir::compositor;
-namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;

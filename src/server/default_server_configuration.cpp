@@ -25,7 +25,7 @@
 
 #include "mir/options/program_option.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
@@ -113,19 +113,19 @@ mir::DefaultServerConfiguration::the_cursor_listener()
         });
 }
 
-std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_shell_surface_configurator()
+std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_surface_configurator()
 {
-    struct DefaultSurfaceConfigurator : public msh::SurfaceConfigurator
+    struct DefaultSurfaceConfigurator : public ms::SurfaceConfigurator
     {
-        int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int requested_value)
+        int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int requested_value)
         {
             return requested_value;
         }
-        void attribute_set(msh::Surface const&, MirSurfaceAttrib, int)
+        void attribute_set(ms::Surface const&, MirSurfaceAttrib, int)
         {
         }
     };
-    return shell_surface_configurator(
+    return surface_configurator(
         [this]()
         {
             return std::make_shared<DefaultSurfaceConfigurator>();

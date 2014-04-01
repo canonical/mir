@@ -38,19 +38,19 @@ static inline bool has_alpha(MirPixelFormat fmt)
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<BufferStreamFactory> const& stream_factory,
     std::shared_ptr<input::InputChannelFactory> const& input_factory,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     buffer_stream_factory(stream_factory),
     input_factory(input_factory),
+    configurator(configurator),
     report(report)
 {
 }
 
-std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
+std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     frontend::SurfaceId id,
     msh::SurfaceCreationParameters const& params,
-    std::function<void()> const& change_callback,
-    std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator)
+    std::shared_ptr<frontend::EventSink> const& event_sink)
 {
     mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
@@ -64,7 +64,6 @@ std::shared_ptr<ms::BasicSurface> ms::SurfaceAllocator::create_surface(
         id,
         params.name,
         actual_size,
-        change_callback,
         nonrectangular,
         buffer_stream,
         input_channel,

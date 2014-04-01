@@ -63,6 +63,10 @@ class Scene
 public:
     virtual ~Scene() {}
 
+    /**
+     * Generate a valid list of renderables based on the current state of the Scene.
+     * \returns a list of mg::Renderables. The list is in stacking order from back to front.
+     */
     virtual graphics::RenderableList generate_renderable_list() const = 0;
 
     // Back to front; normal rendering order

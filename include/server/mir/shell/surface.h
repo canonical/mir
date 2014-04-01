@@ -50,8 +50,6 @@ public:
 
     virtual void allow_framedropping(bool) = 0;
 
-    virtual void raise(std::shared_ptr<scene::SurfaceRanker> const& controller) = 0;
-
     virtual void resize(geometry::Size const& size) = 0;
     virtual void set_transformation(glm::mat4 const& t) = 0;
 

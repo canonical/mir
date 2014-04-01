@@ -18,6 +18,7 @@
 
 #include "src/server/scene/surface_controller.h"
 #include "src/server/scene/surface_stack_model.h"
+#include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
@@ -32,41 +33,52 @@ namespace mt = mir::test;
 
 namespace
 {
+struct MockSurfaceAllocator : public ms::SurfaceFactory
+{
+    MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
+        mf::SurfaceId id,
+        msh::SurfaceCreationParameters const&,
+        std::shared_ptr<mf::EventSink> const&));
+};
+
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
 {
-    MOCK_METHOD4(create_surface, std::weak_ptr<ms::Surface>(
-        mf::SurfaceId,
-        msh::SurfaceCreationParameters const&,
-        std::shared_ptr<mir::frontend::EventSink> const&,
-        std::shared_ptr<msh::SurfaceConfigurator> const&));
+    MOCK_METHOD3(add_surface, void(
+        std::shared_ptr<ms::Surface> const&,
+        ms::DepthId depth,
+        mir::input::InputReceptionMode input_mode));
     MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::Surface> const&));
     MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
 };
 }
 
-TEST(SurfaceController, create_and_destroy_surface)
+TEST(SurfaceController, add_and_remove_surface)
 {
     using namespace ::testing;
 
-    std::weak_ptr<ms::Surface> null_surface;
+    std::shared_ptr<ms::Surface> null_surface;
+    testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     MockSurfaceStackModel model;
 
-    ms::SurfaceController controller(mt::fake_shared(model));
+    ms::SurfaceController controller(mt::fake_shared(mock_surface_allocator), mt::fake_shared(model));
 
     InSequence seq;
-    EXPECT_CALL(model, create_surface(_,_,_,_)).Times(1).WillOnce(Return(null_surface));
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_)).Times(1).WillOnce(Return(null_surface));
+    EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto surface = controller.create_surface(mf::SurfaceId(), msh::a_surface(), {}, {});
-    controller.destroy_surface(surface);
+    auto surface = controller.add_surface(mf::SurfaceId(), msh::a_surface(), {});
+    controller.remove_surface(surface);
 }
 
 TEST(SurfaceController, raise_surface)
 {
     using namespace ::testing;
 
+    testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     MockSurfaceStackModel model;
-    ms::SurfaceController controller(mt::fake_shared(model));
+
+    ms::SurfaceController controller(mt::fake_shared(mock_surface_allocator), mt::fake_shared(model));
 
     EXPECT_CALL(model, raise(_)).Times(1);
 
