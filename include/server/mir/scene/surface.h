@@ -42,7 +42,11 @@ public:
     float alpha() const = 0;
 
     // member functions that don't exist in base classes
+    // TODO input_channel() and on_change() relate to
+    // TODO adding and removing the surface from the scene and are probably not
+    // TODO cleanest interface for this.
     virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
+    virtual void on_change(std::function<void()> change_notification) = 0;
 };
 }
 }

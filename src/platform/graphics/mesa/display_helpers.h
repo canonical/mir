@@ -37,6 +37,8 @@ namespace mir
 {
 namespace graphics
 {
+class GLConfig;
+
 namespace mesa
 {
 
@@ -92,11 +94,7 @@ public:
 class EGLHelper
 {
 public:
-    EGLHelper()
-        : egl_display{EGL_NO_DISPLAY}, egl_config{0},
-          egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
-          should_terminate_egl{false} {}
-
+    EGLHelper(GLConfig const& gl_config);
     ~EGLHelper() noexcept;
 
     EGLHelper(const EGLHelper&) = delete;
@@ -117,6 +115,8 @@ public:
 private:
     void setup_internal(GBMHelper const& gbm, bool initialize);
 
+    EGLint const depth_buffer_bits;
+    EGLint const stencil_buffer_bits;
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;

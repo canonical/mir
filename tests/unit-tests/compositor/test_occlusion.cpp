@@ -26,8 +26,8 @@
 using namespace testing;
 using namespace mir::geometry;
 using namespace mir::compositor;
-namespace mg=mir::graphics;
-namespace mtd=mir::test::doubles;
+namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
 
 struct OcclusionFilterTest : public Test
 {

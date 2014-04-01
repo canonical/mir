@@ -49,10 +49,27 @@ namespace input
 class InputChannel;
 class Surface;
 }
-namespace shell { class SurfaceConfigurator; }
 namespace scene
 {
 class SceneReport;
+class SurfaceConfigurator;
+
+// Thread safe wrapper around notification callback
+class ThreadsafeCallback
+{
+public:
+    ThreadsafeCallback(std::function<void()> const& notify_change);
+
+    ThreadsafeCallback& operator=(std::function<void()> const& notify_change);
+
+    void operator()() const;
+
+private:
+    ThreadsafeCallback(ThreadsafeCallback const&) = delete;
+    ThreadsafeCallback& operator =(ThreadsafeCallback const&) = delete;
+    std::mutex mutable mutex;
+    std::function<void()> notify_change;
+};
 
 class BasicSurface : public Surface
 {
@@ -61,12 +78,11 @@ public:
         frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
-        std::function<void()> change_cb,
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<SceneReport> const& report);
 
     ~BasicSurface() noexcept;
@@ -88,6 +104,7 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
+    void on_change(std::function<void()> change_notification) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -115,7 +132,6 @@ public:
     MirSurfaceType type() const override;
     MirSurfaceState state() const override;
     void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) override;
-    void raise(std::shared_ptr<SurfaceRanker> const& controller) override;
     int configure(MirSurfaceAttrib attrib, int value) override;
     void hide() override;
     void show() override;
@@ -127,7 +143,7 @@ private:
 
     std::mutex mutable guard;
     frontend::SurfaceId const id;
-    std::function<void()> const notify_change;
+    ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
@@ -139,7 +155,7 @@ private:
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<frontend::EventSink> const event_sink;
-    std::shared_ptr<shell::SurfaceConfigurator> const configurator;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 
     MirSurfaceType type_value;

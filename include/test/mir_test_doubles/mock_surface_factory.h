@@ -38,6 +38,8 @@ struct MockSurfaceFactory : public shell::SurfaceFactory
         const shell::SurfaceCreationParameters&,
         frontend::SurfaceId,
         std::shared_ptr<frontend::EventSink> const&));
+
+    void destroy_surface(std::shared_ptr<shell::Surface> const& /*surface*/) override {}
 };
 
 }

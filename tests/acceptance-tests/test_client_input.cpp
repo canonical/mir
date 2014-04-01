@@ -347,6 +347,11 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
         return surface;
     }
 
+    void destroy_surface(std::shared_ptr<msh::Surface> const& surface) override
+    {
+        underlying_factory->destroy_surface(surface);
+    }
+
     std::shared_ptr<msh::SurfaceFactory> const underlying_factory;
     std::vector<geom::Rectangle> const input_rectangles;
 };

@@ -23,7 +23,6 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/depth_id.h"
-#include "mir/input/input_reception_mode.h"
 #include "mir/input/input_targets.h"
 
 #include <memory>
@@ -54,7 +53,6 @@ class InputChannel;
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace scene
 {
-class BasicSurfaceFactory;
 class InputRegistrar;
 class BasicSurface;
 class SceneReport;
@@ -63,7 +61,6 @@ class SurfaceStack : public compositor::Scene, public input::InputTargets, publi
 {
 public:
     explicit SurfaceStack(
-        std::shared_ptr<BasicSurfaceFactory> const& surface_factory,
         std::shared_ptr<InputRegistrar> const& input_registrar,
         std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
@@ -78,24 +75,14 @@ public:
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
-    // From SurfaceStackModel
-    std::weak_ptr<Surface> create_surface(
-        frontend::SurfaceId id,
-        shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
-
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
     virtual void raise(std::weak_ptr<Surface> const& surface) override;
 
-    // TODO I plan decouple the creation of surface from adding to the scene
-    // (as that complicates client code wrapping the default implementation).
-    // For now add_surface() is called by create_surface
     void add_surface(
         std::shared_ptr<Surface> const& surface,
         DepthId depth,
-        input::InputReceptionMode input_mode);
+        input::InputReceptionMode input_mode) override;
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
@@ -110,7 +97,6 @@ private:
     //end protected by list_mutex
 
     //consts, threadsafe
-    std::shared_ptr<BasicSurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
     std::function<void()> const change_cb;

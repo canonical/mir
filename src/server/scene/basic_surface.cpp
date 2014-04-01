@@ -26,7 +26,7 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
-#include "mir/shell/surface_configurator.h"
+#include "mir/scene/surface_configurator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -40,19 +40,36 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+ms::ThreadsafeCallback::ThreadsafeCallback(std::function<void()> const& notify_change) :
+        notify_change(notify_change) {}
+
+ms::ThreadsafeCallback& ms::ThreadsafeCallback::operator=(std::function<void()> const& notify_change)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    this->notify_change = notify_change;
+    return *this;
+}
+
+void ms::ThreadsafeCallback::operator()() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    auto const notifier = notify_change;
+    lock.unlock();
+    notifier();
+}
+
 ms::BasicSurface::BasicSurface(
     frontend::SurfaceId id,
     std::string const& name,
     geometry::Rectangle rect,
-    std::function<void()> change_cb,
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<frontend::EventSink> const& event_sink,
-    std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
     id(id),
-    notify_change(change_cb),
+    notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
@@ -169,6 +186,11 @@ int ms::BasicSurface::client_input_fd() const
 std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 {
     return server_input_channel;
+}
+
+void ms::BasicSurface::on_change(std::function<void()> change_notification)
+{
+    notify_change = change_notification;
 }
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
@@ -367,11 +389,6 @@ void ms::BasicSurface::notify_attrib_change(MirSurfaceAttrib attrib, int value)
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
     targeter->focus_changed(input_channel());
-}
-
-void ms::BasicSurface::raise(std::shared_ptr<ms::SurfaceRanker> const& /*controller*/)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("Need refactoring to implement here"));
 }
 
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
