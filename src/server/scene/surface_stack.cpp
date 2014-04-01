@@ -59,49 +59,61 @@ ms::SurfaceStack::SurfaceStack(
 
 namespace
 {
+//This class avoids locking for long periods of time by copying or lazy-copying
 class RenderableCopy : public mg::Renderable
 {
 public:
-    RenderableCopy(mg::Renderable const&, std::shared_ptr<mc::BufferStream> const& buffer_stream)
-    : buffer_stream(buffer_stream),
-      alpha_enabled_(
-       
-    //bstream
-    std::shared_ptr<Buffer> buffer(void const* user_id) const override
+    RenderableCopy(mg::Renderable const& renderable,
+                   std::shared_ptr<mc::BufferStream> const& buffer_stream)
+    : buffer_stream{buffer_stream},
+      alpha_enabled_{renderable.alpha_enabled()},
+      alpha_{renderable.alpha()},
+      shaped_{renderable.shaped()},
+      visible_{renderable.visible()},
+      screen_position_(renderable.screen_position()),
+      transformation_(renderable.transformation())
     {
     }
+ 
+    //lazy
+    std::shared_ptr<mg::Buffer> buffer(void const* user_id) const override
+    {
+        return buffer_stream->lock_compositor_buffer(user_id);
+    }
 
-    //bstream
+    //lazy copy
     int buffers_ready_for_compositor() const override
-    { return buffers_ready
+    {
+        return buffer_stream->buffers_ready_for_compositor();
+    }
 
-    //copy
-    bool should_be_rendered_in(geometry::Rectangle const& rect) const override
-    { return
+    bool visible() const override
+    { return visible_; }
 
-    //copy
     bool alpha_enabled() const override
-    { return alpha_enabled; }
+    { return alpha_enabled_; }
 
-    //copy
     geom::Rectangle screen_position() const override
-    { return position; }
+    { return screen_position_; }
 
-    //copy
     float alpha() const override
-    { return alpha; }
+    { return alpha_; }
 
-    //copy
     glm::mat4 transformation() const override
-    { return transformation; }
+    { return transformation_; }
 
-    //copy
     bool shaped() const override
-    { return shaped; }
-private:
-    bool shaped_;
-    glm::mat4 transformation_;
+    { return shaped_; }
 
+private:
+    std::shared_ptr<mc::BufferStream> const buffer_stream;
+    bool const alpha_enabled_;
+    float const alpha_;
+    bool const shaped_;
+    bool const visible_;
+    geom::Rectangle const screen_position_;
+    glm::mat4 const transformation_;
+     
 };
 }
 

@@ -27,7 +27,7 @@
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/fake_renderable.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
@@ -135,7 +135,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
 TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
-    mtd::NullDisplayBuffer display_buffer;
+    mtd::StubDisplayBuffer display_buffer{geom::Rectangle{{0,0},{14,14}}};
     auto mock_renderable1 = std::make_shared<mtd::MockRenderable>();
     auto mock_renderable2 = std::make_shared<mtd::MockRenderable>();
     auto mock_renderable3 = std::make_shared<mtd::MockRenderable>();
@@ -156,11 +156,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(*mock_renderable3, transformation())
         .WillOnce(Return(simple));
 
-    EXPECT_CALL(*mock_renderable1, should_be_rendered_in(_))
+    EXPECT_CALL(*mock_renderable1, visible())
         .WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock_renderable2, should_be_rendered_in(_))
+    EXPECT_CALL(*mock_renderable2, visible())
         .WillRepeatedly(Return(false));
-    EXPECT_CALL(*mock_renderable3, should_be_rendered_in(_))
+    EXPECT_CALL(*mock_renderable3, visible())
         .WillRepeatedly(Return(true));
 
     EXPECT_CALL(*mock_renderable1, alpha())
@@ -174,11 +174,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
         .WillOnce(Return(false));
 
     EXPECT_CALL(*mock_renderable1, screen_position())
-        .WillOnce(Return(geom::Rectangle{{1,2}, {3,4}}));
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
     EXPECT_CALL(*mock_renderable2, screen_position())
-        .Times(0);
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
     EXPECT_CALL(*mock_renderable3, screen_position())
-        .WillOnce(Return(geom::Rectangle{{5,6}, {7,8}}));
+        .WillRepeatedly(Return(geom::Rectangle{{5,6}, {7,8}}));
 
     mg::RenderableList list{
         mock_renderable1,

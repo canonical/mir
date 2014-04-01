@@ -436,17 +436,25 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
 {
     size_t num_surfaces{3};
     ms::SurfaceStack stack(
-        mt::fake_shared(mock_surface_allocator),
         mt::fake_shared(input_registrar), report);
 
     std::list<std::shared_ptr<ms::Surface>> surfacelist;
     for(auto i = 0u; i < num_surfaces; i++)
-        surfacelist.emplace_back(stack.create_surface(
-            mf::SurfaceId(),
-            msh::a_surface()
-                .of_size(geom::Size{1 * i, 2 * i})
-                .of_position(geom::Point{3 * i, 4 * i}),
-            {}, {}).lock());
+    {
+        auto const surface = std::make_shared<ms::BasicSurface>(
+            mf::SurfaceId(__LINE__),
+            std::string("stub"),
+            geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+            true,
+            std::make_shared<mtd::StubBufferStream>(),
+            std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mf::EventSink>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
+            report);
+
+        surfacelist.emplace_back(surface);
+        stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    }
 
     auto list = stack.generate_renderable_list();
 

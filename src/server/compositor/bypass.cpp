@@ -32,8 +32,7 @@ mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
 
 bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
-    if (!bypass_is_feasible ||
-        !renderable->should_be_rendered_in(view_area))
+    if (!bypass_is_feasible || !renderable->visible())
         return false;
 
     auto is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
