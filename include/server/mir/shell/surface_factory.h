@@ -19,15 +19,12 @@
 #ifndef MIR_SHELL_SURFACE_FACTORY_H_
 #define MIR_SHELL_SURFACE_FACTORY_H_
 
-#include "mir/frontend/surface_id.h"
 #include <memory>
 
 namespace mir
 {
-namespace frontend
-{
-class EventSink;
-}
+namespace scene { class SurfaceObserver; }
+
 namespace shell
 {
 class Session;
@@ -40,8 +37,7 @@ public:
     virtual std::shared_ptr<Surface> create_surface(
         Session* session,
         SurfaceCreationParameters const& params,
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& sink) = 0;
+        std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
 
     virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
 

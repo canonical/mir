@@ -85,7 +85,6 @@ struct BasicSurfaceTest : public testing::Test
     std::function<void()> mock_change_cb;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream =
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-    std::shared_ptr<StubEventSink> const stub_event_sink = std::make_shared<StubEventSink>();
     std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
@@ -95,13 +94,11 @@ struct BasicSurfaceTest : public testing::Test
 TEST_F(BasicSurfaceTest, basics)
 {
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -117,13 +114,11 @@ TEST_F(BasicSurfaceTest, update_top_left)
         .Times(1);
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -144,13 +139,11 @@ TEST_F(BasicSurfaceTest, update_size)
         .Times(1);
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -173,13 +166,11 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         .Times(1);
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -204,13 +195,11 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         .Times(1);
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -225,13 +214,11 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -242,13 +229,11 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
 {
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -281,13 +266,11 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         .Times(1);
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -303,13 +286,11 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         .Times(1);
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -324,13 +305,11 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         geom::Rectangle{pt, one_by_one},
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
@@ -367,13 +346,11 @@ TEST_F(BasicSurfaceTest, set_input_region)
     };
 
     ms::BasicSurface surface{
-        mf::SurfaceId(),
         name,
         rect,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_event_sink,
         stub_configurator,
         report};
 
