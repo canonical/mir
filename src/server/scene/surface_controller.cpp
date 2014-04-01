@@ -19,6 +19,7 @@
 #include "surface_controller.h"
 #include "surface_stack_model.h"
 #include "mir/scene/surface_factory.h"
+#include "mir/scene/surface.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -32,11 +33,11 @@ ms::SurfaceController::SurfaceController(
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceController::add_surface(
-    frontend::SurfaceId id,
     shell::SurfaceCreationParameters const& params,
-    std::shared_ptr<frontend::EventSink> const& event_sink)
+    std::shared_ptr<SurfaceObserver> const& observer)
 {
-    auto const surface = surface_factory->create_surface(id, params, event_sink);
+    auto const surface = surface_factory->create_surface(params);
+    surface->add_observer(observer);
     surface_stack->add_surface(surface, params.depth, params.input_mode);
     return surface;
 }

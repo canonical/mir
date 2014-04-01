@@ -24,11 +24,6 @@
 
 namespace mir
 {
-namespace shell
-{
-class Session;
-}
-
 namespace scene
 {
 class SurfaceStackModel;
@@ -43,9 +38,8 @@ public:
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
     std::shared_ptr<Surface> add_surface(
-        frontend::SurfaceId id,
         shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink) override;
+        std::shared_ptr<SurfaceObserver> const& observer) override;
 
     void remove_surface(std::weak_ptr<Surface> const& surface) override;
 

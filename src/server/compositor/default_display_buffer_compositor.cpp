@@ -125,6 +125,10 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, view_area);
+
+        for(auto const& renderable : renderable_list)
+            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
+
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
         mc::RenderingOperator applicator(*renderer);
@@ -134,15 +138,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         display_buffer.post_update();
 
-        uncomposited_buffers |= applicator.uncomposited_buffers();
-
         // This is a frig to avoid lp:1286190
-        if (last_pass_rendered_anything && !applicator.anything_was_rendered())
-        {
+        if (last_pass_rendered_anything && renderable_list.empty())
             uncomposited_buffers = true;
-        }
 
-        last_pass_rendered_anything = applicator.anything_was_rendered();
+        last_pass_rendered_anything = !renderable_list.empty();
         // End of frig
     }
 

@@ -41,9 +41,8 @@ public:
 
     std::shared_ptr<Surface> create_surface(
         Session* session,
-        shell::SurfaceCreationParameters const& params,
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        SurfaceCreationParameters const& params,
+        std::shared_ptr<scene::SurfaceObserver> const& observer) override;
 
     void destroy_surface(std::shared_ptr<Surface> const& surface) override;
 

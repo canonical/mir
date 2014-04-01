@@ -33,6 +33,7 @@
 #include "mir/scene/scene_report.h"
 #include "src/server/scene/surface_allocator.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_event_source.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
@@ -98,7 +99,8 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, std::make_shared<mtd::NullSurfaceConfigurator>(), scene_report);
     auto ss = std::make_shared<ms::SurfaceStack>(stub_input_registrar, scene_report);
     auto surface_controller = std::make_shared<ms::SurfaceController>(surface_allocator, ss);
-    auto surface = surface_controller->add_surface(id, params, std::shared_ptr<mf::EventSink>());
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(id, std::shared_ptr<mf::EventSink>());
+    auto surface = surface_controller->add_surface(params, observer);
     surface->allow_framedropping(true);
     auto mir_surface = as_internal_surface(surface);
 

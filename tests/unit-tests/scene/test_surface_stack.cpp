@@ -128,35 +128,29 @@ struct SurfaceStack : public ::testing::Test
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
         stub_surface1 = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         stub_surface2 = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         stub_surface3 = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
     }
@@ -514,13 +508,11 @@ TEST_F(SurfaceStack, generate_renderlist)
     for(auto i = 0u; i < num_surfaces; i++)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             true,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 

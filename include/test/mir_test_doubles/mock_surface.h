@@ -35,11 +35,9 @@ struct MockSurface : public scene::BasicSurface
 {
     MockSurface() :
         scene::BasicSurface(
-            frontend::SurfaceId{},
             {},
             {{},{}},
             true,
-            {},
             {},
             {},
             {},
@@ -65,6 +63,7 @@ struct MockSurface : public scene::BasicSurface
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));
+    MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
 };
 
 }
