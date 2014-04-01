@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_BUILTIN_CURSOR_LOADER_H_
 #define MIR_GRAPHICS_BUILTIN_CURSOR_LOADER_H_
 
-#include "mir/graphics/cursor_loader.h"
+#include "mir/graphics/cursor_images.h"
 
 namespace mir
 {
@@ -28,19 +28,19 @@ namespace graphics
 {
 class CursorImage;
 
-class BuiltinCursorLoader : public CursorLoader
+class BuiltinCursorImages : public CursorImages
 {
 public:
-    BuiltinCursorLoader();
-    virtual ~BuiltinCursorLoader() = default;
+    BuiltinCursorImages();
+    virtual ~BuiltinCursorImages() = default;
 
     std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
                                                std::string const& cursor_name,
                                                geometry::Size const& size);
 
 protected:
-    BuiltinCursorLoader(BuiltinCursorLoader const&) = delete;
-    BuiltinCursorLoader& operator=(BuiltinCursorLoader const&) = delete;
+    BuiltinCursorImages(BuiltinCursorImages const&) = delete;
+    BuiltinCursorImages& operator=(BuiltinCursorImages const&) = delete;
 
 private:
     std::shared_ptr<CursorImage> const builtin_image;

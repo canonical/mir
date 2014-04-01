@@ -31,8 +31,8 @@ namespace graphics
 {
 class CursorImage;
 
-/// CursorLoader is used to lookup cursor images within cursor themes.
-class CursorLoader
+/// CursorImages is used to lookup cursor images within cursor themes.
+class CursorImages
 {
 public:
     /// Looks up the image for a named cursor in a given cursor theme. Cursor names
@@ -42,10 +42,10 @@ public:
                                                        geometry::Size const& size) = 0;
 
 protected:
-    CursorLoader() = default;
-    virtual ~CursorLoader() = default;
-    CursorLoader(CursorLoader const&) = delete;
-    CursorLoader& operator=(CursorLoader const&) = delete;
+    CursorImages() = default;
+    virtual ~CursorImages() = default;
+    CursorImages(CursorImages const&) = delete;
+    CursorImages& operator=(CursorImages const&) = delete;
 };
 }
 }
