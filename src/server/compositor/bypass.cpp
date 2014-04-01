@@ -32,13 +32,18 @@ mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
 
 bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
-    if (!bypass_is_feasible ||
-        !renderable->visible() ||
-        !view_area.contains(renderable->screen_position()))
+    //we've already eliminated bypass as a possibility
+    if (!bypass_is_feasible)
         return false;
 
-    auto is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
-    auto fits = (renderable->screen_position() == view_area);
-    auto is_orthogonal = (renderable->transformation() == identity);
-    return bypass_is_feasible = (is_opaque && fits && is_orthogonal);
+    //offscreen or invisible surfaces don't affect if bypass is possible 
+    if (!(renderable->visible() && //TODO: we shouldn't be getting invisible surfaces 
+         view_area.contains(renderable->screen_position())))
+        return false;
+
+    auto const is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
+    auto const fits = (renderable->screen_position() == view_area);
+    auto const is_orthogonal = (renderable->transformation() == identity);
+    bypass_is_feasible = (is_opaque && fits && is_orthogonal);
+    return bypass_is_feasible;
 }
