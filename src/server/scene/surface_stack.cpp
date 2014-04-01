@@ -63,28 +63,27 @@ namespace
 class RenderableCopy : public mg::Renderable
 {
 public:
-    RenderableCopy(mg::Renderable const& renderable,
-                   std::shared_ptr<mc::BufferStream> const& buffer_stream)
-    : buffer_stream{buffer_stream},
-      alpha_enabled_{renderable.alpha_enabled()},
-      alpha_{renderable.alpha()},
-      shaped_{renderable.shaped()},
-      visible_{renderable.visible()},
-      screen_position_(renderable.screen_position()),
-      transformation_(renderable.transformation())
+    RenderableCopy(std::shared_ptr<mg::Renderable> const& renderable)
+    : underlying_renderable{renderable},
+      alpha_enabled_{renderable->alpha_enabled()},
+      alpha_{renderable->alpha()},
+      shaped_{renderable->shaped()},
+      visible_{renderable->visible()},
+      screen_position_(renderable->screen_position()),
+      transformation_(renderable->transformation())
     {
     }
  
     //lazy
     std::shared_ptr<mg::Buffer> buffer(void const* user_id) const override
     {
-        return buffer_stream->lock_compositor_buffer(user_id);
+        return underlying_renderable->buffer(user_id);
     }
 
     //lazy copy
     int buffers_ready_for_compositor() const override
     {
-        return buffer_stream->buffers_ready_for_compositor();
+        return underlying_renderable->buffers_ready_for_compositor();
     }
 
     bool visible() const override
@@ -106,7 +105,8 @@ public:
     { return shaped_; }
 
 private:
-    std::shared_ptr<mc::BufferStream> const buffer_stream;
+    //for lazy copy
+    std::shared_ptr<mg::Renderable> const underlying_renderable;
     bool const alpha_enabled_;
     float const alpha_;
     bool const shaped_;
@@ -121,8 +121,9 @@ mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 {
     std::unique_lock<decltype(list_mutex)> lk(list_mutex);
     mg::RenderableList list;
-    for (auto &layer : layers_by_depth)
-        std::copy(layer.second.begin(), layer.second.end(), std::back_inserter(list));
+    for (auto const& layer : layers_by_depth)
+        for (auto const& renderable : layer.second) 
+            list.emplace_back(std::make_shared<RenderableCopy>(renderable));
     return list;
 }
 
