@@ -91,8 +91,6 @@ namespace me = mir::examples;
 namespace
 {
 std::atomic<bool> created{false};
-static const int width = 64;
-static const int height = 64;
 
 static const float min_alpha = 0.3f;
 
