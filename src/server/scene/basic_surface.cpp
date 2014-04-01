@@ -290,7 +290,7 @@ glm::mat4 ms::BasicSurface::transformation() const
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return !(hidden || !first_frame_posted);
+    return !hidden && first_frame_posted;
 } 
 
 bool ms::BasicSurface::shaped() const
