@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,6 +21,7 @@
 /*
  * TODO: Improve testability of NestedPlatform, so we can have proper unit tests.
  * In particular we need a way to fake interactions with the client library.
+ * See https://bugs.launchpad.net/mir/+bug/1299101 for tracking.
  */
 TEST(NestedDisplay, DISABLED_nested_display_should_not_change_power_mode_when_display_is_off)
 {
