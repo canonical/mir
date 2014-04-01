@@ -20,8 +20,8 @@
 #define MIR_SCENE_BASIC_SURFACE_H_
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_observer.h"
 
-#include "mir/frontend/surface_id.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_toolkit/common.h"
@@ -54,34 +54,35 @@ namespace scene
 class SceneReport;
 class SurfaceConfigurator;
 
-// Thread safe wrapper around notification callback
-class ThreadsafeCallback
+class SurfaceObservers : public SurfaceObserver
 {
 public:
-    ThreadsafeCallback(std::function<void()> const& notify_change);
 
-    ThreadsafeCallback& operator=(std::function<void()> const& notify_change);
+    void attrib_change(MirSurfaceAttrib attrib, int value) override;
+    void resize(geometry::Size const& size) override;
+    void move_to(geometry::Point const& top_left) override;
+    void set_hidden(bool hide) override;
+    void frame_posted() override;
+    void set_alpha(float alpha) override;
+    void set_transformation(glm::mat4 const& t) override;
 
-    void operator()() const;
+    void add(std::shared_ptr<SurfaceObserver> const& observer);
+    void remove(std::shared_ptr<SurfaceObserver> const& observer);
 
 private:
-    ThreadsafeCallback(ThreadsafeCallback const&) = delete;
-    ThreadsafeCallback& operator =(ThreadsafeCallback const&) = delete;
-    std::mutex mutable mutex;
-    std::function<void()> notify_change;
+    std::mutex mutex;
+    std::vector<std::shared_ptr<SurfaceObserver>> observers;
 };
 
 class BasicSurface : public Surface
 {
 public:
     BasicSurface(
-        frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
         std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<SceneReport> const& report);
 
@@ -104,7 +105,6 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
-    void on_change(std::function<void()> change_notification) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -136,14 +136,15 @@ public:
     void hide() override;
     void show() override;
 
+    void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+    void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
-    void notify_attrib_change(MirSurfaceAttrib attrib, int value);
 
+    SurfaceObservers observers;
     std::mutex mutable guard;
-    frontend::SurfaceId const id;
-    ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
@@ -154,7 +155,6 @@ private:
     std::vector<geometry::Rectangle> input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
-    std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 

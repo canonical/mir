@@ -20,6 +20,8 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/session.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface_coordinator.h"
 
 #include "mir_test_doubles/stub_shell_session.h"
@@ -38,10 +40,9 @@ namespace
 {
 struct MockSurfaceCoordinator : public ms::SurfaceCoordinator
 {
-    MOCK_METHOD3(add_surface, std::shared_ptr<ms::Surface>(
-        mf::SurfaceId,
+    MOCK_METHOD2(add_surface, std::shared_ptr<ms::Surface>(
         msh::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const&));
+        std::shared_ptr<ms::SurfaceObserver> const&));
 
     void remove_surface(std::weak_ptr<ms::Surface> const& /*surface*/) override {}
     void raise(std::weak_ptr<ms::Surface> const& /*surface*/)  override {}
@@ -57,10 +58,11 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-        ON_CALL(*surface_coordinator, add_surface(_, _, _)).WillByDefault(Return(null_surface));
+        ON_CALL(*surface_coordinator, add_surface(_, _)).WillByDefault(Return(null_surface));
     }
     std::shared_ptr<ms::Surface> null_surface;
     std::shared_ptr<MockSurfaceCoordinator> surface_coordinator = std::make_shared<MockSurfaceCoordinator>();
+    std::shared_ptr<ms::SurfaceObserver> const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
     std::shared_ptr<MockPlacementStrategy> placement_strategy = std::make_shared<MockPlacementStrategy>();
 };
 
@@ -73,13 +75,13 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     msh::OrganisingSurfaceFactory factory(surface_coordinator, placement_strategy);
 
     mtd::StubShellSession session;
-    EXPECT_CALL(*surface_coordinator, add_surface(_, _, _)).Times(1);
+    EXPECT_CALL(*surface_coordinator, add_surface(_, _)).Times(1);
 
     auto params = msh::a_surface();
     EXPECT_CALL(*placement_strategy, place(Ref(session), Ref(params))).Times(1)
         .WillOnce(Return(msh::a_surface()));
 
-    factory.create_surface(&session, params, mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
+    factory.create_surface(&session, params, observer);
 }
 
 TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
@@ -88,14 +90,13 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
 
     msh::OrganisingSurfaceFactory factory(surface_coordinator, placement_strategy);
 
-    std::shared_ptr<mf::EventSink> sink = std::make_shared<mtd::NullEventSink>();
     auto params = msh::a_surface();
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
     EXPECT_CALL(*placement_strategy, place(_, Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(*surface_coordinator, add_surface(mf::SurfaceId(), placed_params, sink));
+    EXPECT_CALL(*surface_coordinator, add_surface(placed_params, _));
 
-    factory.create_surface(nullptr, params, mf::SurfaceId(), sink);
+    factory.create_surface(nullptr, params, observer);
 }
