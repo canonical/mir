@@ -110,12 +110,12 @@ public:
         return client->last_rendered();
     }
 
-    bool alpha_enabled() const
+    bool alpha_enabled() const override
     {
         return false;
     }
 
-    geom::Rectangle screen_position() const
+    geom::Rectangle screen_position() const override
     {
         return position;
     }
@@ -130,14 +130,14 @@ public:
         return trans;
     }
 
-    bool shaped() const
+    bool shaped() const override
     {
         return false;
     }
 
-    bool should_be_rendered_in(geom::Rectangle const& rect) const override
+    bool visible() const override
     {
-        return rect.overlaps(position);
+        return true;
     }
 
     int buffers_ready_for_compositor() const override
