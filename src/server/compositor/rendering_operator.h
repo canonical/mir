@@ -38,13 +38,10 @@ public:
     ~RenderingOperator() = default;
 
     void operator()(graphics::Renderable const&);
-    bool uncomposited_buffers() const;
-    bool anything_was_rendered() const;
 
 private:
     Renderer& renderer;
     std::vector<std::shared_ptr<void>> saved_resources;
-    bool uncomposited_buffers_;
 };
 
 }

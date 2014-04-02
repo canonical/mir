@@ -214,60 +214,6 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
     stack.for_each_if(filter, renderable_operator);
 }
 
-TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
-{
-    using namespace ::testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
-
-    MockFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-
-    Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
-        .InSequence(seq1)
-        .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
-        .InSequence(seq1)
-        .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
-        .InSequence(seq1)
-        .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq2);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq2);
-
-    stack.reverse_for_each_if(filter, renderable_operator);
-}
-
-TEST_F(SurfaceStack, stacking_order_reverse)
-{
-    using namespace ::testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
-
-    StubFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-    Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-
-    stack.reverse_for_each_if(filter, renderable_operator);
-}
-
 TEST_F(SurfaceStack, stacking_order)
 {
     using namespace ::testing;

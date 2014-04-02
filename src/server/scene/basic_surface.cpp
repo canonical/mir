@@ -323,15 +323,11 @@ glm::mat4 ms::BasicSurface::transformation() const
     return transformation_matrix;
 }
 
-bool ms::BasicSurface::should_be_rendered_in(geom::Rectangle const& rect) const
+bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
-
-    if (hidden || !first_frame_posted)
-        return false;
-
-    return rect.overlaps(surface_rect);
-}
+    return !hidden && first_frame_posted;
+} 
 
 bool ms::BasicSurface::shaped() const
 {
