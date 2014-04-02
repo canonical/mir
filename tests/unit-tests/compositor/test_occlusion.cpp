@@ -50,6 +50,18 @@ TEST_F(OcclusionFilterTest, single_window_not_occluded)
     EXPECT_EQ(window, list.front());
 }
 
+TEST_F(OcclusionFilterTest, partially_offscreen_still_visible)
+{ // Regression test for LP: #1301115
+    auto left =   std::make_shared<mtd::FakeRenderable>(-10,   10, 100, 100);
+    auto right =  std::make_shared<mtd::FakeRenderable>(1900,  10, 100, 100);
+    auto top =    std::make_shared<mtd::FakeRenderable>(500,   -1, 100, 100);
+    auto bottom = std::make_shared<mtd::FakeRenderable>(200, 1000, 100, 1000);
+    mg::RenderableList list{left, right, top, bottom};
+ 
+    filter_occlusions_from(list, monitor_rect);
+    EXPECT_EQ(4u, list.size());
+}
+
 TEST_F(OcclusionFilterTest, smaller_window_occluded)
 {
     auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
