@@ -22,6 +22,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/cursor.h"
 #include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
@@ -48,7 +49,7 @@ namespace
 
 struct FakeScene : mc::Scene
 {
-    FakeScene(mg::RenderableList& renderlist)
+    FakeScene(mg::RenderableList const& renderlist)
      : renderlist{renderlist}
     {
     }
@@ -618,17 +619,17 @@ TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
     ON_CALL(display_buffer, can_bypass())
         .WillByDefault(Return(true));
 
-    FakeScene scene({&fullscreen});
+    FakeScene scene({fullscreen});
 
     EXPECT_CALL(mock_renderer, begin())
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
         .Times(1);
     EXPECT_CALL(mock_renderer, end())
         .Times(1);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    fullscreen.set_buffer(compositor_buffer);
+    fullscreen->set_buffer(compositor_buffer);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
 
