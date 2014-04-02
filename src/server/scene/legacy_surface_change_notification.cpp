@@ -24,17 +24,17 @@ namespace geom = mir::geometry;
 ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(std::function<void()> const& notify_change) :
         notify_change(notify_change) {}
 
-void ms::LegacySurfaceChangeNotification::resize(geom::Size const& /*size*/)
+void ms::LegacySurfaceChangeNotification::resized_to(geom::Size const& /*size*/)
 {
     notify_change();
 }
 
-void ms::LegacySurfaceChangeNotification::move_to(geom::Point const& /*top_left*/)
+void ms::LegacySurfaceChangeNotification::moved_to(geom::Point const& /*top_left*/)
 {
     notify_change();
 }
 
-void ms::LegacySurfaceChangeNotification::set_hidden(bool /*hide*/)
+void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
 {
     notify_change();
 }
@@ -44,12 +44,12 @@ void ms::LegacySurfaceChangeNotification::frame_posted()
     notify_change();
 }
 
-void ms::LegacySurfaceChangeNotification::set_alpha(float /*alpha*/)
+void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
 {
     notify_change();
 }
 
-void ms::LegacySurfaceChangeNotification::set_transformation(glm::mat4 const& /*t*/)
+void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const& /*t*/)
 {
     notify_change();
 }

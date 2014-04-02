@@ -58,13 +58,13 @@ class SurfaceObservers : public SurfaceObserver
 {
 public:
 
-    void attrib_change(MirSurfaceAttrib attrib, int value) override;
-    void resize(geometry::Size const& size) override;
-    void move_to(geometry::Point const& top_left) override;
-    void set_hidden(bool hide) override;
+    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
+    void resized_to(geometry::Size const& size) override;
+    void moved_to(geometry::Point const& top_left) override;
+    void hidden_set_to(bool hide) override;
     void frame_posted() override;
-    void set_alpha(float alpha) override;
-    void set_transformation(glm::mat4 const& t) override;
+    void alpha_set_to(float alpha) override;
+    void transformation_set_to(glm::mat4 const& t) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
@@ -116,7 +116,9 @@ public:
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
     glm::mat4 transformation() const override;
-    bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
+
+    bool visible() const;
+    
     bool shaped() const  override;  // meaning the pixel format has alpha
 
     // Renderable interface

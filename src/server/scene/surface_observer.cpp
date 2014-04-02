@@ -20,10 +20,10 @@
 
 namespace ms = mir::scene;
 
-void ms::SurfaceObserver::attrib_change(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
-void ms::SurfaceObserver::resize(geometry::Size const& /*size*/) {}
-void ms::SurfaceObserver::move_to(geometry::Point const& /*top_left*/) {}
-void ms::SurfaceObserver::set_hidden(bool /*hide*/) {}
+void ms::SurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::SurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
+void ms::SurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
+void ms::SurfaceObserver::hidden_set_to(bool /*hide*/) {}
 void ms::SurfaceObserver::frame_posted() {}
-void ms::SurfaceObserver::set_alpha(float /*alpha*/) {}
-void ms::SurfaceObserver::set_transformation(glm::mat4 const& /*t*/) {}
+void ms::SurfaceObserver::alpha_set_to(float /*alpha*/) {}
+void ms::SurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}

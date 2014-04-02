@@ -232,7 +232,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
     EXPECT_FALSE(surface.shaped());
 }
 
-TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
+TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
@@ -251,29 +251,23 @@ TEST_F(BasicSurfaceTest, test_surface_should_be_rendered_in)
         stub_configurator,
         report};
 
-    geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
-
-    //not renderable by default
-    EXPECT_FALSE(surface.should_be_rendered_in(rect));
+    //not visible by default
+    EXPECT_FALSE(surface.visible());
 
     surface.set_hidden(false);
     //not renderable if no first frame has been posted by client, regardless of hide state
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.visible());
     surface.set_hidden(true);
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.visible());
 
     // The second call posts the buffer returned by first
     surface.swap_buffers(buffer, callback);
     surface.swap_buffers(buffer, callback);
 
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect));
+    EXPECT_FALSE(surface.visible());
 
     surface.set_hidden(false);
-    EXPECT_TRUE(surface.should_be_rendered_in(output_rect));
-
-    // Not renderable if not overlapping with supplied rect
-    geom::Rectangle output_rect1{geom::Point{100,100}, geom::Size{100, 100}};
-    EXPECT_FALSE(surface.should_be_rendered_in(output_rect1));
+    EXPECT_TRUE(surface.visible());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)

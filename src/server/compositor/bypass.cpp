@@ -44,9 +44,14 @@ bool BypassFilter::operator()(const Renderable &renderable)
 
     auto const& view_area = display_buffer.view_area();
 
+    //TODO: remove this check, why are we getting a non visible renderable 
+    //      in the list of surfaces?
+    if (!renderable.visible())
+        return false; 
+
     // Not weirdly transformed but also not on this monitor? Don't care...
     // This will also check the surface is not hidden and has been posted.
-    if (!renderable.should_be_rendered_in(view_area))
+    if (!view_area.contains(renderable.screen_position()))
         return false;
 
     topmost_fits = false;

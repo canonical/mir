@@ -34,7 +34,7 @@ ms::SurfaceEventSource::SurfaceEventSource(
 {
 }
 
-void ms::SurfaceEventSource::resize(geom::Size const& size)
+void ms::SurfaceEventSource::resized_to(geom::Size const& size)
 {
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -46,7 +46,7 @@ void ms::SurfaceEventSource::resize(geom::Size const& size)
 }
 
 
-void ms::SurfaceEventSource::attrib_change(MirSurfaceAttrib attrib, int value)
+void ms::SurfaceEventSource::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
     MirEvent e;
 

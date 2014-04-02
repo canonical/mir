@@ -36,13 +36,13 @@ namespace scene
 class SurfaceObserver
 {
 public:
-    virtual void attrib_change(MirSurfaceAttrib attrib, int value);
-    virtual void resize(geometry::Size const& size);
-    virtual void move_to(geometry::Point const& top_left);
-    virtual void set_hidden(bool hide);
+    virtual void attrib_changed(MirSurfaceAttrib attrib, int value);
+    virtual void resized_to(geometry::Size const& size);
+    virtual void moved_to(geometry::Point const& top_left);
+    virtual void hidden_set_to(bool hide);
     virtual void frame_posted();
-    virtual void set_alpha(float alpha);
-    virtual void set_transformation(glm::mat4 const& t);
+    virtual void alpha_set_to(float alpha);
+    virtual void transformation_set_to(glm::mat4 const& t);
 
 protected:
     SurfaceObserver() = default;
