@@ -33,7 +33,6 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
-#include "surface_source.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 
@@ -79,7 +78,7 @@ mir::DefaultServerConfiguration::the_scene()
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
--> std::shared_ptr<ms::BasicSurfaceFactory>
+-> std::shared_ptr<ms::SurfaceFactory>
 {
     return surface_factory(
         [this]()
@@ -87,14 +86,9 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
             return std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(),
                 the_input_channel_factory(),
+                the_surface_configurator(),
                 the_scene_report());
         });
-}
-
-std::shared_ptr<ms::SurfaceBuilder>
-mir::DefaultServerConfiguration::the_surface_builder()
-{
-    return the_surface_controller();
 }
 
 std::shared_ptr<ms::SurfaceController>
@@ -115,15 +109,10 @@ mir::DefaultServerConfiguration::the_surface_ranker()
     return the_surface_controller();
 }
 
-std::shared_ptr<msh::SurfaceFactory>
-mir::DefaultServerConfiguration::the_scene_surface_factory()
+std::shared_ptr<ms::SurfaceCoordinator>
+mir::DefaultServerConfiguration::the_surface_coordinator()
 {
-    return scene_surface_factory(
-        [this]()
-        {
-            return std::make_shared<ms::SurfaceSource>(
-                the_surface_builder(), the_shell_surface_configurator());
-        });
+    return the_surface_controller();
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

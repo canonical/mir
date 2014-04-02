@@ -774,36 +774,6 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     EXPECT_EQ(expected_call_count, call_count);
 }
 
-namespace
-{
-MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
-{
-    bool attrib_position = true;
-    bool attrib_found = false;
-
-    while (!attrib_position || *arg != EGL_NONE)
-    {
-        if (attrib_position && *arg == attrib)
-        {
-            attrib_found = true;
-        }
-        else if (!attrib_position)
-        {
-            if (attrib_found && *arg == value)
-            {
-                return true;
-            }
-
-            attrib_found = false;
-        }
-        attrib_position = !attrib_position;
-        ++arg;
-    }
-
-    return false;
-}
-}
-
 TEST_F(MesaDisplayTest, respects_gl_config)
 {
     using namespace testing;
@@ -822,8 +792,8 @@ TEST_F(MesaDisplayTest, respects_gl_config)
     EXPECT_CALL(mock_egl,
                 eglChooseConfig(
                     _,
-                    AllOf(EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
-                          EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
                     _,_,_))
         .Times(AtLeast(1))
         .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),

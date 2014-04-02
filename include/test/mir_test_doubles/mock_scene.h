@@ -32,10 +32,14 @@ namespace doubles
 class MockScene : public compositor::Scene
 {
 public:
+    MockScene()
+    {
+        ON_CALL(*this, generate_renderable_list())
+            .WillByDefault(testing::Return(graphics::RenderableList{}));
+    }
+    MOCK_CONST_METHOD0(generate_renderable_list, graphics::RenderableList());
     MOCK_METHOD2(for_each_if, void(compositor::FilterForScene&,
                                    compositor::OperatorForScene&));
-    MOCK_METHOD2(reverse_for_each_if, void(compositor::FilterForScene&,
-                                           compositor::OperatorForScene&));
     MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());

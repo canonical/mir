@@ -22,7 +22,6 @@
 #include "surface_stack_model.h"
 
 #include "mir/compositor/scene.h"
-#include "mir/graphics/renderable.h"
 #include "mir/scene/depth_id.h"
 #include "mir/input/input_targets.h"
 
@@ -66,13 +65,11 @@ public:
         std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    graphics::RenderableList generate_renderable_list() const;
     // From Scene
+    graphics::RenderableList generate_renderable_list() const;
     virtual void set_change_callback(std::function<void()> const& f);
     //to be deprecated
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
-    virtual void reverse_for_each_if(compositor::FilterForScene& filter,
-                                     compositor::OperatorForScene& op);
     virtual void lock();
     virtual void unlock();
     //end to be deprecated

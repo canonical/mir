@@ -29,6 +29,7 @@ namespace mir
 namespace graphics
 {
 class DisplayReport;
+class GLConfig;
 namespace android
 {
 
@@ -53,7 +54,9 @@ class GLContext : public SwappingGLContext,
 {
 public:
     //For creating a gl context
-    GLContext(MirPixelFormat display_format, DisplayReport& report);
+    GLContext(MirPixelFormat display_format,
+              GLConfig const& gl_config,
+              DisplayReport& report);
 
     //For creating a gl context shared with another GLContext
     GLContext(GLContext const& shared_gl_context,

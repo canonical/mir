@@ -43,6 +43,7 @@ namespace graphics
 class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
+class GLConfig;
 
 namespace nested
 {
@@ -65,7 +66,8 @@ private:
 class EGLDisplayHandle
 {
 public:
-    explicit EGLDisplayHandle(MirConnection* connection);
+    EGLDisplayHandle(MirConnection* connection,
+                     std::shared_ptr<GLConfig> const& gl_config);
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
@@ -77,6 +79,7 @@ public:
 private:
     EGLDisplay egl_display;
     EGLContext egl_context_;
+    std::shared_ptr<GLConfig> const gl_config;
 
     EGLDisplayHandle(EGLDisplayHandle const&) = delete;
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
@@ -96,7 +99,8 @@ public:
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<input::EventFilter> const& event_handler,
         std::shared_ptr<DisplayReport> const& display_report,
-        std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy);
+        std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config);
 
     ~NestedDisplay() noexcept;
 

@@ -20,8 +20,8 @@
 #define MIR_SCENE_BASIC_SURFACE_H_
 
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_observer.h"
 
-#include "mir/frontend/surface_id.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_toolkit/common.h"
@@ -49,10 +49,10 @@ namespace input
 class InputChannel;
 class Surface;
 }
-namespace shell { class SurfaceConfigurator; }
 namespace scene
 {
 class SceneReport;
+class SurfaceConfigurator;
 
 // Thread safe wrapper around notification callback
 class ThreadsafeCallback
@@ -71,18 +71,31 @@ private:
     std::function<void()> notify_change;
 };
 
+class SurfaceObservers : public SurfaceObserver
+{
+public:
+
+    void attrib_change(MirSurfaceAttrib attrib, int value) override;
+    void resize(geometry::Size const& size) override;
+
+    void add(std::shared_ptr<SurfaceObserver> const& observer);
+    void remove(std::shared_ptr<SurfaceObserver> const& observer);
+
+private:
+    std::mutex mutex;
+    std::vector<std::shared_ptr<SurfaceObserver>> observers;
+};
+
 class BasicSurface : public Surface
 {
 public:
     BasicSurface(
-        frontend::SurfaceId id,
         std::string const& name,
         geometry::Rectangle rect,
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<SceneReport> const& report);
 
     ~BasicSurface() noexcept;
@@ -117,7 +130,9 @@ public:
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
     glm::mat4 transformation() const override;
-    bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
+
+    bool visible() const;
+    
     bool shaped() const  override;  // meaning the pixel format has alpha
 
     // Renderable interface
@@ -132,18 +147,19 @@ public:
     MirSurfaceType type() const override;
     MirSurfaceState state() const override;
     void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) override;
-    void raise(std::shared_ptr<SurfaceRanker> const& controller) override;
     int configure(MirSurfaceAttrib attrib, int value) override;
     void hide() override;
     void show() override;
 
+    void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+    void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
-    void notify_attrib_change(MirSurfaceAttrib attrib, int value);
 
+    SurfaceObservers observers;
     std::mutex mutable guard;
-    frontend::SurfaceId const id;
     ThreadsafeCallback notify_change;
     std::string const surface_name;
     geometry::Rectangle surface_rect;
@@ -155,8 +171,7 @@ private:
     std::vector<geometry::Rectangle> input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
-    std::shared_ptr<frontend::EventSink> const event_sink;
-    std::shared_ptr<shell::SurfaceConfigurator> const configurator;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 
     MirSurfaceType type_value;

@@ -128,36 +128,30 @@ struct SurfaceStack : public ::testing::Test
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
         stub_surface1 = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         stub_surface2 = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         stub_surface3 = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{{},{}},
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
     }
 
@@ -218,60 +212,6 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
         .InSequence(seq2);
 
     stack.for_each_if(filter, renderable_operator);
-}
-
-TEST_F(SurfaceStack, skips_surface_that_is_filtered_out_reverse)
-{
-    using namespace ::testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
-
-    MockFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-
-    Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
-        .InSequence(seq1)
-        .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
-        .InSequence(seq1)
-        .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
-        .InSequence(seq1)
-        .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq2);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq2);
-
-    stack.reverse_for_each_if(filter, renderable_operator);
-}
-
-TEST_F(SurfaceStack, stacking_order_reverse)
-{
-    using namespace ::testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
-
-    StubFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-    Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-
-    stack.reverse_for_each_if(filter, renderable_operator);
 }
 
 TEST_F(SurfaceStack, stacking_order)
@@ -568,14 +508,12 @@ TEST_F(SurfaceStack, generate_renderlist)
     for(auto i = 0u; i < num_surfaces; i++)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
-            mf::SurfaceId(__LINE__),
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             true,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mf::EventSink>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(),
+            std::shared_ptr<ms::SurfaceConfigurator>(),
             report);
 
         surfacelist.emplace_back(surface);

@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
 #define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
-#include "basic_surface_factory.h"
+#include "mir/scene/surface_factory.h"
 
 namespace mir
 {
@@ -31,23 +31,23 @@ namespace scene
 {
 class BufferStreamFactory;
 class SceneReport;
+class SurfaceConfigurator;
 
-class SurfaceAllocator : public BasicSurfaceFactory
+class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
+                     std::shared_ptr<SurfaceConfigurator> const& configurator,
                      std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<Surface> create_surface(
-        frontend::SurfaceId id,
-        shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink,
-        std::shared_ptr<shell::SurfaceConfigurator> const& configurator) override;
+        shell::SurfaceCreationParameters const& params) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 };
 

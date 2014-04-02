@@ -8,5 +8,5 @@ Description: Mir server library
 Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
 Requires.private: protobuf >= 2.4.1
 Requires: mircommon
-Libs: -L@LIBDIR@ -lmirserver
+Libs: -L@LIBDIR@ -lmirserver -Wl,-rpath-link,@LIBDIR@
 Cflags: -I@PLATFORM_INCLUDEDIR@ -I@INCLUDEDIR@

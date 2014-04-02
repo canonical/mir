@@ -335,16 +335,21 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(msh::Session* session,
-                                                 msh::SurfaceCreationParameters const& params,
-                                                 mf::SurfaceId id,
-                                                 std::shared_ptr<mf::EventSink> const& sink)
+    std::shared_ptr<msh::Surface> create_surface(
+        msh::Session* session,
+        msh::SurfaceCreationParameters const& params,
+        std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
-        auto surface = underlying_factory->create_surface(session, params, id, sink);
+        auto surface = underlying_factory->create_surface(session, params, observer);
 
         surface->set_input_region(input_rectangles);
 
         return surface;
+    }
+
+    void destroy_surface(std::shared_ptr<msh::Surface> const& surface) override
+    {
+        underlying_factory->destroy_surface(surface);
     }
 
     std::shared_ptr<msh::SurfaceFactory> const underlying_factory;

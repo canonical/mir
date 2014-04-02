@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/surface_configurator.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface_configurator.h"
+#include "mir/scene/surface.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_configurator.h"
@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -74,7 +74,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
-        std::shared_ptr<msh::SurfaceConfigurator> the_shell_surface_configurator() override
+        std::shared_ptr<ms::SurfaceConfigurator> the_surface_configurator() override
         {
             return mt::fake_shared(mock_configurator);
         }
@@ -113,7 +113,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
-        std::shared_ptr<msh::SurfaceConfigurator> the_shell_surface_configurator() override
+        std::shared_ptr<ms::SurfaceConfigurator> the_surface_configurator() override
         {
             return mt::fake_shared(mock_configurator);
         }
