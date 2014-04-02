@@ -35,12 +35,12 @@ class LegacySurfaceChangeNotification : public ms::SurfaceObserver
 public:
     LegacySurfaceChangeNotification(std::function<void()> const& notify_change);
 
-    void resize(geometry::Size const& /*size*/) override;
-    void move_to(geometry::Point const& /*top_left*/) override;
-    void set_hidden(bool /*hide*/) override;
+    void resized_to(geometry::Size const& /*size*/) override;
+    void moved_to(geometry::Point const& /*top_left*/) override;
+    void hidden_set_to(bool /*hide*/) override;
     void frame_posted() override;
-    void set_alpha(float /*alpha*/) override;
-    void set_transformation(glm::mat4 const& /*t*/) override;
+    void alpha_set_to(float /*alpha*/) override;
+    void transformation_set_to(glm::mat4 const& /*t*/) override;
 
 private:
     std::function<void()> const notify_change;

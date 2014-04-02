@@ -36,8 +36,8 @@ public:
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
-    void attrib_change(MirSurfaceAttrib attrib, int value);
-    void resize(geometry::Size const& size);
+    void attrib_changed(MirSurfaceAttrib attrib, int value);
+    void resized_to(geometry::Size const& size);
 
 private:
     frontend::SurfaceId const id;
