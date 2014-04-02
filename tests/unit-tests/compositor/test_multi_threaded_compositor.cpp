@@ -86,11 +86,14 @@ class StubScene : public mc::Scene
 public:
     StubScene() : callback{[]{}} {}
 
+    mg::RenderableList generate_renderable_list() const
+    {
+        return mg::RenderableList{};
+    }
+
     void for_each_if(mc::FilterForScene&, mc::OperatorForScene&)
     {
     }
-
-    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&) {}
 
     void set_change_callback(std::function<void()> const& f)
     {

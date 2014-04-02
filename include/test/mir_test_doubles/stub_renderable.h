@@ -53,7 +53,7 @@ public:
     {
         return trans;
     }
-    bool should_be_rendered_in(geometry::Rectangle const&) const override
+    bool visible() const
     {
         return true;
     }

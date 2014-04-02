@@ -21,6 +21,7 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_creation_parameters.h"
 
+#include "mir_test_doubles/mock_surface.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -30,15 +31,14 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
 struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
-    MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
-        mf::SurfaceId id,
-        msh::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const&));
+    MOCK_METHOD1(create_surface, std::shared_ptr<ms::Surface>(
+        msh::SurfaceCreationParameters const&));
 };
 
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
@@ -56,19 +56,24 @@ TEST(SurfaceController, add_and_remove_surface)
 {
     using namespace ::testing;
 
-    std::shared_ptr<ms::Surface> null_surface;
+    mtd::MockSurface mock_surface;
+    std::shared_ptr<ms::Surface> const expect_surface = mt::fake_shared(mock_surface);
+    auto const surface = std::make_shared<mtd::MockSurface>();
     testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     MockSurfaceStackModel model;
 
     ms::SurfaceController controller(mt::fake_shared(mock_surface_allocator), mt::fake_shared(model));
 
     InSequence seq;
-    EXPECT_CALL(mock_surface_allocator, create_surface(_,_,_)).Times(1).WillOnce(Return(null_surface));
+    EXPECT_CALL(mock_surface_allocator, create_surface(_)).Times(1).WillOnce(Return(expect_surface));
+    EXPECT_CALL(mock_surface, add_observer(_)).Times(1);
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto surface = controller.add_surface(mf::SurfaceId(), msh::a_surface(), {});
-    controller.remove_surface(surface);
+    auto actual_surface = controller.add_surface(msh::a_surface(), std::shared_ptr<ms::SurfaceObserver>());
+
+    EXPECT_THAT(actual_surface, Eq(expect_surface));
+    controller.remove_surface(actual_surface);
 }
 
 TEST(SurfaceController, raise_surface)
