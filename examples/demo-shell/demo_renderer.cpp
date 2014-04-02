@@ -69,7 +69,7 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture()
+GLuint generate_frame_corner_texture(float corner_radius)
 {
     struct Texel
     {
@@ -77,13 +77,14 @@ GLuint generate_frame_corner_texture()
     };
 
     int const width = 256;
-    Texel image[width][width];
+    int const height = 256;
+    Texel image[width][height];
 
-    int cx = width / 2;
-    int cy = width / 2;
-    int radius_sqr = cx * cx;
+    int cx = width * corner_radius;
+    int cy = cx;
+    int radius_sqr = cx * cy;
 
-    for (int y = 0; y < width; ++y)
+    for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
         {
@@ -135,7 +136,7 @@ DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
-    titlebar_corner_tex = generate_frame_corner_texture();
+    titlebar_corner_tex = generate_frame_corner_texture(0.25f);
 }
 
 DemoRenderer::~DemoRenderer()
