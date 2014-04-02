@@ -16,34 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SCENE_SURFACE_EVENT_SOURCE_H_
-#define MIR_SCENE_SURFACE_EVENT_SOURCE_H_
-
 #include "mir/scene/surface_observer.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/frontend/event_sink.h"
 
-#include <memory>
+namespace ms = mir::scene;
 
-namespace mir
-{
-namespace scene
-{
-class SurfaceEventSource : public SurfaceObserver
-{
-public:
-    SurfaceEventSource(
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& event_sink);
-
-    void attrib_changed(MirSurfaceAttrib attrib, int value);
-    void resized_to(geometry::Size const& size);
-
-private:
-    frontend::SurfaceId const id;
-    std::shared_ptr<frontend::EventSink> const event_sink;
-};
-}
-}
-
-#endif // MIR_SCENE_SURFACE_EVENT_SOURCE_H_
+void ms::SurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::SurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
+void ms::SurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
+void ms::SurfaceObserver::hidden_set_to(bool /*hide*/) {}
+void ms::SurfaceObserver::frame_posted() {}
+void ms::SurfaceObserver::alpha_set_to(float /*alpha*/) {}
+void ms::SurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
