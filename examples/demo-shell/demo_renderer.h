@@ -44,6 +44,7 @@ public:
                     float titlebar_height) const;
 
 private:
+    float const corner_radius;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
 };
