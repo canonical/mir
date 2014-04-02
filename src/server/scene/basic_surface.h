@@ -130,7 +130,9 @@ public:
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
     glm::mat4 transformation() const override;
-    bool should_be_rendered_in(geometry::Rectangle const& rect) const  override;
+
+    bool visible() const;
+    
     bool shaped() const  override;  // meaning the pixel format has alpha
 
     // Renderable interface
