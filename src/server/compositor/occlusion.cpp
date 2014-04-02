@@ -41,7 +41,7 @@ bool renderable_is_occluded(
         return true;  //invisible; definitely occluded.
 
     // Not weirdly transformed but also not on this monitor? Don't care...
-    if (!area.contains(renderable.screen_position()))
+    if (!area.overlaps(renderable.screen_position()))
         return true;  // Not on the display; definitely occluded.
 
     bool occluded = false;
