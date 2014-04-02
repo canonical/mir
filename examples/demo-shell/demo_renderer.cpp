@@ -26,6 +26,12 @@ using namespace mir::examples;
 namespace
 {
 
+struct Color
+{
+     GLubyte r, g, b, a;
+};
+
+
 float penumbra_curve(float x)
 {
     return 1.0f - std::sin(x * M_PI / 2.0f);
@@ -69,27 +75,23 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture(float corner_radius)
+GLuint generate_frame_corner_texture(float corner_radius,
+                                     Color const& color,
+                                     GLubyte highlight)
 {
-    struct Texel
-    {
-        GLubyte r, g, b, a;
-    };
-
     int const height = 256;
     int const width = height * corner_radius;
-    Texel image[height * height]; // Worst case still much faster than the heap
+    Color image[height * height]; // Worst case still much faster than the heap
 
-    int cx = width;
-    int cy = cx;
-    int radius_sqr = cx * cy;
+    int const cx = width;
+    int const cy = cx;
+    int const radius_sqr = cx * cy;
 
     for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
         {
-            GLubyte lum = 128;
-            GLubyte alpha = 255;
+            Color col = color;
 
             // Cut out the corner in a circular shape.
             if (x < cx && y < cy)
@@ -97,7 +99,7 @@ GLuint generate_frame_corner_texture(float corner_radius)
                 int dx = cx - x;
                 int dy = cy - y;
                 if (dx * dx + dy * dy >= radius_sqr)
-                    alpha = 0;
+                    col.a = 0;
             }
 
             // Set gradient
@@ -106,10 +108,12 @@ GLuint generate_frame_corner_texture(float corner_radius)
                 float brighten = (1.0f - (static_cast<float>(y) / cy)) *
                                  std::sin(x * M_PI / (2 * (width - 1)));
 
-                lum += (255 - lum) * brighten;
+                col.r += (highlight - col.r) * brighten;
+                col.g += (highlight - col.g) * brighten;
+                col.b += (highlight - col.b) * brighten;
             }
 
-            image[y * width + x] = {lum, lum, lum, alpha};
+            image[y * width + x] = col;
         }
     }
 
@@ -136,7 +140,9 @@ DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     , corner_radius(0.5f)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
-    titlebar_corner_tex = generate_frame_corner_texture(corner_radius);
+    titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
+                                                        {128,128,128,255},
+                                                        255);
 }
 
 DemoRenderer::~DemoRenderer()
