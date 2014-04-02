@@ -59,10 +59,6 @@ struct StubShellSession : public shell::Session
     void show() override
     {
     }
-    int configure_surface(frontend::SurfaceId, MirSurfaceAttrib, int) override
-    {
-        return 0;
-    }
 
     void send_display_config(graphics::DisplayConfiguration const&) override
     {

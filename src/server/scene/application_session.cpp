@@ -170,16 +170,6 @@ void ms::ApplicationSession::show()
     }
 }
 
-int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
-                                               MirSurfaceAttrib attrib,
-                                               int requested_value)
-{
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
-
-    return surf->configure(attrib, requested_value);
-}
-
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
     event_sink->handle_display_config_change(info);

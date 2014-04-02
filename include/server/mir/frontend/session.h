@@ -57,8 +57,6 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
 
-    virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
-
 protected:
     Session() = default;
     Session(Session const&) = delete;

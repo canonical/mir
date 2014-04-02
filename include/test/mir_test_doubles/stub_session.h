@@ -51,10 +51,6 @@ struct StubSession : public frontend::Session
     void show() override
     {
     }
-    int configure_surface(frontend::SurfaceId, MirSurfaceAttrib, int) override
-    {
-        return 0;
-    }
 };
 
 }
