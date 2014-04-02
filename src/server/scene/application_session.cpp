@@ -17,7 +17,7 @@
  */
 
 #include "application_session.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
