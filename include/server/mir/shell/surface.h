@@ -29,7 +29,6 @@
 
 namespace mir
 {
-namespace scene { class SurfaceRanker; }
 namespace shell
 {
 class InputTargeter;
