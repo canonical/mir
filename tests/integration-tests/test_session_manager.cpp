@@ -60,7 +60,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
 
     }
 
-    mtd::MockSurfaceFactory surface_factory;
+    mtd::MockSurfaceFactory surface_factory; // TODO this isn't used as a mock
     ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;

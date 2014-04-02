@@ -30,7 +30,22 @@ class DemoRenderer : public compositor::GLRenderer
 {
 public:
     DemoRenderer(geometry::Rectangle const& display_area);
+    ~DemoRenderer();
+
     void begin() const override;
+    void tessellate(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable,
+                    geometry::Size const& buf_size) const override;
+    void tessellate_shadow(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable,
+                    float radius) const;
+    void tessellate_frame(std::vector<Primitive>& primitives,
+                    graphics::Renderable const& renderable,
+                    float titlebar_height) const;
+
+private:
+    GLuint shadow_corner_tex;
+    GLuint titlebar_corner_tex;
 };
 
 } // namespace examples

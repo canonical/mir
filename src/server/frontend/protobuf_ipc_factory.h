@@ -40,8 +40,7 @@ class ProtobufIpcFactory
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
         pid_t client_pid,
-        std::shared_ptr<EventSink> const& sink,
-        bool authorized_to_resize_display) = 0;
+        std::shared_ptr<EventSink> const& sink) = 0;
 
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
 

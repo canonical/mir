@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SURFACE_CONFIGURATOR_H_
-#define MIR_SHELL_SURFACE_CONFIGURATOR_H_
+#ifndef MIR_SCENE_SURFACE_CONFIGURATOR_H_
+#define MIR_SCENE_SURFACE_CONFIGURATOR_H_
 
 #include "mir_toolkit/common.h"
 
@@ -26,7 +26,7 @@
 namespace mir
 {
 
-namespace shell
+namespace scene
 {
 class Surface;
 
@@ -51,4 +51,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_SHELL_SURFACE_CONFIGURATOR_H_
+#endif // MIR_SCENE_SURFACE_CONFIGURATOR_H_

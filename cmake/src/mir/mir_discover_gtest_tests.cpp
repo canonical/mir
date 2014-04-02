@@ -234,6 +234,18 @@ void emitMemcheckTest(string const& exe, vector<string> const& suppressions)
 }
 }
 
+bool is_death_test(string const& test)
+{
+    // precondition: test will match Foo.*
+    // assumption: death tests will match FooDeathTest.*
+    bool death_test = false;
+    if (test.size() > strlen("DeathTest.*"))
+       death_test = test.substr(test.size() - strlen("DeathTest.*"),
+				strlen("DeathTest")) == "DeathTest";
+
+    return death_test;
+}
+
 int main (int argc, char **argv)
 {
     int output_width = get_output_width();
@@ -291,8 +303,9 @@ int main (int argc, char **argv)
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
-                config.enable_memcheck ? memcheck_cmd_line_pattern(config.suppressions).c_str() :
-                                         ordinary_cmd_line_pattern().c_str(),
+                (config.enable_memcheck && !is_death_test(*test)) ?
+		    memcheck_cmd_line_pattern(config.suppressions).c_str() :
+                    ordinary_cmd_line_pattern().c_str(),
                 test_suite.c_str(),
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,

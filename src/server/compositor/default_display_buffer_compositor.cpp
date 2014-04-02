@@ -29,41 +29,35 @@
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
-#include <vector>
+#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+//TODO remove VisibilityFilter once we don't need filters/operators for rendering
 namespace
 {
-
-struct FilterForVisibleSceneInRegion : public mc::FilterForScene
+struct VisibilityFilter : public mc::FilterForScene
 {
-    FilterForVisibleSceneInRegion(
-        mir::geometry::Rectangle const& enclosing_region,
-        mc::OcclusionMatch const& occlusions)
-        : enclosing_region(enclosing_region),
-          occlusions(occlusions)
+public:
+    VisibilityFilter(
+        mg::RenderableList const& renderable_list)
+        : list(renderable_list)
     {
     }
+
     bool operator()(mg::Renderable const& r)
     {
-        return r.should_be_rendered_in(enclosing_region) &&
-               !occlusions.occluded(r);
+        auto matcher = [&r](std::shared_ptr<mg::Renderable> const& renderable)
+        {
+            return (renderable.get() == &r);
+        };
+        return (std::find_if(list.begin(), list.end(), matcher) != list.end());
     }
 
-    mir::geometry::Rectangle const& enclosing_region;
-    mc::OcclusionMatch const& occlusions;
+private:
+    mg::RenderableList const& list;
 };
-
-std::mutex global_frameno_lock;
-unsigned long global_frameno = 0;
-
-bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
-{
-    return (a - b) < (~0UL / 2UL);
-}
-
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -75,28 +69,13 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
-      local_frameno{global_frameno}
+      last_pass_rendered_anything{false}
 {
 }
-
 
 bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
-
-    /*
-     * Increment frame counts for each tick of the fastest instance of
-     * DefaultDisplayBufferCompositor. This means for the fastest refresh
-     * rate of all attached outputs.
-     */
-    local_frameno++;
-    {
-        std::lock_guard<std::mutex> lock(global_frameno_lock);
-        if (wrapped_greater_or_equal(local_frameno, global_frameno))
-            global_frameno = local_frameno;
-        else
-            local_frameno = global_frameno;
-    }
 
     static bool const bypass_env{[]
     {
@@ -123,8 +102,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         if (filter.fullscreen_on_top())
         {
-            auto bypass_buf =
-                match.topmost_fullscreen()->buffer(local_frameno);
+            /*
+             * Notice the user_id we pass to buffer() here has to be
+             * different to the one used in the Renderer. This is in case
+             * the below if() fails we want to complete the frame using the
+             * same buffer (different user_id required).
+             */
+            auto bypass_buf = match.topmost_fullscreen()->buffer(this);
 
             if (bypass_buf->can_bypass())
             {
@@ -140,41 +124,32 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
-        // preserves buffers used in rendering until after post_update()
-        std::vector<std::shared_ptr<void>> saved_resources;
-        auto save_resource = [&](std::shared_ptr<void> const& r)
-        {
-            saved_resources.push_back(r);
-        };
-
         display_buffer.make_current();
 
         auto const& view_area = display_buffer.view_area();
+        auto renderable_list = scene->generate_renderable_list();
+        mc::filter_occlusions_from(renderable_list, view_area);
 
-        mc::OcclusionFilter occlusion_search(view_area);
-        mc::OcclusionMatch occlusion_match;
-        scene->reverse_for_each_if(occlusion_search, occlusion_match);
+        for(auto const& renderable : renderable_list)
+            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, uncomposited_buffers);
-        FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
+        mc::RenderingOperator applicator(*renderer);
+        VisibilityFilter selector(renderable_list);
         scene->for_each_if(selector, applicator);
         renderer->end();
 
         display_buffer.post_update();
 
         // This is a frig to avoid lp:1286190
-        if (size_of_last_pass)
-        {
-            uncomposited_buffers |= saved_resources.empty();
-        }
+        if (last_pass_rendered_anything && renderable_list.empty())
+            uncomposited_buffers = true;
 
-        size_of_last_pass = saved_resources.size();
+        last_pass_rendered_anything = !renderable_list.empty();
         // End of frig
     }
 
     report->finished_frame(bypassed, this);
     return uncomposited_buffers;
 }
-

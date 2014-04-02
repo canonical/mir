@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-14 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,8 +17,10 @@
  */
 
 
-#ifndef MIR_SCENE_SURFACE_BUILDER_H_
-#define MIR_SCENE_SURFACE_BUILDER_H_
+#ifndef MIR_SCENE_SURFACE_COORDINATOR_H_
+#define MIR_SCENE_SURFACE_COORDINATOR_H_
+
+#include "mir/scene/surface_ranker.h"
 
 #include <memory>
 
@@ -31,22 +33,25 @@ struct SurfaceCreationParameters;
 
 namespace scene
 {
-class BasicSurface;
+class Surface;
+class SurfaceObserver;
 
-class SurfaceBuilder
+class SurfaceCoordinator : public SurfaceRanker
 {
 public:
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
+    virtual std::shared_ptr<Surface> add_surface(
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<SurfaceObserver> const& observer) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface) = 0;
+    virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:
-    SurfaceBuilder() = default;
-    virtual ~SurfaceBuilder() = default;
-    SurfaceBuilder(SurfaceBuilder const&) = delete;
-    SurfaceBuilder& operator=(SurfaceBuilder const&) = delete;
+    SurfaceCoordinator() = default;
+    virtual ~SurfaceCoordinator() = default;
+    SurfaceCoordinator(SurfaceCoordinator const&) = delete;
+    SurfaceCoordinator& operator=(SurfaceCoordinator const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_SCENE_SURFACE_BUILDER_H_ */
+#endif /* MIR_SCENE_SURFACE_COORDINATOR_H_ */

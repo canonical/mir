@@ -80,4 +80,12 @@ MATCHER_P(MatchesList, value, std::string(""))
     return !(::testing::Test::HasFailure());
 }
 
+MATCHER_P3(MatchesListWithEglFields, value, dpy, sur, std::string(""))
+{
+    EXPECT_EQ(arg.dpy, dpy);
+    EXPECT_EQ(arg.sur, sur);
+    EXPECT_THAT(arg, MatchesList(value));
+    return !(::testing::Test::HasFailure());
+}
+
 #endif /* MIR_TEST_HWC_STRUCT_HELPERS_H_ */

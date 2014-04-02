@@ -20,26 +20,32 @@
 #include "mir/graphics/renderable.h"
 #include "occlusion.h"
 
-using namespace mir;
-using namespace mir::compositor;
+using namespace mir::geometry;
 using namespace mir::graphics;
 
-OcclusionFilter::OcclusionFilter(const geometry::Rectangle &area)
-        : area(area)
+namespace
 {
-}
-
-bool OcclusionFilter::operator()(const Renderable &renderable)
+bool renderable_is_occluded(
+    Renderable const& renderable, 
+    Rectangle const& area,
+    std::vector<Rectangle>& coverage)
 {
     static const glm::mat4 identity;
     if (renderable.transformation() != identity)
         return false;  // Weirdly transformed. Assume never occluded.
 
-    if (!renderable.should_be_rendered_in(area))
-        return true;  // Not on the display, or invisible; definitely occluded.
+    //TODO: remove this check, why are we getting a non visible renderable 
+    //      in the list of surfaces?
+    // This will check the surface is not hidden and has been posted.
+    if (!renderable.visible())
+        return true;  //invisible; definitely occluded.
+
+    // Not weirdly transformed but also not on this monitor? Don't care...
+    if (!area.overlaps(renderable.screen_position()))
+        return true;  // Not on the display; definitely occluded.
 
     bool occluded = false;
-    geometry::Rectangle const& window = renderable.screen_position();
+    Rectangle const& window = renderable.screen_position();
     for (const auto &r : coverage)
     {
         if (r.contains(window))
@@ -54,13 +60,19 @@ bool OcclusionFilter::operator()(const Renderable &renderable)
 
     return occluded;
 }
-
-void OcclusionMatch::operator()(const Renderable &renderable)
-{
-    hidden.insert(&renderable);
 }
 
-bool OcclusionMatch::occluded(const Renderable &renderable) const
+void mir::compositor::filter_occlusions_from(
+    RenderableList& list,
+    Rectangle const& area)
 {
-    return hidden.find(&renderable) != hidden.end();
+    std::vector<Rectangle> coverage;
+    auto it = list.rbegin();
+    while (it != list.rend())
+    {
+        if (renderable_is_occluded(**it, area, coverage))
+            list.erase(std::prev(it.base()));
+        else
+            it++;
+    }
 }

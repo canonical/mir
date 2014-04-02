@@ -1,13 +1,6 @@
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa")
-  set (UMOCKDEV_REQUIRED YES)
-endif()
-
-if (UMOCKDEV_REQUIRED)
-  pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0)
-  if (NOT UMOCKDEV_FOUND)
-    message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
-  endif()
+pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0>=0.6)
+if (NOT UMOCKDEV_FOUND)
+  message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
 
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})

@@ -88,7 +88,8 @@ public:
     }
 
     std::shared_ptr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<mg::GLConfig> const&) override
     {
         return std::make_shared<StubDisplay>(display_rects());
     }
@@ -118,6 +119,10 @@ struct RectangleCompare
         return std::tie(x1,y1,w1,h1) < std::tie(x2,y2,w2,h2);
     }
 };
+
+void null_surface_callback(MirSurface*, void*)
+{
+}
 
 }
 
@@ -301,6 +306,7 @@ TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 
                 auto surface = mir_connection_create_surface_sync(connection, &request_params);
                 EXPECT_FALSE(mir_surface_is_valid(surface));
+                mir_surface_release(surface, &null_surface_callback, nullptr);
             }
 
             mir_display_config_destroy(config);
