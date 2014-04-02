@@ -31,7 +31,6 @@ struct Color
      GLubyte r, g, b, a;
 };
 
-
 float penumbra_curve(float x)
 {
     return 1.0f - std::sin(x * M_PI / 2.0f);
