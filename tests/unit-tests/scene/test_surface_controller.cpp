@@ -117,6 +117,8 @@ TEST_F(SurfaceController, raise_surface)
 TEST_F(SurfaceController, offers_create_surface_parameters_to_placement_strategy)
 {
     using namespace ::testing;
+    EXPECT_CALL(mock_surface, add_observer(_)).Times(AnyNumber());
+    EXPECT_CALL(model, add_surface(_,_,_)).Times(AnyNumber());
 
     ms::SurfaceController controller(
         mt::fake_shared(mock_surface_allocator),
@@ -133,6 +135,8 @@ TEST_F(SurfaceController, offers_create_surface_parameters_to_placement_strategy
 TEST_F(SurfaceController, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
 {
     using namespace ::testing;
+    EXPECT_CALL(mock_surface, add_observer(_)).Times(AnyNumber());
+    EXPECT_CALL(model, add_surface(_,_,_)).Times(AnyNumber());
 
     ms::SurfaceController controller(
         mt::fake_shared(mock_surface_allocator),
