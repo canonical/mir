@@ -50,7 +50,7 @@ target_link_libraries(
   mirsharedandroid
   mirsharedenv
 
-  ${Boost_LIBRARIES}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
