@@ -33,6 +33,14 @@ class Buffer;
 class Renderable
 {
 public:
+    typedef void const* ID;
+
+    /**
+     * Return a unique ID for the renderable, which may or may not be based
+     * on the underlying surface ID. You should not assume they are related.
+     */
+    virtual ID id() const = 0;
+
     /**
      * Return the next buffer that should be composited/rendered.
      *
