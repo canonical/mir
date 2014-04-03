@@ -22,7 +22,6 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
-#include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
 #include "session_event_sink.h"
 

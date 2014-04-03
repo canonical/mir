@@ -28,8 +28,6 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 
-#include "mir/shell/surface.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

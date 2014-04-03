@@ -22,7 +22,7 @@
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
