@@ -33,7 +33,7 @@ class Buffer;
 class Renderable
 {
 public:
-    typedef void const* ID;
+    typedef void const* ID; // Mostly opaque, but zero is reserved as "invalid"
 
     /**
      * Return a unique ID for the renderable, which may or may not be based
