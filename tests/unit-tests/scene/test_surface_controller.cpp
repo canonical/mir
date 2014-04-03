@@ -70,7 +70,7 @@ TEST(SurfaceController, add_and_remove_surface)
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto actual_surface = controller.add_surface(msh::a_surface(), std::shared_ptr<ms::SurfaceObserver>());
+    auto actual_surface = controller.add_surface(msh::a_surface(), nullptr, std::shared_ptr<ms::SurfaceObserver>());
 
     EXPECT_THAT(actual_surface, Eq(expect_surface));
     controller.remove_surface(actual_surface);

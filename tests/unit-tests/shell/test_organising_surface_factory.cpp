@@ -40,8 +40,9 @@ namespace
 {
 struct MockSurfaceCoordinator : public ms::SurfaceCoordinator
 {
-    MOCK_METHOD2(add_surface, std::shared_ptr<ms::Surface>(
+    MOCK_METHOD3(add_surface, std::shared_ptr<ms::Surface>(
         msh::SurfaceCreationParameters const&,
+        ms::Session* session,
         std::shared_ptr<ms::SurfaceObserver> const&));
 
     void remove_surface(std::weak_ptr<ms::Surface> const& /*surface*/) override {}
@@ -58,7 +59,7 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-        ON_CALL(*surface_coordinator, add_surface(_, _)).WillByDefault(Return(null_surface));
+        ON_CALL(*surface_coordinator, add_surface(_, _,_)).WillByDefault(Return(null_surface));
     }
     std::shared_ptr<ms::Surface> null_surface;
     std::shared_ptr<MockSurfaceCoordinator> surface_coordinator = std::make_shared<MockSurfaceCoordinator>();
@@ -75,7 +76,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     msh::OrganisingSurfaceFactory factory(surface_coordinator, placement_strategy);
 
     mtd::StubShellSession session;
-    EXPECT_CALL(*surface_coordinator, add_surface(_, _)).Times(1);
+    EXPECT_CALL(*surface_coordinator, add_surface(_, _,_)).Times(1);
 
     auto params = msh::a_surface();
     EXPECT_CALL(*placement_strategy, place(Ref(session), Ref(params))).Times(1)
@@ -96,7 +97,7 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
 
     EXPECT_CALL(*placement_strategy, place(_, Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(*surface_coordinator, add_surface(placed_params, _));
+    EXPECT_CALL(*surface_coordinator, add_surface(placed_params, _, _));
 
     factory.create_surface(nullptr, params, observer);
 }

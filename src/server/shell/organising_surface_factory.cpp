@@ -47,7 +47,7 @@ std::shared_ptr<ms::Surface> msh::OrganisingSurfaceFactory::create_surface(
 {
     auto placed_params = placement_strategy->place(*session, params);
 
-    return surface_coordinator->add_surface(placed_params, observer);
+    return surface_coordinator->add_surface(placed_params, session, observer);
 }
 
 void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<ms::Surface> const& surface)
