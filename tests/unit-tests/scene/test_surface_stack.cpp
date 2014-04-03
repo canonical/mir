@@ -293,28 +293,8 @@ TEST_F(SurfaceStack, raise_throw_behavior)
     }, std::runtime_error);
 }
 
-#if 0
 namespace
 {
-
-struct UniqueOperatorForScene : public mc::OperatorForScene
-{
-    UniqueOperatorForScene(const char *&owner)
-        : owner(owner)
-    {
-    }
-
-    void operator()(const mg::Renderable &)
-    {
-        ASSERT_STREQ("", owner);
-        owner = "UniqueOperatorForScene";
-        std::this_thread::yield();
-        owner = "";
-    }
-
-    const char *&owner;
-};
-
 void tinker_scene(mc::Scene &scene,
                   const char *&owner,
                   const std::atomic_bool &done)
@@ -330,7 +310,6 @@ void tinker_scene(mc::Scene &scene,
         owner = "";
     }
 }
-
 }
 
 TEST_F(SurfaceStack, is_locked_during_iteration)
@@ -344,8 +323,6 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
     const char *owner = "";
-    UniqueOperatorForScene op(owner);
-
     std::atomic_bool done(false);
     std::thread tinkerer(tinker_scene,
         std::ref(stack), std::ref(owner), std::ref(done));
@@ -359,19 +336,14 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
         owner = "";
         stack.unlock();
 
-        MockFilterForScene filter;
-        Sequence seq1;
-        EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
-            .InSequence(seq1)
-            .WillOnce(Return(true));
-        EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
-            .InSequence(seq1)
-            .WillOnce(Return(false));
-        EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
-            .InSequence(seq1)
-            .WillOnce(Return(true));
-
-        stack.for_each_if(filter, op);
+        auto list = stack.generate_renderable_list();
+        ASSERT_EQ(list.size(), 3u);
+        auto it = list.begin();
+        EXPECT_EQ(*it, stub_surface1);
+        std::advance(it, 1);
+        EXPECT_EQ(*it, stub_surface2);
+        std::advance(it, 1);
+        EXPECT_EQ(*it, stub_surface3);
 
         stack.lock();
         ASSERT_STREQ("", owner);
@@ -384,7 +356,6 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     done = true;
     tinkerer.join();
 }
-#endif
 
 TEST_F(SurfaceStack, is_recursively_lockable)
 {
