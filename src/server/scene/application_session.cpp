@@ -175,7 +175,7 @@ int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
                                                int requested_value)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
+    auto const surf = checked_find(id)->second;
 
     return surf->configure(attrib, requested_value);
 }

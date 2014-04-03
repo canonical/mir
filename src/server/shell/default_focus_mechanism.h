@@ -26,11 +26,10 @@
 
 namespace mir
 {
-namespace scene { class SurfaceCoordinator; }
+namespace scene { class SurfaceCoordinator; class Surface; }
 
 namespace shell
 {
-class Surface;
 class InputTargeter;
 
 class DefaultFocusMechanism : public FocusSetter
@@ -51,7 +50,7 @@ private:
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
 
     std::mutex surface_focus_lock;
-    std::weak_ptr<Surface> currently_focused_surface;
+    std::weak_ptr<scene::Surface> currently_focused_surface;
 };
 
 }
