@@ -40,7 +40,7 @@ msh::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 {
 }
 
-std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
+std::shared_ptr<ms::Surface> msh::OrganisingSurfaceFactory::create_surface(
     Session* session,
     SurfaceCreationParameters const& params,
     std::shared_ptr<scene::SurfaceObserver> const& observer)
@@ -50,17 +50,7 @@ std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
     return surface_coordinator->add_surface(placed_params, observer);
 }
 
-void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<Surface> const& surface)
+void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<ms::Surface> const& surface)
 {
-    if (auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface))
-    {
-        surface_coordinator->remove_surface(scene_surface);
-    }
-    else
-    {
-        // We shouldn't be destroying surfaces we didn't create,
-        // so we ought to be able to restore the original type!
-        std::abort();
-    }
-
+    surface_coordinator->remove_surface(surface);
 }

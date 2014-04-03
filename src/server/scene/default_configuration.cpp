@@ -103,12 +103,6 @@ mir::DefaultServerConfiguration::the_surface_controller()
         });
 }
 
-std::shared_ptr<ms::SurfaceRanker>
-mir::DefaultServerConfiguration::the_surface_ranker()
-{
-    return the_surface_controller();
-}
-
 std::shared_ptr<ms::SurfaceCoordinator>
 mir::DefaultServerConfiguration::the_surface_coordinator()
 {

@@ -20,7 +20,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "src/server/scene/session_container.h"
 #include "mir/shell/session.h"
 #include "src/server/scene/surface_controller.h"
@@ -335,7 +335,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(
+    std::shared_ptr<ms::Surface> create_surface(
         msh::Session* session,
         msh::SurfaceCreationParameters const& params,
         std::shared_ptr<ms::SurfaceObserver> const& observer) override
@@ -347,7 +347,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
         return surface;
     }
 
-    void destroy_surface(std::shared_ptr<msh::Surface> const& surface) override
+    void destroy_surface(std::shared_ptr<ms::Surface> const& surface) override
     {
         underlying_factory->destroy_surface(surface);
     }

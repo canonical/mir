@@ -20,8 +20,6 @@
 #ifndef MIR_SCENE_SURFACE_COORDINATOR_H_
 #define MIR_SCENE_SURFACE_COORDINATOR_H_
 
-#include "mir/scene/surface_ranker.h"
-
 #include <memory>
 
 namespace mir
@@ -36,12 +34,14 @@ namespace scene
 class Surface;
 class SurfaceObserver;
 
-class SurfaceCoordinator : public SurfaceRanker
+class SurfaceCoordinator
 {
 public:
     virtual std::shared_ptr<Surface> add_surface(
         shell::SurfaceCreationParameters const& params,
         std::shared_ptr<SurfaceObserver> const& observer) = 0;
+
+    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
 protected:
