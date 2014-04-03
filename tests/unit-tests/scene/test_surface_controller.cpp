@@ -88,6 +88,7 @@ TEST_F(SurfaceController, add_and_remove_surface)
         mt::fake_shared(model));
 
     InSequence seq;
+    EXPECT_CALL(placement_strategy, place(_, _)).Times(1);
     EXPECT_CALL(mock_surface_allocator, create_surface(_)).Times(1).WillOnce(Return(expect_surface));
     EXPECT_CALL(mock_surface, add_observer(_)).Times(1);
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
