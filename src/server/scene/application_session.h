@@ -58,7 +58,7 @@ public:
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
     void take_snapshot(shell::SnapshotCallback const& snapshot_taken);
-    std::shared_ptr<shell::Surface> default_surface() const;
+    std::shared_ptr<Surface> default_surface() const;
 
     std::string name() const;
     pid_t process_id() const override;

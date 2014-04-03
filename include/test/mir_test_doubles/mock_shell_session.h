@@ -39,7 +39,7 @@ struct MockShellSession : public shell::Session
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
 
     MOCK_METHOD1(take_snapshot, void(shell::SnapshotCallback const&));
-    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<shell::Surface>());
+    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<scene::Surface>());
 
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(process_id, pid_t());

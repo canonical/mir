@@ -82,7 +82,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
         EXPECT_CALL(app1, default_surface()).Times(1)
             .WillOnce(Return(mt::fake_shared(mock_surface)));
         EXPECT_CALL(app1, default_surface()).Times(1)
-            .WillOnce(Return(std::shared_ptr<msh::Surface>()));
+            .WillOnce(Return(std::shared_ptr<ms::Surface>()));
     }
 
     NiceMock<mtd::MockInputTargeter> targeter;

@@ -72,9 +72,9 @@ struct StubShellSession : public shell::Session
     {
     }
 
-    std::shared_ptr<shell::Surface> default_surface() const override
+    std::shared_ptr<scene::Surface> default_surface() const override
     {
-        return std::shared_ptr<shell::Surface>();
+        return std::shared_ptr<scene::Surface>();
     }
 
     void set_lifecycle_state(MirLifecycleState /*state*/)

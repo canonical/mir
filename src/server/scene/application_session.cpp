@@ -109,14 +109,14 @@ void ms::ApplicationSession::take_snapshot(msh::SnapshotCallback const& snapshot
         snapshot_taken(msh::Snapshot());
 }
 
-std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
+std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     if (surfaces.size())
         return surfaces.begin()->second;
     else
-        return std::shared_ptr<msh::Surface>();
+        return std::shared_ptr<ms::Surface>();
 }
 
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
