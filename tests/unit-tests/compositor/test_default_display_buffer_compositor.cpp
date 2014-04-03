@@ -58,16 +58,6 @@ struct FakeScene : mc::Scene
         return renderlist;
     }
 
-    // Ugly...should we use delegation?
-    void for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
-    {
-        for (auto it = renderlist.begin(); it != renderlist.end(); it++)
-        {
-            mg::Renderable &info = **it;
-            if (filter(info)) renderable_operator(info);
-        }
-    }
-
     void set_change_callback(std::function<void()> const&) {}
 
     void change(mg::RenderableList const& new_renderlist)
