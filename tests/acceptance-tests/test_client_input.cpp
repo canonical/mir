@@ -325,11 +325,11 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
 
 namespace
 {
-struct RegionApplyingSurfaceFactory : public ms::SurfaceCoordinator
+struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
 {
-    RegionApplyingSurfaceFactory(std::shared_ptr<ms::SurfaceCoordinator> real_factory,
+    RegionApplyingSurfaceCoordinator(std::shared_ptr<ms::SurfaceCoordinator> wrapped_coordinator,
         std::initializer_list<geom::Rectangle> const& input_rectangles)
-        : underlying_factory(real_factory),
+        : wrapped_coordinator(wrapped_coordinator),
           input_rectangles(input_rectangles)
     {
     }
@@ -339,7 +339,7 @@ struct RegionApplyingSurfaceFactory : public ms::SurfaceCoordinator
         msh::Session* session,
         std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
-        auto surface = underlying_factory->add_surface(params, session, observer);
+        auto surface = wrapped_coordinator->add_surface(params, session, observer);
 
         surface->set_input_region(input_rectangles);
 
@@ -348,15 +348,15 @@ struct RegionApplyingSurfaceFactory : public ms::SurfaceCoordinator
 
     void remove_surface(std::weak_ptr<ms::Surface> const& surface) override
     {
-        underlying_factory->remove_surface(surface);
+        wrapped_coordinator->remove_surface(surface);
     }
 
     void raise(std::weak_ptr<ms::Surface> const& surface) override
     {
-        underlying_factory->raise(surface);
+        wrapped_coordinator->raise(surface);
     }
 
-    std::shared_ptr<ms::SurfaceCoordinator> const underlying_factory;
+    std::shared_ptr<ms::SurfaceCoordinator> const wrapped_coordinator;
     std::vector<geom::Rectangle> const input_rectangles;
 };
 }
@@ -397,7 +397,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         }
         std::shared_ptr<ms::SurfaceCoordinator> the_surface_coordinator() override
         {
-            return std::make_shared<RegionApplyingSurfaceFactory>(InputTestingServerConfiguration::the_surface_coordinator(),
+            return std::make_shared<RegionApplyingSurfaceCoordinator>(InputTestingServerConfiguration::the_surface_coordinator(),
                 client_input_regions);
         }
 
