@@ -21,7 +21,6 @@
 #define MIR_SHELL_SURFACE_H_
 
 #include "mir/shell/surface_buffer_access.h"
-#include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface.h"
 
 #include <string>
