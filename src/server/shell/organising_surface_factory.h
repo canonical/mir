@@ -35,8 +35,7 @@ class OrganisingSurfaceFactory : public SurfaceFactory
 {
 public:
     OrganisingSurfaceFactory(
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<PlacementStrategy> const& placement_strategy);
+        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator);
     virtual ~OrganisingSurfaceFactory();
 
     std::shared_ptr<scene::Surface> create_surface(

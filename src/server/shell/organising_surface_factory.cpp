@@ -17,7 +17,6 @@
  */
 
 #include "organising_surface_factory.h"
-#include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
@@ -29,10 +28,8 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 msh::OrganisingSurfaceFactory::OrganisingSurfaceFactory(
-    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
-    std::shared_ptr<msh::PlacementStrategy> const& placement_strategy) :
-    surface_coordinator(surface_coordinator),
-    placement_strategy(placement_strategy)
+    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator) :
+    surface_coordinator(surface_coordinator)
 {
 }
 
@@ -45,9 +42,7 @@ std::shared_ptr<ms::Surface> msh::OrganisingSurfaceFactory::create_surface(
     SurfaceCreationParameters const& params,
     std::shared_ptr<scene::SurfaceObserver> const& observer)
 {
-    auto placed_params = placement_strategy->place(*session, params);
-
-    return surface_coordinator->add_surface(placed_params, session, observer);
+    return surface_coordinator->add_surface(params, session, observer);
 }
 
 void msh::OrganisingSurfaceFactory::destroy_surface(std::shared_ptr<ms::Surface> const& surface)

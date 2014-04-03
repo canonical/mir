@@ -34,8 +34,7 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         [this]()
         {
             return std::make_shared<msh::OrganisingSurfaceFactory>(
-                the_surface_coordinator(),
-                the_shell_placement_strategy());
+                the_surface_coordinator());
         });
 }
 

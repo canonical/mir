@@ -99,6 +99,7 @@ mir::DefaultServerConfiguration::the_surface_controller()
         {
             return std::make_shared<ms::SurfaceController>(
                 the_surface_factory(),
+                the_shell_placement_strategy(),
                 the_surface_stack_model());
         });
 }
