@@ -35,6 +35,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/placement_strategy.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/options/program_option.h"
@@ -77,6 +78,14 @@ struct StubInputFactory : public mi::InputChannelFactory
         return std::shared_ptr<mi::InputChannel>();
     }
 };
+
+struct NullSurfacePlacementStrategy : msh::PlacementStrategy
+{
+    msh::SurfaceCreationParameters place(ms::Session const&, msh::SurfaceCreationParameters const& parameters) override
+    {
+        return parameters;
+    }
+};
 }
 
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
@@ -96,11 +105,13 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
     auto scene_report = mr::null_scene_report();
-    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, std::make_shared<mtd::NullSurfaceConfigurator>(), scene_report);
+    auto const surface_configurator = std::make_shared<mtd::NullSurfaceConfigurator>();
+    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surface_configurator, scene_report);
     auto ss = std::make_shared<ms::SurfaceStack>(stub_input_registrar, scene_report);
-    auto surface_controller = std::make_shared<ms::SurfaceController>(surface_allocator, ss);
+    auto const surface_placement = std::make_shared<NullSurfacePlacementStrategy>();
+    auto surface_controller = std::make_shared<ms::SurfaceController>(surface_allocator, surface_placement, ss);
     auto const observer = std::make_shared<ms::SurfaceEventSource>(id, std::shared_ptr<mf::EventSink>());
-    auto surface = surface_controller->add_surface(params, observer);
+    auto surface = surface_controller->add_surface(params, nullptr, observer);
     surface->allow_framedropping(true);
     auto mir_surface = as_internal_surface(surface);
 

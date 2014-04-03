@@ -30,7 +30,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/shell/surface_factory.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/run_mir.h"

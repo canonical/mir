@@ -31,20 +31,20 @@ class EventSink;
 }
 namespace shell
 {
-class SurfaceFactory;
 class SessionListener;
 }
 
 namespace scene
 {
 class Surface;
+class SurfaceCoordinator;
 class SnapshotStrategy;
 
 class ApplicationSession : public shell::Session
 {
 public:
     ApplicationSession(
-        std::shared_ptr<shell::SurfaceFactory> const& surface_factory,
+        std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
         pid_t pid,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
@@ -78,7 +78,7 @@ protected:
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
-    std::shared_ptr<shell::SurfaceFactory> const surface_factory;
+    std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
     pid_t const pid;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;

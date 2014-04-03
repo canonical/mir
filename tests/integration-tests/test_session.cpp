@@ -154,7 +154,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     TestServerConfiguration conf;
 
     ms::ApplicationSession session{
-        conf.the_shell_surface_factory(),
+        conf.the_surface_coordinator(),
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
