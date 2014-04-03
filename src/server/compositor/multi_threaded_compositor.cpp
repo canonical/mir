@@ -36,10 +36,15 @@ namespace mir
 namespace compositor
 {
 
-class VirtualCursor : public graphics::Cursor
+/**
+ * MultiCursor is the top-level cursor implementation providing a single
+ * cursor instance to the display server, but is able to multiplex all
+ * cursor calls to multiple (per-display) visible cursors.
+ */
+class MultiCursor : public graphics::Cursor
 {
 public:
-    VirtualCursor(MultiThreadedCompositor& compositor)
+    MultiCursor(MultiThreadedCompositor& compositor)
         : compositor(compositor)
     {
     }
@@ -209,7 +214,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      vcursor(std::make_shared<VirtualCursor>(*this)),
+      vcursor(std::make_shared<MultiCursor>(*this)),
       started{false},
       compose_on_start{compose_on_start}
 {
