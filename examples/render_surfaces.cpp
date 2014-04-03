@@ -194,7 +194,7 @@ class Moveable
 {
 public:
     Moveable() {}
-    Moveable(std::shared_ptr<msh::Surface> const& s, const geom::Size& display_size,
+    Moveable(std::shared_ptr<ms::Surface> const& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
         : surface(s), display_size(display_size),
           x{static_cast<float>(s->top_left().x.as_uint32_t())},
@@ -250,7 +250,7 @@ public:
     }
 
 private:
-    std::shared_ptr<msh::Surface> surface;
+    std::shared_ptr<ms::Surface> surface;
     geom::Size display_size;
     float x;
     float y;
