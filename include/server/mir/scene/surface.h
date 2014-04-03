@@ -63,13 +63,12 @@ public:
     virtual void set_alpha(float alpha) = 0;
     virtual void force_requests_to_complete() = 0;
 
-    // TODO input_channel() and on_change() relate to
-    // TODO adding and removing the surface from the scene and are probably not
-    // TODO cleanest interface for this.
-    virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
-
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
     virtual void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
+
+    // TODO input_channel() relates to adding and removing the surface
+    // TODO from the scene and is probably not cleanest interface for this.
+    virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
 };
 }
 }
