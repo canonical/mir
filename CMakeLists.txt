@@ -152,14 +152,6 @@ endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
-set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-# Don't treat warnings as errors in 3rd_party/{gmock}
-string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
-
-# Restore -Werror for non-3rd-party code
-set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
-
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 if (MIR_ENABLE_TESTS)
