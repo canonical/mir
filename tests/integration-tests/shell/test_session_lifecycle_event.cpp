@@ -43,9 +43,9 @@ struct MockStateHandler
     MOCK_METHOD1(state_changed, void (MirLifecycleState));
 };
 
-class StubSessionListener : public msh::NullSessionListener
+class StubSessionListener : public ms::NullSessionListener
 {
-    void stopping(std::shared_ptr<msh::Session> const& session)
+    void stopping(std::shared_ptr<ms::Session> const& session)
     {
         std::shared_ptr<ms::ApplicationSession> app_session(
             std::static_pointer_cast<ms::ApplicationSession>(session)

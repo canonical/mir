@@ -31,9 +31,9 @@ namespace doubles
 class NullSessionEventSink : public scene::SessionEventSink
 {
 public:
-    void handle_focus_change(std::shared_ptr<shell::Session> const&) {}
+    void handle_focus_change(std::shared_ptr<scene::Session> const&) {}
     void handle_no_focus() {}
-    void handle_session_stopping(std::shared_ptr<shell::Session> const&) {}
+    void handle_session_stopping(std::shared_ptr<scene::Session> const&) {}
 };
 
 }

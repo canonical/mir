@@ -23,11 +23,9 @@
 
 namespace mir
 {
-namespace shell
+namespace scene
 {
-class Session;
-
-class NullSessionListener : public SessionListener
+class NullSessionListener : public shell::SessionListener
 {
 public:
     NullSessionListener() = default;
@@ -38,8 +36,8 @@ public:
     void focused(std::shared_ptr<Session> const&) override {}
     void unfocused() override {}
 
-    void surface_created(Session&, std::shared_ptr<scene::Surface> const&) override {}
-    void destroying_surface(Session&, std::shared_ptr<scene::Surface> const&) override {}
+    void surface_created(Session&, std::shared_ptr<Surface> const&) override {}
+    void destroying_surface(Session&, std::shared_ptr<Surface> const&) override {}
 
 protected:
     NullSessionListener(const NullSessionListener&) = delete;
@@ -48,6 +46,5 @@ protected:
 
 }
 }
-
 
 #endif // MIR_SHELL_NULL_SESSION_LISTENER_H_

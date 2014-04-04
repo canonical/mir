@@ -82,7 +82,7 @@ mir::DefaultServerConfiguration::the_shell_session_listener()
     return shell_session_listener(
         [this]
         {
-            return std::make_shared<msh::NullSessionListener>();
+            return std::make_shared<ms::NullSessionListener>();
         });
 }
 

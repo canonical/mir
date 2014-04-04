@@ -101,5 +101,5 @@ TEST(DefaultFocusMechanism, sets_input_focus)
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
-    focus_mechanism.set_focus_to(std::shared_ptr<msh::Session>());
+    focus_mechanism.set_focus_to(std::shared_ptr<ms::Session>());
 }

@@ -158,7 +158,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
-        std::make_shared<msh::NullSessionListener>(),
+        std::make_shared<ms::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };
     session.create_surface(msh::a_surface());

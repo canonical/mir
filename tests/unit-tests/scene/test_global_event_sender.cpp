@@ -36,10 +36,10 @@ namespace
 class MockSessionStorage : public ms::SessionContainer
 {
 public:
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
-    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<ms::Session> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<ms::Session> const&));
+    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<ms::Session> const&)>));
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<ms::Session>(std::shared_ptr<ms::Session> const&));
 };
 }
 
@@ -49,7 +49,7 @@ TEST(GlobalEventSender, sender)
 
     MockSessionStorage mock_storage;
 
-    std::function<void(std::shared_ptr<msh::Session> const&)> called_fn;
+    std::function<void(std::shared_ptr<ms::Session> const&)> called_fn;
 
     EXPECT_CALL(mock_storage, for_each(_))
         .Times(1)

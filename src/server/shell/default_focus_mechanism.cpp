@@ -35,7 +35,7 @@ msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTarg
 {
 }
 
-void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& focus_session)
+void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<ms::Session> const& focus_session)
 {
     // TODO: This path should be encapsulated in a seperate clear_focus message
     if (!focus_session)

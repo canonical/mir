@@ -336,7 +336,7 @@ struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
 
     std::shared_ptr<ms::Surface> add_surface(
         msh::SurfaceCreationParameters const& params,
-        msh::Session* session,
+        ms::Session* session,
         std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
         auto surface = wrapped_coordinator->add_surface(params, session, observer);
@@ -545,7 +545,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             // before event dispatch occurs
             second_client_done_fence.wait_for_signal_ready_for();
 
-            server.the_session_container()->for_each([&](std::shared_ptr<msh::Session> const& session) -> void
+            server.the_session_container()->for_each([&](std::shared_ptr<ms::Session> const& session) -> void
             {
                 if (session->name() == test_client_2_name)
                     session->hide();
@@ -594,7 +594,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     auto server_config = make_event_producing_server(fence, 1,
          [&](mtf::InputTestingServerConfiguration& server)
          {
-            server.the_session_container()->for_each([&](std::shared_ptr<msh::Session> const& session) -> void
+            server.the_session_container()->for_each([&](std::shared_ptr<ms::Session> const& session) -> void
             {
                 session->default_surface()->move_to(geom::Point{screen_width/2-40, screen_height/2-80});
             });

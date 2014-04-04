@@ -42,8 +42,8 @@ TEST(DefaultSessionContainer, for_each)
 
     struct local
     {
-        MOCK_METHOD1(see, void(std::shared_ptr<msh::Session> const&));
-        void operator()(std::shared_ptr<msh::Session> const& session)
+        MOCK_METHOD1(see, void(std::shared_ptr<ms::Session> const&));
+        void operator()(std::shared_ptr<ms::Session> const& session)
         {
             see(session);
         }
@@ -74,7 +74,7 @@ TEST(DefaultSessionContainer, successor_of)
     EXPECT_EQ(session1, container.successor_of(session3));
 
     // Successor of no session is the last session.
-    EXPECT_EQ(session3, container.successor_of(std::shared_ptr<msh::Session>()));
+    EXPECT_EQ(session3, container.successor_of(std::shared_ptr<ms::Session>()));
 }
 
 TEST(DefaultSessionContainer, invalid_session_throw_behavior)

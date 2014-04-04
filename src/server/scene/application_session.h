@@ -40,7 +40,7 @@ class Surface;
 class SurfaceCoordinator;
 class SnapshotStrategy;
 
-class ApplicationSession : public shell::Session
+class ApplicationSession : public Session
 {
 public:
     ApplicationSession(

@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-struct StubShellSession : public shell::Session
+struct StubShellSession : public scene::Session
 {
     frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
     {

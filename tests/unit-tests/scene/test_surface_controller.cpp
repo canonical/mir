@@ -46,7 +46,7 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
 
 struct MockPlacementStrategy : public msh::PlacementStrategy
 {
-    MOCK_METHOD2(place, msh::SurfaceCreationParameters(msh::Session const&, msh::SurfaceCreationParameters const&));
+    MOCK_METHOD2(place, msh::SurfaceCreationParameters(ms::Session const&, msh::SurfaceCreationParameters const&));
 };
 
 struct MockSurfaceStackModel : public ms::SurfaceStackModel

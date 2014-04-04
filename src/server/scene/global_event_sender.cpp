@@ -41,7 +41,7 @@ void ms::GlobalEventSender::handle_lifecycle_event(MirLifecycleState)
 
 void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
-    sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)
+    sessions->for_each([&config](std::shared_ptr<ms::Session> const& session)
     {
         session->send_display_config(config);
     });

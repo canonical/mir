@@ -32,7 +32,7 @@ namespace test
 namespace doubles
 {
 
-struct MockShellSession : public shell::Session
+struct MockShellSession : public scene::Session
 {
     MOCK_METHOD1(create_surface, frontend::SurfaceId(shell::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));

@@ -23,21 +23,19 @@
 
 namespace mir
 {
-namespace scene { class Surface; }
+namespace scene { class Surface; class Session; }
 namespace shell
 {
-class Session;
-
 class SessionListener
 {
 public:
-    virtual void starting(std::shared_ptr<Session> const& session) = 0;
-    virtual void stopping(std::shared_ptr<Session> const& session) = 0;
-    virtual void focused(std::shared_ptr<Session> const& session) = 0;
+    virtual void starting(std::shared_ptr<scene::Session> const& session) = 0;
+    virtual void stopping(std::shared_ptr<scene::Session> const& session) = 0;
+    virtual void focused(std::shared_ptr<scene::Session> const& session) = 0;
     virtual void unfocused() = 0;
 
-    virtual void surface_created(Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
-    virtual void destroying_surface(Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual void surface_created(scene::Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual void destroying_surface(scene::Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
 
 protected:
     SessionListener() = default;

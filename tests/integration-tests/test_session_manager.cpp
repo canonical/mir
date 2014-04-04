@@ -64,7 +64,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
     ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    msh::NullSessionListener session_listener;
+    ms::NullSessionListener session_listener;
     ms::SessionManager session_manager;
 };
 
