@@ -24,6 +24,8 @@
 
 namespace mir
 {
+namespace shell { class PlacementStrategy; }
+
 namespace scene
 {
 class SurfaceStackModel;
@@ -35,10 +37,12 @@ class SurfaceController : public SurfaceCoordinator
 public:
     SurfaceController(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<shell::PlacementStrategy> const& placement_strategy,
         std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
     std::shared_ptr<Surface> add_surface(
         shell::SurfaceCreationParameters const& params,
+        Session* session,
         std::shared_ptr<SurfaceObserver> const& observer) override;
 
     void remove_surface(std::weak_ptr<Surface> const& surface) override;
@@ -47,6 +51,7 @@ public:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
+    std::shared_ptr<shell::PlacementStrategy> const placement_strategy;
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 
