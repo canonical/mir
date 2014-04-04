@@ -568,36 +568,15 @@ TEST_F(DefaultDisplayBufferCompositor, buffers_held_until_post_update_is_done)
     };
     FakeScene scene(list);
 
-    size_t use_count1{0};
-    size_t use_count2{0};
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable1),_))
-        .Times(1)
-        .WillOnce(Invoke(
-            [&use_count1, &buf1](mg::Renderable const& r, mg::Buffer& b)
-            {
-                auto buffer = r.buffer(&b);
-                EXPECT_EQ(buffer.get(), &b);
-                EXPECT_EQ(buffer, buf1);
-                use_count1 = buffer.use_count() - 1; 
-            }));
-
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable2),_))
-        .Times(1)
-        .WillOnce(Invoke(
-            [&use_count2, &buf2](mg::Renderable const& r, mg::Buffer& b)
-            {
-                auto buffer = r.buffer(&b);
-                EXPECT_EQ(buffer.get(), &b);
-                EXPECT_EQ(buffer, buf2);
-                use_count2 = buffer.use_count() - 1; 
-            }));
+    long test_use_count1{buf1.use_count()};
+    long test_use_count2{buf2.use_count()};
 
     EXPECT_CALL(display_buffer, post_update())
         .Times(1)
-        .WillOnce(Invoke([&use_count1, &use_count2, &buf1, &buf2]()
+        .WillOnce(Invoke([&test_use_count1, &test_use_count2, &buf1, &buf2]()
         {
-            EXPECT_EQ(buf1.use_count(), use_count1);
-            EXPECT_EQ(buf2.use_count(), use_count2);
+            EXPECT_GT(buf1.use_count(), test_use_count1);
+            EXPECT_GT(buf2.use_count(), test_use_count2);
         }));
 
     mc::DefaultDisplayBufferCompositor compositor(
