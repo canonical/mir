@@ -22,7 +22,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/input/input_configuration.h"
 #include "mir/abnormal_exit.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"

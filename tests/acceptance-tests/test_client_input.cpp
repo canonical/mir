@@ -22,7 +22,7 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 #include "src/server/scene/session_container.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "src/server/scene/surface_stack_model.h"
 
 #include "src/server/input/android/android_input_manager.h"

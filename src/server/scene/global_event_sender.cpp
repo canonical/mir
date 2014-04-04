@@ -18,7 +18,7 @@
 
 #include "global_event_sender.h"
 #include "session_container.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 namespace mg=mir::graphics;
 namespace ms=mir::scene;

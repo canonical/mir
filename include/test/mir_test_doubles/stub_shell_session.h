@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
 #define MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 namespace mir
 {

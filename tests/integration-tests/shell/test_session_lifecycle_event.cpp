@@ -16,7 +16,7 @@
  * Authored by: Ricardo Mendoza <ricardo.mendoza@canonical.com>
  */
 
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "src/server/scene/application_session.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"

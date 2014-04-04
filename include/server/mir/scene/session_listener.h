@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_LISTENER_H_
-#define MIR_SHELL_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_SESSION_LISTENER_H_
+#define MIR_SCENE_SESSION_LISTENER_H_
 
 #include <memory>
 
@@ -51,4 +51,4 @@ protected:
 }
 
 
-#endif // MIR_SHELL_SESSION_LISTENER_H_
+#endif // MIR_SCENE_SESSION_LISTENER_H_

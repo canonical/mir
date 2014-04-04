@@ -19,7 +19,7 @@
 #include "src/server/scene/application_session.h"
 #include "mir/graphics/buffer.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_surface.h"

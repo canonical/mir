@@ -24,7 +24,7 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"

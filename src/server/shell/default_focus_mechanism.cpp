@@ -21,7 +21,7 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/input_targeter.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 
 namespace mf = mir::frontend;

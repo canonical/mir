@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_H_
-#define MIR_SHELL_SESSION_H_
+#ifndef MIR_SCENE_SESSION_H_
+#define MIR_SCENE_SESSION_H_
 
 #include "mir/frontend/session.h"
 #include "mir/shell/snapshot.h"
@@ -44,4 +44,4 @@ public:
 }
 }
 
-#endif // MIR_SHELL_SESSION_H_
+#endif // MIR_SCENE_SESSION_H_

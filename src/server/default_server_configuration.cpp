@@ -27,7 +27,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
