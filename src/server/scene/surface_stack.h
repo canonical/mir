@@ -68,9 +68,6 @@ public:
     // From Scene
     graphics::RenderableList generate_renderable_list() const;
     virtual void set_change_callback(std::function<void()> const& f);
-    //to be deprecated
-    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
-    //end to be deprecated
     
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
