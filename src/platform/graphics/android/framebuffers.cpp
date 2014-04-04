@@ -98,7 +98,7 @@ std::pair<geom::Size, double> determine_hwc11_size_and_rate(
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                      display_attribute_request, size_values);
 
-	//HWC_DISPLAY_VSYNC_PERIOD is specified in nanoseconds
+    //HWC_DISPLAY_VSYNC_PERIOD is specified in nanoseconds
     double refresh_rate_hz = (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0;
     return {{size_values[0], size_values[1]}, refresh_rate_hz};
 }
@@ -120,7 +120,8 @@ mga::Framebuffers::Framebuffers(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<framebuffer_device_t> const& fb)
     : format{mga::to_mir_format(fb->format)},
-      size({fb->width, fb->height})
+      size({fb->width, fb->height}),
+      refresh_rate_hz{fb->fps}
 {
     //guarantee always 2 fb's allocated
     auto fb_num = static_cast<unsigned int>(fb->numFramebuffers);
