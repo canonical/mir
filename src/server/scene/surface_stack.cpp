@@ -28,8 +28,8 @@
 #include "mir/scene/scene_report.h"
 
 // TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
-// It is needed by the following member functions:
-//  for_each(), for_each_if(), create_surface() and destroy_surface()
+// It is needed by the following member function:
+//  for_each()
 // to access:
 //  buffer_stream() and input_channel()
 #include "basic_surface.h"
@@ -65,20 +65,6 @@ mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
     for (auto &layer : layers_by_depth)
         std::copy(layer.second.begin(), layer.second.end(), std::back_inserter(list));
     return list;
-}
-
-void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
-{
-    std::lock_guard<std::recursive_mutex> lg(guard);
-    for (auto &layer : layers_by_depth)
-    {
-        auto surfaces = layer.second;
-        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
-        {
-            mg::Renderable& r = **it;
-            if (filter(r)) op(r);
-        }
-    }
 }
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
