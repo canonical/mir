@@ -199,7 +199,6 @@ public:
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
-    virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
@@ -285,7 +284,6 @@ protected:
     CachedPtr<scene::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
-    CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;

@@ -32,7 +32,6 @@ namespace mir
 
 namespace shell
 {
-class SurfaceFactory;
 class FocusSetter;
 class SessionListener;
 }
@@ -42,11 +41,12 @@ namespace scene
 class SessionEventSink;
 class SessionContainer;
 class SnapshotStrategy;
+class SurfaceCoordinator;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
-    explicit SessionManager(std::shared_ptr<shell::SurfaceFactory> const& surface_factory,
+    explicit SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<shell::FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
@@ -75,7 +75,7 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<shell::SurfaceFactory> const surface_factory;
+    std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<shell::FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
