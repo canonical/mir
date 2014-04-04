@@ -60,11 +60,11 @@ ms::SurfaceStack::SurfaceStack(
 
 namespace
 {
-//This class avoids locking for long periods of time by copying or lazy-copying
-class RenderableCopy : public mg::Renderable
+//This class avoids locking for long periods of time by copying (or lazy-copying)
+class RenderableSnapshot : public mg::Renderable
 {
 public:
-    RenderableCopy(std::shared_ptr<mg::Renderable> const& renderable)
+    RenderableSnapshot(std::shared_ptr<mg::Renderable> const& renderable)
     : underlying_renderable{renderable},
       alpha_enabled_{renderable->alpha_enabled()},
       alpha_{renderable->alpha()},
@@ -77,14 +77,10 @@ public:
     }
  
     std::shared_ptr<mg::Buffer> buffer(void const* user_id) const override
-    {
-        return underlying_renderable->buffer(user_id);
-    }
+    { return underlying_renderable->buffer(user_id); }
 
     int buffers_ready_for_compositor() const override
-    {
-        return underlying_renderable->buffers_ready_for_compositor();
-    }
+    { return underlying_renderable->buffers_ready_for_compositor(); }
 
     bool visible() const override
     { return visible_; }
@@ -115,23 +111,23 @@ private:
     bool const visible_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
-    mg::Renderable::ID id_; 
+    mg::Renderable::ID const id_; 
 };
 }
 
 mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 {
-    std::unique_lock<decltype(list_mutex)> lk(list_mutex);
+    std::unique_lock<decltype(guard)> lk(guard);
     mg::RenderableList list;
     for (auto const& layer : layers_by_depth)
         for (auto const& renderable : layer.second) 
-            list.emplace_back(std::make_shared<RenderableCopy>(renderable));
+            list.emplace_back(std::make_shared<RenderableSnapshot>(renderable));
     return list;
 }
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::unique_lock<decltype(list_mutex)> lk(list_mutex);
+    std::unique_lock<decltype(guard)> lk(guard);
     assert(f);
     notify_change = f;
 }
@@ -142,7 +138,7 @@ void ms::SurfaceStack::add_surface(
     mi::InputReceptionMode input_mode)
 {
     {
-        std::unique_lock<decltype(list_mutex)> lk(list_mutex);
+        std::unique_lock<decltype(guard)> lk(guard);
         layers_by_depth[depth].push_back(surface);
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
@@ -159,7 +155,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
     bool found_surface = false;
     {
-        std::unique_lock<decltype(list_mutex)> lk(list_mutex);
+        std::unique_lock<decltype(guard)> lk(guard);
 
         for (auto &layer : layers_by_depth)
         {
@@ -192,7 +188,7 @@ void ms::SurfaceStack::emit_change_notification()
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
-    std::unique_lock<decltype(list_mutex)> lk(list_mutex);
+    std::unique_lock<decltype(guard)> lk(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
@@ -205,7 +201,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     auto surface = s.lock();
 
     {
-        std::unique_lock<decltype(list_mutex)> lk(list_mutex);
+        std::unique_lock<decltype(guard)> lk(guard);
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;

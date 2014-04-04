@@ -321,9 +321,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
 
         /* After submitting the buffer we should get some render operations */
         while (server_config.num_of_executed_render_operations() == 0)
-        {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
 
         client_config.set_flag(do_client_finish);
     });

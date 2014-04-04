@@ -87,22 +87,16 @@ private:
 
     void emit_change_notification();
     
-    std::mutex mutable list_mutex;
-    //protected by list_mutex
-    typedef std::vector<std::shared_ptr<Surface>> Layer;
-    std::map<DepthId, Layer> layers_by_depth;
-    //end protected by list_mutex
-
-    //consts, threadsafe
+    std::mutex mutable guard;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
     std::function<void()> const change_cb;
-    //end const
+
+    typedef std::vector<std::shared_ptr<Surface>> Layer;
+    std::map<DepthId, Layer> layers_by_depth;
 
     std::mutex notify_change_mutex;
-    //protected by notify_change_mutex
     std::function<void()> notify_change;
-    //end protected by notify_change_mutex
 };
 
 }
