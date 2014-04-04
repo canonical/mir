@@ -51,8 +51,6 @@ public:
 
     virtual ~Surface() {}
 
-    virtual void force_requests_to_complete() = 0;
-
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 

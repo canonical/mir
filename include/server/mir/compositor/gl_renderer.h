@@ -22,6 +22,7 @@
 #include <mir/compositor/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
+#include <mir/graphics/renderable.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <vector>
@@ -109,14 +110,13 @@ private:
 
     geometry::Rectangle viewport;
 
-    typedef graphics::Renderable const* SurfaceID;
     struct Texture
     {
         GLuint id = 0;
         graphics::BufferID origin;
         bool used;
     };
-    mutable std::unordered_map<SurfaceID, Texture> textures;
+    mutable std::unordered_map<graphics::Renderable::ID, Texture> textures;
     mutable bool skipped = false;
 
 };

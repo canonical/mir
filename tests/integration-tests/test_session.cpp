@@ -22,7 +22,7 @@
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
@@ -154,7 +154,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     TestServerConfiguration conf;
 
     ms::ApplicationSession session{
-        conf.the_shell_surface_factory(),
+        conf.the_surface_coordinator(),
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),

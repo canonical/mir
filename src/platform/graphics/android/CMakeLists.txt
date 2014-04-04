@@ -45,9 +45,12 @@ set_target_properties(
 target_link_libraries(
   mirplatformgraphicsandroid
 
+  miroptions
   mirplatform
   mirsharedandroid
+  mirsharedenv
 
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}

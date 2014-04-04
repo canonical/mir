@@ -21,7 +21,13 @@
 /*
  * TODO: Improve testability of NestedDisplay, so we can have proper unit tests.
  * In particular we need a way to fake interactions with the client library.
+ * See https://bugs.launchpad.net/mir/+bug/1299101 for tracking.
  */
 TEST(NestedDisplay, DISABLED_respects_gl_config)
 {
 }
+
+TEST(NestedDisplay, DISABLED_nested_display_should_not_change_power_mode_when_display_is_off)
+{
+}
+
