@@ -47,6 +47,7 @@ struct MockRenderable : public graphics::Renderable
             .WillByDefault(testing::Return(true));
     }
 
+    MOCK_CONST_METHOD0(id, ID());
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<graphics::Buffer>(void const*));
     MOCK_CONST_METHOD0(alpha_enabled, bool());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
