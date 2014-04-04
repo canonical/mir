@@ -30,39 +30,25 @@ namespace doubles
 
 struct StubSession : public frontend::Session
 {
-    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
+    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
     }
-    void destroy_surface(frontend::SurfaceId /* surface */)
+    void destroy_surface(frontend::SurfaceId /* surface */) override
     {
     }
-    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId /* surface */) const
+    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId /* surface */) const override
     {
         return std::shared_ptr<frontend::Surface>();
     }
-    std::string name() const
+    std::string name() const override
     {
         return std::string();
     }
-    void force_requests_to_complete()
+    void hide() override
     {
     }
-    void hide()
-    {
-    }
-    void show()
-    {
-    }
-    int configure_surface(frontend::SurfaceId, MirSurfaceAttrib, int)
-    {
-        return 0;
-    }
-    void set_event_sink(std::shared_ptr<frontend::EventSink> const&)
-    {
-    }
-
-    void send_display_config(graphics::DisplayConfiguration const&)
+    void show() override
     {
     }
 };

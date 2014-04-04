@@ -69,7 +69,6 @@ public:
     void show();
 
     void send_display_config(graphics::DisplayConfiguration const& info);
-    int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 
     void set_lifecycle_state(MirLifecycleState state);
 
