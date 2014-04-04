@@ -47,6 +47,11 @@ public:
     {
     }
 
+    ID id() const override
+    {
+        return this;
+    }
+
     float alpha() const override
     {
         return opacity;

@@ -23,6 +23,7 @@
 #include "surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/input_registrar.h"
+#include "legacy_surface_change_notification.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/scene/scene_report.h"
 
@@ -70,17 +71,16 @@ public:
       shaped_{renderable->shaped()},
       visible_{renderable->visible()},
       screen_position_(renderable->screen_position()),
-      transformation_(renderable->transformation())
+      transformation_(renderable->transformation()),
+      id_(renderable->id())
     {
     }
  
-    //lazy
     std::shared_ptr<mg::Buffer> buffer(void const* user_id) const override
     {
         return underlying_renderable->buffer(user_id);
     }
 
-    //lazy copy
     int buffers_ready_for_compositor() const override
     {
         return underlying_renderable->buffers_ready_for_compositor();
@@ -103,9 +103,11 @@ public:
 
     bool shaped() const override
     { return shaped_; }
+ 
+    mg::Renderable::ID id() const override
+    { return id_; }
 
 private:
-    //for lazy copy
     std::shared_ptr<mg::Renderable> const underlying_renderable;
     bool const alpha_enabled_;
     float const alpha_;
@@ -113,7 +115,7 @@ private:
     bool const visible_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
-     
+    mg::Renderable::ID id_; 
 };
 }
 
@@ -159,7 +161,8 @@ void ms::SurfaceStack::add_surface(
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
     report->surface_added(surface.get(), surface.get()->name());
-    surface->on_change(change_cb);
+    auto const observer = std::make_shared<LegacySurfaceChangeNotification>(change_cb);
+    surface->add_observer(observer);
     emit_change_notification();
 }
 

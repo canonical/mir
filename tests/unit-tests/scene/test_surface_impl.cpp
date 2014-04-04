@@ -17,6 +17,8 @@
  */
 
 #include "src/server/scene/basic_surface.h"
+#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface_event_source.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
@@ -65,7 +67,6 @@ struct Surface : testing::Test
 
     Surface() :
         buffer_stream(std::make_shared<StubBufferStream>()),
-        stub_sender(std::make_shared<mtd::NullEventSink>()),
         null_configurator(std::make_shared<mtd::NullSurfaceConfigurator>())
     {
         using namespace testing;
@@ -76,7 +77,6 @@ struct Surface : testing::Test
             .WillByDefault(InvokeArgument<1>(nullptr));
     }
     mf::SurfaceId stub_id;
-    std::shared_ptr<mf::EventSink> stub_sender;
     std::shared_ptr<ms::SurfaceConfigurator> null_configurator;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
@@ -87,13 +87,11 @@ TEST_F(Surface, attributes)
     using namespace testing;
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         null_configurator,
         report);
 
@@ -107,13 +105,11 @@ TEST_F(Surface, types)
     using namespace testing;
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         null_configurator,
         report);
 
@@ -148,13 +144,11 @@ TEST_F(Surface, states)
     using namespace testing;
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         null_configurator,
         report);
 
@@ -196,17 +190,18 @@ TEST_F(Surface, emits_resize_events)
 
     geom::Size const new_size{123, 456};
     auto sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        sink,
         null_configurator,
         report);
+
+    surf.add_observer(observer);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -228,17 +223,18 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     geom::Size const new_size{123, 456};
     geom::Size const new_size2{789, 1011};
     auto sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        sink,
         null_configurator,
         report);
+
+    surf.add_observer(observer);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -272,13 +268,11 @@ TEST_F(Surface, emits_resize_events_only_on_change)
 TEST_F(Surface, remembers_alpha)
 {
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         null_configurator,
         report);
 
@@ -311,16 +305,18 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
             .Times(1);
     }
 
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, mt::fake_shared(sink));
+
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        mt::fake_shared(sink),
         null_configurator,
         report);
+
+    surf.add_observer(observer);
 
     surf.configure(mir_surface_attrib_focus, mir_surface_focused);
     surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);
@@ -337,13 +333,11 @@ TEST_F(Surface, configurator_selects_attribute_values)
     EXPECT_CALL(configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized)).Times(1);
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         mt::fake_shared(configurator),
         report);
 
@@ -355,13 +349,11 @@ TEST_F(Surface, take_input_focus)
     using namespace ::testing;
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         null_configurator,
         report);
 
@@ -376,13 +368,11 @@ TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
     auto stub_buffer_stream = std::make_shared<mtd::StubBufferStream>();
 
     ms::BasicSurface surf(
-        stub_id,
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
         stub_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
-        stub_sender,
         null_configurator,
         report);
 

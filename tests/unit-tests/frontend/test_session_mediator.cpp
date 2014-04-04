@@ -42,7 +42,6 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/shell/surface.h"
 
 #include "gmock_set_arg.h"
 #include <gtest/gtest.h>

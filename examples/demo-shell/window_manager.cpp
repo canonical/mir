@@ -21,7 +21,7 @@
 
 #include "mir/shell/focus_controller.h"
 #include "mir/shell/session.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
@@ -207,7 +207,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         {
             // FIXME: We need to be able to select individual surfaces in
             //        future and not just the "default" one.
-            std::shared_ptr<msh::Surface> surf = app->default_surface();
+            auto const surf = app->default_surface();
 
             if (surf &&
                 (event.motion.modifiers & mir_key_modifier_alt ||

@@ -31,7 +31,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
-#include <cstring>
+#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -40,36 +40,85 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::ThreadsafeCallback::ThreadsafeCallback(std::function<void()> const& notify_change) :
-        notify_change(notify_change) {}
-
-ms::ThreadsafeCallback& ms::ThreadsafeCallback::operator=(std::function<void()> const& notify_change)
+void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    this->notify_change = notify_change;
-    return *this;
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->attrib_changed(attrib, value);
 }
 
-void ms::ThreadsafeCallback::operator()() const
+void ms::SurfaceObservers::resized_to(geometry::Size const& size)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    auto const notifier = notify_change;
-    lock.unlock();
-    notifier();
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->resized_to(size);
+}
+
+void ms::SurfaceObservers::moved_to(geometry::Point const& top_left)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->moved_to(top_left);
+}
+
+void ms::SurfaceObservers::hidden_set_to(bool hide)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->hidden_set_to(hide);
+}
+
+void ms::SurfaceObservers::frame_posted()
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->frame_posted();
+}
+
+void ms::SurfaceObservers::alpha_set_to(float alpha)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->alpha_set_to(alpha);
+}
+
+void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->transformation_set_to(t);
+}
+
+void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    if (observer)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        observers.push_back(observer);
+    }
+}
+
+void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    observers.erase(std::remove(observers.begin(),observers.end(), observer), observers.end());
 }
 
 ms::BasicSurface::BasicSurface(
-    frontend::SurfaceId id,
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
-    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<compositor::BufferStream> const& buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
-    std::shared_ptr<frontend::EventSink> const& event_sink,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
-    id(id),
-    notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
@@ -79,13 +128,17 @@ ms::BasicSurface::BasicSurface(
     input_rectangles{surface_rect},
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
-    event_sink(event_sink),
     configurator(configurator),
     report(report),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
     report->surface_created(this, surface_name);
+}
+
+mg::Renderable::ID ms::BasicSurface::id() const
+{
+    return this; // Always sufficient or should we cast from a SurfaceID?
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -114,7 +167,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
         std::unique_lock<std::mutex> lk(guard);
         surface_rect.top_left = top_left;
     }
-    notify_change();
+    observers.moved_to(top_left);
 }
 
 float ms::BasicSurface::alpha() const
@@ -129,7 +182,7 @@ void ms::BasicSurface::set_hidden(bool hide)
         std::unique_lock<std::mutex> lk(guard);
         hidden = hide;
     }
-    notify_change();
+    observers.hidden_set_to(hide);
 }
 
 mir::geometry::Size ms::BasicSurface::size() const
@@ -155,7 +208,7 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
         }
-        notify_change();
+        observers.frame_posted();
     }
 }
 
@@ -188,11 +241,6 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
     return server_input_channel;
 }
 
-void ms::BasicSurface::on_change(std::function<void()> change_notification)
-{
-    notify_change = change_notification;
-}
-
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -221,14 +269,7 @@ void ms::BasicSurface::resize(geom::Size const& size)
         std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = size;
     }
-    notify_change();
-    MirEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_resize;
-    e.resize.surface_id = id.as_value();
-    e.resize.width = size.width.as_int();
-    e.resize.height = size.height.as_int();
-    event_sink->handle_event(e);
+    observers.resized_to(size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -253,22 +294,13 @@ bool ms::BasicSurface::contains(geom::Point const& point) const
     return false;
 }
 
-void ms::BasicSurface::frame_posted()
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        first_frame_posted = true;
-    }
-    notify_change();
-}
-
 void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
         surface_alpha = alpha;
     }
-    notify_change();
+    observers.alpha_set_to(alpha);
 }
 
 
@@ -278,7 +310,7 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
         std::unique_lock<std::mutex> lk(guard);
         transformation_matrix = t;
     }
-    notify_change();
+    observers.transformation_set_to(t);
 }
 
 glm::mat4 ms::BasicSurface::transformation() const
@@ -290,7 +322,7 @@ glm::mat4 ms::BasicSurface::transformation() const
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return !(hidden || !first_frame_posted);
+    return !hidden && first_frame_posted;
 } 
 
 bool ms::BasicSurface::shaped() const
@@ -359,27 +391,10 @@ bool ms::BasicSurface::set_state(MirSurfaceState s)
         state_value = s;
         valid = true;
 
-        notify_attrib_change(mir_surface_attrib_state, s);
+        observers.attrib_changed(mir_surface_attrib_state, s);
     }
 
     return valid;
-}
-
-void ms::BasicSurface::notify_attrib_change(MirSurfaceAttrib attrib, int value)
-{
-    MirEvent e;
-
-    // This memset is not really required. However it does avoid some
-    // harmless uninitialized memory reads that valgrind will complain
-    // about, due to gaps in MirEvent.
-    memset(&e, 0, sizeof e);
-
-    e.type = mir_event_type_surface;
-    e.surface.id = id.as_value();
-    e.surface.attrib = attrib;
-    e.surface.value = value;
-
-    event_sink->handle_event(e);
 }
 
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
@@ -411,7 +426,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = state();
         break;
     case mir_surface_attrib_focus:
-        notify_attrib_change(attrib, value);
+        observers.attrib_changed(attrib, value);
         break;
     case mir_surface_attrib_swapinterval:
         allow_dropping = (value == 0);
@@ -439,3 +454,13 @@ void ms::BasicSurface::show()
     set_hidden(false);
 }
 
+
+void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    observers.add(observer);
+}
+
+void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& observer)
+{
+    observers.remove(observer);
+}

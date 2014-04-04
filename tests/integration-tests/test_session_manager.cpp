@@ -27,7 +27,7 @@
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
@@ -50,7 +50,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
 {
     TestSessionManagerAndFocusSelectionStrategy()
         : session_manager(
-              mt::fake_shared(surface_factory),
+              mt::fake_shared(surface_coordinator),
               mt::fake_shared(container),
               mt::fake_shared(focus_setter),
               std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -60,7 +60,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
 
     }
 
-    mtd::MockSurfaceFactory surface_factory;
+    mtd::MockSurfaceCoordinator surface_coordinator; // TODO this isn't used as a mock
     ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
