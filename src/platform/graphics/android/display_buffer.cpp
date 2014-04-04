@@ -46,7 +46,7 @@ mga::DisplayBuffer::DisplayBuffer(
           {
               fb_bundle->fb_format()
           },
-          {mg::DisplayConfigurationMode{fb_bundle->fb_size(),0.0f}},
+          {mg::DisplayConfigurationMode{fb_bundle->fb_size(), fb_bundle->fb_refresh_rate()}},
           0,
           geom::Size{0,0}, //could use DPI information to fill this
           true,
