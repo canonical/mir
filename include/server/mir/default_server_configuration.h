@@ -82,7 +82,6 @@ class SurfaceCoordinator;
 class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
-class SurfaceRanker;
 class SurfaceController;
 class InputRegistrar;
 class SceneReport;
@@ -217,7 +216,6 @@ public:
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
-    virtual std::shared_ptr<scene::SurfaceRanker>     the_surface_ranker();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
     virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();

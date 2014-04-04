@@ -58,7 +58,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
         {
             return std::make_shared<msh::DefaultFocusMechanism>(
                 the_input_targeter(),
-                the_surface_ranker());
+                the_surface_coordinator());
         });
 }
 

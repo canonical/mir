@@ -23,23 +23,22 @@
 
 namespace mir
 {
-namespace scene { class SurfaceObserver; }
+namespace scene { class SurfaceObserver; class Surface; }
 
 namespace shell
 {
 class Session;
-class Surface;
 struct SurfaceCreationParameters;
 
 class SurfaceFactory
 {
 public:
-    virtual std::shared_ptr<Surface> create_surface(
+    virtual std::shared_ptr<scene::Surface> create_surface(
         Session* session,
         SurfaceCreationParameters const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
 
-    virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
+    virtual void destroy_surface(std::shared_ptr<scene::Surface> const& surface) = 0;
 
 protected:
     virtual ~SurfaceFactory() {}

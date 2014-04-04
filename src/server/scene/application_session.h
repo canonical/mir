@@ -32,12 +32,12 @@ class EventSink;
 namespace shell
 {
 class SurfaceFactory;
-class Surface;
 class SessionListener;
 }
 
 namespace scene
 {
+class Surface;
 class SnapshotStrategy;
 
 class ApplicationSession : public shell::Session
@@ -69,7 +69,6 @@ public:
     void show();
 
     void send_display_config(graphics::DisplayConfiguration const& info);
-    int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 
     void set_lifecycle_state(MirLifecycleState state);
 
@@ -89,7 +88,7 @@ private:
 
     std::atomic<int> next_surface_id;
 
-    typedef std::map<frontend::SurfaceId, std::shared_ptr<shell::Surface>> Surfaces;
+    typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;

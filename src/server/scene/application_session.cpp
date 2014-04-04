@@ -17,7 +17,7 @@
  */
 
 #include "application_session.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
@@ -168,16 +168,6 @@ void ms::ApplicationSession::show()
     {
         id_s.second->show();
     }
-}
-
-int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
-                                               MirSurfaceAttrib attrib,
-                                               int requested_value)
-{
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
-
-    return surf->configure(attrib, requested_value);
 }
 
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)

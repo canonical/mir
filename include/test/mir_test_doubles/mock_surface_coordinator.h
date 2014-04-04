@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,10 +17,10 @@
  */
 
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_RANKER_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_RANKER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
 
-#include "mir/scene/surface_ranker.h"
+#include "mir/scene/surface_coordinator.h"
 
 #include <gmock/gmock.h>
 
@@ -31,9 +31,15 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceRanker : public scene::SurfaceRanker
+struct MockSurfaceCoordinator : public scene::SurfaceCoordinator
 {
     MOCK_METHOD1(raise, void(std::weak_ptr<scene::Surface> const&));
+
+    MOCK_METHOD2(add_surface, std::shared_ptr<scene::Surface>(
+        shell::SurfaceCreationParameters const& params,
+        std::shared_ptr<scene::SurfaceObserver> const& observer));
+
+    MOCK_METHOD1(remove_surface, void(std::weak_ptr<scene::Surface> const& surface));
 };
 
 }
@@ -41,4 +47,4 @@ struct MockSurfaceRanker : public scene::SurfaceRanker
 }
 
 
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_RANKER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_ */

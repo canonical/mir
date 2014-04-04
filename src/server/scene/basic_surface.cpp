@@ -289,15 +289,6 @@ bool ms::BasicSurface::contains(geom::Point const& point) const
     return false;
 }
 
-void ms::BasicSurface::frame_posted()
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        first_frame_posted = true;
-    }
-    observers.frame_posted();
-}
-
 void ms::BasicSurface::set_alpha(float alpha)
 {
     {

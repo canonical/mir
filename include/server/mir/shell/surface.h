@@ -29,7 +29,6 @@
 
 namespace mir
 {
-namespace scene { class SurfaceRanker; }
 namespace shell
 {
 class InputTargeter;
@@ -55,6 +54,7 @@ public:
 
     virtual float alpha() const = 0;
     virtual void set_alpha(float alpha) = 0;
+    virtual void force_requests_to_complete() = 0;
 };
 }
 }

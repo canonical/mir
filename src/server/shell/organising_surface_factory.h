@@ -39,12 +39,12 @@ public:
         std::shared_ptr<PlacementStrategy> const& placement_strategy);
     virtual ~OrganisingSurfaceFactory();
 
-    std::shared_ptr<Surface> create_surface(
+    std::shared_ptr<scene::Surface> create_surface(
         Session* session,
         SurfaceCreationParameters const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) override;
 
-    void destroy_surface(std::shared_ptr<Surface> const& surface) override;
+    void destroy_surface(std::shared_ptr<scene::Surface> const& surface) override;
 
 protected:
     OrganisingSurfaceFactory(OrganisingSurfaceFactory const&) = delete;

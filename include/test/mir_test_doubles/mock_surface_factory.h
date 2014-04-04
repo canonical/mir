@@ -33,12 +33,12 @@ namespace doubles
 
 struct MockSurfaceFactory : public shell::SurfaceFactory
 {
-    MOCK_METHOD3(create_surface, std::shared_ptr<shell::Surface>(
+    MOCK_METHOD3(create_surface, std::shared_ptr<scene::Surface>(
         shell::Session*,
         const shell::SurfaceCreationParameters&,
         std::shared_ptr<scene::SurfaceObserver> const&));
 
-    void destroy_surface(std::shared_ptr<shell::Surface> const& /*surface*/) override {}
+    void destroy_surface(std::shared_ptr<scene::Surface> const& /*surface*/) override {}
 };
 
 }
