@@ -38,7 +38,7 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
-    std::shared_ptr<msh::SessionListener> const& session_listener) :
+    std::shared_ptr<SessionListener> const& session_listener) :
     surface_coordinator(surface_factory),
     app_container(container),
     focus_setter(focus_setter),

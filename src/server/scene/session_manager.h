@@ -33,13 +33,13 @@ namespace mir
 namespace shell
 {
 class FocusSetter;
-class SessionListener;
 }
 
 namespace scene
 {
-class SessionEventSink;
 class SessionContainer;
+class SessionEventSink;
+class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
 
@@ -51,7 +51,7 @@ public:
                             std::shared_ptr<shell::FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
-                            std::shared_ptr<shell::SessionListener> const& session_listener);
+                            std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
@@ -80,7 +80,7 @@ private:
     std::shared_ptr<shell::FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
-    std::shared_ptr<shell::SessionListener> const session_listener;
+    std::shared_ptr<SessionListener> const session_listener;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;

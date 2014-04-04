@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSessionListener : public shell::SessionListener
+struct MockSessionListener : public scene::SessionListener
 {
     virtual ~MockSessionListener() noexcept(true) {}
 

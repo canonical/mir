@@ -25,7 +25,7 @@ namespace mir
 {
 namespace scene
 {
-class NullSessionListener : public shell::SessionListener
+class NullSessionListener : public SessionListener
 {
 public:
     NullSessionListener() = default;

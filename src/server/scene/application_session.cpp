@@ -41,7 +41,7 @@ ms::ApplicationSession::ApplicationSession(
     pid_t pid,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<msh::SessionListener> const& session_listener,
+    std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_coordinator(surface_coordinator),
     pid(pid),

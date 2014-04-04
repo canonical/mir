@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -23,19 +23,21 @@
 
 namespace mir
 {
-namespace scene { class Surface; class Session; }
-namespace shell
+namespace scene
 {
+class Surface;
+class Session;
+
 class SessionListener
 {
 public:
-    virtual void starting(std::shared_ptr<scene::Session> const& session) = 0;
-    virtual void stopping(std::shared_ptr<scene::Session> const& session) = 0;
-    virtual void focused(std::shared_ptr<scene::Session> const& session) = 0;
+    virtual void starting(std::shared_ptr<Session> const& session) = 0;
+    virtual void stopping(std::shared_ptr<Session> const& session) = 0;
+    virtual void focused(std::shared_ptr<Session> const& session) = 0;
     virtual void unfocused() = 0;
 
-    virtual void surface_created(scene::Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
-    virtual void destroying_surface(scene::Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual void surface_created(Session& session, std::shared_ptr<Surface> const& surface) = 0;
+    virtual void destroying_surface(Session& session, std::shared_ptr<Surface> const& surface) = 0;
 
 protected:
     SessionListener() = default;

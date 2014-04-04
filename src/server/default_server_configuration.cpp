@@ -76,7 +76,7 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return socket_file;
 }
 
-std::shared_ptr<msh::SessionListener>
+std::shared_ptr<ms::SessionListener>
 mir::DefaultServerConfiguration::the_shell_session_listener()
 {
     return shell_session_listener(
