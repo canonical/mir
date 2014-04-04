@@ -30,6 +30,7 @@ mc::RenderingOperator::RenderingOperator(
 
 void mc::RenderingOperator::operator()(graphics::Renderable const& renderable)
 {
+        printf("BLAM\n");
     auto compositor_buffer = renderable.buffer(&renderer);
     // preserves buffers used in rendering until after post_update()
     saved_resources.push_back(compositor_buffer);

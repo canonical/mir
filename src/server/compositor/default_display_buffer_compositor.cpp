@@ -52,7 +52,9 @@ public:
         {
             return (renderable.get() == &r);
         };
-        return (std::find_if(list.begin(), list.end(), matcher) != list.end());
+        auto found = (std::find_if(list.begin(), list.end(), matcher) != list.end());
+        printf("FOUND %i\n", found);
+        return found;
     }
 
 private:
@@ -114,6 +116,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
+        printf("composit....\n");
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, view_area);
@@ -123,6 +126,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
+        printf("okey hokey\n");
         mc::RenderingOperator applicator(*renderer);
         VisibilityFilter selector(renderable_list);
         scene->for_each_if(selector, applicator);
