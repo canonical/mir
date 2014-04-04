@@ -54,6 +54,9 @@ mir (0.1.8-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1298596)
       . [regression] Surfaces vanish as soon as their edges touch the edge of
         screen (LP: #1301115)
+  * Cherry-picked from future release 0.1.9:
+    - Bug fix: mirplatformgraphics does not have boost program options in its
+      symbol table (LP: #1301040)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 20 Mar 2014 14:05:25 +0800
 
