@@ -127,7 +127,7 @@ mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::unique_lock<decltype(notify_change_mutex)> lk(notify_change_mutex);
     assert(f);
     notify_change = f;
 }
@@ -182,7 +182,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
 void ms::SurfaceStack::emit_change_notification()
 {
-    std::lock_guard<std::mutex> lg{notify_change_mutex};
+    std::unique_lock<decltype(notify_change_mutex)> lk(notify_change_mutex);
     notify_change();
 }
 
