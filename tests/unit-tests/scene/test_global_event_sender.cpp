@@ -19,7 +19,7 @@
 #include "src/server/scene/global_event_sender.h"
 #include "src/server/scene/session_container.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
-#include "mir_test_doubles/mock_shell_session.h"
+#include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
 
@@ -60,7 +60,7 @@ TEST(GlobalEventSender, sender)
     mtd::StubDisplayConfig stub_display_config;
     g_sender.handle_display_config_change(stub_display_config);
 
-    auto mock_session = std::make_shared<mtd::MockShellSession>();
+    auto mock_session = std::make_shared<mtd::MockSceneSession>();
     EXPECT_CALL(*mock_session, send_display_config(_))
         .Times(1);
     called_fn(mock_session);

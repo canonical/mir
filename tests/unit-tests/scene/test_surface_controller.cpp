@@ -21,7 +21,7 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir_test_doubles/stub_shell_session.h"
+#include "mir_test_doubles/stub_scene_session.h"
 
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test/fake_shared.h"
@@ -66,7 +66,7 @@ struct SurfaceController : testing::Test
     std::shared_ptr<ms::Surface> const expect_surface = mt::fake_shared(mock_surface);
     testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     MockSurfaceStackModel model;
-    mtd::StubShellSession session;
+    mtd::StubSceneSession session;
     std::shared_ptr<ms::SurfaceObserver> observer;
 
     void SetUp()
