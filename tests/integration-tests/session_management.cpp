@@ -120,8 +120,7 @@ TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
     auto const session = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
 
     EXPECT_CALL(*test_surface_stack, add_surface(_,_,_)).Times(1);
-    auto const surface = session->create_surface(params);
-    session->destroy_surface(surface);
+    session->create_surface(params);
 }
 
 
