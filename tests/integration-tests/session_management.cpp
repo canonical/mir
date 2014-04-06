@@ -142,8 +142,6 @@ TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
 
     EXPECT_CALL(*test_surface_stack, raise(_)).Times(1);
 
-    ASSERT_THAT(shell_session->default_surface(), Ne(nullptr));
-
     focus_controller->set_focus_to(shell_session);
 
     session1->destroy_surface(surface1);
