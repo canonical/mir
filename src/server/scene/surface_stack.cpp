@@ -152,7 +152,6 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChan
     }
 }
 
-#include <iostream>
 void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
 {
     auto surface = s.lock();

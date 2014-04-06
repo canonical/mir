@@ -24,6 +24,7 @@
 #include "mir/shell/session.h"
 #include "mir/shell/focus_controller.h"
 
+#include "mir/scene/surface.h"
 #include "src/server/scene/surface_stack.h"
 
 #include "mir_test_doubles/null_event_sink.h"
@@ -111,6 +112,11 @@ struct SessionManagement : Test
             .WillByDefault(Invoke(test_surface_stack.get(), &TestSurfaceStack::default_raise));
     }
 };
+
+MATCHER_P(WeakPtrTo, p, "")
+{
+  return arg.lock() == p;
+}
 }
 
 TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
@@ -122,7 +128,6 @@ TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
     EXPECT_CALL(*test_surface_stack, add_surface(_,_,_)).Times(1);
     session->create_surface(params);
 }
-
 
 TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
 {
@@ -139,7 +144,7 @@ TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
     auto const focus_controller = builder.the_focus_controller();
     auto const shell_session = std::dynamic_pointer_cast<msh::Session>(session1);
 
-    EXPECT_CALL(*test_surface_stack, raise(_)).Times(1);
+    EXPECT_CALL(*test_surface_stack, raise(WeakPtrTo(session1->get_surface(surface1)))).Times(1);
 
     focus_controller->set_focus_to(shell_session);
 
