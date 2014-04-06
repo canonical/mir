@@ -192,10 +192,12 @@ void mc::MultiThreadedCompositor::start()
     });
 
     /* Recomposite whenever the scene changes */
+    lk.unlock();
     scene->set_change_callback([this]()
     {
         schedule_compositing();
     });
+    lk.lock();
 
     started = true;
 
