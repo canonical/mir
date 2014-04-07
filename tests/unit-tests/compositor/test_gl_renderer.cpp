@@ -353,8 +353,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     // Clear the cache to ensure tests are not sensitive to execution order
     renderer->begin();
     renderer->end();
-
-    renderer.reset();
 }
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)

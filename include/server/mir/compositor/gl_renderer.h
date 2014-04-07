@@ -28,7 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 namespace mir
 {
 namespace compositor
