@@ -200,7 +200,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
-    virtual std::shared_ptr<scene::SessionListener>     the_shell_session_listener();
+    virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     /** @} */
 
@@ -287,7 +287,7 @@ protected:
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
-    CachedPtr<scene::SessionListener> shell_session_listener;
+    CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;

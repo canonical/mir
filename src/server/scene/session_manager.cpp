@@ -90,17 +90,17 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
     return new_session;
 }
 
-inline void ms::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<Session> const& shell_session)
+inline void ms::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<Session> const& session)
 {
     auto old_focus = focus_application.lock();
 
-    focus_application = shell_session;
+    focus_application = session;
 
-    focus_setter->set_focus_to(shell_session);
-    if (shell_session)
+    focus_setter->set_focus_to(session);
+    if (session)
     {
-        session_event_sink->handle_focus_change(shell_session);
-        session_listener->focused(shell_session);
+        session_event_sink->handle_focus_change(session);
+        session_listener->focused(session);
     }
     else
     {
@@ -109,22 +109,22 @@ inline void ms::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex>
     }
 }
 
-void ms::SessionManager::set_focus_to(std::shared_ptr<Session> const& shell_session)
+void ms::SessionManager::set_focus_to(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lg(mutex);
-    set_focus_to_locked(lg, shell_session);
+    set_focus_to_locked(lg, session);
 }
 
 void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+    auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    shell_session->force_requests_to_complete();
+    scene_session->force_requests_to_complete();
 
-    session_event_sink->handle_session_stopping(shell_session);
-    session_listener->stopping(shell_session);
+    session_event_sink->handle_session_stopping(scene_session);
+    session_listener->stopping(scene_session);
 
-    app_container->remove_session(shell_session);
+    app_container->remove_session(scene_session);
 
     std::unique_lock<std::mutex> lock(mutex);
     set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<Session>()));
@@ -156,8 +156,8 @@ std::weak_ptr<ms::Session> ms::SessionManager::focussed_application() const
 mf::SurfaceId ms::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
     msh::SurfaceCreationParameters const& params)
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
-    auto id = shell_session->create_surface(params);
+    auto scene_session = std::dynamic_pointer_cast<Session>(session);
+    auto id = scene_session->create_surface(params);
 
     handle_surface_created(session);
 
@@ -166,7 +166,5 @@ mf::SurfaceId ms::SessionManager::create_surface_for(std::shared_ptr<mf::Session
 
 void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
-
-    set_focus_to(shell_session);
+    set_focus_to(std::dynamic_pointer_cast<Session>(session));
 }

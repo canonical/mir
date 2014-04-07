@@ -189,7 +189,7 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_focus_setter(),
                 the_snapshot_strategy(),
                 the_session_event_sink(),
-                the_shell_session_listener());
+                the_session_listener());
         });
 }
 

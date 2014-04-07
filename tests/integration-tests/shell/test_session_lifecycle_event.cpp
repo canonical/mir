@@ -62,7 +62,7 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<ms::SessionListener> the_shell_session_listener() override
+        std::shared_ptr<ms::SessionListener> the_session_listener() override
         {
             return std::make_shared<StubSessionListener>();
         }

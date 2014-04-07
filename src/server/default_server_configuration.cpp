@@ -77,9 +77,9 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
 }
 
 std::shared_ptr<ms::SessionListener>
-mir::DefaultServerConfiguration::the_shell_session_listener()
+mir::DefaultServerConfiguration::the_session_listener()
 {
-    return shell_session_listener(
+    return session_listener(
         [this]
         {
             return std::make_shared<ms::NullSessionListener>();
