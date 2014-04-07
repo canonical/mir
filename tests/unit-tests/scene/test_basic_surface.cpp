@@ -110,6 +110,41 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_FALSE(surface.shaped());
 }
 
+TEST_F(BasicSurfaceTest, id_always_unique)
+{
+    int const N = 10;
+    std::unique_ptr<ms::BasicSurface> surfaces[N];
+
+    for (int i = 0; i < N; ++i)
+    {
+        surfaces[i].reset(new ms::BasicSurface(
+                name, rect, false, mock_buffer_stream,
+                std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
+            );
+
+        for (int j = 0; j < i; ++j)
+        {
+            ASSERT_NE(surfaces[j]->id(), surfaces[i]->id());
+        }
+    }
+}
+
+TEST_F(BasicSurfaceTest, id_never_invalid)
+{
+    int const N = 10;
+    std::unique_ptr<ms::BasicSurface> surfaces[N];
+
+    for (int i = 0; i < N; ++i)
+    {
+        surfaces[i].reset(new ms::BasicSurface(
+                name, rect, false, mock_buffer_stream,
+                std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
+            );
+
+        ASSERT_TRUE(surfaces[i]->id());
+    }
+}
+
 TEST_F(BasicSurfaceTest, update_top_left)
 {
     EXPECT_CALL(mock_callback, call())

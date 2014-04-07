@@ -26,11 +26,13 @@ namespace mir
 {
 namespace shell
 {
+struct Session;
 struct SurfaceCreationParameters;
 }
 
 namespace scene
 {
+using shell::Session;
 class Surface;
 class SurfaceObserver;
 
@@ -39,6 +41,7 @@ class SurfaceCoordinator
 public:
     virtual std::shared_ptr<Surface> add_surface(
         shell::SurfaceCreationParameters const& params,
+        Session* session,
         std::shared_ptr<SurfaceObserver> const& observer) = 0;
 
     virtual void raise(std::weak_ptr<Surface> const& surface) = 0;

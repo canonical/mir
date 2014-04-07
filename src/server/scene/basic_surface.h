@@ -88,6 +88,7 @@ public:
 
     ~BasicSurface() noexcept;
 
+    graphics::Renderable::ID id() const override;
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
     float alpha() const override;

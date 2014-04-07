@@ -19,8 +19,8 @@
 
 #include "default_display_buffer_compositor.h"
 
-#include "rendering_operator.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
@@ -36,30 +36,8 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 using namespace mir;
 
-//TODO remove VisibilityFilter once we don't need filters/operators for rendering
 namespace
 {
-struct VisibilityFilter : public mc::FilterForScene
-{
-public:
-    VisibilityFilter(
-        mg::RenderableList const& renderable_list)
-        : list(renderable_list)
-    {
-    }
-
-    bool operator()(mg::Renderable const& r)
-    {
-        auto matcher = [&r](std::shared_ptr<mg::Renderable> const& renderable)
-        {
-            return (renderable.get() == &r);
-        };
-        return (std::find_if(list.begin(), list.end(), matcher) != list.end());
-    }
-
-private:
-    mg::RenderableList const& list;
-};
 
 class SoftCursor : public mg::Cursor
 {
@@ -149,19 +127,27 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
+        //preserves buffers backing GL textures until after post_update
+        std::vector<std::shared_ptr<mg::Buffer>> saved_resources;
+
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, viewport);
 
+        renderer->set_rotation(display_buffer.orientation());
+        renderer->set_viewport(viewport);
+        renderer->begin();
+
         for(auto const& renderable : renderable_list)
+        {
             uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
-        renderer->set_viewport(viewport);
-        renderer->set_rotation(display_buffer.orientation());
-        renderer->begin();
-        mc::RenderingOperator applicator(*renderer);
-        VisibilityFilter selector(renderable_list);
-        scene->for_each_if(selector, applicator);
+            //'renderer.get()' serves as an ID to distinguish itself from other compositors
+            auto buffer = renderable->buffer(renderer.get());
+            renderer->render(*renderable, *buffer);
+            saved_resources.push_back(buffer);
+        }
+
         renderer->end();
 
         display_buffer.post_update();

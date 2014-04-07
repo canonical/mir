@@ -49,7 +49,6 @@ struct MockSurface : public scene::BasicSurface
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
-    MOCK_METHOD0(visible, bool());
 
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());

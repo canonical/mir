@@ -25,7 +25,6 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
@@ -83,7 +82,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
         EXPECT_CALL(app1, default_surface()).Times(1)
             .WillOnce(Return(mt::fake_shared(mock_surface)));
         EXPECT_CALL(app1, default_surface()).Times(1)
-            .WillOnce(Return(std::shared_ptr<msh::Surface>()));
+            .WillOnce(Return(std::shared_ptr<ms::Surface>()));
     }
 
     NiceMock<mtd::MockInputTargeter> targeter;
