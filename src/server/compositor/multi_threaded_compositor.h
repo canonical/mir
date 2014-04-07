@@ -54,6 +54,7 @@ public:
     void stop();
 
 private:
+    void cleanup();
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<DisplayBufferCompositorFactory> const display_buffer_compositor_factory;

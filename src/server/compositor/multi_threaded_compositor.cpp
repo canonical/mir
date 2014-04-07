@@ -30,6 +30,34 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+namespace
+{
+
+class TryButRevertIfUnwinding
+{
+public:
+    TryButRevertIfUnwinding(std::function<void()> const& apply,
+                            std::function<void()> const& revert)
+        : revert{revert}
+    {
+        apply();
+    }
+
+    ~TryButRevertIfUnwinding()
+    {
+        if (std::uncaught_exception())
+            revert();
+    }
+
+private:
+    TryButRevertIfUnwinding(TryButRevertIfUnwinding const&) = delete;
+    TryButRevertIfUnwinding& operator=(TryButRevertIfUnwinding const&) = delete;
+
+    std::function<void()> const revert;
+};
+
+}
+
 namespace mir
 {
 namespace compositor
@@ -181,25 +209,49 @@ void mc::MultiThreadedCompositor::start()
 
     report->started();
 
-    /* Start the compositing threads */
-    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    auto create_compositing_thread = [this](mg::DisplayBuffer& buffer)
     {
         auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, report};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
         threads.push_back(std::thread{std::ref(*thread_functor)});
         thread_functors.push_back(std::move(thread_functor));
-    });
+    };
 
     /* Recomposite whenever the scene changes */
-    lk.unlock();
-    scene->set_change_callback([this]()
-    {
-        schedule_compositing();
-    });
-    lk.lock();
+    auto scene_callback = [this]() { schedule_compositing(); };
 
+    /* If there is more than one display buffer and the CompositingFunctor
+     * constructor throws for any display buffer after the first,
+     * this cleans up any threads created up to that point.
+     */
+    TryButRevertIfUnwinding create_compositor_threads{
+        [this, &create_compositing_thread]
+        {
+            display->for_each_display_buffer(create_compositing_thread);
+        },
+        [this]
+        {
+            cleanup();
+        }};
+
+    /* Started is set before unlocking the guard so that any other thread
+     * calling start returns on the started check.
+     */
     started = true;
+    TryButRevertIfUnwinding callback_setter{
+        [this, &lk, &scene_callback]
+        {
+            lk.unlock();
+            scene->set_change_callback(scene_callback);
+            lk.lock();
+        },
+        [this, &lk]
+        {
+            lk.lock();
+            started = false;
+            cleanup();
+        }};
 
     /* Optional first render */
     if (compose_on_start)
@@ -218,10 +270,28 @@ void mc::MultiThreadedCompositor::stop()
         return;
     }
 
-    lk.unlock();
-    scene->set_change_callback([]{});
-    lk.lock();
+    /* Started is set before unlocking the guard so that any other thread
+     * calling stop returns on the !started check.
+     */
+    started = false;
+    TryButRevertIfUnwinding callback_setter{
+        [this, &lk]
+        {
+            lk.unlock();
+            scene->set_change_callback([]{});
+            lk.lock();
+        },
+        [this, &lk]
+        {
+            lk.lock();
+            started = true;
+        }};
 
+    cleanup();
+}
+
+void mc::MultiThreadedCompositor::cleanup()
+{
     for (auto& f : thread_functors)
         f->stop();
 
@@ -232,8 +302,6 @@ void mc::MultiThreadedCompositor::stop()
     threads.clear();
 
     report->stopped();
-
-    started = false;
 
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
