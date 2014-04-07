@@ -117,7 +117,7 @@ private:
 
 mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 {
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::lock_guard<decltype(guard)> lg(guard);
     mg::RenderableList list;
     for (auto const& layer : layers_by_depth)
         for (auto const& renderable : layer.second) 
@@ -127,7 +127,7 @@ mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::unique_lock<decltype(notify_change_mutex)> lk(notify_change_mutex);
+    std::lock_guard<decltype(notify_change_mutex)> lg(notify_change_mutex);
     assert(f);
     notify_change = f;
 }
@@ -138,7 +138,7 @@ void ms::SurfaceStack::add_surface(
     mi::InputReceptionMode input_mode)
 {
     {
-        std::unique_lock<decltype(guard)> lk(guard);
+        std::lock_guard<decltype(guard)> lg(guard);
         layers_by_depth[depth].push_back(surface);
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
@@ -155,7 +155,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
     bool found_surface = false;
     {
-        std::unique_lock<decltype(guard)> lk(guard);
+        std::lock_guard<decltype(guard)> lg(guard);
 
         for (auto &layer : layers_by_depth)
         {
@@ -182,13 +182,13 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
 void ms::SurfaceStack::emit_change_notification()
 {
-    std::unique_lock<decltype(notify_change_mutex)> lk(notify_change_mutex);
+    std::lock_guard<decltype(notify_change_mutex)> lg(notify_change_mutex);
     notify_change();
 }
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::lock_guard<decltype(guard)> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
@@ -201,7 +201,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     auto surface = s.lock();
 
     {
-        std::unique_lock<decltype(guard)> lk(guard);
+        std::unique_lock<decltype(guard)> ul(guard);
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;
@@ -212,7 +212,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
                 surfaces.erase(p);
                 surfaces.push_back(surface);
 
-                lk.unlock();
+                ul.unlock();
                 emit_change_notification();
 
                 return;
