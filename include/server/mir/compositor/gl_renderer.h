@@ -23,9 +23,11 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
+#include <mir/graphics/gl_program.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <vector>
+
 
 namespace mir
 {
@@ -97,9 +99,7 @@ public:
                                 graphics::Buffer& buffer) const;
 
 private:
-    GLuint vertex_shader;
-    GLuint fragment_shader;
-    GLuint program;
+    graphics::GLProgram program;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;
