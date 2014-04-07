@@ -30,7 +30,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
@@ -73,7 +73,7 @@ struct MockSessionEventSink : public ms::SessionEventSink
 struct SessionManagerSetup : public testing::Test
 {
     SessionManagerSetup()
-      : session_manager(mt::fake_shared(surface_factory),
+      : session_manager(mt::fake_shared(surface_coordinator),
                         mt::fake_shared(container),
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -92,7 +92,7 @@ struct SessionManagerSetup : public testing::Test
         std::shared_ptr<mi::InputChannel>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
         mir::report::null_scene_report());
-    mtd::MockSurfaceFactory surface_factory;
+    mtd::MockSurfaceCoordinator surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     msh::NullSessionListener session_listener;
@@ -119,9 +119,9 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
+    EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1);
 
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_coordinator, add_surface(_, _, _)).WillByDefault(
        Return(dummy_surface));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -151,7 +151,7 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_coordinator, add_surface(_, _, _)).WillByDefault(
        Return(dummy_surface));
 
     // Once for session creation and once for surface creation
@@ -159,7 +159,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         InSequence seq;
 
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
+        EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1);
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
@@ -173,7 +173,7 @@ namespace
 struct SessionManagerSessionListenerSetup : public testing::Test
 {
     SessionManagerSessionListenerSetup()
-      : session_manager(mt::fake_shared(surface_factory),
+      : session_manager(mt::fake_shared(surface_coordinator),
                         mt::fake_shared(container),
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -184,7 +184,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
     }
 
-    mtd::MockSurfaceFactory surface_factory;
+    mtd::MockSurfaceCoordinator surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     mtd::MockSessionListener session_listener;
@@ -212,7 +212,7 @@ namespace
 struct SessionManagerSessionEventsSetup : public testing::Test
 {
     SessionManagerSessionEventsSetup()
-      : session_manager(mt::fake_shared(surface_factory),
+      : session_manager(mt::fake_shared(surface_coordinator),
                         mt::fake_shared(container),
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -223,7 +223,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
     }
 
-    mtd::MockSurfaceFactory surface_factory;
+    mtd::MockSurfaceCoordinator surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     MockSessionEventSink session_event_sink;

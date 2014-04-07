@@ -138,6 +138,11 @@ TEST_F(GLPixelBufferTest, returns_data_from_bgra_buffer_texture)
         EXPECT_CALL(mock_gl, glReadPixels(0, 0, width, height,
                                           GL_BGRA_EXT, GL_UNSIGNED_BYTE, _))
             .WillOnce(FillPixels());
+
+        /* at destruction */
+        EXPECT_CALL(mock_context, make_current());
+        EXPECT_CALL(mock_gl, glDeleteTextures(_,_));
+        EXPECT_CALL(mock_gl, glDeleteFramebuffers(_,_));
     }
 
     ms::GLPixelBuffer pixels{std::move(context)};
@@ -194,6 +199,11 @@ TEST_F(GLPixelBufferTest, returns_data_from_rgba_buffer_texture)
         EXPECT_CALL(mock_gl, glReadPixels(0, 0, width, height,
                                           GL_RGBA, GL_UNSIGNED_BYTE, _))
             .WillOnce(FillPixelsRGBA());
+
+        /* at destruction */
+        EXPECT_CALL(mock_context, make_current());
+        EXPECT_CALL(mock_gl, glDeleteTextures(_,_));
+        EXPECT_CALL(mock_gl, glDeleteFramebuffers(_,_));
     }
 
     ms::GLPixelBuffer pixels{std::move(context)};

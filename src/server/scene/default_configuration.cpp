@@ -99,14 +99,9 @@ mir::DefaultServerConfiguration::the_surface_controller()
         {
             return std::make_shared<ms::SurfaceController>(
                 the_surface_factory(),
+                the_shell_placement_strategy(),
                 the_surface_stack_model());
         });
-}
-
-std::shared_ptr<ms::SurfaceRanker>
-mir::DefaultServerConfiguration::the_surface_ranker()
-{
-    return the_surface_controller();
 }
 
 std::shared_ptr<ms::SurfaceCoordinator>
@@ -189,7 +184,7 @@ mir::DefaultServerConfiguration::the_session_manager()
         [this]() -> std::shared_ptr<ms::SessionManager>
         {
             return std::make_shared<ms::SessionManager>(
-                the_shell_surface_factory(),
+                the_surface_coordinator(),
                 the_session_container(),
                 the_shell_focus_setter(),
                 the_snapshot_strategy(),

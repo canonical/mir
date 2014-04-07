@@ -82,7 +82,6 @@ class SurfaceCoordinator;
 class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
-class SurfaceRanker;
 class SurfaceController;
 class InputRegistrar;
 class SceneReport;
@@ -200,7 +199,6 @@ public:
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
-    virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
     virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
@@ -217,7 +215,6 @@ public:
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
-    virtual std::shared_ptr<scene::SurfaceRanker>     the_surface_ranker();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
     virtual std::shared_ptr<scene::SurfaceConfigurator> the_surface_configurator();
@@ -287,7 +284,6 @@ protected:
     CachedPtr<scene::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
-    CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;

@@ -59,10 +59,6 @@ struct StubShellSession : public shell::Session
     void show() override
     {
     }
-    int configure_surface(frontend::SurfaceId, MirSurfaceAttrib, int) override
-    {
-        return 0;
-    }
 
     void send_display_config(graphics::DisplayConfiguration const&) override
     {
@@ -72,9 +68,9 @@ struct StubShellSession : public shell::Session
     {
     }
 
-    std::shared_ptr<shell::Surface> default_surface() const override
+    std::shared_ptr<scene::Surface> default_surface() const override
     {
-        return std::shared_ptr<shell::Surface>();
+        return std::shared_ptr<scene::Surface>();
     }
 
     void set_lifecycle_state(MirLifecycleState /*state*/)

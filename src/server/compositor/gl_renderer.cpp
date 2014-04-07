@@ -271,8 +271,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
 GLuint mc::GLRenderer::load_texture(mg::Renderable const& renderable,
                                     mg::Buffer& buffer) const
 {
-    SurfaceID surf = &renderable; // TODO: Add an id() to Renderable
-    auto& tex = textures[surf];
+    auto& tex = textures[renderable.id()];
     bool changed = true;
     auto const& buf_id = buffer.id();
     if (!tex.id)

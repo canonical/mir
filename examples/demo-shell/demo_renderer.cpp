@@ -26,6 +26,11 @@ using namespace mir::examples;
 namespace
 {
 
+struct Color
+{
+     GLubyte r, g, b, a;
+};
+
 float penumbra_curve(float x)
 {
     return 1.0f - std::sin(x * M_PI / 2.0f);
@@ -69,26 +74,23 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture()
+GLuint generate_frame_corner_texture(float corner_radius,
+                                     Color const& color,
+                                     GLubyte highlight)
 {
-    struct Texel
-    {
-        GLubyte r, g, b, a;
-    };
+    int const height = 256;
+    int const width = height * corner_radius;
+    Color image[height * height]; // Worst case still much faster than the heap
 
-    int const width = 256;
-    Texel image[width][width];
+    int const cx = width;
+    int const cy = cx;
+    int const radius_sqr = cx * cy;
 
-    int cx = width / 2;
-    int cy = width / 2;
-    int radius_sqr = cx * cx;
-
-    for (int y = 0; y < width; ++y)
+    for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
         {
-            GLubyte lum = 128;
-            GLubyte alpha = 255;
+            Color col = color;
 
             // Cut out the corner in a circular shape.
             if (x < cx && y < cy)
@@ -96,20 +98,21 @@ GLuint generate_frame_corner_texture()
                 int dx = cx - x;
                 int dy = cy - y;
                 if (dx * dx + dy * dy >= radius_sqr)
-                    alpha = 0;
+                    col.a = 0;
             }
 
             // Set gradient
             if (y < cy)
             {
-                float brighten = (1.0f - (static_cast<float>(y) / cy));
-                if (x < cx)
-                    brighten *= std::sin(x * M_PI / width);
+                float brighten = (1.0f - (static_cast<float>(y) / cy)) *
+                                 std::sin(x * M_PI / (2 * (width - 1)));
 
-                lum += (255 - lum) * brighten;
+                col.r += (highlight - col.r) * brighten;
+                col.g += (highlight - col.g) * brighten;
+                col.b += (highlight - col.b) * brighten;
             }
 
-            image[y][x] = {lum, lum, lum, alpha};
+            image[y * width + x] = col;
         }
     }
 
@@ -122,7 +125,7 @@ GLuint generate_frame_corner_texture()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                 width, width, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                  image);
     glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing please
 
@@ -133,9 +136,12 @@ GLuint generate_frame_corner_texture()
 
 DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
     : GLRenderer(display_area)
+    , corner_radius(0.5f)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
-    titlebar_corner_tex = generate_frame_corner_texture();
+    titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
+                                                        {128,128,128,255},
+                                                        255);
 }
 
 DemoRenderer::~DemoRenderer()
@@ -267,8 +273,9 @@ void DemoRenderer::tessellate_frame(std::vector<Primitive>& primitives,
     primitives.resize(n + 3);
 
     GLfloat htop = top - titlebar_height;
-    GLfloat inleft = left + titlebar_height;  // Square proportions for corners
-    GLfloat inright = right - titlebar_height;
+    GLfloat in = titlebar_height * corner_radius;
+    GLfloat inleft = left + in;
+    GLfloat inright = right - in;
 
     GLfloat mid = (left + right) / 2.0f;
     if (inleft > mid) inleft = mid;

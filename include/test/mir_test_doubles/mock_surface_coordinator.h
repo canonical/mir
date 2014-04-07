@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,13 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
 
-#include "mir/shell/surface_factory.h"
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
+
+#include "mir/scene/surface_coordinator.h"
 
 #include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 namespace mir
 {
@@ -31,18 +31,21 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceFactory : public shell::SurfaceFactory
+struct MockSurfaceCoordinator : public scene::SurfaceCoordinator
 {
-    MOCK_METHOD3(create_surface, std::shared_ptr<shell::Surface>(
-        shell::Session*,
-        const shell::SurfaceCreationParameters&,
-        std::shared_ptr<scene::SurfaceObserver> const&));
+    MOCK_METHOD1(raise, void(std::weak_ptr<scene::Surface> const&));
 
-    void destroy_surface(std::shared_ptr<shell::Surface> const& /*surface*/) override {}
+    MOCK_METHOD3(add_surface, std::shared_ptr<scene::Surface>(
+        shell::SurfaceCreationParameters const& params,
+        scene::Session* session,
+        std::shared_ptr<scene::SurfaceObserver> const& observer));
+
+    MOCK_METHOD1(remove_surface, void(std::weak_ptr<scene::Surface> const& surface));
 };
 
 }
 }
 }
 
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
+
+#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_ */
