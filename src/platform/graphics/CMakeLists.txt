@@ -7,7 +7,6 @@ set(
 
   egl_extensions.cpp
   egl_resources.cpp
-  gl_program.cpp
   display_configuration.cpp
   buffer_basic.cpp
   pixel_format_utils.cpp
