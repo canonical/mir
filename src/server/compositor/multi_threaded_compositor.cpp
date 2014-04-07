@@ -27,6 +27,8 @@
 #include <thread>
 #include <condition_variable>
 
+#include <iostream>
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
@@ -38,7 +40,11 @@ class TryButRevertIfUnwinding
 public:
     TryButRevertIfUnwinding(std::function<void()> const& apply,
                             std::function<void()> const& revert)
-        : revert{revert}
+        : apply{apply}, revert{revert}
+    {
+    }
+
+    void run()
     {
         apply();
     }
@@ -53,6 +59,7 @@ private:
     TryButRevertIfUnwinding(TryButRevertIfUnwinding const&) = delete;
     TryButRevertIfUnwinding& operator=(TryButRevertIfUnwinding const&) = delete;
 
+    std::function<void()> const apply;
     std::function<void()> const revert;
 };
 
@@ -221,10 +228,24 @@ void mc::MultiThreadedCompositor::start()
     /* Recomposite whenever the scene changes */
     auto scene_callback = [this]() { schedule_compositing(); };
 
-    /* If there is more than one display buffer and the CompositingFunctor
-     * constructor throws for any display buffer after the first,
-     * this cleans up any threads created up to that point.
-     */
+    //Thread cleanup is handled by the create_compositor_threads rewinder above
+    TryButRevertIfUnwinding callback_setter{
+        [this, &lk, &scene_callback]
+        {
+            //Set to true before unlocking the guard to prevent any other thread calling start
+            //from allocating resources again
+            started = true;
+            lk.unlock();
+            scene->set_change_callback(scene_callback);
+            lk.lock();
+        },
+        [this, &lk]()
+        {
+            lk.lock();
+            started = false;
+        }};
+
+    //Cleanup threads if any code throws during start
     TryButRevertIfUnwinding create_compositor_threads{
         [this, &create_compositing_thread]
         {
@@ -235,23 +256,8 @@ void mc::MultiThreadedCompositor::start()
             cleanup();
         }};
 
-    /* Started is set before unlocking the guard so that any other thread
-     * calling start returns on the started check.
-     */
-    started = true;
-    TryButRevertIfUnwinding callback_setter{
-        [this, &lk, &scene_callback]
-        {
-            lk.unlock();
-            scene->set_change_callback(scene_callback);
-            lk.lock();
-        },
-        [this, &lk]
-        {
-            lk.lock();
-            started = false;
-            cleanup();
-        }};
+    callback_setter.run();
+    create_compositor_threads.run();
 
     /* Optional first render */
     if (compose_on_start)
@@ -259,7 +265,6 @@ void mc::MultiThreadedCompositor::start()
         lk.unlock();
         schedule_compositing();
     }
-
 }
 
 void mc::MultiThreadedCompositor::stop()
@@ -270,24 +275,31 @@ void mc::MultiThreadedCompositor::stop()
         return;
     }
 
-    /* Started is set before unlocking the guard so that any other thread
-     * calling stop returns on the !started check.
-     */
-    started = false;
-    TryButRevertIfUnwinding callback_setter{
+    TryButRevertIfUnwinding callback_clearer{
         [this, &lk]
         {
+            //Set to false before unlocking the guard to prevent any other
+            //thread calling stop from cleaning resources again
+            started = false;
             lk.unlock();
             scene->set_change_callback([]{});
             lk.lock();
         },
         [this, &lk]
         {
+            //clearing the callback threw, so the caller must assume
+            //stop was not successful, hence we should not cleanup
+            //here - allow caller to call stop again
             lk.lock();
             started = true;
         }};
 
+    callback_clearer.run();
     cleanup();
+
+    // If the compositor is restarted we've likely got clients blocked
+    // so we will need to schedule compositing immediately
+    compose_on_start = true;
 }
 
 void mc::MultiThreadedCompositor::cleanup()
@@ -302,8 +314,4 @@ void mc::MultiThreadedCompositor::cleanup()
     threads.clear();
 
     report->stopped();
-
-    // If the compositor is restarted we've likely got clients blocked
-    // so we will need to schedule compositing immediately
-    compose_on_start = true;
 }
