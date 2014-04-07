@@ -34,6 +34,9 @@ public:
     operator GLuint() const;
 
 private:
+    GLShader(GLShader const&) = delete;
+    GLShader& operator=(GLShader const&) = delete;
+
     GLuint const shader;
 };
 
@@ -48,6 +51,9 @@ public:
     operator GLuint() const;
 
 private:
+    GLProgram(GLProgram const&) = delete;
+    GLProgram& operator=(GLProgram const&) = delete;
+
     GLShader const vertex_shader; 
     GLShader const fragment_shader;
     GLuint const program;
