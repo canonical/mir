@@ -97,6 +97,8 @@ public:
 
     void set_change_callback(std::function<void()> const& f)
     {
+        if (throw_on_set_callback_)
+            throw std::runtime_error("");
         std::lock_guard<std::mutex> lock{callback_mutex};
         assert(f);
         callback = f;
@@ -112,12 +114,18 @@ public:
         std::this_thread::yield();
     }
 
+    void throw_on_set_callback(bool flag)
+    {
+        throw_on_set_callback_ = flag;
+    }
+
     void lock() {}
     void unlock() {}
 
 private:
     std::function<void()> callback;
     std::mutex callback_mutex;
+    bool throw_on_set_callback_;
 };
 
 class RecordingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -165,10 +173,8 @@ public:
         records[&display_buffer].second.insert(std::this_thread::get_id());
     }
 
-    bool enough_records_gathered(unsigned int nbuffers)
+    bool enough_records_gathered(unsigned int nbuffers, unsigned int min_record_count = 1000)
     {
-        static unsigned int const min_record_count{1000};
-
         std::lock_guard<std::mutex> lk{m};
 
         if (records.size() < nbuffers)
@@ -564,4 +570,45 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
     compositor.start();
     compositor.stop();
     compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
+{
+    unsigned int const nbuffers{3};
+
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
+
+    scene->throw_on_set_callback(true);
+    try
+    {
+        compositor.start();
+        //we shouldn't be here...
+        FAIL();
+    }
+    catch (const std::runtime_error& error) {}
+
+    scene->throw_on_set_callback(false);
+
+    compositor.start();
+
+    auto time_point = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    auto zero_seconds = std::chrono::seconds(0);
+    while (!db_compositor_factory->enough_records_gathered(nbuffers, 20))
+    {
+        scene->emit_change_event();
+        if (time_point - std::chrono::steady_clock::now() < zero_seconds)
+        {
+            EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, 20));
+            break;
+        }
+    }
+    compositor.stop();
+
+    //Only one thread should be rendering each display buffer
+    //If the compositor failed to cleanup correctly more than one thread will
+    //composite the same display buffer
+    EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
 }
