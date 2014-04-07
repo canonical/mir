@@ -84,7 +84,7 @@ private:
 class StubScene : public mc::Scene
 {
 public:
-    StubScene() : callback{[]{}} {}
+    StubScene() : callback{[]{}}, throw_on_set_callback_{false} {}
 
     mg::RenderableList generate_renderable_list() const
     {
