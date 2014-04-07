@@ -226,6 +226,19 @@ void mc::MultiThreadedCompositor::start()
     /* Recomposite whenever the scene changes */
     auto scene_callback = [this]() { schedule_compositing(); };
 
+    //Cleanup threads if any code throws during start
+    TryButRevertIfUnwinding create_compositor_threads{
+        [this, &create_compositing_thread]
+        {
+            display->for_each_display_buffer(create_compositing_thread);
+        },
+        [this]
+        {
+            //assumes we have the lock already
+            //this is guaranteed if the callback_setter unwinder gets constructed after this one.
+            cleanup();
+        }};
+
     //Thread cleanup is handled by the create_compositor_threads rewinder above
     TryButRevertIfUnwinding callback_setter{
         [this, &lk, &scene_callback]
@@ -241,17 +254,6 @@ void mc::MultiThreadedCompositor::start()
         {
             lk.lock();
             started = false;
-        }};
-
-    //Cleanup threads if any code throws during start
-    TryButRevertIfUnwinding create_compositor_threads{
-        [this, &create_compositing_thread]
-        {
-            display->for_each_display_buffer(create_compositing_thread);
-        },
-        [this]
-        {
-            cleanup();
         }};
 
     callback_setter.run();
