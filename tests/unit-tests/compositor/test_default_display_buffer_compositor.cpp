@@ -22,6 +22,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/cursor.h"
 #include "mir_test_doubles/mock_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
@@ -631,7 +632,8 @@ TEST_F(DefaultDisplayBufferCompositor, zooms_to_correct_region)
                                      {width/2, height/2}}))
         .Times(1);
 
-    FakeScene scene({});
+    mg::RenderableList list;
+    FakeScene scene(list);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -659,7 +661,8 @@ TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
     ON_CALL(display_buffer, can_bypass())
         .WillByDefault(Return(true));
 
-    FakeScene scene({fullscreen});
+    mg::RenderableList list{fullscreen};
+    FakeScene scene(list);
 
     EXPECT_CALL(mock_renderer, begin())
         .Times(1);
