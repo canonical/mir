@@ -71,7 +71,7 @@ mg::GLShader::~GLShader()
     glDeleteShader(shader);
 }
 
-mg::GLShader::operator int() const
+mg::GLShader::operator GLuint() const
 {
     return shader;
 }
@@ -103,7 +103,7 @@ mg::GLProgram::~GLProgram()
     glDeleteProgram(program);
 }
 
-mg::GLProgram::operator int() const
+mg::GLProgram::operator GLuint() const
 {
     return program;
 }

@@ -34,6 +34,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
+
 const GLchar* vertex_shader_src =
 {
     "attribute vec3 position;\n"

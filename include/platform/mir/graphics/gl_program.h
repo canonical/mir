@@ -31,7 +31,7 @@ class GLShader
 public:
     GLShader(GLchar const* shader_src, GLuint type);
     ~GLShader();
-    operator int() const;
+    operator GLuint() const;
 
 private:
     GLuint const shader;
@@ -45,7 +45,7 @@ public:
         GLchar const* fragment_shader_src);
     ~GLProgram();
 
-    operator int() const;
+    operator GLuint() const;
 
 private:
     GLShader const vertex_shader; 
