@@ -57,6 +57,10 @@ mir (0.1.8-0ubuntu1) UNRELEASED; urgency=medium
   * Cherry-picked from future release 0.1.9:
     - Bug fix: mirplatformgraphics does not have boost program options in its
       symbol table (LP: #1301040)
+    - Bug fix: unity8 crashed with SIGSEGV in glDeleteTextures() from
+      mir::scene::GLPixelBuffer::~GLPixelBuffer() from
+      mir::scene::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy()
+      (LP: #1256360)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 20 Mar 2014 14:05:25 +0800
 
