@@ -52,7 +52,7 @@ public:
     ~MockSnapshotStrategy() noexcept {}
 
     MOCK_METHOD2(take_snapshot_of,
-                void(std::shared_ptr<msh::SurfaceBufferAccess> const&,
+                void(std::shared_ptr<ms::SurfaceBufferAccess> const&,
                      msh::SnapshotCallback const&));
 };
 
@@ -264,7 +264,7 @@ TEST(ApplicationSession, takes_snapshot_of_default_surface)
     mtd::NullEventSink sender;
     auto const default_surface = make_mock_surface();
     auto const default_surface_buffer_access =
-        std::static_pointer_cast<msh::SurfaceBufferAccess>(default_surface);
+        std::static_pointer_cast<ms::SurfaceBufferAccess>(default_surface);
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
 
     EXPECT_CALL(surface_coordinator, add_surface(_,_,_))
