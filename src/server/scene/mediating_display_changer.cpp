@@ -18,7 +18,7 @@
 
 #include "mediating_display_changer.h"
 #include "session_container.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "session_event_handler_register.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
@@ -73,7 +73,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       base_configuration_applied{true}
 {
     session_event_handler_register->register_focus_change_handler(
-        [this](std::shared_ptr<msh::Session> const& session)
+        [this](std::shared_ptr<ms::Session> const& session)
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -108,7 +108,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     session_event_handler_register->register_session_stopping_handler(
-        [this](std::shared_ptr<msh::Session> const& session)
+        [this](std::shared_ptr<ms::Session> const& session)
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -192,7 +192,7 @@ void ms::MediatingDisplayChanger::send_config_to_all_sessions(
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     session_container->for_each(
-        [&conf](std::shared_ptr<msh::Session> const& session)
+        [&conf](std::shared_ptr<Session> const& session)
         {
             session->send_display_config(*conf);
         });

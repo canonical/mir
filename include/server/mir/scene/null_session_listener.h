@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,17 +16,15 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_NULL_SESSION_LISTENER_H_
-#define MIR_SHELL_NULL_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_NULL_SESSION_LISTENER_H_
+#define MIR_SCENE_NULL_SESSION_LISTENER_H_
 
-#include "mir/shell/session_listener.h"
+#include "mir/scene/session_listener.h"
 
 namespace mir
 {
-namespace shell
+namespace scene
 {
-class Session;
-
 class NullSessionListener : public SessionListener
 {
 public:
@@ -38,8 +36,8 @@ public:
     void focused(std::shared_ptr<Session> const&) override {}
     void unfocused() override {}
 
-    void surface_created(Session&, std::shared_ptr<scene::Surface> const&) override {}
-    void destroying_surface(Session&, std::shared_ptr<scene::Surface> const&) override {}
+    void surface_created(Session&, std::shared_ptr<Surface> const&) override {}
+    void destroying_surface(Session&, std::shared_ptr<Surface> const&) override {}
 
 protected:
     NullSessionListener(const NullSessionListener&) = delete;
@@ -49,5 +47,4 @@ protected:
 }
 }
 
-
-#endif // MIR_SHELL_NULL_SESSION_LISTENER_H_
+#endif // MIR_SCENE_NULL_SESSION_LISTENER_H_
