@@ -27,8 +27,6 @@
 #include <thread>
 #include <condition_variable>
 
-#include <iostream>
-
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
@@ -265,6 +263,7 @@ void mc::MultiThreadedCompositor::start()
         lk.unlock();
         schedule_compositing();
     }
+
 }
 
 void mc::MultiThreadedCompositor::stop()
