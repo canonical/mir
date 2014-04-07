@@ -151,6 +151,7 @@ TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
 
 TEST_F(SurfaceStack, stacking_order)
 {
+    using namespace testing;
     ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
@@ -158,17 +159,18 @@ TEST_F(SurfaceStack, stacking_order)
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
     auto list = stack.generate_renderable_list();
-    ASSERT_EQ(list.size(), 3u);
+    ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
-    EXPECT_EQ((*it)->id(), stub_surface1->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface2->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface3->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
+    using namespace testing;
     ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, ms::DepthId{0}, default_params.input_mode);
@@ -176,13 +178,13 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     stack.add_surface(stub_surface3, ms::DepthId{0}, default_params.input_mode);
 
     auto list = stack.generate_renderable_list();
-    ASSERT_EQ(list.size(), 3u);
+    ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
-    EXPECT_EQ((*it)->id(), stub_surface1->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface3->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface2->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
 }
 
 TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
@@ -230,24 +232,24 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
     auto list = stack.generate_renderable_list();
-    ASSERT_EQ(list.size(), 3u);
+    ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
-    EXPECT_EQ((*it)->id(), stub_surface1->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface2->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface3->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
 
     stack.raise(stub_surface1);
 
     list = stack.generate_renderable_list();
-    ASSERT_EQ(list.size(), 3u);
+    ASSERT_THAT(list.size(), 3u);
     it = list.begin();
-    EXPECT_EQ((*it)->id(), stub_surface2->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface3->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface1->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
 }
 
 TEST_F(SurfaceStack, depth_id_trumps_raise)
@@ -261,24 +263,24 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     stack.add_surface(stub_surface3, ms::DepthId{1}, default_params.input_mode);
 
     auto list = stack.generate_renderable_list();
-    ASSERT_EQ(list.size(), 3u);
+    ASSERT_THAT(list.size(), 3u);
     auto it = list.begin();
-    EXPECT_EQ((*it)->id(), stub_surface1->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface2->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface3->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
 
     stack.raise(stub_surface1);
 
     list = stack.generate_renderable_list();
-    ASSERT_EQ(list.size(), 3u);
+    ASSERT_THAT(list.size(), 3u);
     it = list.begin();
-    EXPECT_EQ((*it)->id(), stub_surface2->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface1->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
     std::advance(it, 1);
-    EXPECT_EQ((*it)->id(), stub_surface3->id());
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
 }
 
 TEST_F(SurfaceStack, raise_throw_behavior)
@@ -355,16 +357,11 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
 
     auto list = stack.generate_renderable_list();
 
-    //change position
+    auto const changed_position = geom::Point{43,44};
     for(auto const& surface : surfacelist)
-        surface->move_to({0,0});
+        surface->move_to(changed_position);
 
-    //check that the renderables are not at 0,0
-    auto i = 0u;
+    //check that the renderables are not at changed_pos
     for(auto& renderable : list)
-    {
-        auto point = geom::Rectangle{geom::Point{3*i,4*i}, geom::Size{1*i, 2*i}};
-        EXPECT_EQ(point, renderable->screen_position());
-        i++;
-    }
+        EXPECT_THAT(changed_position, testing::Ne(renderable->screen_position().top_left));
 }
