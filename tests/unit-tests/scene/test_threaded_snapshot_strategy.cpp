@@ -18,7 +18,7 @@
 
 #include "src/server/scene/threaded_snapshot_strategy.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/shell/surface_buffer_access.h"
+#include "mir/scene/surface_buffer_access.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -38,7 +38,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
-class StubSurfaceBufferAccess : public msh::SurfaceBufferAccess
+class StubSurfaceBufferAccess : public ms::SurfaceBufferAccess
 {
 public:
     ~StubSurfaceBufferAccess() noexcept {}

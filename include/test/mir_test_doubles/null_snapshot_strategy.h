@@ -30,7 +30,7 @@ namespace doubles
 
 struct NullSnapshotStrategy : public scene::SnapshotStrategy
 {
-    void take_snapshot_of(std::shared_ptr<shell::SurfaceBufferAccess> const&,
+    void take_snapshot_of(std::shared_ptr<scene::SurfaceBufferAccess> const&,
                           shell::SnapshotCallback const&)
     {
     }
