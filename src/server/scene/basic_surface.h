@@ -88,10 +88,8 @@ public:
 
     ~BasicSurface() noexcept;
 
-    graphics::Renderable::ID id() const override;
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
-    float alpha() const override;
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
@@ -116,17 +114,11 @@ public:
     bool contains(geometry::Point const& point) const override;
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
-    glm::mat4 transformation() const override;
 
     bool visible() const;
     
-    bool shaped() const  override;  // meaning the pixel format has alpha
-
-    // Renderable interface
-    std::shared_ptr<graphics::Buffer> buffer(void const*) const override;
-    bool alpha_enabled() const override;
-    geometry::Rectangle screen_position() const override;
-    int buffers_ready_for_compositor() const override;
+    std::shared_ptr<graphics::Renderable>
+        generate_renderable(void const* compositor_id) const;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;

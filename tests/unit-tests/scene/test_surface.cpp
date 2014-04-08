@@ -480,6 +480,7 @@ TEST_F(SurfaceCreation, test_get_input_channel)
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
+#if 0
 TEST_F(SurfaceCreation, test_surface_set_alpha)
 {
     using namespace testing;
@@ -497,7 +498,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     surf.set_alpha(alpha);
     EXPECT_FLOAT_EQ(alpha, surf.alpha());
 }
-
+#endif
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 {
     using namespace testing;

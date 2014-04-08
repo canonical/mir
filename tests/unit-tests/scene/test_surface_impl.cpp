@@ -265,6 +265,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     EXPECT_EQ(new_size2, surf.size());
 }
 
+#if 0
 TEST_F(Surface, remembers_alpha)
 {
     ms::BasicSurface surf(
@@ -290,7 +291,7 @@ TEST_F(Surface, remembers_alpha)
     surf.set_alpha(1.0f);
     EXPECT_FLOAT_EQ(1.0f, surf.alpha());
 }
-
+#endif
 TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;

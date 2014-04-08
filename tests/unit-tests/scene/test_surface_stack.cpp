@@ -151,6 +151,7 @@ TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
     EXPECT_THAT(stub_surface1.use_count(), Eq(use_count));
 }
 
+#if 0
 TEST_F(SurfaceStack, stacking_order)
 {
     using namespace testing;
@@ -422,3 +423,4 @@ TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisitio
     list.begin()->buffer();
     list.begin()->buffer();
 }
+#endif

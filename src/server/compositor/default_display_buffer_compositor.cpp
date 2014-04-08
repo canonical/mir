@@ -96,8 +96,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         {
             uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
-            //'renderer.get()' serves as an ID to distinguish itself from other compositors
-            auto buffer = renderable->buffer(renderer.get());
+            auto buffer = renderable->buffer();
             renderer->render(*renderable, *buffer);
             saved_resources.push_back(buffer);
         }

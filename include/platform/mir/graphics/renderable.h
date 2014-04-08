@@ -42,7 +42,7 @@ public:
     virtual ID id() const = 0;
 
     /**
-     * Return the next buffer that should be composited/rendered.
+     * Return the buffer that should be composited/rendered.
      */
     virtual std::shared_ptr<Buffer> buffer() const = 0;
 

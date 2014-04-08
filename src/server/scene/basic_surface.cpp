@@ -136,11 +136,6 @@ ms::BasicSurface::BasicSurface(
     report->surface_created(this, surface_name);
 }
 
-mg::Renderable::ID ms::BasicSurface::id() const
-{
-    return this; // Always sufficient or should we cast from a SurfaceID?
-}
-
 void ms::BasicSurface::force_requests_to_complete()
 {
     surface_buffer_stream->force_requests_to_complete();
@@ -168,12 +163,6 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
         surface_rect.top_left = top_left;
     }
     observers.moved_to(top_left);
-}
-
-float ms::BasicSurface::alpha() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return surface_alpha;
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
@@ -313,42 +302,11 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
     observers.transformation_set_to(t);
 }
 
-glm::mat4 ms::BasicSurface::transformation() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return transformation_matrix;
-}
-
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
     return !hidden && first_frame_posted;
 } 
-
-bool ms::BasicSurface::shaped() const
-{
-    return nonrectangular;
-}
-
-std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer(void const* user_id) const
-{
-    return buffer_stream()->lock_compositor_buffer(user_id);
-}
-
-bool ms::BasicSurface::alpha_enabled() const
-{
-    return shaped() || alpha() < 1.0f;
-}
-
-geom::Rectangle ms::BasicSurface::screen_position() const
-{   // This would be more efficient to return a const reference
-    return surface_rect;
-}
-
-int ms::BasicSurface::buffers_ready_for_compositor() const
-{
-    return surface_buffer_stream->buffers_ready_for_compositor();
-}
 
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
@@ -463,4 +421,90 @@ void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& obse
 void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.remove(observer);
+}
+
+
+
+namespace
+{
+//This class avoids locking for long periods of time by copying (or lazy-copying)
+class RenderableSnapshot : public mg::Renderable
+{
+public:
+    RenderableSnapshot(
+        std::shared_ptr<mc::BufferStream> const& stream,
+        void const* compositor_id,
+        geom::Rectangle const& position,
+        glm::mat4 const& transform,
+        bool visible,
+        bool alpha_enabled,
+        float alpha,
+        bool shaped,
+        mg::Renderable::ID id)
+    : underlying_buffer_stream{stream},
+      compositor_id{compositor_id},
+      alpha_enabled_{alpha_enabled},
+      alpha_{alpha},
+      shaped_{shaped},
+      visible_{visible},
+      screen_position_(position),
+      transformation_(transform),
+      id_(id)
+    {
+    }
+ 
+    std::shared_ptr<mg::Buffer> buffer() const override
+    { return underlying_buffer_stream->lock_compositor_buffer(compositor_id); }
+
+    int buffers_ready_for_compositor() const override
+    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
+
+    bool visible() const override
+    { return visible_; }
+
+    bool alpha_enabled() const override
+    { return alpha_enabled_; }
+
+    geom::Rectangle screen_position() const override
+    { return screen_position_; }
+
+    float alpha() const override
+    { return alpha_; }
+
+    glm::mat4 transformation() const override
+    { return transformation_; }
+
+    bool shaped() const override
+    { return shaped_; }
+ 
+    mg::Renderable::ID id() const override
+    { return id_; }
+
+private:
+    std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
+    void const*const compositor_id;
+    bool const alpha_enabled_;
+    float const alpha_;
+    bool const shaped_;
+    bool const visible_;
+    geom::Rectangle const screen_position_;
+    glm::mat4 const transformation_;
+    mg::Renderable::ID const id_; 
+};
+}
+
+std::shared_ptr<mg::Renderable> ms::BasicSurface::generate_renderable(void const* compositor_id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    return std::make_shared<RenderableSnapshot>(
+        surface_buffer_stream,
+        compositor_id,
+        surface_rect,
+        transformation_matrix,
+        visible(),
+        nonrectangular || (surface_alpha < 1.0f),
+        surface_alpha,
+        nonrectangular, 
+        this);
 }

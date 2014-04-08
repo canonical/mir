@@ -86,7 +86,7 @@ class StubScene : public mc::Scene
 public:
     StubScene() : callback{[]{}} {}
 
-    mg::RenderableList generate_renderable_list() const
+    mg::RenderableList generate_renderable_list(void const*) const
     {
         return mg::RenderableList{};
     }
@@ -107,9 +107,6 @@ public:
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
     }
-
-    void lock() {}
-    void unlock() {}
 
 private:
     std::function<void()> callback;

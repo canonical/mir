@@ -37,7 +37,6 @@ namespace scene
 class SurfaceObserver;
 
 class Surface :
-    public graphics::Renderable,
     public input::Surface,
     public frontend::Surface,
     public shell::SurfaceBufferAccess
@@ -47,9 +46,11 @@ public:
     std::string name() const override = 0;
     geometry::Size size() const override = 0;
     geometry::Point top_left() const override = 0;
-    float alpha() const override = 0;
 
     // member functions that don't exist in base classes
+    virtual std::shared_ptr<graphics::Renderable>
+        generate_renderable(void const* compositor_id) const = 0;
+
     virtual MirSurfaceType type() const = 0;
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;

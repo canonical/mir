@@ -53,7 +53,7 @@ struct FakeScene : mc::Scene
     {
     }
 
-    mg::RenderableList generate_renderable_list() const
+    mg::RenderableList generate_renderable_list(void const*) const
     {
         return renderlist;
     }
@@ -107,7 +107,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(scene, generate_renderable_list())
+    EXPECT_CALL(scene, generate_renderable_list(_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -130,11 +130,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     auto mock_renderable3 = std::make_shared<NiceMock<mtd::MockRenderable>>();
 
     auto buf = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(*mock_renderable1, buffer(_))
+    EXPECT_CALL(*mock_renderable1, buffer())
         .WillOnce(Return(buf));
-    EXPECT_CALL(*mock_renderable2, buffer(_))
+    EXPECT_CALL(*mock_renderable2, buffer())
         .Times(0);
-    EXPECT_CALL(*mock_renderable3, buffer(_))
+    EXPECT_CALL(*mock_renderable3, buffer())
         .WillOnce(Return(buf));
 
     glm::mat4 simple;
@@ -523,12 +523,12 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .InSequence(seq)
         .WillOnce(Return(2));
-    EXPECT_CALL(*mock_renderable, buffer(_))
+    EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq); 
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .InSequence(seq)
         .WillOnce(Return(1));
-    EXPECT_CALL(*mock_renderable, buffer(_))
+    EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq); 
 
     mg::RenderableList list({mock_renderable});
@@ -551,9 +551,9 @@ TEST_F(DefaultDisplayBufferCompositor, buffers_held_until_post_update_is_done)
     auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto buf1 = std::make_shared<mtd::StubBuffer>();
     auto buf2 = std::make_shared<mtd::StubBuffer>();
-    ON_CALL(*mock_renderable1, buffer(_))
+    ON_CALL(*mock_renderable1, buffer())
         .WillByDefault(Return(buf1));
-    ON_CALL(*mock_renderable2, buffer(_))
+    ON_CALL(*mock_renderable2, buffer())
         .WillByDefault(Return(buf2));
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle{{0,0},{14,14}}));
