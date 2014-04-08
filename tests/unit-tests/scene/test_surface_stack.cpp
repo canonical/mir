@@ -50,40 +50,6 @@ namespace mr = mir::report;
 
 namespace
 {
-struct MockFilterForScene : public mc::FilterForScene
-{
-    // Can not mock operator overload so need to forward
-    MOCK_METHOD1(filter, bool(mg::Renderable const&));
-    bool operator()(mg::Renderable const& r)
-    {
-        return filter(r);
-    }
-};
-
-struct StubFilterForScene : public mc::FilterForScene
-{
-    MOCK_METHOD1(filter, bool(mg::Renderable const&));
-    bool operator()(mg::Renderable const&)
-    {
-        return true;
-    }
-};
-
-struct MockOperatorForScene : public mc::OperatorForScene
-{
-    MOCK_METHOD1(renderable_operator, void(mg::Renderable const&));
-    void operator()(mg::Renderable const& state)
-    {
-        renderable_operator(state);
-    }
-};
-
-struct StubOperatorForScene : public mc::OperatorForScene
-{
-    void operator()(mg::Renderable const&)
-    {
-    }
-};
 
 struct StubInputChannelFactory : public mi::InputChannelFactory
 {
@@ -183,95 +149,40 @@ TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
     EXPECT_THAT(stub_surface1.use_count(), Eq(use_count));
 }
 
-TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
-{
-    using namespace ::testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
-
-    MockFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-
-    Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
-        .InSequence(seq1)
-        .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
-        .InSequence(seq1)
-        .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
-        .InSequence(seq1)
-        .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq2);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq2);
-
-    stack.for_each_if(filter, renderable_operator);
-}
-
 TEST_F(SurfaceStack, stacking_order)
 {
-    using namespace ::testing;
-
     ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    StubFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-    Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-
-    stack.for_each_if(filter, renderable_operator);
-}
-
-TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
-{
-    using namespace ::testing;
-    NiceMock<MockCallback> mock_cb;
-    EXPECT_CALL(mock_cb, call())
-        .Times(2);
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.remove_surface(stub_surface1);
+    auto list = stack.generate_renderable_list();
+    ASSERT_EQ(list.size(), 3u);
+    auto it = list.begin();
+    EXPECT_EQ(*it, stub_surface1);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface2);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface3);
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
-    using namespace ::testing;
-
     ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface2, ms::DepthId{1}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{0}, default_params.input_mode);
 
-    StubFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-    Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-
-    stack.for_each_if(filter, renderable_operator);
+    auto list = stack.generate_renderable_list();
+    ASSERT_EQ(list.size(), 3u);
+    auto it = list.begin();
+    EXPECT_EQ(*it, stub_surface1);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface3);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface2);
 }
 
 TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
@@ -318,27 +229,25 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    StubFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-    Sequence seq;
-    // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-    // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
+    auto list = stack.generate_renderable_list();
+    ASSERT_EQ(list.size(), 3u);
+    auto it = list.begin();
+    EXPECT_EQ(*it, stub_surface1);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface2);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface3);
 
-    stack.for_each_if(filter, renderable_operator);
     stack.raise(stub_surface1);
-    stack.for_each_if(filter, renderable_operator);
+
+    list = stack.generate_renderable_list();
+    ASSERT_EQ(list.size(), 3u);
+    it = list.begin();
+    EXPECT_EQ(*it, stub_surface2);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface3);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface1);
 }
 
 TEST_F(SurfaceStack, depth_id_trumps_raise)
@@ -351,27 +260,25 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     stack.add_surface(stub_surface2, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{1}, default_params.input_mode);
 
-    StubFilterForScene filter;
-    MockOperatorForScene renderable_operator;
-    Sequence seq;
-    // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
-    // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface2)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface1)))
-        .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*stub_surface3)))
-        .InSequence(seq);
+    auto list = stack.generate_renderable_list();
+    ASSERT_EQ(list.size(), 3u);
+    auto it = list.begin();
+    EXPECT_EQ(*it, stub_surface1);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface2);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface3);
 
-    stack.for_each_if(filter, renderable_operator);
     stack.raise(stub_surface1);
-    stack.for_each_if(filter, renderable_operator);
+
+    list = stack.generate_renderable_list();
+    ASSERT_EQ(list.size(), 3u);
+    it = list.begin();
+    EXPECT_EQ(*it, stub_surface2);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface1);
+    std::advance(it, 1);
+    EXPECT_EQ(*it, stub_surface3);
 }
 
 TEST_F(SurfaceStack, raise_throw_behavior)
@@ -388,25 +295,6 @@ TEST_F(SurfaceStack, raise_throw_behavior)
 
 namespace
 {
-
-struct UniqueOperatorForScene : public mc::OperatorForScene
-{
-    UniqueOperatorForScene(const char *&owner)
-        : owner(owner)
-    {
-    }
-
-    void operator()(const mg::Renderable &)
-    {
-        ASSERT_STREQ("", owner);
-        owner = "UniqueOperatorForScene";
-        std::this_thread::yield();
-        owner = "";
-    }
-
-    const char *&owner;
-};
-
 void tinker_scene(mc::Scene &scene,
                   const char *&owner,
                   const std::atomic_bool &done)
@@ -422,7 +310,6 @@ void tinker_scene(mc::Scene &scene,
         owner = "";
     }
 }
-
 }
 
 TEST_F(SurfaceStack, is_locked_during_iteration)
@@ -436,8 +323,6 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
     const char *owner = "";
-    UniqueOperatorForScene op(owner);
-
     std::atomic_bool done(false);
     std::thread tinkerer(tinker_scene,
         std::ref(stack), std::ref(owner), std::ref(done));
@@ -451,19 +336,14 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
         owner = "";
         stack.unlock();
 
-        MockFilterForScene filter;
-        Sequence seq1;
-        EXPECT_CALL(filter, filter(Ref(*stub_surface1)))
-            .InSequence(seq1)
-            .WillOnce(Return(true));
-        EXPECT_CALL(filter, filter(Ref(*stub_surface2)))
-            .InSequence(seq1)
-            .WillOnce(Return(false));
-        EXPECT_CALL(filter, filter(Ref(*stub_surface3)))
-            .InSequence(seq1)
-            .WillOnce(Return(true));
-
-        stack.for_each_if(filter, op);
+        auto list = stack.generate_renderable_list();
+        ASSERT_EQ(list.size(), 3u);
+        auto it = list.begin();
+        EXPECT_EQ(*it, stub_surface1);
+        std::advance(it, 1);
+        EXPECT_EQ(*it, stub_surface2);
+        std::advance(it, 1);
+        EXPECT_EQ(*it, stub_surface3);
 
         stack.lock();
         ASSERT_STREQ("", owner);
@@ -481,11 +361,8 @@ TEST_F(SurfaceStack, is_recursively_lockable)
 {
     ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
-    StubFilterForScene filter;
-    StubOperatorForScene op;
-
     stack.lock();
-    stack.for_each_if(filter, op);
+    stack.generate_renderable_list();
     stack.unlock();
 
     stack.lock();

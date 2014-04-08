@@ -13,6 +13,7 @@ set(
   test_server_client_types.cpp
   test_session_manager.cpp
   test_session.cpp
+  session_management.cpp
 )
 
 add_subdirectory(client/)
