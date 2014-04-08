@@ -54,7 +54,7 @@ void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& fo
         surface->configure(mir_surface_attrib_focus, mir_surface_focused);
         currently_focused_surface = surface;
 
-        surface_coordinator->raise(std::static_pointer_cast<ms::Surface>(surface)); // TODO deal with cast
+        surface_coordinator->raise(surface);
         surface->take_input_focus(input_targeter);
     }
     else
