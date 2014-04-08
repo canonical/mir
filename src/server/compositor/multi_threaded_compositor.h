@@ -40,6 +40,14 @@ class CompositingFunctor;
 class Scene;
 class CompositorReport;
 
+enum class CompositorState
+{
+    started,
+    stopped,
+    starting,
+    stopping
+};
+
 class MultiThreadedCompositor : public Compositor
 {
 public:
@@ -64,7 +72,7 @@ private:
     std::vector<std::thread> threads;
 
     std::mutex started_guard;
-    bool started;
+    CompositorState state;
     bool compose_on_start;
 
     void schedule_compositing();

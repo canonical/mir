@@ -186,7 +186,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      started{false},
+      state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
 }
@@ -207,11 +207,12 @@ void mc::MultiThreadedCompositor::schedule_compositing()
 void mc::MultiThreadedCompositor::start()
 {
     std::unique_lock<std::mutex> lk(started_guard);
-    if (started)
+    if (state != CompositorState::stopped)
     {
         return;
     }
 
+    state = CompositorState::starting;
     report->started();
 
     auto create_compositing_thread = [this](mg::DisplayBuffer& buffer)
@@ -243,9 +244,6 @@ void mc::MultiThreadedCompositor::start()
     TryButRevertIfUnwinding callback_setter{
         [this, &lk, &scene_callback]
         {
-            //Set to true before unlocking the guard to prevent any other thread calling start
-            //from allocating resources again
-            started = true;
             lk.unlock();
             scene->set_change_callback(scene_callback);
             lk.lock();
@@ -253,11 +251,12 @@ void mc::MultiThreadedCompositor::start()
         [this, &lk]()
         {
             lk.lock();
-            started = false;
+            state = CompositorState::stopped;
         }};
 
     callback_setter.run();
     create_compositor_threads.run();
+    state = CompositorState::started;
 
     /* Optional first render */
     if (compose_on_start)
@@ -271,32 +270,33 @@ void mc::MultiThreadedCompositor::start()
 void mc::MultiThreadedCompositor::stop()
 {
     std::unique_lock<std::mutex> lk(started_guard);
-    if (!started)
+    if (state != CompositorState::started)
     {
         return;
     }
 
+    state = CompositorState::stopping;
+
     TryButRevertIfUnwinding callback_clearer{
         [this, &lk]
         {
-            //Set to false before unlocking the guard to prevent any other
-            //thread calling stop from cleaning resources again
-            started = false;
             lk.unlock();
             scene->set_change_callback([]{});
             lk.lock();
         },
         [this, &lk]
         {
-            //clearing the callback threw, so the caller must assume
+            //failed removing callback, so the caller must assume
             //stop was not successful, hence we should not cleanup
             //here - allow caller to call stop again
             lk.lock();
-            started = true;
+            state = CompositorState::started;
         }};
 
     callback_clearer.run();
     cleanup();
+
+    state = CompositorState::stopped;
 
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
