@@ -21,12 +21,11 @@
 #include "mir_test_framework/declarative_placement_strategy.h"
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 namespace mtf = mir_test_framework;
 
 mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
-    std::shared_ptr<msh::PlacementStrategy> const& default_strategy,
+    std::shared_ptr<ms::PlacementStrategy> const& default_strategy,
     SurfaceGeometries const& positions, 
     SurfaceDepths const& depths)
     : default_strategy(default_strategy),

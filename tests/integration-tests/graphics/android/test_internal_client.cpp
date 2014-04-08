@@ -35,7 +35,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/shell/placement_strategy.h"
+#include "mir/scene/placement_strategy.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/options/program_option.h"
@@ -79,7 +79,7 @@ struct StubInputFactory : public mi::InputChannelFactory
     }
 };
 
-struct NullSurfacePlacementStrategy : msh::PlacementStrategy
+struct NullSurfacePlacementStrategy : ms::PlacementStrategy
 {
     ms::SurfaceCreationParameters place(ms::Session const&, ms::SurfaceCreationParameters const& parameters) override
     {

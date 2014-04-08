@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,22 +16,23 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_PLACEMENT_STRATEGY_H_
-#define MIR_SHELL_PLACEMENT_STRATEGY_H_
+#ifndef MIR_SCENE_PLACEMENT_STRATEGY_H_
+#define MIR_SCENE_PLACEMENT_STRATEGY_H_
 
 namespace mir
 {
-namespace scene { class Session; struct SurfaceCreationParameters; }
-
-namespace shell
+namespace scene
 {
+class Session;
+struct SurfaceCreationParameters;
+
 class PlacementStrategy
 {
 public:
     virtual ~PlacementStrategy() {}
     // TODO: It is strange to work in terms of SurfaceCreationParameters here,
     // perhaps a new interface is needed.
-    virtual scene::SurfaceCreationParameters place(scene::Session const& session, scene::SurfaceCreationParameters const& request_parameters) = 0;
+    virtual SurfaceCreationParameters place(Session const& session, SurfaceCreationParameters const& request_parameters) = 0;
 
 
 protected:
@@ -43,4 +44,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_SHELL_PLACEMENT_STRATEGY_H_
+#endif // MIR_SCENE_PLACEMENT_STRATEGY_H_

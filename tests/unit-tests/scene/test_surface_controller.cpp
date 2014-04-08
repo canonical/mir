@@ -19,7 +19,7 @@
 #include "src/server/scene/surface_controller.h"
 #include "src/server/scene/surface_stack_model.h"
 #include "mir/scene/surface_factory.h"
-#include "mir/shell/placement_strategy.h"
+#include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir_test_doubles/stub_scene_session.h"
 
@@ -44,7 +44,7 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
         ms::SurfaceCreationParameters const&));
 };
 
-struct MockPlacementStrategy : public msh::PlacementStrategy
+struct MockPlacementStrategy : public ms::PlacementStrategy
 {
     MOCK_METHOD2(place, ms::SurfaceCreationParameters(ms::Session const&, ms::SurfaceCreationParameters const&));
 };

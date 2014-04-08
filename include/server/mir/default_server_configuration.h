@@ -56,7 +56,6 @@ namespace shell
 {
 class InputTargeter;
 class FocusSetter;
-class PlacementStrategy;
 class FocusController;
 class DisplayLayout;
 }
@@ -71,6 +70,7 @@ class BroadcastingSessionEventSink;
 class BufferStreamFactory;
 class MediatingDisplayChanger;
 class PixelBuffer;
+class PlacementStrategy;
 class SessionContainer;
 class SessionEventSink;
 class SessionEventHandlerRegister;
@@ -199,7 +199,7 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
-    virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
+    virtual std::shared_ptr<scene::PlacementStrategy>   the_shell_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     /** @} */
@@ -286,7 +286,7 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
-    CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
+    CachedPtr<scene::PlacementStrategy> shell_placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
