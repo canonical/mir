@@ -127,6 +127,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
 
+    void const* compositor_id{&input_registrar};
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
@@ -157,7 +158,7 @@ TEST_F(SurfaceStack, stacking_order)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto list = stack.generate_renderable_list();
+    auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_EQ(list.size(), 3u);
     auto it = list.begin();
     EXPECT_EQ(*it, stub_surface1);
@@ -175,7 +176,7 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     stack.add_surface(stub_surface2, ms::DepthId{1}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{0}, default_params.input_mode);
 
-    auto list = stack.generate_renderable_list();
+    auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_EQ(list.size(), 3u);
     auto it = list.begin();
     EXPECT_EQ(*it, stub_surface1);
@@ -229,7 +230,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto list = stack.generate_renderable_list();
+    auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_EQ(list.size(), 3u);
     auto it = list.begin();
     EXPECT_EQ(*it, stub_surface1);
@@ -240,7 +241,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 
     stack.raise(stub_surface1);
 
-    list = stack.generate_renderable_list();
+    list = stack.generate_renderable_list(compositor_id);
     ASSERT_EQ(list.size(), 3u);
     it = list.begin();
     EXPECT_EQ(*it, stub_surface2);
@@ -260,7 +261,7 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     stack.add_surface(stub_surface2, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{1}, default_params.input_mode);
 
-    auto list = stack.generate_renderable_list();
+    auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_EQ(list.size(), 3u);
     auto it = list.begin();
     EXPECT_EQ(*it, stub_surface1);
@@ -271,7 +272,7 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
 
     stack.raise(stub_surface1);
 
-    list = stack.generate_renderable_list();
+    list = stack.generate_renderable_list(compositor_id);
     ASSERT_EQ(list.size(), 3u);
     it = list.begin();
     EXPECT_EQ(*it, stub_surface2);
