@@ -49,7 +49,8 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& 
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
-    f(*display_buffer);
+    if (display_buffer->configuration().power_mode == mir_power_mode_on)
+        f(*display_buffer);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() const
