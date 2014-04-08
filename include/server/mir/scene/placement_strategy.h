@@ -29,18 +29,15 @@ struct SurfaceCreationParameters;
 class PlacementStrategy
 {
 public:
-    virtual ~PlacementStrategy() {}
-    // TODO: It is strange to work in terms of SurfaceCreationParameters here,
-    // perhaps a new interface is needed.
-    virtual SurfaceCreationParameters place(Session const& session, SurfaceCreationParameters const& request_parameters) = 0;
+    virtual ~PlacementStrategy() = default;
 
+    virtual SurfaceCreationParameters place(Session const& session, SurfaceCreationParameters const& request_parameters) = 0;
 
 protected:
     PlacementStrategy() = default;
     PlacementStrategy(PlacementStrategy const&) = delete;
     PlacementStrategy& operator=(PlacementStrategy const&) = delete;
 };
-
 }
 } // namespace mir
 
