@@ -27,7 +27,7 @@ namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
 std::shared_ptr<ms::PlacementStrategy>
-mir::DefaultServerConfiguration::the_shell_placement_strategy()
+mir::DefaultServerConfiguration::the_placement_strategy()
 {
     return shell_placement_strategy(
         [this]

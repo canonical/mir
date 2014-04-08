@@ -199,7 +199,7 @@ public:
      * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
-    virtual std::shared_ptr<scene::PlacementStrategy>   the_shell_placement_strategy();
+    virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     /** @} */
