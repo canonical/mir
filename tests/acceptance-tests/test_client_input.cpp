@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
@@ -335,7 +335,7 @@ struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
     }
 
     std::shared_ptr<ms::Surface> add_surface(
-        msh::SurfaceCreationParameters const& params,
+        ms::SurfaceCreationParameters const& params,
         ms::Session* session,
         std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {

@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 
 #include "mir_test_framework/declarative_placement_strategy.h"
 
@@ -35,7 +35,7 @@ mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Session const& session, msh::SurfaceCreationParameters const& request_parameters)
+ms::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
 {
     auto placed = default_strategy->place(session, request_parameters);
 

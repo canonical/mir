@@ -18,7 +18,7 @@
 
 #include "src/server/scene/application_session.h"
 #include "mir/graphics/buffer.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
@@ -99,7 +99,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
         mt::fake_shared(listener),
         mt::fake_shared(sender));
 
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
 
     session.destroy_surface(surf);
@@ -130,7 +130,7 @@ TEST(ApplicationSession, listener_notified_of_surface_destruction_on_session_des
             mt::fake_shared(listener),
             mt::fake_shared(sender));
 
-        msh::SurfaceCreationParameters params;
+        ms::SurfaceCreationParameters params;
         session.create_surface(params);
     }
 }
@@ -161,7 +161,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
         mt::fake_shared(sender));
 
 
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
     auto id1 = app_session.create_surface(params);
     auto id2 = app_session.create_surface(params);
     auto id3 = app_session.create_surface(params);
@@ -205,7 +205,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         EXPECT_CALL(*mock_surface, show()).Times(1);
     }
 
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
     app_session.hide();
@@ -281,7 +281,7 @@ TEST(ApplicationSession, takes_snapshot_of_default_surface)
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(sender));
 
-    auto surface = app_session.create_surface(msh::SurfaceCreationParameters{});
+    auto surface = app_session.create_surface(ms::SurfaceCreationParameters{});
     app_session.take_snapshot(msh::SnapshotCallback());
     app_session.destroy_surface(surface);
 }

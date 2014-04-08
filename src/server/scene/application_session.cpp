@@ -69,7 +69,7 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
+mf::SurfaceId ms::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
 {
     auto const id = next_id();
 

@@ -47,8 +47,7 @@ ms::SurfaceAllocator::SurfaceAllocator(
 {
 }
 
-std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
-    shell::SurfaceCreationParameters const& params)
+std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(SurfaceCreationParameters const& params)
 {
     mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,

@@ -36,7 +36,7 @@ public:
             std::shared_ptr<DisplayLayout> const& display_layout);
     virtual ~ConsumingPlacementStrategy() {}
 
-    virtual shell::SurfaceCreationParameters place(scene::Session const& session, shell::SurfaceCreationParameters const& request_parameters);
+    virtual scene::SurfaceCreationParameters place(scene::Session const& session, scene::SurfaceCreationParameters const& request_parameters);
 
 protected:
     ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;

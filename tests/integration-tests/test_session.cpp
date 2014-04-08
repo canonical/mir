@@ -23,7 +23,7 @@
 #include "src/server/scene/pixel_buffer.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/renderer.h"
@@ -161,7 +161,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         std::make_shared<ms::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };
-    session.create_surface(msh::a_surface());
+    session.create_surface(ms::a_surface());
 
     auto compositor = conf.the_compositor();
 

@@ -36,7 +36,7 @@ ms::SurfaceController::SurfaceController(
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceController::add_surface(
-    shell::SurfaceCreationParameters const& params,
+    SurfaceCreationParameters const& params,
     Session* session,
     std::shared_ptr<SurfaceObserver> const& observer)
 {

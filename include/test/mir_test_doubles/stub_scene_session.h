@@ -30,7 +30,7 @@ namespace doubles
 
 struct StubSceneSession : public scene::Session
 {
-    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
+    frontend::SurfaceId create_surface(scene::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
     }

@@ -19,7 +19,7 @@
  */
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/input_registrar.h"

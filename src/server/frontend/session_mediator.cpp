@@ -23,7 +23,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -52,7 +52,7 @@
 #include <mutex>
 #include <functional>
 
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
@@ -161,7 +161,7 @@ void mf::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
-    auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
+    auto const surf_id = session->create_surface(ms::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))

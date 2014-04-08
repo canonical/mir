@@ -20,7 +20,7 @@
 #include "src/server/scene/surface_stack_model.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir_test_doubles/stub_scene_session.h"
 
 #include "mir_test_doubles/mock_surface.h"
@@ -41,12 +41,12 @@ namespace
 struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
     MOCK_METHOD1(create_surface, std::shared_ptr<ms::Surface>(
-        msh::SurfaceCreationParameters const&));
+        ms::SurfaceCreationParameters const&));
 };
 
 struct MockPlacementStrategy : public msh::PlacementStrategy
 {
-    MOCK_METHOD2(place, msh::SurfaceCreationParameters(ms::Session const&, msh::SurfaceCreationParameters const&));
+    MOCK_METHOD2(place, ms::SurfaceCreationParameters(ms::Session const&, ms::SurfaceCreationParameters const&));
 };
 
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
@@ -94,7 +94,7 @@ TEST_F(SurfaceController, add_and_remove_surface)
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto actual_surface = controller.add_surface(msh::a_surface(), &session, observer);
+    auto actual_surface = controller.add_surface(ms::a_surface(), &session, observer);
 
     EXPECT_THAT(actual_surface, Eq(expect_surface));
     controller.remove_surface(actual_surface);
@@ -125,9 +125,9 @@ TEST_F(SurfaceController, offers_create_surface_parameters_to_placement_strategy
         mt::fake_shared(placement_strategy),
         mt::fake_shared(model));
 
-    auto params = msh::a_surface();
+    auto params = ms::a_surface();
     EXPECT_CALL(placement_strategy, place(Ref(session), Ref(params))).Times(1)
-        .WillOnce(Return(msh::a_surface()));
+        .WillOnce(Return(ms::a_surface()));
 
     controller.add_surface(params, &session, observer);
 }
@@ -143,7 +143,7 @@ TEST_F(SurfaceController, forwards_create_surface_parameters_from_placement_stra
         mt::fake_shared(placement_strategy),
         mt::fake_shared(model));
 
-    auto params = msh::a_surface();
+    auto params = ms::a_surface();
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
