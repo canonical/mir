@@ -7,7 +7,7 @@ CMAKE_DEPENDENT_OPTION(
   DISABLE_GTEST_TEST_DISCOVERY
   "If set to ON, disables fancy test autodiscovery and switches back to classic add_test behavior"
   OFF
-  "NOT MIR_IS_CROSS_COMPILING"
+  "NOT CMAKE_CROSSCOMPILING"
   ON)
 
 option(
