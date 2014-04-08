@@ -594,12 +594,11 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
 
     compositor.start();
 
-    auto time_point = std::chrono::steady_clock::now() + std::chrono::seconds(1);
-    auto zero_seconds = std::chrono::seconds(0);
+    auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(1);
     while (!db_compositor_factory->enough_records_gathered(nbuffers, 20))
     {
         scene->emit_change_event();
-        if (time_point - std::chrono::steady_clock::now() < zero_seconds)
+        if (std::chrono::steady_clock::now() > time_out)
         {
             EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, 20));
             break;
