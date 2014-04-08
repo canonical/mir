@@ -37,9 +37,21 @@ public:
 
     /**
      * Generate a valid list of renderables based on the current state of the Scene.
-     * \returns a list of mg::Renderables. The list is in stacking order from back to front.
+     * \param [in] user_id An arbitrary unique identifier used to distinguish
+     *                     separate threads/monitors/components which need
+     *                     to concurrently receive the same buffer. Calling
+     *                     with the same user_id will return a new (different)
+     *                     buffer to that user each time. For consistency,
+     *                     all callers need to determine their user_id in the
+     *                     same way (e.g. always use "this" pointer).
+     * \returns a list of mg::Renderables for the compositor id. The list is in
+     *          stacking order from back to front.
      */
-    virtual graphics::RenderableList generate_renderable_list() const = 0;
+
+    //TODO: make the compositors register with the scene and get an access token before
+    //they can access the list
+    typedef void const* CompositorID;
+    virtual graphics::RenderableList generate_renderable_list(CompositorID id) const = 0;
 
     /**
      * Sets a callback to be called whenever the state of the

@@ -372,9 +372,7 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
 TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
 {
     using namespace testing;
-    size_t num_surfaces{3};
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
+    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     auto mock_stream = std::make_shared<mtd::MockBufferStream>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
@@ -396,5 +394,31 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(compositor_id))
         .Times(1);
     ASSERT_THAT(list.size(), Eq(1u));
+    list.begin()->buffer();
+}
+
+TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisition)
+{
+    using namespace testing;
+    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
+
+    auto mock_stream = std::make_shared<mtd::MockBufferStream>();
+    EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
+        .Times(1);
+
+    auto const surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+        true,
+        mock_stream,
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<ms::SurfaceConfigurator>(),
+        report);
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+
+    auto list = stack.generate_renderable_list(compositor_id); 
+    ASSERT_THAT(list.size(), Eq(1u));
+    list.begin()->buffer();
+    list.begin()->buffer();
     list.begin()->buffer();
 }
