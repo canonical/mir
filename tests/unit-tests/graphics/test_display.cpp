@@ -83,7 +83,7 @@ public:
             report);
 #else
         auto platform = std::make_shared<mg::mesa::Platform>(report,
-            std::make_shared<mir::test::doubles::NullVirtualTerminal>());
+            std::make_shared<mir::test::doubles::NullVirtualTerminal>(), true);
 #endif
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),

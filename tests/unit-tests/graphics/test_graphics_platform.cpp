@@ -78,7 +78,7 @@ public:
 #else
         return std::make_shared<mg::mesa::Platform>(
             mr::null_display_report(),
-            std::make_shared<mir::test::doubles::NullVirtualTerminal>());
+            std::make_shared<mir::test::doubles::NullVirtualTerminal>(), true);
 #endif
     }
 

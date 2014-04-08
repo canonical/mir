@@ -110,15 +110,15 @@ struct GBMBODeleter
 
 mgm::BufferAllocator::BufferAllocator(
     gbm_device* device,
-    const std::shared_ptr<BufferInitializer>& buffer_initializer)
+    const std::shared_ptr<BufferInitializer>& buffer_initializer,
+    bool bypass_option)
     : device(device),
       buffer_initializer(buffer_initializer),
-      egl_extensions(std::make_shared<mg::EGLExtensions>())
+      egl_extensions(std::make_shared<mg::EGLExtensions>()),
+      bypass_env(bypass_option)
+
 {
     assert(buffer_initializer.get() != 0);
-
-    const char *env = getenv("MIR_BYPASS");
-    bypass_env = env ? env[0] != '0' : true;
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(

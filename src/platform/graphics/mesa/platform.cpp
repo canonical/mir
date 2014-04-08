@@ -42,6 +42,8 @@ namespace mo = mir::options;
 
 namespace
 {
+char const* bypass_option_name{"bypass"};
+char const* vt_option_name{"vt"};
 
 struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 {
@@ -123,10 +125,12 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
 std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_display;
 bool mgm::Platform::internal_display_clients_present;
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
-                        std::shared_ptr<VirtualTerminal> const& vt)
+                        std::shared_ptr<VirtualTerminal> const& vt,
+                        bool bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
       listener{listener},
-      vt{vt}
+      vt{vt},
+      bypass_option{bypass_option}
 {
     drm.setup(udev);
     gbm.setup(drm);
@@ -143,7 +147,7 @@ mgm::Platform::~Platform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer, bypass_option);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
@@ -197,6 +201,11 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
     return gbm.device;
 }
 
+bool mgm::Platform::bypass_option_is_set() const
+{
+    return bypass_option;
+}
+
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
@@ -204,10 +213,10 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
         real_fops,
         std::move(real_pops),
-        options->get<int>("vt"), // TODO This option is mesa specific
+        options->get<int>(vt_option_name),
         report);
 
-    return std::make_shared<mgm::Platform>(report, vt);
+    return std::make_shared<mgm::Platform>(report, vt, options->get<bool>(bypass_option_name));
 }
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
@@ -224,8 +233,20 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 
 extern "C" void add_platform_options(boost::program_options::options_description& config)
 {
+    char const* bypass_env_string = "MIR_SERVER_BYPASS";
+    auto const bypass_env = getenv(bypass_env_string);
+    auto const legacy_env = getenv("MIR_BYPASS");
+
+    //MIR_SERVER_BYPASS takes precedence. If the proper option is not set, and the legacy
+    //option is set, set the proper option value to the value of the legacy option
+    if (!bypass_env && legacy_env)
+        setenv(bypass_env_string, legacy_env, 1);
+
     config.add_options()
-        ("vt",
+        (vt_option_name,
          boost::program_options::value<int>()->default_value(0),
-         "[platform-specific] VT to run on or 0 to use current.");
+         "[platform-specific] VT to run on or 0 to use current.")
+        (bypass_option_name,
+         boost::program_options::value<bool>()->default_value(true),
+         "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
 }

@@ -42,7 +42,8 @@ class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
     BufferAllocator(gbm_device* device,
-                    std::shared_ptr<BufferInitializer> const& buffer_initializer);
+                    std::shared_ptr<BufferInitializer> const& buffer_initializer,
+                    bool bypass_option);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -60,7 +61,7 @@ private:
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
-    bool bypass_env;
+    bool const bypass_env;
 };
 
 }

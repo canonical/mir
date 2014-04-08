@@ -66,9 +66,9 @@ protected:
 
         platform = std::make_shared<mgm::Platform>(
             mr::null_display_report(),
-            std::make_shared<mtd::NullVirtualTerminal>());
+            std::make_shared<mtd::NullVirtualTerminal>(), true);
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
-        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mock_buffer_initializer));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mock_buffer_initializer, true));
     }
 
     // Defaults
@@ -139,7 +139,7 @@ TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
     EXPECT_FALSE(buf->can_bypass());
 }
 
-TEST_F(MesaBufferAllocatorTest, bypass_disables_via_environment)
+TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
@@ -149,13 +149,11 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_via_environment)
                                           mir_pixel_format_argb_8888,
                                           mg::BufferUsage::hardware);
 
-    setenv("MIR_BYPASS", "0", 1);
     mgm::BufferAllocator alloc(platform->gbm.device,
-                               mock_buffer_initializer);
+                               mock_buffer_initializer, false);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->can_bypass());
-    unsetenv("MIR_BYPASS");
 }
 
 TEST_F(MesaBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
@@ -255,7 +253,7 @@ TEST_F(MesaBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     using namespace testing;
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_buffer_initializer));
+    allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_buffer_initializer, true));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);

@@ -51,18 +51,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
-    static bool const bypass_env{[]
-    {
-        auto const env = getenv("MIR_BYPASS");
-        return !env || env[0] != '0';
-    }()};
     bool bypassed = false;
     bool uncomposited_buffers{false};
 
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->generate_renderable_list();
 
-    if (bypass_env && display_buffer.can_bypass())
+    if (display_buffer.can_bypass())
     {
         // It would be *really* nice not to lock the scene for a composite pass.
         // (C.f. lp:1234018)
