@@ -497,12 +497,13 @@ std::shared_ptr<mg::Renderable> ms::BasicSurface::generate_renderable(void const
 {
     std::unique_lock<std::mutex> lk(guard);
 
+    auto visible = !hidden && first_frame_posted;
     return std::make_shared<RenderableSnapshot>(
         surface_buffer_stream,
         compositor_id,
         surface_rect,
         transformation_matrix,
-        visible(),
+        visible,
         nonrectangular || (surface_alpha < 1.0f),
         surface_alpha,
         nonrectangular, 
