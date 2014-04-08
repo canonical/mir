@@ -38,7 +38,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
 
-    MOCK_METHOD1(take_snapshot, void(shell::SnapshotCallback const&));
+    MOCK_METHOD1(take_snapshot, void(scene::SnapshotCallback const&));
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<scene::Surface>());
 
     MOCK_CONST_METHOD0(name, std::string());

@@ -26,7 +26,6 @@
 
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 namespace mir
 {
@@ -36,7 +35,7 @@ namespace scene
 struct WorkItem
 {
     std::shared_ptr<SurfaceBufferAccess> const surface_buffer_access;
-    msh::SnapshotCallback const snapshot_taken;
+    ms::SnapshotCallback const snapshot_taken;
 };
 
 class SnapshottingFunctor
@@ -80,7 +79,7 @@ public:
 
 
         wi.snapshot_taken(
-            msh::Snapshot{pixels->size(),
+            ms::Snapshot{pixels->size(),
                      pixels->stride(),
                      pixels->as_argb_8888()});
     }
@@ -126,7 +125,7 @@ ms::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy() noexcept
 
 void ms::ThreadedSnapshotStrategy::take_snapshot_of(
     std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
-    msh::SnapshotCallback const& snapshot_taken)
+    SnapshotCallback const& snapshot_taken)
 {
     functor->schedule_snapshot(WorkItem{surface_buffer_access, snapshot_taken});
 }

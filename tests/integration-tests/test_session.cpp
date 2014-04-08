@@ -189,9 +189,9 @@ TEST(ApplicationSession, stress_test_take_snapshot)
                 bool snapshot_taken2 = false;
 
                 session.take_snapshot(
-                    [&](msh::Snapshot const&) { snapshot_taken1 = true; });
+                    [&](ms::Snapshot const&) { snapshot_taken1 = true; });
                 session.take_snapshot(
-                    [&](msh::Snapshot const&) { snapshot_taken2 = true; });
+                    [&](ms::Snapshot const&) { snapshot_taken2 = true; });
 
                 while (!snapshot_taken1 || !snapshot_taken2)
                     std::this_thread::sleep_for(std::chrono::microseconds{50});

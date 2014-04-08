@@ -23,7 +23,6 @@
 #include <gtest/gtest.h>
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 

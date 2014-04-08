@@ -33,7 +33,6 @@
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
@@ -86,11 +85,11 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
 
     std::atomic<bool> snapshot_taken{false};
 
-    msh::Snapshot snapshot;
+    ms::Snapshot snapshot;
 
     strategy.take_snapshot_of(
         mt::fake_shared(buffer_access),
-        [&](msh::Snapshot const& s)
+        [&](ms::Snapshot const& s)
         {
             snapshot = s;
             snapshot_taken = true;

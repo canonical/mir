@@ -40,7 +40,7 @@ public:
 
     void take_snapshot_of(
         std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
-        shell::SnapshotCallback const& snapshot_taken);
+        SnapshotCallback const& snapshot_taken);
 
 private:
     std::shared_ptr<PixelBuffer> const pixels;

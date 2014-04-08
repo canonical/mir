@@ -33,7 +33,6 @@
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
-namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace mt = mir::test;
@@ -53,16 +52,16 @@ public:
 
     MOCK_METHOD2(take_snapshot_of,
                 void(std::shared_ptr<ms::SurfaceBufferAccess> const&,
-                     msh::SnapshotCallback const&));
+                     ms::SnapshotCallback const&));
 };
 
 struct MockSnapshotCallback
 {
-    void operator()(msh::Snapshot const& snapshot)
+    void operator()(ms::Snapshot const& snapshot)
     {
         operator_call(snapshot);
     }
-    MOCK_METHOD1(operator_call, void(msh::Snapshot const&));
+    MOCK_METHOD1(operator_call, void(ms::Snapshot const&));
 };
 
 MATCHER(IsNullSnapshot, "")
@@ -282,7 +281,7 @@ TEST(ApplicationSession, takes_snapshot_of_default_surface)
         mt::fake_shared(sender));
 
     auto surface = app_session.create_surface(ms::SurfaceCreationParameters{});
-    app_session.take_snapshot(msh::SnapshotCallback());
+    app_session.take_snapshot(ms::SnapshotCallback());
     app_session.destroy_surface(surface);
 }
 
