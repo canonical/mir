@@ -315,7 +315,7 @@ try
     std::vector<int> requested_size;
     bool use_std_out = false;
     bool query_params_only = false;
-    double capture_fps = 0.0;
+    int capture_interval = 1;
 
     //avoid unused warning/error
     dummy_tls[0] = 0;
@@ -341,8 +341,10 @@ try
         ("query",
             po::value<bool>(&query_params_only)->zero_tokens(),
             "only queries the colorspace and output size used but does not start screencast")
-        ("fps",
-            po::value<double>(&capture_fps), "the maximum allowed screen capture rate in frames-per-second");
+        ("cap-interval",
+            po::value<int>(&capture_interval),
+            "adjusts the capture rate to <arg> display refresh intervals\n"
+            "1 -> capture at display rate\n2 -> capture at half the display rate, etc..");
 
     po::variables_map vm;
     try
@@ -358,6 +360,9 @@ try
 
         if (vm.count("display-id") && vm.count("screen-region"))
             throw po::error("cannot set both display-id and screen-region");
+
+        if (vm.count("cap-interval") && capture_interval < 1)
+            throw po::error("invalid capture interval");
     }
     catch(po::error& e)
     {
@@ -402,8 +407,7 @@ try
         get_screencast_params(connection.get(), *display_config, requested_size, screen_region, output_id);
 
     double capture_rate_limit = get_capture_rate_limit(*display_config, params);
-    if (capture_fps > capture_rate_limit || capture_fps <= 0.0)
-        capture_fps = capture_rate_limit;
+    double capture_fps = capture_rate_limit/capture_interval;
 
     auto const screencast = mir::raii::deleter_for(
         mir_connection_create_screencast_sync(connection.get(), &params),
