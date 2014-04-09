@@ -58,7 +58,7 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
-mg::RenderableList ms::SurfaceStack::generate_renderable_list(CompositorID id) const
+mg::RenderableList ms::SurfaceStack::renderable_list_for(CompositorID id) const
 {
     std::lock_guard<decltype(guard)> lg(guard);
     mg::RenderableList list;

@@ -53,7 +53,7 @@ struct FakeScene : mc::Scene
     {
     }
 
-    mg::RenderableList generate_renderable_list(void const*) const
+    mg::RenderableList renderable_list_for(void const*) const
     {
         return renderlist;
     }
@@ -107,7 +107,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(scene, generate_renderable_list(_))
+    EXPECT_CALL(scene, renderable_list_for(_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);

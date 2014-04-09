@@ -60,7 +60,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     bool uncomposited_buffers{false};
 
     auto const& view_area = display_buffer.view_area();
-    auto renderable_list = scene->generate_renderable_list(this);
+    auto renderable_list = scene->renderable_list_for(this);
 
     if (bypass_env && display_buffer.can_bypass())
     {
