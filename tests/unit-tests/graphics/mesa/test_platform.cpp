@@ -318,7 +318,7 @@ TEST_F(MesaGraphicsPlatform, adding_options_corrects_legacy_option)
     //clear out test environment
     std::string const legacy_string{"MIR_BYPASS"};
     std::string const bypass_string{"MIR_SERVER_BYPASS"};
-    auto previous_bypass = getenv(legacy_string.c_str());
+    auto previous_bypass = getenv(bypass_string.c_str());
     auto previous_legacy = getenv(legacy_string.c_str());
     unsetenv(bypass_string.c_str());
     unsetenv(legacy_string.c_str());
@@ -340,6 +340,9 @@ TEST_F(MesaGraphicsPlatform, adding_options_corrects_legacy_option)
     EXPECT_THAT(getenv(bypass_string.c_str()), Eq(nullptr)); //should be unset
 
     //restore before test
-    setenv(legacy_string.c_str(), previous_legacy, 1);
-    setenv(legacy_string.c_str(), previous_bypass, 1);
+
+    if (previous_bypass)
+        setenv(bypass_string.c_str(), previous_bypass, 1);
+    if (previous_legacy)
+        setenv(legacy_string.c_str(), previous_legacy, 1);
 }
