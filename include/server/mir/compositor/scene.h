@@ -48,8 +48,8 @@ public:
      *          stacking order from back to front.
      */
 
-    //TODO: make the compositors register with the scene and get an access token before
-    //they can access the list
+    //TODO: this sould be forward declared so the users don't have to decide which ptr to use
+    //      as an id
     typedef void const* CompositorID;
     virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
 
