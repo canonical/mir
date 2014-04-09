@@ -180,14 +180,14 @@ public:
                         saved_resources.push_back(r->buffer(this));
                 }
 
-                wait_until_next_vsync();
+                wait_until_next_fake_vsync();
 
                 return false;
             });
     }
 
 private:
-    void wait_until_next_vsync()
+    void wait_until_next_fake_vsync()
     {
         using namespace std::chrono;
         typedef duration<int64_t, std::ratio<1, 60>> vsync_periods;
