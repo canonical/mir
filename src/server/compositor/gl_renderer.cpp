@@ -213,8 +213,8 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-    // TODO: save for longer
     auto buffer = renderable.buffer(this);
+    saved_resources.insert(buffer);
 
     glUseProgram(program);
 
@@ -369,6 +369,8 @@ void mc::GLRenderer::begin() const
 
 void mc::GLRenderer::end() const
 {
+    saved_resources.clear();  // TODO: move this
+
     auto t = textures.begin();
     while (t != textures.end())
     {
