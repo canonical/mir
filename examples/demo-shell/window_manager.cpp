@@ -20,7 +20,7 @@
 #include "window_manager.h"
 
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
@@ -195,8 +195,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
-        std::shared_ptr<msh::Session> app =
-            focus_controller->focussed_application().lock();
+        auto const app = focus_controller->focussed_application().lock();
 
         int fingers = static_cast<int>(event.motion.pointer_count);
 

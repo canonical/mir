@@ -25,6 +25,7 @@
 
 #include <algorithm>
 
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
@@ -35,7 +36,7 @@ msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
 }
 
 msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(
-    msh::Session const& /* session */,
+    ms::Session const& /* session */,
     msh::SurfaceCreationParameters const& request_parameters)
 {
     mir::graphics::DisplayConfigurationOutputId const output_id_invalid{

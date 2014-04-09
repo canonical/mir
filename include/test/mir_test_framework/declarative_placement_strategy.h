@@ -47,7 +47,7 @@ class DeclarativePlacementStrategy : public mir::shell::PlacementStrategy
 
     virtual ~DeclarativePlacementStrategy() = default;
     
-    mir::shell::SurfaceCreationParameters place(mir::shell::Session const& session, mir::shell::SurfaceCreationParameters const& request_parameters) override;
+    mir::shell::SurfaceCreationParameters place(mir::scene::Session const& session, mir::shell::SurfaceCreationParameters const& request_parameters) override;
 
 protected:
     DeclarativePlacementStrategy(const DeclarativePlacementStrategy&) = delete;

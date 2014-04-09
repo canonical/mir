@@ -23,18 +23,18 @@
 
 namespace mir
 {
-namespace shell { class Session; }
-
 namespace scene
 {
+class Session;
+
 class SessionEventSink
 {
 public:
     virtual ~SessionEventSink() = default;
 
-    virtual void handle_focus_change(std::shared_ptr<shell::Session> const& session) = 0;
+    virtual void handle_focus_change(std::shared_ptr<Session> const& session) = 0;
     virtual void handle_no_focus() = 0;
-    virtual void handle_session_stopping(std::shared_ptr<shell::Session> const& session) = 0;
+    virtual void handle_session_stopping(std::shared_ptr<Session> const& session) = 0;
 
 protected:
     SessionEventSink() = default;
