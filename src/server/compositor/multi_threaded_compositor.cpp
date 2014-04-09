@@ -26,6 +26,8 @@
 
 #include <thread>
 #include <condition_variable>
+#include <cstdint>
+#include <chrono>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -188,14 +190,18 @@ private:
     void wait_until_next_vsync()
     {
         using namespace std::chrono;
+        typedef duration<uint64_t, std::ratio<1, 60>> vsync_periods;
 
-        static int const vsync_period_microsec{16666};
+        /* Truncate to vsync periods */
+        auto const previous_vsync =
+            duration_cast<vsync_periods>(steady_clock::now().time_since_epoch());
+        /* Convert back to a timepoint */
+        auto const previous_vsync_tp =
+            time_point<steady_clock, vsync_periods>{previous_vsync};
+        /* Next vsync time point */
+        auto const next_vsync = previous_vsync_tp + vsync_periods(1);
 
-        auto now = duration_cast<microseconds>(
-            steady_clock::now().time_since_epoch());
-        microseconds next_vsync{
-            (now.count() / vsync_period_microsec + 1) * vsync_period_microsec};
-        std::this_thread::sleep_until(steady_clock::time_point{next_vsync});
+        std::this_thread::sleep_until(next_vsync);
     }
 
     std::shared_ptr<mc::Scene> const scene;
