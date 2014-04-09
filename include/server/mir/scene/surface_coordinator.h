@@ -26,15 +26,14 @@ namespace mir
 {
 namespace shell
 {
-struct Session;
 struct SurfaceCreationParameters;
 }
 
 namespace scene
 {
-using shell::Session;
 class Surface;
 class SurfaceObserver;
+class Session;
 
 class SurfaceCoordinator
 {

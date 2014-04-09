@@ -20,6 +20,7 @@
 
 #include "mir_test_framework/declarative_placement_strategy.h"
 
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 namespace mtf = mir_test_framework;
@@ -34,7 +35,7 @@ mtf::DeclarativePlacementStrategy::DeclarativePlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(msh::Session const& session, msh::SurfaceCreationParameters const& request_parameters)
+msh::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Session const& session, msh::SurfaceCreationParameters const& request_parameters)
 {
     auto placed = default_strategy->place(session, request_parameters);
 

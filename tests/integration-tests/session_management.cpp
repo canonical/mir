@@ -21,7 +21,7 @@
 #include "mir/input/input_configuration.h"
 
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/shell/focus_controller.h"
 
 #include "mir/scene/surface.h"
@@ -142,11 +142,11 @@ TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
     auto surface2 = session2->create_surface(params);
 
     auto const focus_controller = builder.the_focus_controller();
-    auto const shell_session = std::dynamic_pointer_cast<msh::Session>(session1);
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session1);
 
     EXPECT_CALL(*test_surface_stack, raise(WeakPtrTo(session1->get_surface(surface1)))).Times(1);
 
-    focus_controller->set_focus_to(shell_session);
+    focus_controller->set_focus_to(scene_session);
 
     session1->destroy_surface(surface1);
     session2->destroy_surface(surface2);

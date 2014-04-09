@@ -18,14 +18,14 @@
 
 #include "src/server/scene/application_session.h"
 #include "src/server/shell/default_focus_mechanism.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/graphics/display_configuration.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_shell_session.h"
+#include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/stub_input_targeter.h"
@@ -46,7 +46,7 @@ TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
 {
     using namespace ::testing;
 
-    NiceMock<mtd::MockShellSession> app1, app2;
+    NiceMock<mtd::MockSceneSession> app1, app2;
     auto const mock_surface1 = std::make_shared<NiceMock<mtd::MockSurface>>();
     auto const mock_surface2 = std::make_shared<NiceMock<mtd::MockSurface>>();
     auto const surface_coordinator = std::make_shared<mtd::MockSurfaceCoordinator>();
@@ -73,7 +73,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
 {
     using namespace ::testing;
 
-    NiceMock<mtd::MockShellSession> app1;
+    NiceMock<mtd::MockSceneSession> app1;
     NiceMock<mtd::MockSurface> mock_surface;
     auto const surface_coordinator = std::make_shared<mtd::MockSurfaceCoordinator>();
 
@@ -101,5 +101,5 @@ TEST(DefaultFocusMechanism, sets_input_focus)
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
-    focus_mechanism.set_focus_to(std::shared_ptr<msh::Session>());
+    focus_mechanism.set_focus_to(std::shared_ptr<ms::Session>());
 }

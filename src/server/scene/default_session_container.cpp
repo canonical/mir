@@ -26,16 +26,15 @@
 #include <stdexcept>
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
-void ms::DefaultSessionContainer::insert_session(std::shared_ptr<msh::Session> const& session)
+void ms::DefaultSessionContainer::insert_session(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
     apps.push_back(session);
 }
 
-void ms::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> const& session)
+void ms::DefaultSessionContainer::remove_session(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -50,7 +49,7 @@ void ms::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> c
     }
 }
 
-void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<msh::Session> const&)> f) const
+void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -60,14 +59,14 @@ void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<ms
     }
 }
 
-std::shared_ptr<msh::Session> ms::DefaultSessionContainer::successor_of(std::shared_ptr<msh::Session> const& session) const
+std::shared_ptr<ms::Session> ms::DefaultSessionContainer::successor_of(std::shared_ptr<Session> const& session) const
 {
-    std::shared_ptr<msh::Session> result, first;
+    std::shared_ptr<Session> result, first;
 
     if (!session && apps.size())
         return apps.back();
     else if(!session)
-        return std::shared_ptr<msh::Session>();
+        return std::shared_ptr<Session>();
 
     for (auto it = apps.begin(); it != apps.end(); it++)
     {

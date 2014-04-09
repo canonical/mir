@@ -39,7 +39,7 @@ public:
                                    std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator);
     virtual ~DefaultFocusMechanism() = default;
 
-    void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
+    void set_focus_to(std::shared_ptr<scene::Session> const& new_focus);
 
 protected:
     DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;

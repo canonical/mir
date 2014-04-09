@@ -23,6 +23,7 @@
 #include "mir/geometry/rectangle.h"
 
 namespace me = mir::examples;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(
@@ -31,7 +32,7 @@ me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(msh::Session const& /* session */,
+msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(ms::Session const& /* session */,
     msh::SurfaceCreationParameters const& request_parameters)
 {
     auto placed_parameters = request_parameters;
