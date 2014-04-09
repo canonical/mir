@@ -64,7 +64,7 @@ mg::RenderableList ms::SurfaceStack::generate_renderable_list(CompositorID id) c
     mg::RenderableList list;
     for (auto const& layer : layers_by_depth)
         for (auto const& surface : layer.second) 
-            list.emplace_back(surface->generate_renderable(id));
+            list.emplace_back(surface->renderable_for(id));
     return list;
 }
 

@@ -107,7 +107,7 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_EQ(name, surface.name());
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.top_left, surface.top_left());
-    EXPECT_FALSE(surface.generate_renderable(this)->shaped());
+    EXPECT_FALSE(surface.renderable_for(this)->shaped());
 }
 
 TEST_F(BasicSurfaceTest, id_always_unique)
@@ -124,7 +124,7 @@ TEST_F(BasicSurfaceTest, id_always_unique)
 
         for (int j = 0; j < i; ++j)
         {
-            ASSERT_NE(surfaces[j]->generate_renderable(this)->id(), surfaces[i]->generate_renderable(this)->id());
+            ASSERT_NE(surfaces[j]->renderable_for(this)->id(), surfaces[i]->renderable_for(this)->id());
         }
     }
 }
@@ -141,7 +141,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
                 std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
             );
 
-        ASSERT_TRUE(surfaces[i]->generate_renderable(this)->id());
+        ASSERT_TRUE(surfaces[i]->renderable_for(this)->id());
     }
 }
 
@@ -191,12 +191,12 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_NE(new_size, surface.size());
 
-    auto old_transformation = surface.generate_renderable(this)->transformation();
+    auto old_transformation = surface.renderable_for(this)->transformation();
 
     surface.resize(new_size);
     EXPECT_EQ(new_size, surface.size());
     // Size no longer affects transformation:
-    EXPECT_EQ(old_transformation, surface.generate_renderable(this)->transformation());
+    EXPECT_EQ(old_transformation, surface.renderable_for(this)->transformation());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
@@ -216,14 +216,14 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
     auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
-    auto original_transformation = surface.generate_renderable(this)->transformation();
+    auto original_transformation = surface.renderable_for(this)->transformation();
     glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
                     0.2f, 0.6f, 1.0f, 1.4f,
                     0.3f, 0.7f, 1.1f, 1.5f,
                     0.4f, 0.8f, 1.2f, 1.6f};
 
     surface.set_transformation(trans);
-    auto got = surface.generate_renderable(this)->transformation();
+    auto got = surface.renderable_for(this)->transformation();
     EXPECT_NE(original_transformation, got);
     EXPECT_EQ(trans, got);
 }
@@ -264,7 +264,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
         report};
 
     EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
-    EXPECT_FALSE(surface.generate_renderable(this)->shaped());
+    EXPECT_FALSE(surface.renderable_for(this)->shaped());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_visibility)

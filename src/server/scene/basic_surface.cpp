@@ -506,7 +506,7 @@ private:
 };
 }
 
-std::shared_ptr<mg::Renderable> ms::BasicSurface::generate_renderable(void const* compositor_id) const
+std::shared_ptr<mg::Renderable> ms::BasicSurface::renderable_for(void const* compositor_id) const
 {
     std::unique_lock<std::mutex> lk(guard);
 

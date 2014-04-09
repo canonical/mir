@@ -51,7 +51,7 @@ public:
     //TODO: make the compositors register with the scene and get an access token before
     //they can access the list
     typedef void const* CompositorID;
-    virtual graphics::RenderableList generate_renderable_list(CompositorID id) const = 0;
+    virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
 
     /**
      * Sets a callback to be called whenever the state of the

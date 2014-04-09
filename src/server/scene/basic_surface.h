@@ -118,8 +118,7 @@ public:
 
     bool visible() const;
     
-    std::shared_ptr<graphics::Renderable>
-        generate_renderable(void const* compositor_id) const;
+    std::shared_ptr<graphics::Renderable> renderable_for(void const* compositor_id) const;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;
