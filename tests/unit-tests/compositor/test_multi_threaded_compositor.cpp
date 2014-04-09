@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_scene.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
+#include "mir_test/spin_wait.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -314,18 +315,6 @@ private:
     mutable std::atomic<int> buffers_requested_;
 };
 
-void wait_for_condition_or_timeout(
-    std::function<bool()> const& condition,
-    std::chrono::milliseconds timeout)
-{
-    auto const end = std::chrono::steady_clock::now() + timeout;
-
-    while (std::chrono::steady_clock::now() < end && !condition())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds{10});
-    }
-}
-
 auto const null_report = mr::null_compositor_report();
 unsigned int const composites_per_update{1};
 }
@@ -609,17 +598,17 @@ TEST(MultiThreadedCompositor, consumes_buffers_for_renderables_that_are_not_rend
 
     compositor.start();
 
-    wait_for_condition_or_timeout(
+    mir::test::spin_wait_for_condition_or_timeout(
         [&] { return renderable->buffers_requested() == 1; },
-        std::chrono::seconds{3});
+        std::chrono::seconds{5});
 
     EXPECT_THAT(renderable->buffers_requested(), Eq(1));
 
     stub_scene->emit_change_event();
 
-    wait_for_condition_or_timeout(
+    mir::test::spin_wait_for_condition_or_timeout(
         [&] { return renderable->buffers_requested() == 2; },
-        std::chrono::seconds{3});
+        std::chrono::seconds{5});
 
     EXPECT_THAT(renderable->buffers_requested(), Eq(2));
 

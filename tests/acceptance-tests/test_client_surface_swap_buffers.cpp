@@ -22,8 +22,11 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
+#include "mir_test/spin_wait.h"
 
 #include <gtest/gtest.h>
+
+#include <atomic>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -50,6 +53,12 @@ public:
     mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
+void swap_buffers_callback(MirSurface*, void* ctx)
+{
+    auto buffers_swapped = static_cast<std::atomic<bool>*>(ctx);
+    *buffers_swapped = true;
+}
+
 }
 
 TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_not_composited)
@@ -73,7 +82,19 @@ TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_no
 
     for (int i = 0; i < 10; ++i)
     {
-        mir_surface_swap_buffers_sync(surface);
+        std::atomic<bool> buffers_swapped{false};
+
+        mir_surface_swap_buffers(surface, swap_buffers_callback, &buffers_swapped);
+
+        mir::test::spin_wait_for_condition_or_timeout(
+            [&] { return buffers_swapped.load(); },
+            std::chrono::seconds{5});
+
+        /* 
+         * ASSERT instead of EXPECT, since if we continue we will block in future
+         * mir client calls (e.g mir_connection_release).
+         */
+        ASSERT_TRUE(buffers_swapped.load());
     }
 
     mir_connection_release(connection);
