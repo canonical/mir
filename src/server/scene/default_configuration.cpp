@@ -91,10 +91,10 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         });
 }
 
-std::shared_ptr<ms::SurfaceController>
-mir::DefaultServerConfiguration::the_surface_controller()
+std::shared_ptr<ms::SurfaceCoordinator>
+mir::DefaultServerConfiguration::the_surface_coordinator()
 {
-    return surface_controller(
+    return surface_coordinator(
         [this]()
         {
             return std::make_shared<ms::SurfaceController>(
@@ -102,12 +102,6 @@ mir::DefaultServerConfiguration::the_surface_controller()
                 the_shell_placement_strategy(),
                 the_surface_stack_model());
         });
-}
-
-std::shared_ptr<ms::SurfaceCoordinator>
-mir::DefaultServerConfiguration::the_surface_coordinator()
-{
-    return the_surface_controller();
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>
