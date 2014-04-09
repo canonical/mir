@@ -129,14 +129,6 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto mock_renderable3 = std::make_shared<NiceMock<mtd::MockRenderable>>();
 
-    auto buf = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(*mock_renderable1, buffer(_))
-        .WillOnce(Return(buf));
-    EXPECT_CALL(*mock_renderable2, buffer(_))
-        .Times(0);
-    EXPECT_CALL(*mock_renderable3, buffer(_))
-        .WillOnce(Return(buf));
-
     glm::mat4 simple;
     EXPECT_CALL(*mock_renderable1, transformation())
         .WillOnce(Return(simple));
@@ -523,12 +515,12 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .InSequence(seq)
         .WillOnce(Return(2));
-    EXPECT_CALL(*mock_renderable, buffer(_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable)))
         .InSequence(seq); 
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .InSequence(seq)
         .WillOnce(Return(1));
-    EXPECT_CALL(*mock_renderable, buffer(_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable)))
         .InSequence(seq); 
 
     mg::RenderableList list({mock_renderable});
