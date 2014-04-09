@@ -313,6 +313,11 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
+    return visible(lk); 
+}
+
+bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
+{
     return !hidden && first_frame_posted;
 } 
 
@@ -510,14 +515,14 @@ std::shared_ptr<mg::Renderable> ms::BasicSurface::renderable_for(void const* com
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    auto visible = !hidden && first_frame_posted;
+    auto const shaped = nonrectangular || (surface_alpha < 1.0f);
     return std::make_shared<RenderableSnapshot>(
         surface_buffer_stream,
         compositor_id,
         surface_rect,
         transformation_matrix,
-        visible,
-        nonrectangular || (surface_alpha < 1.0f),
+        visible(lk),
+        shaped,
         surface_alpha,
         nonrectangular, 
         this);

@@ -37,7 +37,7 @@ public:
 
     /**
      * Generate a valid list of renderables based on the current state of the Scene.
-     * \param [in] user_id An arbitrary unique identifier used to distinguish
+     * \param [in] id      An arbitrary unique identifier used to distinguish
      *                     separate compositors which need to receive a list
      *                     for rendering. Calling with the same id will return
      *                     a new (different) list to that user each time. For
@@ -46,9 +46,6 @@ public:
      * \returns a list of mg::Renderables for the compositor id. The list is in
      *          stacking order from back to front.
      */
-
-    //TODO: this sould be forward declared so the users don't have to decide which ptr to use
-    //      as an id
     typedef void const* CompositorID;
     virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
 

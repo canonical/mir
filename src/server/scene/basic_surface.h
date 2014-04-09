@@ -134,6 +134,7 @@ public:
     void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
 
 private:
+    bool visible(std::unique_lock<std::mutex>&) const;
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
 
