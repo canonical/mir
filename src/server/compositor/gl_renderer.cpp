@@ -364,13 +364,12 @@ void mc::GLRenderer::set_rotation(float degrees)
 
 void mc::GLRenderer::begin() const
 {
+    saved_resources.clear();
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void mc::GLRenderer::end() const
 {
-    saved_resources.clear();  // TODO: move this
-
     auto t = textures.begin();
     while (t != textures.end())
     {
@@ -391,5 +390,6 @@ void mc::GLRenderer::end() const
 
 void mc::GLRenderer::suspend()
 {
+    saved_resources.clear();
     skipped = true;
 }
