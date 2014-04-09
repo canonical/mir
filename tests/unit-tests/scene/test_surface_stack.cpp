@@ -391,7 +391,8 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
    
     Mock::VerifyAndClearExpectations(mock_stream.get()); 
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(compositor_id))
-        .Times(1);
+        .Times(1)
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     ASSERT_THAT(list.size(), Eq(1u));
     list.front()->buffer();
 }
@@ -403,7 +404,8 @@ TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisitio
 
     auto mock_stream = std::make_shared<mtd::MockBufferStream>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
-        .Times(1);
+        .Times(1)
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
