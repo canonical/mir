@@ -58,13 +58,14 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
-mg::RenderableList ms::SurfaceStack::renderable_list_for(CompositorID id) const
+mg::RenderableList ms::SurfaceStack::renderable_list_for(
+    mc::DisplayBufferCompositor const* requesting_compositor) const
 {
     std::lock_guard<decltype(guard)> lg(guard);
     mg::RenderableList list;
     for (auto const& layer : layers_by_depth)
         for (auto const& surface : layer.second) 
-            list.emplace_back(surface->renderable_for(id));
+            list.emplace_back(surface->renderable_for(requesting_compositor));
     return list;
 }
 

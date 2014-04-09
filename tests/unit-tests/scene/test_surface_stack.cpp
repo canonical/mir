@@ -18,6 +18,7 @@
 
 #include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/compositor/display_buffer_compositor.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
@@ -51,6 +52,11 @@ namespace mr = mir::report;
 
 namespace
 {
+
+struct StubDisplayBufferCompositor : public mc::DisplayBufferCompositor
+{
+    bool composite() { return false; }
+};
 
 struct StubInputChannelFactory : public mi::InputChannelFactory
 {
@@ -128,7 +134,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
 
-    void const* compositor_id{&input_registrar};
+    StubDisplayBufferCompositor const compositor;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 
@@ -160,7 +166,7 @@ TEST_F(SurfaceStack, stacking_order)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
     ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
     EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
@@ -179,7 +185,7 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     stack.add_surface(stub_surface2, ms::DepthId{1}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{0}, default_params.input_mode);
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
     ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
     EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
@@ -233,7 +239,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
     ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
     EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
@@ -244,7 +250,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 
     stack.raise(stub_surface1);
 
-    list = stack.renderable_list_for(compositor_id);
+    list = stack.renderable_list_for(&compositor);
     ASSERT_THAT(list.size(), 3u);
     it = list.begin();
     EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
@@ -264,7 +270,7 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     stack.add_surface(stub_surface2, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{1}, default_params.input_mode);
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
     ASSERT_THAT(list.size(), 3u);
     auto it = list.begin();
     EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
@@ -275,7 +281,7 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
 
     stack.raise(stub_surface1);
 
-    list = stack.renderable_list_for(compositor_id);
+    list = stack.renderable_list_for(&compositor);
     ASSERT_THAT(list.size(), 3u);
     it = list.begin();
     EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
@@ -321,7 +327,7 @@ TEST_F(SurfaceStack, generate_renderlist)
         stack.add_surface(surface, default_params.depth, default_params.input_mode);
     }
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
 
     ASSERT_THAT(list.size(), Eq(num_surfaces));
 
@@ -357,7 +363,7 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
         stack.add_surface(surface, default_params.depth, default_params.input_mode);
     }
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
 
     auto const changed_position = geom::Point{43,44};
     for(auto const& surface : surfacelist)
@@ -387,10 +393,10 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
         report);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
 
-    auto list = stack.renderable_list_for(compositor_id);
+    auto list = stack.renderable_list_for(&compositor);
    
     Mock::VerifyAndClearExpectations(mock_stream.get()); 
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(compositor_id))
+    EXPECT_CALL(*mock_stream, lock_compositor_buffer(&compositor))
         .Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     ASSERT_THAT(list.size(), Eq(1u));
@@ -417,7 +423,7 @@ TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisitio
         report);
     stack.add_surface(surface, default_params.depth, default_params.input_mode);
 
-    auto list = stack.renderable_list_for(compositor_id); 
+    auto list = stack.renderable_list_for(&compositor); 
     ASSERT_THAT(list.size(), Eq(1u));
     list.front()->buffer();
     list.front()->buffer();
