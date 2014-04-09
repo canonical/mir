@@ -582,28 +582,23 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
     mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
 
     scene->throw_on_set_callback(true);
-    try
-    {
-        compositor.start();
-        //we shouldn't be here...
-        FAIL();
-    }
-    catch (const std::runtime_error& error) {}
+
+    EXPECT_THROW(compositor.start(), std::runtime_error);
 
     scene->throw_on_set_callback(false);
 
     compositor.start();
 
     auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(1);
-    while (!db_compositor_factory->enough_records_gathered(nbuffers, 20))
+    while (!db_compositor_factory->enough_records_gathered(nbuffers, 20) &&
+           std::chrono::steady_clock::now() <= time_out)
     {
         scene->emit_change_event();
-        if (std::chrono::steady_clock::now() > time_out)
-        {
-            EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, 20));
-            break;
-        }
+        std::this_thread::yield();
     }
+
+    EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, 20));
+
     compositor.stop();
 
     //Only one thread should be rendering each display buffer
