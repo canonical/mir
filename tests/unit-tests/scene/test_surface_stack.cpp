@@ -151,7 +151,6 @@ TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
     EXPECT_THAT(stub_surface1.use_count(), Eq(use_count));
 }
 
-#if 0
 TEST_F(SurfaceStack, stacking_order)
 {
     using namespace testing;
@@ -164,11 +163,11 @@ TEST_F(SurfaceStack, stacking_order)
     auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
-    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3.get()));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
@@ -183,11 +182,11 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
-    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
 }
 
 TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
@@ -237,23 +236,22 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_THAT(list.size(), Eq(3u));
     auto it = list.begin();
-    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3.get()));
 
     stack.raise(stub_surface1);
 
     list = stack.generate_renderable_list(compositor_id);
-    list = stack.generate_renderable_list();
     ASSERT_THAT(list.size(), 3u);
     it = list.begin();
-    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
 }
 
 TEST_F(SurfaceStack, depth_id_trumps_raise)
@@ -269,22 +267,22 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     auto list = stack.generate_renderable_list(compositor_id);
     ASSERT_THAT(list.size(), 3u);
     auto it = list.begin();
-    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3.get()));
 
     stack.raise(stub_surface1);
 
     list = stack.generate_renderable_list(compositor_id);
     ASSERT_THAT(list.size(), 3u);
     it = list.begin();
-    EXPECT_THAT((*it)->id(), Eq(stub_surface2->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface1->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface1.get()));
     std::advance(it, 1);
-    EXPECT_THAT((*it)->id(), Eq(stub_surface3->id()));
+    EXPECT_THAT((*it)->id(), Eq(stub_surface3.get()));
 }
 
 TEST_F(SurfaceStack, raise_throw_behavior)
@@ -330,7 +328,7 @@ TEST_F(SurfaceStack, generate_renderlist)
     auto surface_it = surfacelist.begin();
     for(auto& renderable : list)
     {
-        EXPECT_THAT(renderable->screen_position(), Eq((*surface_it++)->screen_position()));
+        EXPECT_THAT(renderable->screen_position().top_left, Eq((*surface_it++)->top_left()));
     }
 
     for(auto& surface : surfacelist)
@@ -359,7 +357,7 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
         stack.add_surface(surface, default_params.depth, default_params.input_mode);
     }
 
-    auto list = stack.generate_renderable_list();
+    auto list = stack.generate_renderable_list(compositor_id);
 
     auto const changed_position = geom::Point{43,44};
     for(auto const& surface : surfacelist)
@@ -381,7 +379,7 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
-        geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+        geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         true,
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
@@ -391,11 +389,11 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
 
     auto list = stack.generate_renderable_list(compositor_id);
    
-    Mock::VerifyAndClearExpectactions(mock_stream.get()); 
+    Mock::VerifyAndClearExpectations(mock_stream.get()); 
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(compositor_id))
         .Times(1);
     ASSERT_THAT(list.size(), Eq(1u));
-    list.begin()->buffer();
+    list.front()->buffer();
 }
 
 TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisition)
@@ -409,7 +407,7 @@ TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisitio
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
-        geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+        geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         true,
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
@@ -419,8 +417,7 @@ TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisitio
 
     auto list = stack.generate_renderable_list(compositor_id); 
     ASSERT_THAT(list.size(), Eq(1u));
-    list.begin()->buffer();
-    list.begin()->buffer();
-    list.begin()->buffer();
+    list.front()->buffer();
+    list.front()->buffer();
+    list.front()->buffer();
 }
-#endif
