@@ -51,6 +51,7 @@ public:
     virtual std::shared_ptr<graphics::Renderable>
         generate_renderable(void const* compositor_id) const = 0;
 
+    virtual float alpha() const = 0; //only used in examples/
     virtual MirSurfaceType type() const = 0;
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
