@@ -43,8 +43,7 @@ public:
     {
     }
 
-    void render(graphics::Renderable const&,
-                graphics::Buffer&) const override
+    void render(graphics::Renderable const&) const override
     {
     }
 

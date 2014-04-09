@@ -42,8 +42,7 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(graphics::Renderable const& renderable,
-                graphics::Buffer& buffer) const override;
+    void render(graphics::Renderable const& renderable) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
