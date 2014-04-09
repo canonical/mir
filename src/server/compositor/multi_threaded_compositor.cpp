@@ -190,7 +190,7 @@ private:
     void wait_until_next_vsync()
     {
         using namespace std::chrono;
-        typedef duration<uint64_t, std::ratio<1, 60>> vsync_periods;
+        typedef duration<int64_t, std::ratio<1, 60>> vsync_periods;
 
         /* Truncate to vsync periods */
         auto const previous_vsync =
