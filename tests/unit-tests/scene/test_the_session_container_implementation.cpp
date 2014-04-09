@@ -18,7 +18,7 @@
 
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/default_session_container.h"
-#include "mir_test_doubles/stub_shell_session.h"
+#include "mir_test_doubles/stub_scene_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -34,16 +34,16 @@ TEST(DefaultSessionContainer, for_each)
     using namespace ::testing;
     ms::DefaultSessionContainer container;
 
-    auto session1 = std::make_shared<mtd::StubShellSession>();
-    auto session2 = std::make_shared<mtd::StubShellSession>();
+    auto session1 = std::make_shared<mtd::StubSceneSession>();
+    auto session2 = std::make_shared<mtd::StubSceneSession>();
 
     container.insert_session(session1);
     container.insert_session(session2);
 
     struct local
     {
-        MOCK_METHOD1(see, void(std::shared_ptr<msh::Session> const&));
-        void operator()(std::shared_ptr<msh::Session> const& session)
+        MOCK_METHOD1(see, void(std::shared_ptr<ms::Session> const&));
+        void operator()(std::shared_ptr<ms::Session> const& session)
         {
             see(session);
         }
@@ -61,9 +61,9 @@ TEST(DefaultSessionContainer, successor_of)
     using namespace ::testing;
     ms::DefaultSessionContainer container;
 
-    auto session1 = std::make_shared<mtd::StubShellSession>();
-    auto session2 = std::make_shared<mtd::StubShellSession>();
-    auto session3 = std::make_shared<mtd::StubShellSession>();
+    auto session1 = std::make_shared<mtd::StubSceneSession>();
+    auto session2 = std::make_shared<mtd::StubSceneSession>();
+    auto session3 = std::make_shared<mtd::StubSceneSession>();
 
     container.insert_session(session1);
     container.insert_session(session2);
@@ -74,7 +74,7 @@ TEST(DefaultSessionContainer, successor_of)
     EXPECT_EQ(session1, container.successor_of(session3));
 
     // Successor of no session is the last session.
-    EXPECT_EQ(session3, container.successor_of(std::shared_ptr<msh::Session>()));
+    EXPECT_EQ(session3, container.successor_of(std::shared_ptr<ms::Session>()));
 }
 
 TEST(DefaultSessionContainer, invalid_session_throw_behavior)
@@ -83,6 +83,6 @@ TEST(DefaultSessionContainer, invalid_session_throw_behavior)
     ms::DefaultSessionContainer container;
 
     EXPECT_THROW({
-        container.remove_session(std::make_shared<mtd::StubShellSession>());
+        container.remove_session(std::make_shared<mtd::StubSceneSession>());
     }, std::logic_error);
 }

@@ -16,7 +16,7 @@
  * Authored by: Ricardo Mendoza <ricardo.mendoza@canonical.com>
  */
 
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "src/server/scene/application_session.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -43,9 +43,9 @@ struct MockStateHandler
     MOCK_METHOD1(state_changed, void (MirLifecycleState));
 };
 
-class StubSessionListener : public msh::NullSessionListener
+class StubSessionListener : public ms::NullSessionListener
 {
-    void stopping(std::shared_ptr<msh::Session> const& session)
+    void stopping(std::shared_ptr<ms::Session> const& session)
     {
         std::shared_ptr<ms::ApplicationSession> app_session(
             std::static_pointer_cast<ms::ApplicationSession>(session)
@@ -62,7 +62,7 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<msh::SessionListener> the_shell_session_listener() override
+        std::shared_ptr<ms::SessionListener> the_session_listener() override
         {
             return std::make_shared<StubSessionListener>();
         }

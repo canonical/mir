@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
-#define MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SCENE_SESSION_H_
+#define MIR_TEST_DOUBLES_STUB_SCENE_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-struct StubShellSession : public shell::Session
+struct StubSceneSession : public scene::Session
 {
     frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
     {
@@ -82,5 +82,5 @@ struct StubShellSession : public shell::Session
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
+#endif // MIR_TEST_DOUBLES_STUB_SCENE_SESSION_H_
 

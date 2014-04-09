@@ -17,10 +17,10 @@
  */
 
 #include "src/server/scene/session_manager.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/shell/focus_setter.h"
 #include "src/server/scene/default_session_container.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -64,7 +64,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
     ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    msh::NullSessionListener session_listener;
+    ms::NullSessionListener session_listener;
     ms::SessionManager session_manager;
 };
 

@@ -33,13 +33,13 @@ namespace mir
 namespace shell
 {
 class FocusSetter;
-class SessionListener;
 }
 
 namespace scene
 {
-class SessionEventSink;
 class SessionContainer;
+class SessionEventSink;
+class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
 
@@ -51,7 +51,7 @@ public:
                             std::shared_ptr<shell::FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
-                            std::shared_ptr<shell::SessionListener> const& session_listener);
+                            std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
@@ -65,8 +65,8 @@ public:
                                  shell::SurfaceCreationParameters const& params);
 
     void focus_next();
-    std::weak_ptr<shell::Session> focussed_application() const;
-    void set_focus_to(std::shared_ptr<shell::Session> const& focus);
+    std::weak_ptr<Session> focussed_application() const;
+    void set_focus_to(std::shared_ptr<Session> const& focus);
 
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
@@ -80,12 +80,12 @@ private:
     std::shared_ptr<shell::FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
-    std::shared_ptr<shell::SessionListener> const session_listener;
+    std::shared_ptr<SessionListener> const session_listener;
 
     std::mutex mutex;
-    std::weak_ptr<shell::Session> focus_application;
+    std::weak_ptr<Session> focus_application;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<shell::Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 };
 
 }

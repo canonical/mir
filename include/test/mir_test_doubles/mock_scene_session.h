@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SHELL_SESSION_H_
-#define MIR_TEST_DOUBLES_MOCK_SHELL_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
+#define MIR_TEST_DOUBLES_MOCK_SCENE_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
 
@@ -32,7 +32,7 @@ namespace test
 namespace doubles
 {
 
-struct MockShellSession : public shell::Session
+struct MockSceneSession : public scene::Session
 {
     MOCK_METHOD1(create_surface, frontend::SurfaceId(shell::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
