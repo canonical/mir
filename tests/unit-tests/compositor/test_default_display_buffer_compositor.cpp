@@ -248,9 +248,9 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .InSequence(render_seq);
-    EXPECT_CALL(mock_renderer, end())
-        .InSequence(render_seq);
     EXPECT_CALL(display_buffer, post_update())
+        .InSequence(render_seq);
+    EXPECT_CALL(mock_renderer, end())
         .InSequence(render_seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
