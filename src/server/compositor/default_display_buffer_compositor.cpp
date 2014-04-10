@@ -101,9 +101,8 @@ bool mc::DefaultDisplayBufferCompositor::composite()
             renderer->render(*renderable);
         }
 
-        renderer->end();
-
         display_buffer.post_update();
+        renderer->end();
 
         // This is a frig to avoid lp:1286190
         if (last_pass_rendered_anything && renderable_list.empty())
