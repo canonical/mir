@@ -391,6 +391,5 @@ void mc::GLRenderer::end() const
 
 void mc::GLRenderer::suspend()
 {
-    saved_resources.clear();
     skipped = true;
 }
