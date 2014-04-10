@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/broadcasting_session_event_sink.h"
-#include "mir_test_doubles/stub_shell_session.h"
+#include "mir_test_doubles/stub_scene_session.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -29,15 +29,15 @@ namespace mt = mir::test;
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
 {
-    mtd::StubShellSession session1;
-    std::vector<msh::Session*> handler_called(3, nullptr);
+    mtd::StubSceneSession session1;
+    std::vector<ms::Session*> handler_called(3, nullptr);
 
     ms::BroadcastingSessionEventSink events;
 
     for (auto& h : handler_called)
     {
         events.register_focus_change_handler(
-            [&h](std::shared_ptr<msh::Session> const& session)
+            [&h](std::shared_ptr<ms::Session> const& session)
             {
                 h = session.get();
             });
@@ -53,7 +53,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
 {
-    mtd::StubShellSession session1;
+    mtd::StubSceneSession session1;
     std::vector<int> handler_called(3, 0);
 
     ms::BroadcastingSessionEventSink events;
@@ -77,15 +77,15 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_session_stopping)
 {
-    mtd::StubShellSession session1;
-    std::vector<msh::Session*> handler_called(3, nullptr);
+    mtd::StubSceneSession session1;
+    std::vector<ms::Session*> handler_called(3, nullptr);
 
     ms::BroadcastingSessionEventSink events;
 
     for (auto& h : handler_called)
     {
         events.register_session_stopping_handler(
-            [&h](std::shared_ptr<msh::Session> const& session)
+            [&h](std::shared_ptr<ms::Session> const& session)
             {
                 h = session.get();
             });

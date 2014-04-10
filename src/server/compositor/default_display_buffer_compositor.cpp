@@ -64,13 +64,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (bypass_env && display_buffer.can_bypass())
     {
-        // It would be *really* nice not to lock the scene for a composite pass.
-        // (C.f. lp:1234018)
-        // A compositor shouldn't know anything about navigating the scene,
-        // it should be passed a collection of objects to render. (And any
-        // locks managed by the scene - which can just lock what is needed.)
-        std::unique_lock<Scene> lock(*scene);
-
         mc::BypassMatch bypass_match(view_area);
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
         if (bypass_it != renderable_list.rend())
@@ -86,7 +79,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
             {
                 uncomposited_buffers = (*bypass_it)->buffers_ready_for_compositor() > 1;
 
-                lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
                 renderer->suspend();

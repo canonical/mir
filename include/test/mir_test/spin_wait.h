@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,30 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
-#define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#ifndef MIR_TEST_SPIN_WAIT_H_
+#define MIR_TEST_SPIN_WAIT_H_
 
-#include "mir/shell/focus_setter.h"
-
-#include <gmock/gmock.h>
+#include <functional>
+#include <chrono>
 
 namespace mir
 {
 namespace test
 {
-namespace doubles
-{
 
-struct MockFocusSetter : public shell::FocusSetter
-{
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<scene::Session> const&));
-};
+bool spin_wait_for_condition_or_timeout(
+    std::function<bool()> const& condition,
+    std::chrono::milliseconds timeout,
+    std::chrono::milliseconds spin_period = std::chrono::milliseconds{10});
 
 }
 }
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#endif /* MIR_TEST_SPIN_WAIT_H_ */

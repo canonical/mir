@@ -23,7 +23,7 @@
 #include "mir/shell/focus_controller.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/shell.h"
 #include "mir/geometry/size.h"

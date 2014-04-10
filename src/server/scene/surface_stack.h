@@ -68,11 +68,6 @@ public:
     // From Scene
     graphics::RenderableList generate_renderable_list() const;
     virtual void set_change_callback(std::function<void()> const& f);
-    //to be deprecated
-    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
-    virtual void lock();
-    virtual void unlock();
-    //end to be deprecated
     
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
@@ -92,7 +87,7 @@ private:
 
     void emit_change_notification();
 
-    std::recursive_mutex mutable guard;
+    std::mutex mutable guard;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
     std::function<void()> const change_cb;

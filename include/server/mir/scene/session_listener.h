@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,16 +16,16 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_LISTENER_H_
-#define MIR_SHELL_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_SESSION_LISTENER_H_
+#define MIR_SCENE_SESSION_LISTENER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace scene { class Surface; }
-namespace shell
+namespace scene
 {
+class Surface;
 class Session;
 
 class SessionListener
@@ -36,8 +36,8 @@ public:
     virtual void focused(std::shared_ptr<Session> const& session) = 0;
     virtual void unfocused() = 0;
 
-    virtual void surface_created(Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
-    virtual void destroying_surface(Session& session, std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual void surface_created(Session& session, std::shared_ptr<Surface> const& surface) = 0;
+    virtual void destroying_surface(Session& session, std::shared_ptr<Surface> const& surface) = 0;
 
 protected:
     SessionListener() = default;
@@ -51,4 +51,4 @@ protected:
 }
 
 
-#endif // MIR_SHELL_SESSION_LISTENER_H_
+#endif // MIR_SCENE_SESSION_LISTENER_H_

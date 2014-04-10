@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 #include <map>
 
@@ -29,18 +29,15 @@ namespace frontend
 {
 class EventSink;
 }
-namespace shell
-{
-class SessionListener;
-}
 
 namespace scene
 {
+class SessionListener;
 class Surface;
 class SurfaceCoordinator;
 class SnapshotStrategy;
 
-class ApplicationSession : public shell::Session
+class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
@@ -48,7 +45,7 @@ public:
         pid_t pid,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-        std::shared_ptr<shell::SessionListener> const& session_listener,
+        std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink);
 
     ~ApplicationSession();
@@ -81,7 +78,7 @@ private:
     pid_t const pid;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
-    std::shared_ptr<shell::SessionListener> const session_listener;
+    std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();

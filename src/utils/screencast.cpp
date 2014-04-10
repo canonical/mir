@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 
 #include "mir/raii.h"
 
@@ -39,6 +40,7 @@
 #include <future>
 #include <vector>
 #include <utility>
+#include <chrono>
 
 namespace po = boost::program_options;
 
@@ -70,18 +72,11 @@ void read_pixels(GLenum format, mir::geometry::Size const& size, void* buffer)
 }
 
 
-uint32_t get_first_valid_output_id(MirConnection* connection)
+uint32_t get_first_valid_output_id(MirDisplayConfiguration const& display_config)
 {
-    auto const conf = mir::raii::deleter_for(
-        mir_connection_create_display_config(connection),
-        &mir_display_config_destroy);
-
-    if (conf == nullptr)
-        throw std::runtime_error("Failed to get display configuration\n");
-
-    for (unsigned i = 0; i < conf->num_outputs; ++i)
+    for (unsigned int i = 0; i < display_config.num_outputs; ++i)
     {
-        MirDisplayOutput const& output = conf->outputs[i];
+        MirDisplayOutput const& output = display_config.outputs[i];
 
         if (output.connected && output.used &&
             output.current_mode < output.num_modes)
@@ -93,21 +88,14 @@ uint32_t get_first_valid_output_id(MirConnection* connection)
     throw std::runtime_error("Couldn't find a valid output to screencast");
 }
 
-MirRectangle get_screen_region_from(MirConnection* connection, uint32_t output_id)
+MirRectangle get_screen_region_from(MirDisplayConfiguration const& display_config, uint32_t output_id)
 {
     if (output_id == mir_display_output_id_invalid)
-        output_id = get_first_valid_output_id(connection);
+        output_id = get_first_valid_output_id(display_config);
 
-    auto const conf = mir::raii::deleter_for(
-        mir_connection_create_display_config(connection),
-        &mir_display_config_destroy);
-
-    if (conf == nullptr)
-        throw std::runtime_error("Failed to get display configuration\n");
-
-    for (unsigned i = 0; i < conf->num_outputs; ++i)
+    for (unsigned int i = 0; i < display_config.num_outputs; ++i)
     {
-        MirDisplayOutput const& output = conf->outputs[i];
+        MirDisplayOutput const& output = display_config.outputs[i];
 
         if (output.output_id == output_id &&
             output.current_mode < output.num_modes)
@@ -123,6 +111,7 @@ MirRectangle get_screen_region_from(MirConnection* connection, uint32_t output_i
 }
 
 MirScreencastParameters get_screencast_params(MirConnection* connection,
+                                              MirDisplayConfiguration const& display_config,
                                               std::vector<int> const& requested_size,
                                               std::vector<int> const& requested_region,
                                               uint32_t output_id)
@@ -130,6 +119,9 @@ MirScreencastParameters get_screencast_params(MirConnection* connection,
     MirScreencastParameters params;
     if (requested_region.size() == 4)
     {
+        /* TODO: the region should probably be validated
+         * to make sure it overlaps any one of the active display areas
+         */
         params.region.left = requested_region[0];
         params.region.top = requested_region[1];
         params.region.width = requested_region[2];
@@ -137,7 +129,7 @@ MirScreencastParameters get_screencast_params(MirConnection* connection,
     }
     else
     {
-        params.region = get_screen_region_from(connection, output_id);
+        params.region = get_screen_region_from(display_config, output_id);
     }
 
     if (requested_size.size() == 2)
@@ -158,6 +150,38 @@ MirScreencastParameters get_screencast_params(MirConnection* connection,
         throw std::runtime_error("Couldn't find a valid pixel format for connection");
 
     return params;
+}
+
+double get_capture_rate_limit(MirDisplayConfiguration const& display_config, MirScreencastParameters const& params)
+{
+    mir::geometry::Rectangle screencast_area{
+        {params.region.left, params.region.top},
+        {params.region.width, params.region.height}};
+
+    double highest_refresh_rate = 0.0;
+    for (unsigned int i = 0; i < display_config.num_outputs; ++i)
+    {
+        MirDisplayOutput const& output = display_config.outputs[i];
+        if (output.connected && output.used &&
+            output.current_mode < output.num_modes)
+        {
+            MirDisplayMode const& mode = output.modes[output.current_mode];
+            mir::geometry::Rectangle display_area{
+                {output.position_x, output.position_y},
+                {mode.horizontal_resolution, mode.vertical_resolution}};
+            if (display_area.overlaps(screencast_area) && mode.refresh_rate > highest_refresh_rate)
+                highest_refresh_rate = mode.refresh_rate;
+        }
+    }
+
+    /* Either the display config has invalid refresh rate data
+     * or the screencast region is outside of any display area, either way
+     * let's default to sensible max capture limit
+     */
+    if (highest_refresh_rate == 0.0)
+        highest_refresh_rate = 60.0;
+
+    return highest_refresh_rate;
 }
 
 struct EGLSetup
@@ -243,22 +267,23 @@ struct EGLSetup
 void do_screencast(EGLSetup const& egl_setup,
                    mir::geometry::Size const& size,
                    int32_t number_of_captures,
+                   double capture_fps,
                    std::ostream& out_stream)
 {
     static int const rgba_pixel_size{4};
-
     auto const frame_size_bytes = rgba_pixel_size *
                                   size.width.as_uint32_t() *
                                   size.height.as_uint32_t();
 
     std::vector<char> frame_data(frame_size_bytes, 0);
-
-
     auto format = egl_setup.pixel_read_format();
 
+    auto capture_period = std::chrono::duration<double>(1.0/capture_fps);
 
     while (running && (number_of_captures != 0))
     {
+        auto time_point = std::chrono::steady_clock::now() + capture_period;
+
         read_pixels(format, size, frame_data.data());
 
         auto write_out_future = std::async(
@@ -268,11 +293,12 @@ void do_screencast(EGLSetup const& egl_setup,
                 });
 
         egl_setup.swap_buffers();
-
         write_out_future.wait();
 
         if (number_of_captures > 0)
             number_of_captures--;
+
+        std::this_thread::sleep_until(time_point);
     }
 }
 
@@ -289,6 +315,7 @@ try
     std::vector<int> requested_size;
     bool use_std_out = false;
     bool query_params_only = false;
+    int capture_interval = 1;
 
     //avoid unused warning/error
     dummy_tls[0] = 0;
@@ -313,7 +340,11 @@ try
         ("stdout", po::value<bool>(&use_std_out)->zero_tokens(), "use stdout for output (--file is ignored)")
         ("query",
             po::value<bool>(&query_params_only)->zero_tokens(),
-            "only queries the colorspace and output size used but does not start screencast");
+            "only queries the colorspace and output size used but does not start screencast")
+        ("cap-interval",
+            po::value<int>(&capture_interval),
+            "adjusts the capture rate to <arg> display refresh intervals\n"
+            "1 -> capture at display rate\n2 -> capture at half the display rate, etc..");
 
     po::variables_map vm;
     try
@@ -329,6 +360,9 @@ try
 
         if (vm.count("display-id") && vm.count("screen-region"))
             throw po::error("cannot set both display-id and screen-region");
+
+        if (vm.count("cap-interval") && capture_interval < 1)
+            throw po::error("invalid capture interval");
     }
     catch(po::error& e)
     {
@@ -362,8 +396,18 @@ try
         throw std::runtime_error(std::string(msg));
     }
 
+    auto const display_config = mir::raii::deleter_for(
+        mir_connection_create_display_config(connection.get()),
+        &mir_display_config_destroy);
+
+    if (display_config == nullptr)
+        throw std::runtime_error("Failed to get display configuration\n");
+
     MirScreencastParameters params =
-        get_screencast_params(connection.get(), requested_size, screen_region, output_id);
+        get_screencast_params(connection.get(), *display_config, requested_size, screen_region, output_id);
+
+    double capture_rate_limit = get_capture_rate_limit(*display_config, params);
+    double capture_fps = capture_rate_limit/capture_interval;
 
     auto const screencast = mir::raii::deleter_for(
         mir_connection_create_screencast_sync(connection.get(), &params),
@@ -380,6 +424,7 @@ try
         std::stringstream ss;
         ss << "/tmp/mir_screencast_" ;
         ss << screencast_size.width << "x" << screencast_size.height;
+        ss << "_" << capture_fps << "Hz";
         ss << (egl_setup.pixel_read_format() == GL_BGRA_EXT ? ".bgra" : ".rgba");
         output_filename = ss.str();
     }
@@ -390,6 +435,7 @@ try
            (egl_setup.pixel_read_format() == GL_BGRA_EXT ? "BGRA" : "RGBA") << std::endl;
        std::cout << "Output size: " <<
            screencast_size.width << "x" << screencast_size.height << std::endl;
+       std::cout << "Capture rate (Hz): " << capture_fps << std::endl;
        std::cout << "Output to: " <<
            (use_std_out ? "standard out" : output_filename) << std::endl;
        return EXIT_SUCCESS;
@@ -397,12 +443,12 @@ try
 
     if (use_std_out)
     {
-        do_screencast(egl_setup, screencast_size, number_of_captures, std::cout);
+        do_screencast(egl_setup, screencast_size, number_of_captures, capture_fps, std::cout);
     }
     else
     {
         std::ofstream file_stream(output_filename);
-        do_screencast(egl_setup, screencast_size, number_of_captures, file_stream);
+        do_screencast(egl_setup, screencast_size, number_of_captures, capture_fps, file_stream);
     }
 
     return EXIT_SUCCESS;

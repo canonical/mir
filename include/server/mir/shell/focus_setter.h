@@ -23,11 +23,11 @@
 
 namespace mir
 {
+namespace scene { class Session; }
+
 
 namespace shell
 {
-class Session;
-
 /// Interface used by the Shell to propagate changes in the focus model to interested views
 /// e.g. Input, or Surfaces.
 class FocusSetter
@@ -35,7 +35,7 @@ class FocusSetter
 public:
     virtual ~FocusSetter() {}
 
-    virtual void set_focus_to(std::shared_ptr<shell::Session> const& new_focus) = 0;
+    virtual void set_focus_to(std::shared_ptr<scene::Session> const& new_focus) = 0;
 
 protected:
     FocusSetter() = default;

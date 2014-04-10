@@ -21,7 +21,7 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/input_targeter.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 
 namespace mf = mir::frontend;
@@ -35,7 +35,7 @@ msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTarg
 {
 }
 
-void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& focus_session)
+void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<ms::Session> const& focus_session)
 {
     // TODO: This path should be encapsulated in a seperate clear_focus message
     if (!focus_session)
@@ -54,7 +54,7 @@ void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& fo
         surface->configure(mir_surface_attrib_focus, mir_surface_focused);
         currently_focused_surface = surface;
 
-        surface_coordinator->raise(std::static_pointer_cast<ms::Surface>(surface)); // TODO deal with cast
+        surface_coordinator->raise(surface);
         surface->take_input_focus(input_targeter);
     }
     else
