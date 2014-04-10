@@ -168,8 +168,6 @@ TEST_F(ServerRenderWindow, returns_no_transform_when_asked_for_hint)
 
 TEST_F(ServerRenderWindow, reports_framebuffer_concrete_type)
 {
-    using namespace testing;
-
     mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
 
     EXPECT_EQ(NATIVE_WINDOW_FRAMEBUFFER, render_window.driver_requests_info(NATIVE_WINDOW_CONCRETE_TYPE));
