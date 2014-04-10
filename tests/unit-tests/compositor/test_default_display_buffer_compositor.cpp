@@ -536,3 +536,41 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     EXPECT_FALSE(compositor.composite());
 }
 
+TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
+{
+    using namespace testing;
+    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto buf1 = std::make_shared<mtd::StubBuffer>();
+    auto buf2 = std::make_shared<mtd::StubBuffer>();
+    ON_CALL(*mock_renderable1, buffer(_))
+        .WillByDefault(Return(buf1));
+    ON_CALL(*mock_renderable2, buffer(_))
+        .WillByDefault(Return(buf2));
+    ON_CALL(display_buffer, view_area())
+        .WillByDefault(Return(geom::Rectangle{{0,0},{14,14}}));
+    EXPECT_CALL(*mock_renderable1, screen_position())
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
+    EXPECT_CALL(*mock_renderable2, screen_position())
+        .WillRepeatedly(Return(geom::Rectangle{{0,2}, {3,4}}));
+
+    mg::RenderableList list{
+        mock_renderable1,
+        mock_renderable2
+    };
+    FakeScene scene(list);
+
+    Sequence seq;
+    EXPECT_CALL(display_buffer, post_update())
+        .InSequence(seq);
+    EXPECT_CALL(mock_renderer, end())
+        .InSequence(seq);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite();
+}
+
