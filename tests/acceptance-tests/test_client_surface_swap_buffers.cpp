@@ -97,5 +97,6 @@ TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_no
         ASSERT_TRUE(buffers_swapped.load());
     }
 
+    mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
