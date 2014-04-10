@@ -31,7 +31,7 @@ namespace mir
 namespace input { class InputChannel; }
 namespace shell { class InputTargeter; }
 namespace geometry { class Rectangle; }
-namespace compositor { class DisplayBufferCompositor; }
+
 namespace scene
 {
 class SurfaceObserver;
@@ -48,8 +48,7 @@ public:
     geometry::Point top_left() const override = 0;
 
     // member functions that don't exist in base classes
-    virtual std::shared_ptr<graphics::Renderable> renderable_for(
-        compositor::DisplayBufferCompositor const* requesting_compositor) const = 0;
+    virtual std::shared_ptr<graphics::Renderable> renderable_for(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
     virtual MirSurfaceType type() const = 0;

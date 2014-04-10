@@ -444,7 +444,7 @@ class RenderableSnapshot : public mg::Renderable
 public:
     RenderableSnapshot(
         std::shared_ptr<mc::BufferStream> const& stream,
-        mc::DisplayBufferCompositor const* requesting_compositor,
+        void const* compositor_id,
         geom::Rectangle const& position,
         glm::mat4 const& transform,
         bool visible,
@@ -453,7 +453,7 @@ public:
         bool shaped,
         mg::Renderable::ID id)
     : underlying_buffer_stream{stream},
-      requesting_compositor{requesting_compositor},
+      compositor_id{compositor_id},
       alpha_enabled_{alpha_enabled},
       alpha_{alpha},
       shaped_{shaped},
@@ -472,7 +472,7 @@ public:
         return cached_buffer(
             [this]() -> std::shared_ptr<mg::Buffer>
             {
-                return underlying_buffer_stream->lock_compositor_buffer(requesting_compositor);
+                return underlying_buffer_stream->lock_compositor_buffer(compositor_id);
             });
     }
 
@@ -500,7 +500,7 @@ public:
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     mir::CachedPtr<mg::Buffer> mutable cached_buffer;
-    mc::DisplayBufferCompositor const*const requesting_compositor;
+    void const*const compositor_id;
     bool const alpha_enabled_;
     float const alpha_;
     bool const shaped_;
@@ -511,15 +511,14 @@ private:
 };
 }
 
-std::shared_ptr<mg::Renderable> ms::BasicSurface::renderable_for(
-    mc::DisplayBufferCompositor const* requesting_compositor) const
+std::shared_ptr<mg::Renderable> ms::BasicSurface::renderable_for(void const* compositor_id) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
     auto const shaped = nonrectangular || (surface_alpha < 1.0f);
     return std::make_shared<RenderableSnapshot>(
         surface_buffer_stream,
-        requesting_compositor,
+        compositor_id,
         surface_rect,
         transformation_matrix,
         visible(lk),

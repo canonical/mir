@@ -154,7 +154,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
                 verify_scene.exec([this]
                 {
                     std::vector<geom::Rectangle> rects;
-                    auto list = the_scene()->renderable_list_for(nullptr);
+                    auto list = the_scene()->renderable_list_for(this);
                     for(auto &rend : list) 
                         rects.push_back(rend->screen_position());
 

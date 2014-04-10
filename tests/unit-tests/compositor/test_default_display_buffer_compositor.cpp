@@ -53,7 +53,7 @@ struct FakeScene : mc::Scene
     {
     }
 
-    mg::RenderableList renderable_list_for(mc::DisplayBufferCompositor const*) const
+    mg::RenderableList renderable_list_for(void const*) const
     {
         return renderlist;
     }

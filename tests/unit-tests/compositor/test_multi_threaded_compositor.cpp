@@ -86,7 +86,7 @@ class StubScene : public mc::Scene
 public:
     StubScene() : callback{[]{}} {}
 
-    mg::RenderableList renderable_list_for(mc::DisplayBufferCompositor const*) const
+    mg::RenderableList renderable_list_for(void const*) const
     {
         return mg::RenderableList{};
     }

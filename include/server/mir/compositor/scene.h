@@ -29,7 +29,7 @@ namespace mir
 {
 namespace compositor
 {
-class DisplayBufferCompositor;
+
 class Scene
 {
 public:
@@ -37,16 +37,17 @@ public:
 
     /**
      * Generate a valid list of renderables based on the current state of the Scene.
-     * \param [in] requesting_compositor 
-     *                     The compositor that is requesting a list for rendering.
-     *                     This function will generate a new (different) list
-     *                     for the same compositor on each call. Different compositors
-     *                     could get different lists.
+     * \param [in] id      An arbitrary unique identifier used to distinguish
+     *                     separate compositors which need to receive a list
+     *                     for rendering. Calling with the same id will return
+     *                     a new (different) list to that user each time. For
+     *                     consistency, all callers need to determine their id
+     *                     in the same way (e.g. always use "this" pointer).
      * \returns a list of mg::Renderables for the compositor id. The list is in
      *          stacking order from back to front.
      */
-    virtual graphics::RenderableList renderable_list_for(
-        DisplayBufferCompositor const* requesting_compositor) const = 0;
+    typedef void const* CompositorID;
+    virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
 
     /**
      * Sets a callback to be called whenever the state of the
