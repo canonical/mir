@@ -81,7 +81,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     EXPECT_EQ(stub_native_buffer.get(), test_buffer);
 }
 
-TEST_F(InternalClientWindow, size_test)
+TEST_F(InternalClientWindow, info_query_test)
 {
     using namespace testing;
     EXPECT_CALL(*mock_surface, size())
@@ -92,7 +92,9 @@ TEST_F(InternalClientWindow, size_test)
 
     unsigned int rc_width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
     unsigned int rc_height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
+    unsigned int rc_concrete_type = interpreter.driver_requests_info(NATIVE_WINDOW_CONCRETE_TYPE);
 
+    EXPECT_EQ(NATIVE_WINDOW_SURFACE, rc_concrete_type);
     EXPECT_EQ(sz.width.as_uint32_t(), rc_width);
     EXPECT_EQ(sz.height.as_uint32_t(), rc_height);
 }

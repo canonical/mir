@@ -188,6 +188,15 @@ TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
     EXPECT_EQ(surf_params.height, default_height);
 }
 
+TEST_F(AndroidInterpreterTest, native_window_concrete_query_hook)
+{
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
+
+    auto concrete_type = interpreter.driver_requests_info(NATIVE_WINDOW_CONCRETE_TYPE);
+    EXPECT_EQ(NATIVE_WINDOW_SURFACE, concrete_type);
+}
+
 TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 {
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
