@@ -159,11 +159,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
-std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
-{
-    return the_input_manager();
-}
-
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
     return clock(

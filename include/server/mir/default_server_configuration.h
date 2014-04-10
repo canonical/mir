@@ -103,6 +103,7 @@ class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
+class InputDispatcherConfiguration;
 class CursorListener;
 class InputRegion;
 class NestedInputRelay;
@@ -143,6 +144,7 @@ public:
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
+    virtual std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -258,6 +260,7 @@ protected:
     CachedPtr<frontend::Connector>   connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
+    CachedPtr<input::InputDispatcherConfiguration> input_dispatcher_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;

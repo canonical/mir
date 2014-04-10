@@ -1,5 +1,5 @@
-/*
- * Copyright © 2012 Canonical Ltd.
+ /*
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,32 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
+#ifndef MIR_INPUT_NESTED_INPUT_MANAGER_H_
+#define MIR_INPUT_NESTED_INPUT_MANAGER_H_
 
 #include "mir/input/input_manager.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace input
 {
-namespace doubles
-{
+class InputDispatcher;
 
-struct MockInputManager : public input::InputManager
+class NestedInputManager : public InputManager
 {
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+public:
+    NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher);
+    void start() override;
+    void stop() override;
+private:
+    std::shared_ptr<InputDispatcher> const dispatcher;
 };
 
 }
 }
-}
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H
+#endif // MIR_INPUT_NESTED_INPUT_MANAGER
+
+

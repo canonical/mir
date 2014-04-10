@@ -57,6 +57,11 @@ void mtf::InputTestingServerConfiguration::on_exit()
     input_injection_thread.join();
 }
 
+std::shared_ptr<mi::InputDispatcherConfiguration> mtf::InputTestingServerConfiguration::the_input_dispatcher_configuration()
+{
+    return the_input_configuration()->the_input_dispatcher_configuration();
+}
+
 std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)

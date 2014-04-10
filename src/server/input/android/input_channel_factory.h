@@ -16,29 +16,29 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
+#ifndef MIR_INPUT_ANDROID_INPUT_CHANNEL_FACTORY_H_
+#define MIR_INPUT_ANDROID_INPUT_CHANNEL_FACTORY_H_
 
-#include "mir/input/input_dispatcher.h"
-#include <gmock/gmock.h>
+#include "mir/input/input_channel_factory.h"
 
 namespace mir
 {
-namespace test
+namespace input
 {
-namespace doubles
+namespace android
 {
+class InputChannelFactory : public mir::input::InputChannelFactory
+{
+public:
+    std::shared_ptr<mir::input::InputChannel> make_input_channel() override;
 
-struct MockInputDispatcher : public mir::input::InputDispatcher
-{
-    // droidinput::InputDispatcher interface
-    MOCK_METHOD1(dispatch, void(MirEvent const&));
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+    InputChannelFactory() = default;
+    InputChannelFactory(InputChannelFactory const&) = delete;
+    InputChannelFactory& operator=(InputChannelFactory const&) = delete;
 };
 
 }
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
+#endif

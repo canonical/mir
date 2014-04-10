@@ -16,33 +16,46 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_RELAY_H_
-#define MIR_INPUT_NESTED_INPUT_RELAY_H_
+#ifndef MIR_INPUT_ANDROID_CACHED_ANDROID_PTR_H
+#define MIR_INPUT_ANDROID_CACHED_ANDROID_PTR_H
 
-#include "mir/input/event_filter.h"
+#include <utils/RefBase.h>
+#include <utils/StrongPointer.h>
 
-#include <memory>
+#include <functional>
 
+namespace droidinput = android;
 namespace mir
 {
 namespace input
 {
-class InputDispatcher;
-class NestedInputRelay : public EventFilter
+namespace android
 {
+template <typename Type>
+class CachedAndroidPtr
+{
+    droidinput::wp<Type> cache;
+
+    CachedAndroidPtr(CachedAndroidPtr const&) = delete;
+    CachedAndroidPtr& operator=(CachedAndroidPtr const&) = delete;
+
 public:
-    NestedInputRelay();
-    ~NestedInputRelay() noexcept;
+    CachedAndroidPtr() = default;
 
-    void set_dispatcher(std::shared_ptr<InputDispatcher> const& dispatcher);
-
-private:
-    bool handle(MirEvent const& event);
-
-    std::shared_ptr<InputDispatcher> dispatcher;
+    droidinput::sp<Type> operator()(std::function<droidinput::sp<Type>()> make)
+    {
+        auto result = cache.promote();
+        if (!result.get())
+        {
+            cache = result = make();
+        }
+        return result;
+    }
 };
+
+}
 }
 }
 
+#endif
 
-#endif /* MIR_INPUT_NESTED_INPUT_RELAY_H_ */

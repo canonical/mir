@@ -20,7 +20,7 @@
 
 #include "src/server/input/android/android_input_registrar.h"
 
-#include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
@@ -52,14 +52,14 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     {
         test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
 
-        dispatcher = new mtd::MockInputDispatcher();
+        dispatcher = new mtd::MockAndroidInputDispatcher();
     }
     void TearDown() override
     {
         close(test_input_fd);
     }
     int test_input_fd;
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher;
+    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher;
 };
 
 struct StubInputSurface : public mi::Surface

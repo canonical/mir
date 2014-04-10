@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,32 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
+#ifndef MIR_INPUT_INPUT_DISPATCHER_H
+#define MIR_INPUT_INPUT_DISPATCHER_H
 
-#include "mir/input/input_manager.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "mir_toolkit/event.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct MockInputManager : public input::InputManager
+/*!
+ * \brief InputDispatcher decides which surface should receive input events.
+ */
+class InputDispatcher
 {
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+public:
+    virtual void dispatch(MirEvent const& event) = 0;
+    virtual void start() = 0;
+    virtual void stop() = 0;
+
+    virtual ~InputDispatcher() = default;
 };
 
 }
 }
-}
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H
+#endif
+

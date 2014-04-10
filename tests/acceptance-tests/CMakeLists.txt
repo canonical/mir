@@ -14,6 +14,7 @@ set(
   SOURCES
 
   test_client_library.cpp
+  test_custom_input_dispatcher.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
   test_focus_selection.cpp
