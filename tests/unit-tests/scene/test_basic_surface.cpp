@@ -89,7 +89,7 @@ struct BasicSurfaceTest : public testing::Test
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
     std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
-    void const* compositor_id{compositor_id};
+    void const* compositor_id{nullptr};
 };
 
 }
