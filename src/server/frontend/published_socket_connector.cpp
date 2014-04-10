@@ -26,10 +26,61 @@
 #include <boost/throw_exception.hpp>
 
 #include <sys/socket.h>
+#include <sys/stat.h>
+
+#include <fstream>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
+
+namespace
+{
+
+bool socket_file_exists(std::string const& filename)
+{
+    struct stat statbuf;
+    bool exists = (0 == stat(filename.c_str(), &statbuf));
+    /* Avoid removing non-socket files */
+    bool is_socket_type = (statbuf.st_mode & S_IFMT) == S_IFSOCK;
+    return exists && is_socket_type;
+}
+
+bool socket_exists(std::string const& socket_name)
+{
+    try
+    {
+        std::string socket_path{socket_name};
+
+        /* In case an abstract socket name exists with the same name*/
+        socket_path.insert(std::begin(socket_path), ' ');
+
+        /* If the name is contained in this table, it signifies
+         * a process is truly using that socket connection
+         */
+        std::ifstream socket_names_file("/proc/net/unix");
+        std::string line;
+        while (std::getline(socket_names_file, line))
+        {
+           if (line.find(socket_path) != std::string::npos)
+               return true;
+        }
+    }
+    catch (...)
+    {
+        /* Assume the socket exists */
+        return true;
+    }
+    return false;
+}
+
+std::string remove_if_stale(std::string const& socket_name)
+{
+    if (socket_file_exists(socket_name) && !socket_exists(socket_name))
+        std::remove(socket_name.c_str());
+    return socket_name;
+}
+}
 
 mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
@@ -37,7 +88,7 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     int threads,
     std::shared_ptr<ConnectorReport> const& report)
 :   BasicConnector(session_creator, threads, report),
-    socket_file(socket_file),
+    socket_file(remove_if_stale(socket_file)),
     acceptor(io_service, socket_file)
 {
     start_accept();
