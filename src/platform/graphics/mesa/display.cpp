@@ -337,11 +337,19 @@ void mgm::Display::clear_connected_unused_outputs()
 {
     current_display_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
-        if (conf_output.connected && !conf_output.used)
+        /*
+         * An output may be unused either because it's explicitly not used
+         * (DisplayConfigurationOutput::used) or because its power mode is
+         * not mir_power_mode_on.
+         */
+        if (conf_output.connected &&
+            (!conf_output.used || (conf_output.power_mode != mir_power_mode_on)))
         {
             uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
             auto kms_output = output_container.get_kms_output_for(connector_id);
+
             kms_output->clear_crtc();
+            kms_output->set_power_mode(conf_output.power_mode);
         }
     });
 }
