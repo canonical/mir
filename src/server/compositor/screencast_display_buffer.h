@@ -60,7 +60,7 @@ public:
     void release_current();
 
     void render_and_post_update(
-        std::list<std::shared_ptr<graphics::Renderable>> const&,
+        graphics::RenderableList const&,
         std::function<void(graphics::Renderable const&)> const&);
 
     void post_update();

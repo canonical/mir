@@ -30,11 +30,14 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/mock_gl_config.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -132,6 +135,7 @@ public:
         return std::make_shared<mgm::Display>(
             platform,
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLConfig>(),
             null_report);
     }
 
@@ -518,6 +522,7 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
     auto display = std::make_shared<mgm::Display>(
                         create_platform(),
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 }
 
@@ -688,6 +693,7 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     auto display = std::make_shared<mgm::Display>(
                         platform,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+                        std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 
     EXPECT_THROW({
@@ -703,10 +709,7 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
 
-    auto display = std::make_shared<mgm::Display>(
-                        create_platform(),
-                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-                        null_report);
+    auto display = create_display(create_platform());
     MockEventRegister mock_register;
 
     EXPECT_CALL(mock_register, register_fd_handler(_,_));
@@ -718,10 +721,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 {
     using namespace testing;
 
-    auto display = std::make_shared<mgm::Display>(
-                        create_platform(),
-                        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
-                        null_report);
+    auto display = create_display(create_platform());
 
     mir::AsioMainLoop ml;
     std::condition_variable done;
@@ -772,4 +772,37 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     watchdog.join();
 
     EXPECT_EQ(expected_call_count, call_count);
+}
+
+TEST_F(MesaDisplayTest, respects_gl_config)
+{
+    using namespace testing;
+
+    mtd::MockGLConfig mock_gl_config;
+    EGLint const depth_bits{24};
+    EGLint const stencil_bits{8};
+
+    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(depth_bits));
+    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(stencil_bits));
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    mgm::Display display{
+        create_platform(),
+        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        mir::test::fake_shared(mock_gl_config),
+        null_report};
 }

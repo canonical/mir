@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,33 +16,33 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SCENE_BASIC_SURFACE_FACTORY_H_
-#define MIR_SCENE_BASIC_SURFACE_FACTORY_H_
+#ifndef MIR_SCENE_SURFACE_FACTORY_H_
+#define MIR_SCENE_SURFACE_FACTORY_H_
 
 #include "mir/shell/surface_creation_parameters.h"
 #include <memory>
-#include <functional>
 
 namespace mir
 {
 namespace scene
 {
+class Surface;
 
-class BasicSurface;
-class BasicSurfaceFactory
+class SurfaceFactory
 {
 public:
-    BasicSurfaceFactory() = default;
-    virtual ~BasicSurfaceFactory() = default;
+    SurfaceFactory() = default;
+    virtual ~SurfaceFactory() = default;
 
-    virtual std::shared_ptr<BasicSurface> create_surface(
-        shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
+    virtual std::shared_ptr<Surface> create_surface(
+        shell::SurfaceCreationParameters const& params) = 0;
+
 private:
-    BasicSurfaceFactory(const BasicSurfaceFactory&) = delete;
-    BasicSurfaceFactory& operator=(const BasicSurfaceFactory&) = delete;
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_SCENE_BASIC_SURFACE_FACTORY_H_ */
+#endif /* MIR_SCENE_SURFACE_FACTORY_H_ */

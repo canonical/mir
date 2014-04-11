@@ -20,7 +20,7 @@
 
 #include "mir/frontend/fd_sets.h"
 
-#include <string>
+#include <sys/types.h>
 
 namespace mir
 {
@@ -31,7 +31,7 @@ namespace detail
 class MessageSender
 {
 public:
-    virtual void send(std::string const& body, FdSets const& fds) = 0;
+    virtual void send(char const* data, size_t length, FdSets const& fds) = 0;
 
 protected:
     MessageSender() = default;

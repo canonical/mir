@@ -37,6 +37,7 @@ public:
     boost::program_options::options_description_easy_init add_options();
 
 private:
+    void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
     std::shared_ptr<options::Option> the_options() const override;
 

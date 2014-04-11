@@ -55,10 +55,9 @@ mfd::SocketSession::~SocketSession() noexcept
 
 void mfd::SocketSession::read_next_message()
 {
-    size_t const header_size = 2;
     auto callback = std::bind(&mfd::SocketSession::on_read_size,
                         this, std::placeholders::_1);
-    socket_receiver->async_receive_msg(callback, message, header_size);
+    socket_receiver->async_receive_msg(callback, ba::buffer(header, header_size));
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
@@ -69,13 +68,22 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
-    unsigned char high_byte = message.sbumpc();
-    unsigned char low_byte = message.sbumpc();
+    unsigned char const high_byte = header[0];
+    unsigned char const low_byte = header[1];
     size_t const body_size = (high_byte << 8) + low_byte;
 
-    auto callback = std::bind(&mfd::SocketSession::on_new_message,
-                        this, std::placeholders::_1);
-    socket_receiver->async_receive_msg(callback, message, body_size);
+    body.resize(body_size);
+
+    if (socket_receiver->available_bytes() >= body_size)
+    {
+        on_new_message(socket_receiver->receive_msg(ba::buffer(body)));
+    }
+    else
+    {
+        auto callback = std::bind(&mfd::SocketSession::on_new_message,
+                                  this, std::placeholders::_1);
+        socket_receiver->async_receive_msg(callback, ba::buffer(body));
+    }
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
@@ -86,9 +94,8 @@ try
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
-    std::istream msg(&message);
     mir::protobuf::wire::Invocation invocation;
-    invocation.ParseFromIstream(&msg);
+    invocation.ParseFromArray(body.data(), body.size());
 
     if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));

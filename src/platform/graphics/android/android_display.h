@@ -30,6 +30,7 @@ namespace graphics
 {
 
 class DisplayReport;
+class GLConfig;
 
 namespace android
 {
@@ -41,6 +42,7 @@ class AndroidDisplay : public Display
 {
 public:
     explicit AndroidDisplay(std::shared_ptr<DisplayBuilder> const& display_builder,
+                            std::shared_ptr<GLConfig> const& gl_config,
                             std::shared_ptr<DisplayReport> const& display_report);
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f);

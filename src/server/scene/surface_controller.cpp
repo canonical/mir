@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,26 +18,36 @@
 
 #include "surface_controller.h"
 #include "surface_stack_model.h"
+#include "mir/scene/surface_factory.h"
+#include "mir/scene/surface.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+ms::SurfaceController::SurfaceController(
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+    surface_factory(surface_factory),
     surface_stack(surface_stack)
 {
 }
 
-std::weak_ptr<ms::BasicSurface> ms::SurfaceController::create_surface(shell::SurfaceCreationParameters const& params)
+std::shared_ptr<ms::Surface> ms::SurfaceController::add_surface(
+    shell::SurfaceCreationParameters const& params,
+    std::shared_ptr<SurfaceObserver> const& observer)
 {
-    return surface_stack->create_surface(params);
+    auto const surface = surface_factory->create_surface(params);
+    surface->add_observer(observer);
+    surface_stack->add_surface(surface, params.depth, params.input_mode);
+    return surface;
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::remove_surface(std::weak_ptr<Surface> const& surface)
 {
-    surface_stack->destroy_surface(surface);
+    surface_stack->remove_surface(surface);
 }
 
-void ms::SurfaceController::raise(std::weak_ptr<BasicSurface> const& surface)
+void ms::SurfaceController::raise(std::weak_ptr<Surface> const& surface)
 {
     surface_stack->raise(surface);
 }

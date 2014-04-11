@@ -101,6 +101,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     GBMSurfaceUPtr surface_gbm_param,
     geom::Rectangle const& area,
     MirOrientation rot,
+    GLConfig const& gl_config,
     EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       scheduled_bufobj{nullptr},
@@ -109,6 +110,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       drm(platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
+      egl{gl_config},
       area(area),
       rotation(rot),
       needs_set_crtc{false},
@@ -196,7 +198,7 @@ MirOrientation mgm::DisplayBuffer::orientation() const
 }
 
 void mgm::DisplayBuffer::render_and_post_update(
-    std::list<std::shared_ptr<Renderable>> const&,
+    RenderableList const&,
     std::function<void(Renderable const&)> const&)
 {
     post_update(nullptr); 

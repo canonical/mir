@@ -209,6 +209,11 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
         &result,
         NewCallback(&callback, &called_back));
 
+    // FIXME - This test is somehow racy. If I add:
+    //    EXPECT_TRUE(false) << connection;
+    // then I can get mir_connection_release to generate an exception during
+    // disconnect() internally, sometimes. Although that exception is caught
+    // internally by the client library so we don't see it here.
     mir_connection_release(connection);
 
     EXPECT_TRUE(called_back);

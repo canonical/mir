@@ -43,7 +43,7 @@ public:
 
     virtual void swap_client_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) = 0;
     virtual std::shared_ptr<graphics::Buffer>
-        lock_compositor_buffer(unsigned long frameno) = 0;
+        lock_compositor_buffer(void const* user_id) = 0;
     virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
     virtual MirPixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;

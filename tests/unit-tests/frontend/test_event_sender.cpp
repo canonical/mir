@@ -37,7 +37,7 @@ namespace
 {
 struct MockMsgSender : public mfd::MessageSender
 {
-    MOCK_METHOD2(send, void(std::string const&, mfd::FdSets const&));
+    MOCK_METHOD3(send, void(char const*, size_t, mfd::FdSets const&));
 };
 }
 
@@ -48,18 +48,18 @@ TEST(TestEventSender, display_send)
     mtd::StubDisplayConfig config;
     MockMsgSender mock_msg_sender;
 
-    auto msg_validator = [&config](std::string const& msg){
+    auto msg_validator = [&config](char const* data, size_t len){
         mir::protobuf::wire::Result wire;
-        wire.ParseFromString(msg);
+        wire.ParseFromArray(data, len);
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
         EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
     };
 
-    EXPECT_CALL(mock_msg_sender, send(_, _))
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0>(Invoke(msg_validator)));
+        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
 
     mfd::EventSender sender(mt::fake_shared(mock_msg_sender));
 
@@ -76,7 +76,7 @@ TEST(TestEventSender, sends_noninput_events)
     MirEvent event;
     memset(&event, 0, sizeof event);
 
-    EXPECT_CALL(*msg_sender, send(_, _))
+    EXPECT_CALL(*msg_sender, send(_, _, _))
         .Times(2);
     event.type = mir_event_type_surface;
     event_sender.handle_event(event);
@@ -94,7 +94,7 @@ TEST(TestEventSender, never_sends_input_events)
     MirEvent event;
     memset(&event, 0, sizeof event);
 
-    EXPECT_CALL(*msg_sender, send(_, _))
+    EXPECT_CALL(*msg_sender, send(_, _, _))
         .Times(0);
     event.type = mir_event_type_key;
     event_sender.handle_event(event);

@@ -205,34 +205,34 @@ void EventHub::Device::close() {
 
 // --- EventHub ---
 
-const uint32_t EventHub::EPOLL_ID_INOTIFY;
+const uint32_t EventHub::EPOLL_ID_UDEV;
 const uint32_t EventHub::EPOLL_ID_WAKE;
 const int EventHub::EPOLL_SIZE_HINT;
 const int EventHub::EPOLL_MAX_EVENTS;
 
 EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
         input_report(input_report),
+        device_listener{mir::udev::Context()},
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1),
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
         mNeedToReopenDevices(false), mNeedToScanDevices(true),
-        mPendingEventCount(0), mPendingEventIndex(0), mPendingINotify(false) {
+        mPendingEventCount(0), mPendingEventIndex(0), mPendingUdevEvent(false) {
     acquire_wake_lock(PARTIAL_WAKE_LOCK, WAKE_LOCK_ID);
 
     mEpollFd = epoll_create(EPOLL_SIZE_HINT);
     LOG_ALWAYS_FATAL_IF(mEpollFd < 0, "Could not create epoll instance.  errno=%d", errno);
 
-    mINotifyFd = inotify_init();
-    int result = inotify_add_watch(mINotifyFd, DEVICE_PATH, IN_DELETE | IN_CREATE | IN_ATTRIB);
-    LOG_ALWAYS_FATAL_IF(result < 0, "Could not register INotify for %s.  errno=%d",
-            DEVICE_PATH, errno);
+    device_listener.filter_by_subsystem("input");
+    device_listener.enable();
+
 
     struct epoll_event eventItem;
     memset(&eventItem, 0, sizeof(eventItem));
     eventItem.events = EPOLLIN;
-    eventItem.data.u32 = EPOLL_ID_INOTIFY;
-    result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mINotifyFd, &eventItem);
-    LOG_ALWAYS_FATAL_IF(result != 0, "Could not add INotify to epoll instance.  errno=%d", errno);
+    eventItem.data.u32 = EPOLL_ID_UDEV;
+    int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, device_listener.fd(), &eventItem);
+    LOG_ALWAYS_FATAL_IF(result != 0, "Could not add Udev monitor to epoll instance.  errno=%d", errno);
 
     int wakeFds[2];
     result = pipe(wakeFds);
@@ -265,7 +265,6 @@ EventHub::~EventHub(void) {
     }
 
     ::close(mEpollFd);
-    ::close(mINotifyFd);
     ::close(mWakeReadPipeFd);
     ::close(mWakeWritePipeFd);
 
@@ -730,9 +729,9 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
         bool deviceChanged = false;
         while (mPendingEventIndex < mPendingEventCount) {
             const struct epoll_event& eventItem = mPendingEventItems[mPendingEventIndex++];
-            if (eventItem.data.u32 == EPOLL_ID_INOTIFY) {
+            if (eventItem.data.u32 == EPOLL_ID_UDEV) {
                 if (eventItem.events & EPOLLIN) {
-                    mPendingINotify = true;
+                    mPendingUdevEvent = true;
                 } else {
                     ALOGW("Received unexpected epoll event 0x%08x for INotify.", eventItem.events);
                 }
@@ -839,9 +838,9 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
         // readNotify() will modify the list of devices so this must be done after
         // processing all other events to ensure that we read all remaining events
         // before closing the devices.
-        if (mPendingINotify && mPendingEventIndex >= mPendingEventCount) {
-            mPendingINotify = false;
-            readNotifyLocked();
+        if (mPendingUdevEvent && mPendingEventIndex >= mPendingEventCount) {
+            mPendingUdevEvent = false;
+            handleUdevEventsLocked();
             deviceChanged = true;
         }
 
@@ -916,13 +915,42 @@ void EventHub::wake() {
 }
 
 void EventHub::scanDevicesLocked() {
-    status_t res = scanDirLocked(DEVICE_PATH);
-    if(res < 0) {
-        ALOGE("scan dir failed for %s\n", DEVICE_PATH);
+    mir::udev::Enumerator input_enumerator{std::make_shared<mir::udev::Context>()};
+
+    input_enumerator.match_subsystem("input");
+    input_enumerator.scan_devices();
+
+    for (auto& device : input_enumerator)
+    {
+        if (device.devnode() != nullptr)
+        {
+            openDeviceLocked(device.devnode());
+        }
     }
+
     if (mDevices.indexOfKey(VIRTUAL_KEYBOARD_ID) < 0) {
         createVirtualKeyboardLocked();
     }
+}
+
+void EventHub::handleUdevEventsLocked()
+{
+    device_listener.process_events([this](mir::udev::Monitor::EventType type, mir::udev::Device const& dev){
+        if (type == mir::udev::Monitor::ADDED)
+        {
+            if (dev.devnode() != nullptr)
+            {
+                openDeviceLocked(dev.devnode());
+            }
+        }
+        else if (type == mir::udev::Monitor::REMOVED)
+        {
+            if (dev.devnode() != nullptr)
+            {
+                closeDeviceByPathLocked(dev.devnode());
+            }
+        }
+    });
 }
 
 // ----------------------------------------------------------------------------
@@ -1389,80 +1417,6 @@ void EventHub::closeDeviceLocked(Device* device) {
         device->next = mClosingDevices;
         mClosingDevices = device;
     }
-}
-
-status_t EventHub::readNotifyLocked() {
-    int res;
-    char devname[PATH_MAX];
-    char *filename;
-    char event_buf[512];
-    int event_size;
-    int event_pos = 0;
-    struct inotify_event *event;
-
-    ALOGV("EventHub::readNotify nfd: %d\n", mINotifyFd);
-    res = read(mINotifyFd, event_buf, sizeof(event_buf));
-    if(res < (int)sizeof(*event)) {
-        if(errno == EINTR)
-            return 0;
-        ALOGW("could not get event, %s\n", strerror(errno));
-        return -1;
-    }
-    //printf("got %d bytes of event information\n", res);
-
-    strcpy(devname, DEVICE_PATH);
-    filename = devname + strlen(devname);
-    *filename++ = '/';
-
-    while(res >= (int)sizeof(*event)) {
-        event = (struct inotify_event *)(event_buf + event_pos);
-        //printf("%d: %08x \"%s\"\n", event->wd, event->mask, event->len ? event->name : "");
-        if(event->len) {
-            strcpy(filename, event->name);
-            if(event->mask & IN_CREATE) {
-                openDeviceLocked(devname);
-            } else if (event->mask & IN_ATTRIB) {
-                Device* device = getDeviceByPathLocked(devname);
-                if (!device) {
-                    ALOGI("Retry opening device file %s", devname);
-                    // file permissions might have changed, making the device readable now
-                    // let's retry opening it
-                    openDeviceLocked(devname);
-                }
-            } else {
-                ALOGI("Removing device '%s' due to inotify event\n", devname);
-                closeDeviceByPathLocked(devname);
-            }
-        }
-        event_size = sizeof(*event) + event->len;
-        res -= event_size;
-        event_pos += event_size;
-    }
-    return 0;
-}
-
-status_t EventHub::scanDirLocked(const char *dirname)
-{
-    char devname[PATH_MAX];
-    char *filename;
-    DIR *dir;
-    struct dirent *de;
-    dir = opendir(dirname);
-    if(dir == NULL)
-        return -1;
-    strcpy(devname, dirname);
-    filename = devname + strlen(devname);
-    *filename++ = '/';
-    while((de = readdir(dir))) {
-        if(de->d_name[0] == '.' &&
-           (de->d_name[1] == '\0' ||
-            (de->d_name[1] == '.' && de->d_name[2] == '\0')))
-            continue;
-        strcpy(filename, de->d_name);
-        openDeviceLocked(devname);
-    }
-    closedir(dir);
-    return 0;
 }
 
 void EventHub::requestReopenDevices() {

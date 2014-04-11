@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
+#include "mir/graphics/renderable.h"
 
 #include <memory>
 #include <functional>
@@ -62,12 +63,14 @@ class Scene
 public:
     virtual ~Scene() {}
 
+    /**
+     * Generate a valid list of renderables based on the current state of the Scene.
+     * \returns a list of mg::Renderables. The list is in stacking order from back to front.
+     */
+    virtual graphics::RenderableList generate_renderable_list() const = 0;
+
     // Back to front; normal rendering order
     virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
-
-    // Front to back; as used when scanning for occlusions
-    virtual void reverse_for_each_if(FilterForScene& filter,
-                                     OperatorForScene& op) = 0;
 
     /**
      * Sets a callback to be called whenever the state of the

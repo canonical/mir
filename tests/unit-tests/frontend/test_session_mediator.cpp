@@ -36,7 +36,6 @@
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
-#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_screencast.h"
@@ -141,7 +140,6 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    mtd::StubSurfaceBuilder surface_builder;
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
@@ -171,16 +169,17 @@ class MockPlatform : public mg::Platform
         using namespace testing;
         ON_CALL(*this, create_buffer_allocator(_))
             .WillByDefault(Return(std::shared_ptr<mg::GraphicBufferAllocator>()));
-        ON_CALL(*this, create_display(_))
+        ON_CALL(*this, create_display(_,_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
 
     MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mg::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
-    MOCK_METHOD1(create_display,
+    MOCK_METHOD2(create_display,
                  std::shared_ptr<mg::Display>(
-                     std::shared_ptr<mg::DisplayConfigurationPolicy> const&));
+                     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+                     std::shared_ptr<mg::GLConfig> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
     MOCK_CONST_METHOD2(fill_ipc_package, void(mg::BufferIPCPacker*, mg::Buffer const*));

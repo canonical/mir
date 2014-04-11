@@ -83,7 +83,7 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 
     try
     {
-        sender->send(send_buffer, {});
+        sender->send(send_buffer.data(), send_buffer.length(), {});
     }
     catch (std::exception const& error)
     {

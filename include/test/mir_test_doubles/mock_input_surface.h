@@ -43,12 +43,12 @@ public:
                 Return(geometry::Size{}));
         static std::string n;
         ON_CALL(*this, name())
-            .WillByDefault(testing::ReturnRef(n));
+            .WillByDefault(testing::Return(n));
     }
     ~MockInputSurface() noexcept {}
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(name, std::string const&());
+    MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
 };
 

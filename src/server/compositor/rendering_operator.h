@@ -21,6 +21,7 @@
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/scene.h"
 
+#include <vector>
 #include <functional>
 #include <memory>
 
@@ -33,19 +34,14 @@ class RenderingOperator : public OperatorForScene
 {
 public:
     explicit RenderingOperator(
-        Renderer& renderer,
-        std::function<void(std::shared_ptr<void> const&)> save_resource,
-        unsigned long frameno,
-        bool& uncomposited_buffers);
+        Renderer& renderer);
     ~RenderingOperator() = default;
 
     void operator()(graphics::Renderable const&);
 
 private:
     Renderer& renderer;
-    std::function<void(std::shared_ptr<void> const&)> save_resource;
-    unsigned long const frameno;
-    bool& uncomposited_buffers;
+    std::vector<std::shared_ptr<void>> saved_resources;
 };
 
 }

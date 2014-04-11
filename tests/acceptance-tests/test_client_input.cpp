@@ -40,6 +40,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
+#include "mir_test_framework/declarative_placement_strategy.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -64,81 +65,37 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-typedef std::map<std::string, geom::Rectangle> GeometryMap;
-typedef std::map<std::string, ms::DepthId> DepthMap;
-
-struct StaticPlacementStrategy : public msh::PlacementStrategy
-{
-    StaticPlacementStrategy(std::shared_ptr<msh::PlacementStrategy> const& underlying_strategy,
-                            GeometryMap const& positions,
-                            DepthMap const& depths)
-        : underlying_strategy(underlying_strategy),
-          surface_geometry_by_name(positions),
-          surface_depths_by_name(depths)
-    {
-    }
-
-    StaticPlacementStrategy(std::shared_ptr<msh::PlacementStrategy> const& underlying_strategy,
-                            GeometryMap const& positions)
-        : StaticPlacementStrategy(underlying_strategy, positions, DepthMap())
-    {
-    }
-
-    msh::SurfaceCreationParameters place(msh::Session const& session, msh::SurfaceCreationParameters const& request_parameters)
-    {
-        auto placed = request_parameters;
-        auto const& name = request_parameters.name;
-
-        auto it = surface_geometry_by_name.find(name);
-        if (it != surface_geometry_by_name.end())
-        {
-            auto const& geometry = it->second;
-            placed.top_left = geometry.top_left;
-            placed.size = geometry.size;
-        }
-        else
-        {
-            placed = underlying_strategy->place(session, placed);
-        }
-        placed.depth = surface_depths_by_name[name];
-
-        return placed;
-    }
-
-    std::shared_ptr<msh::PlacementStrategy> const underlying_strategy;
-    GeometryMap surface_geometry_by_name;
-    DepthMap surface_depths_by_name;
-};
 
 std::shared_ptr<mtf::InputTestingServerConfiguration>
 make_event_producing_server(mtf::CrossProcessSync const& client_ready_fence,
     int number_of_clients,
     std::function<void(mtf::InputTestingServerConfiguration& server)> const& produce_events,
-    GeometryMap const& client_geometry_map, DepthMap const& client_depth_map)
+    mtf::SurfaceGeometries const& client_geometries, mtf::SurfaceDepths const& client_depths)
 {
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
         mtf::CrossProcessSync input_cb_setup_fence;
         int const number_of_clients;
         std::function<void(mtf::InputTestingServerConfiguration& server)> const produce_events;
-        GeometryMap const client_geometry;
-        DepthMap const client_depth;
+        mtf::SurfaceGeometries const client_geometries;
+        mtf::SurfaceDepths const client_depths;
 
         ServerConfiguration(mtf::CrossProcessSync const& input_cb_setup_fence, int number_of_clients,
                             std::function<void(mtf::InputTestingServerConfiguration& server)> const& produce_events,
-                            GeometryMap const& client_geometry, DepthMap const& client_depth)
+                            mtf::SurfaceGeometries const& client_geometries, mtf::SurfaceDepths const& client_depths)
                 : input_cb_setup_fence(input_cb_setup_fence),
                   number_of_clients(number_of_clients),
                   produce_events(produce_events),
-                  client_geometry(client_geometry),
-                  client_depth(client_depth)
+                  client_geometries(client_geometries),
+                  client_depths(client_depths)
         {
         }
 
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
-            return std::make_shared<StaticPlacementStrategy>(InputTestingServerConfiguration::the_shell_placement_strategy(),
-                client_geometry, client_depth);
+            return std::make_shared<mtf::DeclarativePlacementStrategy>(
+                InputTestingServerConfiguration::the_shell_placement_strategy(),
+                client_geometries, client_depths);
         }
 
         void inject_input()
@@ -149,7 +106,7 @@ make_event_producing_server(mtf::CrossProcessSync const& client_ready_fence,
         }
     };
     return std::make_shared<ServerConfiguration>(client_ready_fence, number_of_clients,
-        produce_events, client_geometry_map, client_depth_map);
+        produce_events, client_geometries, client_depths);
 }
 
 std::shared_ptr<mtf::InputTestingServerConfiguration>
@@ -157,7 +114,7 @@ make_event_producing_server(mtf::CrossProcessSync const& client_ready_fence, int
                             std::function<void(mtf::InputTestingServerConfiguration& server)> const& produce_events)
 {
     return make_event_producing_server(client_ready_fence, number_of_clients,
-        produce_events, GeometryMap(), DepthMap());
+        produce_events, mtf::SurfaceGeometries(), mtf::SurfaceDepths());
 }
 
 std::shared_ptr<mtf::InputTestingClientConfiguration>
@@ -329,7 +286,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     static std::string const test_client_2 = "2";
     mtf::CrossProcessSync fence;
 
-    static GeometryMap positions;
+    static mtf::SurfaceGeometries positions;
     positions[test_client_1] = geom::Rectangle{geom::Point{0, 0},
                                                geom::Size{client_width, client_height}};
     positions[test_client_2] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
@@ -342,7 +299,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, screen_height/2-1));
             // In the bounds of the second surface
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
-        }, positions, DepthMap());
+        }, positions, mtf::SurfaceDepths());
     launch_server_process(*server_config);
 
     auto client_1 = make_event_expecting_client(test_client_1, fence,
@@ -378,16 +335,21 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(msh::Session* session,
-                                                 msh::SurfaceCreationParameters const& params,
-                                                 mf::SurfaceId id,
-                                                 std::shared_ptr<mf::EventSink> const& sink)
+    std::shared_ptr<msh::Surface> create_surface(
+        msh::Session* session,
+        msh::SurfaceCreationParameters const& params,
+        std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
-        auto surface = underlying_factory->create_surface(session, params, id, sink);
+        auto surface = underlying_factory->create_surface(session, params, observer);
 
         surface->set_input_region(input_rectangles);
 
         return surface;
+    }
+
+    void destroy_surface(std::shared_ptr<msh::Surface> const& surface) override
+    {
+        underlying_factory->destroy_surface(surface);
     }
 
     std::shared_ptr<msh::SurfaceFactory> const underlying_factory;
@@ -423,10 +385,11 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
-            static GeometryMap positions;
+            static mtf::SurfaceGeometries positions;
             positions[test_client_name] = screen_geometry;
 
-            return std::make_shared<StaticPlacementStrategy>(InputTestingServerConfiguration::the_shell_placement_strategy(), positions);
+            return std::make_shared<mtf::DeclarativePlacementStrategy>(
+                InputTestingServerConfiguration::the_shell_placement_strategy(), positions, mtf::SurfaceDepths());
         }
         std::shared_ptr<msh::SurfaceFactory> the_shell_surface_factory() override
         {
@@ -488,14 +451,14 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
         geom::Size{screen_width, screen_height}};
 
-    static GeometryMap positions;
+    static mtf::SurfaceGeometries positions;
     positions[test_client_name_1] = screen_geometry;
 
     auto smaller_geometry = screen_geometry;
     smaller_geometry.size.width = geom::Width{screen_width/2};
     positions[test_client_name_2] = smaller_geometry;
 
-    static DepthMap depths;
+    static mtf::SurfaceDepths depths;
     depths[test_client_name_1] = ms::DepthId{0};
     depths[test_client_name_2] = ms::DepthId{1};
 
@@ -564,7 +527,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     static std::string const test_client_2_name = "2";
     mtf::CrossProcessSync fence, first_client_ready_fence, second_client_done_fence;
 
-    static DepthMap depths;
+    static mtf::SurfaceDepths depths;
     depths[test_client_name] = ms::DepthId{0};
     depths[test_client_2_name] = ms::DepthId{1};
 
@@ -585,7 +548,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             });
 
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
-        }, GeometryMap(), depths);
+        }, mtf::SurfaceGeometries(), depths);
     launch_server_process(*server_config);
 
     auto client_config_1 = make_event_expecting_client(test_client_name, fence,
@@ -620,7 +583,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     static std::string const test_client = "tc";
     mtf::CrossProcessSync fence;
 
-    static GeometryMap positions;
+    static mtf::SurfaceGeometries positions;
     positions[test_client] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
                                              geom::Size{client_width, client_height}};
 
@@ -632,7 +595,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
                 session->default_surface()->move_to(geom::Point{screen_width/2-40, screen_height/2-80});
             });
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2+40, screen_height/2+90));
-        }, positions, DepthMap());
+        }, positions, mtf::SurfaceDepths());
     launch_server_process(*server_config);
 
     auto client = make_event_expecting_client(test_client, fence,
