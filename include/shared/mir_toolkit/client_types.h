@@ -105,22 +105,6 @@ typedef void (*mir_display_config_callback)(
     MirConnection* connection, void* context);
 
 /**
- * Callback member of MirTrustSession for handling of trust sessions.
- *   \param [in] tps            The trust session associated with the callback
- *   \param [in,out] context    The context provided by the client
- */
-typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
-
-/**
- * Callback member of MirTrustSession for handling of trust sessions events.
- *   \param [in] trusted_session  The trust session associated with the callback
- *   \param [in] state            The state of the trust session
- *   \param [in,out] context      The context provided by the client
- */
-typedef void (*mir_trust_session_event_callback)(
-    MirTrustSession* trusted_session, MirTrustSessionState state, void* context);
-
-/**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
  * surface can be used for OpenGL accelerated rendering. A "software" surface
  * is one that can be addressed in main memory and blitted to directly.
@@ -324,14 +308,29 @@ typedef struct MirScreencastParameters
 typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
 
 /**
- * MirTrustSessionAddTrustResult specifies the result of a
- * call to add an app id to a trust session
+ * Callback member of MirTrustSession for handling of trust sessions.
+ *   \param [in] tps            The trust session associated with the callback
+ *   \param [in,out] context    The context provided by the client
  */
-typedef enum
-{
-    mir_trust_session_pid_added,
-    mir_trust_session_pid_already_exists
-} MirTrustSessionAddTrustResult;
+typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
+
+/**
+ * Callback member of MirTrustSession for adding trusted sessions
+ *   \param [in] trusted_session  The trust session associated with the callback
+ *   \param [in] result           The result of adding a trusted session
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_trust_session_add_trusted_session_callback)(
+    MirTrustSession* trusted_session, MirTrustSessionAddTrustResult result, void* context);
+
+/**
+ * Callback member of MirTrustSession for handling of trust sessions events.
+ *   \param [in] trusted_session  The trust session associated with the callback
+ *   \param [in] state            The state of the trust session
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_trust_session_event_callback)(
+    MirTrustSession* trusted_session, MirTrustSessionState state, void* context);
 
 #ifdef __cplusplus
 }

@@ -41,30 +41,34 @@ class TrustSession : public shell::TrustSession
 public:
     TrustSession(std::weak_ptr<shell::Session> const& session,
                  shell::TrustSessionCreationParameters const& parameters);
-    virtual ~TrustSession();
+    ~TrustSession();
 
-    std::vector<pid_t> get_applications() const override;
+    MirTrustSessionAddTrustResult add_trusted_client_process(pid_t pid);
+    void for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const;
 
     MirTrustSessionState get_state() const override;
+    std::string get_cookie() const override;
     std::weak_ptr<shell::Session> get_trusted_helper() const override;
     void start() override;
     void stop() override;
 
-    void add_trusted_child(std::shared_ptr<shell::Session> const& session);
+    bool add_trusted_child(std::shared_ptr<shell::Session> const& session);
     void remove_trusted_child(std::shared_ptr<shell::Session> const& session);
-    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)> f, bool reverse) const;
+    void for_each_trusted_child(std::function<void(std::shared_ptr<shell::Session> const&)> f, bool reverse) const;
 
 protected:
     TrustSession(const TrustSession&) = delete;
     TrustSession& operator=(const TrustSession&) = delete;
 
 private:
-    std::weak_ptr<shell::Session> const trusted_helper;
-    std::vector<pid_t> const applications;
-
-    MirTrustSessionState state;
-
     std::mutex mutable mutex;
+    std::weak_ptr<shell::Session> const trusted_helper;
+    MirTrustSessionState state;
+    std::string cookie;
+
+    std::mutex mutable mutex_processes;
+    std::mutex mutable mutex_children;
+    std::vector<pid_t> client_processes;
     std::vector<std::weak_ptr<shell::Session>> trusted_children;
     void clear_trusted_children();
 };

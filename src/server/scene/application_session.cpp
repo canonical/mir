@@ -188,8 +188,6 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 
 void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSession> const& trust_session)
 {
-    set_trust_session(trust_session);
-
     // All sessions which are part of the trust session get this event.
     MirEvent start_event;
     memset(&start_event, 0, sizeof start_event);
@@ -200,28 +198,13 @@ void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSessi
     session_listener->trust_session_started(*this, trust_session);
 }
 
-void ms::ApplicationSession::end_trust_session()
+void ms::ApplicationSession::end_trust_session(std::shared_ptr<msh::TrustSession> const& trust_session)
 {
-    session_listener->trust_session_stopping(*this, get_trust_session());
-    set_trust_session(nullptr);
+    session_listener->trust_session_stopping(*this, trust_session);
 
     MirEvent stop_event;
     memset(&stop_event, 0, sizeof stop_event);
     stop_event.type = mir_event_type_trust_session_state_change;
     stop_event.trust_session.new_state = mir_trust_session_state_stopped;
     event_sink->handle_event(stop_event);
-}
-
-std::shared_ptr<msh::TrustSession> ms::ApplicationSession::get_trust_session() const
-{
-    std::unique_lock<std::mutex> lock(mutex_trusted_session);
-
-    return trust_session;
-}
-
-void ms::ApplicationSession::set_trust_session(std::shared_ptr<msh::TrustSession> const& _trust_session)
-{
-    std::unique_lock<std::mutex> lock(mutex_trusted_session);
-
-    trust_session = _trust_session;
 }

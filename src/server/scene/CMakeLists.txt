@@ -17,4 +17,5 @@ ADD_LIBRARY(
   surface_impl.cpp
   threaded_snapshot_strategy.cpp
   trust_session.cpp
+  trust_session_container.cpp
 )

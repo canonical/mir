@@ -31,9 +31,9 @@ struct TrustSessionCreationParameters
 {
     TrustSessionCreationParameters();
 
-    TrustSessionCreationParameters& add_application(pid_t application_pid);
+    TrustSessionCreationParameters& set_base_process_id(pid_t process_id);
 
-    std::vector<pid_t> applications;
+    pid_t base_process_id;
 };
 
 bool operator==(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);

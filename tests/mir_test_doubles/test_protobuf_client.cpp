@@ -61,6 +61,9 @@ mir::test::TestProtobufClient::TestProtobufClient(
     surface_parameters.set_buffer_usage(0);
     surface_parameters.set_output_id(mir_display_output_id_invalid);
 
+    trusted_session.set_pid(__LINE__);
+    trust_session_parameters.mutable_base_trusted_session()->set_pid(__LINE__);
+
     ON_CALL(*this, connect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
     ON_CALL(*this, create_surface_done())
@@ -77,6 +80,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
     ON_CALL(*this, trust_session_start_done())
         .WillByDefault(testing::Invoke(&wc_trust_session_start, &WaitCondition::wake_up_everyone));
+    ON_CALL(*this, trust_session_add_trusted_session_done())
+        .WillByDefault(testing::Invoke(&wc_trust_session_add, &WaitCondition::wake_up_everyone));
     ON_CALL(*this, trust_session_stop_done())
         .WillByDefault(testing::Invoke(&wc_trust_session_stop, &WaitCondition::wake_up_everyone));
 }
@@ -235,6 +240,11 @@ void mir::test::TestProtobufClient::wait_for_tfd_done()
 void mir::test::TestProtobufClient::wait_for_trust_session_start_done()
 {
     wc_trust_session_start.wait_for_at_most_seconds(maxwait);
+}
+
+void mir::test::TestProtobufClient::wait_for_trust_session_add_trusted_session_done()
+{
+    wc_trust_session_add.wait_for_at_most_seconds(maxwait);
 }
 
 void mir::test::TestProtobufClient::wait_for_trust_session_stop_done()

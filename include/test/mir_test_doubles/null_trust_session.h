@@ -30,14 +30,24 @@ namespace doubles
 
 class NullTrustSession : public shell::TrustSession
 {
-    std::vector<pid_t> get_applications() const override
+
+    MirTrustSessionAddTrustResult add_trusted_client_process(pid_t)
     {
-      return std::vector<pid_t>();
+        return mir_trust_session_add_tust_failed;
+    }
+
+    void for_each_trusted_client_process(std::function<void(pid_t)>, bool) const
+    {
     }
 
     MirTrustSessionState get_state() const override
     {
       return mir_trust_session_state_stopped;
+    }
+
+    std::string get_cookie() const override
+    {
+      return "";
     }
 
     void start() override
@@ -53,15 +63,16 @@ class NullTrustSession : public shell::TrustSession
       return std::weak_ptr<shell::Session>();
     }
 
-    void add_trusted_child(std::shared_ptr<shell::Session> const&) override
+    bool add_trusted_child(std::shared_ptr<shell::Session> const&) override
     {
+        return false;
     }
 
     void remove_trusted_child(std::shared_ptr<shell::Session> const&) override
     {
     }
 
-    void for_each_trusted_child(std::function<bool(std::shared_ptr<shell::Session> const&)>,
+    void for_each_trusted_child(std::function<void(std::shared_ptr<shell::Session> const&)>,
                                 bool) const override
     {
     }

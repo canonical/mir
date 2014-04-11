@@ -21,12 +21,13 @@
 namespace msh = mir::shell;
 
 msh::TrustSessionCreationParameters::TrustSessionCreationParameters()
+    : base_process_id(0)
 {
 }
 
-msh::TrustSessionCreationParameters& msh::TrustSessionCreationParameters::add_application(pid_t application_pid)
+msh::TrustSessionCreationParameters& msh::TrustSessionCreationParameters::set_base_process_id(pid_t process_id)
 {
-    applications.push_back(application_pid);
+    base_process_id = process_id;
     return *this;
 }
 
@@ -34,7 +35,7 @@ bool msh::operator==(
     const TrustSessionCreationParameters& lhs,
     const msh::TrustSessionCreationParameters& rhs)
 {
-    return lhs.applications == rhs.applications;
+    return lhs.base_process_id == rhs.base_process_id;
 }
 
 bool msh::operator!=(

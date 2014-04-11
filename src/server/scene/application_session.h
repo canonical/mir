@@ -74,9 +74,7 @@ public:
     void set_lifecycle_state(MirLifecycleState state);
 
     void begin_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session) override;
-    void end_trust_session() override;
-
-    std::shared_ptr<shell::TrustSession> get_trust_session() const override;
+    void end_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session) override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -98,11 +96,6 @@ private:
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
-
-    // trust sessions
-    std::mutex mutable mutex_trusted_session;
-    std::shared_ptr<shell::TrustSession> trust_session;
-    void set_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session);
 };
 
 }

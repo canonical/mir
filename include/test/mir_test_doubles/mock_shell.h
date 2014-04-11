@@ -49,6 +49,9 @@ struct MockShell : public frontend::Shell
         std::string&,
         std::shared_ptr<frontend::Session> const&,
         shell::TrustSessionCreationParameters const&));
+    MOCK_METHOD2(add_trusted_session_for, MirTrustSessionAddTrustResult(
+        std::shared_ptr<frontend::TrustSession> const&,
+        pid_t));
     MOCK_METHOD1(stop_trust_session, void(std::shared_ptr<frontend::TrustSession> const&));
 };
 

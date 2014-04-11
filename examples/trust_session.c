@@ -141,12 +141,13 @@ void trusted_helper(const char* server, pid_t child_pid)
     // register for state change events.
     mir_trust_session_set_event_callback(mcd.trust_session, trust_session_event_callback, &mcd);
 
-    MirTrustSessionAddTrustResult add_result = mir_trust_session_add_trusted_pid(mcd.trust_session, child_pid);
-    assert(add_result == mir_trust_session_pid_added);
-
-    mir_trust_session_start_sync(mcd.trust_session);
+    mir_trust_session_start_sync(mcd.trust_session, getpid());
     assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_started);
     puts("trusted_helper: Started trust session");
+
+    MirTrustSessionAddTrustResult add_result = mir_trust_session_add_trusted_session_sync(mcd.trust_session, child_pid);
+    assert(add_result == mir_trust_session_add_tust_succeeded);
+    printf("trusted_helper: added trusted session pid: %d\n", child_pid);
 
     int status;
     printf("trusted_helper: waiting on child app: %d\n", child_pid);
@@ -154,9 +155,9 @@ void trusted_helper(const char* server, pid_t child_pid)
 
     if (mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_started)
     {
-        mir_trust_session_stop_sync(mcd.trust_session);
-        assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_stopped);
-        puts("trusted_helper: Stopped trust session");
+        // mir_trust_session_stop_sync(mcd.trust_session);
+        // assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_stopped);
+        // puts("trusted_helper: Stopped trust session");
     }
     else
     {
@@ -238,6 +239,7 @@ int main(int argc, char* argv[])
 
     if (pid == 0)
     {
+        sleep(1);
         trust_session_app(server);
     }
     else if (pid > 0)

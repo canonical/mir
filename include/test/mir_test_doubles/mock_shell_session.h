@@ -55,10 +55,7 @@ struct MockShellSession : public shell::Session
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
 
     MOCK_METHOD1(begin_trust_session, void(std::shared_ptr<shell::TrustSession> const&));
-    MOCK_METHOD0(end_trust_session, void());
-
-    MOCK_CONST_METHOD0(get_trust_session, std::shared_ptr<shell::TrustSession>());
-    MOCK_METHOD1(set_trust_session, void(std::shared_ptr<shell::TrustSession> const&));
+    MOCK_METHOD1(end_trust_session, void(std::shared_ptr<shell::TrustSession> const&));
 };
 
 }

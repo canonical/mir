@@ -46,6 +46,12 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
                       ::mir::protobuf::TrustSession* /*response*/,
                       ::google::protobuf::Closure* /*done*/));
 
+    MOCK_METHOD4(add_trusted_session,
+                 void(::google::protobuf::RpcController* /*controller*/,
+                      const ::mir::protobuf::TrustedSession* /*request*/,
+                      ::mir::protobuf::TrustSessionAddResult* /*response*/,
+                      ::google::protobuf::Closure* /*done*/));
+
     MOCK_METHOD4(stop_trust_session,
                  void(::google::protobuf::RpcController* /*controller*/,
                       ::mir::protobuf::Void const* /*request*/,
@@ -69,6 +75,16 @@ public:
                 response->clear_error();
                 done->Run();
             }};
+    }
+
+    void add_trusted_session(::google::protobuf::RpcController* /*controller*/,
+                             const ::mir::protobuf::TrustedSession* /*request*/,
+                             ::mir::protobuf::TrustSessionAddResult* /*response*/,
+                             ::google::protobuf::Closure* done)
+    {
+        if (server_thread.joinable())
+            server_thread.join();
+        server_thread = std::thread{[done, this] { done->Run(); }};
     }
 
     void stop_trust_session(::google::protobuf::RpcController* /*controller*/,
@@ -149,7 +165,7 @@ TEST_F(MirTrustSessionTest, start_trust_session)
     MirTrustSession trust_session{
         mock_server,
         event_distributor};
-    trust_session.start(null_callback_func, nullptr);
+    trust_session.start(__LINE__, null_callback_func, nullptr);
 }
 
 TEST_F(MirTrustSessionTest, stop_trust_session)
@@ -176,7 +192,7 @@ TEST_F(MirTrustSessionTest, executes_callback_on_start)
     MirTrustSession trust_session{
         stub_server,
         event_distributor};
-    trust_session.stop(mock_callback_func, &mock_cb)->wait_for_all();
+    trust_session.start(__LINE__, mock_callback_func, &mock_cb)->wait_for_all();
 }
 
 TEST_F(MirTrustSessionTest, executes_callback_on_stop)
@@ -189,7 +205,7 @@ TEST_F(MirTrustSessionTest, executes_callback_on_stop)
     MirTrustSession trust_session{
         stub_server,
         event_distributor};
-    trust_session.start(mock_callback_func, &mock_cb)->wait_for_all();
+    trust_session.stop(mock_callback_func, &mock_cb)->wait_for_all();
 }
 
 TEST_F(MirTrustSessionTest, state_change_event_handler_started)

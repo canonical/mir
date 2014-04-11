@@ -175,16 +175,22 @@ message Screencast {
   optional string error = 127;
 }
 
-message TrustSessionApplication {
+message TrustedSession {
   required int32 pid = 1;
 }
 
 message TrustSessionParameters {
-  repeated TrustSessionApplication application = 2;
+  required TrustedSession base_trusted_session = 1;
 }
 
 message TrustSession {
   optional uint32 state = 1;
+  optional string cookie = 2;
+  optional string error = 127;
+}
+
+message TrustSessionAddResult {
+  required int32 result = 1;
   optional string error = 127;
 }
 
@@ -209,6 +215,7 @@ service DisplayServer {
   rpc release_screencast(ScreencastId) returns (Void);
 
   rpc start_trust_session(TrustSessionParameters) returns (TrustSession);
+  rpc add_trusted_session(TrustedSession) returns (TrustSessionAddResult);
   rpc stop_trust_session(Void) returns (Void);
 }
 

@@ -45,9 +45,7 @@ public:
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 
     virtual void begin_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
-    virtual void end_trust_session() = 0;
-
-    virtual std::shared_ptr<TrustSession> get_trust_session() const = 0;
+    virtual void end_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
 };
 }
 }

@@ -23,6 +23,8 @@
 
 #include <sys/types.h>
 #include <vector>
+#include <string>
+#include <memory>
 
 namespace mir
 {
@@ -34,9 +36,11 @@ class TrustSession
 public:
     virtual ~TrustSession() = default;
 
-    virtual std::vector<pid_t> get_applications() const = 0;
+    virtual MirTrustSessionAddTrustResult add_trusted_client_process(pid_t pid) = 0;
+    virtual void for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const = 0;
 
     virtual MirTrustSessionState get_state() const = 0;
+    virtual std::string get_cookie() const = 0;
 
     virtual void start() = 0;
     virtual void stop() = 0;

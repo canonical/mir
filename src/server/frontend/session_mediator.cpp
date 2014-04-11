@@ -463,19 +463,11 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        std::ostringstream stream;
-        stream << "trusted process ids: ";
         msh::TrustSessionCreationParameters parameters;
-        for (auto i=0; i < request->application_size(); i++)
-        {
-            auto& application = request->application(i);
-            parameters.add_application(application.pid());
+        parameters.set_base_process_id(request->base_trusted_session().pid());
 
-            if (i > 0)
-                stream << ", ";
-            stream << application.pid();
-        }
-
+        std::ostringstream stream;
+        stream << "process id: " << parameters.base_process_id;
         report->session_start_trust_session_called(session->name(), stream.str());
 
         auto current_trust_session = weak_trust_session.lock();
@@ -489,7 +481,36 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         if (!error.empty())
             response->set_error(error);
         if (trust_session)
+        {
             response->set_state(trust_session->get_state());
+            response->set_cookie(trust_session->get_cookie());
+        }
+    }
+    done->Run();
+}
+
+void mf::SessionMediator::add_trusted_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustedSession* request,
+    ::mir::protobuf::TrustSessionAddResult* response,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto trust_session = weak_trust_session.lock();
+
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
+        // std::ostringstream stream;
+        // stream << "process id: " << request.pid()
+        // report->session_start_trust_session_called(session->name(), stream.str());
+
+        response->set_result(shell->add_trusted_session_for(trust_session, request->pid()));
     }
     done->Run();
 }

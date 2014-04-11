@@ -48,10 +48,9 @@ public:
     MirTrustSession(MirTrustSession const&) = delete;
     MirTrustSession& operator=(MirTrustSession const&) = delete;
 
-    MirTrustSessionAddTrustResult add_trusted_pid(pid_t pid);
-
-    MirWaitHandle* start(mir_trust_session_callback callback, void* context);
+    MirWaitHandle* start(pid_t pid, mir_trust_session_callback callback, void* context);
     MirWaitHandle* stop(mir_trust_session_callback callback, void* context);
+    MirWaitHandle* add_trusted_session(pid_t pid, mir_trust_session_add_trusted_session_callback callback, void* context);
 
     void register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context);
 
@@ -61,15 +60,17 @@ public:
     MirTrustSessionState get_state() const;
     void set_state(MirTrustSessionState new_state);
 
+    std::string get_cookie() const;
+
 private:
     mutable std::mutex mutex; // Protects members of *this
     mutable std::mutex mutex_event_handler; // Need another mutex for callback access to members
 
     mir::protobuf::DisplayServer& server;
     mir::protobuf::TrustSession session;
+    mir::protobuf::TrustSessionAddResult add_result;
     mir::protobuf::Void protobuf_void;
     std::string error_message;
-    std::vector<pid_t> process_ids;
 
     std::shared_ptr<mir::client::EventDistributor> const event_distributor;
     std::function<void(MirTrustSessionState)> handle_trust_session_event;
@@ -77,10 +78,12 @@ private:
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
+    MirWaitHandle add_result_wait_handle;
     MirTrustSessionState state;
 
     void done_start(mir_trust_session_callback callback, void* context);
     void done_stop(mir_trust_session_callback callback, void* context);
+    void done_add_trusted_session(mir_trust_session_add_trusted_session_callback callback, void* context);
 };
 
 #endif /* MIR_CLIENT_MIR_TRUST_SESSION_H_ */

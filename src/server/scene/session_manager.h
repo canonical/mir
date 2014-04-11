@@ -44,6 +44,7 @@ namespace scene
 class SessionEventSink;
 class SessionContainer;
 class SnapshotStrategy;
+class TrustSessionContainer;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
@@ -75,6 +76,8 @@ public:
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& error,
                                                   std::shared_ptr<frontend::Session> const& session,
                                                   shell::TrustSessionCreationParameters const& params) override;
+    MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
+                                                          pid_t session_pid) override;
     void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
 
 protected:
@@ -94,12 +97,22 @@ private:
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<shell::Session> const& next_focus);
 
+    MirTrustSessionAddTrustResult add_trusted_session_for_locked(std::unique_lock<std::mutex> const&,
+                                                                 std::shared_ptr<frontend::TrustSession> const& trust_session,
+                                                                 pid_t session_pid);
+    void stop_trust_session_locked(std::unique_lock<std::mutex> const& lock,
+                                   std::shared_ptr<frontend::TrustSession> const& trust_session);
+
     std::mutex mutable surfaces_mutex;
 
     typedef std::vector<std::shared_ptr<frontend::TrustSession>> TrustSessions;
     std::mutex mutable trust_sessions_mutex;
     TrustSessions trust_sessions;
 
+    typedef std::multimap<frontend::Session*, std::shared_ptr<frontend::TrustSession>> TrustedSessions2;
+    TrustedSessions2 trust_sessions2;
+
+    std::shared_ptr<TrustSessionContainer> trust_session_container;
 };
 
 }

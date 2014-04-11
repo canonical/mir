@@ -64,30 +64,10 @@ void MirTrustSession::set_state(MirTrustSessionState new_state)
     state = new_state;
 }
 
-MirTrustSessionAddTrustResult MirTrustSession::add_trusted_pid(pid_t pid)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    for (auto it = process_ids.begin(); it != process_ids.end(); ++it) {
-        if (*it == pid)
-            return mir_trust_session_pid_already_exists;
-    }
-
-    process_ids.push_back(pid);
-    return mir_trust_session_pid_added;
-}
-
-MirWaitHandle* MirTrustSession::start(mir_trust_session_callback callback, void* context)
+MirWaitHandle* MirTrustSession::start(pid_t pid, mir_trust_session_callback callback, void* context)
 {
     mir::protobuf::TrustSessionParameters parameters;
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        for (auto it = process_ids.begin(); it != process_ids.end(); ++it) {
-            auto app = parameters.add_application();
-            app->set_pid(*it);
-        }
-    }
+    parameters.mutable_base_trusted_session()->set_pid(pid);
 
     server.start_trust_session(
         0,
@@ -109,6 +89,23 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void* 
                                       callback, context));
 
     return &stop_wait_handle;
+}
+
+MirWaitHandle* MirTrustSession::add_trusted_session(pid_t pid,
+    mir_trust_session_add_trusted_session_callback callback,
+    void* context)
+{
+    mir::protobuf::TrustedSession trusted_session;
+    trusted_session.set_pid(pid);
+
+    server.add_trusted_session(
+        0,
+        &trusted_session,
+        &add_result,
+        google::protobuf::NewCallback(this, &MirTrustSession::done_add_trusted_session,
+                                      callback, context));
+
+    return &add_result_wait_handle;
 }
 
 void MirTrustSession::register_trust_session_event_callback(
@@ -151,6 +148,12 @@ void MirTrustSession::done_stop(mir_trust_session_callback callback, void* conte
     stop_wait_handle.result_received();
 }
 
+void MirTrustSession::done_add_trusted_session(mir_trust_session_add_trusted_session_callback callback, void* context)
+{
+    callback(this, static_cast<MirTrustSessionAddTrustResult>(add_result.result()), context);
+    add_result_wait_handle.result_received();
+}
+
 char const* MirTrustSession::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -170,4 +173,15 @@ void MirTrustSession::set_error_message(std::string const& error)
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     error_message = error;
+}
+
+std::string MirTrustSession::get_cookie() const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    if (session.has_cookie())
+    {
+        return session.cookie().c_str();
+    }
+    return std::string();
 }

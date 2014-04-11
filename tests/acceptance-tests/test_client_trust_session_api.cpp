@@ -92,7 +92,7 @@ TEST_F(MirClientTrustSessionAPITest, client_trust_session_api)
             trust_session = mir_connection_create_trust_session(connection);
             ASSERT_TRUE(trust_session != NULL);
 
-            mir_wait_for(mir_trust_session_start(trust_session, trust_session_start_callback, this));
+            mir_wait_for(mir_trust_session_start(trust_session, __LINE__, trust_session_start_callback, this));
             EXPECT_EQ(started, 1);
             EXPECT_EQ(stopped, 0);
 

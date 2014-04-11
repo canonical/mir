@@ -26,6 +26,8 @@
 #include "mir/shell/session_listener.h"
 #include "session_event_sink.h"
 #include "trust_session.h"
+#include "trust_session_container.h"
+#include "mir/shell/trust_session_creation_parameters.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -48,12 +50,93 @@ ms::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& s
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
-    session_listener(session_listener)
+    session_listener(session_listener),
+    trust_session_container(std::make_shared<TrustSessionContainer>())
 {
     assert(surface_factory);
     assert(container);
     assert(focus_setter);
     assert(session_listener);
+
+
+    printf("TESTING\n");
+
+    auto ptr1 = std::make_shared<TrustSession>(std::weak_ptr<msh::Session>(), msh::a_trust_session());
+    auto ptr2 = std::make_shared<TrustSession>(std::weak_ptr<msh::Session>(), msh::a_trust_session());
+    auto ptr3 = std::make_shared<TrustSession>(std::weak_ptr<msh::Session>(), msh::a_trust_session());
+    auto ptr4 = std::make_shared<TrustSession>(std::weak_ptr<msh::Session>(), msh::a_trust_session());
+
+    trust_session_container->insert(ptr2, TrustSessionContainer::ClientProcess{8});
+    trust_session_container->insert(ptr2, TrustSessionContainer::ClientProcess{6});
+    trust_session_container->insert(ptr2, TrustSessionContainer::ClientProcess{7});
+    trust_session_container->insert(ptr2, TrustSessionContainer::ClientProcess{5});
+
+    trust_session_container->insert(ptr1, TrustSessionContainer::ClientProcess{1});
+    trust_session_container->insert(ptr1, TrustSessionContainer::ClientProcess{2});
+    trust_session_container->insert(ptr1, TrustSessionContainer::ClientProcess{3});
+    trust_session_container->insert(ptr1, TrustSessionContainer::ClientProcess{4});
+    trust_session_container->insert(ptr1, TrustSessionContainer::ClientProcess{5});
+
+    trust_session_container->insert(ptr3, TrustSessionContainer::ClientProcess{9});
+    trust_session_container->insert(ptr3, TrustSessionContainer::ClientProcess{5});
+
+    trust_session_container->insert(ptr4, TrustSessionContainer::ClientProcess{10});
+    trust_session_container->insert(ptr4, TrustSessionContainer::ClientProcess{11});
+    trust_session_container->insert(ptr4, TrustSessionContainer::ClientProcess{11});
+    trust_session_container->insert(ptr4, TrustSessionContainer::ClientProcess{11});
+
+    trust_session_container->remove_trust_session(ptr3);
+    trust_session_container->remove_process(TrustSessionContainer::ClientProcess{5});
+
+
+
+    printf("\nProcesses for 1:\n");
+    trust_session_container->for_each_process_for_trust_session(ptr1,
+        [](TrustSessionContainer::ClientProcess const& process)
+        {
+            printf("   pid %d\n", process);
+
+        });
+
+    printf("\nProcesses for 2:\n");
+    trust_session_container->for_each_process_for_trust_session(ptr2,
+        [](TrustSessionContainer::ClientProcess const& process)
+        {
+            printf("   pid %d\n", process);
+
+        });
+
+    printf("\nProcesses for 3:\n");
+    trust_session_container->for_each_process_for_trust_session(ptr3,
+        [](TrustSessionContainer::ClientProcess const& process)
+        {
+            printf("   pid %d\n", process);
+
+        });
+
+    printf("\nProcesses for 4:\n");
+    trust_session_container->for_each_process_for_trust_session(ptr4,
+        [](TrustSessionContainer::ClientProcess const& process)
+        {
+            printf("   pid %d\n", process);
+
+        });
+
+
+
+    printf("\nTrust sessions for process 1:\n");
+    trust_session_container->for_each_trust_session_for_process(TrustSessionContainer::ClientProcess{1},
+        [](std::shared_ptr<frontend::TrustSession> const& trust_session)
+        {
+            printf("   trust session %p\n", (void*)trust_session.get());
+        });
+
+    printf("\nTrust sessions for process 5:\n");
+    trust_session_container->for_each_trust_session_for_process(TrustSessionContainer::ClientProcess{5},
+        [](std::shared_ptr<frontend::TrustSession> const& trust_session)
+        {
+            printf("   trust session %p\n", (void*)trust_session.get());
+        });
 }
 
 ms::SessionManager::~SessionManager()
@@ -88,26 +171,15 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
     app_container->insert_session(new_session);
 
     {
-        // Add session to existing trust session
-        std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-
-        auto find_trusted_sesssion_fn =
-            [client_pid](std::shared_ptr<frontend::TrustSession> const& trust_session)
+        trust_session_container->for_each_trust_session_for_process(client_pid,
+            [client_pid, new_session](std::shared_ptr<frontend::TrustSession> const& trust_session)
             {
-                auto applications = trust_session->get_applications();
-                auto it_apps = std::find(applications.begin(), applications.end(), client_pid);
-                return it_apps != applications.end();
-            };
+                printf("found after %d\n", client_pid);
+                auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
 
-        auto it = trust_sessions.begin();
-        while((it = std::find_if(it, trust_sessions.end(), find_trusted_sesssion_fn)) != trust_sessions.end())
-        {
-            auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(*it);
-
-            shell_trust_session->add_trusted_child(new_session);
-            new_session->begin_trust_session(shell_trust_session);
-            it++;
-        }
+                shell_trust_session->add_trusted_child(new_session);
+                new_session->begin_trust_session(shell_trust_session);
+            });
     }
 
     session_listener->starting(new_session);
@@ -150,19 +222,34 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(shell_session);
 
-    auto trust_session = shell_session->get_trust_session();
-    if (trust_session)
     {
-        auto trusted_helper = trust_session->get_trusted_helper().lock();
-        if (trusted_helper == shell_session)
+        std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+        std::vector<std::shared_ptr<frontend::TrustSession>> trust_sessions;
+        trust_session_container->for_each_trust_session_for_process(shell_session->process_id(),
+            [&](std::shared_ptr<frontend::TrustSession> const& trust_session)
+            {
+                trust_sessions.push_back(trust_session);
+            });
+
+        for(auto trust_session : trust_sessions)
         {
-            stop_trust_session(trust_session);
-        }
-        else
-        {
-            trust_session->remove_trusted_child(shell_session);
+            auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
+
+            if (shell_trust_session->get_trusted_helper().lock() == shell_session)
+            {
+                stop_trust_session_locked(lock, shell_trust_session);
+            }
+            else
+            {
+                shell_trust_session->remove_trusted_child(shell_session);
+                shell_session->end_trust_session(shell_trust_session);
+
+                trust_session_container->remove_process(shell_session->process_id());
+            }
         }
     }
+
     session_listener->stopping(shell_session);
 
     app_container->remove_session(shell_session);
@@ -217,67 +304,83 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
     set_focus_to(shell_session);
 }
 
-std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::string& error,
-                                            std::shared_ptr<mf::Session> const& session,
-                                            shell::TrustSessionCreationParameters const& params)
+std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::string&,
+    std::shared_ptr<mf::Session> const& session,
+    shell::TrustSessionCreationParameters const& params)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
-
-    auto it = std::find_if(trust_sessions.begin(), trust_sessions.end(),
-        [shell_session](std::shared_ptr<frontend::TrustSession> const& trust_session)
-        {
-            auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
-
-            return shell_trust_session->get_trusted_helper().lock() == shell_session;
-        }
-    );
-    if (it != trust_sessions.end())
-    {
-        error = "Trust session already started";
-        return std::shared_ptr<mf::TrustSession>();
-    }
-
 
     auto const trust_session = std::make_shared<TrustSession>(shell_session, params);
 
-    for (pid_t application_pid : trust_session->get_applications())
-    {
-        app_container->for_each(
-            [trust_session, application_pid](std::shared_ptr<msh::Session> const& container_session)
-            {
-                if (container_session->process_id() == application_pid)
-                {
-                    trust_session->add_trusted_child(container_session);
-                }
-            }
-        );
-    }
-    trust_sessions.push_back(trust_session);
+    trust_session_container->insert(trust_session, shell_session->process_id());
 
     trust_session->start();
-
-    shell_session->begin_trust_session(trust_session);
-    trust_session->for_each_trusted_child(
-        [trust_session](std::shared_ptr<msh::Session> const& child_session)
-        {
-            child_session->begin_trust_session(trust_session);
-            return true;
-        },
-        false
-    );
+    add_trusted_session_for_locked(lock, trust_session, params.base_process_id);
 
     return trust_session;
+}
+
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::shared_ptr<mf::TrustSession> const& trust_session,
+    pid_t session_pid)
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    return add_trusted_session_for_locked(lock, trust_session, session_pid);
+}
+
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked(std::unique_lock<std::mutex> const&,
+    std::shared_ptr<mf::TrustSession> const& trust_session,
+    pid_t session_pid)
+{
+    auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
+
+    trust_session_container->insert(trust_session, session_pid);
+
+    app_container->for_each(
+        [this, session_pid, shell_trust_session](std::shared_ptr<msh::Session> const& container_session)
+        {
+            if (container_session->process_id() == session_pid)
+            {
+                printf("found during %d\n", session_pid);
+                if (shell_trust_session->add_trusted_child(container_session))
+                {
+                    container_session->begin_trust_session(shell_trust_session);
+                }
+            }
+        });
+
+    return mir_trust_session_add_tust_succeeded;
 }
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
-    auto it = std::find(trust_sessions.begin(), trust_sessions.end(), trust_session);
-    if (it != trust_sessions.end())
-    {
-        (*it)->stop();
-        trust_sessions.erase(it);
-    }
+    stop_trust_session_locked(lock, trust_session);
 }
+
+void ms::SessionManager::stop_trust_session_locked(std::unique_lock<std::mutex> const&,
+    std::shared_ptr<mf::TrustSession> const& trust_session)
+{
+    auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
+
+    auto trusted_helper = shell_trust_session->get_trusted_helper().lock();
+    if (trusted_helper) {
+        trusted_helper->end_trust_session(shell_trust_session);
+    }
+
+    shell_trust_session->for_each_trusted_child(
+        [this, shell_trust_session](std::shared_ptr<msh::Session> const& child_session)
+        {
+            child_session->end_trust_session(shell_trust_session);
+        },
+        true
+    );
+
+    trust_session->stop();
+
+    trust_session_container->remove_trust_session(trust_session);
+}
+
