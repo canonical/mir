@@ -28,6 +28,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 
+#include <cstdio>
 #include <fstream>
 
 namespace mf = mir::frontend;
@@ -77,7 +78,14 @@ bool socket_exists(std::string const& socket_name)
 std::string remove_if_stale(std::string const& socket_name)
 {
     if (socket_file_exists(socket_name) && !socket_exists(socket_name))
-        std::remove(socket_name.c_str());
+    {
+        if (std::remove(socket_name.c_str()) != 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed removing stale socket file")) << boost::errinfo_errno(errno));
+        }
+    }
     return socket_name;
 }
 }
