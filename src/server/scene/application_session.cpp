@@ -76,11 +76,13 @@ mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationP
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_coordinator->add_surface(params, this);
     surf->add_observer(observer);
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
-    surfaces[id] = surf;
+
+    {
+        std::unique_lock<std::mutex> lock(surfaces_mutex);
+        surfaces[id] = surf;
+    }
 
     session_listener->surface_created(*this, surf);
-
     return id;
 }
 
