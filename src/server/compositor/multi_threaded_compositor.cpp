@@ -294,15 +294,6 @@ void mc::MultiThreadedCompositor::start()
         thread_functors.push_back(std::move(thread_functor));
     };
 
-    /* Start the buffer consuming thread */
-    {
-        auto thread_functor_raw = new mc::BufferConsumingFunctor{scene};
-        auto thread_functor = std::unique_ptr<mc::BufferConsumingFunctor>(thread_functor_raw);
-
-        threads.push_back(std::thread{std::ref(*thread_functor)});
-        thread_functors.push_back(std::move(thread_functor));
-    }
-
     /* Recomposite whenever the scene changes */
     auto scene_callback = [this]() { schedule_compositing(); };
 
@@ -311,6 +302,13 @@ void mc::MultiThreadedCompositor::start()
         [this, &create_compositing_thread]
         {
             display->for_each_display_buffer(create_compositing_thread);
+
+            /* Start the buffer consuming thread */
+            auto thread_functor_raw = new mc::BufferConsumingFunctor{scene};
+            auto thread_functor = std::unique_ptr<mc::BufferConsumingFunctor>(thread_functor_raw);
+
+            threads.push_back(std::thread{std::ref(*thread_functor)});
+            thread_functors.push_back(std::move(thread_functor));
         },
         [this]
         {
