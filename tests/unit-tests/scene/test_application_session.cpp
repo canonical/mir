@@ -82,7 +82,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     mtd::NullEventSink sender;
     mtd::MockSurfaceCoordinator surface_coordinator;
 
-    EXPECT_CALL(surface_coordinator, add_surface(_, _, _))
+    EXPECT_CALL(surface_coordinator, add_surface(_, _))
         .WillOnce(Return(mock_surface));
 
     mtd::MockSessionListener listener;
@@ -113,9 +113,9 @@ TEST(ApplicationSession, listener_notified_of_surface_destruction_on_session_des
 
     mtd::NullEventSink sender;
     mtd::MockSurfaceCoordinator surface_coordinator;
-    ON_CALL(surface_coordinator, add_surface(_,_,_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_coordinator, add_surface(_,_)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(surface_coordinator, add_surface(_, _, _));
+    EXPECT_CALL(surface_coordinator, add_surface(_, _));
 
     mtd::MockSessionListener listener;
     EXPECT_CALL(listener, surface_created(_, _)).Times(1);
@@ -144,11 +144,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 
     {
         InSequence seq;
-        EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
     }
 
@@ -187,7 +187,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     auto mock_surface = make_mock_surface();
 
     mtd::MockSurfaceCoordinator surface_coordinator;
-    ON_CALL(surface_coordinator, add_surface(_, _, _)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(Return(mock_surface));
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
@@ -197,7 +197,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(sender));
 
-    EXPECT_CALL(surface_coordinator, add_surface(_, _, _));
+    EXPECT_CALL(surface_coordinator, add_surface(_, _));
 
     {
         InSequence seq;
@@ -267,7 +267,7 @@ TEST(ApplicationSession, takes_snapshot_of_default_surface)
         std::static_pointer_cast<msh::SurfaceBufferAccess>(default_surface);
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
 
-    EXPECT_CALL(surface_coordinator, add_surface(_,_,_))
+    EXPECT_CALL(surface_coordinator, add_surface(_,_))
         .WillOnce(Return(default_surface));
 
     EXPECT_CALL(*snapshot_strategy,

@@ -74,8 +74,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationP
     auto const id = next_id();
 
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
-    auto surf = surface_coordinator->add_surface(params, this, observer);
-
+    auto surf = surface_coordinator->add_surface(params, this);
+    surf->add_observer(observer);
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
 

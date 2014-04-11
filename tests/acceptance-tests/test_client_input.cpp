@@ -336,10 +336,9 @@ struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
 
     std::shared_ptr<ms::Surface> add_surface(
         msh::SurfaceCreationParameters const& params,
-        ms::Session* session,
-        std::shared_ptr<ms::SurfaceObserver> const& observer) override
+        ms::Session* session) override
     {
-        auto surface = wrapped_coordinator->add_surface(params, session, observer);
+        auto surface = wrapped_coordinator->add_surface(params, session);
 
         surface->set_input_region(input_rectangles);
 
