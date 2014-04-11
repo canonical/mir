@@ -13,6 +13,7 @@ protobuf_generate_cpp(
 set(
   SOURCES
 
+  clients.cpp
   test_client_library.cpp
   test_custom_input_dispatcher.cpp
   test_surfaceloop.cpp

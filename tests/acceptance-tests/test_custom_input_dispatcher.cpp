@@ -20,6 +20,8 @@
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_dispatcher_configuration.h"
 
+#include "clients.h"
+
 #include "mir/shell/input_targeter.h"
 #include "mir/scene/input_registrar.h"
 
@@ -47,32 +49,19 @@ namespace mtd = mt::doubles;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
-namespace
-{
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
 class CustomInputDispatcher :
     public mtd::MockInputDispatcher,
     public ms::InputRegistrar,
     public msh::InputTargeter
 {
 public:
-    // empty stubs for InputRegistrar and InputTargeter
-    void input_channel_opened(std::shared_ptr<mi::InputChannel> const& /*opened_channel*/,
+    MOCK_METHOD3(input_channel_opened, void(std::shared_ptr<mi::InputChannel> const& /*opened_channel*/,
                               std::shared_ptr<mi::Surface> const& /*info*/,
-                              mi::InputReceptionMode /*input_mode*/) override
-    {
-    }
-    void input_channel_closed(std::shared_ptr<mi::InputChannel> const& /*closed_channel*/) override
-    {
-    }
-    void focus_changed(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/) override
-    {
-    }
-    void focus_cleared() override
-    {
-    }
+                              mi::InputReceptionMode /*input_mode*/));
+    MOCK_METHOD1(input_channel_closed, void(std::shared_ptr<mi::InputChannel> const& /*closed_channel*/));
+    // empty stubs for InputRegistrar and InputTargeter
+    MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
+    MOCK_METHOD0(focus_cleared, void());
 };
 
 class CustomInputDispatcherConfiguration : public mi::InputDispatcherConfiguration
@@ -131,3 +120,67 @@ TEST_F(BespokeDisplayServerTestFixture, custom_input_dispatcher_receives_input)
     launch_server_process(server_config);
 }
 
+TEST_F(BespokeDisplayServerTestFixture, custom_input_dispatcher_receives_opened_sessions)
+{
+    struct ServerConfig : mtf::InputTestingServerConfiguration
+    {
+        std::shared_ptr<mi::InputDispatcherConfiguration>
+        the_input_dispatcher_configuration() override
+        {
+            return input_dispatcher_configuration(
+            []
+            {
+                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>();
+                {
+                    using namespace ::testing;
+                    InSequence seq;
+
+                    EXPECT_CALL(dispatcher_conf->dispatcher, input_channel_opened(_,_,_)).Times(1);
+                    EXPECT_CALL(dispatcher_conf->dispatcher, input_channel_closed(_)).Times(1);
+                }
+
+                return dispatcher_conf;
+            });
+        }
+        void inject_input() override {}
+    } server_config;
+
+    launch_server_process(server_config);
+
+    mtf::SurfaceCreatingClient client;
+
+    launch_client_process(client);
+}
+
+
+TEST_F(BespokeDisplayServerTestFixture, custom_input_dispatcher_receives_focus_changes)
+{
+    struct ServerConfig : mtf::InputTestingServerConfiguration
+    {
+        std::shared_ptr<mi::InputDispatcherConfiguration>
+        the_input_dispatcher_configuration() override
+        {
+            return input_dispatcher_configuration(
+            []
+            {
+                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>();
+                {
+                    using namespace ::testing;
+                    InSequence seq;
+
+                    EXPECT_CALL(dispatcher_conf->dispatcher, focus_changed(_)).Times(1);
+                    EXPECT_CALL(dispatcher_conf->dispatcher, focus_cleared()).Times(1);
+                }
+
+                return dispatcher_conf;
+            });
+        }
+        void inject_input() override {}
+    } server_config;
+
+    launch_server_process(server_config);
+
+    mtf::SurfaceCreatingClient client;
+
+    launch_client_process(client);
+}
