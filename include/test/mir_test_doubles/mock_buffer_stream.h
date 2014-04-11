@@ -31,6 +31,11 @@ namespace doubles
 {
 struct MockBufferStream : public compositor::BufferStream
 {
+    MockBufferStream()
+    {
+        ON_CALL(*this, buffers_ready_for_compositor())
+            .WillByDefault(testing::Return(1));
+    }
     MOCK_METHOD2(swap_client_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> completee));
     MOCK_METHOD1(lock_compositor_buffer,
                  std::shared_ptr<graphics::Buffer>(void const*));
@@ -42,7 +47,7 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD0(force_client_completion, void());
     MOCK_METHOD1(allow_framedropping, void(bool));
     MOCK_METHOD0(force_requests_to_complete, void());
-    int buffers_ready_for_compositor() const override { return 1; }
+    MOCK_CONST_METHOD0(buffers_ready_for_compositor, int());
 };
 }
 }

@@ -64,7 +64,7 @@ public:
     void schedule_compositing()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-
+    printf("SCHED\n");
         frames_scheduled = true;
         run_cv.notify_one();
     }
@@ -92,6 +92,7 @@ protected:
              */
             if (running)
             {
+                printf("FIRE.\n");
                 frames_scheduled = false;
                 lock.unlock();
 
@@ -251,6 +252,7 @@ void mc::MultiThreadedCompositor::start()
     /* Start the compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
+        printf("uno.\n");
         auto thread_functor_raw =
             new mc::DisplayBufferCompositingFunctor{
                 display_buffer_compositor_factory, buffer, report};
@@ -281,6 +283,7 @@ void mc::MultiThreadedCompositor::start()
     /* Optional first render */
     if (compose_on_start)
     {
+        printf("zung\n");
         lk.unlock();
         schedule_compositing();
     }

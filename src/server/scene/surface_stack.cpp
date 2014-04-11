@@ -122,6 +122,7 @@ mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
     for (auto const& layer : layers_by_depth)
         for (auto const& renderable : layer.second) 
             list.emplace_back(std::make_shared<RenderableSnapshot>(renderable));
+        printf("generate %i\n", (int) list.size());
     return list;
 }
 
