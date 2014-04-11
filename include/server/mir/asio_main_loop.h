@@ -45,6 +45,8 @@ public:
         std::initializer_list<int> fd,
         std::function<void(int)> const& handler);
 
+    std::unique_ptr<Alarm> notify_in(std::chrono::milliseconds delay,
+                                     std::function<void()> callback) override;
 private:
     class SignalHandler;
     class FDHandler;

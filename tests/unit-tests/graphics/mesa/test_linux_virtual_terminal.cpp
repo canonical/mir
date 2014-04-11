@@ -83,6 +83,16 @@ public:
     MOCK_METHOD2(register_fd_handler,
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
+
+    MOCK_METHOD2(notify_in_delegate,
+                 mir::Alarm*(std::chrono::milliseconds,
+                             std::function<void()>));
+
+    std::unique_ptr<mir::Alarm> notify_in(std::chrono::milliseconds delay,
+                                          std::function<void()> callback)
+    {
+        return std::unique_ptr<mir::Alarm>{notify_in_delegate(delay, callback)};
+    }
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,
