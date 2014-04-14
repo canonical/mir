@@ -31,6 +31,11 @@ namespace graphics
 {
 namespace mesa
 {
+enum class BypassOption
+{
+    bypass_enabled,
+    bypass_disabled
+};
 
 class VirtualTerminal;
 class InternalNativeDisplay;
@@ -41,7 +46,7 @@ class Platform : public graphics::Platform,
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
                       std::shared_ptr<VirtualTerminal> const& vt,
-                      bool bypass_option);
+                      BypassOption bypass_option);
     ~Platform();
 
     /* From Platform */
@@ -67,13 +72,13 @@ public:
     std::shared_ptr<DisplayReport> const listener;
     std::shared_ptr<VirtualTerminal> const vt;
 
-    bool bypass_option_is_set() const;
+    BypassOption bypass_option() const;
 
     //connection shared by all internal clients
     static bool internal_display_clients_present;
     static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 private:
-    bool const bypass_option;
+    BypassOption const bypass_option_;
 };
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);

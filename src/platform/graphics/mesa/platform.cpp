@@ -126,11 +126,11 @@ std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_displ
 bool mgm::Platform::internal_display_clients_present;
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<VirtualTerminal> const& vt,
-                        bool bypass_option)
+                        BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
       listener{listener},
       vt{vt},
-      bypass_option{bypass_option}
+      bypass_option_{bypass_option}
 {
     drm.setup(udev);
     gbm.setup(drm);
@@ -147,7 +147,7 @@ mgm::Platform::~Platform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer, bypass_option);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer, bypass_option_);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
@@ -201,9 +201,9 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
     return gbm.device;
 }
 
-bool mgm::Platform::bypass_option_is_set() const
+mgm::BypassOption mgm::Platform::bypass_option() const
 {
-    return bypass_option;
+    return bypass_option_;
 }
 
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
@@ -216,7 +216,11 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
         options->get<int>(vt_option_name),
         report);
 
-    return std::make_shared<mgm::Platform>(report, vt, options->get<bool>(bypass_option_name));
+    auto bypass_option = mgm::BypassOption::bypass_enabled;
+    if (!options->get<bool>(bypass_option_name))
+        bypass_option = mgm::BypassOption::bypass_disabled;
+        
+    return std::make_shared<mgm::Platform>(report, vt, bypass_option);
 }
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)

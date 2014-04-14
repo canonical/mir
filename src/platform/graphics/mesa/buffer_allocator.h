@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
 #define MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
 
+#include "platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 
@@ -43,7 +44,7 @@ class BufferAllocator: public graphics::GraphicBufferAllocator
 public:
     BufferAllocator(gbm_device* device,
                     std::shared_ptr<BufferInitializer> const& buffer_initializer,
-                    bool bypass_option);
+                    BypassOption bypass_option);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -61,7 +62,7 @@ private:
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
-    bool const bypass_env;
+    BypassOption const bypass_option;
 };
 
 }
