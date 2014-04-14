@@ -213,7 +213,7 @@ struct StubCursorImage : public mg::CursorImage
     }
     static void const* image_data;
 };
-void const* StubCursorImage::image_data = reinterpret_cast<void*>(0x1729);
+void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
 
 struct MesaCursorTest : public ::testing::Test
 {
