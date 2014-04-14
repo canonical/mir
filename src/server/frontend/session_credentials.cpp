@@ -34,22 +34,22 @@ mf::SessionCredentials::SessionCredentials(int socket_fd)
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
 
-    pid_ = cr.pid;
-    uid_ = cr.uid;
-    gid_ = cr.gid;
+    the_pid = cr.pid;
+    the_uid = cr.uid;
+    the_gid = cr.gid;
 }
 
 pid_t mf::SessionCredentials::pid() const
 {
-    return pid_;
+    return the_pid;
 }
 
 uid_t mf::SessionCredentials::uid() const
 {
-    return uid_;
+    return the_uid;
 }
 
 gid_t mf::SessionCredentials::gid() const
 {
-    return gid_;
+    return the_gid;
 }

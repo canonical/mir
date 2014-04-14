@@ -36,9 +36,9 @@ public:
 private:
     SessionCredentials() = delete;
 
-    pid_t pid_;
-    uid_t uid_;
-    gid_t gid_;
+    pid_t the_pid;
+    uid_t the_uid;
+    gid_t the_gid;
 
 };
 }
