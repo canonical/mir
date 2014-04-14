@@ -87,11 +87,11 @@ struct StubShellSession : public shell::Session
     {
     }
 
-    void begin_trust_session(std::shared_ptr<shell::TrustSession> const&) override
+    void begin_trust_session() override
     {
     }
 
-    void end_trust_session(std::shared_ptr<shell::TrustSession> const&) override
+    void end_trust_session() override
     {
     }
 

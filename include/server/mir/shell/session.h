@@ -44,8 +44,8 @@ public:
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 
-    virtual void begin_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
-    virtual void end_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
+    virtual void begin_trust_session() = 0;
+    virtual void end_trust_session() = 0;
 };
 }
 }

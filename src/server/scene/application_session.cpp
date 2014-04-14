@@ -17,14 +17,12 @@
  */
 
 #include "application_session.h"
-#include "trust_session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
 #include "mir/frontend/event_sink.h"
 #include "default_session_container.h"
-#include "mir/shell/trust_session.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -186,7 +184,7 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
     event_sink->handle_lifecycle_event(state);
 }
 
-void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSession> const& trust_session)
+void ms::ApplicationSession::begin_trust_session()
 {
     // All sessions which are part of the trust session get this event.
     MirEvent start_event;
@@ -194,14 +192,10 @@ void ms::ApplicationSession::begin_trust_session(std::shared_ptr<msh::TrustSessi
     start_event.type = mir_event_type_trust_session_state_change;
     start_event.trust_session.new_state = mir_trust_session_state_started;
     event_sink->handle_event(start_event);
-
-    session_listener->trust_session_started(*this, trust_session);
 }
 
-void ms::ApplicationSession::end_trust_session(std::shared_ptr<msh::TrustSession> const& trust_session)
+void ms::ApplicationSession::end_trust_session()
 {
-    session_listener->trust_session_stopping(*this, trust_session);
-
     MirEvent stop_event;
     memset(&stop_event, 0, sizeof stop_event);
     stop_event.type = mir_event_type_trust_session_state_change;

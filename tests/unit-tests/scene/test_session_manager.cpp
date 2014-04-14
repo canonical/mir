@@ -18,7 +18,7 @@
 
 #include "src/server/scene/session_manager.h"
 #include "mir/compositor/buffer_stream.h"
-#include "src/server/scene/default_session_container.h"
+#include "src/server/scene/session_container.h"
 #include "mir/shell/session.h"
 #include "src/server/scene/surface_impl.h"
 #include "mir/shell/session_listener.h"
@@ -28,6 +28,8 @@
 #include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir/shell/trust_session_creation_parameters.h"
+#include "mir/shell/null_trust_session_listener.h"
+#include "mir/shell/trust_session.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -39,6 +41,7 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_session_event_sink.h"
+#include "mir_test_doubles/mock_trust_session_listener.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -79,7 +82,8 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
-                        mt::fake_shared(session_listener))
+                        mt::fake_shared(session_listener),
+                        std::make_shared<msh::NullTrustSessionListener>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
@@ -178,7 +182,8 @@ struct SessionManagerSessionListenerSetup : public testing::Test
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
-                        mt::fake_shared(session_listener))
+                        mt::fake_shared(session_listener),
+                        std::make_shared<msh::NullTrustSessionListener>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
@@ -207,22 +212,6 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
     session_manager.close_session(session);
 }
 
-TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_trust_session_start_and_stop)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(session_listener, trust_session_started(_,_)).Times(1);
-    EXPECT_CALL(session_listener, trust_session_stopping(_,_)).Times(1);
-
-    auto session = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
-
-    std::string error;
-    msh::TrustSessionCreationParameters parameters;
-
-    auto trust_session = session_manager.start_trust_session_for(error, session, parameters);
-    session_manager.stop_trust_session(trust_session);
-}
-
 namespace
 {
 
@@ -234,7 +223,8 @@ struct SessionManagerSessionEventsSetup : public testing::Test
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_event_sink),
-                        std::make_shared<msh::NullSessionListener>())
+                        std::make_shared<msh::NullSessionListener>(),
+                        std::make_shared<msh::NullTrustSessionListener>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
@@ -274,4 +264,48 @@ TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifec
 
     session_manager.close_session(session1);
     session_manager.close_session(session);
+}
+
+namespace
+{
+
+struct SessionManagerTrustSessionListenerSetup : public testing::Test
+{
+    SessionManagerTrustSessionListenerSetup()
+      : session_manager(mt::fake_shared(surface_factory),
+                        mt::fake_shared(container),
+                        mt::fake_shared(focus_setter),
+                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                        std::make_shared<mtd::NullSessionEventSink>(),
+                        std::make_shared<msh::NullSessionListener>(),
+                        mt::fake_shared(trust_session_listener))
+    {
+        using namespace ::testing;
+        ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<msh::Session>())));
+    }
+
+    mtd::MockSurfaceFactory surface_factory;
+    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
+    testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
+    testing::NiceMock<mtd::MockTrustSessionListener> trust_session_listener;
+    mtd::NullEventSink event_sink;
+
+    ms::SessionManager session_manager;
+};
+}
+
+TEST_F(SessionManagerTrustSessionListenerSetup, trust_session_listener_is_notified_of_trust_session_start_and_stop)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(trust_session_listener, starting(_)).Times(1);
+    EXPECT_CALL(trust_session_listener, stopping(_)).Times(1);
+
+    auto helper = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
+
+    std::string error;
+    msh::TrustSessionCreationParameters parameters;
+
+    auto trust_session = session_manager.start_trust_session_for(error, helper, parameters);
+    session_manager.stop_trust_session(trust_session);
 }

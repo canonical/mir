@@ -174,14 +174,3 @@ void MirTrustSession::set_error_message(std::string const& error)
 
     error_message = error;
 }
-
-std::string MirTrustSession::get_cookie() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (session.has_cookie())
-    {
-        return session.cookie().c_str();
-    }
-    return std::string();
-}

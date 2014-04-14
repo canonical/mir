@@ -125,11 +125,6 @@ MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session)
     return trust_session->get_state();
 }
 
-const char* mir_trust_session_get_cookie(MirTrustSession *trust_session)
-{
-    return trust_session->get_cookie().c_str();
-}
-
 void mir_trust_session_set_event_callback(MirTrustSession* trust_session,
                                           mir_trust_session_event_callback callback,
                                           void* context)

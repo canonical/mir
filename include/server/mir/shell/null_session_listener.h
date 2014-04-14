@@ -41,9 +41,6 @@ public:
     void surface_created(Session&, std::shared_ptr<Surface> const&) override {}
     void destroying_surface(Session&, std::shared_ptr<Surface> const&) override {}
 
-    void trust_session_started(Session&, std::shared_ptr<TrustSession> const&) override {}
-    void trust_session_stopping(Session&, std::shared_ptr<TrustSession> const&) override {}
-
 protected:
     NullSessionListener(const NullSessionListener&) = delete;
     NullSessionListener& operator=(const NullSessionListener&) = delete;

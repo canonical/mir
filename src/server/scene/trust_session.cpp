@@ -19,6 +19,7 @@
 #include "trust_session.h"
 #include "mir/shell/trust_session_creation_parameters.h"
 #include "mir/shell/session.h"
+#include "mir/shell/trust_session_listener.h"
 #include "session_container.h"
 
 #include <sstream>
@@ -27,43 +28,16 @@
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-struct Cookie
-{
-    int id;
-    void* ptr;
-};
-
-namespace std
-{
-    template<>
-    struct hash<Cookie>
-    {
-        typedef Cookie argument_type;
-        typedef std::size_t value_type;
-
-        value_type operator()(argument_type const& s) const
-        {
-            value_type const h1 ( std::hash<int>()(s.id) );
-            value_type const h2 ( std::hash<void*>()(s.ptr) );
-            return h1 ^ (h2 << 1);
-        }
-    };
-}
-
 int next_unique_id = 0;
 
 ms::TrustSession::TrustSession(
     std::weak_ptr<msh::Session> const& session,
-    msh::TrustSessionCreationParameters const&) :
+    msh::TrustSessionCreationParameters const&,
+    std::shared_ptr<shell::TrustSessionListener> const& trust_session_listener) :
     trusted_helper(session),
+    trust_session_listener(trust_session_listener),
     state(mir_trust_session_state_stopped)
 {
-    Cookie id{next_unique_id++, this};
-    std::hash<Cookie> hash_fn;
-
-    std::stringstream ss;
-    ss << hash_fn(id);
-    cookie = ss.str();
 }
 
 ms::TrustSession::~TrustSession()
@@ -78,13 +52,6 @@ MirTrustSessionState ms::TrustSession::get_state() const
     return state;
 }
 
-std::string ms::TrustSession::get_cookie() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return cookie;
-}
-
 std::weak_ptr<msh::Session> ms::TrustSession::get_trusted_helper() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -96,56 +63,58 @@ void ms::TrustSession::start()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
+    if (state == mir_trust_session_state_started)
+        return;
+
     state = mir_trust_session_state_started;
+
+    auto helper = trusted_helper.lock();
+    if (helper) {
+        helper->begin_trust_session();
+    }
 }
 
 void ms::TrustSession::stop()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
+    if (state == mir_trust_session_state_stopped)
+        return;
+
     state = mir_trust_session_state_stopped;
 
-    clear_trusted_children();
-}
+    auto helper = trusted_helper.lock();
+    if (helper) {
+        helper->end_trust_session();
+    }
 
-MirTrustSessionAddTrustResult ms::TrustSession::add_trusted_client_process(pid_t pid)
-{
-    std::lock_guard<decltype(mutex_children)> lock(mutex_processes);
+    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
 
-    auto it = std::find(client_processes.begin(), client_processes.end(), pid);
-    if (it != client_processes.end())
-        return mir_trust_session_add_tust_duplicate;
-
-    client_processes.push_back(pid);
-    return mir_trust_session_add_tust_succeeded;
-}
-
-void ms::TrustSession::for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const
-{
-    std::lock_guard<decltype(mutex_children)> lock(mutex_processes);
-
-    if (reverse)
+    for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
     {
-        for (auto rit = client_processes.rbegin(); rit != client_processes.rend(); ++rit)
+        auto session = (*rit).lock();
+        if (session)
         {
-            f(*rit);
+            session->end_trust_session();
+            trust_session_listener->trusted_session_ending(*this, session);
         }
     }
-    else
-    {
-        for (auto it = client_processes.begin(); it != client_processes.end(); ++it)
-        {
-            f(*it);
-        }
-    }
+
+    trusted_children.clear();
+}
+
+void ms::TrustSession::for_each_trusted_client_process(std::function<void(pid_t pid)>, bool) const
+{
 }
 
 bool ms::TrustSession::add_trusted_child(std::shared_ptr<msh::Session> const& session)
 {
-    std::lock_guard<decltype(mutex_children)> lock(mutex_children);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (get_state() == mir_trust_session_state_stopped)
+    if (state == mir_trust_session_state_stopped)
         return false;
+
+    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
 
     if (std::find_if(trusted_children.begin(), trusted_children.end(),
             [session](std::weak_ptr<shell::Session> const& child)
@@ -157,22 +126,30 @@ bool ms::TrustSession::add_trusted_child(std::shared_ptr<msh::Session> const& se
     }
 
     trusted_children.push_back(session);
+
+    session->begin_trust_session();
+    trust_session_listener->trusted_session_beginning(*this, session);
     return true;
 }
 
 void ms::TrustSession::remove_trusted_child(std::shared_ptr<msh::Session> const& session)
 {
-    std::lock_guard<decltype(mutex_children)> lock(mutex_children);
+    std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (state == mir_trust_session_state_stopped)
         return;
 
+    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
+
     for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
     {
         auto trusted_child = (*it).lock();
-        if (trusted_child == session) {
+        if (trusted_child && trusted_child == session) {
 
             trusted_children.erase(it);
+
+            session->end_trust_session();
+            trust_session_listener->trusted_session_ending(*this, session);
             break;
         }
     }
@@ -182,14 +159,13 @@ void ms::TrustSession::for_each_trusted_child(
     std::function<void(std::shared_ptr<msh::Session> const&)> f,
     bool reverse) const
 {
-    std::lock_guard<decltype(mutex_children)> lock(mutex_children);
+    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
 
     if (reverse)
     {
         for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
         {
-            auto trusted_child = (*rit).lock();
-            if (trusted_child)
+            if (auto trusted_child = (*rit).lock())
                 f(trusted_child);
         }
     }
@@ -197,15 +173,8 @@ void ms::TrustSession::for_each_trusted_child(
     {
         for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
         {
-            auto trusted_child = (*it).lock();
-            if (trusted_child)
+            if (auto trusted_child = (*it).lock())
                 f(trusted_child);
         }
     }
-}
-
-void ms::TrustSession::clear_trusted_children()
-{
-    std::lock_guard<decltype(mutex_children)> lock(mutex_children);
-    trusted_children.clear();
 }

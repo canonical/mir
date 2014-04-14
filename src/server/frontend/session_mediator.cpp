@@ -483,7 +483,6 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         if (trust_session)
         {
             response->set_state(trust_session->get_state());
-            response->set_cookie(trust_session->get_cookie());
         }
     }
     done->Run();

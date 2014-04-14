@@ -73,8 +73,8 @@ public:
 
     void set_lifecycle_state(MirLifecycleState state);
 
-    void begin_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session) override;
-    void end_trust_session(std::shared_ptr<shell::TrustSession> const& trust_session) override;
+    void begin_trust_session() override;
+    void end_trust_session() override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

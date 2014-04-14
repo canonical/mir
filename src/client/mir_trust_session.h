@@ -60,8 +60,6 @@ public:
     MirTrustSessionState get_state() const;
     void set_state(MirTrustSessionState new_state);
 
-    std::string get_cookie() const;
-
 private:
     mutable std::mutex mutex; // Protects members of *this
     mutable std::mutex mutex_event_handler; // Need another mutex for callback access to members

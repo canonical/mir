@@ -397,7 +397,6 @@ TEST(ApplicationSession, begin_trust_session)
 
     mtd::MockSurfaceFactory surface_factory;
     MockEventSink sender;
-    mtd::NullTrustSession trust_session;
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_factory),
@@ -409,7 +408,7 @@ TEST(ApplicationSession, begin_trust_session)
 
     EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
 
-    app_session.begin_trust_session(mt::fake_shared(trust_session));
+    app_session.begin_trust_session();
 }
 
 TEST(ApplicationSession, end_trust_session)
@@ -418,7 +417,6 @@ TEST(ApplicationSession, end_trust_session)
 
     mtd::MockSurfaceFactory surface_factory;
     MockEventSink sender;
-    mtd::NullTrustSession trust_session;
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_factory),
@@ -430,5 +428,5 @@ TEST(ApplicationSession, end_trust_session)
 
     EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_stopped))).Times(1);
 
-    app_session.end_trust_session(mt::fake_shared(trust_session));
+    app_session.end_trust_session();
 }

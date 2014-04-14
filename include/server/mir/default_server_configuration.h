@@ -62,6 +62,7 @@ class SessionListener;
 class FocusController;
 class DisplayLayout;
 class SurfaceConfigurator;
+class TrustSessionListener;
 }
 namespace time
 {
@@ -204,6 +205,7 @@ public:
     virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
+    virtual std::shared_ptr<shell::TrustSessionListener>     the_shell_trust_session_listener();
     /** @} */
 
     /** @name internal scene configuration
@@ -304,6 +306,7 @@ protected:
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
+    CachedPtr<shell::TrustSessionListener> shell_trust_session_listener;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

@@ -30,12 +30,6 @@ namespace doubles
 
 class NullTrustSession : public shell::TrustSession
 {
-
-    MirTrustSessionAddTrustResult add_trusted_client_process(pid_t)
-    {
-        return mir_trust_session_add_tust_failed;
-    }
-
     void for_each_trusted_client_process(std::function<void(pid_t)>, bool) const
     {
     }
@@ -43,11 +37,6 @@ class NullTrustSession : public shell::TrustSession
     MirTrustSessionState get_state() const override
     {
       return mir_trust_session_state_stopped;
-    }
-
-    std::string get_cookie() const override
-    {
-      return "";
     }
 
     void start() override

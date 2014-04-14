@@ -112,13 +112,6 @@ MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session);
 MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session);
 
 /**
- * Return the cookie used for automatic adding of trusted sessions
- * \param [in] trust_session  The trust session
- * \return                    The cookie for the trust session
- */
-const char* mir_trust_session_get_cookie(MirTrustSession *trust_session);
-
-/**
  * Release a trust session
  *   \param [in] trust_session  The trust session to release
  */

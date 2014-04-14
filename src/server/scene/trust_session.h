@@ -30,6 +30,7 @@ namespace mir
 namespace shell
 {
 class TrustSessionCreationParameters;
+class TrustSessionListener;
 }
 
 namespace scene
@@ -40,15 +41,15 @@ class TrustSession : public shell::TrustSession
 {
 public:
     TrustSession(std::weak_ptr<shell::Session> const& session,
-                 shell::TrustSessionCreationParameters const& parameters);
+                 shell::TrustSessionCreationParameters const& parameters,
+                 std::shared_ptr<shell::TrustSessionListener> const& trust_session_listener);
     ~TrustSession();
 
-    MirTrustSessionAddTrustResult add_trusted_client_process(pid_t pid);
     void for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const;
 
     MirTrustSessionState get_state() const override;
-    std::string get_cookie() const override;
     std::weak_ptr<shell::Session> get_trusted_helper() const override;
+
     void start() override;
     void stop() override;
 
@@ -61,16 +62,15 @@ protected:
     TrustSession& operator=(const TrustSession&) = delete;
 
 private:
-    std::mutex mutable mutex;
     std::weak_ptr<shell::Session> const trusted_helper;
+    std::shared_ptr<shell::TrustSessionListener> const trust_session_listener;
     MirTrustSessionState state;
     std::string cookie;
+    std::mutex mutable mutex;
 
-    std::mutex mutable mutex_processes;
     std::mutex mutable mutex_children;
     std::vector<pid_t> client_processes;
     std::vector<std::weak_ptr<shell::Session>> trusted_children;
-    void clear_trusted_children();
 };
 
 }
