@@ -19,7 +19,7 @@
 #include "src/server/scene/application_session.h"
 #include "src/server/shell/default_focus_mechanism.h"
 #include "mir/scene/session.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/graphics/display_configuration.h"
 

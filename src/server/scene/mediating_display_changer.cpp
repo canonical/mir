@@ -27,7 +27,6 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
