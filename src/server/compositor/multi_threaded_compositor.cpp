@@ -35,32 +35,25 @@ namespace mg = mir::graphics;
 namespace
 {
 
-class TryButRevertIfUnwinding
+class ApplyIfUnwinding
 {
 public:
-    TryButRevertIfUnwinding(std::function<void()> const& apply,
-                            std::function<void()> const& revert)
-        : apply{apply}, revert{revert}
+    ApplyIfUnwinding(std::function<void()> const& apply)
+        : apply{apply}
     {
     }
 
-    void run()
-    {
-        apply();
-    }
-
-    ~TryButRevertIfUnwinding()
+    ~ApplyIfUnwinding()
     {
         if (std::uncaught_exception())
-            revert();
+            apply();
     }
 
 private:
-    TryButRevertIfUnwinding(TryButRevertIfUnwinding const&) = delete;
-    TryButRevertIfUnwinding& operator=(TryButRevertIfUnwinding const&) = delete;
+    ApplyIfUnwinding(ApplyIfUnwinding const&) = delete;
+    ApplyIfUnwinding& operator=(ApplyIfUnwinding const&) = delete;
 
     std::function<void()> const apply;
-    std::function<void()> const revert;
 };
 
 }
@@ -265,7 +258,7 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::schedule_compositing()
 {
-    std::unique_lock<std::mutex> lk(started_guard);
+    std::unique_lock<std::mutex> lk(state_guard);
     report->scheduled();
     for (auto& f : thread_functors)
         f->schedule_compositing();
@@ -273,7 +266,7 @@ void mc::MultiThreadedCompositor::schedule_compositing()
 
 void mc::MultiThreadedCompositor::start()
 {
-    std::unique_lock<std::mutex> lk(started_guard);
+    std::unique_lock<std::mutex> lk(state_guard);
     if (state != CompositorState::stopped)
     {
         return;
@@ -282,58 +275,18 @@ void mc::MultiThreadedCompositor::start()
     state = CompositorState::starting;
     report->started();
 
-    auto create_compositing_thread = [this](mg::DisplayBuffer& buffer)
-    {
-        auto thread_functor_raw =
-            new mc::DisplayBufferCompositingFunctor{
-                display_buffer_compositor_factory, buffer, report};
-        auto thread_functor =
-            std::unique_ptr<mc::DisplayBufferCompositingFunctor>(thread_functor_raw);
+    /* To cleanup state if any code below throws */
+    ApplyIfUnwinding cleanup_if_unwinding{
+        [this, &lk]{
+            destroy_compositing_threads(lk);
+        }};
 
-        threads.push_back(std::thread{std::ref(*thread_functor)});
-        thread_functors.push_back(std::move(thread_functor));
-    };
-
+    lk.unlock();
     /* Recomposite whenever the scene changes */
-    auto scene_callback = [this]() { schedule_compositing(); };
+    scene->set_change_callback([this]() { schedule_compositing(); });
+    lk.lock();
 
-    //Cleanup threads if any code throws during start
-    TryButRevertIfUnwinding create_compositor_threads{
-        [this, &create_compositing_thread]
-        {
-            display->for_each_display_buffer(create_compositing_thread);
-
-            /* Start the buffer consuming thread */
-            auto thread_functor_raw = new mc::BufferConsumingFunctor{scene};
-            auto thread_functor = std::unique_ptr<mc::BufferConsumingFunctor>(thread_functor_raw);
-
-            threads.push_back(std::thread{std::ref(*thread_functor)});
-            thread_functors.push_back(std::move(thread_functor));
-        },
-        [this]
-        {
-            //assumes we have the lock already
-            //this is guaranteed if the callback_setter unwinder gets constructed after this one.
-            cleanup();
-        }};
-
-    //Thread cleanup is handled by the create_compositor_threads rewinder above
-    TryButRevertIfUnwinding callback_setter{
-        [this, &lk, &scene_callback]
-        {
-            lk.unlock();
-            scene->set_change_callback(scene_callback);
-            lk.lock();
-        },
-        [this, &lk]()
-        {
-            lk.lock();
-            state = CompositorState::stopped;
-        }};
-
-    callback_setter.run();
-    create_compositor_threads.run();
-    state = CompositorState::started;
+    create_compositing_threads();
 
     /* Optional first render */
     if (compose_on_start)
@@ -345,7 +298,7 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    std::unique_lock<std::mutex> lk(started_guard);
+    std::unique_lock<std::mutex> lk(state_guard);
     if (state != CompositorState::started)
     {
         return;
@@ -353,34 +306,57 @@ void mc::MultiThreadedCompositor::stop()
 
     state = CompositorState::stopping;
 
-    TryButRevertIfUnwinding callback_clearer{
-        [this, &lk]
-        {
-            lk.unlock();
-            scene->set_change_callback([]{});
-            lk.lock();
-        },
-        [this, &lk]
-        {
-            //failed removing callback, so the caller must assume
-            //stop was not successful, hence we should not cleanup
-            //here - allow caller to call stop again
-            lk.lock();
+    /* To cleanup state if any code below throws */
+    ApplyIfUnwinding cleanup_if_unwinding{
+        [this, &lk]{
+            if(!lk.owns_lock()) lk.lock();
             state = CompositorState::started;
         }};
 
-    callback_clearer.run();
-    cleanup();
+    lk.unlock();
+    scene->set_change_callback([]{});
+    lk.lock();
 
-    state = CompositorState::stopped;
+    destroy_compositing_threads(lk);
 
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
     compose_on_start = true;
 }
 
-void mc::MultiThreadedCompositor::cleanup()
+void mc::MultiThreadedCompositor::create_compositing_threads()
 {
+    /* Start the display buffer compositing threads */
+    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    {
+        auto thread_functor_raw =
+            new mc::DisplayBufferCompositingFunctor{
+                display_buffer_compositor_factory, buffer, report};
+        auto thread_functor =
+            std::unique_ptr<mc::DisplayBufferCompositingFunctor>(thread_functor_raw);
+
+        threads.push_back(std::thread{std::ref(*thread_functor)});
+        thread_functors.push_back(std::move(thread_functor));
+    });
+
+    /* Start the buffer consuming thread */
+    auto thread_functor_raw = new mc::BufferConsumingFunctor{scene};
+    auto thread_functor = std::unique_ptr<mc::BufferConsumingFunctor>(thread_functor_raw);
+
+    threads.push_back(std::thread{std::ref(*thread_functor)});
+    thread_functors.push_back(std::move(thread_functor));
+
+    state = CompositorState::started;
+}
+
+void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<std::mutex>& lock)
+{
+    /* Could be called during unwinding,
+     * ensure the lock is held before changing state
+     */
+    if(!lock.owns_lock())
+        lock.lock();
+
     for (auto& f : thread_functors)
         f->stop();
 
@@ -391,4 +367,6 @@ void mc::MultiThreadedCompositor::cleanup()
     threads.clear();
 
     report->stopped();
+
+    state = CompositorState::stopped;
 }
