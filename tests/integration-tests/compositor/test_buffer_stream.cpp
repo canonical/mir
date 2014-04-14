@@ -19,10 +19,11 @@
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
+#include "mir/asio_main_loop.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
-#include "multithread_harness.h"
+#include "mir_test_framework/watchdog.h"
 
 #include <gmock/gmock.h>
 
@@ -33,12 +34,45 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace mt = mir::testing;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 namespace
 {
+class Semaphore
+{
+public:
+    Semaphore()
+        : signalled{false}
+    {
+    }
+
+    void signal()
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        signalled = true;
+        cv.notify_all();
+    }
+
+    template<typename rep, typename period>
+    bool wait_for(std::chrono::duration<rep, period> delay)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        return cv.wait_for(lock, delay, [this]() { return signalled; });
+    }
+
+    void wait(void)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        cv.wait(lock, [this]() { return signalled; });
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool signalled;
+};
+
 struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 {
     using mc::BufferStreamSurfaces::BufferStreamSurfaces;
@@ -46,31 +80,42 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
     // Convenient function to allow tests to be written in linear style
     void swap_client_buffers_blocking(mg::Buffer*& buffer)
     {
-        std::mutex mutex;
-        std::condition_variable cv;
-        bool done = false;
+        Semaphore s;
 
+        swap_client_buffers_cancellable(buffer, s);
+    }
+
+    void swap_client_buffers_cancellable(mg::Buffer*& buffer, Semaphore& signal)
+    {
         swap_client_buffers(buffer,
             [&](mg::Buffer* new_buffer)
              {
-                std::unique_lock<decltype(mutex)> lock(mutex);
                 buffer = new_buffer;
-                done = true;
-                cv.notify_one();
+                signal.signal();
              });
 
-        std::unique_lock<decltype(mutex)> lock(mutex);
-
-        cv.wait(lock, [&]{ return done; });
+        signal.wait();
     }
 };
 
 struct BufferStreamTest : public ::testing::Test
 {
     BufferStreamTest()
-        : nbuffers{3},
+        : ml{std::make_shared<mir::AsioMainLoop>()},
+          nbuffers{3},
           buffer_stream{create_bundle()}
     {
+        mainloop_thread = std::thread([this]()
+        {
+            ml->run();
+        });
+    }
+
+    ~BufferStreamTest()
+    {
+        ml->stop();
+        if (mainloop_thread.joinable())
+            mainloop_thread.join();
     }
 
     std::shared_ptr<mc::BufferBundle> create_bundle()
@@ -82,9 +127,12 @@ struct BufferStreamTest : public ::testing::Test
 
         return std::make_shared<mc::SwitchingBundle>(nbuffers,
                                                      allocator,
-                                                     properties);
+                                                     properties,
+                                                     ml);
     }
 
+    std::thread mainloop_thread;
+    std::shared_ptr<mir::AsioMainLoop> ml;
     const int nbuffers;
     BufferStreamSurfaces buffer_stream;
 };
@@ -332,4 +380,27 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 
     for (auto &s : snapshotters)
         s->join();
+}
+
+TEST_F(BufferStreamTest, client_swaps_at_at_least_1_Hz)
+{
+    mg::Buffer* client1{nullptr};
+    // Grab all the buffers...
+    for (int i = 0; i < nbuffers; ++i)
+        buffer_stream.swap_client_buffers_blocking(client1);
+
+    Semaphore done_signal;
+
+    mir_test_framework::WatchDog watchdog([&done_signal]() { done_signal.signal(); });
+
+    mg::Buffer* prev_buffer = client1;
+    watchdog.run([this, &client1](mir_test_framework::WatchDog& watchdog)
+    {
+        buffer_stream.swap_client_buffers_blocking(client1);
+        watchdog.notify_done();
+    });
+
+    EXPECT_TRUE(watchdog.wait_for(std::chrono::milliseconds{1200}));
+    // Verify that the swap has gone through.
+    EXPECT_NE(prev_buffer, client1);
 }

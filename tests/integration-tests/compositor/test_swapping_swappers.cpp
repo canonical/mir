@@ -18,6 +18,7 @@
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "multithread_harness.h"
+#include "mir_test_doubles/stub_timer.h"
 
 #include "src/server/compositor/switching_bundle.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
@@ -47,7 +48,10 @@ struct SwapperSwappingStress : public ::testing::Test
         auto properties = mg::BufferProperties{geom::Size{380, 210},
                                           mir_pixel_format_abgr_8888,
                                           mg::BufferUsage::hardware};
-        switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
+        switching_bundle = std::make_shared<mc::SwitchingBundle>(3,
+                                                                 allocator,
+                                                                 properties,
+                                                                 std::make_shared<mtd::StubTimer>());
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;

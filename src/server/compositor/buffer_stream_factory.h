@@ -22,6 +22,7 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/timer.h"
 
 #include <memory>
 
@@ -38,8 +39,7 @@ class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
 
-    explicit BufferStreamFactory(
-        const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc);
+    explicit BufferStreamFactory(const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc, const std::shared_ptr<mir::Timer> timer);
 
     virtual ~BufferStreamFactory() {}
 
@@ -48,7 +48,7 @@ public:
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
-
+    std::shared_ptr<mir::Timer> const timer;
 };
 
 }

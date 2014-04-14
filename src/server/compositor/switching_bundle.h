@@ -20,12 +20,15 @@
 #ifndef MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 #define MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 
+#include "mir/timer.h"
+
 #include "buffer_bundle.h"
 #include <condition_variable>
 #include <mutex>
 #include <memory>
 #include <iosfwd>
 #include <unordered_set>
+#include <thread>
 
 namespace mir
 {
@@ -44,7 +47,8 @@ public:
 
     SwitchingBundle(int nbuffers,
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
-                    const graphics::BufferProperties &);
+                    const graphics::BufferProperties &,
+                    const std::shared_ptr<Timer> &);
 
     ~SwitchingBundle() noexcept;
 
@@ -112,6 +116,9 @@ private:
     int force_drop;
 
     std::function<void(graphics::Buffer* buffer)> client_acquire_todo;
+
+    std::shared_ptr<mir::Timer> const timer;
+    std::shared_ptr<mir::Alarm> acquire_timeout;
 
     friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 };

@@ -66,10 +66,10 @@
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
-mc::SwitchingBundle::SwitchingBundle(
-    int nbuffers,
+mc::SwitchingBundle::SwitchingBundle(int nbuffers,
     const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc,
-    const mg::BufferProperties &property_request)
+    const mg::BufferProperties &property_request,
+    const std::shared_ptr<Timer> &timer)
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{nbuffers},
@@ -78,7 +78,8 @@ mc::SwitchingBundle::SwitchingBundle(
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
       overlapping_compositors{false},
-      framedropping{false}, force_drop{0}
+      framedropping{false}, force_drop{0},
+      timer{timer}
 {
     if (nbuffers < min_buffers || nbuffers > max_buffers)
     {
@@ -223,7 +224,28 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
     else
     {
         if (!client_buffers_available(lock))
+        {
+            if (!acquire_timeout)
+            {
+                acquire_timeout = timer->notify_in(std::chrono::milliseconds{1000}, [this]()
+                {
+                    std::unique_lock<std::mutex> lock(guard);
+                    if (client_acquire_todo)
+                    {
+                        if (nfree() <= 0)
+                        {
+                            while (nready == 0)
+                                cond.wait(lock);
+
+                            drop_frames(1);
+                        }
+                        complete_client_acquire(std::move(lock));
+                    }
+                });
+            } else if (acquire_timeout->state() != mir::Alarm::Pending)
+                acquire_timeout->reschedule_in(std::chrono::milliseconds{1000});
             return;
+        }
     }
 
     complete_client_acquire(std::move(lock));
@@ -372,7 +394,11 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
         }
 
         if (client_buffers_available(lock) && client_acquire_todo)
+        {
+            if (acquire_timeout)
+                acquire_timeout->cancel();
             complete_client_acquire(std::move(lock));
+        }
     }
 }
 
@@ -425,6 +451,10 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
+    if (acquire_timeout)
+    {
+        acquire_timeout.reset();
+    }
     if (client_acquire_todo)
     {
         drop_frames(nready);
