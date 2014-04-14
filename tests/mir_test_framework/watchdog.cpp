@@ -41,7 +41,7 @@ void mtf::WatchDog::run(std::function<void(mtf::WatchDog&)> watchee)
 {
     if (runner.joinable())
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to start a second thread of execution on the WatchDog"));
-    runner = std::thread{[watchee](mtf::WatchDog* dawg) {watchee(*dawg);}, this};
+    runner = std::thread{watchee, std::ref(*this)};
 }
 
 void mtf::WatchDog::notify_done()
