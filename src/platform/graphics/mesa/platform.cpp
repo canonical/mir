@@ -233,15 +233,6 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 
 extern "C" void add_platform_options(boost::program_options::options_description& config)
 {
-    char const* bypass_env_string = "MIR_SERVER_BYPASS";
-    auto const bypass_env = getenv(bypass_env_string);
-    auto const legacy_env = getenv("MIR_BYPASS");
-
-    //MIR_SERVER_BYPASS takes precedence. If the proper option is not set, and the legacy
-    //option is set, set the proper option value to the value of the legacy option
-    if (!bypass_env && legacy_env)
-        setenv(bypass_env_string, legacy_env, 1);
-
     config.add_options()
         (vt_option_name,
          boost::program_options::value<int>()->default_value(0),

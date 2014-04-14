@@ -52,7 +52,6 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        unsetenv("MIR_BYPASS");
 
         fake_devices.add_standard_device("standard-drm-devices");
 
