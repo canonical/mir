@@ -34,7 +34,7 @@ public:
     BuiltinCursorImages();
     virtual ~BuiltinCursorImages() = default;
 
-    std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
+    std::shared_ptr<CursorImage> image(std::string const& theme_name,
                                                std::string const& cursor_name,
                                                geometry::Size const& size);
 

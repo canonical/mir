@@ -37,7 +37,7 @@ class CursorImages
 public:
     /// Looks up the image for a named cursor in a given cursor theme. Cursor names
     /// follow the XCursor naming conventions.
-    virtual std::shared_ptr<CursorImage> lookup_cursor(std::string const& theme_name,
+    virtual std::shared_ptr<CursorImage> image(std::string const& theme_name,
                                                        std::string const& cursor_name,
                                                        geometry::Size const& size) = 0;
 

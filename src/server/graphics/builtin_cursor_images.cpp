@@ -44,7 +44,7 @@ mg::BuiltinCursorImages::BuiltinCursorImages()
 {
 }
 
-std::shared_ptr<mg::CursorImage> mg::BuiltinCursorImages::lookup_cursor(std::string const& /* theme_name */,
+std::shared_ptr<mg::CursorImage> mg::BuiltinCursorImages::image(std::string const& /* theme_name */,
                                                                             std::string const& /* cursor_name */,
                                                                             geom::Size const& /* size */)
 {
