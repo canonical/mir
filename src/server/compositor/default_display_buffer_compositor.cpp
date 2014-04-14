@@ -94,13 +94,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, view_area);
+
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
 
         for(auto const& renderable : renderable_list)
         {
-            auto r = renderable->buffers_ready_for_compositor();
-            uncomposited_buffers |= ( r > 1);//renderable->buffers_ready_for_compositor() > 1);
+            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
             //'renderer.get()' serves as an ID to distinguish itself from other compositors
             auto buffer = renderable->buffer(renderer.get());
@@ -109,6 +109,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         }
 
         renderer->end();
+
         display_buffer.post_update();
 
         // This is a frig to avoid lp:1286190

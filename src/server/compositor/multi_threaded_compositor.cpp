@@ -64,6 +64,7 @@ public:
     void schedule_compositing()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
+
         frames_scheduled = true;
         run_cv.notify_one();
     }
@@ -94,8 +95,8 @@ protected:
                 frames_scheduled = false;
                 lock.unlock();
 
-    
                 auto more_frames_pending = composite();
+
                 /*
                  * Each surface could have a number of frames ready in its buffer
                  * queue. And we need to ensure that we render all of them so that

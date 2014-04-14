@@ -38,10 +38,7 @@ bool renderable_is_occluded(
     //      in the list of surfaces?
     // This will check the surface is not hidden and has been posted.
     if (!renderable.visible())
-    {
-        printf("NOT VIS\n");
         return true;  //invisible; definitely occluded.
-    }
 
     // Not weirdly transformed but also not on this monitor? Don't care...
     if (!area.overlaps(renderable.screen_position()))
