@@ -31,10 +31,18 @@ namespace doubles
 {
 struct MockBufferStream : public compositor::BufferStream
 {
+    int buffers_ready_{0};
+    int buffers_ready()
+    {
+        if (buffers_ready_)
+            return buffers_ready_--;
+        return 0;
+    }
+
     MockBufferStream()
     {
         ON_CALL(*this, buffers_ready_for_compositor())
-            .WillByDefault(testing::Return(1));
+            .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
     }
     MOCK_METHOD2(swap_client_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> completee));
     MOCK_METHOD1(lock_compositor_buffer,

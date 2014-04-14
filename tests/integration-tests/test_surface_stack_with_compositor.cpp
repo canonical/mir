@@ -26,6 +26,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
 
@@ -89,7 +90,6 @@ struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
         increment_post_count();
     }
 
-    
     bool reaches_expected_count_before(std::chrono::system_clock::time_point& timeout)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
@@ -136,7 +136,7 @@ struct SurfaceStackCompositorInteractions : public testing::Test
 {
     SurfaceStackCompositorInteractions()
         : timeout{std::chrono::system_clock::now() + std::chrono::seconds(1)},
-          mock_buffer_stream(std::make_shared<mtd::MockBufferStream>()),
+          mock_buffer_stream(std::make_shared<testing::NiceMock<mtd::MockBufferStream>>()),
           stub_surface{std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
@@ -147,6 +147,9 @@ struct SurfaceStackCompositorInteractions : public testing::Test
             null_scene_report)}
 
     {
+        using namespace testing;
+        ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
+            .WillByDefault(Return(mt::fake_shared(stubbuf)));
     }
     mtd::StubInputRegistrar stub_input_registrar;
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
@@ -156,6 +159,7 @@ struct SurfaceStackCompositorInteractions : public testing::Test
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::shared_ptr<ms::BasicSurface> stub_surface; 
     msh::SurfaceCreationParameters default_params;
+    mtd::StubBuffer stubbuf;
 };
 }
 
@@ -205,8 +209,7 @@ TEST_F(SurfaceStackCompositorInteractions, does_not_composes_on_start_if_told_no
     EXPECT_TRUE(stub_secondary_db.reaches_expected_count_before(timeout));
 }
 
-//really, this shouldn't trigger a composition. the surface posting should trigger the composition
-TEST_F(SurfaceStackCompositorInteractions, adding_a_surface_triggers_a_composition)
+TEST_F(SurfaceStackCompositorInteractions, adding_a_surface_that_has_been_swapped_triggers_a_composition)
 {
     unsigned int const expected_post_count{1};
     CountingDisplayBuffer stub_primary_db{expected_post_count};
@@ -225,21 +228,28 @@ TEST_F(SurfaceStackCompositorInteractions, adding_a_surface_triggers_a_compositi
         null_comp_report, false);
     mt_compositor.start();
 
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
     EXPECT_TRUE(stub_primary_db.reaches_expected_count_before(timeout));
     EXPECT_TRUE(stub_secondary_db.reaches_expected_count_before(timeout));
 }
 
-TEST_F(SurfaceStackCompositorInteractions, a_surface_gets_all_its_buffer_consumed)
+namespace
+{
+int thread_distinguishing_buffers_ready_for_compositor()
+{
+    //c++14 integer_sequence
+    std::vector<int> sequence{5,4,3,2,1};
+    thread_local size_t sequence_idx{0};
+    return sequence[sequence_idx++];
+}
+}
+TEST_F(SurfaceStackCompositorInteractions, compositor_runs_until_all_surfaces_buffers_are_consumed)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
-        .WillOnce(Return(4))
-        .WillOnce(Return(3))
-        .WillOnce(Return(2))
-        .WillOnce(Return(1))
-        .WillOnce(Return(0));
+    ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
+        .WillByDefault(Invoke(thread_distinguishing_buffers_ready_for_compositor));
 
     unsigned int const expected_post_count{5};
     CountingDisplayBuffer stub_primary_db{expected_post_count};
@@ -258,14 +268,97 @@ TEST_F(SurfaceStackCompositorInteractions, a_surface_gets_all_its_buffer_consume
         null_comp_report, false);
     mt_compositor.start();
 
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
     EXPECT_TRUE(stub_primary_db.reaches_expected_count_before(timeout));
     EXPECT_TRUE(stub_secondary_db.reaches_expected_count_before(timeout));
 }
 
-//TEST_F(SurfaceStackCompositorInteractions, removing_a_surface_triggers_a_composition_immediately)
+TEST_F(SurfaceStackCompositorInteractions, moving_a_surface_triggers_composition)
+{
+    unsigned int const expected_post_count{1};
+    CountingDisplayBuffer stub_primary_db{expected_post_count};
+    CountingDisplayBuffer stub_secondary_db{expected_post_count};
+    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    ms::SurfaceStack stack(mt::fake_shared(stub_input_registrar), null_scene_report);
+    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
+        mt::fake_shared(stack),
+        mt::fake_shared(renderer_factory),
+        null_comp_report};
 
-//TEST_F(SurfaceStackCompositorInteractions, moving_a_surface_triggers_composition)
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+
+    mc::MultiThreadedCompositor mt_compositor(
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stack),
+        mt::fake_shared(dbc_factory),
+        null_comp_report, false);
+
+    mt_compositor.start();
+    stub_surface->move_to(geom::Point{1,1});
+
+    EXPECT_TRUE(stub_primary_db.reaches_expected_count_before(timeout));
+    EXPECT_TRUE(stub_secondary_db.reaches_expected_count_before(timeout));
+}
+
+TEST_F(SurfaceStackCompositorInteractions, removing_a_surface_triggers_composition)
+{
+    unsigned int const expected_post_count{1};
+    CountingDisplayBuffer stub_primary_db{expected_post_count};
+    CountingDisplayBuffer stub_secondary_db{expected_post_count};
+    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    ms::SurfaceStack stack(mt::fake_shared(stub_input_registrar), null_scene_report);
+    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
+        mt::fake_shared(stack),
+        mt::fake_shared(renderer_factory),
+        null_comp_report};
+
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+
+    mc::MultiThreadedCompositor mt_compositor(
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stack),
+        mt::fake_shared(dbc_factory),
+        null_comp_report, false);
+
+    mt_compositor.start();
+    stack.remove_surface(stub_surface);
+
+    EXPECT_TRUE(stub_primary_db.reaches_expected_count_before(timeout));
+    EXPECT_TRUE(stub_secondary_db.reaches_expected_count_before(timeout));
+}
+
+TEST_F(SurfaceStackCompositorInteractions, buffer_updates_trigger_composition)
+{
+    unsigned int const expected_post_count{1};
+    CountingDisplayBuffer stub_primary_db{expected_post_count};
+    CountingDisplayBuffer stub_secondary_db{expected_post_count};
+    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    ms::SurfaceStack stack(mt::fake_shared(stub_input_registrar), null_scene_report);
+    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
+        mt::fake_shared(stack),
+        mt::fake_shared(renderer_factory),
+        null_comp_report};
+
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+
+    mc::MultiThreadedCompositor mt_compositor(
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stack),
+        mt::fake_shared(dbc_factory),
+        null_comp_report, false);
+
+    mt_compositor.start();
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+
+    EXPECT_TRUE(stub_primary_db.reaches_expected_count_before(timeout));
+    EXPECT_TRUE(stub_secondary_db.reaches_expected_count_before(timeout));
+}
+
+//TODO: future tests:
 //TEST_F(SurfaceStackCompositorInteractions, surface_buffer_updates_triggers_composition)
 //TEST_F(SurfaceStackCompositorInteractions, surface_buffer_updates_triggers_composition_until_all_consumed)
