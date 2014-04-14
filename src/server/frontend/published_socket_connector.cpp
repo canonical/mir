@@ -63,8 +63,13 @@ bool socket_exists(std::string const& socket_name)
         std::string line;
         while (std::getline(socket_names_file, line))
         {
-           if (line.find(socket_path) != std::string::npos)
+           auto index = line.find(socket_path);
+           /* check for complete match */
+           if (index != std::string::npos &&
+               (index + socket_path.length()) == line.length())
+           {
                return true;
+           }
         }
     }
     catch (...)
