@@ -300,6 +300,54 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
 }
 
+TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    std::mutex checkpoint_mutex;
+    std::condition_variable checkpoint;
+    bool hit_checkpoint{false};
+
+    auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
+                                               [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        hit_checkpoint = true;
+        checkpoint.notify_all();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{10}, [&hit_checkpoint]() { return hit_checkpoint; }));
+    }
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [&runner]
+    {
+        runner.notify_done();
+    });
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{50}));
+
+    ml.stop();
+    // Main loop should be stopped now
+
+    hit_checkpoint = false;
+    auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
+                                         [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        hit_checkpoint = true;
+        checkpoint.notify_all();
+    });
+
+    std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+    EXPECT_FALSE(checkpoint.wait_for(lock, std::chrono::milliseconds{50}, [&hit_checkpoint]() { return hit_checkpoint; }));
+}
+
 TEST(AsioMainLoopTest, alarm_fires_at_correct_time)
 {
     mir::AsioMainLoop ml;

@@ -52,6 +52,7 @@ private:
     class FDHandler;
 
     boost::asio::io_service io;
+    boost::asio::io_service::work work;
     std::vector<std::unique_ptr<SignalHandler>> signal_handlers;
     std::vector<std::unique_ptr<FDHandler>> fd_handlers;
 };

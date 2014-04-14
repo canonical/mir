@@ -111,6 +111,7 @@ private:
  * to compile.
  */
 mir::AsioMainLoop::AsioMainLoop()
+    : work{io}
 {
 }
 
