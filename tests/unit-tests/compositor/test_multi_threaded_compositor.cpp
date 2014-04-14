@@ -637,23 +637,36 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
     EXPECT_THROW(compositor.start(), std::runtime_error);
 
     scene->throw_on_set_callback(false);
-    
-    compositor.start();
-    
+
+    /* No point in running the rest of the test if it throws again */
+    ASSERT_NO_THROW(compositor.start());
+
+    /* The minimum number of records here should be nbuffers *2, since we are checking for
+     * presence of at least one additional rogue compositor thread per display buffer
+     * However to avoid timing considerations like one good thread compositing the display buffer
+     * twice before the rogue thread gets a chance to, an arbitrary number of records are gathered
+     */
+    unsigned int min_number_of_records = 100;
+
+    /* Timeout here in case the exception from setting the scene callback put the compositor
+     * in a bad state that did not allow it to composite (hence no records gathered)
+     */
     auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(1);
-    while (!db_compositor_factory->enough_records_gathered(nbuffers, 20) &&
+    while (!db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records) &&
            std::chrono::steady_clock::now() <= time_out)
     {
         scene->emit_change_event();
         std::this_thread::yield();
     }
 
-    EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, 20));
-    
+    /* Check expectation in case a timeout happened */
+    EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records));
+
     compositor.stop();
-    
-    //Only one thread should be rendering each display buffer
-    //If the compositor failed to cleanup correctly more than one thread will
-    //composite the same display buffer
+
+    /* Only one thread should be rendering each display buffer
+     * If the compositor failed to cleanup correctly more than one thread could be
+     * compositing the same display buffer
+     */
     EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
 }
