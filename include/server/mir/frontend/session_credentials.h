@@ -24,21 +24,21 @@ namespace mir
 {
 namespace frontend
 {
-struct SessionCredentials
+class SessionCredentials
 {
+public:
+    SessionCredentials(int socket_fd);
+
     pid_t pid() const;
     uid_t uid() const;
     gid_t gid() const;
 
-    static SessionCredentials from_socket(int fd);
-    static SessionCredentials from_current_process();
-
 private:
-    SessionCredentials(pid_t pid, uid_t uid, gid_t gid);
+    SessionCredentials() = delete;
 
-    pid_t const pid_;
-    uid_t const uid_;
-    gid_t const gid_;
+    pid_t pid_;
+    uid_t uid_;
+    gid_t gid_;
 
 };
 }

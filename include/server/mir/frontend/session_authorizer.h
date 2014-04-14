@@ -26,7 +26,7 @@ namespace mir
 namespace frontend
 {
 
-struct SessionCredentials;
+class SessionCredentials;
 
 class SessionAuthorizer
 {

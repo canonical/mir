@@ -34,7 +34,7 @@ namespace frontend
 class EventSink;
 class ResourceCache;
 class MessageProcessorReport;
-struct SessionCredentials;
+class SessionCredentials;
 
 class ProtobufIpcFactory
 {

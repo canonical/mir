@@ -37,7 +37,7 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
 
 mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
-    return mf::SessionCredentials::from_socket(socket->native_handle());
+    return mf::SessionCredentials{socket->native_handle()};
 }
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)

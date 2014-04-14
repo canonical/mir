@@ -24,9 +24,20 @@
 
 namespace mf = mir::frontend;
 
-mf::SessionCredentials::SessionCredentials(pid_t pid, uid_t uid, gid_t gid)
-    : pid_(pid), uid_(uid), gid_(gid)
-{}
+mf::SessionCredentials::SessionCredentials(int socket_fd)
+{
+    struct ucred cr;
+    socklen_t cl = sizeof(cr);
+
+    auto status = getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+
+    if (status)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
+
+    pid_ = cr.pid;
+    uid_ = cr.uid;
+    gid_ = cr.gid;
+}
 
 pid_t mf::SessionCredentials::pid() const
 {
@@ -41,25 +52,4 @@ uid_t mf::SessionCredentials::uid() const
 gid_t mf::SessionCredentials::gid() const
 {
     return gid_;
-}
-
-mf::SessionCredentials mf::SessionCredentials::from_current_process()
-{
-    pid_t the_pid = ::getpid();
-    uid_t the_uid = ::geteuid();
-    gid_t the_gid = ::getegid();
-    return mf::SessionCredentials{the_pid, the_uid, the_gid};
-}
-
-mf::SessionCredentials mf::SessionCredentials::from_socket(int fd)
-{
-    struct ucred cr;
-    socklen_t cl = sizeof(cr);
-
-    auto status = getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
-
-    if (status)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
-
-    return mf::SessionCredentials{cr.pid, cr.uid, cr.gid};
 }
