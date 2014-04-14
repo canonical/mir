@@ -212,13 +212,12 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
 
     if ((framedropping || force_drop) && nbuffers > 1)
     {
-        if (nfree() <= 0)
-        {
-            while (nready == 0)
-                cond.wait(lock);
-
-            drop_frames(1);
-        }
+        /*
+         * If we don't have a free buffer to return or we cannot free a ready buffer
+         * by dropping it, we would block in complete_client_acquire, so just return.
+         */
+        if (nfree() <= 0 && nready == 0)
+            return;
     }
     else
     {
@@ -232,6 +231,17 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
 void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex> lock)
 {
     auto complete = std::move(client_acquire_todo);
+
+    if ((framedropping || force_drop) && nbuffers > 1)
+    {
+        if (nfree() <= 0)
+        {
+            while (nready == 0)
+                cond.wait(lock);
+
+            drop_frames(1);
+        }
+    }
 
     if (force_drop > 0)
         force_drop--;
