@@ -1,3 +1,21 @@
+mir (0.1.9-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.1.9 (https://launchpad.net/mir/+milestone/0.1.9)
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - mirserver ABI bumped to 19. Shells need rebuilding.
+    - More libmirserver class changes and reorganization, including;
+      . Moving things from shell:: to scene::
+      . Rewriting/refactoring surface factories.
+    - Added an id() to Renderable.
+    - Scene/Renderer interfaces:
+      . Scene is no longer responsible for its own iteration (no for_each
+        any more). Instead you should iterate over the list returned by
+        Scene::generate_renderable_list().
+    - Bugs fixed:
+      . TODO: fill in when proposing to Ubuntu
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 15 Apr 2014 13:35:04 +0800
+
 mir (0.1.8+14.04.20140411-0ubuntu1) trusty; urgency=medium
 
   [ Daniel van Vugt ]
