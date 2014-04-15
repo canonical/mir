@@ -62,6 +62,11 @@ struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
     {
     }
 
+    bool can_bypass() const override
+    {
+        return true;
+    }
+
     void render_and_post_update(
         mg::RenderableList const&,
         std::function<void(mg::Renderable const&)> const&) override
@@ -118,6 +123,15 @@ private:
     mg::DisplayBuffer& secondary;
 };
 
+class BypassStubBuffer : public mtd::StubBuffer
+{
+public:
+    bool can_bypass() const override
+    {
+        return true;
+    }
+};
+
 struct SurfaceStackCompositor : public testing::Test
 {
     SurfaceStackCompositor()
@@ -145,7 +159,7 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::shared_ptr<ms::BasicSurface> stub_surface; 
     ms::SurfaceCreationParameters default_params;
-    mtd::StubBuffer stubbuf;
+    BypassStubBuffer stubbuf;
 };
 }
 
@@ -222,7 +236,7 @@ namespace
 {
 int thread_distinguishing_buffers_ready_for_compositor()
 {
-    //c++14 integer_sequence
+    //could use c++14 integer_sequence one day
     std::vector<int> sequence{5,4,3,2,1};
     thread_local size_t sequence_idx{0};
     return sequence[sequence_idx++];
@@ -243,6 +257,37 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         mt::fake_shared(renderer_factory),
         null_comp_report};
 
+    mc::MultiThreadedCompositor mt_compositor(
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stack),
+        mt::fake_shared(dbc_factory),
+        null_comp_report, false);
+    mt_compositor.start();
+
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+
+    EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
+    EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
+}
+
+TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffers_are_consumed)
+{
+    using namespace testing;
+    ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
+        .WillByDefault(Invoke(thread_distinguishing_buffers_ready_for_compositor));
+
+    CountingDisplayBuffer stub_primary_db;
+    CountingDisplayBuffer stub_secondary_db;
+    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    ms::SurfaceStack stack(mt::fake_shared(stub_input_registrar), null_scene_report);
+    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
+        mt::fake_shared(stack),
+        mt::fake_shared(renderer_factory),
+        null_comp_report};
+
+    stub_surface->resize(geom::Size{10,10});
+    stub_surface->move_to(geom::Point{0,0});
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
