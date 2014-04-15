@@ -31,7 +31,10 @@ namespace mir
 {
 namespace test
 {
-
+/*!
+ * Pointer and reference adaptors for MirEvent inside gmock matchers.
+ * \{
+ */
 inline MirEvent const& get(MirEvent const* ptr)
 {
     return *ptr;
@@ -41,6 +44,9 @@ inline MirEvent const& get(MirEvent const& ptr)
 {
     return ptr;
 }
+/**
+ * \}
+ */
 
 MATCHER(KeyDownEvent, "")
 {
@@ -53,7 +59,7 @@ MATCHER(KeyDownEvent, "")
 }
 MATCHER_P(KeyOfSymbol, keysym, "")
 {
-    if (static_cast<xkb_keysym_t>(get(arg).key.key_code) == (uint)keysym)
+    if (static_cast<xkb_keysym_t>(get(arg).key.key_code) == static_cast<uint32_t>(keysym))
         return true;
     return false;
 }
@@ -133,5 +139,3 @@ MATCHER(MovementEvent, "")
 }
 
 #endif
-
-

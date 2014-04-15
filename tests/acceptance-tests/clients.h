@@ -36,6 +36,4 @@ struct SurfaceCreatingClient : TestingClientConfiguration
 
 }
 
-
 #endif
-

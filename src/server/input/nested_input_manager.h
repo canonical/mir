@@ -42,5 +42,3 @@ private:
 }
 
 #endif // MIR_INPUT_NESTED_INPUT_MANAGER
-
-

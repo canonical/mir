@@ -75,11 +75,10 @@ TEST_F(AndroidInputDispatcherTest, start_starts_dispathcer_and_thread)
 
     InSequence seq;
 
-    EXPECT_CALL(*dispatcher,
-                setInputDispatchMode(mia::DispatchEnabled,
-                                     mia::DispatchUnfrozen))
+    EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen))
         .Times(1);
-    EXPECT_CALL(*dispatcher, setInputFilterEnabled(true)).Times(1);
+    EXPECT_CALL(*dispatcher, setInputFilterEnabled(true))
+        .Times(1);
 
     EXPECT_CALL(*dispatcher_thread, start())
         .Times(1);
@@ -103,4 +102,3 @@ TEST_F(AndroidInputDispatcherTest, stop_stops_dispatcher_and_thread)
 
     input_dispatcher.stop();
 }
-

@@ -25,14 +25,14 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mtd = mir::test::doubles;
 
-
 class FakeEventHubInputDispatcherConfiguration : public mia::InputDispatcherConfiguration
 {
 public:
     FakeEventHubInputDispatcherConfiguration(std::shared_ptr<mi::EventFilter> const& ev_filter,
                                              std::shared_ptr<mi::InputReport> const& input_report)
-      : InputDispatcherConfiguration(ev_filter,input_report)
-    {}
+        : InputDispatcherConfiguration(ev_filter, input_report)
+    {
+    }
     bool is_key_repeat_enabled() const override
     {
         return false;

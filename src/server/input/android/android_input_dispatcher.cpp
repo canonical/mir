@@ -28,6 +28,7 @@
 #include <stdexcept>
 
 namespace mia = mir::input::android;
+namespace droidinput = ::android;
 
 mia::AndroidInputDispatcher::AndroidInputDispatcher(
     droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
@@ -44,7 +45,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
     {
     case mir_event_type_key:
     {
-        ::android::NotifyKeyArgs const notify_key_args(
+        droidinput::NotifyKeyArgs const notify_key_args(
             event.key.event_time,
             event.key.device_id,
             event.key.source_id,
@@ -63,8 +64,8 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 
     case mir_event_type_motion:
     {
-        std::vector<::android::PointerProperties> pointer_properties(event.motion.pointer_count);
-        std::vector<::android::PointerCoords> pointer_coords(event.motion.pointer_count);
+        std::vector<droidinput::PointerProperties> pointer_properties(event.motion.pointer_count);
+        std::vector<droidinput::PointerCoords> pointer_coords(event.motion.pointer_count);
 
         for(auto i = 0U; i != event.motion.pointer_count; ++i)
         {
@@ -80,7 +81,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, event.motion.pointer_coordinates[i].orientation);
         }
 
-        ::android::NotifyMotionArgs const notify_motion_args(
+        droidinput::NotifyMotionArgs const notify_motion_args(
             event.motion.event_time,
             event.motion.device_id,
             event.motion.source_id,

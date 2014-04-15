@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #include "input_dispatcher_configuration.h"
 #include "event_filter_dispatcher_policy.h"
 #include "android_input_dispatcher.h"
@@ -159,5 +158,3 @@ std::shared_ptr<mi::InputDispatcher> mia::InputDispatcherConfiguration::the_inpu
             return std::make_shared<mia::AndroidInputDispatcher>(the_dispatcher(), the_dispatcher_thread());
         });
 }
-
-

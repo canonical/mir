@@ -27,7 +27,11 @@ namespace input
 {
 
 /*!
- * \brief InputDispatcher decides which surface should receive input events.
+ * \brief The InputDispatchers role is to decide what should happen with user input events.
+ *
+ * It will receive MirEvents with either MirMotionEvent or MirKeyEvent inside. The InputDispatcher
+ * implementation shall either handle the input without informing any clients or pick a client
+ * surface and send the event to it.
  */
 class InputDispatcher
 {
