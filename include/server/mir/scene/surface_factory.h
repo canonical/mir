@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_FACTORY_H_
 #define MIR_SCENE_SURFACE_FACTORY_H_
 
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include <memory>
 
 namespace mir
@@ -34,8 +34,7 @@ public:
     SurfaceFactory() = default;
     virtual ~SurfaceFactory() = default;
 
-    virtual std::shared_ptr<Surface> create_surface(
-        shell::SurfaceCreationParameters const& params) = 0;
+    virtual std::shared_ptr<Surface> create_surface(SurfaceCreationParameters const& params) = 0;
 
 private:
     SurfaceFactory(const SurfaceFactory&) = delete;

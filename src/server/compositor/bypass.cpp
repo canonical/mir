@@ -21,55 +21,29 @@
 #include "bypass.h"
 
 using namespace mir;
-using namespace mir::compositor;
-using namespace mir::graphics;
+namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 
-BypassFilter::BypassFilter(const graphics::DisplayBuffer &display_buffer)
-        : display_buffer(display_buffer)
+mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
+    : view_area(rect),
+      bypass_is_feasible(true)
 {
 }
 
-bool BypassFilter::operator()(const Renderable &renderable)
+bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
-    if (!all_orthogonal)
+    //we've already eliminated bypass as a possibility
+    if (!bypass_is_feasible)
         return false;
 
-    // Any weird transformations? Then we can't risk any bypass
-    static const glm::mat4 identity;
-    if (renderable.transformation() != identity)
-    {
-        all_orthogonal = false;
-        return false;
-    }
-
-    auto const& view_area = display_buffer.view_area();
-
-    // Not weirdly transformed but also not on this monitor? Don't care...
-    // This will also check the surface is not hidden and has been posted.
-    if (!renderable.should_be_rendered_in(view_area))
+    //offscreen or invisible surfaces don't affect if bypass is possible 
+    if (!(renderable->visible() && //TODO: we shouldn't be getting invisible surfaces 
+         view_area.contains(renderable->screen_position())))
         return false;
 
-    topmost_fits = false;
-
-    if (renderable.alpha() != 1.0f || renderable.shaped())
-        return false;
-
-    // Transformed perfectly to fit the monitor? Bypass!
-    topmost_fits = renderable.screen_position() == view_area;
-    return topmost_fits;
-}
-
-bool BypassFilter::fullscreen_on_top() const
-{
-    return all_orthogonal && topmost_fits;
-}
-
-void BypassMatch::operator()(const Renderable &r)
-{
-    latest = &r;
-}
-
-const Renderable *BypassMatch::topmost_fullscreen() const
-{
-    return latest;
+    auto const is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
+    auto const fits = (renderable->screen_position() == view_area);
+    auto const is_orthogonal = (renderable->transformation() == identity);
+    bypass_is_feasible = (is_opaque && fits && is_orthogonal);
+    return bypass_is_feasible;
 }

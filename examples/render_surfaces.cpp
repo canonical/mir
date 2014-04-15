@@ -22,7 +22,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/connector.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -30,7 +30,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/shell/surface_factory.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/run_mir.h"
@@ -195,7 +194,7 @@ class Moveable
 {
 public:
     Moveable() {}
-    Moveable(std::shared_ptr<msh::Surface> const& s, const geom::Size& display_size,
+    Moveable(std::shared_ptr<ms::Surface> const& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
         : surface(s), display_size(display_size),
           x{static_cast<float>(s->top_left().x.as_uint32_t())},
@@ -251,7 +250,7 @@ public:
     }
 
 private:
-    std::shared_ptr<msh::Surface> surface;
+    std::shared_ptr<ms::Surface> surface;
     geom::Size display_size;
     float x;
     float y;
@@ -466,10 +465,10 @@ public:
         for (auto& m : moveables)
         {
             auto const s = surface_coordinator->add_surface(
-                    msh::a_surface().of_size(surface_size)
+                    ms::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
                                    .of_buffer_usage(mg::BufferUsage::hardware),
-                    {});
+                    nullptr);
 
             /*
              * We call swap_buffers() twice so that the surface is

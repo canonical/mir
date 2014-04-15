@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SESSION_LISTENER_H_
 #define MIR_TEST_DOUBLES_MOCK_SESSION_LISTENER_H_
 
-#include "mir/shell/session_listener.h"
+#include "mir/scene/session_listener.h"
 
 #include <gmock/gmock.h>
 
@@ -30,17 +30,17 @@ namespace test
 namespace doubles
 {
 
-struct MockSessionListener : public shell::SessionListener
+struct MockSessionListener : public scene::SessionListener
 {
     virtual ~MockSessionListener() noexcept(true) {}
 
-    MOCK_METHOD1(starting, void(std::shared_ptr<shell::Session> const&));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<shell::Session> const&));
-    MOCK_METHOD1(focused, void(std::shared_ptr<shell::Session> const&));
+    MOCK_METHOD1(starting, void(std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD1(stopping, void(std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD1(focused, void(std::shared_ptr<scene::Session> const&));
     MOCK_METHOD0(unfocused, void());
 
-    MOCK_METHOD2(surface_created, void(shell::Session&, std::shared_ptr<shell::Surface> const&));
-    MOCK_METHOD2(destroying_surface, void(shell::Session&, std::shared_ptr<shell::Surface> const&));
+    MOCK_METHOD2(surface_created, void(scene::Session&, std::shared_ptr<scene::Surface> const&));
+    MOCK_METHOD2(destroying_surface, void(scene::Session&, std::shared_ptr<scene::Surface> const&));
 };
 
 }

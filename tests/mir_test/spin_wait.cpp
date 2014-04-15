@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,32 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SCENE_SNAPSHOT_H_
-#define MIR_SCENE_SNAPSHOT_H_
+#include "mir_test/spin_wait.h"
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/dimensions.h"
+#include <thread>
 
-#include <functional>
-
-namespace mir
+bool mir::test::spin_wait_for_condition_or_timeout(
+    std::function<bool()> const& condition,
+    std::chrono::milliseconds timeout,
+    std::chrono::milliseconds spin_period)
 {
-namespace shell
-{
+    auto const end = std::chrono::steady_clock::now() + timeout;
+    
+    while (std::chrono::steady_clock::now() < end && !condition())
+    {
+        std::this_thread::sleep_for(spin_period);
+    }   
 
-struct Snapshot
-{
-    geometry::Size size;
-    geometry::Stride stride;
-    void const* pixels;
-};
-
-typedef std::function<void(Snapshot const&)> SnapshotCallback;
-
+    return condition();
 }
-}
-
-#endif /* MIR_SCENE_SNAPSHOT_H_ */

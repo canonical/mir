@@ -27,36 +27,8 @@
 
 namespace mir
 {
-namespace graphics { class Renderable; }
 namespace compositor
 {
-
-class FilterForScene
-{
-public:
-    virtual ~FilterForScene() {}
-
-    virtual bool operator()(graphics::Renderable const&) = 0;
-
-protected:
-    FilterForScene() = default;
-    FilterForScene(const FilterForScene&) = delete;
-    FilterForScene& operator=(const FilterForScene&) = delete;
-};
-
-class OperatorForScene
-{
-public:
-    virtual ~OperatorForScene() {}
-
-    virtual void operator()(graphics::Renderable const&) = 0;
-
-protected:
-    OperatorForScene() = default;
-    OperatorForScene(const OperatorForScene&) = delete;
-    OperatorForScene& operator=(const OperatorForScene&) = delete;
-
-};
 
 class Scene
 {
@@ -69,9 +41,6 @@ public:
      */
     virtual graphics::RenderableList generate_renderable_list() const = 0;
 
-    // Back to front; normal rendering order
-    virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
-
     /**
      * Sets a callback to be called whenever the state of the
      * Scene changes.
@@ -81,10 +50,6 @@ public:
      * the Scene, otherwise a deadlock may occur.
      */
     virtual void set_change_callback(std::function<void()> const& f) = 0;
-
-    // Implement BasicLockable, to temporarily lock scene state:
-    virtual void lock() = 0;
-    virtual void unlock() = 0;
 
 protected:
     Scene() = default;

@@ -34,8 +34,15 @@ bool renderable_is_occluded(
     if (renderable.transformation() != identity)
         return false;  // Weirdly transformed. Assume never occluded.
 
-    if (!renderable.should_be_rendered_in(area))
-        return true;  // Not on the display, or invisible; definitely occluded.
+    //TODO: remove this check, why are we getting a non visible renderable 
+    //      in the list of surfaces?
+    // This will check the surface is not hidden and has been posted.
+    if (!renderable.visible())
+        return true;  //invisible; definitely occluded.
+
+    // Not weirdly transformed but also not on this monitor? Don't care...
+    if (!area.overlaps(renderable.screen_position()))
+        return true;  // Not on the display; definitely occluded.
 
     bool occluded = false;
     Rectangle const& window = renderable.screen_position();

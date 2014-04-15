@@ -19,7 +19,7 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/input/input_region.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
 

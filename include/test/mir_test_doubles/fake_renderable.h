@@ -42,9 +42,14 @@ public:
         : rect{{x, y}, {width, height}},
           opacity(opacity),
           rectangular(rectangular),
-          visible(visible),
+          visible_(visible),
           posted(posted)
     {
+    }
+
+    ID id() const override
+    {
+        return this;
     }
 
     float alpha() const override
@@ -57,9 +62,9 @@ public:
         return glm::mat4();
     }
 
-    bool should_be_rendered_in(const mir::geometry::Rectangle &r) const override
+    bool visible() const override
     {
-        return visible && posted && rect.overlaps(r);
+        return visible_ && posted;
     }
 
     bool shaped() const override
@@ -97,7 +102,7 @@ private:
     mir::geometry::Rectangle rect;
     float opacity;
     bool rectangular;
-    bool visible;
+    bool visible_;
     bool posted;
 };
 

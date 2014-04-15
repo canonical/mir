@@ -33,6 +33,10 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
+    ID id() const override
+    {
+        return this;
+    }
     std::shared_ptr<graphics::Buffer> buffer(void const*) const override
     {
         return std::make_shared<StubBuffer>();
@@ -53,7 +57,7 @@ public:
     {
         return trans;
     }
-    bool should_be_rendered_in(geometry::Rectangle const&) const override
+    bool visible() const
     {
         return true;
     }

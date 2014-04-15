@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_
-#define MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_
+#ifndef MIR_SCENE_SURFACE_CREATION_PARAMETERS_H_
+#define MIR_SCENE_SURFACE_CREATION_PARAMETERS_H_
 
 #include "mir_toolkit/common.h"
 #include "mir/geometry/point.h"
@@ -32,7 +32,7 @@
 
 namespace mir
 {
-namespace shell
+namespace scene
 {
 
 struct SurfaceCreationParameters
@@ -74,4 +74,4 @@ SurfaceCreationParameters a_surface();
 }
 }
 
-#endif /* MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_ */
+#endif /* MIR_SCENE_SURFACE_CREATION_PARAMETERS_H_ */

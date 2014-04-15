@@ -27,7 +27,7 @@
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/fake_renderable.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
@@ -56,16 +56,6 @@ struct FakeScene : mc::Scene
     mg::RenderableList generate_renderable_list() const
     {
         return renderlist;
-    }
-
-    // Ugly...should we use delegation?
-    void for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
-    {
-        for (auto it = renderlist.begin(); it != renderlist.end(); it++)
-        {
-            mg::Renderable &info = **it;
-            if (filter(info)) renderable_operator(info);
-        }
     }
 
     void set_change_callback(std::function<void()> const&) {}
@@ -119,8 +109,6 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(1);
     EXPECT_CALL(scene, generate_renderable_list())
         .Times(1);
-    EXPECT_CALL(scene, for_each_if(_,_))
-        .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
 
@@ -135,7 +123,8 @@ TEST_F(DefaultDisplayBufferCompositor, render)
 TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
-    mtd::NullDisplayBuffer display_buffer;
+    
+    mtd::StubDisplayBuffer display_buffer{geom::Rectangle{{0,0},{14,14}}};
     auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto mock_renderable3 = std::make_shared<NiceMock<mtd::MockRenderable>>();
@@ -156,11 +145,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(*mock_renderable3, transformation())
         .WillOnce(Return(simple));
 
-    EXPECT_CALL(*mock_renderable1, should_be_rendered_in(_))
+    EXPECT_CALL(*mock_renderable1, visible())
         .WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock_renderable2, should_be_rendered_in(_))
+    EXPECT_CALL(*mock_renderable2, visible())
         .WillRepeatedly(Return(false));
-    EXPECT_CALL(*mock_renderable3, should_be_rendered_in(_))
+    EXPECT_CALL(*mock_renderable3, visible())
         .WillRepeatedly(Return(true));
 
     EXPECT_CALL(*mock_renderable1, alpha())
@@ -174,11 +163,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
         .WillOnce(Return(false));
 
     EXPECT_CALL(*mock_renderable1, screen_position())
-        .WillOnce(Return(geom::Rectangle{{1,2}, {3,4}}));
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
     EXPECT_CALL(*mock_renderable2, screen_position())
-        .Times(0);
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
     EXPECT_CALL(*mock_renderable3, screen_position())
-        .WillOnce(Return(geom::Rectangle{{5,6}, {7,8}}));
+        .WillRepeatedly(Return(geom::Rectangle{{5,6}, {7,8}}));
 
     mg::RenderableList list{
         mock_renderable1,
@@ -554,3 +543,47 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     EXPECT_TRUE(compositor.composite());
     EXPECT_FALSE(compositor.composite());
 }
+
+TEST_F(DefaultDisplayBufferCompositor, buffers_held_until_post_update_is_done)
+{
+    using namespace testing;
+    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto buf1 = std::make_shared<mtd::StubBuffer>();
+    auto buf2 = std::make_shared<mtd::StubBuffer>();
+    ON_CALL(*mock_renderable1, buffer(_))
+        .WillByDefault(Return(buf1));
+    ON_CALL(*mock_renderable2, buffer(_))
+        .WillByDefault(Return(buf2));
+    ON_CALL(display_buffer, view_area())
+        .WillByDefault(Return(geom::Rectangle{{0,0},{14,14}}));
+    EXPECT_CALL(*mock_renderable1, screen_position())
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
+    EXPECT_CALL(*mock_renderable2, screen_position())
+        .WillRepeatedly(Return(geom::Rectangle{{0,2}, {3,4}}));
+
+    mg::RenderableList list{
+        mock_renderable1,
+        mock_renderable2
+    };
+    FakeScene scene(list);
+
+    long test_use_count1{buf1.use_count()};
+    long test_use_count2{buf2.use_count()};
+
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(1)
+        .WillOnce(Invoke([&test_use_count1, &test_use_count2, &buf1, &buf2]()
+        {
+            EXPECT_GT(buf1.use_count(), test_use_count1);
+            EXPECT_GT(buf2.use_count(), test_use_count2);
+        }));
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite();
+}
+

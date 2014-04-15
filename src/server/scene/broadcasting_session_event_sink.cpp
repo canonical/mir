@@ -19,7 +19,6 @@
 #include "broadcasting_session_event_sink.h"
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 /*
  * TODO: Use Boost.Signals2 for this when we default to Boost 1.54, see
@@ -30,9 +29,9 @@ namespace msh = mir::shell;
  */
 
 void ms::BroadcastingSessionEventSink::handle_focus_change(
-    std::shared_ptr<msh::Session> const& session)
+    std::shared_ptr<Session> const& session)
 {
-    std::vector<std::function<void(std::shared_ptr<msh::Session> const&)>> handlers;
+    std::vector<std::function<void(std::shared_ptr<Session> const&)>> handlers;
 
     {
         std::lock_guard<std::mutex> lg{handler_mutex};
@@ -57,9 +56,9 @@ void ms::BroadcastingSessionEventSink::handle_no_focus()
 }
 
 void ms::BroadcastingSessionEventSink::handle_session_stopping(
-    std::shared_ptr<msh::Session> const& session)
+    std::shared_ptr<Session> const& session)
 {
-    std::vector<std::function<void(std::shared_ptr<msh::Session> const&)>> handlers;
+    std::vector<std::function<void(std::shared_ptr<Session> const&)>> handlers;
 
     {
         std::lock_guard<std::mutex> lg{handler_mutex};
@@ -71,7 +70,7 @@ void ms::BroadcastingSessionEventSink::handle_session_stopping(
 }
 
 void ms::BroadcastingSessionEventSink::register_focus_change_handler(
-    std::function<void(std::shared_ptr<msh::Session> const& session)> const& handler)
+    std::function<void(std::shared_ptr<Session> const& session)> const& handler)
 {
     std::lock_guard<std::mutex> lg{handler_mutex};
 
@@ -87,7 +86,7 @@ void ms::BroadcastingSessionEventSink::register_no_focus_handler(
 }
 
 void ms::BroadcastingSessionEventSink::register_session_stopping_handler(
-    std::function<void(std::shared_ptr<msh::Session> const& session)> const& handler)
+    std::function<void(std::shared_ptr<Session> const& session)> const& handler)
 {
     std::lock_guard<std::mutex> lg{handler_mutex};
 

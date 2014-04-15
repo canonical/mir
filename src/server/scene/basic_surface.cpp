@@ -40,38 +40,60 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::ThreadsafeCallback::ThreadsafeCallback(std::function<void()> const& notify_change) :
-        notify_change(notify_change) {}
-
-ms::ThreadsafeCallback& ms::ThreadsafeCallback::operator=(std::function<void()> const& notify_change)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    this->notify_change = notify_change;
-    return *this;
-}
-
-void ms::ThreadsafeCallback::operator()() const
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    auto const notifier = notify_change;
-    lock.unlock();
-    notifier();
-}
-
-void ms::SurfaceObservers::attrib_change(MirSurfaceAttrib attrib, int value)
+void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
-        p->attrib_change(attrib, value);
+        p->attrib_changed(attrib, value);
 }
 
-void ms::SurfaceObservers::resize(geometry::Size const& size)
+void ms::SurfaceObservers::resized_to(geometry::Size const& size)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
-        p->resize(size);
+        p->resized_to(size);
+}
+
+void ms::SurfaceObservers::moved_to(geometry::Point const& top_left)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->moved_to(top_left);
+}
+
+void ms::SurfaceObservers::hidden_set_to(bool hide)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->hidden_set_to(hide);
+}
+
+void ms::SurfaceObservers::frame_posted()
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->frame_posted();
+}
+
+void ms::SurfaceObservers::alpha_set_to(float alpha)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->alpha_set_to(alpha);
+}
+
+void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->transformation_set_to(t);
 }
 
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
@@ -97,7 +119,6 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<SceneReport> const& report) :
-    notify_change([](){}),
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
@@ -113,6 +134,11 @@ ms::BasicSurface::BasicSurface(
     state_value(mir_surface_state_restored)
 {
     report->surface_created(this, surface_name);
+}
+
+mg::Renderable::ID ms::BasicSurface::id() const
+{
+    return this; // Always sufficient or should we cast from a SurfaceID?
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -141,7 +167,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
         std::unique_lock<std::mutex> lk(guard);
         surface_rect.top_left = top_left;
     }
-    notify_change();
+    observers.moved_to(top_left);
 }
 
 float ms::BasicSurface::alpha() const
@@ -156,7 +182,7 @@ void ms::BasicSurface::set_hidden(bool hide)
         std::unique_lock<std::mutex> lk(guard);
         hidden = hide;
     }
-    notify_change();
+    observers.hidden_set_to(hide);
 }
 
 mir::geometry::Size ms::BasicSurface::size() const
@@ -182,7 +208,7 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
         }
-        notify_change();
+        observers.frame_posted();
     }
 }
 
@@ -215,11 +241,6 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
     return server_input_channel;
 }
 
-void ms::BasicSurface::on_change(std::function<void()> change_notification)
-{
-    notify_change = change_notification;
-}
-
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -248,8 +269,7 @@ void ms::BasicSurface::resize(geom::Size const& size)
         std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = size;
     }
-    notify_change();
-    observers.resize(size);
+    observers.resized_to(size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -274,22 +294,13 @@ bool ms::BasicSurface::contains(geom::Point const& point) const
     return false;
 }
 
-void ms::BasicSurface::frame_posted()
-{
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        first_frame_posted = true;
-    }
-    notify_change();
-}
-
 void ms::BasicSurface::set_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
         surface_alpha = alpha;
     }
-    notify_change();
+    observers.alpha_set_to(alpha);
 }
 
 
@@ -299,7 +310,7 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
         std::unique_lock<std::mutex> lk(guard);
         transformation_matrix = t;
     }
-    notify_change();
+    observers.transformation_set_to(t);
 }
 
 glm::mat4 ms::BasicSurface::transformation() const
@@ -308,15 +319,11 @@ glm::mat4 ms::BasicSurface::transformation() const
     return transformation_matrix;
 }
 
-bool ms::BasicSurface::should_be_rendered_in(geom::Rectangle const& rect) const
+bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
-
-    if (hidden || !first_frame_posted)
-        return false;
-
-    return rect.overlaps(surface_rect);
-}
+    return !hidden && first_frame_posted;
+} 
 
 bool ms::BasicSurface::shaped() const
 {
@@ -384,7 +391,7 @@ bool ms::BasicSurface::set_state(MirSurfaceState s)
         state_value = s;
         valid = true;
 
-        observers.attrib_change(mir_surface_attrib_state, s);
+        observers.attrib_changed(mir_surface_attrib_state, s);
     }
 
     return valid;
@@ -419,7 +426,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = state();
         break;
     case mir_surface_attrib_focus:
-        observers.attrib_change(attrib, value);
+        observers.attrib_changed(attrib, value);
         break;
     case mir_surface_attrib_swapinterval:
         allow_dropping = (value == 0);

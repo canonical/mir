@@ -28,6 +28,7 @@ set(
   test_client_library_drm.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
+  test_client_surface_swap_buffers.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

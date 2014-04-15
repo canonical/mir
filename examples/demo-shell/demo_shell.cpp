@@ -33,7 +33,7 @@
 #include <iostream>
 
 namespace me = mir::examples;
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
@@ -74,15 +74,15 @@ public:
     {
     }
 
-    std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+    std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
     {
         return shell_placement_strategy(
-            [this]() -> std::shared_ptr<msh::PlacementStrategy>
+            [this]() -> std::shared_ptr<ms::PlacementStrategy>
             {
                 if (the_options()->is_set("fullscreen-surfaces"))
                     return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
                 else
-                    return DefaultServerConfiguration::the_shell_placement_strategy();
+                    return DefaultServerConfiguration::the_placement_strategy();
             });
     }
 
