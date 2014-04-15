@@ -56,6 +56,7 @@ namespace scene
 class InputRegistrar;
 class BasicSurface;
 class SceneReport;
+class Observer;
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
@@ -85,6 +86,15 @@ public:
         std::shared_ptr<Surface> const& surface,
         DepthId depth,
         input::InputReceptionMode input_mode) override;
+    
+    void add_observer(std::shared_ptr<Observer> const& observer)
+        {
+            (void)observer;
+        }
+    void remove_observer(std::shared_ptr<Observer> const& observer)
+        {
+            (void)observer;
+        }
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;

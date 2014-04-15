@@ -20,6 +20,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/observer.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -114,10 +115,16 @@ struct StubInputChannel : public mi::InputChannel
     int const c_fd;
 };
 
-class MockCallback
+struct MockCallback
 {
-public:
     MOCK_METHOD0(call, void());
+};
+
+struct MockSceneObserver : public ms::Observer
+{
+    MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD0(surfaces_reordered, void());
 };
 
 struct SurfaceStack : public ::testing::Test
@@ -532,4 +539,66 @@ TEST_F(SurfaceStack, generate_renderlist)
 
     for(auto& surface : surfacelist)
         stack.remove_surface(surface);
+}
+
+TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    InSequence seq;
+    EXPECT_CALL(observer, surface_added(Eq(stub_surface1))).Times(1);
+    EXPECT_CALL(observer, surface_removed(Eq(stub_surface1)))
+        .Times(1);
+    
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.remove_surface(stub_surface1);
+}
+
+TEST_F(SurfaceStack, remove_scene_observer)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    InSequence seq;
+    EXPECT_CALL(observer, surface_added(Eq(stub_surface1))).Times(1);
+    // We remove the scene observer before removing the surface, and thus
+    // expect to NOT see the surface_removed call
+    EXPECT_CALL(observer, surface_removed(Eq(stub_surface1)))
+        .Times(0);
+    
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.remove_observer(mt::fake_shared(observer));
+
+    stack.remove_surface(stub_surface1);
+}
+
+TEST_F(SurfaceStack, surfaces_reordered)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    EXPECT_CALL(observer, surface_added(_)).Times(AnyNumber());
+    EXPECT_CALL(observer, surface_removed(_)).Times(AnyNumber());
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.raise(stub_surface1);
 }
