@@ -19,7 +19,6 @@
  */
 
 #include "basic_surface.h"
-#include "mir/cached_ptr.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/event_sink.h"
@@ -453,6 +452,7 @@ public:
         bool shaped,
         mg::Renderable::ID id)
     : underlying_buffer_stream{stream},
+      compositor_buffer{nullptr},
       compositor_id{compositor_id},
       alpha_enabled_{alpha_enabled},
       alpha_{alpha},
@@ -469,11 +469,9 @@ public:
 
     std::shared_ptr<mg::Buffer> buffer() const override
     {
-        return cached_buffer(
-            [this]() -> std::shared_ptr<mg::Buffer>
-            {
-                return underlying_buffer_stream->lock_compositor_buffer(compositor_id);
-            });
+        if (!compositor_buffer)
+            compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
+        return compositor_buffer;
     }
 
     bool visible() const override
@@ -499,7 +497,7 @@ public:
 
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
-    mir::CachedPtr<mg::Buffer> mutable cached_buffer;
+    std::shared_ptr<mg::Buffer> mutable compositor_buffer;
     void const*const compositor_id;
     bool const alpha_enabled_;
     float const alpha_;
