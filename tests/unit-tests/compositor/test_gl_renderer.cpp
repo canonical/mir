@@ -272,20 +272,20 @@ public:
         EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
             .WillOnce(Return(screen_to_gl_coords_uniform_location));
 
-        mc::GLRendererFactory gl_renderer_factory;
         display_area = {{1, 2}, {3, 4}};
-        renderer = gl_renderer_factory.create_renderer_for(display_area);
 
-        EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
-        EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
         EXPECT_CALL(mock_gl, glDeleteProgram(stub_program));
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
     }
 
-    mtd::MockGL         mock_gl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockBuffer> mock_buffer;
     mir::geometry::Rectangle display_area;
     std::unique_ptr<mc::Renderer> renderer;
     glm::mat4           trans;
-    mtd::MockRenderable renderable;
+    testing::NiceMock<mtd::MockRenderable> renderable;
+    mc::GLRendererFactory gl_renderer_factory;
 };
 
 }
@@ -294,7 +294,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 
-    mtd::MockBuffer mock_buffer;
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
 
     InSequence seq;
 
@@ -357,7 +357,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    mtd::MockBuffer mock_buffer;
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
 
     InSequence seq;
     EXPECT_CALL(renderable, shaped())
@@ -392,7 +392,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
 TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
 {
-    mtd::MockBuffer mock_buffer;
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
 
     EXPECT_CALL(mock_buffer, size())
         .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
