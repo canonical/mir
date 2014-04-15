@@ -21,7 +21,7 @@
 
 #include "mir/graphics/renderable.h"
 #include "mir/input/surface.h"
-#include "mir/shell/surface_buffer_access.h"
+#include "mir/scene/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 
 #include <vector>
@@ -39,7 +39,7 @@ class SurfaceObserver;
 class Surface :
     public input::Surface,
     public frontend::Surface,
-    public shell::SurfaceBufferAccess
+    public SurfaceBufferAccess
 {
 public:
     // resolve ambiguous member function names

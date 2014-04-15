@@ -20,7 +20,7 @@
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/input/input_channel.h"
@@ -58,7 +58,7 @@ struct MockInputChannel : public mi::InputChannel
 TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
     using namespace geom;
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
 
     geom::Point const default_point{geom::X{0}, geom::Y{0}};
 
@@ -69,7 +69,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
     EXPECT_EQ(mir_pixel_format_invalid, params.pixel_format);
 
-    EXPECT_EQ(msh::a_surface(), params);
+    EXPECT_EQ(ms::a_surface(), params);
 }
 
 TEST(SurfaceCreationParametersTest, builder_mutators)
@@ -80,7 +80,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
     std::string name{"surface"};
 
-    auto params = msh::a_surface().of_name(name)
+    auto params = ms::a_surface().of_name(name)
                                  .of_size(size)
                                  .of_buffer_usage(usage)
                                  .of_pixel_format(format);
@@ -98,12 +98,12 @@ TEST(SurfaceCreationParametersTest, equality)
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
 
-    auto params0 = msh::a_surface().of_name("surface")
+    auto params0 = ms::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
 
-    auto params1 = msh::a_surface().of_name("surface")
+    auto params1 = ms::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
@@ -125,7 +125,7 @@ TEST(SurfaceCreationParametersTest, inequality)
     std::vector<MirPixelFormat> const formats{mir_pixel_format_abgr_8888,
                                                  mir_pixel_format_bgr_888};
 
-    std::vector<msh::SurfaceCreationParameters> params_vec;
+    std::vector<ms::SurfaceCreationParameters> params_vec;
 
     for (auto const& size : sizes)
     {
@@ -133,7 +133,7 @@ TEST(SurfaceCreationParametersTest, inequality)
         {
             for (auto const& format : formats)
             {
-                auto cur_params = msh::a_surface().of_name("surface0")
+                auto cur_params = ms::a_surface().of_name("surface0")
                                                  .of_size(size)
                                                  .of_buffer_usage(usage)
                                                  .of_pixel_format(format);

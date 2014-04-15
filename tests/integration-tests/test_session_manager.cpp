@@ -23,7 +23,7 @@
 #include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/scene/basic_surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"

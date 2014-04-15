@@ -19,7 +19,7 @@
 #include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -92,7 +92,7 @@ struct SurfaceStack : public ::testing::Test
     void SetUp()
     {
         using namespace testing;
-        default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
+        default_params = ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
         stub_surface1 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
@@ -123,7 +123,7 @@ struct SurfaceStack : public ::testing::Test
     }
 
     mtd::StubInputRegistrar input_registrar;
-    msh::SurfaceCreationParameters default_params;
+    ms::SurfaceCreationParameters default_params;
     std::shared_ptr<ms::BasicSurface> stub_surface1;
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
