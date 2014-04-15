@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,29 +16,35 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_
-#define MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_
+#ifndef MIR_SCENE_SURFACE_BUFFER_ACCESS_H_
+#define MIR_SCENE_SURFACE_BUFFER_ACCESS_H_
 
-#include "src/server/scene/snapshot_strategy.h"
+#include <functional>
 
 namespace mir
 {
-namespace test
+namespace graphics
 {
-namespace doubles
+class Buffer;
+}
+namespace scene
 {
 
-struct NullSnapshotStrategy : public scene::SnapshotStrategy
+class SurfaceBufferAccess
 {
-    void take_snapshot_of(
-        std::shared_ptr<scene::SurfaceBufferAccess> const&,
-        scene::SnapshotCallback const&)
-    {
-    }
+public:
+    virtual ~SurfaceBufferAccess() = default;
+
+    virtual void with_most_recent_buffer_do(
+        std::function<void(graphics::Buffer&)> const& exec) = 0;
+
+protected:
+    SurfaceBufferAccess() = default;
+    SurfaceBufferAccess(SurfaceBufferAccess const&) = delete;
+    SurfaceBufferAccess& operator=(SurfaceBufferAccess const&) = delete;
 };
 
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_ */
+#endif /* MIR_SCENE_SURFACE_BUFFER_ACCESS_H_ */

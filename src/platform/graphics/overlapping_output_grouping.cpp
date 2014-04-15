@@ -76,6 +76,7 @@ mg::OverlappingOutputGrouping::OverlappingOutputGrouping(DisplayConfiguration co
     conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
         if (conf_output.connected && conf_output.used &&
+            conf_output.power_mode == mir_power_mode_on &&
             conf_output.current_mode_index < conf_output.modes.size())
         {
             add_output(conf_output);
