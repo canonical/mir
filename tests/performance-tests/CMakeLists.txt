@@ -4,34 +4,42 @@ set(
   test_glmark2-es2-mir.cpp
 )
 
-add_executable(
-  mir_performance_tests
+message("---- DOING THE CHECK ----");
+find_program(GLMARK2_ES2_MIR_FOUND glmark2)
 
-  ${PERFORMANCE_TESTS_SOURCES}
-)
+if(NOT GLMARK2_ES2_MIR_FOUND)
+  message("glmark2-es2-mir not found, disabling performance test");
+else()
 
-target_link_libraries(
-  mir_performance_tests
+  add_executable(
+    mir_performance_tests
 
-  mirserver
-  mirclient
-  mirplatform
+    ${PERFORMANCE_TESTS_SOURCES}
+  )
 
-  mir-test
-  mir-test-framework
-  mir-test-doubles
-  mir-test-doubles-platform
-  3rd_party
+  target_link_libraries(
+    mir_performance_tests
 
-  ${PROTOBUF_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-)
+    mirserver
+    mirclient
+    mirplatform
 
-install(
+    mir-test
+    mir-test-framework
+    mir-test-doubles
+    mir-test-doubles-platform
+    3rd_party
+
+    ${PROTOBUF_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${GTEST_BOTH_LIBRARIES}
+    ${GMOCK_LIBRARY}
+    ${GMOCK_MAIN_LIBRARY}
+    ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  )
+
+  install(
     TARGETS mir_performance_tests
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+  )
+endif()
