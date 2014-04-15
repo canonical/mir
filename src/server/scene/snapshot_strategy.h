@@ -19,34 +19,30 @@
 #ifndef MIR_SCENE_SNAPSHOT_STRATEGY_H_
 #define MIR_SCENE_SNAPSHOT_STRATEGY_H_
 
-#include "mir/shell/snapshot.h"
+#include "mir/scene/snapshot.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace shell
-{
-class SurfaceBufferAccess;
-}
-
 namespace scene
 {
+class SurfaceBufferAccess;
+
 class SnapshotStrategy
 {
 public:
     virtual ~SnapshotStrategy() = default;
 
     virtual void take_snapshot_of(
-        std::shared_ptr<shell::SurfaceBufferAccess> const& surface_buffer_access,
-        shell::SnapshotCallback const& snapshot_taken) = 0;
+        std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
+        SnapshotCallback const& snapshot_taken) = 0;
 
 protected:
     SnapshotStrategy() = default;
     SnapshotStrategy(SnapshotStrategy const&) = delete;
     SnapshotStrategy& operator=(SnapshotStrategy const&) = delete;
 };
-
 }
 }
 
