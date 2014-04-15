@@ -18,7 +18,6 @@
 
 #include "src/server/scene/global_event_sender.h"
 #include "src/server/scene/session_container.h"
-#include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
@@ -29,7 +28,6 @@
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace ms = mir::scene;
-namespace msh=mir::shell;
 
 namespace
 {

@@ -17,8 +17,8 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/placement_strategy.h"
+#include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 #include "src/server/scene/session_container.h"
@@ -90,10 +90,10 @@ make_event_producing_server(mtf::CrossProcessSync const& client_ready_fence,
         {
         }
 
-        std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+        std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
         {
             return std::make_shared<mtf::DeclarativePlacementStrategy>(
-                InputTestingServerConfiguration::the_shell_placement_strategy(),
+                InputTestingServerConfiguration::the_placement_strategy(),
                 client_geometries, client_depths);
         }
 
@@ -335,7 +335,7 @@ struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
     }
 
     std::shared_ptr<ms::Surface> add_surface(
-        msh::SurfaceCreationParameters const& params,
+        ms::SurfaceCreationParameters const& params,
         ms::Session* session) override
     {
         auto surface = wrapped_coordinator->add_surface(params, session);
@@ -386,13 +386,13 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         {
         }
 
-        std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+        std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
         {
             static mtf::SurfaceGeometries positions;
             positions[test_client_name] = screen_geometry;
 
             return std::make_shared<mtf::DeclarativePlacementStrategy>(
-                InputTestingServerConfiguration::the_shell_placement_strategy(), positions, mtf::SurfaceDepths());
+                InputTestingServerConfiguration::the_placement_strategy(), positions, mtf::SurfaceDepths());
         }
         std::shared_ptr<ms::SurfaceCoordinator> the_surface_coordinator() override
         {

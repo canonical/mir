@@ -27,15 +27,8 @@
 
 namespace mir
 {
-namespace frontend { class EventSink; }
-namespace shell
-{
-struct SurfaceCreationParameters;
-}
-
 namespace scene
 {
-
 class Surface;
 
 class SurfaceStackModel
