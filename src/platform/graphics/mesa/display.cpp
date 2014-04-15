@@ -54,7 +54,10 @@ int errno_from_exception(std::exception const& e)
 class GBMGLContext : public mg::GLContext
 {
 public:
-    GBMGLContext(mgm::helpers::GBMHelper const& gbm, EGLContext shared_context)
+    GBMGLContext(mgm::helpers::GBMHelper const& gbm,
+                 mg::GLConfig const& gl_config,
+                 EGLContext shared_context)
+        : egl{gl_config}
     {
         egl.setup(gbm, shared_context);
     }
@@ -77,13 +80,16 @@ private:
 
 mgm::Display::Display(std::shared_ptr<Platform> const& platform,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+                      std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
       monitor(mir::udev::Context()),
+      shared_egl{*gl_config},
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)},
-      current_display_configuration{platform->drm.fd}
+      current_display_configuration{platform->drm.fd},
+      gl_config{gl_config}
 {
     platform->vt->set_graphics_mode();
 
@@ -203,6 +209,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                                   std::move(surface),
                                   bounding_rect,
                                   orientation,
+                                  *gl_config,
                                   shared_egl.context()}};
 
             display_buffers_new.push_back(std::move(db));
@@ -320,7 +327,10 @@ auto mgm::Display::the_cursor() -> std::weak_ptr<graphics::Cursor>
 std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()
 {
     return std::unique_ptr<GBMGLContext>{
-        new GBMGLContext{platform->gbm, shared_egl.context()}};
+        new GBMGLContext{
+            platform->gbm,
+            *gl_config,
+            shared_egl.context()}};
 }
 
 void mgm::Display::clear_connected_unused_outputs()

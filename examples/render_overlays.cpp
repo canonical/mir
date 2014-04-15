@@ -110,12 +110,12 @@ public:
         return client->last_rendered();
     }
 
-    bool alpha_enabled() const
+    bool alpha_enabled() const override
     {
         return false;
     }
 
-    geom::Rectangle screen_position() const
+    geom::Rectangle screen_position() const override
     {
         return position;
     }
@@ -130,14 +130,14 @@ public:
         return trans;
     }
 
-    bool shaped() const
+    bool shaped() const override
     {
         return false;
     }
 
-    bool should_be_rendered_in(geom::Rectangle const& rect) const override
+    bool visible() const override
     {
-        return rect.overlaps(position);
+        return true;
     }
 
     int buffers_ready_for_compositor() const override
@@ -168,7 +168,9 @@ try
     mir::DefaultServerConfiguration conf{argc, argv};
 
     auto platform = conf.the_graphics_platform();
-    auto display = platform->create_display(conf.the_display_configuration_policy());
+    auto display = platform->create_display(
+        conf.the_display_configuration_policy(),
+        conf.the_gl_config());
     auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
 
      mg::BufferProperties buffer_properties{

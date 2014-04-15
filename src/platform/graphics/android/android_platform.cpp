@@ -31,6 +31,8 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
+#include "mir/options/configuration.h"
+#include "mir/abnormal_exit.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -39,6 +41,26 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mf=mir::frontend;
 namespace mo = mir::options;
+
+namespace
+{
+char const* const hwc_log_opt = "hwc-report";
+bool should_log_hwc(mo::Option const& options)
+{
+    if (!options.is_set(hwc_log_opt))
+        return false;
+
+    auto opt = options.get<std::string>(hwc_log_opt);
+    if (opt == mo::log_opt_value)
+        return true;
+    else if (opt == mo::off_opt_value)
+        return false;
+    else
+        throw mir::AbnormalExit(
+            std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
+            mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
+}
+}
 
 mga::AndroidPlatform::AndroidPlatform(
     std::shared_ptr<mga::DisplayBuilder> const& display_builder,
@@ -61,9 +83,11 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_bu
 }
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
-    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+    std::shared_ptr<mg::GLConfig> const& gl_config)
 {
-    return std::make_shared<mga::AndroidDisplay>(display_builder, display_report);
+    return std::make_shared<mga::AndroidDisplay>(
+        display_builder, gl_config, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
@@ -105,10 +129,10 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& display_report)
 {
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(should_log_hwc(*options));
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, display_report);
@@ -126,7 +150,7 @@ extern "C" void add_platform_options(
     boost::program_options::options_description& config)
 {
     config.add_options()
-        ("hwc-report",
-         boost::program_options::value<std::string>()->default_value(std::string{"off"}),
-         "[platform-specific] How to handle the HWC logging report.");
+        (hwc_log_opt,
+         boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
+         "[platform-specific] How to handle the HWC logging report. [{log,off}]");
 }

@@ -24,7 +24,6 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_input_surface.h"
-#include "mir_test_doubles/stub_surface_builder.h"
 
 #include "mir/raii.h"
 
@@ -34,7 +33,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mf = mir::frontend;

@@ -16,23 +16,16 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/server/scene/surface_impl.h"
 #include "src/server/scene/basic_surface.h"
+#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface_event_source.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/shell/surface_creation_parameters.h"
-#include "src/server/scene/surface_stack_model.h"
-#include "src/server/scene/surface_builder.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
 
-#include "mir_test_doubles/stub_surface_ranker.h"
-#include "mir_test_doubles/mock_surface_ranker.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_input_targeter.h"
-#include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/mock_surface_configurator.h"
@@ -41,7 +34,6 @@
 
 #include <cstring>
 #include <stdexcept>
-#include "gmock_set_arg.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -67,94 +59,15 @@ struct MockEventSink : public mf::EventSink
     MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
 };
 
-class StubSurfaceBuilder : public ms::SurfaceBuilder
-{
-public:
-    StubSurfaceBuilder() :
-        stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
-        dummy_surface()
-    {
-    }
-
-    std::weak_ptr<ms::Surface> create_surface(
-        mf::SurfaceId id,
-        msh::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const& event_sink,
-        std::shared_ptr<msh::SurfaceConfigurator> const& configurator) override
-    {
-        dummy_surface = std::make_shared<ms::BasicSurface>(
-            id,
-            std::string("stub"), 
-            geom::Rectangle{{},{}}, 
-            [](){},
-            false, 
-            stub_buffer_stream_,
-            std::shared_ptr<mi::InputChannel>(),
-            event_sink,
-            configurator,
-            report);
-        return dummy_surface;
-    }
-
-    void destroy_surface(std::weak_ptr<ms::Surface> const& )
-    {
-        reset_surface();
-    }
-
-    void reset_surface()
-    {
-        dummy_surface.reset();
-    }
-
-    std::shared_ptr<mtd::StubBufferStream> stub_buffer_stream()
-    {
-        return stub_buffer_stream_;
-    }
-
-
-private:
-    std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
-    std::shared_ptr<ms::BasicSurface> dummy_surface;
-    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
-};
-
-class MockSurfaceBuilder : public ms::SurfaceBuilder
-{
-public:
-    MockSurfaceBuilder()
-    {
-        using namespace testing;
-        ON_CALL(*this, create_surface(_, _, _, _)).
-            WillByDefault(Invoke(&self, &StubSurfaceBuilder::create_surface));
-
-        ON_CALL(*this, destroy_surface(_)).
-            WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
-    }
-
-    MOCK_METHOD4(create_surface, std::weak_ptr<ms::Surface>(
-        mf::SurfaceId,
-        const msh::SurfaceCreationParameters&,
-        std::shared_ptr<mf::EventSink> const&,
-        std::shared_ptr<msh::SurfaceConfigurator> const& configurator));
-
-    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
-
-private:
-    StubSurfaceBuilder self;
-};
-
 typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
-
-struct SurfaceImpl : testing::Test
+struct Surface : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
-    StubSurfaceBuilder surface_builder;
-    mtd::StubSurfaceRanker surface_ranker;
 
-    SurfaceImpl() :
+    Surface() :
         buffer_stream(std::make_shared<StubBufferStream>()),
-        stub_sender(std::make_shared<mtd::NullEventSink>())
+        null_configurator(std::make_shared<mtd::NullSurfaceConfigurator>())
     {
         using namespace testing;
 
@@ -164,87 +77,41 @@ struct SurfaceImpl : testing::Test
             .WillByDefault(InvokeArgument<1>(nullptr));
     }
     mf::SurfaceId stub_id;
-    std::shared_ptr<mf::EventSink> stub_sender;
+    std::shared_ptr<ms::SurfaceConfigurator> null_configurator;
+    std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
 };
 }
 
-TEST_F(SurfaceImpl, creation_and_destruction)
+TEST_F(Surface, attributes)
 {
     using namespace testing;
 
-    msh::SurfaceCreationParameters const params;
-    MockSurfaceBuilder surface_builder;
-
-    InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(_, params, _, _)).Times(1);
-    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
-
-    ms::SurfaceImpl test(
-        surface_builder.create_surface(stub_id, params, stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
-}
-
-TEST_F(SurfaceImpl, creation_throws_means_no_destroy)
-{
-    using namespace testing;
-
-    msh::SurfaceCreationParameters const params;
-    MockSurfaceBuilder surface_builder;
-
-    InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(_, params, _, _)).Times(1)
-        .WillOnce(Throw(std::runtime_error(__PRETTY_FUNCTION__)));
-    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(Exactly(0));
-
-    EXPECT_THROW({
-        ms::SurfaceImpl test(
-            surface_builder.create_surface(stub_id, params, stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-            mt::fake_shared(surface_builder));
-    }, std::runtime_error);
-}
-
-TEST_F(SurfaceImpl, destroy)
-{
-    using namespace testing;
-    MockSurfaceBuilder surface_builder;
-
-    InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(_, _, _, _)).Times(AnyNumber());
-    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
-
-    {
-        ms::SurfaceImpl test(
-            surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-            mt::fake_shared(surface_builder));
-
-        Mock::VerifyAndClearExpectations(&test);
-        EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
-        Mock::VerifyAndClearExpectations(&test);
-    }
-
-    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
-}
-
-TEST_F(SurfaceImpl, attributes)
-{
-    using namespace testing;
-
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
 
     EXPECT_THROW({
         surf.configure(static_cast<MirSurfaceAttrib>(111), 222);
     }, std::logic_error);
 }
 
-TEST_F(SurfaceImpl, types)
+TEST_F(Surface, types)
 {
     using namespace testing;
 
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
 
     EXPECT_EQ(mir_surface_type_normal, surf.type());
 
@@ -272,13 +139,18 @@ TEST_F(SurfaceImpl, types)
     EXPECT_EQ(mir_surface_type_freestyle, surf.type());
 }
 
-TEST_F(SurfaceImpl, states)
+TEST_F(Surface, states)
 {
     using namespace testing;
 
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
 
     EXPECT_EQ(mir_surface_state_restored, surf.state());
 
@@ -312,15 +184,24 @@ bool operator==(MirEvent const& a, MirEvent const& b)
     return !memcmp(&a, &b, sizeof(MirEvent));
 }
 
-TEST_F(SurfaceImpl, emits_resize_events)
+TEST_F(Surface, emits_resize_events)
 {
     using namespace testing;
 
     geom::Size const new_size{123, 456};
     auto sink = std::make_shared<MockEventSink>();
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), sink, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
+
+    surf.add_observer(observer);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -335,16 +216,25 @@ TEST_F(SurfaceImpl, emits_resize_events)
     EXPECT_EQ(new_size, surf.size());
 }
 
-TEST_F(SurfaceImpl, emits_resize_events_only_on_change)
+TEST_F(Surface, emits_resize_events_only_on_change)
 {
     using namespace testing;
 
     geom::Size const new_size{123, 456};
     geom::Size const new_size2{789, 1011};
     auto sink = std::make_shared<MockEventSink>();
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), sink, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
+
+    surf.add_observer(observer);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
@@ -375,11 +265,16 @@ TEST_F(SurfaceImpl, emits_resize_events_only_on_change)
     EXPECT_EQ(new_size2, surf.size());
 }
 
-TEST_F(SurfaceImpl, remembers_alpha)
+TEST_F(Surface, remembers_alpha)
 {
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
 
     EXPECT_FLOAT_EQ(1.0f, surf.alpha());
 
@@ -396,7 +291,7 @@ TEST_F(SurfaceImpl, remembers_alpha)
     EXPECT_FLOAT_EQ(1.0f, surf.alpha());
 }
 
-TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
+TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;
 
@@ -410,15 +305,24 @@ TEST_F(SurfaceImpl, sends_focus_notifications_when_focus_gained_and_lost)
             .Times(1);
     }
 
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), mt::fake_shared(sink), std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, mt::fake_shared(sink));
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
+
+    surf.add_observer(observer);
 
     surf.configure(mir_surface_attrib_focus, mir_surface_focused);
     surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
 
-TEST_F(SurfaceImpl, configurator_selects_attribute_values)
+TEST_F(Surface, configurator_selects_attribute_values)
 {
     using namespace testing;
 
@@ -428,55 +332,57 @@ TEST_F(SurfaceImpl, configurator_selects_attribute_values)
         .WillOnce(Return(mir_surface_state_minimized));
     EXPECT_CALL(configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized)).Times(1);
 
-    ms::SurfaceImpl surf(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, mt::fake_shared(configurator)),
-        mt::fake_shared(surface_builder));
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        mt::fake_shared(configurator),
+        report);
 
     EXPECT_EQ(mir_surface_state_minimized, surf.configure(mir_surface_attrib_state, mir_surface_state_restored));
 }
 
-TEST_F(SurfaceImpl, take_input_focus)
+TEST_F(Surface, take_input_focus)
 {
     using namespace ::testing;
 
-    ms::SurfaceImpl test(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
 
     mtd::MockInputTargeter targeter;
     EXPECT_CALL(targeter, focus_changed(_)).Times(1);
 
-    test.take_input_focus(mt::fake_shared(targeter));
+    surf.take_input_focus(mt::fake_shared(targeter));
 }
 
-TEST_F(SurfaceImpl, with_most_recent_buffer_do_uses_compositor_buffer)
+TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
 {
-    ms::SurfaceImpl test(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
+    auto stub_buffer_stream = std::make_shared<mtd::StubBufferStream>();
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        stub_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
 
     mg::Buffer* buf_ptr{nullptr};
 
-    test.with_most_recent_buffer_do(
+    surf.with_most_recent_buffer_do(
         [&](mg::Buffer& buffer)
         {
             buf_ptr = &buffer;
         });
 
-    EXPECT_EQ(surface_builder.stub_buffer_stream()->stub_compositor_buffer.get(),
-              buf_ptr);
-}
-
-TEST_F(SurfaceImpl, raise)
-{
-    using namespace ::testing;
-
-    mtd::MockSurfaceRanker surface_ranker;
-    ms::SurfaceImpl test(
-        surface_builder.create_surface(stub_id, msh::a_surface(), stub_sender, std::make_shared<mtd::NullSurfaceConfigurator>()),
-        mt::fake_shared(surface_builder));
-
-    EXPECT_CALL(surface_ranker, raise(_)).Times(1);
-
-    test.raise(mt::fake_shared(surface_ranker));
+    EXPECT_EQ(stub_buffer_stream->stub_compositor_buffer.get(), buf_ptr);
 }

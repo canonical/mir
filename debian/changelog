@@ -1,7 +1,7 @@
 mir (0.1.8-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.1.8 (https://launchpad.net/mir/+milestone/0.1.8)
-    - mirserver ABI bumped to 18 (TODO - expected anyway)
+    - mirserver ABI bumped to 18.
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - Server API changes affecting shells:
       . GLRenderer::tessellate() changed syntax.
