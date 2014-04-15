@@ -57,8 +57,8 @@ public:
 
 struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
 {
-    CountingDisplayBuffer()
-     : StubDisplayBuffer({{0,0}, {10, 10}})
+    CountingDisplayBuffer() :
+        StubDisplayBuffer({{0,0}, {10, 10}})
     {
     }
 
@@ -134,10 +134,10 @@ public:
 
 struct SurfaceStackCompositor : public testing::Test
 {
-    SurfaceStackCompositor()
-        : timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
-          mock_buffer_stream(std::make_shared<testing::NiceMock<mtd::MockBufferStream>>()),
-          stub_surface{std::make_shared<ms::BasicSurface>(
+    SurfaceStackCompositor() :
+        timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
+        mock_buffer_stream(std::make_shared<testing::NiceMock<mtd::MockBufferStream>>()),
+        stub_surface{std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             false,
@@ -145,7 +145,6 @@ struct SurfaceStackCompositor : public testing::Test
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             null_scene_report)}
-
     {
         using namespace testing;
         ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
