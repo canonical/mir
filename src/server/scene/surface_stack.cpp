@@ -52,9 +52,7 @@ ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<InputRegistrar> const& input_registrar,
     std::shared_ptr<SceneReport> const& report) :
     input_registrar{input_registrar},
-    report{report},
-    change_cb{[this]() { emit_change_notification(); }},
-    notify_change{[]{}}
+    report{report}
 {
 }
 
@@ -83,9 +81,8 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::lock_guard<std::mutex> lg{notify_change_mutex};
-    assert(f);
-    notify_change = f;
+    // TODO: Remove
+    (void)f;
 }
 
 void ms::SurfaceStack::add_surface(
@@ -98,10 +95,9 @@ void ms::SurfaceStack::add_surface(
         layers_by_depth[depth].push_back(surface);
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
+    observers.surface_added(surface);
+
     report->surface_added(surface.get(), surface.get()->name());
-    auto const observer = std::make_shared<LegacySurfaceChangeNotification>(change_cb);
-    surface->add_observer(observer);
-    emit_change_notification();
 }
 
 
@@ -130,16 +126,16 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
     if (found_surface)
     {
         input_registrar->input_channel_closed(keep_alive->input_channel());
+        observers.surface_removed(keep_alive);
+
         report->surface_removed(keep_alive.get(), keep_alive.get()->name());
-        emit_change_notification();
     }
     // TODO: error logging when surface not found
 }
 
 void ms::SurfaceStack::emit_change_notification()
 {
-    std::lock_guard<std::mutex> lg{notify_change_mutex};
-    notify_change();
+    // TODO: Remove
 }
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
@@ -169,7 +165,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
                 surfaces.push_back(surface);
 
                 ul.unlock();
-                emit_change_notification();
+                observers.surfaces_reordered();
 
                 return;
             }
@@ -187,4 +183,56 @@ void ms::SurfaceStack::lock()
 void ms::SurfaceStack::unlock()
 {
     guard.unlock();
+}
+
+void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)
+{
+    observers.add_observer(observer);
+}
+
+void ms::SurfaceStack::remove_observer(std::shared_ptr<ms::Observer> const& observer)
+{
+    observers.remove_observer(observer);
+}
+
+void ms::Observers::surface_added(std::shared_ptr<ms::Surface> const& surface) 
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+    
+    for (auto observer : observers)
+        observer->surface_added(surface);
+}
+
+void ms::Observers::surface_removed(std::shared_ptr<ms::Surface> const& surface)
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+
+    for (auto observer : observers)
+        observer->surface_removed(surface);
+}
+
+void ms::Observers::surfaces_reordered()
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+    
+    for (auto observer : observers)
+        observer->surfaces_reordered();
+}
+
+void ms::Observers::add_observer(std::shared_ptr<ms::Observer> const& observer)
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+
+    observers.push_back(observer);
+}
+
+void ms::Observers::remove_observer(std::shared_ptr<ms::Observer> const& observer)
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+    
+    auto it = std::find(observers.begin(), observers.end(), observer);
+    if (it == observers.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (not previously added)"));
+    
+    observers.erase(it);
 }

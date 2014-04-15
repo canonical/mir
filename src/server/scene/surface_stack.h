@@ -23,6 +23,7 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/depth_id.h"
+#include "mir/scene/observer.h"
 #include "mir/input/input_targets.h"
 
 #include <memory>
@@ -56,7 +57,22 @@ namespace scene
 class InputRegistrar;
 class BasicSurface;
 class SceneReport;
-class Observer;
+
+class Observers : public Observer
+{
+public:
+   // ms::Observer
+   void surface_added(std::shared_ptr<Surface> const& surface) override;
+   void surface_removed(std::shared_ptr<Surface> const& surface) override;
+   void surfaces_reordered();
+
+   void add_observer(std::shared_ptr<Observer> const& observer);
+   void remove_observer(std::shared_ptr<Observer> const& observer);
+
+private:
+    std::mutex mutex;
+    std::vector<std::shared_ptr<Observer>> observers;
+};
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
@@ -87,14 +103,9 @@ public:
         DepthId depth,
         input::InputReceptionMode input_mode) override;
     
-    void add_observer(std::shared_ptr<Observer> const& observer)
-        {
-            (void)observer;
-        }
-    void remove_observer(std::shared_ptr<Observer> const& observer)
-        {
-            (void)observer;
-        }
+    // TODO: Override
+    void add_observer(std::shared_ptr<Observer> const& observer);
+    void remove_observer(std::shared_ptr<Observer> const& observer);
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
@@ -105,13 +116,11 @@ private:
     std::recursive_mutex mutable guard;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
-    std::function<void()> const change_cb;
 
     typedef std::vector<std::shared_ptr<Surface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
 
-    std::mutex notify_change_mutex;
-    std::function<void()> notify_change;
+    Observers observers;
 };
 
 }

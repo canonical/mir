@@ -244,20 +244,6 @@ TEST_F(SurfaceStack, stacking_order)
     stack.for_each_if(filter, renderable_operator);
 }
 
-TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
-{
-    using namespace ::testing;
-    NiceMock<MockCallback> mock_cb;
-    EXPECT_CALL(mock_cb, call())
-        .Times(2);
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
-    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.remove_surface(stub_surface1);
-}
-
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace ::testing;
@@ -602,3 +588,5 @@ TEST_F(SurfaceStack, surfaces_reordered)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.raise(stub_surface1);
 }
+
+// TODO: Test multiple observers.
