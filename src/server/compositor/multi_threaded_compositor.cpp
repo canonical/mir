@@ -191,7 +191,7 @@ public:
          */
         CurrentRenderingTarget target{buffer};
 
-        auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
@@ -202,9 +202,11 @@ public:
                               report_id);
 
         run_compositing_loop([&] { return display_buffer_compositor->composite();});
+
+        display_buffer_compositor.release();
     }
 
-    void on_cursor_movement_unlocked(geometry::Point const& p)
+    void on_cursor_movement_unlocked(geometry::Point const& p) override
     {
         if (display_buffer_compositor)
         {
@@ -215,7 +217,7 @@ public:
             schedule_compositing_unlocked();
     }
 
-    void zoom_unlocked(float magnification)
+    void zoom_unlocked(float magnification) override
     {
         if (auto db = dynamic_cast<Zoomable*>(display_buffer_compositor.get()))
         {
