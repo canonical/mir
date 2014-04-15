@@ -30,7 +30,7 @@ namespace doubles
 
 struct StubSceneSession : public scene::Session
 {
-    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
+    frontend::SurfaceId create_surface(scene::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
     }
@@ -64,7 +64,7 @@ struct StubSceneSession : public scene::Session
     {
     }
 
-    void take_snapshot(shell::SnapshotCallback const&) override
+    void take_snapshot(scene::SnapshotCallback const&) override
     {
     }
 

@@ -20,14 +20,13 @@
 #include "surface_stack_model.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/placement_strategy.h"
+#include "mir/scene/placement_strategy.h"
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 ms::SurfaceController::SurfaceController(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::shared_ptr<msh::PlacementStrategy> const& placement_strategy,
+    std::shared_ptr<ms::PlacementStrategy> const& placement_strategy,
     std::shared_ptr<SurfaceStackModel> const& surface_stack) :
     surface_factory(surface_factory),
     placement_strategy(placement_strategy),
@@ -36,7 +35,7 @@ ms::SurfaceController::SurfaceController(
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceController::add_surface(
-    shell::SurfaceCreationParameters const& params,
+    SurfaceCreationParameters const& params,
     Session* session,
     std::shared_ptr<SurfaceObserver> const& observer)
 {

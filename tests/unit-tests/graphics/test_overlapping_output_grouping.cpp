@@ -37,10 +37,22 @@ class StubDisplayConfiguration : public mg::DisplayConfiguration
 public:
     struct OutputInfo
     {
+        OutputInfo(
+            geom::Rectangle const& rect,
+            bool connected,
+            bool used,
+            MirOrientation orientation,
+            MirPowerMode power_mode = mir_power_mode_on)
+            : rect(rect), connected{connected}, used{used},
+              orientation{orientation}, power_mode{power_mode}
+        {
+        }
+
         geom::Rectangle rect;
         bool connected;
         bool used;
         MirOrientation orientation;
+        MirPowerMode power_mode;
     };
 
     StubDisplayConfiguration(std::vector<OutputInfo> const& info)
@@ -81,7 +93,7 @@ public:
                 info.rect.top_left,
                 i - 1,
                 mir_pixel_format_invalid,
-                mir_power_mode_on,
+                info.power_mode,
                 info.orientation
             };
 
@@ -288,6 +300,20 @@ TEST_F(OverlappingOutputGroupingTest, multiply_overlapping_outputs)
             {{50,50}, {100, 100}}
         },
     };
+
+    check_groupings(info, expected_groups);
+}
+
+TEST_F(OverlappingOutputGroupingTest, ignores_outputs_with_power_mode_not_on)
+{
+    std::vector<StubDisplayConfiguration::OutputInfo> info
+    {
+        {{{0,0}, {100, 100}}, true, true, mir_orientation_normal, mir_power_mode_off},
+        {{{0,0}, {100, 100}}, true, true, mir_orientation_normal, mir_power_mode_standby},
+        {{{0,0}, {100, 100}}, true, true, mir_orientation_normal, mir_power_mode_suspend}
+    };
+
+    std::vector<geom::Rectangles> expected_groups;
 
     check_groupings(info, expected_groups);
 }

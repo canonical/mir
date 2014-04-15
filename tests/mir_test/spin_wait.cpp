@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,29 +16,21 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_
-#define MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_
+#include "mir_test/spin_wait.h"
 
-#include "src/server/scene/snapshot_strategy.h"
+#include <thread>
 
-namespace mir
+bool mir::test::spin_wait_for_condition_or_timeout(
+    std::function<bool()> const& condition,
+    std::chrono::milliseconds timeout,
+    std::chrono::milliseconds spin_period)
 {
-namespace test
-{
-namespace doubles
-{
-
-struct NullSnapshotStrategy : public scene::SnapshotStrategy
-{
-    void take_snapshot_of(
-        std::shared_ptr<scene::SurfaceBufferAccess> const&,
-        scene::SnapshotCallback const&)
+    auto const end = std::chrono::steady_clock::now() + timeout;
+    
+    while (std::chrono::steady_clock::now() < end && !condition())
     {
-    }
-};
+        std::this_thread::sleep_for(spin_period);
+    }   
 
+    return condition();
 }
-}
-}
-
-#endif /* MIR_TEST_DOUBLES_NULL_SNAPSHOT_STRATEGY_H_ */

@@ -26,7 +26,6 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 TEST(DefaultSessionContainer, for_each)

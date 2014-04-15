@@ -57,18 +57,19 @@ public:
     virtual std::shared_ptr<frontend::Session> open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink) override;
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session);
+    virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
 
-    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
-                                 shell::SurfaceCreationParameters const& params);
+    frontend::SurfaceId create_surface_for(
+        std::shared_ptr<frontend::Session> const& session,
+        SurfaceCreationParameters const& params) override;
 
-    void focus_next();
+    void focus_next() override;
     std::weak_ptr<Session> focussed_application() const;
-    void set_focus_to(std::shared_ptr<Session> const& focus);
+    void set_focus_to(std::shared_ptr<Session> const& focus) override;
 
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
+    void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
 
 protected:
     SessionManager(const SessionManager&) = delete;

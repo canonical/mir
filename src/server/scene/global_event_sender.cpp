@@ -22,7 +22,6 @@
 
 namespace mg=mir::graphics;
 namespace ms=mir::scene;
-namespace msh=mir::shell;
 
 ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
     : sessions(session_container)
