@@ -24,6 +24,12 @@ add_executable(mir_demo_client_egltriangle
 target_link_libraries(mir_demo_client_egltriangle
   eglapp
 )
+add_executable(mir_demo_client_eglcounter
+  eglcounter.cpp
+)
+target_link_libraries(mir_demo_client_eglcounter
+  eglapp
+)
 add_executable(mir_demo_client_eglplasma
   eglplasma.c
 )
