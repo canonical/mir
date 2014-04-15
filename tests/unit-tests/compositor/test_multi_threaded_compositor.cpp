@@ -17,10 +17,13 @@
  */
 
 #include "src/server/compositor/multi_threaded_compositor.h"
+#include "src/server/report/null_report_factory.h"
+
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
-#include "src/server/report/null_report_factory.h"
+#include "mir/scene/observer.h"
+
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
@@ -38,9 +41,10 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
+namespace mr = mir::report;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
 
 namespace
 {
@@ -84,8 +88,6 @@ private:
 class StubScene : public mc::Scene
 {
 public:
-    StubScene() : callback{[]{}} {}
-
     mg::RenderableList generate_renderable_list() const
     {
         return mg::RenderableList{};
@@ -95,18 +97,27 @@ public:
     {
     }
 
-    void set_change_callback(std::function<void()> const& f)
+    void add_observer(std::shared_ptr<ms::Observer> const& observer_)
     {
-        std::lock_guard<std::mutex> lock{callback_mutex};
-        assert(f);
-        callback = f;
+        std::lock_guard<std::mutex> lock{observer_mutex};
+        assert(!observer);
+        observer = observer_;
+    }
+
+    void remove_observer(std::shared_ptr<ms::Observer> const& /* observer */)
+    {
+        std::lock_guard<std::mutex> lock{observer_mutex};
+        observer.reset();
     }
 
     void emit_change_event()
     {
         {
-            std::lock_guard<std::mutex> lock{callback_mutex};
-            callback();
+            std::lock_guard<std::mutex> lock{observer_mutex};
+            
+            // Any old event will do.
+            if (observer)
+                observer->surfaces_reordered();
         }
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
@@ -116,8 +127,8 @@ public:
     void unlock() {}
 
 private:
-    std::function<void()> callback;
-    std::mutex callback_mutex;
+    std::shared_ptr<ms::Observer> observer;
+    std::mutex observer_mutex;
 };
 
 class RecordingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -546,17 +557,21 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
 TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 {
+    using namespace ::testing;
+
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto mock_scene = std::make_shared<mtd::MockScene>();
     auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
-    auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
+    auto mock_report = std::make_shared<NiceMock<mtd::MockCompositorReport>>();
     EXPECT_CALL(*mock_report, started())
         .Times(1);
     EXPECT_CALL(*mock_report, stopped())
         .Times(1);
-    EXPECT_CALL(*mock_scene, set_change_callback(testing::_))
-        .Times(2);
+    EXPECT_CALL(*mock_scene, add_observer(_))
+        .Times(1);
+    EXPECT_CALL(*mock_scene, remove_observer(_))
+        .Times(1);
 
     mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, mock_report, true};
 

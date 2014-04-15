@@ -84,7 +84,6 @@ public:
 
     // From Scene
     graphics::RenderableList generate_renderable_list() const;
-    virtual void set_change_callback(std::function<void()> const& f);
     //to be deprecated
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
     virtual void lock();
@@ -103,15 +102,12 @@ public:
         DepthId depth,
         input::InputReceptionMode input_mode) override;
     
-    // TODO: Override
-    void add_observer(std::shared_ptr<Observer> const& observer);
-    void remove_observer(std::shared_ptr<Observer> const& observer);
+    void add_observer(std::shared_ptr<Observer> const& observer) override;
+    void remove_observer(std::shared_ptr<Observer> const& observer) override;
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
-
-    void emit_change_notification();
 
     std::recursive_mutex mutable guard;
     std::shared_ptr<InputRegistrar> const input_registrar;

@@ -23,7 +23,6 @@
 #include "surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/input_registrar.h"
-#include "legacy_surface_change_notification.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/scene/scene_report.h"
 
@@ -79,12 +78,6 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
     }
 }
 
-void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
-{
-    // TODO: Remove
-    (void)f;
-}
-
 void ms::SurfaceStack::add_surface(
     std::shared_ptr<Surface> const& surface,
     DepthId depth,
@@ -131,11 +124,6 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
         report->surface_removed(keep_alive.get(), keep_alive.get()->name());
     }
     // TODO: error logging when surface not found
-}
-
-void ms::SurfaceStack::emit_change_notification()
-{
-    // TODO: Remove
 }
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)

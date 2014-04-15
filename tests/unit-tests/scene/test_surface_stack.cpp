@@ -546,6 +546,24 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove)
     stack.remove_surface(stub_surface1);
 }
 
+TEST_F(SurfaceStack, multiple_observers)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer1, observer2;
+    
+    InSequence seq;
+    EXPECT_CALL(observer1, surface_added(Eq(stub_surface1))).Times(1);
+    EXPECT_CALL(observer2, surface_added(Eq(stub_surface1))).Times(1);
+    
+    stack.add_observer(mt::fake_shared(observer1));
+    stack.add_observer(mt::fake_shared(observer2));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+}
+
 TEST_F(SurfaceStack, remove_scene_observer)
 {
     using namespace ::testing;
@@ -588,5 +606,3 @@ TEST_F(SurfaceStack, surfaces_reordered)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.raise(stub_surface1);
 }
-
-// TODO: Test multiple observers.
