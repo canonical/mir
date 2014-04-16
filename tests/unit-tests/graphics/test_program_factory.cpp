@@ -197,4 +197,15 @@ TEST_F(ProgramFactory, graphics_program_linker_failure_recovers_and_throw)
         auto r = gl_renderer_factory.create_renderer_for(display_area);
     }, std::runtime_error);
 }
+
+TEST_F(ProgramFactory, graphics_program_creation_success)
+{
+    using namespace std::placeholders;
+
+    SetUpMockVertexShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
+    SetUpMockFragmentShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
+    SetUpMockGraphicsProgram(mock_gl, std::bind(ExpectProgramLinkSuccess, _1, _2));
+
+    gl_renderer_factory.create_renderer_for(display_area);
+}
 }
