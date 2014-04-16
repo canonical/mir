@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_FRAMEWORK_DECLARATIVE_PLACEMENT_STRATEGY_H_
 #define MIR_TEST_FRAMEWORK_DECLARATIVE_PLACEMENT_STRATEGY_H_
 
-#include "mir/shell/placement_strategy.h"
+#include "mir/scene/placement_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/depth_id.h"
 
@@ -36,25 +36,25 @@ typedef std::map<std::string, mir::scene::DepthId> SurfaceDepths;
 /// a static list of surface geometries and relative depths. Used, for example,
 /// in input tests where it is necessary to set up scenarios depending on
 /// multiple surfaces geometry and stacking.
-class DeclarativePlacementStrategy : public mir::shell::PlacementStrategy
+class DeclarativePlacementStrategy : public mir::scene::PlacementStrategy
 {
  public:
     // Placement requests will be passed through to default strategy, and then overriden if the surface appears
     // in the geometry or depth map. This allows for the convenience of leaving some surfaces geometries unspecified
     // and receiving the default behavior.
-    DeclarativePlacementStrategy(std::shared_ptr<mir::shell::PlacementStrategy> const& default_strategy,
+    DeclarativePlacementStrategy(std::shared_ptr<mir::scene::PlacementStrategy> const& default_strategy,
         SurfaceGeometries const& positions_by_name, SurfaceDepths const& depths_by_name);
 
     virtual ~DeclarativePlacementStrategy() = default;
     
-    mir::shell::SurfaceCreationParameters place(mir::shell::Session const& session, mir::shell::SurfaceCreationParameters const& request_parameters) override;
+    mir::scene::SurfaceCreationParameters place(mir::scene::Session const& session, mir::scene::SurfaceCreationParameters const& request_parameters) override;
 
 protected:
     DeclarativePlacementStrategy(const DeclarativePlacementStrategy&) = delete;
     DeclarativePlacementStrategy& operator=(const DeclarativePlacementStrategy&) = delete;
 
 private:
-    std::shared_ptr<mir::shell::PlacementStrategy> const default_strategy;
+    std::shared_ptr<mir::scene::PlacementStrategy> const default_strategy;
 
     SurfaceGeometries surface_geometries_by_name;
     SurfaceDepths surface_depths_by_name;

@@ -20,8 +20,8 @@
 #include "mir/frontend/shell.h"
 #include "mir/input/input_configuration.h"
 
-#include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/session.h"
+#include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/session.h"
 #include "mir/shell/focus_controller.h"
 
 #include "mir/scene/surface.h"
@@ -121,7 +121,7 @@ MATCHER_P(WeakPtrTo, p, "")
 
 TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 {
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
 
     auto const session = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
 
@@ -133,7 +133,7 @@ TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
 {
     EXPECT_CALL(*test_surface_stack, add_surface(_,_,_)).Times(AnyNumber());
 
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
 
     auto const session1 = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
     auto const surface1 = session1->create_surface(params);
@@ -142,7 +142,7 @@ TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
     auto surface2 = session2->create_surface(params);
 
     auto const focus_controller = builder.the_focus_controller();
-    auto const shell_session = std::dynamic_pointer_cast<msh::Session>(session1);
+    auto const shell_session = std::dynamic_pointer_cast<ms::Session>(session1);
 
     EXPECT_CALL(*test_surface_stack, raise(WeakPtrTo(session1->get_surface(surface1)))).Times(1);
 

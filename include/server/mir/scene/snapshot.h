@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace shell
+namespace scene
 {
 
 struct Snapshot

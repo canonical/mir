@@ -18,7 +18,7 @@
 
 #include "src/server/scene/threaded_snapshot_strategy.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/shell/surface_buffer_access.h"
+#include "mir/scene/surface_buffer_access.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -33,12 +33,11 @@
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
-class StubSurfaceBufferAccess : public msh::SurfaceBufferAccess
+class StubSurfaceBufferAccess : public ms::SurfaceBufferAccess
 {
 public:
     ~StubSurfaceBufferAccess() noexcept {}
@@ -86,11 +85,11 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
 
     std::atomic<bool> snapshot_taken{false};
 
-    msh::Snapshot snapshot;
+    ms::Snapshot snapshot;
 
     strategy.take_snapshot_of(
         mt::fake_shared(buffer_access),
-        [&](msh::Snapshot const& s)
+        [&](ms::Snapshot const& s)
         {
             snapshot = s;
             snapshot_taken = true;

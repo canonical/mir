@@ -22,7 +22,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/connector.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -465,11 +465,10 @@ public:
         for (auto& m : moveables)
         {
             auto const s = surface_coordinator->add_surface(
-                    msh::a_surface().of_size(surface_size)
+                    ms::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
                                    .of_buffer_usage(mg::BufferUsage::hardware),
-                    nullptr,
-                    {});
+                    nullptr);
 
             /*
              * We call swap_buffers() twice so that the surface is
