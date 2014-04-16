@@ -75,6 +75,13 @@ bool BespokeDisplayServerTestFixture::shutdown_server_process()
         || result.reason == TerminationReason::unknown;
 }
 
+bool BespokeDisplayServerTestFixture::kill_server_process()
+{
+    auto const& result = process_manager.kill_server_process();
+    return result.reason == TerminationReason::child_terminated_by_signal &&
+           result.signal == SIGKILL;
+}
+
 mtf::Result BespokeDisplayServerTestFixture::wait_for_shutdown_server_process()
 {
     return process_manager.wait_for_shutdown_server_process();
