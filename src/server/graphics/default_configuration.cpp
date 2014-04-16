@@ -27,6 +27,7 @@
 
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
+#include "program_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
@@ -172,6 +173,6 @@ mir::DefaultServerConfiguration::the_gl_program_factory()
     return gl_program_factory(
         [this]
         {
-            return nullptr;
+            return std::make_shared<mg::ProgramFactory>();
         });
 }
