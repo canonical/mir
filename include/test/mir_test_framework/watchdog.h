@@ -34,6 +34,7 @@ public:
     ~WatchDog() noexcept;
     void run(std::function<void(WatchDog&)> watchee);
     void notify_done();
+    void stop();
 
     template<typename rep, typename period>
     bool wait_for(std::chrono::duration<rep, period> delay);

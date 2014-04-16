@@ -52,3 +52,10 @@ void mtf::WatchDog::notify_done()
     }
     notifier.notify_all();
 }
+
+void mtf::WatchDog::stop()
+{
+    killer();
+    if (runner.joinable())
+        runner.join();
+}
