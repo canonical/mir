@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
 
 #include "mir/compositor/renderer_factory.h"
+#include <mutex>
 
 namespace mir
 {
@@ -30,6 +31,15 @@ class GLRendererFactory : public RendererFactory
 {
 public:
     std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
+
+private:
+    /*
+     * We need to serialize renderer creation because some GL calls used
+     * during renderer construction that create unique resource ids
+     * (e.g. glCreateProgram) are not thread-safe when the threads are
+     * have the same or shared EGL contexts.
+     */
+    std::mutex mutex;
 };
 
 }
