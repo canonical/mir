@@ -257,6 +257,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
         {
             schedule_compositing();
         });
+    /* Recomposite whenever the scene changes */
+    scene->add_observer(observer);
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
@@ -292,11 +294,6 @@ void mc::MultiThreadedCompositor::start()
         [this, &lk]{
             destroy_compositing_threads(lk);
         }};
-
-    lk.unlock();
-    /* Recomposite whenever the scene changes */
-    scene->add_observer(observer);
-    lk.lock();
 
     create_compositing_threads();
 
