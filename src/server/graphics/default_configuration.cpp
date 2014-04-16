@@ -165,3 +165,13 @@ mir::DefaultServerConfiguration::the_gl_config()
             return std::make_shared<NoGLConfig>();
         });
 }
+
+std::shared_ptr<mg::GLProgramFactory>
+mir::DefaultServerConfiguration::the_gl_program_factory()
+{
+    return gl_program_factory(
+        [this]
+        {
+            return std::make_shared<NoGLConfig>();
+        });
+}
