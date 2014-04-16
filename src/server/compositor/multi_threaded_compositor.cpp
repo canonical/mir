@@ -263,6 +263,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 {
+    scene->remove_observer(observer);
+
     stop();
 }
 
@@ -321,10 +323,6 @@ void mc::MultiThreadedCompositor::stop()
             if(!lk.owns_lock()) lk.lock();
             state = CompositorState::started;
         }};
-
-    lk.unlock();
-    scene->remove_observer(observer);
-    lk.lock();
 
     destroy_compositing_threads(lk);
 
