@@ -36,13 +36,11 @@ ms::SurfaceController::SurfaceController(
 
 std::shared_ptr<ms::Surface> ms::SurfaceController::add_surface(
     SurfaceCreationParameters const& params,
-    Session* session,
-    std::shared_ptr<SurfaceObserver> const& observer)
+    Session* session)
 {
     auto placed_params = placement_strategy->place(*session, params);
 
     auto const surface = surface_factory->create_surface(placed_params);
-    surface->add_observer(observer);
     surface_stack->add_surface(surface, placed_params.depth, placed_params.input_mode);
     return surface;
 }

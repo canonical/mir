@@ -468,8 +468,7 @@ public:
                     ms::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
                                    .of_buffer_usage(mg::BufferUsage::hardware),
-                    nullptr,
-                    {});
+                    nullptr);
 
             /*
              * We call swap_buffers() twice so that the surface is

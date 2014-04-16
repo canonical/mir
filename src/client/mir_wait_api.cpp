@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,13 +13,20 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_LIBRARY_H
-#define MIR_CLIENT_LIBRARY_H
+#include "mir_toolkit/mir_wait.h"
+#include "mir_wait_handle.h"
 
-#include <mir_toolkit/mir_connection.h>
-#include <mir_toolkit/mir_surface.h>
-#include <mir_toolkit/mir_wait.h>
+void mir_wait_for(MirWaitHandle* wait_handle)
+{
+    if (wait_handle)
+        wait_handle->wait_for_all();
+}
 
-#endif /* MIR_CLIENT_LIBRARY_H */
+void mir_wait_for_one(MirWaitHandle* wait_handle)
+{
+    if (wait_handle)
+        wait_handle->wait_for_one();
+}
