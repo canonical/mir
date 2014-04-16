@@ -21,26 +21,13 @@
 #include "consuming_placement_strategy.h"
 #include "default_focus_mechanism.h"
 #include "graphics_display_layout.h"
-#include "organising_surface_factory.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
-std::shared_ptr<msh::SurfaceFactory>
-mir::DefaultServerConfiguration::the_shell_surface_factory()
-{
-    return shell_surface_factory(
-        [this]()
-        {
-            return std::make_shared<msh::OrganisingSurfaceFactory>(
-                the_surface_coordinator(),
-                the_shell_placement_strategy());
-        });
-}
-
-std::shared_ptr<msh::PlacementStrategy>
-mir::DefaultServerConfiguration::the_shell_placement_strategy()
+std::shared_ptr<ms::PlacementStrategy>
+mir::DefaultServerConfiguration::the_placement_strategy()
 {
     return shell_placement_strategy(
         [this]
@@ -58,7 +45,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
         {
             return std::make_shared<msh::DefaultFocusMechanism>(
                 the_input_targeter(),
-                the_surface_ranker());
+                the_surface_coordinator());
         });
 }
 

@@ -94,7 +94,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 18)
+set(MIRSERVER_ABI 19)
 
 set_target_properties(
   mirserver

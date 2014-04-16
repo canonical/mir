@@ -13,34 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#ifndef MIR_SCENE_SNAPSHOT_H_
+#define MIR_SCENE_SNAPSHOT_H_
 
-#ifndef MIR_SHELL_SURFACE_RANKER_H_
-#define MIR_SHELL_SURFACE_RANKER_H_
+#include "mir/geometry/size.h"
+#include "mir/geometry/dimensions.h"
 
-#include <memory>
+#include <functional>
 
 namespace mir
 {
 namespace scene
 {
-class Surface;
 
-class SurfaceRanker
+struct Snapshot
 {
-public:
-    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
-
-protected:
-    SurfaceRanker() = default;
-    virtual ~SurfaceRanker() = default;
-    SurfaceRanker(SurfaceRanker const&) = delete;
-    SurfaceRanker& operator=(SurfaceRanker const&) = delete;
+    geometry::Size size;
+    geometry::Stride stride;
+    void const* pixels;
 };
+
+typedef std::function<void(Snapshot const&)> SnapshotCallback;
+
 }
 }
 
-
-#endif /* MIR_SHELL_SURFACE_RANKER_H_ */
+#endif /* MIR_SCENE_SNAPSHOT_H_ */

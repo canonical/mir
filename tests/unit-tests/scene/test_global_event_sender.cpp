@@ -18,8 +18,7 @@
 
 #include "src/server/scene/global_event_sender.h"
 #include "src/server/scene/session_container.h"
-#include "mir_test_doubles/mock_frontend_surface.h"
-#include "mir_test_doubles/mock_shell_session.h"
+#include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
 
@@ -29,17 +28,16 @@
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace ms = mir::scene;
-namespace msh=mir::shell;
 
 namespace
 {
 class MockSessionStorage : public ms::SessionContainer
 {
 public:
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
-    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<ms::Session> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<ms::Session> const&));
+    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<ms::Session> const&)>));
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<ms::Session>(std::shared_ptr<ms::Session> const&));
 };
 }
 
@@ -49,7 +47,7 @@ TEST(GlobalEventSender, sender)
 
     MockSessionStorage mock_storage;
 
-    std::function<void(std::shared_ptr<msh::Session> const&)> called_fn;
+    std::function<void(std::shared_ptr<ms::Session> const&)> called_fn;
 
     EXPECT_CALL(mock_storage, for_each(_))
         .Times(1)
@@ -60,7 +58,7 @@ TEST(GlobalEventSender, sender)
     mtd::StubDisplayConfig stub_display_config;
     g_sender.handle_display_config_change(stub_display_config);
 
-    auto mock_session = std::make_shared<mtd::MockShellSession>();
+    auto mock_session = std::make_shared<mtd::MockSceneSession>();
     EXPECT_CALL(*mock_session, send_display_config(_))
         .Times(1);
     called_fn(mock_session);

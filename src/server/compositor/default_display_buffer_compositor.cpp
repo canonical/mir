@@ -19,8 +19,8 @@
 
 #include "default_display_buffer_compositor.h"
 
-#include "rendering_operator.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
@@ -33,32 +33,6 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-
-//TODO remove VisibilityFilter once we don't need filters/operators for rendering
-namespace
-{
-struct VisibilityFilter : public mc::FilterForScene
-{
-public:
-    VisibilityFilter(
-        mg::RenderableList const& renderable_list)
-        : list(renderable_list)
-    {
-    }
-
-    bool operator()(mg::Renderable const& r)
-    {
-        auto matcher = [&r](std::shared_ptr<mg::Renderable> const& renderable)
-        {
-            return (renderable.get() == &r);
-        };
-        return (std::find_if(list.begin(), list.end(), matcher) != list.end());
-    }
-
-private:
-    mg::RenderableList const& list;
-};
-}
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
@@ -85,22 +59,14 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     bool bypassed = false;
     bool uncomposited_buffers{false};
 
+    auto const& view_area = display_buffer.view_area();
+    auto renderable_list = scene->generate_renderable_list();
+
     if (bypass_env && display_buffer.can_bypass())
     {
-        // It would be *really* nice not to lock the scene for a composite pass.
-        // (C.f. lp:1234018)
-        // A compositor shouldn't know anything about navigating the scene,
-        // it should be passed a collection of objects to render. (And any
-        // locks managed by the scene - which can just lock what is needed.)
-        std::unique_lock<Scene> lock(*scene);
-
-        mc::BypassFilter filter(display_buffer);
-        mc::BypassMatch match;
-
-        // It would be *really* nice if Scene had an iterator to simplify this
-        scene->for_each_if(filter, match);
-
-        if (filter.fullscreen_on_top())
+        mc::BypassMatch bypass_match(view_area);
+        auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
+        if (bypass_it != renderable_list.rend())
         {
             /*
              * Notice the user_id we pass to buffer() here has to be
@@ -108,13 +74,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
              * the below if() fails we want to complete the frame using the
              * same buffer (different user_id required).
              */
-            auto bypass_buf = match.topmost_fullscreen()->buffer(this);
-
+            auto bypass_buf = (*bypass_it)->buffer(this);
             if (bypass_buf->can_bypass())
             {
-                uncomposited_buffers = match.topmost_fullscreen()->buffers_ready_for_compositor() > 1;
+                uncomposited_buffers = (*bypass_it)->buffers_ready_for_compositor() > 1;
 
-                lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
                 renderer->suspend();
@@ -124,20 +88,26 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
+        //preserves buffers backing GL textures until after post_update
+        std::vector<std::shared_ptr<mg::Buffer>> saved_resources;
+
         display_buffer.make_current();
 
-        auto const& view_area = display_buffer.view_area();
-        auto renderable_list = scene->generate_renderable_list();
         mc::filter_occlusions_from(renderable_list, view_area);
-
-        for(auto const& renderable : renderable_list)
-            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
-        mc::RenderingOperator applicator(*renderer);
-        VisibilityFilter selector(renderable_list);
-        scene->for_each_if(selector, applicator);
+
+        for(auto const& renderable : renderable_list)
+        {
+            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
+
+            //'renderer.get()' serves as an ID to distinguish itself from other compositors
+            auto buffer = renderable->buffer(renderer.get());
+            renderer->render(*renderable, *buffer);
+            saved_resources.push_back(buffer);
+        }
+
         renderer->end();
 
         display_buffer.post_update();

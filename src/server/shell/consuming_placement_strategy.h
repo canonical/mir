@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_CONSUMING_PLACEMENT_STRATEGY_H_
 #define MIR_SHELL_CONSUMING_PLACEMENT_STRATEGY_H_
 
-#include "mir/shell/placement_strategy.h"
+#include "mir/scene/placement_strategy.h"
 
 #include <memory>
 
@@ -29,14 +29,14 @@ namespace shell
 {
 class DisplayLayout;
 
-class ConsumingPlacementStrategy : public PlacementStrategy
+class ConsumingPlacementStrategy : public scene::PlacementStrategy
 {
 public:
     explicit ConsumingPlacementStrategy(
             std::shared_ptr<DisplayLayout> const& display_layout);
     virtual ~ConsumingPlacementStrategy() {}
 
-    virtual shell::SurfaceCreationParameters place(shell::Session const& session, shell::SurfaceCreationParameters const& request_parameters);
+    virtual scene::SurfaceCreationParameters place(scene::Session const& session, scene::SurfaceCreationParameters const& request_parameters);
 
 protected:
     ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;

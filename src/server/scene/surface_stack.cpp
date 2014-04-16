@@ -19,7 +19,7 @@
  */
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/input_registrar.h"
@@ -27,8 +27,8 @@
 #include "mir/scene/scene_report.h"
 
 // TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
-// It is needed by the following member functions:
-//  for_each(), for_each_if(), create_surface() and destroy_surface()
+// It is needed by the following member function:
+//  for_each()
 // to access:
 //  buffer_stream() and input_channel()
 #include "basic_surface.h"
@@ -55,27 +55,71 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
-mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
+namespace
 {
-    std::lock_guard<std::recursive_mutex> lg(guard);
-    mg::RenderableList list;
-    for (auto &layer : layers_by_depth)
-        std::copy(layer.second.begin(), layer.second.end(), std::back_inserter(list));
-    return list;
+//This class avoids locking for long periods of time by copying (or lazy-copying)
+class RenderableSnapshot : public mg::Renderable
+{
+public:
+    RenderableSnapshot(std::shared_ptr<mg::Renderable> const& renderable)
+    : underlying_renderable{renderable},
+      alpha_enabled_{renderable->alpha_enabled()},
+      alpha_{renderable->alpha()},
+      shaped_{renderable->shaped()},
+      visible_{renderable->visible()},
+      screen_position_(renderable->screen_position()),
+      transformation_(renderable->transformation()),
+      id_(renderable->id())
+    {
+    }
+ 
+    std::shared_ptr<mg::Buffer> buffer(void const* user_id) const override
+    { return underlying_renderable->buffer(user_id); }
+
+    int buffers_ready_for_compositor() const override
+    { return underlying_renderable->buffers_ready_for_compositor(); }
+
+    bool visible() const override
+    { return visible_; }
+
+    bool alpha_enabled() const override
+    { return alpha_enabled_; }
+
+    geom::Rectangle screen_position() const override
+    { return screen_position_; }
+
+    float alpha() const override
+    { return alpha_; }
+
+    glm::mat4 transformation() const override
+    { return transformation_; }
+
+    bool shaped() const override
+    { return shaped_; }
+ 
+    mg::Renderable::ID id() const override
+    { return id_; }
+
+private:
+    std::shared_ptr<mg::Renderable> const underlying_renderable;
+    bool const alpha_enabled_;
+    float const alpha_;
+    bool const shaped_;
+    bool const visible_;
+    geom::Rectangle const screen_position_;
+    glm::mat4 const transformation_;
+    mg::Renderable::ID const id_; 
+};
 }
 
-void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
+mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
 {
-    std::lock_guard<std::recursive_mutex> lg(guard);
-    for (auto &layer : layers_by_depth)
-    {
-        auto surfaces = layer.second;
-        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
-        {
-            mg::Renderable& r = **it;
-            if (filter(r)) op(r);
-        }
-    }
+    std::lock_guard<decltype(guard)> lg(guard);
+    mg::RenderableList list;
+    for (auto const& layer : layers_by_depth)
+        for (auto const& renderable : layer.second) 
+            list.emplace_back(std::make_shared<RenderableSnapshot>(renderable));
+    return list;
 }
 
 void ms::SurfaceStack::add_surface(
@@ -84,7 +128,7 @@ void ms::SurfaceStack::add_surface(
     mi::InputReceptionMode input_mode)
 {
     {
-        std::lock_guard<std::recursive_mutex> lg(guard);
+        std::lock_guard<decltype(guard)> lg(guard);
         layers_by_depth[depth].push_back(surface);
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
@@ -100,7 +144,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
     bool found_surface = false;
     {
-        std::lock_guard<std::recursive_mutex> lg(guard);
+        std::lock_guard<decltype(guard)> lg(guard);
 
         for (auto &layer : layers_by_depth)
         {
@@ -128,7 +172,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
-    std::lock_guard<std::recursive_mutex> lg(guard);
+    std::lock_guard<decltype(guard)> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
@@ -141,7 +185,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     auto surface = s.lock();
 
     {
-        std::unique_lock<std::recursive_mutex> ul(guard);
+        std::unique_lock<decltype(guard)> ul(guard);
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;
@@ -161,16 +205,6 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-}
-
-void ms::SurfaceStack::lock()
-{
-    guard.lock();
-}
-
-void ms::SurfaceStack::unlock()
-{
-    guard.unlock();
 }
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)

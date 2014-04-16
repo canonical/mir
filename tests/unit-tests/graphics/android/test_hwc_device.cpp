@@ -56,6 +56,11 @@ public:
     {
     }
 
+    ID id() const override
+    {
+        return this;
+    }
+
     std::shared_ptr<mg::Buffer> buffer(void const*) const override
     {
         return buf;

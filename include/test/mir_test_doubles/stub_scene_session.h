@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
-#define MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SCENE_SESSION_H_
+#define MIR_TEST_DOUBLES_STUB_SCENE_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 namespace mir
 {
@@ -28,9 +28,9 @@ namespace test
 namespace doubles
 {
 
-struct StubShellSession : public shell::Session
+struct StubSceneSession : public scene::Session
 {
-    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */) override
+    frontend::SurfaceId create_surface(scene::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
     }
@@ -59,22 +59,18 @@ struct StubShellSession : public shell::Session
     void show() override
     {
     }
-    int configure_surface(frontend::SurfaceId, MirSurfaceAttrib, int) override
-    {
-        return 0;
-    }
 
     void send_display_config(graphics::DisplayConfiguration const&) override
     {
     }
 
-    void take_snapshot(shell::SnapshotCallback const&) override
+    void take_snapshot(scene::SnapshotCallback const&) override
     {
     }
 
-    std::shared_ptr<shell::Surface> default_surface() const override
+    std::shared_ptr<scene::Surface> default_surface() const override
     {
-        return std::shared_ptr<shell::Surface>();
+        return std::shared_ptr<scene::Surface>();
     }
 
     void set_lifecycle_state(MirLifecycleState /*state*/)
@@ -86,5 +82,5 @@ struct StubShellSession : public shell::Session
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SHELL_SESSION_H_
+#endif // MIR_TEST_DOUBLES_STUB_SCENE_SESSION_H_
 

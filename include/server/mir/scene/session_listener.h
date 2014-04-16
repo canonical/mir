@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,17 +16,17 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_LISTENER_H_
-#define MIR_SHELL_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_SESSION_LISTENER_H_
+#define MIR_SCENE_SESSION_LISTENER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace shell
+namespace scene
 {
-class Session;
 class Surface;
+class Session;
 
 class SessionListener
 {
@@ -51,4 +51,4 @@ protected:
 }
 
 
-#endif // MIR_SHELL_SESSION_LISTENER_H_
+#endif // MIR_SCENE_SESSION_LISTENER_H_
