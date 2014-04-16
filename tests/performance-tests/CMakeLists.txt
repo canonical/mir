@@ -4,8 +4,7 @@ set(
   test_glmark2-es2-mir.cpp
 )
 
-message("---- DOING THE CHECK ----")
-find_program(GLMARK2_ES2_MIR_FOUND glmark2)
+find_program(GLMARK2_ES2_MIR_FOUND glmark2-es2-mir)
 
 if(NOT GLMARK2_ES2_MIR_FOUND)
   message("glmark2-es2-mir not found, disabling performance test")

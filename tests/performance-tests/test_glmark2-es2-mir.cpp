@@ -13,12 +13,9 @@ protected:
   {
     FILE * in;
     char buf[256];
-    //const char * cmd = "glmark2-es2-mir --fullscreen";
-    const char *cmd = "ls -l";
+    const char *cmd = "glmark2-es2-mir --fullscreen";
+	const char *initial_bypass_state = getenv("MIR_BYPASS");
     std::ofstream glmark2_output;
- 
-    const char *initial_bypass_state;
-    initial_bypass_state = getenv("MIR_BYPASS");
 
     if(bypass_enabled)
         putenv(strdup("MIR_BYPASS=1")); 
