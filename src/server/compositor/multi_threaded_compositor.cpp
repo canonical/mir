@@ -32,6 +32,32 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+namespace
+{
+
+class ApplyIfUnwinding
+{
+public:
+    ApplyIfUnwinding(std::function<void()> const& apply)
+        : apply{apply}
+    {
+    }
+
+    ~ApplyIfUnwinding()
+    {
+        if (std::uncaught_exception())
+            apply();
+    }
+
+private:
+    ApplyIfUnwinding(ApplyIfUnwinding const&) = delete;
+    ApplyIfUnwinding& operator=(ApplyIfUnwinding const&) = delete;
+
+    std::function<void()> const apply;
+};
+
+}
+
 namespace mir
 {
 namespace compositor
@@ -220,7 +246,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      started{false},
+      state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
 }
@@ -232,7 +258,7 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::schedule_compositing()
 {
-    std::unique_lock<std::mutex> lk(started_guard);
+    std::unique_lock<std::mutex> lk(state_guard);
     report->scheduled();
     for (auto& f : thread_functors)
         f->schedule_compositing();
@@ -240,15 +266,67 @@ void mc::MultiThreadedCompositor::schedule_compositing()
 
 void mc::MultiThreadedCompositor::start()
 {
-    std::unique_lock<std::mutex> lk(started_guard);
-    if (started)
+    std::unique_lock<std::mutex> lk(state_guard);
+    if (state != CompositorState::stopped)
     {
         return;
     }
 
+    state = CompositorState::starting;
     report->started();
 
-    /* Start the compositing threads */
+    /* To cleanup state if any code below throws */
+    ApplyIfUnwinding cleanup_if_unwinding{
+        [this, &lk]{
+            destroy_compositing_threads(lk);
+        }};
+
+    lk.unlock();
+    /* Recomposite whenever the scene changes */
+    scene->set_change_callback([this]() { schedule_compositing(); });
+    lk.lock();
+
+    create_compositing_threads();
+
+    /* Optional first render */
+    if (compose_on_start)
+    {
+        lk.unlock();
+        schedule_compositing();
+    }
+}
+
+void mc::MultiThreadedCompositor::stop()
+{
+    std::unique_lock<std::mutex> lk(state_guard);
+    if (state != CompositorState::started)
+    {
+        return;
+    }
+
+    state = CompositorState::stopping;
+
+    /* To cleanup state if any code below throws */
+    ApplyIfUnwinding cleanup_if_unwinding{
+        [this, &lk]{
+            if(!lk.owns_lock()) lk.lock();
+            state = CompositorState::started;
+        }};
+
+    lk.unlock();
+    scene->set_change_callback([]{});
+    lk.lock();
+
+    destroy_compositing_threads(lk);
+
+    // If the compositor is restarted we've likely got clients blocked
+    // so we will need to schedule compositing immediately
+    compose_on_start = true;
+}
+
+void mc::MultiThreadedCompositor::create_compositing_threads()
+{
+    /* Start the display buffer compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         auto thread_functor_raw =
@@ -262,41 +340,22 @@ void mc::MultiThreadedCompositor::start()
     });
 
     /* Start the buffer consuming thread */
-    {
-        auto thread_functor_raw = new mc::BufferConsumingFunctor{scene};
-        auto thread_functor = std::unique_ptr<mc::BufferConsumingFunctor>(thread_functor_raw);
+    auto thread_functor_raw = new mc::BufferConsumingFunctor{scene};
+    auto thread_functor = std::unique_ptr<mc::BufferConsumingFunctor>(thread_functor_raw);
 
-        threads.push_back(std::thread{std::ref(*thread_functor)});
-        thread_functors.push_back(std::move(thread_functor));
-    }
+    threads.push_back(std::thread{std::ref(*thread_functor)});
+    thread_functors.push_back(std::move(thread_functor));
 
-    /* Recomposite whenever the scene changes */
-    scene->set_change_callback([this]()
-    {
-        schedule_compositing();
-    });
-
-    started = true;
-
-    /* Optional first render */
-    if (compose_on_start)
-    {
-        lk.unlock();
-        schedule_compositing();
-    }
+    state = CompositorState::started;
 }
 
-void mc::MultiThreadedCompositor::stop()
+void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<std::mutex>& lock)
 {
-    std::unique_lock<std::mutex> lk(started_guard);
-    if (!started)
-    {
-        return;
-    }
-
-    lk.unlock();
-    scene->set_change_callback([]{});
-    lk.lock();
+    /* Could be called during unwinding,
+     * ensure the lock is held before changing state
+     */
+    if(!lock.owns_lock())
+        lock.lock();
 
     for (auto& f : thread_functors)
         f->stop();
@@ -309,9 +368,5 @@ void mc::MultiThreadedCompositor::stop()
 
     report->stopped();
 
-    started = false;
-
-    // If the compositor is restarted we've likely got clients blocked
-    // so we will need to schedule compositing immediately
-    compose_on_start = true;
+    state = CompositorState::stopped;
 }
