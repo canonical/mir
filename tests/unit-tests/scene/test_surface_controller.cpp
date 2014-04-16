@@ -67,7 +67,6 @@ struct SurfaceController : testing::Test
     testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     MockSurfaceStackModel model;
     mtd::StubSceneSession session;
-    std::shared_ptr<ms::SurfaceObserver> observer;
 
     void SetUp()
     {
@@ -90,11 +89,10 @@ TEST_F(SurfaceController, add_and_remove_surface)
     InSequence seq;
     EXPECT_CALL(placement_strategy, place(_, _)).Times(1);
     EXPECT_CALL(mock_surface_allocator, create_surface(_)).Times(1).WillOnce(Return(expect_surface));
-    EXPECT_CALL(mock_surface, add_observer(_)).Times(1);
     EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
 
-    auto actual_surface = controller.add_surface(ms::a_surface(), &session, observer);
+    auto actual_surface = controller.add_surface(ms::a_surface(), &session);
 
     EXPECT_THAT(actual_surface, Eq(expect_surface));
     controller.remove_surface(actual_surface);
@@ -129,7 +127,7 @@ TEST_F(SurfaceController, offers_create_surface_parameters_to_placement_strategy
     EXPECT_CALL(placement_strategy, place(Ref(session), Ref(params))).Times(1)
         .WillOnce(Return(ms::a_surface()));
 
-    controller.add_surface(params, &session, observer);
+    controller.add_surface(params, &session);
 }
 
 TEST_F(SurfaceController, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
@@ -151,5 +149,5 @@ TEST_F(SurfaceController, forwards_create_surface_parameters_from_placement_stra
         .WillOnce(Return(placed_params));
     EXPECT_CALL(mock_surface_allocator, create_surface(placed_params));
 
-    controller.add_surface(params, &session, observer);
+    controller.add_surface(params, &session);
 }

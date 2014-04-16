@@ -36,8 +36,7 @@ class SurfaceCoordinator
 public:
     virtual std::shared_ptr<Surface> add_surface(
         SurfaceCreationParameters const& params,
-        Session* session,
-        std::shared_ptr<SurfaceObserver> const& observer) = 0;
+        Session* session) = 0;
 
     virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
