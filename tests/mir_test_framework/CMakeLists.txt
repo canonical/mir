@@ -22,6 +22,7 @@ set(
   udev_environment.cpp
   declarative_placement_strategy.cpp
   watchdog.cpp
+  semaphore.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS

@@ -24,6 +24,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_framework/watchdog.h"
+#include "mir_test_framework/semaphore.h"
 
 #include <gmock/gmock.h>
 
@@ -35,44 +36,11 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
 
 namespace
 {
-class Semaphore
-{
-public:
-    Semaphore()
-        : signalled{false}
-    {
-    }
-
-    void signal()
-    {
-        std::unique_lock<decltype(mutex)> lock(mutex);
-        signalled = true;
-        cv.notify_all();
-    }
-
-    template<typename rep, typename period>
-    bool wait_for(std::chrono::duration<rep, period> delay)
-    {
-        std::unique_lock<decltype(mutex)> lock(mutex);
-        return cv.wait_for(lock, delay, [this]() { return signalled; });
-    }
-
-    void wait(void)
-    {
-        std::unique_lock<decltype(mutex)> lock(mutex);
-        cv.wait(lock, [this]() { return signalled; });
-    }
-
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool signalled;
-};
-
 struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 {
     using mc::BufferStreamSurfaces::BufferStreamSurfaces;
@@ -80,18 +48,18 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
     // Convenient function to allow tests to be written in linear style
     void swap_client_buffers_blocking(mg::Buffer*& buffer)
     {
-        Semaphore s;
+        mtf::Semaphore s;
 
         swap_client_buffers_cancellable(buffer, s);
     }
 
-    void swap_client_buffers_cancellable(mg::Buffer*& buffer, Semaphore& signal)
+    void swap_client_buffers_cancellable(mg::Buffer*& buffer, mtf::Semaphore& signal)
     {
         swap_client_buffers(buffer,
             [&](mg::Buffer* new_buffer)
              {
                 buffer = new_buffer;
-                signal.signal();
+                signal.raise();
              });
 
         signal.wait();
@@ -389,9 +357,9 @@ TEST_F(BufferStreamTest, client_swaps_at_at_least_1_Hz)
     for (int i = 0; i < nbuffers; ++i)
         buffer_stream.swap_client_buffers_blocking(client1);
 
-    Semaphore done_signal;
+    mtf::Semaphore done_signal;
 
-    mir_test_framework::WatchDog watchdog([&done_signal]() { done_signal.signal(); });
+    mir_test_framework::WatchDog watchdog([&done_signal]() { done_signal.raise(); });
 
     mg::Buffer* prev_buffer = client1;
     watchdog.run([this, &client1](mir_test_framework::WatchDog& watchdog)
