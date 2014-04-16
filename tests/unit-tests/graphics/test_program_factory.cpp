@@ -54,15 +54,6 @@ namespace
 const GLint stub_v_shader = 1;
 const GLint stub_f_shader = 2;
 const GLint stub_program = 1;
-const GLuint stub_texture = 1;
-const GLint transform_uniform_location = 1;
-const GLint alpha_uniform_location = 2;
-const GLint position_attr_location = 3;
-const GLint texcoord_attr_location = 4;
-const GLint screen_to_gl_coords_uniform_location = 5;
-const GLint tex_uniform_location = 6;
-const GLint display_transform_uniform_location = 7;
-const GLint centre_uniform_location = 8;
 const std::string stub_info_log = "something failed!";
 const size_t stub_info_log_length = stub_info_log.size();
 
@@ -121,27 +112,6 @@ void SetUpMockGraphicsProgram(mtd::MockGL &mock_gl, const std::function<void(con
     program_link_expectation(stub_program, mock_gl);
 }
 
-void SetUpMockProgramData(mtd::MockGL &mock_gl)
-{
-    /* Uniforms and Attributes */
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
-
-    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        .WillOnce(Return(tex_uniform_location));
-    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        .WillOnce(Return(display_transform_uniform_location));
-    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        .WillOnce(Return(transform_uniform_location));
-    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        .WillOnce(Return(alpha_uniform_location));
-    EXPECT_CALL(mock_gl, glGetAttribLocation(stub_program, _))
-        .WillOnce(Return(position_attr_location));
-    EXPECT_CALL(mock_gl, glGetAttribLocation(stub_program, _))
-        .WillOnce(Return(texcoord_attr_location));
-    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        .WillOnce(Return(centre_uniform_location));
-}
-
 class ProgramFactory : public testing::Test
 {
 public:
@@ -149,7 +119,7 @@ public:
         gl_renderer_factory{std::make_shared<mg::ProgramFactory>()}
     {
     }
-    mtd::MockGL mock_gl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     mc::GLRendererFactory gl_renderer_factory;
     mir::geometry::Rectangle display_area;
 };
@@ -158,11 +128,6 @@ ACTION_P2(CopyString, str, len)
 {
     memcpy(arg3, str, len);
     arg3[len] = '\0';
-}
-
-ACTION_P(ReturnByConstReference, cref)
-{
-    return cref;
 }
 
 MATCHER_P(NthCharacterIsNul, n, "specified character is the nul-byte")
