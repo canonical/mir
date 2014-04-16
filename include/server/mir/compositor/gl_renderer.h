@@ -20,8 +20,8 @@
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
 #include <mir/compositor/renderer.h>
-#include <mir/compositor/gl_program.h>
 #include <mir/geometry/rectangle.h>
+#include <mir/graphics/gl_program.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <GLES2/gl2.h>
@@ -98,7 +98,7 @@ public:
                                 graphics::Buffer& buffer) const;
 
 private:
-    GLProgram program;
+    graphics::GLProgram program;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;

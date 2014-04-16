@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 
 class GLShader

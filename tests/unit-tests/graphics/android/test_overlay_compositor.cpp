@@ -16,22 +16,25 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/fallback_overlay_gl_program.h"
-#include "mir_test/fake_shared.h"
+#include "src/platform/graphics/android/overlay_gl_compositor.h"
+//#include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir_test_doubles/mock_gl.h"
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
-namespace geom=mir::geometry;
+//namespace geom=mir::geometry;
 
 namespace
 {
 
 class OverlayCompositor : public ::testing::Test
 {
-    testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
+public:
+    testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
     testing::NiceMock<mtd::MockGL> mock_gl;
 };
 
@@ -42,5 +45,5 @@ TEST_F(OverlayCompositor, compiles_in_constructor)
     using namespace testing;
     EXPECT_CALL(mock_gl_program_factory, create_gl_program(_,_))
         .Times(1);
-    mga::GLOverlayCompositor compositor(mock_gl_program_factory)
+    mga::OverlayGLProgram glprogram(mock_gl_program_factory);
 }

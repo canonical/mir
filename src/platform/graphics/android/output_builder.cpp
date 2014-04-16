@@ -63,6 +63,13 @@ MirPixelFormat mga::OutputBuilder::display_format()
     return framebuffers->fb_format();
 }
 
+namespace {
+struct NullFactory : public mg::GLProgramFactory
+{
+    std::unique_ptr<mg::GLProgram> create_gl_program(std::string const&, std::string const&) const
+    { return nullptr; }
+};
+}
 std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
     GLContext const& gl_context)
 {
@@ -99,7 +106,8 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
         } 
     }
 
+    NullFactory nf;
     auto native_window = res_factory->create_native_window(framebuffers);
     return std::unique_ptr<mga::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, device, native_window, gl_context));
+        new DisplayBuffer(framebuffers, device, native_window, gl_context, nf));
 }
