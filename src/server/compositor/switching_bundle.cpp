@@ -69,7 +69,8 @@ namespace mg = mir::graphics;
 mc::SwitchingBundle::SwitchingBundle(int nbuffers,
     const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc,
     const mg::BufferProperties &property_request,
-    const std::shared_ptr<Timer> &timer)
+    const std::shared_ptr<Timer> &timer,
+    std::chrono::milliseconds blocking_delay)
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{nbuffers},
@@ -79,7 +80,8 @@ mc::SwitchingBundle::SwitchingBundle(int nbuffers,
       snapshot{-1}, nsnapshotters{0},
       overlapping_compositors{false},
       framedropping{false}, force_drop{0},
-      timer{timer}
+      timer{timer},
+      blocking_delay{blocking_delay}
 {
     if (nbuffers < min_buffers || nbuffers > max_buffers)
     {
@@ -227,7 +229,7 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
         {
             if (!acquire_timeout)
             {
-                acquire_timeout = timer->notify_in(std::chrono::milliseconds{1000}, [this]()
+                acquire_timeout = timer->notify_in(blocking_delay, [this]()
                 {
                     std::unique_lock<std::mutex> lock(guard);
                     if (client_acquire_todo)
@@ -243,7 +245,7 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
                     }
                 });
             } else if (acquire_timeout->state() != mir::Alarm::Pending)
-                acquire_timeout->reschedule_in(std::chrono::milliseconds{1000});
+                acquire_timeout->reschedule_in(blocking_delay);
             return;
         }
     }
@@ -453,7 +455,7 @@ void mc::SwitchingBundle::force_requests_to_complete()
     std::unique_lock<std::mutex> lock(guard);
     if (acquire_timeout)
     {
-        acquire_timeout.reset();
+        acquire_timeout->cancel();
     }
     if (client_acquire_todo)
     {

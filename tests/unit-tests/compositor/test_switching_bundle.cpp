@@ -17,9 +17,11 @@
  */
 
 #include "src/server/compositor/switching_bundle.h"
+#include "mir/asio_main_loop.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_timer.h"
+#include "mir_test_framework/semaphore.h"
+#include "mir_test_framework/watchdog.h"
 
 #include <gtest/gtest.h>
 
@@ -27,11 +29,14 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <algorithm>
+#include <map>
 
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
+namespace mtf=mir_test_framework;
 
 using namespace testing;
 
@@ -48,38 +53,44 @@ struct SwitchingBundleTest : public ::testing::Test
             mir_pixel_format_abgr_8888,
             mg::BufferUsage::hardware
         };
-        timer = std::make_shared<mtd::StubTimer>();
+        timer = std::make_shared<mir::AsioMainLoop>();
+        mainloop_thread = std::thread([this]() {timer->run();});
+    }
+
+    void TearDown()
+    {
+        timer->stop();
+        if (mainloop_thread.joinable())
+            mainloop_thread.join();
     }
 
     std::shared_ptr<mtd::StubBufferAllocator> allocator;
 
     mg::BufferProperties basic_properties;
-    std::shared_ptr<mtd::StubTimer> timer;
+    std::shared_ptr<mir::AsioMainLoop> timer;
+    std::thread mainloop_thread;
 };
+
+auto client_acquire_cancellable(mc::SwitchingBundle& switching_bundle, std::shared_ptr<mtf::Semaphore> signal)
+-> mg::Buffer*
+{
+    mg::Buffer* result;
+    switching_bundle.client_acquire(
+                [&, signal](mg::Buffer* new_buffer)
+    {
+        result = new_buffer;
+        signal->raise();
+    });
+
+    signal->wait();
+
+    return result;
+}
 
 auto client_acquire_blocking(mc::SwitchingBundle& switching_bundle)
 -> mg::Buffer*
 {
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-
-    mg::Buffer* result;
-    switching_bundle.client_acquire(
-        [&](mg::Buffer* new_buffer)
-         {
-            std::unique_lock<decltype(mutex)> lock(mutex);
-
-            result = new_buffer;
-            done = true;
-            cv.notify_one();
-         });
-
-    std::unique_lock<decltype(mutex)> lock(mutex);
-
-    cv.wait(lock, [&]{ return done; });
-
-    return result;
+    return client_acquire_cancellable(switching_bundle, std::make_shared<mtf::Semaphore>());
 }
 }
 
@@ -945,5 +956,154 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
             ASSERT_EQ(final_size, compositor->size());
             bundle.compositor_release(compositor);
         }
+    }
+}
+
+TEST_F(SwitchingBundleTest, uncomposited_client_swaps_at_given_rate)
+{
+    for (int nbuffers = mc::SwitchingBundle::min_buffers;
+         nbuffers < mc::SwitchingBundle::max_buffers;
+         nbuffers++)
+    {
+        for (auto block_time = std::chrono::milliseconds{100};
+             block_time < std::chrono::milliseconds{500};
+             block_time += std::chrono::milliseconds{100})
+        {
+            mc::SwitchingBundle bundle(nbuffers,
+                                       allocator,
+                                       basic_properties,
+                                       timer,
+                                       block_time);
+
+            for (int i = 0; i < nbuffers; i++)
+            {
+                auto client = client_acquire_blocking(bundle);
+                bundle.client_release(client);
+            }
+            auto signal = std::make_shared<mtf::Semaphore>();
+            mtf::WatchDog watchdog{[signal]() { signal->raise(); }};
+
+            auto start = std::chrono::high_resolution_clock::now();
+
+            watchdog.run([&bundle, signal](mtf::WatchDog& watchdog)
+            {
+                client_acquire_cancellable(bundle, signal);
+                watchdog.notify_done();
+            });
+            // Give 100ms grace time for slow machines running under valgrind...
+            EXPECT_TRUE(watchdog.wait_for(block_time + std::chrono::milliseconds{100}));
+            EXPECT_GE(std::chrono::high_resolution_clock::now() - start, block_time);
+        }
+    }
+}
+
+TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
+{
+    for (int nbuffers = mc::SwitchingBundle::min_buffers > 1 ? mc::SwitchingBundle::min_buffers : 2;
+         nbuffers <= mc::SwitchingBundle::max_buffers;
+         nbuffers++)
+    {
+        // We have the world's fastest display!
+        std::chrono::milliseconds const vsync_delay{1};
+        int const num_frames{1000};
+
+        mc::SwitchingBundle bundle(nbuffers,
+                                   allocator,
+                                   basic_properties,
+                                   timer,
+                                   vsync_delay);
+
+        mtf::Semaphore kill_switch;
+        mtf::WatchDog compositor_runner{[&kill_switch](){ kill_switch.raise(); }};
+        mtf::WatchDog client_runner{[&kill_switch](){ kill_switch.raise(); }};
+
+        std::mutex buffer_mutex;
+        std::map<mg::BufferID, int> buffers_age;
+        mg::BufferID racing_buffer;
+
+        compositor_runner.run([&](mtf::WatchDog& watchdog)
+        {
+            for (int i = 0; !kill_switch.raised(); i++)
+            {
+                std::shared_ptr<mg::Buffer> compositor;
+                {
+                    std::lock_guard<decltype(buffer_mutex)> lock(buffer_mutex);
+                    compositor = bundle.compositor_acquire(nullptr);
+                    if (!buffers_age.empty())
+                    {
+                        auto max = std::max_element(buffers_age.begin(),
+                                                    buffers_age.end(),
+                                                    [](std::pair<mg::BufferID, int> const& a,
+                                                       std::pair<mg::BufferID, int> const& b)
+                        {
+                            return a.second < b.second;
+                        });
+
+                        // We expect to be compositing the oldest buffer
+                        // but there's a small race where the bundle has prepared
+                        // a new buffer for the client but has not yet sent it out
+                        if (max->first != compositor->id())
+                        {
+                            // We shouldn't be able to beat the client twice, though...
+                            EXPECT_FALSE(racing_buffer.is_valid());
+                            // ...and we should have the second-oldest buffer recorded.
+                            auto oldest_age = max->second;
+                            if (oldest_age == 0)
+                            {
+                                // ...but for the two-buffer case we can only ever have
+                                // buffers of age 0 - one for the compositor, one for
+                                // the client.
+                                EXPECT_EQ(oldest_age, buffers_age[compositor->id()]);
+                            }
+                            else
+                            {
+                                EXPECT_EQ(oldest_age - 1, buffers_age[compositor->id()]);
+                            }
+                            racing_buffer = max->first;
+                        }
+
+                        buffers_age.erase(compositor->id());
+                    }
+                }
+                std::this_thread::sleep_for(vsync_delay);
+                bundle.compositor_release(compositor);
+                if (i >= num_frames)
+                    watchdog.notify_done();
+            }
+        });
+
+        ASSERT_FALSE(bundle.framedropping_allowed());
+        bool has_dropped_frame{false};
+        client_runner.run([&](mtf::WatchDog& watchdog)
+        {
+            for (int i = 0; !kill_switch.raised(); i++)
+            {
+                auto client = client_acquire_blocking(bundle);
+                {
+                    std::lock_guard<decltype(buffer_mutex)> lock(buffer_mutex);
+                    bundle.client_release(client);
+
+                    if (buffers_age.count(client->id()))
+                    {
+                        has_dropped_frame = true;
+                        if (racing_buffer.is_valid())
+                            EXPECT_EQ(racing_buffer, client->id());
+                        racing_buffer = mg::BufferID{};
+                    }
+
+                    // Age all the things!
+                    for (auto& id_age_pair : buffers_age)
+                        id_age_pair.second++;
+                    // But this one is newborn.
+                    buffers_age[client->id()] = 0;
+                }
+                if (i >= num_frames)
+                    watchdog.notify_done();
+            }
+        });
+        EXPECT_TRUE(client_runner.wait_for(std::chrono::milliseconds{1500}));
+        EXPECT_TRUE(compositor_runner.wait_for(std::chrono::milliseconds{1500}));
+        EXPECT_TRUE(has_dropped_frame);
+        compositor_runner.stop();
     }
 }

@@ -48,7 +48,8 @@ public:
     SwitchingBundle(int nbuffers,
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
                     const graphics::BufferProperties &,
-                    const std::shared_ptr<Timer> &);
+                    const std::shared_ptr<Timer> &,
+                    std::chrono::milliseconds blocking_time = std::chrono::milliseconds{1000});
 
     ~SwitchingBundle() noexcept;
 
@@ -119,6 +120,7 @@ private:
 
     std::shared_ptr<mir::Timer> const timer;
     std::shared_ptr<mir::Alarm> acquire_timeout;
+    std::chrono::milliseconds const blocking_delay;
 
     friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
 };

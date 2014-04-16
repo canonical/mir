@@ -224,6 +224,7 @@ mir::Alarm::State AlarmImpl::state() const
 bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
 {
     bool cancelling = timer.expires_from_now(boost::posix_time::milliseconds{delay.count()});
+    std::unique_lock<decltype(data->m)> lock(data->m);
     // Awkwardly, we can't stop the async_wait handler from being called
     // on a destroyed AlarmImpl. This means we need to wedge a shared_ptr
     // into the async_wait callback.
@@ -237,8 +238,9 @@ bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
         std::unique_lock<decltype(data->m)> lock(data->m);
         if (!ec && data->state == Pending)
         {
-            data->callback();
             data->state = Triggered;
+            lock.unlock();
+            data->callback();
         }
     });
     data->state = Pending;
