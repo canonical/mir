@@ -23,15 +23,15 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include "mir/compositor/gl_renderer.h"
+#include "mir/compositor/renderer.h"
 #include "src/server/compositor/gl_renderer_factory.h"
+#include "src/server/graphics/program_factory.h"
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_renderable.h>
 #include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/mock_gl.h>
-#include <mir_test_doubles/mock_gl_program_factory.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -141,20 +141,63 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
         .WillOnce(Return(centre_uniform_location));
 }
 
-class GLRenderer : public testing::Test
+class GLRenderer :
+    public testing::Test
 {
 public:
+
     GLRenderer()
     {
+        using namespace std::placeholders;
+
+        // Silence warnings about "uninteresting" calls that we truly aren't
+        // interested in (for most test cases)...
+        EXPECT_CALL(mock_gl, glClear(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, GL_FALSE, _))
+            .Times(AtLeast(1));
+        EXPECT_CALL(mock_gl, glUniform1f(_, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glUniform2f(_, _, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glBindBuffer(_, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glVertexAttribPointer(_, _, _, _, _, _))
+            .Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glEnableVertexAttribArray(_)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
+        EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
+
+        EXPECT_CALL(renderable, shaped()).WillRepeatedly(Return(false));
+        EXPECT_CALL(renderable, alpha()).WillRepeatedly(Return(1.0f));
+        EXPECT_CALL(renderable, transformation()).WillRepeatedly(Return(trans));
+        EXPECT_CALL(renderable, screen_position())
+            .WillRepeatedly(Return(mir::geometry::Rectangle{{1,2},{3,4}}));
+        EXPECT_CALL(mock_gl, glDisable(_)).Times(AnyNumber());
+
+        InSequence s;
+
+        SetUpMockVertexShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
+        SetUpMockFragmentShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
+        SetUpMockGraphicsProgram(mock_gl, std::bind(ExpectProgramLinkSuccess, _1,_2));
+        SetUpMockProgramData(mock_gl);
+        EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_location, 0));
+
+        EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+            .WillOnce(Return(screen_to_gl_coords_uniform_location));
+
+        mc::GLRendererFactory gl_renderer_factory{std::make_shared<mg::ProgramFactory>()};
         display_area = {{1, 2}, {3, 4}};
+        renderer = gl_renderer_factory.create_renderer_for(display_area);
+
+        EXPECT_CALL(mock_gl, glDeleteProgram(stub_program));
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
+        EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
     }
 
-    mtd::MockGLProgramFactory mock_gl_program_factory;
-    testing::NiceMock<mtd::MockGL> mock_gl;
-    testing::NiceMock<mtd::MockBuffer> mock_buffer;
-    testing::NiceMock<mtd::MockRenderable> renderable;
+    mtd::MockGL         mock_gl;
     mir::geometry::Rectangle display_area;
+    std::unique_ptr<mc::Renderer> renderer;
     glm::mat4           trans;
+    mtd::MockRenderable renderable;
 };
 
 }
@@ -163,7 +206,10 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 
+    mtd::MockBuffer mock_buffer;
+
     InSequence seq;
+
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(renderable, shaped())
@@ -212,19 +258,18 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
-    mc::GLRenderer renderer(mock_gl_program_factory, display_area);
-    renderer.begin();
-    renderer.render(renderable, mock_buffer);
-    renderer.end();
+    renderer->begin();
+    renderer->render(renderable, mock_buffer);
+    renderer->end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
-    renderer.begin();
-    renderer.end();
+    renderer->begin();
+    renderer->end();
 }
-#if 0
+
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
+    mtd::MockBuffer mock_buffer;
 
     InSequence seq;
     EXPECT_CALL(renderable, shaped())
@@ -259,7 +304,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
 TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
 {
-    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
+    mtd::MockBuffer mock_buffer;
 
     EXPECT_CALL(mock_buffer, size())
         .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
@@ -345,4 +390,3 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->begin();
     renderer->end();
 }
-#endif
