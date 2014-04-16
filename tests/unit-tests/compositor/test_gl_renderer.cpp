@@ -144,38 +144,17 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
 class GLRenderer : public testing::Test
 {
 public:
-
     GLRenderer()
     {
-        using namespace std::placeholders;
-
-
-        //InSequence s;
-        //SetUpMockVertexShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
-        //SetUpMockFragmentShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
-        //SetUpMockGraphicsProgram(mock_gl, std::bind(ExpectProgramLinkSuccess, _1,_2));
-        //SetUpMockProgramData(mock_gl);
-        //EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_location, 0));
-
-        //EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
-        //    .WillOnce(Return(screen_to_gl_coords_uniform_location));
-
-        //mc::GLRendererFactory gl_renderer_factory;
         display_area = {{1, 2}, {3, 4}};
-        //renderer = gl_renderer_factory.create_renderer_for(display_area);
-
-        //EXPECT_CALL(mock_gl, glDeleteShader(stub_v_shader));
-        //EXPECT_CALL(mock_gl, glDeleteShader(stub_f_shader));
-        //EXPECT_CALL(mock_gl, glDeleteProgram(stub_program));
     }
 
-    mtd::MockGL         mock_gl;
     mtd::MockGLProgramFactory mock_program_factory;
-
+    testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockBuffer> mock_buffer
+    testing::NiceMock<mtd::MockRenderable> renderable;
     mir::geometry::Rectangle display_area;
     glm::mat4           trans;
-    mtd::MockRenderable renderable;
-    mtd::MockGLProgramFactory mock_gl_program_factory;
 };
 
 }
@@ -184,7 +163,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 
-    mtd::MockBuffer mock_buffer;
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
 
     InSequence seq;
 
@@ -248,7 +227,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 #if 0
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 {
-    mtd::MockBuffer mock_buffer;
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
 
     InSequence seq;
     EXPECT_CALL(renderable, shaped())
@@ -283,7 +262,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
 TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
 {
-    mtd::MockBuffer mock_buffer;
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
 
     EXPECT_CALL(mock_buffer, size())
         .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
