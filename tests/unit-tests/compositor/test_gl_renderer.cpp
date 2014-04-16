@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include "mir/compositor/renderer.h"
+#include "mir/compositor/gl_renderer.h"
 #include "src/server/compositor/gl_renderer_factory.h"
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
@@ -149,9 +149,9 @@ public:
         display_area = {{1, 2}, {3, 4}};
     }
 
-    mtd::MockGLProgramFactory mock_program_factory;
+    mtd::MockGLProgramFactory mock_gl_program_factory;
     testing::NiceMock<mtd::MockGL> mock_gl;
-    testing::NiceMock<mtd::MockBuffer> mock_buffer
+    testing::NiceMock<mtd::MockBuffer> mock_buffer;
     testing::NiceMock<mtd::MockRenderable> renderable;
     mir::geometry::Rectangle display_area;
     glm::mat4           trans;
@@ -163,10 +163,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 {
     using namespace std::placeholders;
 
-    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
-
     InSequence seq;
-
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(renderable, shaped())
@@ -216,13 +213,13 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     mc::GLRenderer renderer(mock_gl_program_factory, display_area);
-    renderer->begin();
-    renderer->render(renderable, mock_buffer);
-    renderer->end();
+    renderer.begin();
+    renderer.render(renderable, mock_buffer);
+    renderer.end();
 
     // Clear the cache to ensure tests are not sensitive to execution order
-    renderer->begin();
-    renderer->end();
+    renderer.begin();
+    renderer.end();
 }
 #if 0
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)

@@ -20,17 +20,18 @@
 #define MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
 
 #include "mir/compositor/renderer_factory.h"
+#include "mir/graphics/gl_program_factory.h"
+#include "mir/graphics/gl_program.h"
 #include <mutex>
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
-
-class GLRendererFactory : public RendererFactory
+class ProgramFactory : public GLProgramFactory
 {
 public:
-    std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
+    std::unique_ptr<GLProgram> create_gl_program(std::string const&, std::string const&) const override;
 
 private:
     /*
@@ -39,9 +40,21 @@ private:
      * (e.g. glCreateProgram) are not thread-safe when the threads are
      * have the same or shared EGL contexts.
      */
-    std::mutex mutex;
+    std::mutex mutable mutex;
 };
+}
 
+namespace compositor
+{
+
+class GLRendererFactory : public RendererFactory
+{
+public:
+    GLRendererFactory(std::shared_ptr<graphics::GLProgramFactory> const& factory);
+    std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
+private:
+    std::shared_ptr<graphics::GLProgramFactory> const program_factory;
+};
 }
 }
 
