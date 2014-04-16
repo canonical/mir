@@ -203,7 +203,7 @@ public:
 
         run_compositing_loop([&] { return display_buffer_compositor->composite();});
 
-        display_buffer_compositor.release();
+        display_buffer_compositor.reset();
     }
 
     void on_cursor_movement_unlocked(geometry::Point const& p) override
