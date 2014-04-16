@@ -33,11 +33,12 @@ namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
 mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& display_builder,
+                                    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
                                     std::shared_ptr<GLConfig> const& gl_config,
                                     std::shared_ptr<DisplayReport> const& display_report)
     : display_builder{display_builder},
       gl_context{display_builder->display_format(), *gl_config, *display_report},
-      display_buffer{display_builder->create_display_buffer(gl_context)}
+      display_buffer{display_builder->create_display_buffer(*gl_program_factory, gl_context)}
 {
     display_report->report_successful_setup_of_native_resources();
 

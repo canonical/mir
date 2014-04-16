@@ -92,6 +92,7 @@ class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
 class GLConfig;
+class GLProgramFactory;
 namespace nested { class HostConnection; }
 }
 namespace input
@@ -247,6 +248,7 @@ public:
 protected:
     std::shared_ptr<options::Option> the_options() const;
 
+    virtual std::shared_ptr<graphics::GLProgramFactory> the_gl_program_factory();
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
