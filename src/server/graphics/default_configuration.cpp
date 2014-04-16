@@ -172,6 +172,6 @@ mir::DefaultServerConfiguration::the_gl_program_factory()
     return gl_program_factory(
         [this]
         {
-            return std::make_shared<NoGLConfig>();
+            return nullptr;
         });
 }

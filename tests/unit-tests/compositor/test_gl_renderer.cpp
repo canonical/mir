@@ -31,6 +31,7 @@
 #include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir_test_doubles/mock_gl.h>
+#include <mir_test_doubles/mock_gl_program_factory.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -174,7 +175,7 @@ public:
     mir::geometry::Rectangle display_area;
     glm::mat4           trans;
     mtd::MockRenderable renderable;
-    mtd::MockGLProgramFactory gl_renderer_factory;
+    mtd::MockGLProgramFactory mock_gl_program_factory;
 };
 
 }
@@ -235,6 +236,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
+    mc::GLRenderer renderer(mock_gl_program_factory, display_area);
     renderer->begin();
     renderer->render(renderable, mock_buffer);
     renderer->end();
