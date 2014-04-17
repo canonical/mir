@@ -26,9 +26,9 @@ namespace
 {
 std::string const vertex_shader
 {
-    "uniform vec4 coords;\n"
+    "attribute vec4 position;\n"
     "void main() {\n"
-    "   gl_Position = coords;\n"
+    "   gl_Position = position;\n"
     "}\n"
 };
 
@@ -44,6 +44,6 @@ mga::OverlayGLProgram::OverlayGLProgram(
     GLProgramFactory const& factory, GLContext const& context)
 {
     context.make_current();
-    overlay_program = std::move(factory.create_gl_program(vertex_shader, fragment_shader));
+    overlay_program = factory.create_gl_program(vertex_shader, fragment_shader);
     context.release_current();
 }

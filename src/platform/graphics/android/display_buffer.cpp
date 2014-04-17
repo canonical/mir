@@ -30,8 +30,6 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-
-
 mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,

@@ -28,7 +28,6 @@ namespace mir
 namespace graphics
 {
 class GLProgramFactory;
-
 namespace android
 {
 class GLContext;
