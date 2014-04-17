@@ -22,7 +22,6 @@
 #include <mir/compositor/renderer.h>
 #include <mir/graphics/gl_program.h>
 #include <mir/geometry/rectangle.h>
-#include <mir/graphics/gl_program.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_program_factory.h>
