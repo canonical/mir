@@ -17,16 +17,33 @@
  */
 
 #include "mir/graphics/gl_program_factory.h"
+#include "mir/graphics/gl_context.h"
 #include "overlay_gl_compositor.h"
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace
 {
-std::string const vertex_shader{};
-std::string const fragment_shader{};
-}
-mga::OverlayGLProgram::OverlayGLProgram(GLProgramFactory const& factory) :
-    overlay_program{factory.create_gl_program(vertex_shader, fragment_shader)}
+std::string const vertex_shader
 {
+    "uniform vec4 coords;\n"
+    "void main() {\n"
+    "   gl_Position = coords;\n"
+    "}\n"
+};
+
+std::string const fragment_shader
+{
+    "precision mediump float;\n"
+    "void main() {\n"
+    "   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
+    "}\n"
+};
+}
+mga::OverlayGLProgram::OverlayGLProgram(
+    GLProgramFactory const& factory, GLContext const& context)
+{
+    context.make_current();
+    overlay_program = std::move(factory.create_gl_program(vertex_shader, fragment_shader));
+    context.release_current();
 }

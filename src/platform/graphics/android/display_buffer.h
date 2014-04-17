@@ -71,6 +71,7 @@ private:
     bool prepared;
     DisplayConfigurationOutput current_configuration;
     MirOrientation rotation;
+
 };
 
 }

@@ -26,6 +26,7 @@ namespace mir
 {
 namespace graphics
 {
+class GLContext;
 class GLProgramFactory;
 
 namespace android
@@ -34,7 +35,7 @@ namespace android
 class OverlayGLProgram
 {
 public:
-    OverlayGLProgram(GLProgramFactory const& program_factory);
+    OverlayGLProgram(GLProgramFactory const& program_factory, graphics::GLContext const& gl_context);
 private:
     std::unique_ptr<graphics::GLProgram> overlay_program;
 };

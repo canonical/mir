@@ -270,21 +270,19 @@ TEST_F(AndroidDisplayBuffer, can_make_current)
     using namespace testing;
     EGLContext fake_ctxt = reinterpret_cast<EGLContext>(0x4422);
     EGLSurface fake_surf = reinterpret_cast<EGLSurface>(0x33984);
+    ON_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .WillByDefault(Return(fake_ctxt));
+    ON_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
+        .WillByDefault(Return(fake_surf));
 
-    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(fake_ctxt));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(fake_surf));
-
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
+    
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surf, fake_surf, fake_ctxt))
         .Times(2)
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));
 
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     db.make_current();
     EXPECT_THROW(
     {
@@ -295,12 +293,11 @@ TEST_F(AndroidDisplayBuffer, can_make_current)
 TEST_F(AndroidDisplayBuffer, release_current)
 {
     using namespace testing;
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
         .Times(1);
-
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     db.release_current();
 }
 
