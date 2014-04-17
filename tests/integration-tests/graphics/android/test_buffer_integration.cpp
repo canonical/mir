@@ -26,6 +26,8 @@
 #include "testdraw/graphics_region_factory.h"
 #include "testdraw/patterns.h"
 
+#include "mir_test_doubles/stub_timer.h"
+
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
@@ -116,7 +118,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
 
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
 
-    mc::SwitchingBundle swapper(2, allocator, buffer_properties);
+    mc::SwitchingBundle swapper(2, allocator, buffer_properties, std::make_shared<mir::test::doubles::StubTimer>());
 
     auto returned_buffer = client_acquire_blocking(swapper);
 
