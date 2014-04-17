@@ -287,11 +287,9 @@ public:
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
-    testing::NiceMock<mtd::MockBuffer> mock_buffer;
-    mir::geometry::Rectangle display_area;
-    std::unique_ptr<mc::Renderer> renderer;
-    glm::mat4           trans;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    mir::geometry::Rectangle display_area;
+    glm::mat4           trans;
     testing::NiceMock<mtd::MockRenderable> renderable;
     mc::GLRendererFactory gl_renderer_factory;
 };
@@ -474,6 +472,8 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
 
 TEST_F(GLRenderer, holds_buffers_till_the_end)
 {
+    auto renderer = gl_renderer_factory.create_renderer_for(display_area);
+
     InSequence seq;
 
     EXPECT_CALL(*mock_buffer, id())
