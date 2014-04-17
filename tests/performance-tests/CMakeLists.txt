@@ -1,7 +1,6 @@
 set(
   PERFORMANCE_TESTS_SOURCES
 
-  performance_test_helper.cpp
   test_glmark2-es2-mir.cpp
 )
 
