@@ -44,8 +44,9 @@ override_dh_install:
 	dh_install --fail-missing \
 	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmirplatformgraphics.so \
 	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmirclientplatform.so
-	sh debian/install_ld_so_conf.sh $(DEB_HOST_MULTIARCH)
+	sh debian/install_ld_so_conf.sh $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 
 override_dh_installdeb:
-	sh debian/create_postinst_prerm_scripts.sh $(DEB_HOST_MULTIARCH)
+	sh debian/create_postinst_prerm_scripts.sh \
+	  $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 	dh_installdeb
