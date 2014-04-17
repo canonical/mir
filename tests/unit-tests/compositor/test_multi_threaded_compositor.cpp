@@ -26,16 +26,12 @@
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
 #include "mir_test_doubles/mock_scene.h"
-#include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test/spin_wait.h"
 
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>
 #include <mutex>
 #include <chrono>
-#include <atomic>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -98,7 +94,7 @@ public:
 
     mg::RenderableList generate_renderable_list() const
     {
-        return renderable_list;
+        return mg::RenderableList{};
     }
 
     void set_change_callback(std::function<void()> const& f)
@@ -303,24 +299,19 @@ private:
     unsigned int render_count;
 };
 
-class BufferCountingRenderable : public mtd::StubRenderable
+class NullDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    BufferCountingRenderable() : buffers_requested_{0} {}
-
-    std::shared_ptr<mg::Buffer> buffer(void const*) const override
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
     {
-        ++buffers_requested_;
-        return std::make_shared<mtd::StubBuffer>();
-    }
+        struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
+        {
+            bool composite() { return false; }
+        };
 
-    int buffers_requested() const
-    {
-        return buffers_requested_;
+        auto raw = new NullDisplayBufferCompositor{};
+        return std::unique_ptr<NullDisplayBufferCompositor>(raw);
     }
-
-private:
-    mutable std::atomic<int> buffers_requested_;
 };
 
 auto const null_report = mr::null_compositor_report();
@@ -547,7 +538,7 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto scene = std::make_shared<StubScene>();
-    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
+    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
     mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
@@ -564,62 +555,23 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
 TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 {
-    using namespace testing;
-
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto mock_scene = std::make_shared<mtd::MockScene>();
-    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
+    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
     EXPECT_CALL(*mock_report, started())
         .Times(1);
     EXPECT_CALL(*mock_report, stopped())
         .Times(1);
-    EXPECT_CALL(*mock_scene, set_change_callback(_))
+    EXPECT_CALL(*mock_scene, set_change_callback(testing::_))
         .Times(2);
-    EXPECT_CALL(*mock_scene, generate_renderable_list())
-        .Times(AtLeast(0))
-        .WillRepeatedly(Return(mg::RenderableList{}));
 
     mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, mock_report, true};
 
     compositor.start();
     compositor.start();
     compositor.stop();
-    compositor.stop();
-}
-
-TEST(MultiThreadedCompositor, consumes_buffers_for_renderables_that_are_not_rendered)
-{
-    using namespace testing;
-
-    unsigned int const nbuffers{2};
-    auto renderable = std::make_shared<BufferCountingRenderable>();
-    auto display = std::make_shared<StubDisplay>(nbuffers);
-    auto stub_scene = std::make_shared<StubScene>(mg::RenderableList{renderable});
-    // We use NullDisplayBufferCompositors to simulate DisplayBufferCompositors
-    // not rendering a renderable.
-    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
-
-    mc::MultiThreadedCompositor compositor{
-        display, stub_scene, db_compositor_factory, null_report, true};
-
-    compositor.start();
-
-    mir::test::spin_wait_for_condition_or_timeout(
-        [&] { return renderable->buffers_requested() == 1; },
-        std::chrono::seconds{5});
-
-    EXPECT_THAT(renderable->buffers_requested(), Eq(1));
-
-    stub_scene->emit_change_event();
-
-    mir::test::spin_wait_for_condition_or_timeout(
-        [&] { return renderable->buffers_requested() == 2; },
-        std::chrono::seconds{5});
-
-    EXPECT_THAT(renderable->buffers_requested(), Eq(2));
-
     compositor.stop();
 }
 
