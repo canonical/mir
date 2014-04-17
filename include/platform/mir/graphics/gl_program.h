@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_PROGRAM_H_
-#define MIR_COMPOSITOR_GL_PROGRAM_H_
+#ifndef MIR_GRAPHICS_GL_PROGRAM_H_
+#define MIR_GRAPHICS_GL_PROGRAM_H_
 
 #include <GLES2/gl2.h>
 
@@ -62,4 +62,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_GL_PROGRAM_H_ */
+#endif /* MIR_GRAPHICS_GL_PROGRAM_H_ */

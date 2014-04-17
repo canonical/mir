@@ -115,6 +115,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& conf_policy,
+    std::shared_ptr<mg::GLProgramFactory> const&,
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mgn::NestedDisplay>(

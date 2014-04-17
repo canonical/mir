@@ -305,6 +305,7 @@ protected:
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
+    CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
 
 private:
