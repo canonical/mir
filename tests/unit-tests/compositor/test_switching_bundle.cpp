@@ -22,6 +22,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_framework/semaphore.h"
 #include "mir_test_framework/watchdog.h"
+#include "mir_test/wait_condition.h"
 
 #include <gtest/gtest.h>
 
@@ -1106,4 +1107,60 @@ TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
         EXPECT_TRUE(has_dropped_frame);
         compositor_runner.stop();
     }
+}
+
+TEST_F(SwitchingBundleTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
+{
+    /* Regression test for LP: #1306464 */
+    using namespace testing;
+
+    int const nbuffers{3};
+    mc::SwitchingBundle bundle{nbuffers, allocator, basic_properties, timer};
+
+    bundle.allow_framedropping(true);
+
+    mg::Buffer* buffer{nullptr};
+
+    for (int i = 0; i < nbuffers; ++i)
+    {
+        bundle.client_acquire([&] (mg::Buffer* b) { buffer = b; });
+        bundle.client_release(buffer);
+    }
+
+    /*
+     * We need nbuffers - 1 compositors to acquire all the buffers,
+     * each compositor acquiring buffers twice (see below)
+     */
+    std::vector<int> compositors(nbuffers - 1);
+    std::vector<std::shared_ptr<mg::Buffer>> buffers;
+
+    for (auto const& id : compositors)
+    {
+        buffers.push_back(bundle.compositor_acquire(&id));
+        buffers.push_back(bundle.compositor_acquire(&id));
+    }
+
+    /* At this point the bundle has 0 free buffers and 0 ready buffers */
+
+    mir::test::WaitCondition client_acquire_complete;
+
+    /*
+     * Although we neither have a free buffer, nor can we free a buffer by dropping it,
+     * this shouldn't block. BufferBundle::client_acquire() should *never* block.
+     */
+    bundle.client_acquire(
+        [&] (mg::Buffer*)
+        {
+            client_acquire_complete.wake_up_everyone();
+        });
+
+    /* Release compositor buffers so that the client can get one */
+    for (auto const& buffer : buffers)
+    {
+        bundle.compositor_release(buffer);
+    }
+
+    client_acquire_complete.wait_for_at_most_seconds(5);
+
+    EXPECT_TRUE(client_acquire_complete.woken());
 }

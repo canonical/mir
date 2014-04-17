@@ -27,7 +27,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
-#include <mutex>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -64,93 +63,17 @@ const GLchar* fragment_shader_src =
     "   gl_FragColor = vec4(frag.xyz, frag.a * alpha);\n"
     "}\n"
 };
-
-typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
-typedef void(*MirGLGetObjectiv)(GLuint, GLenum, GLint *);
-
-void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
-                          MirGLGetObjectiv      getObjectiv,
-                          std::string const &   msg,
-                          GLuint                object)
-{
-    GLint object_log_length = 0;
-    (*getObjectiv)(object, GL_INFO_LOG_LENGTH, &object_log_length);
-
-    const GLuint object_log_buffer_length = object_log_length + 1;
-    std::string  object_info_log;
-
-    object_info_log.resize(object_log_buffer_length);
-    (*getObjectInfoLog)(object, object_log_length, NULL,
-                        const_cast<GLchar *>(object_info_log.data()));
-
-    std::string object_info_err(msg + "\n");
-    object_info_err += object_info_log;
-
-    BOOST_THROW_EXCEPTION(std::runtime_error(object_info_err));
 }
 
-}
-
-mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
-    vertex_shader(0),
-    fragment_shader(0),
-    program(0),
-    position_attr_loc(0),
-    texcoord_attr_loc(0),
-    centre_uniform_loc(0),
-    transform_uniform_loc(0),
-    alpha_uniform_loc(0),
-    rotation(NAN) // ensure the first set_rotation succeeds
+mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+    : program(vertex_shader_src, fragment_shader_src),
+      position_attr_loc(0),
+      texcoord_attr_loc(0),
+      centre_uniform_loc(0),
+      transform_uniform_loc(0),
+      alpha_uniform_loc(0),
+      rotation(NAN) // ensure the first set_rotation succeeds
 {
-    /*
-     * We need to serialize renderer creation because some GL calls used
-     * during renderer construction that create unique resource ids
-     * (e.g. glCreateProgram) are not thread-safe when the threads are
-     * have the same or shared EGL contexts.
-     */
-    static std::mutex mutex;
-    std::lock_guard<std::mutex> lock(mutex);
-
-    GLint param = 0;
-
-    /* Create shaders and program */
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_src, 0);
-    glCompileShader(vertex_shader);
-    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
-    if (param == GL_FALSE)
-    {
-        GetObjectLogAndThrow(glGetShaderInfoLog,
-            glGetShaderiv,
-            "Failed to compile vertex shader:",
-            vertex_shader);
-    }
-
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_src, 0);
-    glCompileShader(fragment_shader);
-    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
-    if (param == GL_FALSE)
-    {
-        GetObjectLogAndThrow(glGetShaderInfoLog,
-            glGetShaderiv,
-            "Failed to compile fragment shader:",
-            fragment_shader);
-    }
-
-    program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-    glGetProgramiv(program, GL_LINK_STATUS, &param);
-    if (param == GL_FALSE)
-    {
-        GetObjectLogAndThrow(glGetProgramInfoLog,
-            glGetProgramiv,
-            "Failed to link program:",
-            program);
-    }
-
     glUseProgram(program);
 
     /* Set up program variables */
@@ -173,12 +96,6 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area) :
 
 mc::GLRenderer::~GLRenderer() noexcept
 {
-    if (vertex_shader)
-        glDeleteShader(vertex_shader);
-    if (fragment_shader)
-        glDeleteShader(fragment_shader);
-    if (program)
-        glDeleteProgram(program);
     for (auto& t : textures)
         glDeleteTextures(1, &t.second.id);
 }

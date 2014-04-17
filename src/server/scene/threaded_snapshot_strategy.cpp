@@ -18,7 +18,7 @@
 
 #include "threaded_snapshot_strategy.h"
 #include "pixel_buffer.h"
-#include "mir/shell/surface_buffer_access.h"
+#include "mir/scene/surface_buffer_access.h"
 
 #include <deque>
 #include <mutex>
@@ -26,7 +26,6 @@
 
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 namespace mir
 {
@@ -35,8 +34,8 @@ namespace scene
 
 struct WorkItem
 {
-    std::shared_ptr<msh::SurfaceBufferAccess> const surface_buffer_access;
-    msh::SnapshotCallback const snapshot_taken;
+    std::shared_ptr<SurfaceBufferAccess> const surface_buffer_access;
+    ms::SnapshotCallback const snapshot_taken;
 };
 
 class SnapshottingFunctor
@@ -80,7 +79,7 @@ public:
 
 
         wi.snapshot_taken(
-            msh::Snapshot{pixels->size(),
+            ms::Snapshot{pixels->size(),
                      pixels->stride(),
                      pixels->as_argb_8888()});
     }
@@ -125,8 +124,8 @@ ms::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy() noexcept
 }
 
 void ms::ThreadedSnapshotStrategy::take_snapshot_of(
-    std::shared_ptr<msh::SurfaceBufferAccess> const& surface_buffer_access,
-    msh::SnapshotCallback const& snapshot_taken)
+    std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
+    SnapshotCallback const& snapshot_taken)
 {
     functor->schedule_snapshot(WorkItem{surface_buffer_access, snapshot_taken});
 }

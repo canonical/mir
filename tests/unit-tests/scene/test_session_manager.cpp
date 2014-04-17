@@ -23,7 +23,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/null_session_listener.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
@@ -119,9 +119,9 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1);
+    EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1);
 
-    ON_CALL(surface_coordinator, add_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(
        Return(dummy_surface));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -131,7 +131,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<ms::Session>())).Times(1);
 
     auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
-    session->create_surface(msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
 }
@@ -151,7 +151,7 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
-    ON_CALL(surface_coordinator, add_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(
        Return(dummy_surface));
 
     // Once for session creation and once for surface creation
@@ -159,12 +159,12 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         InSequence seq;
 
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
-        EXPECT_CALL(surface_coordinator, add_surface(_, _, _)).Times(1);
+        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1);
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
     auto session1 = session_manager.open_session(__LINE__, "Weather Report", std::shared_ptr<mf::EventSink>());
-    session_manager.create_surface_for(session1, msh::a_surface());
+    session_manager.create_surface_for(session1, ms::a_surface());
 }
 
 namespace

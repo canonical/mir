@@ -199,3 +199,26 @@ TEST_F(DisplayTest, gl_context_releases_context)
     EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
         .Times(AtLeast(0));
 }
+
+TEST_F(DisplayTest, does_not_expose_display_buffer_for_output_with_power_mode_off)
+{
+    using namespace testing;
+    auto display = create_display();
+    int db_count{0};
+
+    display->for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
+    EXPECT_THAT(db_count, Eq(1));
+
+    auto conf = display->configuration();
+    conf->for_each_output(
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.power_mode = mir_power_mode_off;
+        });
+
+    display->configure(*conf);
+
+    db_count = 0;
+    display->for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
+    EXPECT_THAT(db_count, Eq(0));
+}

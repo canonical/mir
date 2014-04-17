@@ -1,24 +1,90 @@
-mir (0.1.8-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.1.9-0ubuntu1) UNRELEASED; urgency=medium
 
-  * New upstream release 0.1.8 (https://launchpad.net/mir/+milestone/0.1.8)
-    - mirserver ABI bumped to 18.
+  * New upstream release 0.1.9 (https://launchpad.net/mir/+milestone/0.1.9)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - mirserver ABI bumped to 19. Shells need rebuilding.
+    - More libmirserver class changes and reorganization, including;
+      . Moving things from shell:: to scene::
+      . Rewriting/refactoring surface factories.
+    - Added an id() to Renderable.
+    - Scene/Renderer interfaces:
+      . Scene is no longer responsible for its own iteration (no for_each
+        any more). Instead you should iterate over the list returned by
+        Scene::generate_renderable_list().
+    - Bugs fixed:
+      . TODO: fill in when proposing to Ubuntu
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 15 Apr 2014 13:35:04 +0800
+
+mir (0.1.8+14.04.20140411-0ubuntu1) trusty; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.1.8 (https://launchpad.net/mir/+milestone/0.1.8)
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - mirserver ABI bumped to 18. Shells need rebuilding.
     - Server API changes affecting shells:
       . GLRenderer::tessellate() changed syntax.
-    - Switch EventHub device enumeration and hotplug to Udev. NOTE! This means
-      mir_test_* can't run natively on touch devices any more without some
-      preparation first:
+      . graphics::Platform::create_display() has a new parameter allowing you
+        to customize the compositor's (E)GL configutation.
+      . Renderable::buffer(unsigned long frameno) is now:
+        Renderable::buffer(void const* user_id). See below.
+      . Renderable::should_be_rendered_in() is replaced by a more natural:
+        Renderable::visble()
+      . input::Surface::name() returns by value instead of reference now,
+        to ensure future thread safety.
+    - Switched EventHub device enumeration and hotplug to Udev. NOTE! This
+      means mir_test_* can't run natively on touch devices any more without
+      some setup first:
         sudo mount -o remount,rw /
         sudo apt-get update
         sudo apt-get install -y umockdev
+        umockdev-run -- bin/mir_unit_tests
     - Added logging for HWC events.
     - Continued consolidation of Surface classes toward a simpler architecture.
+    - Introduced "RenderableList" as the way to sample the Scene contents,
+      and started using that in the default compositor.
+    - Introduced physical length units and conversion (geometry::Length) in
+      preparation for arbitrary DPI rendering.
     - Added some decorations to demo-shell; shadows and basic title bars, all
-      anti-aliased and high-DPI-scalable.
-    - Bugs fixed:
-      . TODO (during merge proposal to distro)
+      anti-aliased and high-DPI scalable.
+    - Multi-monitor frame sync has been redesigned to eliminate the need for
+      frame number tracking.
+    - Bugs (and enhancements) resolved:
+      . [enhancement] Please move input detection to libudev (LP: #1237784)
+      . [enhancement] Add a clamping resize mode to GLRenderer (LP: #1259887)
+      . [regression] Intermittent loss of multimonitor frame sync
+        (LP: #1290306)
+      . [enhancement] Make GL config options configurable (LP: #1290780)
+      . memcheck-test doesn't test anything when DISABLED_GTEST_DISCOVERY is
+        enabled (LP: #1291876)
+      . "Error opening DRM device" is always followed by "Unknown error -(some
+        negative number)" (LP: #1292384)
+      . Rendering/composition gets stopped early (LP: #1293896)
+      . Ubuntu Touch Settings and terminal apps are not rendering correctly on
+        rotate. (LP: #1294048)
+      . [regression] Apps are much slower to open (LP: #1294051)
+      . Settings app opens to a blank screen unless given enough time to render
+        or the app is touched (LP: #1294053)
+      . TestClientInput/DemoPrivateProtobuf memory leak is causing regular CI
+        test failures (LP: #1295231)
+      . OSK touch events "fall through" and hit surface behind them
+        (LP: #1297878)
+      . [enhancement] add a test for composite of last client post
+        (LP: #1298596)
+      . [regression] Surfaces vanish as soon as their edges touch the edge of
+        screen (LP: #1301115)
+  * Cherry-picked from future release 0.1.9:
+    - Bug fix: mirplatformgraphics does not have boost program options in its
+      symbol table (LP: #1301040)
+    - Bug fix: unity8 crashed with SIGSEGV in glDeleteTextures() from
+      mir::scene::GLPixelBuffer::~GLPixelBuffer() from
+      mir::scene::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy()
+      (LP: #1256360)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 20 Mar 2014 14:05:25 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Apr 2014 21:03:54 +0000
 
 mir (0.1.7+14.04.20140318-0ubuntu1) trusty; urgency=low
 
