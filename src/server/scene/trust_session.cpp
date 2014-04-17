@@ -88,19 +88,26 @@ void ms::TrustSession::stop()
         helper->end_trust_session();
     }
 
-    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-    for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
+    std::vector<std::shared_ptr<shell::Session>> children;
     {
-        auto session = (*rit).lock();
-        if (session)
+        std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
+
+        for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
         {
-            session->end_trust_session();
-            trust_session_listener->trusted_session_ending(*this, session);
+            auto session = (*rit).lock();
+            if (session)
+            {
+                children.push_back(session);
+            }
         }
+        trusted_children.clear();
     }
 
-    trusted_children.clear();
+    for (auto session : children)
+    {
+        session->end_trust_session();
+        trust_session_listener->trusted_session_ending(*this, session);
+    }
 }
 
 void ms::TrustSession::for_each_trusted_client_process(std::function<void(pid_t pid)>, bool) const
@@ -114,19 +121,20 @@ bool ms::TrustSession::add_trusted_child(std::shared_ptr<msh::Session> const& se
     if (state == mir_trust_session_state_stopped)
         return false;
 
-    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-    if (std::find_if(trusted_children.begin(), trusted_children.end(),
-            [session](std::weak_ptr<shell::Session> const& child)
-            {
-                return child.lock() == session;
-            }) != trusted_children.end())
     {
-        return false;
+        std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
+
+        if (std::find_if(trusted_children.begin(), trusted_children.end(),
+                [session](std::weak_ptr<shell::Session> const& child)
+                {
+                    return child.lock() == session;
+                }) != trusted_children.end())
+        {
+            return false;
+        }
+
+        trusted_children.push_back(session);
     }
-
-    trusted_children.push_back(session);
-
     session->begin_trust_session();
     trust_session_listener->trusted_session_beginning(*this, session);
     return true;
@@ -139,19 +147,25 @@ void ms::TrustSession::remove_trusted_child(std::shared_ptr<msh::Session> const&
     if (state == mir_trust_session_state_stopped)
         return;
 
-    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-    for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
+    bool found = false;
     {
-        auto trusted_child = (*it).lock();
-        if (trusted_child && trusted_child == session) {
+        std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
 
-            trusted_children.erase(it);
-
-            session->end_trust_session();
-            trust_session_listener->trusted_session_ending(*this, session);
-            break;
+        for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
+        {
+            auto trusted_child = (*it).lock();
+            if (trusted_child && trusted_child == session) {
+                found = true;
+                trusted_children.erase(it);
+                break;
+            }
         }
+    }
+
+    if (found)
+    {
+        session->end_trust_session();
+        trust_session_listener->trusted_session_ending(*this, session);
     }
 }
 

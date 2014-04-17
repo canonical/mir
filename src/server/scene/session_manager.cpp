@@ -93,6 +93,8 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     app_container->insert_session(new_session);
 
+    session_listener->starting(new_session);
+
     {
         trust_session_container->for_each_trust_session_for_process(client_pid,
             [client_pid, new_session](std::shared_ptr<frontend::TrustSession> const& trust_session)
@@ -103,8 +105,6 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
                 shell_trust_session->add_trusted_child(new_session);
             });
     }
-
-    session_listener->starting(new_session);
 
     set_focus_to(new_session);
 
@@ -239,9 +239,9 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
     trust_session_container->insert(trust_session, shell_session->process_id());
 
     trust_session->start();
-    add_trusted_session_for_locked(lock, trust_session, params.base_process_id);
-
     trust_session_listener->starting(trust_session);
+
+    add_trusted_session_for_locked(lock, trust_session, params.base_process_id);
     return trust_session;
 }
 
