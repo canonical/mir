@@ -42,6 +42,14 @@ class CompositingFunctor;
 class Scene;
 class CompositorReport;
 
+enum class CompositorState
+{
+    started,
+    stopped,
+    starting,
+    stopping
+};
+
 class MultiThreadedCompositor : public Compositor, public Zoomable
 {
 public:
@@ -60,6 +68,9 @@ public:
     void on_cursor_movement(geometry::Point const& p);
 
 private:
+    void create_compositing_threads();
+    void destroy_compositing_threads(std::unique_lock<std::mutex>& lock);
+
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
@@ -69,9 +80,8 @@ private:
     std::vector<std::thread> threads;
 
     std::shared_ptr<graphics::Cursor> const vcursor;
-
-    std::mutex started_guard;
-    bool started;
+    std::mutex state_guard;
+    CompositorState state;
     bool compose_on_start;
 
     void schedule_compositing();
