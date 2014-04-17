@@ -458,14 +458,14 @@ std::weak_ptr<mir::graphics::Cursor> mc::MultiThreadedCompositor::cursor() const
 
 void mc::MultiThreadedCompositor::on_cursor_movement(geometry::Point const& p)
 {
-    std::unique_lock<std::mutex> lk(started_guard);
+    std::unique_lock<std::mutex> lk(state_guard);
     for (auto& f : thread_functors)
         f->on_cursor_movement(p);
 }
 
 void mc::MultiThreadedCompositor::zoom(float magnification)
 {
-    std::unique_lock<std::mutex> lk(started_guard);
+    std::unique_lock<std::mutex> lk(state_guard);
     for (auto& f : thread_functors)
         f->zoom(magnification);
 }
