@@ -54,6 +54,10 @@ public:
             .WillByDefault(Invoke([](std::string const a, std::string const b)
                 { return std::unique_ptr<mg::GLProgram>(new mg::GLProgram(a.c_str(),b.c_str())); }));
 
+        ON_CALL(mock_gl, glGetShaderiv(_,_,_))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
+        ON_CALL(mock_gl, glGetProgramiv(_,_,_))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
         ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")))
             .WillByDefault(Return(display_transform_uniform_loc));
     }
