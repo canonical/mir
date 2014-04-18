@@ -22,11 +22,13 @@
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
+
 namespace
 {
 std::string const vertex_shader
 {
-    "attribute vec4 position;\n"
+    "attribute mat4 display_transform;\n"
     "void main() {\n"
     "   gl_Position = position;\n"
     "}\n"
@@ -40,10 +42,15 @@ std::string const fragment_shader
     "}\n"
 };
 }
+
 mga::OverlayGLProgram::OverlayGLProgram(
-    GLProgramFactory const& factory, GLContext const& context)
+    GLProgramFactory const& factory,
+    GLContext const& context,
+    geom::Rectangle const&)
 {
     context.make_current();
-    overlay_program = factory.create_gl_program(vertex_shader, fragment_shader);
+    program = factory.create_gl_program(vertex_shader, fragment_shader);
+
+    display_transform_uniform = glGetUniformLocation(*program, "display_transform");
     context.release_current();
 }

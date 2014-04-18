@@ -19,7 +19,9 @@
 #ifndef MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
 #define MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
 
+#include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_program.h"
+#include <GLES2/gl2.h>
 #include <memory>
 
 namespace mir
@@ -35,9 +37,13 @@ namespace android
 class OverlayGLProgram
 {
 public:
-    OverlayGLProgram(GLProgramFactory const& program_factory, graphics::GLContext const& gl_context);
+    OverlayGLProgram(
+        GLProgramFactory const& program_factory,
+        graphics::GLContext const& gl_context,
+        geometry::Rectangle const& screen_position);
 private:
-    std::unique_ptr<graphics::GLProgram> overlay_program;
+    std::unique_ptr<graphics::GLProgram> program;
+    GLint display_transform_uniform; 
 };
 
 }
