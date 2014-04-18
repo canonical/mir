@@ -20,6 +20,13 @@
 #include "mir/graphics/gl_context.h"
 #include "overlay_gl_compositor.h"
 
+#define GLM_FORCE_RADIANS
+#define GLM_PRECISION_MEDIUMP_FLOAT
+#define GLM_HAS_INITIALIZER_LISTS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
@@ -41,16 +48,31 @@ std::string const fragment_shader
     "   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
     "}\n"
 };
+
+void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
+{
+    glm::mat4 disp_transform(1.0);
+    disp_transform = glm::translate(
+                        disp_transform,
+                        glm::vec3{rect.top_left.x.as_int(), rect.top_left.y.as_int(), 0.0});
+    disp_transform = glm::scale(
+                        disp_transform,
+                        glm::vec3{1.0/rect.size.width.as_int(),
+                                  1.0/rect.size.height.as_int(),
+                                  1.0});
+    glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, glm::value_ptr(disp_transform));
+}
 }
 
 mga::OverlayGLProgram::OverlayGLProgram(
     GLProgramFactory const& factory,
     GLContext const& context,
-    geom::Rectangle const&)
+    geom::Rectangle const& screen_pos)
 {
     context.make_current();
     program = factory.create_gl_program(vertex_shader, fragment_shader);
 
     display_transform_uniform = glGetUniformLocation(*program, "display_transform");
+    set_display_transform(display_transform_uniform, screen_pos); 
     context.release_current();
 }

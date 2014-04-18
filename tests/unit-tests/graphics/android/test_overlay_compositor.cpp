@@ -84,25 +84,29 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
 }
 
+
+MATCHER_P(Matches4x4Matrix, value, "matches expected 4x4 matrix")
+{
+    for(auto i=0; i < 16; i++)
+        EXPECT_THAT(arg[i], testing::FloatEq(value[i]));
+    return !(::testing::Test::HasFailure());
+}
+
 TEST_F(OverlayCompositor, sets_up_orthographic_matrix_based_on_screen_size)
 {
     using namespace testing;
     geom::Rectangle screen_pos{geom::Point{100,200}, geom::Size{800,600}};
 
-    glm::mat4 expected_matrix(1.0);
-    expected_matrix = glm::translate(glm::mat4(1.0), 
-                                     glm::vec3{screen_pos.top_left.x.as_int(),
-                                               screen_pos.top_left.y.as_int(),
-                                               1.0});
-    expected_matrix = glm::scale(glm::mat4(1.0),
-                                 glm::vec3{screen_pos.size.width.as_int(),
-                                           screen_pos.size.height.as_int(),
-                                           1.0});
+    float expected_matrix[]{
+        1/800.0, 0.0    , 0.0, 0.0,
+        0.0    , 1/600.0, 0.0, 0.0,
+        0.0    , 0.0    , 1.0, 0.0,
+        100.0  , 200.0  , 0.0, 1.0,
+    };
 
     glm::mat4 matrix(0.0);
-    EXPECT_CALL(mock_gl, glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, _))
-        .WillOnce(SaveArgPointee<3>(glm::value_ptr(matrix)));
+    EXPECT_CALL(mock_gl, glUniformMatrix4fv(
+        display_transform_uniform_loc, 1, GL_FALSE, Matches4x4Matrix(expected_matrix)));
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, screen_pos);
-    EXPECT_EQ(expected_matrix, matrix);
 }
