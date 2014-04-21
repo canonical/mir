@@ -72,12 +72,30 @@ mga::OverlayGLProgram::OverlayGLProgram(
     context.make_current();
     program = factory.create_gl_program(vertex_shader, fragment_shader);
 
-    //gluseprogram
+    glUseProgram(*program);
+
     auto display_transform_uniform = glGetUniformLocation(*program, "display_transform");
     set_display_transform(display_transform_uniform, screen_pos); 
+
+    position_attr = glGetUniformLocation(*program, "position");
+
+    glUseProgram(0);
     context.release_current();
 }
 
-void mga::OverlayGLProgram::render(RenderableList const&, SwappingGLContext const&)
+void mga::OverlayGLProgram::render(
+    RenderableList const& renderlist, SwappingGLContext const& context)
 {
+    glEnableVertexAttribArray(position_attr);
+
+    for(auto const& renderable : renderlist)
+    {
+        size_t const num_vertices{4};
+        GLfloat{};
+
+        glVertexAttribPointer(position_attr, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
+    }
+
+    context.swap_buffers();
 }

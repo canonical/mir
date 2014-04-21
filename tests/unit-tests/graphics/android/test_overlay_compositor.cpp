@@ -82,8 +82,10 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     InSequence seq;
     EXPECT_CALL(mock_context, make_current());
     EXPECT_CALL(mock_gl_program_factory, create_gl_program(_,_));
+    EXPECT_CALL(mock_gl, glUseProgram(_));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")));
+    EXPECT_CALL(mock_gl, glUseProgram(0));
     EXPECT_CALL(mock_context, release_current());
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
@@ -105,14 +107,14 @@ TEST_F(OverlayCompositor, sets_up_orthographic_matrix_based_on_screen_size)
     geom::Rectangle screen_pos{pt, sz};
     float inv_w = 1.0/sz.width.as_int();
     float inv_h = 1.0/sz.height.as_int();
-    float x = static_cast<float>(pt.x.as_int());
-    float y = static_cast<float>(pt.y.as_int());
+    float x = static_cast<float>(pt.x.as_int() + sz.width.as_int()/2);
+    float y = static_cast<float>(pt.y.as_int() + sz.height.as_int()/2);
 
     float expected_matrix[]{
         inv_w, 0.0    , 0.0, 0.0,
         0.0  , inv_h  , 0.0, 0.0,
         0.0  , 0.0    , 1.0, 0.0,
-        x    , y      , 0.0, 1.0
+        -x   , -y     , 0.0, 1.0
     };
 
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(
@@ -127,11 +129,11 @@ struct Vertex
     float y;
 };
 
-Vertex normalized_vertex(geom::Point const& pos, geom::Size const& bounding)
+Vertex to_vertex(geom::Point const& pos)
 {
     return {
-        ((static_cast<float>(pos.x.as_int())/bounding.width.as_int()) * 2.0f) - 1.0f,
-        ((static_cast<float>(pos.y.as_int())/bounding.height.as_int()) * 2.0f) - 1.0f
+        static_cast<float>(pos.x.as_int()),
+        static_cast<float>(pos.y.as_int())
     };
 }
 
@@ -173,17 +175,17 @@ TEST_F(OverlayCompositor, rendering_designates_vertices)
     };
 
     std::vector<Vertex> expected_vertices1 {
-        normalized_vertex(rect1.top_left, dummy_screen_pos.size),
-        normalized_vertex(top_right(rect1), dummy_screen_pos.size),
-        normalized_vertex(bottom_left(rect1), dummy_screen_pos.size),
-        normalized_vertex(bottom_right(rect1), dummy_screen_pos.size),
+        to_vertex(rect1.top_left,
+        to_vertex(top_right(rect1)),
+        to_vertex(bottom_left(rect1)),
+        to_vertex(bottom_right(rect1)),
     };
 
     std::vector<Vertex> expected_vertices2 {
-        normalized_vertex(rect2.top_left, dummy_screen_pos.size),
-        normalized_vertex(top_right(rect2), dummy_screen_pos.size),
-        normalized_vertex(bottom_left(rect2), dummy_screen_pos.size),
-        normalized_vertex(bottom_right(rect2), dummy_screen_pos.size),
+        to_vertex(rect2.top_left,
+        to_vertex(top_right(rect2)),
+        to_vertex(bottom_left(rect2)),
+        to_vertex(bottom_right(rect2)),
     };
 
     InSequence seq;
@@ -191,6 +193,10 @@ TEST_F(OverlayCompositor, rendering_designates_vertices)
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
         position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices1)));
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, expected_vertices1.size()));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(
+        position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices2)));
+    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, expected_vertices2.size()));
+    EXPECT_CALL(mock_context_s, swap_buffers());
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);

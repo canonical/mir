@@ -47,6 +47,8 @@ public:
     void render(RenderableList const&, SwappingGLContext const&);
 private:
     std::unique_ptr<graphics::GLProgram> program;
+
+    GLint position_attr;
 };
 
 }
