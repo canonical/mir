@@ -20,11 +20,12 @@
 #include "mir/graphics/gl_context.h"
 #include "mir_test_doubles/mock_gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/stub_renderable.h"
+#include "mir_test_doubles/mock_swapping_gl_context.h"
 #include <gtest/gtest.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_PRECISION_MEDIUMP_FLOAT
-#define GLM_HAS_INITIALIZER_LISTS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -60,14 +61,17 @@ public:
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
         ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")))
             .WillByDefault(Return(display_transform_uniform_loc));
+        ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")))
+            .WillByDefault(Return(position_attr_loc));
     }
 
     GLint const display_transform_uniform_loc{1};
+    GLint const position_attr_loc{2};
 
     testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
     testing::NiceMock<MockContext> mock_context;
     testing::NiceMock<mtd::MockGL> mock_gl;
-    geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{200,200}};
+    geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{500,400}};
 };
 
 }
@@ -79,6 +83,7 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_context, make_current());
     EXPECT_CALL(mock_gl_program_factory, create_gl_program(_,_));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")));
     EXPECT_CALL(mock_context, release_current());
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
@@ -95,18 +100,99 @@ MATCHER_P(Matches4x4Matrix, value, "matches expected 4x4 matrix")
 TEST_F(OverlayCompositor, sets_up_orthographic_matrix_based_on_screen_size)
 {
     using namespace testing;
-    geom::Rectangle screen_pos{geom::Point{100,200}, geom::Size{800,600}};
+    geom::Size sz{800,600};
+    geom::Point pt{100,200};
+    geom::Rectangle screen_pos{pt, sz};
+    float inv_w = 1.0/sz.width.as_int();
+    float inv_h = 1.0/sz.height.as_int();
+    float x = static_cast<float>(pt.x.as_int());
+    float y = static_cast<float>(pt.y.as_int());
 
     float expected_matrix[]{
-        1/800.0, 0.0    , 0.0, 0.0,
-        0.0    , 1/600.0, 0.0, 0.0,
-        0.0    , 0.0    , 1.0, 0.0,
-        100.0  , 200.0  , 0.0, 1.0,
+        inv_w, 0.0    , 0.0, 0.0,
+        0.0  , inv_h  , 0.0, 0.0,
+        0.0  , 0.0    , 1.0, 0.0,
+        x    , y      , 0.0, 1.0
     };
 
-    glm::mat4 matrix(0.0);
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(
         display_transform_uniform_loc, 1, GL_FALSE, Matches4x4Matrix(expected_matrix)));
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, screen_pos);
 }
+
+struct Vertex 
+{
+    float x;
+    float y;
+};
+
+Vertex normalized_vertex(geom::Point const& pos, geom::Size const& bounding)
+{
+    return {
+        ((static_cast<float>(pos.x.as_int())/bounding.width.as_int()) * 2.0f) - 1.0f,
+        ((static_cast<float>(pos.y.as_int())/bounding.height.as_int()) * 2.0f) - 1.0f
+    };
+}
+
+geom::Point top_right(geom::Rectangle const& rect)
+{
+    return rect.top_left + geom::DeltaX{rect.size.width.as_int()};
+}
+geom::Point bottom_left(geom::Rectangle const& rect)
+{
+    return rect.top_left + geom::DeltaY{rect.size.height.as_int()};
+}
+geom::Point bottom_right(geom::Rectangle const& rect)
+{
+    return rect.top_left + geom::DeltaX{rect.size.width.as_int()} + geom::DeltaY{rect.size.height.as_int()};
+}
+
+MATCHER_P(MatchesVertices, vertices, "matches vertices")
+{
+    int i{0};
+    auto arg_vertices = static_cast<GLfloat const*>(arg);
+    for(auto const& vert : vertices)
+    { 
+        EXPECT_THAT(arg_vertices[i++], testing::FloatEq(vert.x));
+        EXPECT_THAT(arg_vertices[i++], testing::FloatEq(vert.y));
+    } 
+    return !(::testing::Test::HasFailure());
+}
+
+TEST_F(OverlayCompositor, rendering_designates_vertices)
+{
+    using namespace testing;
+    mtd::MockSwappingGLContext mock_context_s;
+    geom::Rectangle rect1{{100,200},{50, 60}};
+    geom::Rectangle rect2{{150,250},{150, 90}};
+    
+    mg::RenderableList renderlist{
+        std::make_shared<mtd::StubRenderable>(rect1), 
+        std::make_shared<mtd::StubRenderable>(rect2)
+    };
+
+    std::vector<Vertex> expected_vertices1 {
+        normalized_vertex(rect1.top_left, dummy_screen_pos.size),
+        normalized_vertex(top_right(rect1), dummy_screen_pos.size),
+        normalized_vertex(bottom_left(rect1), dummy_screen_pos.size),
+        normalized_vertex(bottom_right(rect1), dummy_screen_pos.size),
+    };
+
+    std::vector<Vertex> expected_vertices2 {
+        normalized_vertex(rect2.top_left, dummy_screen_pos.size),
+        normalized_vertex(top_right(rect2), dummy_screen_pos.size),
+        normalized_vertex(bottom_left(rect2), dummy_screen_pos.size),
+        normalized_vertex(bottom_right(rect2), dummy_screen_pos.size),
+    };
+
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(
+        position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices1)));
+    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, expected_vertices1.size()));
+
+    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    glprogram.render(renderlist, mock_context_s);
+}
+

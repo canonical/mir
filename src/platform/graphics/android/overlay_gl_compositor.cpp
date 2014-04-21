@@ -22,7 +22,6 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_PRECISION_MEDIUMP_FLOAT
-#define GLM_HAS_INITIALIZER_LISTS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -35,7 +34,8 @@ namespace
 {
 std::string const vertex_shader
 {
-    "attribute mat4 display_transform;\n"
+    "attribute vec2 position;\n"
+    "uniform mat4 display_transform;\n"
     "void main() {\n"
     "   gl_Position = position;\n"
     "}\n"
@@ -72,7 +72,12 @@ mga::OverlayGLProgram::OverlayGLProgram(
     context.make_current();
     program = factory.create_gl_program(vertex_shader, fragment_shader);
 
-    display_transform_uniform = glGetUniformLocation(*program, "display_transform");
+    //gluseprogram
+    auto display_transform_uniform = glGetUniformLocation(*program, "display_transform");
     set_display_transform(display_transform_uniform, screen_pos); 
     context.release_current();
+}
+
+void mga::OverlayGLProgram::render(RenderableList const&, SwappingGLContext const&)
+{
 }

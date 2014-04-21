@@ -33,6 +33,12 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
+    StubRenderable(geometry::Rectangle const& rect)
+        : rect(rect)
+    {}
+    StubRenderable() :
+        StubRenderable({{},{}})
+    {}
     ID id() const override
     {
         return this;
@@ -47,7 +53,7 @@ public:
     }
     geometry::Rectangle screen_position() const
     {
-        return {{},{}};
+        return rect;
     }
     float alpha() const override
     {
@@ -73,6 +79,7 @@ public:
 
 private:
     glm::mat4 trans;
+    geometry::Rectangle const rect;
 };
 
 }

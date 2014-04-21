@@ -21,6 +21,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_program.h"
+#include "mir/graphics/renderable.h"
 #include <GLES2/gl2.h>
 #include <memory>
 
@@ -33,6 +34,7 @@ class GLProgramFactory;
 
 namespace android
 {
+class SwappingGLContext;
 
 class OverlayGLProgram
 {
@@ -41,9 +43,10 @@ public:
         GLProgramFactory const& program_factory,
         graphics::GLContext const& gl_context,
         geometry::Rectangle const& screen_position);
+
+    void render(RenderableList const&, SwappingGLContext const&);
 private:
     std::unique_ptr<graphics::GLProgram> program;
-    GLint display_transform_uniform; 
 };
 
 }
