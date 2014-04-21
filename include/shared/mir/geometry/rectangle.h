@@ -42,6 +42,8 @@ struct Rectangle
      * area, that is, the rectangle is represented as [top_left,bottom_right).
      */
     Point bottom_right() const;
+    Point top_right() const;
+    Point bottom_left() const;
     bool contains(Point const& p) const;
 
     /**
@@ -66,6 +68,7 @@ inline bool operator != (Rectangle const& lhs, Rectangle const& rhs)
 }
 
 std::ostream& operator<<(std::ostream& out, Rectangle const& value);
+
 }
 }
 

@@ -19,6 +19,7 @@
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_context.h"
 #include "overlay_gl_compositor.h"
+#include "gl_context.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_PRECISION_MEDIUMP_FLOAT
@@ -54,11 +55,14 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
     glm::mat4 disp_transform(1.0);
     disp_transform = glm::translate(
                         disp_transform,
-                        glm::vec3{rect.top_left.x.as_int(), rect.top_left.y.as_int(), 0.0});
+                        glm::vec3{-rect.top_left.x.as_float(), -rect.top_left.y.as_float(), 0.0});
+    disp_transform = glm::translate(
+                        disp_transform,
+                        glm::vec3{-rect.size.width.as_float()/2.0, -rect.size.height.as_float()/2.0, 0.0});
     disp_transform = glm::scale(
                         disp_transform,
-                        glm::vec3{1.0/rect.size.width.as_int(),
-                                  1.0/rect.size.height.as_int(),
+                        glm::vec3{1.0/rect.size.width.as_float(),
+                                  1.0/rect.size.height.as_float(),
                                   1.0});
     glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, glm::value_ptr(disp_transform));
 }
@@ -66,7 +70,7 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
 
 mga::OverlayGLProgram::OverlayGLProgram(
     GLProgramFactory const& factory,
-    GLContext const& context,
+    mg::GLContext const& context,
     geom::Rectangle const& screen_pos)
 {
     context.make_current();
@@ -91,9 +95,16 @@ void mga::OverlayGLProgram::render(
     for(auto const& renderable : renderlist)
     {
         size_t const num_vertices{4};
-        GLfloat{};
+        size_t const vertex_order{2};
+        auto screen_pos = renderable->screen_position();
+        GLfloat vertices[num_vertices*vertex_order]{
+            screen_pos.top_left.x.as_float(), screen_pos.top_left.y.as_float(),
+            screen_pos.top_right().x.as_float(), screen_pos.top_right().y.as_float(),
+            screen_pos.bottom_left().x.as_float(), screen_pos.bottom_left().y.as_float(),
+            screen_pos.bottom_right().x.as_float(), screen_pos.bottom_right().y.as_float(),
+        };
 
-        glVertexAttribPointer(position_attr, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+        glVertexAttribPointer(position_attr, vertex_order, GL_FLOAT, GL_FALSE, 0, vertices);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
     }
 

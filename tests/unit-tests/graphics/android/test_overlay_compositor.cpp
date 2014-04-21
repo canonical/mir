@@ -175,17 +175,16 @@ TEST_F(OverlayCompositor, rendering_designates_vertices)
     };
 
     std::vector<Vertex> expected_vertices1 {
-        to_vertex(rect1.top_left,
-        to_vertex(top_right(rect1)),
-        to_vertex(bottom_left(rect1)),
-        to_vertex(bottom_right(rect1)),
+        to_vertex(rect1.top_left),
+        to_vertex(rect1.top_right()),
+        to_vertex(rect1.bottom_left()),
+        to_vertex(rect1.bottom_right()),
     };
-
     std::vector<Vertex> expected_vertices2 {
-        to_vertex(rect2.top_left,
-        to_vertex(top_right(rect2)),
-        to_vertex(bottom_left(rect2)),
-        to_vertex(bottom_right(rect2)),
+        to_vertex(rect2.top_left),
+        to_vertex(rect2.top_right()),
+        to_vertex(rect2.bottom_left()),
+        to_vertex(rect2.bottom_right()),
     };
 
     InSequence seq;
