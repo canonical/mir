@@ -162,7 +162,7 @@ MATCHER_P(MatchesVertices, vertices, "matches vertices")
     return !(::testing::Test::HasFailure());
 }
 
-TEST_F(OverlayCompositor, rendering_designates_vertices)
+TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
 {
     using namespace testing;
     mtd::MockSwappingGLContext mock_context_s;
@@ -188,16 +188,35 @@ TEST_F(OverlayCompositor, rendering_designates_vertices)
     };
 
     InSequence seq;
-    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
         position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices1)));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, expected_vertices1.size()));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
         position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices2)));
-    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, expected_vertices2.size()));
+
+    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    glprogram.render(renderlist, mock_context_s);
+}
+
+TEST_F(OverlayCompositor, executes_render_in_sequence)
+{
+    using namespace testing;
+    mtd::MockSwappingGLContext mock_context_s;
+    mg::RenderableList renderlist{
+        std::make_shared<mtd::StubRenderable>(), 
+        std::make_shared<mtd::StubRenderable>()
+    };
+
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+    EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_context_s, swap_buffers());
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
 }
+
 

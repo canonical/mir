@@ -108,5 +108,6 @@ void mga::OverlayGLProgram::render(
         glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
     }
 
+    glDisableVertexAttribArray(position_attr);
     context.swap_buffers();
 }
