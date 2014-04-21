@@ -19,22 +19,10 @@ add_executable(
 target_link_libraries(
   mir_performance_tests
 
-  mirserver
-  mirclient
-  mirplatform
-
-  mir-test
-  mir-test-framework
-  mir-test-doubles
-  mir-test-doubles-platform
-  3rd_party
-
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
 install(
