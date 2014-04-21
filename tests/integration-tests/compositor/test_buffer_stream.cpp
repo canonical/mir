@@ -18,7 +18,7 @@
 
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/server/compositor/switching_bundle.h"
+#include "src/server/compositor/buffer_queue.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
@@ -80,7 +80,7 @@ struct BufferStreamTest : public ::testing::Test
                                         mir_pixel_format_abgr_8888,
                                         mg::BufferUsage::hardware};
 
-        return std::make_shared<mc::SwitchingBundle>(nbuffers,
+        return std::make_shared<mc::BufferQueue>(nbuffers,
                                                      allocator,
                                                      properties);
     }
