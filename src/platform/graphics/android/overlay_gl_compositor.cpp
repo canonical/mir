@@ -81,7 +81,10 @@ mga::OverlayGLProgram::OverlayGLProgram(
     auto display_transform_uniform = glGetUniformLocation(*program, "display_transform");
     set_display_transform(display_transform_uniform, screen_pos); 
 
-    position_attr = glGetUniformLocation(*program, "position");
+    position_attr = glGetAttribLocation(*program, "position");
+    texcoord_attr = glGetAttribLocation(*program, "texcoord");
+
+    glGenTextures(1, &tex_id);
 
     glUseProgram(0);
     context.release_current();
@@ -89,7 +92,8 @@ mga::OverlayGLProgram::OverlayGLProgram(
 
 namespace
 {
-//could do scaling eventually
+size_t const num_vertices{4};
+size_t const vertex_order{2};
 GLfloat const texcoords[]{
     0.0f, 0.0f,
     0.0f, 1.0f,
@@ -101,12 +105,16 @@ GLfloat const texcoords[]{
 void mga::OverlayGLProgram::render(
     RenderableList const& renderlist, SwappingGLContext const& context)
 {
+    glUseProgram(*program);
     glEnableVertexAttribArray(position_attr);
+    glEnableVertexAttribArray(texcoord_attr);
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+
+    //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
+    glVertexAttribPointer(texcoord_attr, vertex_order, GL_FLOAT, GL_FALSE, 0, texcoords);
 
     for(auto const& renderable : renderlist)
     {
-        size_t const num_vertices{4};
-        size_t const vertex_order{2};
         auto screen_pos = renderable->screen_position();
         GLfloat vertices[num_vertices*vertex_order]{
             screen_pos.top_left.x.as_float(), screen_pos.top_left.y.as_float(),
@@ -119,6 +127,8 @@ void mga::OverlayGLProgram::render(
         glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
     }
 
+    glDisableVertexAttribArray(texcoord_attr);
     glDisableVertexAttribArray(position_attr);
     context.swap_buffers();
+    glUseProgram(0);
 }

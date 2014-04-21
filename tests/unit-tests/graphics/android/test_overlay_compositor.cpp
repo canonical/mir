@@ -61,9 +61,9 @@ public:
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
         ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")))
             .WillByDefault(Return(display_transform_uniform_loc));
-        ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")))
+        ON_CALL(mock_gl, glGetAttribLocation(_, StrEq("position")))
             .WillByDefault(Return(position_attr_loc));
-        ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("texcoord")))
+        ON_CALL(mock_gl, glGetAttribLocation(_, StrEq("texcoord")))
             .WillByDefault(Return(texcoord_attr_loc));
         ON_CALL(mock_gl, glGenTextures(1,_))
             .WillByDefault(SetArgPointee<1>(texid));
@@ -89,7 +89,8 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_gl_program_factory, create_gl_program(_,_));
     EXPECT_CALL(mock_gl, glUseProgram(_));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")));
-    EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")));
+    EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("position")));
+    EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("texcoord")));
     EXPECT_CALL(mock_gl, glGenTextures(1,_));
     EXPECT_CALL(mock_gl, glUseProgram(0));
     EXPECT_CALL(mock_context, release_current());
@@ -180,6 +181,7 @@ TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
     };
 
     InSequence seq;
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
         position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices1)));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
@@ -208,9 +210,10 @@ TEST_F(OverlayCompositor, computes_texture_coordinates_correctly)
         {1.0f, 1.0f}
     };
 
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_)).Times(AnyNumber());
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
         texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_texcoord)))
-        .Times(2);
+        .Times(1);
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
@@ -225,23 +228,25 @@ TEST_F(OverlayCompositor, executes_render_in_sequence)
         std::make_shared<mtd::StubRenderable>()
     };
 
+    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+
     InSequence seq;
-    
     EXPECT_CALL(mock_gl, glUseProgram(_));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_loc));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, texid));
-
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
+    EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_loc));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_context_s, swap_buffers());
     EXPECT_CALL(mock_gl, glUseProgram(0));
 
-    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
 }

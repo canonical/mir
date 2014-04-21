@@ -49,6 +49,8 @@ private:
     std::unique_ptr<graphics::GLProgram> program;
 
     GLint position_attr;
+    GLint texcoord_attr;
+    GLuint tex_id;
 };
 
 }
