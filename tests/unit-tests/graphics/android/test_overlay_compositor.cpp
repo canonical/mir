@@ -158,7 +158,7 @@ MATCHER_P(MatchesVertices, vertices, "matches vertices")
 TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
 {
     using namespace testing;
-    mtd::MockSwappingGLContext mock_context_s;
+    NiceMock<mtd::MockSwappingGLContext> mock_context_s;
     geom::Rectangle rect1{{100,200},{50, 60}};
     geom::Rectangle rect2{{150,250},{150, 90}};
     
@@ -194,7 +194,7 @@ TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
 TEST_F(OverlayCompositor, computes_texture_coordinates_correctly)
 {
     using namespace testing;
-    mtd::MockSwappingGLContext mock_context_s;
+    NiceMock<mtd::MockSwappingGLContext> mock_context_s;
     geom::Rectangle rect1{{100,200},{50, 60}};
     geom::Rectangle rect2{{150,250},{150, 90}};
     
@@ -222,7 +222,7 @@ TEST_F(OverlayCompositor, computes_texture_coordinates_correctly)
 TEST_F(OverlayCompositor, executes_render_in_sequence)
 {
     using namespace testing;
-    mtd::MockSwappingGLContext mock_context_s;
+    NiceMock<mtd::MockSwappingGLContext> mock_context_s;
     mg::RenderableList renderlist{
         std::make_shared<mtd::StubRenderable>(), 
         std::make_shared<mtd::StubRenderable>()
