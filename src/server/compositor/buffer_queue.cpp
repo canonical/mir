@@ -32,16 +32,16 @@ namespace
 bool remove(std::shared_ptr<mg::Buffer> const& buffer,
             std::vector<std::shared_ptr<mg::Buffer>>& list)
 {
-    auto begin = list.begin();
-    auto end = list.end();
-    auto it = std::find(begin, end, buffer);
-
-    /* nothing to remove */
-    if (it == end)
-        return false;
-
-    list.erase(it);
-    return true;
+    for (unsigned int i = 0; i < list.size(); i++)
+    {
+        if (buffer == list[i])
+        {
+            list.erase(list.begin() + i);
+            return true;
+        }
+    }
+    /* buffer was not in the list */
+    return false;
 }
 
 std::shared_ptr<mg::Buffer> pop(std::deque<std::shared_ptr<mg::Buffer>>& q)
@@ -54,9 +54,16 @@ std::shared_ptr<mg::Buffer> pop(std::deque<std::shared_ptr<mg::Buffer>>& q)
 bool contains(std::shared_ptr<mg::Buffer> const& buffer,
               std::vector<std::shared_ptr<mg::Buffer>> const& list)
 {
-    auto begin = list.begin();
-    auto end = list.end();
-    return std::find(begin, end, buffer) != end;
+    /* Avoid allocating iterators, the list is small enough
+     * that the overhead of iterator creation is greater than the
+     * search itself
+     */
+    for (unsigned int i = 0; i < list.size(); i++)
+    {
+        if (buffer == list[i])
+            return true;
+    }
+    return false;
 }
 }
 
