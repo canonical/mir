@@ -63,17 +63,22 @@ public:
             .WillByDefault(Return(display_transform_uniform_loc));
         ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")))
             .WillByDefault(Return(position_attr_loc));
-    }
+        ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("texcoord")))
+            .WillByDefault(Return(texcoord_attr_loc));
+        ON_CALL(mock_gl, glGenTextures(1,_))
+            .WillByDefault(SetArgPointee<1>(texid));
+        }
 
-    GLint const display_transform_uniform_loc{1};
-    GLint const position_attr_loc{2};
+        GLint const display_transform_uniform_loc{1};
+        GLint const position_attr_loc{2};
+        GLint const texcoord_attr_loc{3};
+        GLint const texid{4};
 
-    testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
-    testing::NiceMock<MockContext> mock_context;
-    testing::NiceMock<mtd::MockGL> mock_gl;
-    geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{500,400}};
+        testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
+        testing::NiceMock<MockContext> mock_context;
+        testing::NiceMock<mtd::MockGL> mock_gl;
+        geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{500,400}};
 };
-
 }
 
 TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
@@ -85,12 +90,12 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_gl, glUseProgram(_));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("position")));
+    EXPECT_CALL(mock_gl, glGenTextures(1,_));
     EXPECT_CALL(mock_gl, glUseProgram(0));
     EXPECT_CALL(mock_context, release_current());
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
 }
-
 
 MATCHER_P(Matches4x4Matrix, value, "matches expected 4x4 matrix")
 {
@@ -135,19 +140,6 @@ Vertex to_vertex(geom::Point const& pos)
         static_cast<float>(pos.x.as_int()),
         static_cast<float>(pos.y.as_int())
     };
-}
-
-geom::Point top_right(geom::Rectangle const& rect)
-{
-    return rect.top_left + geom::DeltaX{rect.size.width.as_int()};
-}
-geom::Point bottom_left(geom::Rectangle const& rect)
-{
-    return rect.top_left + geom::DeltaY{rect.size.height.as_int()};
-}
-geom::Point bottom_right(geom::Rectangle const& rect)
-{
-    return rect.top_left + geom::DeltaX{rect.size.width.as_int()} + geom::DeltaY{rect.size.height.as_int()};
 }
 
 MATCHER_P(MatchesVertices, vertices, "matches vertices")
@@ -197,6 +189,33 @@ TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
     glprogram.render(renderlist, mock_context_s);
 }
 
+TEST_F(OverlayCompositor, computes_texture_coordinates_correctly)
+{
+    using namespace testing;
+    mtd::MockSwappingGLContext mock_context_s;
+    geom::Rectangle rect1{{100,200},{50, 60}};
+    geom::Rectangle rect2{{150,250},{150, 90}};
+    
+    mg::RenderableList renderlist{
+        std::make_shared<mtd::StubRenderable>(rect1), 
+        std::make_shared<mtd::StubRenderable>(rect2)
+    };
+
+    std::vector<Vertex> expected_texcoord {
+        {0.0f, 0.0f},
+        {0.0f, 1.0f},
+        {1.0f, 0.0f},
+        {1.0f, 1.0f}
+    };
+
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(
+        texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_texcoord)))
+        .Times(2);
+
+    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    glprogram.render(renderlist, mock_context_s);
+}
+
 TEST_F(OverlayCompositor, executes_render_in_sequence)
 {
     using namespace testing;
@@ -207,16 +226,22 @@ TEST_F(OverlayCompositor, executes_render_in_sequence)
     };
 
     InSequence seq;
+    
+    EXPECT_CALL(mock_gl, glUseProgram(_));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
+    EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_loc));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, texid));
+
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_context_s, swap_buffers());
+    EXPECT_CALL(mock_gl, glUseProgram(0));
 
     mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
 }
-
-

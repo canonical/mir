@@ -87,6 +87,17 @@ mga::OverlayGLProgram::OverlayGLProgram(
     context.release_current();
 }
 
+namespace
+{
+//could do scaling eventually
+GLfloat const texcoords[]{
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f
+};
+}
+
 void mga::OverlayGLProgram::render(
     RenderableList const& renderlist, SwappingGLContext const& context)
 {
