@@ -84,6 +84,12 @@ void glClear (GLbitfield mask)
     global_mock_gl->glClear(mask);
 }
 
+void glClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glClearColor(r,g,b,a);
+}
+
 void glEnable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();

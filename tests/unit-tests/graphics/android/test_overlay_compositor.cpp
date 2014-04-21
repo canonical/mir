@@ -20,6 +20,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir_test_doubles/mock_gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include <gtest/gtest.h>
@@ -80,6 +81,7 @@ public:
         testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
         testing::NiceMock<MockContext> mock_context;
         testing::NiceMock<mtd::MockGL> mock_gl;
+        testing::NiceMock<mtd::MockEGL> mock_egl;
         geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{500,400}};
 };
 }
@@ -116,16 +118,14 @@ TEST_F(OverlayCompositor, sets_up_orthographic_matrix_based_on_screen_size)
     geom::Size sz{800,600};
     geom::Point pt{100,200};
     geom::Rectangle screen_pos{pt, sz};
-    float inv_w = 1.0/sz.width.as_int();
-    float inv_h = 1.0/sz.height.as_int();
-    float x = static_cast<float>(pt.x.as_int() + sz.width.as_int()/2);
-    float y = static_cast<float>(pt.y.as_int() + sz.height.as_int()/2);
+    float inv_w = 2.0/sz.width.as_int();
+    float inv_h = 2.0/sz.height.as_int() * -1.0;
 
     float expected_matrix[]{
         inv_w, 0.0    , 0.0, 0.0,
         0.0  , inv_h  , 0.0, 0.0,
         0.0  , 0.0    , 1.0, 0.0,
-        -x   , -y     , 0.0, 1.0
+        -1.0 , 1.0    , 0.0, 1.0
     };
 
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(
@@ -237,10 +237,12 @@ TEST_F(OverlayCompositor, executes_render_in_sequence)
 
     InSequence seq;
     EXPECT_CALL(mock_gl, glUseProgram(_));
+    EXPECT_CALL(mock_gl, glClearColor(FloatEq(0.0), FloatEq(0.0), FloatEq(0.0), FloatEq(1.0)));
+    EXPECT_CALL(mock_gl, glClear(GL_COLOR_BUFFER_BIT));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_loc));
-    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, texid));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, texid));
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
