@@ -61,6 +61,8 @@ public:
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
         ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")))
             .WillByDefault(Return(display_transform_uniform_loc));
+        ON_CALL(mock_gl, glGetUniformLocation(_, StrEq("tex")))
+            .WillByDefault(Return(tex_uniform_loc));
         ON_CALL(mock_gl, glGetAttribLocation(_, StrEq("position")))
             .WillByDefault(Return(position_attr_loc));
         ON_CALL(mock_gl, glGetAttribLocation(_, StrEq("texcoord")))
@@ -72,7 +74,8 @@ public:
         GLint const display_transform_uniform_loc{1};
         GLint const position_attr_loc{2};
         GLint const texcoord_attr_loc{3};
-        GLint const texid{4};
+        GLint const tex_uniform_loc{4};
+        GLint const texid{5};
 
         testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
         testing::NiceMock<MockContext> mock_context;
@@ -92,6 +95,8 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("position")));
     EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("texcoord")));
     EXPECT_CALL(mock_gl, glGenTextures(1,_));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("tex")));
+    EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_loc, 0));
     EXPECT_CALL(mock_gl, glUseProgram(0));
     EXPECT_CALL(mock_context, release_current());
 

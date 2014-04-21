@@ -36,17 +36,22 @@ namespace
 std::string const vertex_shader
 {
     "attribute vec2 position;\n"
+    "attribute vec2 texcoord;\n"
     "uniform mat4 display_transform;\n"
+    "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_Position = position;\n"
+    "   gl_Position = display_transform * vec4(position, 1.0, 1.0);\n"
+    "   v_texcoord = texcoord;\n"
     "}\n"
 };
 
 std::string const fragment_shader
 {
     "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
+    "   gl_FragColor = texture2D(tex, v_texcoord);\n"
     "}\n"
 };
 

@@ -42,6 +42,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
     (*getObjectInfoLog)(object, object_log_length, NULL,
                         const_cast<GLchar *>(object_info_log.data()));
 
+    printf("%s\n", msg.c_str());
     std::string object_info_err(msg + "\n");
     object_info_err += object_info_log;
 
