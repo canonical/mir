@@ -86,6 +86,8 @@ private:
     int prev(int slot) const;
     int last_compositor() const;
 
+    void ensure_free_buffer_may_drop(std::unique_lock<std::mutex>& lock);
+
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
     void complete_client_acquire(std::unique_lock<std::mutex> lock);
     bool client_buffers_available(std::unique_lock<std::mutex> const& lock);

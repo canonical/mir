@@ -208,6 +208,17 @@ bool mc::SwitchingBundle::client_buffers_available(std::unique_lock<std::mutex> 
     return nfree() >= min_free;
 }
 
+void mc::SwitchingBundle::ensure_free_buffer_may_drop(std::unique_lock<std::mutex>& lock)
+{
+    if (nfree() <= 0)
+    {
+        while (nready == 0)
+            cond.wait(lock);
+
+        drop_frames(1);
+    }
+}
+
 void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* buffer)> complete)
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -233,13 +244,7 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
                     std::unique_lock<std::mutex> lock(guard);
                     if (client_acquire_todo)
                     {
-                        if (nfree() <= 0)
-                        {
-                            while (nready == 0)
-                                cond.wait(lock);
-
-                            drop_frames(1);
-                        }
+                        ensure_free_buffer_may_drop(lock);
                         complete_client_acquire(std::move(lock));
                     }
                 });
@@ -258,13 +263,7 @@ void mc::SwitchingBundle::complete_client_acquire(std::unique_lock<std::mutex> l
 
     if ((framedropping || force_drop) && nbuffers > 1)
     {
-        if (nfree() <= 0)
-        {
-            while (nready == 0)
-                cond.wait(lock);
-
-            drop_frames(1);
-        }
+        ensure_free_buffer_may_drop(lock);
     }
 
     if (force_drop > 0)
