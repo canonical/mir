@@ -32,16 +32,16 @@ namespace
 bool remove(std::shared_ptr<mg::Buffer> const& buffer,
             std::vector<std::shared_ptr<mg::Buffer>>& list)
 {
-    for (unsigned int i = 0; i < list.size(); i++)
-    {
-        if (buffer == list[i])
-        {
-            list.erase(list.begin() + i);
-            return true;
-        }
-    }
-    /* buffer was not in the list */
-    return false;
+    auto const& begin = list.begin();
+    auto const& end = list.end();
+    auto it = std::find(begin, end, buffer);
+
+    /* nothing to remove */
+    if (it == end)
+        return false;
+
+    list.erase(it);
+    return true;
 }
 
 std::shared_ptr<mg::Buffer> pop(std::deque<std::shared_ptr<mg::Buffer>>& q)
@@ -54,16 +54,9 @@ std::shared_ptr<mg::Buffer> pop(std::deque<std::shared_ptr<mg::Buffer>>& q)
 bool contains(std::shared_ptr<mg::Buffer> const& buffer,
               std::vector<std::shared_ptr<mg::Buffer>> const& list)
 {
-    /* Avoid allocating iterators, the list is small enough
-     * that the overhead of iterator creation is greater than the
-     * search itself
-     */
-    for (unsigned int i = 0; i < list.size(); i++)
-    {
-        if (buffer == list[i])
-            return true;
-    }
-    return false;
+    auto const& begin = list.cbegin();
+    auto const& end = list.cend();
+    return std::find(begin, end, buffer) != end;
 }
 }
 
@@ -308,17 +301,11 @@ void mc::BufferQueue::give_buffer_to_client(
 
 bool mc::BufferQueue::is_new_front_buffer_user(void const* user_id)
 {
-    /* std::find could be used, but allocating iterators would
-     * be more expensive than the search itself
-     */
     if (!front_buffer_users.empty())
     {
-        for (unsigned int i = 0; i < front_buffer_users.size(); i++)
-        {
-            if (user_id == front_buffer_users[i])
-                return false;
-        }
-        return true;
+        auto const& begin = front_buffer_users.cbegin();
+        auto const& end = front_buffer_users.cend();
+        return std::find(begin, end, user_id) == end;
     }
     /* The user list is really only empty the very first time.
      * False is returned so that the front buffer can be updated.
