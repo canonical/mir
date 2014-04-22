@@ -1102,10 +1102,11 @@ TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
                     watchdog.notify_done();
             }
         });
-        EXPECT_TRUE(client_runner.wait_for(std::chrono::milliseconds{1500}));
-        EXPECT_TRUE(compositor_runner.wait_for(std::chrono::milliseconds{1500}));
+        EXPECT_TRUE(client_runner.wait_for(std::chrono::milliseconds{5000}));
+        EXPECT_TRUE(compositor_runner.wait_for(std::chrono::milliseconds{5000}));
         EXPECT_TRUE(has_dropped_frame);
         compositor_runner.stop();
+        client_runner.stop();
     }
 }
 
