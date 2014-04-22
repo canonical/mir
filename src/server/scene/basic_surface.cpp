@@ -20,7 +20,6 @@
 
 #include "basic_surface.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/input/input_channel.h"
 #include "mir/shell/input_targeter.h"
