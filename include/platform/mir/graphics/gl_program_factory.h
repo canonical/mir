@@ -30,11 +30,13 @@ namespace graphics
 class GLProgramFactory
 {
 public:
-    GLProgramFactory() {};
     virtual ~GLProgramFactory() = default;
 
     virtual std::unique_ptr<GLProgram>
         create_gl_program(std::string const&, std::string const&) const = 0;
+
+protected:
+    GLProgramFactory() = default;
 
 private:
     GLProgramFactory(GLProgramFactory const&) = delete;
