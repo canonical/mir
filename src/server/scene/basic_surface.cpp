@@ -462,6 +462,10 @@ public:
       id_(id)
     {
     }
+
+    ~RenderableSnapshot()
+    {
+    }
  
     int buffers_ready_for_compositor() const override
     { return underlying_buffer_stream->buffers_ready_for_compositor(); }
@@ -508,19 +512,20 @@ private:
 };
 }
 
-std::shared_ptr<mg::Renderable> ms::BasicSurface::renderable_for(void const* compositor_id) const
+std::unique_ptr<mg::Renderable> ms::BasicSurface::renderable_for(void const* compositor_id) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
     auto const shaped = nonrectangular || (surface_alpha < 1.0f);
-    return std::make_shared<RenderableSnapshot>(
-        surface_buffer_stream,
-        compositor_id,
-        surface_rect,
-        transformation_matrix,
-        visible(lk),
-        shaped,
-        surface_alpha,
-        nonrectangular, 
-        this);
+    return std::unique_ptr<mg::Renderable>(
+        new RenderableSnapshot(
+            surface_buffer_stream,
+            compositor_id,
+            surface_rect,
+            transformation_matrix,
+            visible(lk),
+            shaped,
+            surface_alpha,
+            nonrectangular, 
+            this));
 }

@@ -33,6 +33,8 @@ class Buffer;
 class Renderable
 {
 public:
+    virtual ~Renderable() = default;
+
     typedef void const* ID; // Mostly opaque, but zero is reserved as "invalid"
 
     /**
@@ -79,7 +81,6 @@ public:
 
 protected:
     Renderable() = default;
-    virtual ~Renderable() = default;
     Renderable(Renderable const&) = delete;
     Renderable& operator=(Renderable const&) = delete;
 };
