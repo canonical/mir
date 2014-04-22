@@ -20,11 +20,13 @@
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
 #include <mir/compositor/renderer.h>
+#include <mir/compositor/gl_program.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace mir
@@ -42,8 +44,7 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(graphics::Renderable const& renderable,
-                graphics::Buffer& buffer) const override;
+    void render(graphics::Renderable const& renderable) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
@@ -97,9 +98,7 @@ public:
                                 graphics::Buffer& buffer) const;
 
 private:
-    GLuint vertex_shader;
-    GLuint fragment_shader;
-    GLuint program;
+    GLProgram program;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;
@@ -117,6 +116,7 @@ private:
         bool used;
     };
     mutable std::unordered_map<graphics::Renderable::ID, Texture> textures;
+    mutable std::unordered_set<std::shared_ptr<graphics::Buffer>> saved_resources;
     mutable bool skipped = false;
 
 };

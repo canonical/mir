@@ -82,9 +82,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
-        //preserves buffers backing GL textures until after post_update
-        std::vector<std::shared_ptr<mg::Buffer>> saved_resources;
-
         display_buffer.make_current();
 
         mc::filter_occlusions_from(renderable_list, view_area);
@@ -95,15 +92,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         for(auto const& renderable : renderable_list)
         {
             uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
-
-            auto buffer = renderable->buffer();
-            renderer->render(*renderable, *buffer);
-            saved_resources.push_back(buffer);
+            renderer->render(*renderable);
         }
 
-        renderer->end();
-
         display_buffer.post_update();
+        renderer->end();
 
         // This is a frig to avoid lp:1286190
         if (last_pass_rendered_anything && renderable_list.empty())
