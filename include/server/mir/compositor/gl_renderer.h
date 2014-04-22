@@ -27,6 +27,7 @@
 #include <mir/graphics/gl_program_factory.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace mir
@@ -46,8 +47,7 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(graphics::Renderable const& renderable,
-                graphics::Buffer& buffer) const override;
+    void render(graphics::Renderable const& renderable) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
@@ -119,6 +119,7 @@ private:
         bool used;
     };
     mutable std::unordered_map<graphics::Renderable::ID, Texture> textures;
+    mutable std::unordered_set<std::shared_ptr<graphics::Buffer>> saved_resources;
     mutable bool skipped = false;
 
 };
