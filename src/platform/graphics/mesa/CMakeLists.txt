@@ -35,6 +35,7 @@ add_library(
   native_platform.cpp
   anonymous_shm_file.cpp
   shm_buffer.cpp
+  bypass.cpp
 )
 
 set_target_properties(

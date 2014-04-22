@@ -158,7 +158,7 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_post_update)
     db.post_update();
 }
 
-TEST_F(ScreencastDisplayBufferTest, renders_renderables_on_render_and_post_update)
+TEST_F(ScreencastDisplayBufferTest, reports_no_optimizations_possible)
 {
     using namespace testing;
 
@@ -171,16 +171,5 @@ TEST_F(ScreencastDisplayBufferTest, renders_renderables_on_render_and_post_updat
         std::make_shared<mtd::StubRenderable>()};
 
     mc::ScreencastDisplayBuffer db{rect, stub_buffer};
-
-    Mock::VerifyAndClearExpectations(&mock_gl);
-    MockRenderFunctor mock_render_functor;
-
-    InSequence s;
-
-    for (auto const& renderable : renderables)
-        EXPECT_CALL(mock_render_functor, operator_call(renderable.get()));
-
-    EXPECT_CALL(mock_gl, glFinish());
-
-    db.render_and_post_update(renderables, std::ref(mock_render_functor));
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
 }

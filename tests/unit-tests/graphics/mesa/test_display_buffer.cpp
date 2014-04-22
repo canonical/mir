@@ -45,6 +45,7 @@ class MesaDisplayBufferTest : public Test
 {
 public:
     MesaDisplayBufferTest()
+     : bypassable_list{}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -99,6 +100,7 @@ protected:
     UdevEnvironment   fake_devices;
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
+    mir::graphics::RenderableList const bypassable_list;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
@@ -132,7 +134,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_TRUE(db.can_bypass());
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
@@ -149,7 +151,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.can_bypass());
+    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)

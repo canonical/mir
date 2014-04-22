@@ -36,8 +36,6 @@ public:
     MockDisplayBuffer()
     {
         using namespace testing;
-        ON_CALL(*this, can_bypass())
-            .WillByDefault(Return(false));
         ON_CALL(*this, view_area())
             .WillByDefault(Return(geometry::Rectangle{{0,0},{0,0}}));
     }
@@ -45,9 +43,7 @@ public:
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(post_update, void());
-    MOCK_CONST_METHOD0(can_bypass, bool());
-    MOCK_METHOD2(render_and_post_update, void(graphics::RenderableList const&, 
-                                   std::function<void(graphics::Renderable const&)> const&));
+    MOCK_METHOD1(post_renderables_if_optimizable, bool(graphics::RenderableList const&));
     MOCK_CONST_METHOD0(orientation, MirOrientation());
 };
 

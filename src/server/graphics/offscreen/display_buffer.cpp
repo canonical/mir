@@ -144,15 +144,9 @@ void mgo::DisplayBuffer::post_update()
     glFinish();
 }
 
-bool mgo::DisplayBuffer::can_bypass() const
+bool mgo::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;
-}
-
-void mgo::DisplayBuffer::render_and_post_update(
-        RenderableList const&,
-        std::function<void(Renderable const&)> const&)
-{
 }
 
 MirOrientation mgo::DisplayBuffer::orientation() const

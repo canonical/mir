@@ -24,7 +24,6 @@
 #include <mir_toolkit/common.h>
 
 #include <memory>
-#include <functional>
 
 namespace mir
 {
@@ -52,16 +51,12 @@ public:
     virtual void post_update() = 0;
 
     /** This will render renderlist to the screen and post the result to the screen.
-        For each renderable, the DisplayBuffer will decide if its more efficient to render
-        that Renderable via OpenGL, or via another method. If the Renderable is to be rendered
-        via OpenGL, render_fn will be invoked on that Renderable. */
-    virtual void render_and_post_update(
-        RenderableList const& renderlist,
-        std::function<void(Renderable const&)> const& render_fn) = 0;
-
-    /** to be deprecated */
-    virtual bool can_bypass() const = 0;
-    virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
+     *  \return true if the hardware can optimize the rendering of the list. The list
+     *          will be posted to the screen at the completion of this call.
+     *          false if the hardware platform cannot optimize the list. The caller should
+     *          render the list another way, and call post_update()
+    **/
+    virtual bool post_renderables_if_optimizable(RenderableList const& renderlist) = 0;
 
     /** Returns the orientation of the display buffer relative to how the
      *  user should see it (the orientation of the output).

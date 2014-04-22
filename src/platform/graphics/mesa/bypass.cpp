@@ -21,16 +21,15 @@
 #include "bypass.h"
 
 using namespace mir;
-namespace mc=mir::compositor;
-namespace mg=mir::graphics;
+namespace mgm = mir::graphics::mesa;
 
-mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
+mgm::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
     : view_area(rect),
       bypass_is_feasible(true)
 {
 }
 
-bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
+bool mgm::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
     //we've already eliminated bypass as a possibility
     if (!bypass_is_feasible)
