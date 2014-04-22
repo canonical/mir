@@ -344,15 +344,10 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     renderer->begin();
     renderer->render(renderable);
-    renderer->end();
-
-    // Clear the cache to ensure tests are not sensitive to execution order
-    renderer->begin();
     renderer->end();
 }
 
@@ -380,10 +375,6 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
     renderer->begin();
     renderer->render(renderable);
-    renderer->end();
-
-    // Clear the cache to ensure tests are not sensitive to execution order
-    renderer->begin();
     renderer->end();
 }
 
@@ -464,10 +455,6 @@ TEST_F(GLRenderer, caches_and_uploads_texture_only_on_buffer_changes)
     renderer->begin();
     renderer->render(renderable);
     renderer->end();
-
-    // Clear the cache to ensure tests are not sensitive to execution order
-    renderer->begin();
-    renderer->end();
 }
 
 TEST_F(GLRenderer, holds_buffers_till_the_end)
@@ -498,8 +485,4 @@ TEST_F(GLRenderer, holds_buffers_till_the_end)
     EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
     renderer->end();
     EXPECT_EQ(old_use_count, mock_buffer.use_count());
-
-    // Clear the cache to ensure tests are not sensitive to execution order
-    renderer->begin();
-    renderer->end();
 }
