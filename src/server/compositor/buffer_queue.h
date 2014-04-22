@@ -41,8 +41,8 @@ public:
     static const int min_num_buffers = 2;
 
     BufferQueue(int nbuffers,
-                const std::shared_ptr<graphics::GraphicBufferAllocator> &,
-                const graphics::BufferProperties &);
+                std::shared_ptr<graphics::GraphicBufferAllocator> const&,
+                graphics::BufferProperties const&);
 
     void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) override;
     void client_release(graphics::Buffer*) override;

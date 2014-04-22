@@ -101,7 +101,7 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
 
     if (!free_queue.empty())
     {
-        auto buffer = pop(free_queue);
+        auto const& buffer = pop(free_queue);
         give_buffer_to_client(buffer, std::move(lock));
         return;
     }
@@ -109,7 +109,7 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
     /* No empty buffers, attempt allocating more*/
     if (allocated_buffers < nbuffers)
     {
-        auto buffer = gralloc->alloc_buffer(the_properties);
+        auto const& buffer = gralloc->alloc_buffer(the_properties);
         allocated_buffers++;
         give_buffer_to_client(buffer, std::move(lock));
         return;
@@ -118,7 +118,7 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
     /* Last resort, drop oldest buffer from the ready queue */
     if (frame_dropping_enabled && !ready_to_composite_queue.empty())
     {
-        auto buffer = pop(ready_to_composite_queue);
+        auto const& buffer = pop(ready_to_composite_queue);
         give_buffer_to_client(buffer, std::move(lock));
     }
 
@@ -143,7 +143,7 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
             std::logic_error("client released out of sequence"));
     }
 
-    auto buffer = pop(buffers_owned_by_client);
+    auto const& buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
 }
 
@@ -252,7 +252,7 @@ void mc::BufferQueue::force_requests_to_complete()
     std::unique_lock<std::mutex> lock(guard);
     if (give_to_client && !ready_to_composite_queue.empty())
     {
-        auto buffer = pop(ready_to_composite_queue);
+        auto const& buffer = pop(ready_to_composite_queue);
         while (!ready_to_composite_queue.empty())
         {
             free_queue.push_back(pop(ready_to_composite_queue));
