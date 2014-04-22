@@ -89,7 +89,9 @@ class StubScene : public mc::Scene
 {
 public:
     StubScene(mg::RenderableList const& list)
-        : callback{[]{}}, renderable_list{list}
+        : callback{[]{}},
+          throw_on_set_callback_{false}, 
+          renderable_list{list}
     {
     }
     StubScene() : StubScene(mg::RenderableList{}) {}
@@ -101,6 +103,8 @@ public:
 
     void set_change_callback(std::function<void()> const& f)
     {
+        if (throw_on_set_callback_)
+            throw std::runtime_error("");
         std::lock_guard<std::mutex> lock{callback_mutex};
         assert(f);
         callback = f;
@@ -116,12 +120,18 @@ public:
         std::this_thread::yield();
     }
 
+    void throw_on_set_callback(bool flag)
+    {
+        throw_on_set_callback_ = flag;
+    }
+
     void lock() {}
     void unlock() {}
 
 private:
     std::function<void()> callback;
     std::mutex callback_mutex;
+    bool throw_on_set_callback_;
     mg::RenderableList renderable_list;
 };
 
@@ -170,10 +180,8 @@ public:
         records[&display_buffer].second.insert(std::this_thread::get_id());
     }
 
-    bool enough_records_gathered(unsigned int nbuffers)
+    bool enough_records_gathered(unsigned int nbuffers, unsigned int min_record_count = 1000)
     {
-        static unsigned int const min_record_count{1000};
-
         std::lock_guard<std::mutex> lk{m};
 
         if (records.size() < nbuffers)
@@ -613,4 +621,52 @@ TEST(MultiThreadedCompositor, consumes_buffers_for_renderables_that_are_not_rend
     EXPECT_THAT(renderable->buffers_requested(), Eq(2));
 
     compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
+{
+    unsigned int const nbuffers{3};
+
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
+
+    scene->throw_on_set_callback(true);
+
+    EXPECT_THROW(compositor.start(), std::runtime_error);
+
+    scene->throw_on_set_callback(false);
+
+    /* No point in running the rest of the test if it throws again */
+    ASSERT_NO_THROW(compositor.start());
+
+    /* The minimum number of records here should be nbuffers *2, since we are checking for
+     * presence of at least one additional rogue compositor thread per display buffer
+     * However to avoid timing considerations like one good thread compositing the display buffer
+     * twice before the rogue thread gets a chance to, an arbitrary number of records are gathered
+     */
+    unsigned int min_number_of_records = 100;
+
+    /* Timeout here in case the exception from setting the scene callback put the compositor
+     * in a bad state that did not allow it to composite (hence no records gathered)
+     */
+    auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    while (!db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records) &&
+           std::chrono::steady_clock::now() <= time_out)
+    {
+        scene->emit_change_event();
+        std::this_thread::yield();
+    }
+
+    /* Check expectation in case a timeout happened */
+    EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records));
+
+    compositor.stop();
+
+    /* Only one thread should be rendering each display buffer
+     * If the compositor failed to cleanup correctly more than one thread could be
+     * compositing the same display buffer
+     */
+    EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
 }
