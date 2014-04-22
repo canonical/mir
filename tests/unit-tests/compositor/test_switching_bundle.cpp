@@ -1005,8 +1005,8 @@ TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
          nbuffers++)
     {
         // We have the world's fastest display!
-        std::chrono::milliseconds const vsync_delay{1};
-        int const num_frames{1000};
+        std::chrono::milliseconds const vsync_delay{2};
+        int const num_frames{500};
 
         mc::SwitchingBundle bundle(nbuffers,
                                    allocator,
@@ -1077,27 +1077,41 @@ TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
         bool has_dropped_frame{false};
         client_runner.run([&](mtf::WatchDog& watchdog)
         {
+            std::unique_lock<decltype(buffer_mutex)> lock;
             for (int i = 0; !kill_switch.raised(); i++)
             {
-                auto client = client_acquire_blocking(bundle);
+                mtf::Semaphore buffer_acquired;
+                mg::Buffer* client;
+
+                bundle.client_acquire([&](mg::Buffer* new_buffer)
                 {
-                    std::lock_guard<decltype(buffer_mutex)> lock(buffer_mutex);
-                    bundle.client_release(client);
+                    // Take the lock in the acquire callback to ensure we can't
+                    // race _twice_ against the compositor thread
+                    lock = std::unique_lock<decltype(buffer_mutex)>{buffer_mutex};
+                    client = new_buffer;
+                    buffer_acquired.raise();
+                });
+                buffer_acquired.wait();
 
-                    if (buffers_age.count(client->id()))
-                    {
-                        has_dropped_frame = true;
-                        if (racing_buffer.is_valid())
-                            EXPECT_EQ(racing_buffer, client->id());
-                        racing_buffer = mg::BufferID{};
-                    }
+                bundle.client_release(client);
 
-                    // Age all the things!
-                    for (auto& id_age_pair : buffers_age)
-                        id_age_pair.second++;
-                    // But this one is newborn.
-                    buffers_age[client->id()] = 0;
+                if (buffers_age.count(client->id()))
+                {
+                    has_dropped_frame = true;
+                    if (racing_buffer.is_valid())
+                        EXPECT_EQ(racing_buffer, client->id());
+                    racing_buffer = mg::BufferID{};
                 }
+
+                // Age all the things!
+                for (auto& id_age_pair : buffers_age)
+                    id_age_pair.second++;
+                // But this one is newborn.
+                buffers_age[client->id()] = 0;
+
+                // We've finished messing with the buffer_age map.
+                lock.unlock();
+
                 if (i >= num_frames)
                     watchdog.notify_done();
             }
