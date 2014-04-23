@@ -117,7 +117,7 @@ public:
         observer = observer_;
     }
 
-    void remove_observer(std::shared_ptr<ms::Observer> const& /* observer */)
+    void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */)
     {
         std::lock_guard<std::mutex> lock{observer_mutex};
         observer.reset();

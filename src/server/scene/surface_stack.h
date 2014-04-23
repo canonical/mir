@@ -67,7 +67,7 @@ public:
    void surfaces_reordered();
 
    void add_observer(std::shared_ptr<Observer> const& observer);
-   void remove_observer(std::shared_ptr<Observer> const& observer);
+   void remove_observer(std::weak_ptr<Observer> const& observer);
 
 private:
     std::mutex mutex;
@@ -98,7 +98,7 @@ public:
         input::InputReceptionMode input_mode) override;
     
     void add_observer(std::shared_ptr<Observer> const& observer) override;
-    void remove_observer(std::shared_ptr<Observer> const& observer) override;
+    void remove_observer(std::weak_ptr<Observer> const& observer) override;
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;

@@ -47,7 +47,7 @@ public:
     virtual graphics::RenderableList generate_renderable_list() const = 0;
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
-    virtual void remove_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
 protected:
     Scene() = default;

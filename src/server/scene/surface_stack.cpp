@@ -222,7 +222,7 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
     }
 }
 
-void ms::SurfaceStack::remove_observer(std::shared_ptr<ms::Observer> const& observer)
+void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observer)
 {
     observers.remove_observer(observer);
 }
@@ -258,11 +258,15 @@ void ms::Observers::add_observer(std::shared_ptr<ms::Observer> const& observer)
     observers.push_back(observer);
 }
 
-void ms::Observers::remove_observer(std::shared_ptr<ms::Observer> const& observer)
+void ms::Observers::remove_observer(std::weak_ptr<ms::Observer> const& observer)
 {
     std::unique_lock<decltype(mutex)> lg(mutex);
     
-    auto it = std::find(observers.begin(), observers.end(), observer);
+    auto o = observer.lock();
+    if (!o)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid observer (destroyed)"));
+    
+    auto it = std::find(observers.begin(), observers.end(), o);
     if (it == observers.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (not previously added)"));
     

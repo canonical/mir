@@ -34,6 +34,13 @@ ms::LegacySceneChangeNotification::LegacySceneChangeNotification(std::function<v
 
 ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
 {
+    std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+    for (auto &kv : surface_observers)
+    {
+        auto surface = kv.first.lock();
+        if (surface)
+            surface->remove_observer(kv.second);
+    }
 }
 
 void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)

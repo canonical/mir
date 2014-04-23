@@ -63,7 +63,7 @@ struct FakeScene : mc::Scene
     void add_observer(std::shared_ptr<ms::Observer> const& /* observer */) override
     {
     }
-    void remove_observer(std::shared_ptr<ms::Observer> const& /* observer */) override
+    void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */) override
     {
     }
 

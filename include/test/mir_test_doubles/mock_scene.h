@@ -40,7 +40,7 @@ public:
     MOCK_CONST_METHOD0(generate_renderable_list, graphics::RenderableList());
     
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::Observer> const&));
-    MOCK_METHOD1(remove_observer, void(std::shared_ptr<scene::Observer> const&));
+    MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::Observer> const&));
 };
 
 } // namespace doubles
