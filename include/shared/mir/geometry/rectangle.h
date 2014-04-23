@@ -68,7 +68,6 @@ inline bool operator != (Rectangle const& lhs, Rectangle const& rhs)
 }
 
 std::ostream& operator<<(std::ostream& out, Rectangle const& value);
-
 }
 }
 

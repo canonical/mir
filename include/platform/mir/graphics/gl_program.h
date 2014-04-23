@@ -2,15 +2,15 @@
  * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -43,17 +43,26 @@ private:
 class GLProgram
 {
 public:
-    GLProgram(
-        GLchar const* vertex_shader_src,
-        GLchar const* fragment_shader_src);
-    ~GLProgram();
+    virtual ~GLProgram() = default;
+    virtual operator GLuint() const = 0;
 
-    operator GLuint() const;
-
+protected:
+    GLProgram() = default;
 private:
     GLProgram(GLProgram const&) = delete;
     GLProgram& operator=(GLProgram const&) = delete;
+};
 
+class SingleVertexSingleFragmentProgram : public GLProgram
+{
+public:
+    SingleVertexSingleFragmentProgram(
+        GLchar const* vertex_shader_src,
+        GLchar const* fragment_shader_src);
+    ~SingleVertexSingleFragmentProgram();
+
+    operator GLuint() const override;
+private:
     GLShader const vertex_shader; 
     GLShader const fragment_shader;
     GLuint const program;

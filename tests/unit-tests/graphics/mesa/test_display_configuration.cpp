@@ -28,6 +28,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/mock_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -102,6 +103,7 @@ public:
     {
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 

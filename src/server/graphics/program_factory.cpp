@@ -28,5 +28,6 @@ mg::ProgramFactory::create_gl_program(
     std::string const& fragment_shader) const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return std::unique_ptr<mg::GLProgram>(new GLProgram(vertex_shader.c_str(), fragment_shader.c_str()));
+    return std::unique_ptr<mg::GLProgram>(
+        new SingleVertexSingleFragmentProgram(vertex_shader.c_str(), fragment_shader.c_str()));
 }

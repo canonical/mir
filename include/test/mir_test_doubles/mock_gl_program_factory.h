@@ -29,12 +29,20 @@ namespace test
 namespace doubles
 {
 
+struct StubGLProgram : public graphics::GLProgram
+{
+    operator GLuint() const override
+    {
+        return 7;
+    }
+};
+
 class StubGLProgramFactory : public graphics::GLProgramFactory
 {
 public:
     std::unique_ptr<graphics::GLProgram> create_gl_program(std::string const&, std::string const&) const
     {
-        return nullptr;
+        return std::unique_ptr<StubGLProgram>(new StubGLProgram);
     }
 };
 

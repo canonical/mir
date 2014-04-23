@@ -53,8 +53,8 @@ public:
     {
         using namespace testing;
         ON_CALL(mock_gl_program_factory,create_gl_program(_,_))
-            .WillByDefault(Invoke([](std::string const a, std::string const b)
-                { return std::unique_ptr<mg::GLProgram>(new mg::GLProgram(a.c_str(),b.c_str())); }));
+            .WillByDefault(Invoke([](std::string const, std::string const)
+                { return std::unique_ptr<mg::GLProgram>(new mtd::StubGLProgram); }));
 
         ON_CALL(mock_gl, glGetShaderiv(_,_,_))
             .WillByDefault(SetArgPointee<2>(GL_TRUE));

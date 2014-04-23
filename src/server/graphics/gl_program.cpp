@@ -42,7 +42,6 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
     (*getObjectInfoLog)(object, object_log_length, NULL,
                         const_cast<GLchar *>(object_info_log.data()));
 
-    printf("%s\n", msg.c_str());
     std::string object_info_err(msg + "\n");
     object_info_err += object_info_log;
 
@@ -77,7 +76,7 @@ mg::GLShader::operator GLuint() const
     return shader;
 }
 
-mg::GLProgram::GLProgram(
+mg::SingleVertexSingleFragmentProgram::SingleVertexSingleFragmentProgram(
     GLchar const* vertex_shader_src,
     GLchar const* fragment_shader_src)
   : vertex_shader(vertex_shader_src, GL_VERTEX_SHADER),
@@ -99,12 +98,12 @@ mg::GLProgram::GLProgram(
     }
 }
 
-mg::GLProgram::~GLProgram()
+mg::SingleVertexSingleFragmentProgram::~SingleVertexSingleFragmentProgram()
 {
     glDeleteProgram(program);
 }
 
-mg::GLProgram::operator GLuint() const
+mg::SingleVertexSingleFragmentProgram::operator GLuint() const
 {
     return program;
 }
