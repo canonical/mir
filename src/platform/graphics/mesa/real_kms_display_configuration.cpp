@@ -222,7 +222,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;
         output.connected = connected;
-        //if (current_mode_index != invalid_mode_index)
+        if (current_mode_index != invalid_mode_index)
             output.current_mode_index = current_mode_index;
         output.current_format = mir_pixel_format_xrgb_8888;
     }
