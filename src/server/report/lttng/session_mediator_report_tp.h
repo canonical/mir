@@ -61,6 +61,16 @@ TRACEPOINT_EVENT(
 
 TRACEPOINT_EVENT(
     mir_server_session_mediator,
+    session_add_trusted_session_called,
+    TP_ARGS(char const*, application, char const*, trust_info),
+    TP_FIELDS(
+        ctf_string(application, application)
+        ctf_string(trust_info, trust_info)
+        )
+    )
+
+TRACEPOINT_EVENT(
+    mir_server_session_mediator,
     session_error,
     TP_ARGS(char const*, application, char const*, method, char const*, what),
     TP_FIELDS(

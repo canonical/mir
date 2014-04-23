@@ -50,6 +50,8 @@ public:
 
     virtual void session_start_trust_session_called(std::string const& app_name, std::string const& trust_info) = 0;
 
+    virtual void session_add_trusted_session_called(std::string const& app_name, std::string const& trust_info) = 0;
+
     virtual void session_stop_trust_session_called(std::string const& app_name) = 0;
 
     virtual void session_error(

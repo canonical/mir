@@ -45,6 +45,11 @@ void mir::report::lttng::SessionMediatorReport::session_start_trust_session_call
     mir_tracepoint(mir_server_session_mediator, session_start_trust_session_called, app_name.c_str(), trust_info.c_str());
 }
 
+void mir::report::lttng::SessionMediatorReport::session_add_trusted_session_called(std::string const& app_name, std::string const& trust_info)
+{
+    mir_tracepoint(mir_server_session_mediator, session_add_trusted_session_called, app_name.c_str(), trust_info.c_str());
+}
+
 void mir::report::lttng::SessionMediatorReport::session_error(std::string const& app_name, char const* method, std::string const& what)
 {
     mir_tracepoint(mir_server_session_mediator, session_error, app_name.c_str(), method, what.c_str());

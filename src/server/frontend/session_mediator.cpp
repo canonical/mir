@@ -505,9 +505,9 @@ void mf::SessionMediator::add_trusted_session(::google::protobuf::RpcController*
         if (trust_session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
 
-        // std::ostringstream stream;
-        // stream << "process id: " << request.pid()
-        // report->session_start_trust_session_called(session->name(), stream.str());
+        std::ostringstream stream;
+        stream << "process id: " << request->pid();
+        report->session_add_trusted_session_called(session->name(), stream.str());
 
         response->set_result(shell->add_trusted_session_for(trust_session, request->pid()));
     }
