@@ -238,7 +238,7 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
         if (!client_buffers_available(lock))
         {
             if (!acquire_timeout)
-            {
+            {   // Lazily construct the timeout alarm
                 acquire_timeout = timer->notify_in(blocking_delay, [this]()
                 {
                     std::unique_lock<std::mutex> lock(guard);
@@ -248,8 +248,11 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
                         complete_client_acquire(std::move(lock));
                     }
                 });
-            } else if (acquire_timeout->state() != mir::Alarm::Pending)
+            }
+            else if (acquire_timeout->state() != mir::Alarm::Pending)
+            {
                 acquire_timeout->reschedule_in(blocking_delay);
+            }
             return;
         }
     }
