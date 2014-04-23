@@ -99,7 +99,6 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
         trust_session_container->for_each_trust_session_for_process(client_pid,
             [client_pid, new_session](std::shared_ptr<frontend::TrustSession> const& trust_session)
             {
-                printf("found after %d\n", client_pid);
                 auto shell_trust_session = std::dynamic_pointer_cast<msh::TrustSession>(trust_session);
 
                 shell_trust_session->add_trusted_child(new_session);
@@ -266,7 +265,6 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked
         {
             if (container_session->process_id() == session_pid)
             {
-                printf("found during %d\n", session_pid);
                 shell_trust_session->add_trusted_child(container_session);
             }
         });
