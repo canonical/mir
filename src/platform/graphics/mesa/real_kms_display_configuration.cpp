@@ -168,8 +168,9 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         kms_connector_type_to_output_type(connector.connector_type)};
     geom::Size physical_size{connector.mmWidth, connector.mmHeight};
     bool connected{connector.connection == DRM_MODE_CONNECTED};
-    size_t current_mode_index{std::numeric_limits<size_t>::max()};
-    size_t preferred_mode_index{std::numeric_limits<size_t>::max()};
+    size_t const invalid_mode_index = std::numeric_limits<size_t>::max();
+    size_t current_mode_index{invalid_mode_index};
+    size_t preferred_mode_index{invalid_mode_index};
     std::vector<DisplayConfigurationMode> modes;
     std::vector<MirPixelFormat> formats {mir_pixel_format_argb_8888,
                                          mir_pixel_format_xrgb_8888};
@@ -221,7 +222,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;
         output.connected = connected;
-        output.current_mode_index = current_mode_index;
+        //if (current_mode_index != invalid_mode_index)
+            output.current_mode_index = current_mode_index;
         output.current_format = mir_pixel_format_xrgb_8888;
     }
 }
