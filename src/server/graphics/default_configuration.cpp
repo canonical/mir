@@ -27,6 +27,7 @@
 
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
+#include "program_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
@@ -163,5 +164,15 @@ mir::DefaultServerConfiguration::the_gl_config()
                 int stencil_buffer_bits() const override { return 0; }
             };
             return std::make_shared<NoGLConfig>();
+        });
+}
+
+std::shared_ptr<mg::GLProgramFactory>
+mir::DefaultServerConfiguration::the_gl_program_factory()
+{
+    return gl_program_factory(
+        [this]
+        {
+            return std::make_shared<mg::ProgramFactory>();
         });
 }
