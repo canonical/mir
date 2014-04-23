@@ -643,7 +643,7 @@ TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
 
     EXPECT_CALL(mock_renderer, begin())
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
         .Times(1);
     EXPECT_CALL(mock_renderer, end())
         .Times(1);
