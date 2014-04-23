@@ -16,29 +16,32 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
-#define MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
+#ifndef MIR_GRAPHICS_GL_RENDERER_FACTORY_H_
+#define MIR_GRAPHICS_GL_RENDERER_FACTORY_H_
 
-#include "mir/compositor/renderer_factory.h"
+#include "mir/graphics/gl_program_factory.h"
+#include "mir/graphics/gl_program.h"
+#include <mutex>
 
 namespace mir
 {
 namespace graphics
 {
-class GLProgramFactory;
-}
-namespace compositor
-{
-
-class GLRendererFactory : public RendererFactory
+class ProgramFactory : public GLProgramFactory
 {
 public:
-    GLRendererFactory(std::shared_ptr<graphics::GLProgramFactory> const& factory);
-    std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
+    std::unique_ptr<GLProgram> create_gl_program(std::string const&, std::string const&) const override;
+
 private:
-    std::shared_ptr<graphics::GLProgramFactory> const program_factory;
+    /*
+     * We need to serialize renderer creation because some GL calls used
+     * during renderer construction that create unique resource ids
+     * (e.g. glCreateProgram) are not thread-safe when the threads are
+     * have the same or shared EGL contexts.
+     */
+    std::mutex mutable mutex;
 };
 }
 }
 
-#endif /* MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_ */
+#endif /* MIR_GRAPHICS_GL_RENDERER_FACTORY_H_ */

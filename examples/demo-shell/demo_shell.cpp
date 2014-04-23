@@ -47,11 +47,18 @@ namespace examples
 class DemoRendererFactory : public compositor::RendererFactory
 {
 public:
+    DemoRendererFactory(std::shared_ptr<graphics::GLProgramFactory> const& gl_program_factory) :
+        gl_program_factory(gl_program_factory)
+    {
+    }
+
     std::unique_ptr<compositor::Renderer> create_renderer_for(
         geometry::Rectangle const& rect) override
     {
-        return std::unique_ptr<compositor::Renderer>(new DemoRenderer(rect));
+        return std::unique_ptr<compositor::Renderer>(new DemoRenderer(*gl_program_factory, rect));
     }
+private:
+    std::shared_ptr<graphics::GLProgramFactory> const gl_program_factory;
 };
 
 class DemoServerConfiguration : public mir::examples::ServerConfiguration
@@ -97,7 +104,7 @@ public:
 
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override
     {
-        return std::make_shared<DemoRendererFactory>();
+        return std::make_shared<DemoRendererFactory>(the_gl_program_factory());
     }
 
 private:

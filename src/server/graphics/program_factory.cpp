@@ -1,5 +1,6 @@
+
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,29 +17,16 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
-#define MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
+#include "program_factory.h"
+#include "mir/graphics/gl_program.h"
 
-#include "mir/compositor/renderer_factory.h"
+namespace mg = mir::graphics;
 
-namespace mir
+std::unique_ptr<mg::GLProgram>
+mg::ProgramFactory::create_gl_program(
+    std::string const& vertex_shader,
+    std::string const& fragment_shader) const
 {
-namespace graphics
-{
-class GLProgramFactory;
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return std::unique_ptr<mg::GLProgram>(new GLProgram(vertex_shader.c_str(), fragment_shader.c_str()));
 }
-namespace compositor
-{
-
-class GLRendererFactory : public RendererFactory
-{
-public:
-    GLRendererFactory(std::shared_ptr<graphics::GLProgramFactory> const& factory);
-    std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
-private:
-    std::shared_ptr<graphics::GLProgramFactory> const program_factory;
-};
-}
-}
-
-#endif /* MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_ */

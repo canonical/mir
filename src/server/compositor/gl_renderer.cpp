@@ -65,8 +65,10 @@ const GLchar* fragment_shader_src =
 };
 }
 
-mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
-    : program(vertex_shader_src, fragment_shader_src),
+mc::GLRenderer::GLRenderer(
+    mg::GLProgramFactory const& program_factory,
+    geom::Rectangle const& display_area)
+    : program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
       position_attr_loc(0),
       texcoord_attr_loc(0),
       centre_uniform_loc(0),
@@ -74,16 +76,16 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
       alpha_uniform_loc(0),
       rotation(NAN) // ensure the first set_rotation succeeds
 {
-    glUseProgram(program);
+    glUseProgram(*program);
 
     /* Set up program variables */
-    GLint tex_loc = glGetUniformLocation(program, "tex");
-    display_transform_uniform_loc = glGetUniformLocation(program, "display_transform");
-    transform_uniform_loc = glGetUniformLocation(program, "transform");
-    alpha_uniform_loc = glGetUniformLocation(program, "alpha");
-    position_attr_loc = glGetAttribLocation(program, "position");
-    texcoord_attr_loc = glGetAttribLocation(program, "texcoord");
-    centre_uniform_loc = glGetUniformLocation(program, "centre");
+    GLint tex_loc = glGetUniformLocation(*program, "tex");
+    display_transform_uniform_loc = glGetUniformLocation(*program, "display_transform");
+    transform_uniform_loc = glGetUniformLocation(*program, "transform");
+    alpha_uniform_loc = glGetUniformLocation(*program, "alpha");
+    position_attr_loc = glGetAttribLocation(*program, "position");
+    texcoord_attr_loc = glGetAttribLocation(*program, "texcoord");
+    centre_uniform_loc = glGetUniformLocation(*program, "centre");
 
     glUniform1i(tex_loc, 0);
 
@@ -128,9 +130,12 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
     vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
 }
 
-void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
+void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-    glUseProgram(program);
+    auto buffer = renderable.buffer(this);
+    saved_resources.insert(buffer);
+
+    glUseProgram(*program);
 
     if (renderable.shaped() || renderable.alpha() < 1.0f)
     {
@@ -154,14 +159,14 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                        glm::value_ptr(renderable.transformation()));
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
-    GLuint surface_tex = load_texture(renderable, buffer);
+    GLuint surface_tex = load_texture(renderable, *buffer);
 
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     std::vector<Primitive> primitives;
-    tessellate(primitives, renderable, buffer.size());
+    tessellate(primitives, renderable, buffer->size());
    
     for (auto const& p : primitives)
     {
@@ -249,8 +254,8 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    glUseProgram(program);
-    GLint mat_loc = glGetUniformLocation(program, "screen_to_gl_coords");
+    glUseProgram(*program);
+    GLint mat_loc = glGetUniformLocation(*program, "screen_to_gl_coords");
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
     glUseProgram(0);
 
@@ -269,7 +274,7 @@ void mc::GLRenderer::set_rotation(float degrees)
                        -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
-    glUseProgram(program);
+    glUseProgram(*program);
     glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
     glUseProgram(0);
 
@@ -299,6 +304,8 @@ void mc::GLRenderer::end() const
         }
     }
     skipped = false;
+
+    saved_resources.clear();
 }
 
 void mc::GLRenderer::suspend()
