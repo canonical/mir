@@ -19,12 +19,13 @@
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/asio_main_loop.h"
+#include "mir/timer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_framework/watchdog.h"
 #include "mir_test_framework/semaphore.h"
+#include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
 
@@ -41,6 +42,50 @@ namespace geom = mir::geometry;
 
 namespace
 {
+
+class MockAlarm : public mir::Alarm
+{
+public:
+    MockAlarm(std::function<void(void)> callback)
+        : callback{callback}
+    {
+        using namespace testing;
+        ON_CALL(*this, cancel()).WillByDefault(Return(true));
+        ON_CALL(*this, state()).WillByDefault(Return(mir::Alarm::Pending));
+        ON_CALL(*this, reschedule_in(_)).WillByDefault(Return(true));
+    }
+    virtual ~MockAlarm() = default;
+
+    MOCK_METHOD0(cancel, bool(void));
+    MOCK_CONST_METHOD0(state, mir::Alarm::State(void));
+    MOCK_METHOD1(reschedule_in, bool(std::chrono::milliseconds));
+
+    void trigger()
+    {
+        callback();
+    }
+private:
+    std::function<void(void)> const callback;
+};
+
+class MockTimer : public mir::Timer
+{
+public:
+    MockTimer()
+    {
+        using namespace testing;
+        ON_CALL(*this, notify_in(_,_))
+            .WillByDefault(WithArgs<1>(Invoke(create_alarm_for_callback)));
+    }
+
+    MOCK_METHOD2(notify_in, std::unique_ptr<mir::Alarm>(std::chrono::milliseconds, std::function<void(void)>));
+
+    static std::unique_ptr<mir::Alarm> create_alarm_for_callback(std::function<void(void)> callback)
+    {
+        return std::unique_ptr<mir::Alarm>{new testing::NiceMock<MockAlarm>{callback}};
+    }
+};
+
 struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 {
     using mc::BufferStreamSurfaces::BufferStreamSurfaces;
@@ -69,21 +114,10 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 struct BufferStreamTest : public ::testing::Test
 {
     BufferStreamTest()
-        : ml{std::make_shared<mir::AsioMainLoop>()},
+        : timer{std::make_shared<testing::NiceMock<MockTimer>>()},
           nbuffers{3},
           buffer_stream{create_bundle()}
     {
-        mainloop_thread = std::thread([this]()
-        {
-            ml->run();
-        });
-    }
-
-    ~BufferStreamTest()
-    {
-        ml->stop();
-        if (mainloop_thread.joinable())
-            mainloop_thread.join();
     }
 
     std::shared_ptr<mc::BufferBundle> create_bundle()
@@ -96,11 +130,10 @@ struct BufferStreamTest : public ::testing::Test
         return std::make_shared<mc::SwitchingBundle>(nbuffers,
                                                      allocator,
                                                      properties,
-                                                     ml);
+                                                     timer);
     }
 
-    std::thread mainloop_thread;
-    std::shared_ptr<mir::AsioMainLoop> ml;
+    std::shared_ptr<MockTimer> timer;
     const int nbuffers;
     BufferStreamSurfaces buffer_stream;
 };
@@ -350,25 +383,42 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
         s->join();
 }
 
-TEST_F(BufferStreamTest, client_swaps_at_at_least_1_Hz)
+TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
 {
-    mg::Buffer* client1{nullptr};
+    using namespace testing;
+
+    mg::Buffer* placeholder{nullptr};
+    MockAlarm* swap_buffer_timeout{nullptr};
+    mtf::Semaphore alarm_set;
+
+    EXPECT_CALL(*timer, notify_in(_,_))
+        .Times(1)
+        .WillOnce(WithArgs<1>(Invoke([&swap_buffer_timeout, &alarm_set](std::function<void(void)> callback)
+                              {
+                                  swap_buffer_timeout = new NiceMock<MockAlarm>{callback};
+                                  alarm_set.raise();
+                                  return std::unique_ptr<MockAlarm>{swap_buffer_timeout};
+                              })));
+
     // Grab all the buffers...
     for (int i = 0; i < nbuffers; ++i)
-        buffer_stream.swap_client_buffers_blocking(client1);
+        buffer_stream.swap_client_buffers_blocking(placeholder);
 
     mtf::Semaphore done_signal;
 
-    mir_test_framework::WatchDog watchdog([&done_signal]() { done_signal.raise(); });
+    mtf::WatchDog watchdog([&done_signal]() { done_signal.raise(); });
 
-    mg::Buffer* prev_buffer = client1;
-    watchdog.run([this, &client1](mir_test_framework::WatchDog& watchdog)
-    {
-        buffer_stream.swap_client_buffers_blocking(client1);
+    watchdog.run([this, &done_signal](mtf::WatchDog& watchdog)
+    {        
+        mg::Buffer* placeholder{nullptr};
+        buffer_stream.swap_client_buffers_cancellable(placeholder, done_signal);
         watchdog.notify_done();
     });
 
-    EXPECT_TRUE(watchdog.wait_for(std::chrono::milliseconds{1200}));
-    // Verify that the swap has gone through.
-    EXPECT_NE(prev_buffer, client1);
+    // The SwitchingBundle allocates a timer the first time client_acquire would block.
+    // We need to wait for the alarm to be set before we trigger it.
+    ASSERT_TRUE(alarm_set.wait_for(std::chrono::milliseconds{50}));
+    swap_buffer_timeout->trigger();
+
+    EXPECT_TRUE(watchdog.wait_for(std::chrono::milliseconds{200}));
 }
