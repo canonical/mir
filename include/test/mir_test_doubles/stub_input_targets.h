@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,36 +14,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
- *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_TARGETS_H_
-#define MIR_INPUT_INPUT_TARGETS_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_
 
-#include "mir/input/input_channel_factory.h"
-
-#include <memory>
+#include "mir/input/input_targets.h"
 
 namespace mir
 {
-namespace input
+namespace test
 {
-class Surface;
-
-class InputTargets
+namespace doubles
 {
-public:
-    virtual ~InputTargets() = default;
 
-    virtual void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) = 0;
-
-protected:
-    InputTargets() = default;
-    InputTargets(InputTargets const&) = delete;
-    InputTargets& operator=(InputTargets const&) = delete;
+class StubInputTargets : public input::InputTargets
+{
+    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& ) override
+    {
+    }
 };
 
 }
 }
+} // namespace mir
 
-#endif // MIR_INPUT_INPUT_TARGETS
+#endif /* MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_ */
