@@ -31,15 +31,14 @@ namespace graphics
 {
 class CursorImage;
 
-/// CursorImages is used to lookup cursor images within cursor themes.
+/// CursorImages is used to lookup cursor images.
 class CursorImages
 {
 public:
-    /// Looks up the image for a named cursor in a given cursor theme. Cursor names
+    /// Looks up the image for a named cursor. Cursor names
     /// follow the XCursor naming conventions.
-    virtual std::shared_ptr<CursorImage> image(std::string const& theme_name,
-                                                       std::string const& cursor_name,
-                                                       geometry::Size const& size) = 0;
+    virtual std::shared_ptr<CursorImage> image(std::string const& cursor_name,
+        geometry::Size const& size) = 0;
 
 protected:
     CursorImages() = default;
@@ -49,6 +48,5 @@ protected:
 };
 }
 }
-
 
 #endif /* MIR_GRAPHICS_CURSOR_LOADER_H_ */

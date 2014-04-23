@@ -44,10 +44,9 @@ mg::BuiltinCursorImages::BuiltinCursorImages()
 {
 }
 
-std::shared_ptr<mg::CursorImage> mg::BuiltinCursorImages::image(std::string const& /* theme_name */,
-                                                                            std::string const& /* cursor_name */,
-                                                                            geom::Size const& /* size */)
+std::shared_ptr<mg::CursorImage> mg::BuiltinCursorImages::image(std::string const& /* cursor_name */,
+    geom::Size const& /* size */)
 {
-    // Builtin repository only has one cursor and theme at a single size.
+    // Builtin repository only has one cursor at a single size.
     return builtin_image;
 }

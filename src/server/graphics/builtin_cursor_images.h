@@ -34,9 +34,8 @@ public:
     BuiltinCursorImages();
     virtual ~BuiltinCursorImages() = default;
 
-    std::shared_ptr<CursorImage> image(std::string const& theme_name,
-                                               std::string const& cursor_name,
-                                               geometry::Size const& size);
+    std::shared_ptr<CursorImage> image(std::string const& cursor_name,
+        geometry::Size const& size);
 
 protected:
     BuiltinCursorImages(BuiltinCursorImages const&) = delete;
