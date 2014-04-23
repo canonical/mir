@@ -21,7 +21,7 @@
 #include "mir/options/option.h"
 
 #include "default_display_configuration_policy.h"
-#include "nested/host_connection.h"
+#include "nested/mir_client_host_connection.h"
 #include "nested/nested_platform.h"
 #include "offscreen/display.h"
 
@@ -145,7 +145,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                 options->get<std::string>(options::name_opt) :
                 "nested-mir@:" + server_socket;
 
-            return std::make_shared<graphics::nested::HostConnection>(
+            return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
                 my_name);
         });

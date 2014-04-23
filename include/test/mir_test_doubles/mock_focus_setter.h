@@ -32,7 +32,7 @@ namespace doubles
 
 struct MockFocusSetter : public shell::FocusSetter
 {
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<shell::Session> const&));
+    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<scene::Session> const&));
 };
 
 }

@@ -32,10 +32,13 @@ set(
   aging_buffer.cpp
   client_buffer_depository.cpp
   display_configuration.cpp
-  mir_client_library.cpp
+  error_connections.cpp
   mir_connection.cpp
+  mir_connection_api.cpp
   mir_wait_handle.cpp
+  mir_wait_api.cpp
   mir_surface.cpp
+  mir_surface_api.cpp
   logging/rpc_report.cpp
   logging/input_receiver_report.cpp
   default_connection_configuration.cpp

@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 #include <map>
 
@@ -29,18 +29,15 @@ namespace frontend
 {
 class EventSink;
 }
-namespace shell
-{
-class SessionListener;
-}
 
 namespace scene
 {
+class SessionListener;
 class Surface;
 class SurfaceCoordinator;
 class SnapshotStrategy;
 
-class ApplicationSession : public shell::Session
+class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
@@ -48,16 +45,16 @@ public:
         pid_t pid,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-        std::shared_ptr<shell::SessionListener> const& session_listener,
+        std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink);
 
     ~ApplicationSession();
 
-    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& params);
+    frontend::SurfaceId create_surface(SurfaceCreationParameters const& params);
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
-    void take_snapshot(shell::SnapshotCallback const& snapshot_taken);
+    void take_snapshot(SnapshotCallback const& snapshot_taken);
     std::shared_ptr<Surface> default_surface() const;
 
     std::string name() const;
@@ -81,7 +78,7 @@ private:
     pid_t const pid;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
-    std::shared_ptr<shell::SessionListener> const session_listener;
+    std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();

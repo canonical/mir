@@ -18,11 +18,10 @@
 
 #include "global_event_sender.h"
 #include "session_container.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 namespace mg=mir::graphics;
 namespace ms=mir::scene;
-namespace msh=mir::shell;
 
 ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
     : sessions(session_container)
@@ -41,7 +40,7 @@ void ms::GlobalEventSender::handle_lifecycle_event(MirLifecycleState)
 
 void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
-    sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)
+    sessions->for_each([&config](std::shared_ptr<ms::Session> const& session)
     {
         session->send_display_config(config);
     });

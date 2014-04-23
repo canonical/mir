@@ -165,6 +165,25 @@ mtf::Result mtf::TestingProcessManager::shutdown_server_process()
     return result;
 }
 
+mtf::Result mtf::TestingProcessManager::kill_server_process()
+{
+    Result result;
+
+    if (server_process)
+    {
+        server_process->kill();
+        result = server_process->wait_for_termination();
+        server_process.reset();
+        return result;
+    }
+    else
+    {
+        result.reason = TerminationReason::unknown;
+    }
+
+    return result;
+}
+
 mtf::Result mtf::TestingProcessManager::wait_for_shutdown_server_process()
 {
     Result result;

@@ -26,6 +26,8 @@ namespace geom = mir::geometry;
 std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
+    std::lock_guard<std::mutex> lock(mutex);
+
     auto raw = new GLRenderer(rect);
     return std::unique_ptr<mc::Renderer>(raw);
 }

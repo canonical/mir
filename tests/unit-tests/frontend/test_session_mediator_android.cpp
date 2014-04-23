@@ -22,7 +22,7 @@
 #include "src/server/scene/application_session.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/shell.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -43,7 +43,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
 

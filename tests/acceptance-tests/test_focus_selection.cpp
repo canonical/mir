@@ -43,7 +43,7 @@ namespace
 {
 MATCHER(NonNullSession, "")
 {
-    return arg != std::shared_ptr<msh::Session>();
+    return arg.operator bool();
 }
 }
 
