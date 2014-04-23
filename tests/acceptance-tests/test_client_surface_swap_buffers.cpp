@@ -26,8 +26,6 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
-
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
@@ -78,7 +76,7 @@ TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_no
     };
 
     auto const surface = mir_connection_create_surface_sync(connection, &request_params);
-    ASSERT_NE(nullptr, surface);
+    ASSERT_TRUE(mir_surface_is_valid(surface));
 
     for (int i = 0; i < 10; ++i)
     {
