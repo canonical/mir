@@ -18,16 +18,23 @@
 
 #include "mir/asio_main_loop.h"
 #include "mir_test/pipe.h"
+#include "mir_test_framework/watchdog.h"
 
 #include <gtest/gtest.h>
 
 #include <thread>
 #include <atomic>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
+#include <array>
+#include <boost/throw_exception.hpp>
 
 #include <sys/types.h>
 #include <unistd.h>
 
 namespace mt = mir::test;
+namespace mtf = mir_test_framework;
 
 TEST(AsioMainLoopTest, signal_handled)
 {
@@ -291,4 +298,232 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[0], elems_read[0]);
     EXPECT_EQ(elems_to_send[1], elems_read[1]);
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
+}
+
+TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    std::mutex checkpoint_mutex;
+    std::condition_variable checkpoint;
+    bool hit_checkpoint{false};
+
+    auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
+                                               [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        hit_checkpoint = true;
+        checkpoint.notify_all();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{10}, [&hit_checkpoint]() { return hit_checkpoint; }));
+    }
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [&runner]
+    {
+        runner.notify_done();
+    });
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{50}));
+
+    ml.stop();
+    // Main loop should be stopped now
+
+    hit_checkpoint = false;
+    auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
+                                         [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        hit_checkpoint = true;
+        checkpoint.notify_all();
+    });
+
+    std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+    EXPECT_FALSE(checkpoint.wait_for(lock, std::chrono::milliseconds{50}, [&hit_checkpoint]() { return hit_checkpoint; }));
+}
+
+TEST(AsioMainLoopTest, alarm_fires_at_correct_time)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner]()
+    {
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
+}
+
+TEST(AsioMainLoopTest, multiple_alarms_fire)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    int const alarm_count{10};
+    std::atomic<int> call_count{0};
+    std::array<std::unique_ptr<mir::Alarm>, alarm_count> alarms;
+
+    for (auto& alarm : alarms)
+    {
+        alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner, &call_count]()
+        {
+            call_count.fetch_add(1);
+            if (call_count == alarm_count)
+                runner.notify_done();
+        });
+    }
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
+    for (auto& alarm : alarms)
+        EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+}
+
+
+TEST(AsioMainLoopTest, alarm_changes_to_triggered_state)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner]()
+    {
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
+
+    EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+}
+
+TEST(AsioMainLoopTest, alarm_starts_in_pending_state)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner]()
+    {
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    EXPECT_EQ(mir::Alarm::Pending, alarm->state());
+}
+
+TEST(AsioMainLoopTest, cancelled_alarm_doesnt_fire)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [&runner]()
+    {
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    EXPECT_TRUE(alarm->cancel());
+    EXPECT_FALSE(runner.wait_for(std::chrono::milliseconds{300}));
+    EXPECT_EQ(mir::Alarm::Cancelled, alarm->state());
+}
+
+TEST(AsioMainLoopTest, destroyed_alarm_doesnt_fire)
+{
+    mir::AsioMainLoop ml;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [&runner]()
+    {
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    alarm.reset(nullptr);
+
+    EXPECT_FALSE(runner.wait_for(std::chrono::milliseconds{300}));
+}
+
+TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
+{
+    mir::AsioMainLoop ml;
+
+    // Somewhat counterintuitively we need some work on the mainloop to keep it running.
+    auto dummy_alarm = ml.notify_in(std::chrono::milliseconds{1000}, [](){});
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    std::mutex m;
+    std::condition_variable called;
+    int call_count{0};
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&runner, &call_count, &m, &called]()
+    {
+        std::unique_lock<decltype(m)> lock(m);
+        call_count++;
+        if (call_count == 2)
+            runner.notify_done();
+        called.notify_all();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    {
+        std::unique_lock<decltype(m)> lock(m);
+        ASSERT_TRUE(called.wait_for(lock,
+                                    std::chrono::milliseconds{50},
+                                    [&call_count](){ return call_count == 1; }));
+    }
+
+    ASSERT_EQ(mir::Alarm::Triggered, alarm->state());
+    alarm->reschedule_in(std::chrono::milliseconds{100});
+    EXPECT_EQ(mir::Alarm::Pending, alarm->state());
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{500}));
+    EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+}
+
+TEST(AsioMainLoopTest, rescheduled_alarm_cancels_previous_scheduling)
+{
+    mir::AsioMainLoop ml;
+
+    // Somewhat counterintuitively we need some work on the mainloop to keep it running.
+    auto dummy_alarm = ml.notify_in(std::chrono::milliseconds{1000}, [](){});
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    int call_count{0};
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [&runner, &call_count]()
+    {
+        call_count++;
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{150}));
+    EXPECT_EQ(mir::Alarm::Pending, alarm->state());
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{500}));
+    EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(1, call_count);
 }
