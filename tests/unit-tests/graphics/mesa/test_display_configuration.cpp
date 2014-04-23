@@ -422,7 +422,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             false,
             true,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
+            1,  // Ensure current_mode_index is remembered even still
             mir_pixel_format_invalid,
             mir_power_mode_on,
             mir_orientation_normal
