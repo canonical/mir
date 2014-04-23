@@ -257,14 +257,10 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
         {
             schedule_compositing();
         });
-    /* Recomposite whenever the scene changes */
-    scene->add_observer(observer);
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 {
-    scene->remove_observer(observer);
-
     stop();
 }
 
@@ -297,6 +293,11 @@ void mc::MultiThreadedCompositor::start()
             destroy_compositing_threads(lk);
         }};
 
+    lk.unlock();
+    /* Recomposite whenever the scene changes */
+    scene->add_observer(observer);
+    lk.lock();
+
     create_compositing_threads();
 
     /* Optional first render */
@@ -323,6 +324,10 @@ void mc::MultiThreadedCompositor::stop()
             if(!lk.owns_lock()) lk.lock();
             state = CompositorState::started;
         }};
+
+    lk.unlock();
+    scene->remove_observer(observer);
+    lk.lock();
 
     destroy_compositing_threads(lk);
 
