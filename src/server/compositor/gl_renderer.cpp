@@ -128,8 +128,11 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
     vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
 }
 
-void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer) const
+void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
+    auto buffer = renderable.buffer(this);
+    saved_resources.insert(buffer);
+
     glUseProgram(program);
 
     if (renderable.shaped() || renderable.alpha() < 1.0f)
@@ -154,14 +157,14 @@ void mc::GLRenderer::render(mg::Renderable const& renderable, mg::Buffer& buffer
                        glm::value_ptr(renderable.transformation()));
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
-    GLuint surface_tex = load_texture(renderable, buffer);
+    GLuint surface_tex = load_texture(renderable, *buffer);
 
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     std::vector<Primitive> primitives;
-    tessellate(primitives, renderable, buffer.size());
+    tessellate(primitives, renderable, buffer->size());
    
     for (auto const& p : primitives)
     {
@@ -299,6 +302,8 @@ void mc::GLRenderer::end() const
         }
     }
     skipped = false;
+
+    saved_resources.clear();
 }
 
 void mc::GLRenderer::suspend()
