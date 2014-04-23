@@ -23,8 +23,6 @@
 
 #include <boost/throw_exception.hpp>
 
-// TODO: Place under test
-
 namespace ms = mir::scene;
 
 ms::LegacySceneChangeNotification::LegacySceneChangeNotification(std::function<void()> const& notify_change)
@@ -51,7 +49,6 @@ void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surfac
     {
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         surface_observers[surface] = observer;
-        // TODO: Throw exception on duplicate
     }
     notify_change();
 }
@@ -63,7 +60,6 @@ void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surf
         auto it = surface_observers.find(surface);
         if (it != surface_observers.end())
             surface_observers.erase(it);
-        // TODO: Throw exception
     }
     notify_change();
 }
