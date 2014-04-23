@@ -22,19 +22,23 @@
 #include "mir/scene/observer.h"
 
 #include <functional>
+#include <map>
+#include <mutex>
 
 namespace mir
 {
 namespace scene
 {
+class SurfaceObserver;
 
 // A simple implementation of surface observer which forwards all changes to a provided callback.
 // Also installs surface observers on each added surface which in turn forward each change to 
 // said callback.
-class SimpleObserver : public Observer
+class LegacySceneChangeNotification : public Observer
 {
 public:
-    SimpleObserver(std::function<void()> const& notify_change);
+    LegacySceneChangeNotification(std::function<void()> const& notify_change);
+    ~LegacySceneChangeNotification();
 
     void surface_added(std::shared_ptr<Surface> const& surface) override;
     void surface_removed(std::shared_ptr<Surface> const& surface) override;
@@ -42,6 +46,10 @@ public:
 
 private:
     std::function<void()> notify_change;
+    
+    std::mutex surface_observers_guard;
+    std::map<std::weak_ptr<Surface>, std::shared_ptr<SurfaceObserver>,
+        std::owner_less<std::weak_ptr<Surface>>> surface_observers;
 };
 
 }

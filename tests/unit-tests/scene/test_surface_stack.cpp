@@ -400,6 +400,27 @@ TEST_F(SurfaceStack, remove_scene_observer)
     stack.remove_surface(stub_surface1);
 }
 
+// Many clients of the scene observer wish to install surface observers to monitor surface
+// notifications. We offer them a surface_added event for existing surfaces to give them
+// a chance to do this.
+TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
+{
+    using namespace ::testing;
+
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    InSequence seq;
+    EXPECT_CALL(observer, surface_added(Eq(stub_surface1))).Times(1);
+    
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+
+    stack.add_observer(mt::fake_shared(observer));
+}
+
 TEST_F(SurfaceStack, surfaces_reordered)
 {
     using namespace ::testing;

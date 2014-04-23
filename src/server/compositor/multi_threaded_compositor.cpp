@@ -23,7 +23,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
-#include "mir/scene/simple_observer.h"
+#include "mir/scene/legacy_scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
 
@@ -253,7 +253,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
-    observer = std::make_shared<ms::SimpleObserver>([this]()
+    observer = std::make_shared<ms::LegacySceneChangeNotification>([this]()
         {
             schedule_compositing();
         });
@@ -267,9 +267,6 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 void mc::MultiThreadedCompositor::schedule_compositing()
 {
     std::unique_lock<std::mutex> lk(state_guard);
-
-    if (state != CompositorState::started)
-        return;
 
     report->scheduled();
     for (auto& f : thread_functors)

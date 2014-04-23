@@ -24,7 +24,7 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
-#include "mir/scene/simple_observer.h"
+#include "mir/scene/legacy_scene_change_notification.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
@@ -67,7 +67,7 @@ public:
                 display_buffer_compositor_map[&display_buffer] = db_compositor_factory->create_compositor_for(display_buffer);
             });
         
-        observer = std::make_shared<ms::SimpleObserver>([this]() {
+        observer = std::make_shared<ms::LegacySceneChangeNotification>([this]() {
                 display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
                     {  
                         display_buffer_compositor_map[&display_buffer]->composite();

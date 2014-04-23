@@ -17,6 +17,6 @@ ADD_LIBRARY(
   surface_event_source.cpp
   surface_observer.cpp
   threaded_snapshot_strategy.cpp
-  simple_observer.cpp
+  legacy_scene_change_notification.cpp
   legacy_surface_change_notification.cpp
 )

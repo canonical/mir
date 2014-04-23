@@ -210,6 +210,16 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)
 {
     observers.add_observer(observer);
+
+    // Notify observer of existing surfaces
+    {
+        std::unique_lock<decltype(guard)> ul(guard);
+        for (auto &layer : layers_by_depth)
+        {
+            for (auto &surface : layer.second)
+                observer->surface_added(surface);
+        }
+    }
 }
 
 void ms::SurfaceStack::remove_observer(std::shared_ptr<ms::Observer> const& observer)
