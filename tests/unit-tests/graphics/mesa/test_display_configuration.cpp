@@ -549,10 +549,10 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     std::vector<uint32_t> const encoder_ids{20, 21};
     std::vector<uint32_t> const connector_ids{30};
     std::vector<geom::Size> const connector_physical_sizes_mm_before{
-        {480, 270}, {}
+        {480, 270}
     };
     std::vector<geom::Size> const connector_physical_sizes_mm_after{
-        {}, {512, 642}
+        {512, 642}
     };
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
@@ -586,7 +586,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             {},
             conf_modes1,
             2,
-            connector_physical_sizes_mm_before[0],
+            connector_physical_sizes_mm_after[0],
             true,
             true,
             geom::Point(),
@@ -628,7 +628,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
                             DRM_MODE_CONNECTED, encoder_ids[1],
                             modes1, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_before[0]);
+                            connector_physical_sizes_mm_after[0]);
     resources.prepare();
 
     conf = display->configuration();
