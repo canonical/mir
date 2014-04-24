@@ -160,6 +160,8 @@ bool me::WindowManager::handle(MirEvent const& event)
         {
             MirOrientation orientation = mir_orientation_normal;
             bool rotating = true;
+            int mode_change = 0;
+            int const preferred = 999;
 
             switch (event.key.scan_code)
             {
@@ -170,14 +172,33 @@ bool me::WindowManager::handle(MirEvent const& event)
             default:        rotating = false; break;
             }
 
-            if (rotating)
+            switch (event.key.scan_code)
+            {
+            case KEY_MINUS: mode_change = -1;        break;
+            case KEY_EQUAL: mode_change = +1;        break;
+            case KEY_0:     mode_change = preferred; break;
+            default:                                 break;
+            }
+
+            if (rotating || mode_change)
             {
                 compositor->stop();
                 auto conf = display->configuration();
                 conf->for_each_output(
                     [&](mg::UserDisplayConfigurationOutput& output) -> void
                     {
-                        output.orientation = orientation;
+                        if (rotating)
+                            output.orientation = orientation;
+
+                        size_t nmodes = output.modes.size();
+                        if (mode_change && nmodes)
+                        {
+                            output.current_mode_index =
+                                (mode_change == preferred) ?
+                                    output.preferred_mode_index :
+                                    (output.current_mode_index + nmodes +
+                                     mode_change) % nmodes;
+                        }
                     }
                 );
                 display->configure(*conf);
