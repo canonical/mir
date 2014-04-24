@@ -21,12 +21,13 @@
 #include "mir/options/option.h"
 
 #include "default_display_configuration_policy.h"
-#include "nested/host_connection.h"
+#include "nested/mir_client_host_connection.h"
 #include "nested/nested_platform.h"
 #include "offscreen/display.h"
 
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
+#include "program_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
@@ -145,7 +146,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                 options->get<std::string>(options::name_opt) :
                 "nested-mir@:" + server_socket;
 
-            return std::make_shared<graphics::nested::HostConnection>(
+            return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
                 my_name);
         });
@@ -163,5 +164,15 @@ mir::DefaultServerConfiguration::the_gl_config()
                 int stencil_buffer_bits() const override { return 0; }
             };
             return std::make_shared<NoGLConfig>();
+        });
+}
+
+std::shared_ptr<mg::GLProgramFactory>
+mir::DefaultServerConfiguration::the_gl_program_factory()
+{
+    return gl_program_factory(
+        [this]
+        {
+            return std::make_shared<mg::ProgramFactory>();
         });
 }

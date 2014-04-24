@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_
 
-#include <mir/graphics/renderable.h>
+#include "mir/input/input_targets.h"
 
 namespace mir
 {
@@ -28,13 +28,15 @@ namespace test
 namespace doubles
 {
 
-struct MockRenderFunction
+class StubInputTargets : public input::InputTargets
 {
-    MOCK_METHOD1(called, void(graphics::Renderable const&));
+    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& ) override
+    {
+    }
 };
 
 }
 }
-}
+} // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_ */

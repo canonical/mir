@@ -122,6 +122,11 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                     result.signal = WTERMSIG(status);
                     break;
                 }
+                else {
+                    terminated = true;
+                    result.reason = TerminationReason::unknown;
+                    break;
+                }
             }
             else if (rc == 0)
             {

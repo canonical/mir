@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
 #include "mir/compositor/renderer.h"
+#include "mir/graphics/renderable.h"
 
 namespace mir
 {
@@ -43,9 +44,10 @@ public:
     {
     }
 
-    void render(graphics::Renderable const&,
-                graphics::Buffer&) const override
+    void render(graphics::Renderable const& r) const override
     {
+        auto buffer = r.buffer(this);  // We need to consume a buffer to
+                                       // unblock tests with clients.
     }
 
     void end() const override
