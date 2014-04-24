@@ -161,7 +161,7 @@ bool me::WindowManager::handle(MirEvent const& event)
             MirOrientation orientation = mir_orientation_normal;
             bool rotating = true;
             int mode_change = 0;
-            int const preferred = 999;
+            bool preferred_mode = false;
 
             switch (event.key.scan_code)
             {
@@ -174,13 +174,13 @@ bool me::WindowManager::handle(MirEvent const& event)
 
             switch (event.key.scan_code)
             {
-            case KEY_MINUS: mode_change = -1;        break;
-            case KEY_EQUAL: mode_change = +1;        break;
-            case KEY_0:     mode_change = preferred; break;
-            default:                                 break;
+            case KEY_MINUS: mode_change = -1;      break;
+            case KEY_EQUAL: mode_change = +1;      break;
+            case KEY_0:     preferred_mode = true; break;
+            default:                               break;
             }
 
-            if (rotating || mode_change)
+            if (rotating || mode_change || preferred_mode)
             {
                 compositor->stop();
                 auto conf = display->configuration();
@@ -190,12 +190,16 @@ bool me::WindowManager::handle(MirEvent const& event)
                         if (rotating)
                             output.orientation = orientation;
 
-                        size_t nmodes = output.modes.size();
-                        if (mode_change && nmodes)
+                        if (preferred_mode)
                         {
                             output.current_mode_index =
-                                (mode_change == preferred) ?
-                                    output.preferred_mode_index :
+                                output.preferred_mode_index;
+                        }
+                        else if (mode_change)
+                        {
+                            size_t nmodes = output.modes.size();
+                            if (nmodes)
+                                output.current_mode_index =
                                     (output.current_mode_index + nmodes +
                                      mode_change) % nmodes;
                         }
